@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git init *)",
+      "Bash(git branch *)",
+      "Bash(git remote *)",
+      "Bash(git add *)",
+      "Bash(git config *)",
+      "Bash(git commit *)",
+      "Bash(npx --yes create-next-app@latest web --typescript --tailwind --eslint --app --no-src-dir --import-alias=\"@/*\" --use-npm --turbopack --skip-install)",
+      "Bash(npm install *)",
+      "Bash(npx --yes shadcn@latest init -d --yes)",
+      "Bash(npx --yes shadcn@latest add button input label card form --yes)",
+      "Bash(npx --yes shadcn@latest add form --yes)",
+      "Bash(npx tsc *)",
+      "Bash(npx prisma *)",
+      "Bash(npx next *)",
+      "Bash(npm rebuild *)",
+      "Bash(mv proxy.ts middleware.ts)",
+      "Bash(rm -f types/next-shims.d.ts)",
+      "Bash(rmdir types *)"
+    ]
+  }
+}

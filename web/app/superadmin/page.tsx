@@ -35,8 +35,8 @@ export default function SuperadminPage() {
       const token = await getToken();
       const res = await apiFetch<{ clubs: Club[] }>('/superadmin/clubs', { token });
       setClubs(res.clubs);
-    } catch {
-      router.push('/dashboard');
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Error al cargar clubs');
     } finally {
       setLoading(false);
     }
@@ -78,6 +78,14 @@ export default function SuperadminPage() {
   }
 
   if (loading) return <div className="p-8 text-slate-500">Cargando...</div>;
+  if (error && clubs.length === 0) return (
+    <div className="p-8">
+      <p className="text-red-600 font-semibold mb-2">Error al acceder al panel superadmin:</p>
+      <p className="text-slate-700 bg-red-50 rounded p-3 font-mono text-sm">{error}</p>
+      <p className="text-slate-500 text-sm mt-4">Asegúrate de que Render haya terminado de redesplegar y recarga la página.</p>
+      <button onClick={() => { setLoading(true); setError(null); load(); }} className="mt-4 px-4 py-2 bg-slate-900 text-white rounded-lg text-sm">Reintentar</button>
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-slate-50 p-8">

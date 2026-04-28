@@ -14,7 +14,7 @@ interface MeResponse {
 export default function DashboardPage() {
   const { getToken, isLoaded, isSignedIn } = useAuth();
   const router = useRouter();
-  const [user, setUser] = useState<MeResponse['user']>(null);
+  const [user, setUser] = useState<MeResponse['user'] | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

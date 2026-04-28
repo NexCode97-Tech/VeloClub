@@ -18,7 +18,11 @@
       "Bash(npm rebuild *)",
       "Bash(mv proxy.ts middleware.ts)",
       "Bash(rm -f types/next-shims.d.ts)",
-      "Bash(rmdir types *)"
+      "Bash(rmdir types *)",
+      "Bash(npm run *)",
+      "Read(//c/Users/socia/AppData/Local/Temp/claude/C--Users-socia-OneDrive-Desktop-Claude-VeloClub/ef15029d-2463-4355-9468-3bbc1f92de68/tasks/**)",
+      "Bash(pkill -f \"tsx watch\")",
+      "Bash(./node_modules/.bin/prisma generate *)"
     ]
   }
 }

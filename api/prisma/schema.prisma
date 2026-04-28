@@ -8,11 +8,13 @@ datasource db {
 }
 
 model Club {
-  id        String   @id @default(cuid())
+  id        String     @id @default(cuid())
   name      String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
   users     User[]
+  locations Location[]
+  members   Member[]
 }
 
 model User {
@@ -30,8 +32,72 @@ model User {
   @@index([clubId])
 }
 
+model Location {
+  id        String           @id @default(cuid())
+  name      String
+  address   String?
+  clubId    String
+  club      Club             @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  members   MemberLocation[]
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  @@index([clubId])
+}
+
+model Member {
+  id                   String           @id @default(cuid())
+  clubId               String
+  club                 Club             @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  // Datos personales
+  fullName             String
+  email                String?
+  phone                String?
+  birthDate            DateTime?
+  // Foto de perfil
+  pictureUrl           String?
+  picturePublicId      String?
+  // Documento de identidad
+  docNumber            String?
+  docFileUrl           String?
+  docFilePublicId      String?
+  // Seguro médico
+  insuranceFileUrl     String?
+  insurancePublicId    String?
+  // Contacto de emergencia
+  emergencyContact     String?
+  emergencyPhone       String?
+  // Datos de patinaje
+  category             String?
+  // Sedes
+  locations            MemberLocation[]
+  // Invitación a la plataforma
+  inviteEmail          String?
+  inviteStatus         InviteStatus     @default(PENDING)
+  clerkId              String?          @unique
+  role                 Role             @default(STUDENT)
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
+
+  @@index([clubId])
+}
+
+model MemberLocation {
+  memberId   String
+  locationId String
+  member     Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  location   Location @relation(fields: [locationId], references: [id], onDelete: Cascade)
+
+  @@id([memberId, locationId])
+}
+
 enum Role {
   ADMIN
   COACH
   STUDENT
+}
+
+enum InviteStatus {
+  PENDING
+  ACCEPTED
 }

@@ -4,6 +4,8 @@ import helmet from 'helmet';
 import dotenv from 'dotenv';
 import meRouter from './routes/me';
 import clubsRouter from './routes/clubs';
+import locationsRouter from './routes/locations';
+import membersRouter from './routes/members';
 
 dotenv.config();
 
@@ -20,6 +22,8 @@ app.get('/health', (_req, res) => {
 
 app.use('/me', meRouter);
 app.use('/clubs', clubsRouter);
+app.use('/locations', locationsRouter);
+app.use('/members', membersRouter);
 
 app.listen(PORT, () => {
   console.log(`API en http://localhost:${PORT}`);

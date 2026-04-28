@@ -14,7 +14,7 @@ router.get('/', requireAuth, async (req, res) => {
   if (superadminEmails.includes(email)) {
     const user = await prisma.user.upsert({
       where: { clerkId },
-      update: { name, picture },
+      update: { name, picture, role: 'SUPERADMIN', profileComplete: true },
       create: { clerkId, email, name, picture: picture ?? null, role: 'SUPERADMIN', profileComplete: true },
     });
     return res.json({ status: 'superadmin', user });

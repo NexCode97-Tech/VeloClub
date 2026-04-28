@@ -21,6 +21,20 @@ app.get('/health', (_req, res) => {
   res.json({ status: 'ok', service: 'veloclub-api' });
 });
 
+// Endpoint temporal para resetear usuario superadmin
+app.delete('/reset-user/:email', async (req, res) => {
+  const secret = req.headers['x-reset-secret'];
+  if (secret !== process.env.RESET_SECRET) return res.status(403).json({ error: 'Forbidden' });
+  const { prisma } = await import('./db/client');
+  const email = String(req.params.email);
+  try {
+    await prisma.user.delete({ where: { email } });
+    res.json({ ok: true, deleted: email });
+  } catch {
+    res.json({ ok: false, message: 'User not found or already deleted' });
+  }
+});
+
 app.use('/me', meRouter);
 app.use('/clubs', clubsRouter);
 app.use('/locations', locationsRouter);

@@ -43,10 +43,10 @@ export default function HomePage() {
           Gestiona tu club<br />desde un solo lugar
         </h1>
         <p className="text-lg text-slate-500 mb-10 max-w-xl">
-          VeloClub es la herramienta todo-en-uno para clubes de patinaje. Miembros, asistencia, pagos, logros y calendario — sin complicaciones.
+          VeloClub es la herramienta todo en uno para clubes de patinaje. Miembros, asistencia, pagos, logros y calendario, sin complicaciones.
         </p>
         <Link href="/sign-in">
-          <Button size="lg" className="px-10">Ingresar a mi club</Button>
+          <Button size="lg" className="px-10">Iniciar sesión</Button>
         </Link>
       </section>
 

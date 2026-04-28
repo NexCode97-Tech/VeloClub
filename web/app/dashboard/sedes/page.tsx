@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
+  Dialog, DialogContent, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog';
 import { Plus, Pencil, Trash2, MapPin } from 'lucide-react';
 
@@ -74,10 +74,8 @@ export default function SedesPage() {
           <h2 className="text-2xl font-bold text-slate-900">Sedes</h2>
           <p className="text-slate-500 text-sm mt-1">Gestiona los lugares de entrenamiento del club</p>
         </div>
+        <Button onClick={openNew}><Plus className="w-4 h-4 mr-2" />Nueva sede</Button>
         <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={openNew}><Plus className="w-4 h-4 mr-2" />Nueva sede</Button>
-          </DialogTrigger>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>{editing ? 'Editar sede' : 'Nueva sede'}</DialogTitle>

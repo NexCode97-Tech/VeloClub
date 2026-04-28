@@ -18,7 +18,7 @@ function getId(req: Request): string {
 router.get('/', requireAuth, async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'No autenticado' });
   const locations = await prisma.location.findMany({
-    where: { clubId: req.user.clubId },
+    where: { clubId: req.user.clubId ?? '' },
     orderBy: { createdAt: 'asc' },
   });
   res.json({ locations });
@@ -30,7 +30,7 @@ router.post('/', requireAuth, async (req, res) => {
   const parsed = locationSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.issues });
   const location = await prisma.location.create({
-    data: { ...parsed.data, clubId: req.user.clubId },
+    data: { ...parsed.data, clubId: req.user.clubId ?? '' },
   });
   res.status(201).json({ location });
 });
@@ -42,7 +42,7 @@ router.put('/:id', requireAuth, async (req, res) => {
   const parsed = locationSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.issues });
   const existing = await prisma.location.findFirst({
-    where: { id, clubId: req.user.clubId },
+    where: { id, clubId: req.user.clubId ?? '' },
   });
   if (!existing) return res.status(404).json({ error: 'Sede no encontrada' });
   const updated = await prisma.location.update({
@@ -57,7 +57,7 @@ router.delete('/:id', requireAuth, async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'No autenticado' });
   const id = getId(req);
   const existing = await prisma.location.findFirst({
-    where: { id, clubId: req.user.clubId },
+    where: { id, clubId: req.user.clubId ?? '' },
   });
   if (!existing) return res.status(404).json({ error: 'Sede no encontrada' });
   await prisma.location.delete({ where: { id } });

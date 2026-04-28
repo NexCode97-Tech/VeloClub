@@ -7,14 +7,14 @@ import { apiFetch } from '@/lib/api-client';
 import { Users, MapPin, CalendarCheck, CreditCard } from 'lucide-react';
 
 interface MeResponse {
-  user: { name: string; role: string; club: { name: string } } | null;
-  needsOnboarding: boolean;
+  status: 'ok' | 'superadmin' | 'complete_profile' | 'no_access' | 'inactive';
+  user?: { name: string; role: string; club?: { name: string } };
 }
 
 export default function DashboardPage() {
   const { getToken, isLoaded, isSignedIn } = useAuth();
   const router = useRouter();
-  const [data, setData] = useState<MeResponse['user']>(null);
+  const [user, setUser] = useState<MeResponse['user']>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -24,14 +24,14 @@ export default function DashboardPage() {
       try {
         const token = await getToken();
         const me = await apiFetch<MeResponse>('/me', { token });
-        if (me.needsOnboarding) {
-          router.push('/onboarding');
-        } else {
-          setData(me.user);
-          setLoading(false);
-        }
+        if (me.status === 'superadmin') { router.push('/superadmin'); return; }
+        if (me.status === 'no_access') { router.push('/no-access'); return; }
+        if (me.status === 'inactive') { router.push('/inactivo'); return; }
+        if (me.status === 'complete_profile') { router.push('/completar-perfil'); return; }
+        setUser(me.user);
       } catch (err) {
         console.error(err);
+      } finally {
         setLoading(false);
       }
     })();
@@ -49,17 +49,12 @@ export default function DashboardPage() {
   return (
     <div className="p-8">
       <div className="mb-8">
-        <h2 className="text-2xl font-bold text-slate-900">Bienvenido, {data?.name}</h2>
-        <p className="text-slate-500 mt-1">Club: {data?.club.name}</p>
+        <h2 className="text-2xl font-bold text-slate-900">Bienvenido, {user?.name}</h2>
+        <p className="text-slate-500 mt-1">Club: {user?.club?.name}</p>
       </div>
-
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {cards.map(({ label, icon: Icon, href, color }) => (
-          <a
-            key={href}
-            href={href}
-            className="bg-white rounded-xl p-6 shadow-sm border border-slate-200 hover:shadow-md transition-shadow flex flex-col gap-3"
-          >
+          <a key={href} href={href} className="bg-white rounded-xl p-6 shadow-sm border border-slate-200 hover:shadow-md transition-shadow flex flex-col gap-3">
             <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${color}`}>
               <Icon className="w-5 h-5" />
             </div>
@@ -67,7 +62,6 @@ export default function DashboardPage() {
           </a>
         ))}
       </div>
-
       <div className="mt-8 bg-white rounded-xl p-6 shadow-sm border border-slate-200">
         <p className="text-slate-500 text-sm">Próximamente: asistencia del día, pagos pendientes y saldo del club.</p>
       </div>

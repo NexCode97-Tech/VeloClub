@@ -6,6 +6,7 @@ import meRouter from './routes/me';
 import clubsRouter from './routes/clubs';
 import locationsRouter from './routes/locations';
 import membersRouter from './routes/members';
+import superadminRouter from './routes/superadmin';
 
 dotenv.config();
 
@@ -24,6 +25,7 @@ app.use('/me', meRouter);
 app.use('/clubs', clubsRouter);
 app.use('/locations', locationsRouter);
 app.use('/members', membersRouter);
+app.use('/superadmin', superadminRouter);
 
 app.listen(PORT, () => {
   console.log(`API en http://localhost:${PORT}`);

@@ -10,6 +10,7 @@ datasource db {
 model Club {
   id        String     @id @default(cuid())
   name      String
+  active    Boolean    @default(true)
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
   users     User[]
@@ -18,16 +19,17 @@ model Club {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  clerkId   String   @unique
-  email     String   @unique
-  name      String
-  picture   String?
-  role      Role     @default(ADMIN)
-  clubId    String
-  club      Club     @relation(fields: [clubId], references: [id], onDelete: Cascade)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id              String   @id @default(cuid())
+  clerkId         String   @unique
+  email           String   @unique
+  name            String
+  picture         String?
+  role            Role     @default(ADMIN)
+  profileComplete Boolean  @default(false)
+  clubId          String?
+  club            Club?    @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   @@index([clubId])
 }
@@ -46,40 +48,32 @@ model Location {
 }
 
 model Member {
-  id                   String           @id @default(cuid())
-  clubId               String
-  club                 Club             @relation(fields: [clubId], references: [id], onDelete: Cascade)
-  // Datos personales
-  fullName             String
-  email                String?
-  phone                String?
-  birthDate            DateTime?
-  // Foto de perfil
-  pictureUrl           String?
-  picturePublicId      String?
-  // Documento de identidad
-  docNumber            String?
-  docFileUrl           String?
-  docFilePublicId      String?
-  // Seguro médico
-  insuranceFileUrl     String?
-  insurancePublicId    String?
-  // Contacto de emergencia
-  emergencyContact     String?
-  emergencyPhone       String?
-  // Datos de patinaje
-  category             String?
-  // Sedes
-  locations            MemberLocation[]
-  // Invitación a la plataforma
-  inviteEmail          String?
-  inviteStatus         InviteStatus     @default(PENDING)
-  clerkId              String?          @unique
-  role                 Role             @default(STUDENT)
-  createdAt            DateTime         @default(now())
-  updatedAt            DateTime         @updatedAt
+  id                String           @id @default(cuid())
+  clubId            String
+  club              Club             @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  fullName          String
+  email             String?
+  phone             String?
+  birthDate         DateTime?
+  pictureUrl        String?
+  picturePublicId   String?
+  docNumber         String?
+  docFileUrl        String?
+  docFilePublicId   String?
+  insuranceFileUrl  String?
+  insurancePublicId String?
+  emergencyContact  String?
+  emergencyPhone    String?
+  category          String?
+  locations         MemberLocation[]
+  inviteStatus      InviteStatus     @default(PENDING)
+  clerkId           String?          @unique
+  role              Role             @default(STUDENT)
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
 
   @@index([clubId])
+  @@index([email])
 }
 
 model MemberLocation {
@@ -92,6 +86,7 @@ model MemberLocation {
 }
 
 enum Role {
+  SUPERADMIN
   ADMIN
   COACH
   STUDENT

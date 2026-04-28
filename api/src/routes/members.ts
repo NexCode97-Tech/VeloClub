@@ -26,7 +26,7 @@ function getId(req: Request): string {
 router.get('/', requireAuth, async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'No autenticado' });
   const members = await prisma.member.findMany({
-    where: { clubId: req.user.clubId },
+    where: { clubId: req.user.clubId ?? '' },
     include: { locations: { include: { location: true } } },
     orderBy: { fullName: 'asc' },
   });
@@ -38,7 +38,7 @@ router.get('/:id', requireAuth, async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'No autenticado' });
   const id = getId(req);
   const member = await prisma.member.findFirst({
-    where: { id, clubId: req.user.clubId },
+    where: { id, clubId: req.user.clubId ?? '' },
     include: { locations: { include: { location: true } } },
   });
   if (!member) return res.status(404).json({ error: 'Miembro no encontrado' });
@@ -58,7 +58,7 @@ router.post('/', requireAuth, async (req, res) => {
       ...rest,
       email: rest.email || undefined,
       birthDate: birthDate ? new Date(birthDate) : undefined,
-      clubId: req.user.clubId,
+      clubId: req.user.clubId ?? '',
       locations: locationIds?.length
         ? { create: locationIds.map((locId) => ({ locationId: locId })) }
         : undefined,
@@ -74,7 +74,7 @@ router.put('/:id', requireAuth, async (req, res) => {
   const id = getId(req);
 
   const existing = await prisma.member.findFirst({
-    where: { id, clubId: req.user.clubId },
+    where: { id, clubId: req.user.clubId ?? '' },
   });
   if (!existing) return res.status(404).json({ error: 'Miembro no encontrado' });
 
@@ -108,7 +108,7 @@ router.delete('/:id', requireAuth, async (req, res) => {
   const id = getId(req);
 
   const existing = await prisma.member.findFirst({
-    where: { id, clubId: req.user.clubId },
+    where: { id, clubId: req.user.clubId ?? '' },
   });
   if (!existing) return res.status(404).json({ error: 'Miembro no encontrado' });
   await prisma.member.delete({ where: { id } });
@@ -121,7 +121,7 @@ router.post('/:id/upload', requireAuth, async (req, res) => {
   const id = getId(req);
 
   const existing = await prisma.member.findFirst({
-    where: { id, clubId: req.user.clubId },
+    where: { id, clubId: req.user.clubId ?? '' },
   });
   if (!existing) return res.status(404).json({ error: 'Miembro no encontrado' });
 

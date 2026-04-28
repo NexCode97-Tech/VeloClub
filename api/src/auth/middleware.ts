@@ -16,7 +16,8 @@ declare global {
         name: string;
         picture?: string;
       };
-      user?: { id: string; clubId: string; role: string };
+      user?: { id: string; clubId: string | null; role: string };
+      clubId?: string;
     }
   }
 }

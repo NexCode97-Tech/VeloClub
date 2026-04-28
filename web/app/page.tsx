@@ -27,11 +27,8 @@ export default function HomePage() {
   return (
     <main className="min-h-screen bg-white">
       {/* Nav */}
-      <nav className="flex items-center justify-between px-8 py-4 border-b border-slate-100">
+      <nav className="flex items-center px-8 py-4 border-b border-slate-100">
         <span className="text-xl font-bold text-slate-900">VeloClub</span>
-        <Link href="/sign-in">
-          <Button size="sm">Iniciar sesión</Button>
-        </Link>
       </nav>
 
       {/* Hero */}

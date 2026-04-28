@@ -35,6 +35,15 @@ app.get('/reset-user/:email', async (req, res) => {
   }
 });
 
+// Endpoint temporal para listar usuarios en DB
+app.get('/debug-users', async (req, res) => {
+  const secret = req.query['secret'];
+  if (secret !== process.env.RESET_SECRET) return res.status(403).json({ error: 'Forbidden' });
+  const { prisma } = await import('./db/client');
+  const users = await prisma.user.findMany({ select: { email: true, role: true, profileComplete: true, clerkId: true } });
+  res.json({ users });
+});
+
 // Endpoint temporal para asignar rol SUPERADMIN por email
 app.get('/make-superadmin/:email', async (req, res) => {
   const secret = req.query['secret'];

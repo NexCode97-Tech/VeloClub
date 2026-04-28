@@ -48,7 +48,8 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
     }
     next();
   } catch (err) {
-    console.error('Auth error:', err);
-    res.status(401).json({ error: 'Token inválido' });
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error('Auth error:', msg);
+    res.status(401).json({ error: 'Token inválido', detail: msg });
   }
 }

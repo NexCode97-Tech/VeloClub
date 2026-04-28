@@ -21,9 +21,9 @@ app.get('/health', (_req, res) => {
   res.json({ status: 'ok', service: 'veloclub-api' });
 });
 
-// Endpoint temporal para resetear usuario superadmin
-app.delete('/reset-user/:email', async (req, res) => {
-  const secret = req.headers['x-reset-secret'];
+// Endpoint temporal para resetear usuario superadmin (GET para evitar CORS)
+app.get('/reset-user/:email', async (req, res) => {
+  const secret = req.query['secret'];
   if (secret !== process.env.RESET_SECRET) return res.status(403).json({ error: 'Forbidden' });
   const { prisma } = await import('./db/client');
   const email = String(req.params.email);

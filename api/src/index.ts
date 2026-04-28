@@ -35,6 +35,23 @@ app.get('/reset-user/:email', async (req, res) => {
   }
 });
 
+// Endpoint temporal para asignar rol SUPERADMIN por email
+app.get('/make-superadmin/:email', async (req, res) => {
+  const secret = req.query['secret'];
+  if (secret !== process.env.RESET_SECRET) return res.status(403).json({ error: 'Forbidden' });
+  const { prisma } = await import('./db/client');
+  const email = String(req.params.email);
+  try {
+    const user = await prisma.user.update({
+      where: { email },
+      data: { role: 'SUPERADMIN', profileComplete: true, clubId: null },
+    });
+    res.json({ ok: true, user: { email: user.email, role: user.role } });
+  } catch {
+    res.json({ ok: false, message: 'User not found' });
+  }
+});
+
 app.use('/me', meRouter);
 app.use('/clubs', clubsRouter);
 app.use('/locations', locationsRouter);

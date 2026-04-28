@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { UserButton } from '@clerk/nextjs';
 import {
@@ -36,8 +37,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       {/* Sidebar */}
       <aside className="w-64 bg-white border-r border-slate-200 flex flex-col">
         {/* Logo */}
-        <div className="px-6 py-5 border-b border-slate-200">
-          <h1 className="text-xl font-bold text-slate-900">VeloClub</h1>
+        <div className="px-6 py-4 border-b border-slate-200">
+          <Image src="/logo.png" alt="VeloClub" width={130} height={36} className="object-contain" />
         </div>
 
         {/* Nav */}

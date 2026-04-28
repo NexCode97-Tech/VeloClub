@@ -5,6 +5,7 @@ import { useEffect } from 'react';
 import { useAuth } from '@clerk/nextjs';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import Image from 'next/image';
 import { CheckCircle2, Users, CalendarCheck, CreditCard, Trophy } from 'lucide-react';
 
 const features = [
@@ -28,7 +29,7 @@ export default function HomePage() {
     <main className="min-h-screen bg-white">
       {/* Nav */}
       <nav className="flex items-center px-8 py-4 border-b border-slate-100">
-        <span className="text-xl font-bold text-slate-900">VeloClub</span>
+        <Image src="/logo.png" alt="VeloClub" width={140} height={40} className="object-contain" />
       </nav>
 
       {/* Hero */}

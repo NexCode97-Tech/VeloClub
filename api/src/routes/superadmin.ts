@@ -5,9 +5,10 @@ import { prisma } from '../db/client';
 
 const router = Router();
 
-// Middleware: solo superadmin
+// Middleware: solo superadmin (verifica email directamente, sin depender de la BD)
 function requireSuperadmin(req: any, res: any, next: any) {
-  if (!req.user || req.user.role !== 'SUPERADMIN') {
+  const superadminEmails = (process.env.SUPERADMIN_EMAILS ?? '').split(',').map((e: string) => e.trim()).filter(Boolean);
+  if (!req.auth || !superadminEmails.includes(req.auth.email)) {
     return res.status(403).json({ error: 'Acceso denegado' });
   }
   next();

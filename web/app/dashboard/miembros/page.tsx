@@ -27,7 +27,7 @@ const ROLE_COLORS: Record<string, string> = {
   ADMIN: 'bg-red-100 text-red-700', COACH: 'bg-blue-100 text-blue-700', STUDENT: 'bg-green-100 text-green-700',
 };
 
-const emptyForm = { fullName: '', email: '', phone: '', birthDate: '', category: '', role: 'STUDENT', locationIds: [] as string[] };
+const emptyForm: { fullName: string; email: string; phone: string; birthDate: string; category: string; role: string; locationIds: string[] } = { fullName: '', email: '', phone: '', birthDate: '', category: '', role: 'STUDENT', locationIds: [] };
 
 export default function MiembrosPage() {
   const { getToken } = useAuth();
@@ -215,7 +215,7 @@ export default function MiembrosPage() {
             </div>
             <div className="space-y-2">
               <Label>Rol</Label>
-              <Select value={form.role} onValueChange={v => setForm(f => ({ ...f, role: v }))}>
+              <Select value={form.role} onValueChange={v => setForm(f => ({ ...f, role: v ?? 'STUDENT' }))}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="STUDENT">Alumno</SelectItem>

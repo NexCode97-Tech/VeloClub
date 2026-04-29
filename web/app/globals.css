@@ -128,3 +128,11 @@
     @apply font-sans;
   }
 }
+
+/* Cursor pointer en botones de Clerk */
+.cl-formButtonPrimary,
+.cl-socialButtonsBlockButton,
+.cl-userButtonTrigger,
+button {
+  cursor: pointer;
+}

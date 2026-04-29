@@ -2,13 +2,12 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { usePathname, useRouter } from 'next/navigation';
-import { useClerk } from '@clerk/nextjs';
+import { usePathname } from 'next/navigation';
+import { UserButton } from '@clerk/nextjs';
 import {
   LayoutDashboard,
   Building2,
   Settings,
-  LogOut,
   ShieldCheck,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -21,8 +20,6 @@ const navItems = [
 
 export default function SuperadminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const router = useRouter();
-  const { signOut } = useClerk();
 
   return (
     <div className="flex min-h-screen bg-slate-50">
@@ -65,15 +62,10 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
           })}
         </nav>
 
-        {/* Sign out */}
-        <div className="px-3 py-4 border-t border-slate-200">
-          <button
-            onClick={() => signOut(() => router.push('/sign-in'))}
-            className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
-          >
-            <LogOut className="w-4 h-4 shrink-0" />
-            Cerrar sesión
-          </button>
+        {/* User */}
+        <div className="px-4 py-4 border-t border-slate-200 flex items-center gap-3">
+          <UserButton />
+          <span className="text-sm text-slate-600 truncate">Mi cuenta</span>
         </div>
       </aside>
 

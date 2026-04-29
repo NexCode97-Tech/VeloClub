@@ -3,7 +3,9 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import { UserButton } from '@clerk/nextjs';
+import { UserButton, useAuth } from '@clerk/nextjs';
+import { useEffect, useState } from 'react';
+import { apiFetch } from '@/lib/api-client';
 import {
   LayoutDashboard,
   Users,
@@ -29,8 +31,33 @@ const navItems = [
   { href: '/dashboard/reportes', label: 'Reportes', icon: BarChart2 },
 ];
 
+const roleLabels: Record<string, string> = {
+  ADMIN: 'Administrador',
+  COACH: 'Entrenador',
+  STUDENT: 'Deportista',
+};
+
+const roleColors: Record<string, string> = {
+  ADMIN: 'bg-blue-100 text-blue-700',
+  COACH: 'bg-green-100 text-green-700',
+  STUDENT: 'bg-slate-100 text-slate-600',
+};
+
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const { getToken, isLoaded, isSignedIn } = useAuth();
+  const [role, setRole] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!isLoaded || !isSignedIn) return;
+    (async () => {
+      try {
+        const token = await getToken();
+        const res = await apiFetch<{ user?: { role: string } }>('/me', { token });
+        setRole(res.user?.role ?? null);
+      } catch {}
+    })();
+  }, [isLoaded, isSignedIn]);
 
   return (
     <div className="flex min-h-screen bg-slate-50">
@@ -40,6 +67,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <div className="px-6 py-4 border-b border-slate-200">
           <Image src="/logo.png" alt="VeloClub" width={130} height={36} className="object-contain" />
         </div>
+
+        {/* Role badge */}
+        {role && (
+          <div className="px-4 py-3 border-b border-slate-100">
+            <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${roleColors[role] ?? 'bg-slate-100 text-slate-600'}`}>
+              {roleLabels[role] ?? role}
+            </span>
+          </div>
+        )}
 
         {/* Nav */}
         <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">

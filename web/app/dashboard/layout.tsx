@@ -62,11 +62,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         if (res.status === 'inactive') { router.replace('/inactivo'); return; }
         if (res.status === 'superadmin') { router.replace('/superadmin'); return; }
         if (res.status === 'complete_profile') { router.replace('/completar-perfil'); return; }
+        // Solo mostrar dashboard si el acceso está confirmado
         setRole(res.user?.role ?? null);
+        setChecking(false);
       } catch {
         router.replace('/no-access');
-      } finally {
-        setChecking(false);
       }
     })();
   }, [isLoaded, isSignedIn]);

@@ -35,10 +35,9 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
         const token = await getToken();
         const res = await apiFetch<{ status: string }>('/me', { token });
         if (res.status !== 'superadmin') { router.replace('/dashboard'); return; }
+        setChecking(false);
       } catch {
         router.replace('/sign-in');
-      } finally {
-        setChecking(false);
       }
     })();
   }, [isLoaded, isSignedIn]);

@@ -30,7 +30,8 @@
       "Bash(cp \"/mnt/c/Users/socia/OneDrive/Desktop/Claude/VeloClub/Favicon.png\" \"/mnt/c/Users/socia/OneDrive/Desktop/Claude/VeloClub/web/public/favicon.png\")",
       "Bash(cp \"/mnt/c/Users/socia/OneDrive/Desktop/Claude/VeloClub/Favicon.png\" \"/mnt/c/Users/socia/OneDrive/Desktop/Claude/VeloClub/web/app/icon.png\")",
       "mcp__d6d432c8-0c72-4593-a08d-a0f837b05bfd__list_teams",
-      "mcp__d6d432c8-0c72-4593-a08d-a0f837b05bfd__list_projects"
+      "mcp__d6d432c8-0c72-4593-a08d-a0f837b05bfd__list_projects",
+      "Bash(git rebase *)"
     ]
   }
 }

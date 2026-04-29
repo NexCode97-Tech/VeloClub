@@ -133,6 +133,7 @@
 .cl-formButtonPrimary,
 .cl-socialButtonsBlockButton,
 .cl-userButtonTrigger,
+.cl-userButtonBox,
 button {
   cursor: pointer;
 }

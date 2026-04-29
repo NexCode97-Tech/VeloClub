@@ -7,18 +7,30 @@ export default function manifest(): MetadataRoute.Manifest {
     description: "Plataforma para clubes de patinaje",
     start_url: "/dashboard",
     display: "standalone",
-    background_color: "#f8fafc",
+    background_color: "#ffffff",
     theme_color: "#0f172a",
     orientation: "portrait",
     icons: [
       {
-        src: "/logo.png",
+        src: "/icon-desktop-192.png",
         sizes: "192x192",
         type: "image/png",
         purpose: "any",
       },
       {
-        src: "/logo.png",
+        src: "/icon-desktop-512.png",
+        sizes: "512x512",
+        type: "image/png",
+        purpose: "any",
+      },
+      {
+        src: "/icon-maskable-192.png",
+        sizes: "192x192",
+        type: "image/png",
+        purpose: "maskable",
+      },
+      {
+        src: "/icon-maskable-512.png",
         sizes: "512x512",
         type: "image/png",
         purpose: "maskable",

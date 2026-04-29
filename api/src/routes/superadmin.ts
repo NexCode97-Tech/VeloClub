@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { requireAuth } from '../auth/middleware';
 import { prisma } from '../db/client';
+import { addToAllowlist, removeFromAllowlist } from '../lib/clerk-allowlist';
 
 const router = Router();
 
@@ -58,6 +59,9 @@ router.post('/clubs', requireAuth, requireSuperadmin, async (req, res) => {
     include: { _count: { select: { members: true } } },
   });
 
+  // Agregar email del admin al allowlist de Clerk
+  await addToAllowlist(adminEmail);
+
   res.status(201).json({ club });
 });
 
@@ -77,6 +81,11 @@ router.patch('/clubs/:id/toggle', requireAuth, requireSuperadmin, async (req, re
 // DELETE /superadmin/clubs/:id
 router.delete('/clubs/:id', requireAuth, requireSuperadmin, async (req, res) => {
   const id = String(req.params.id);
+
+  // Quitar emails de los miembros del allowlist de Clerk
+  const members = await prisma.member.findMany({ where: { clubId: id }, select: { email: true } });
+  await Promise.all(members.filter(m => m.email).map(m => removeFromAllowlist(m.email!)));
+
   await prisma.club.delete({ where: { id } });
   res.json({ ok: true });
 });

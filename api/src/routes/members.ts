@@ -2,6 +2,7 @@ import { Router, Request } from 'express';
 import { z } from 'zod';
 import { requireAuth } from '../auth/middleware';
 import { prisma } from '../db/client';
+import { addToAllowlist, removeFromAllowlist } from '../lib/clerk-allowlist';
 
 const router = Router();
 
@@ -65,6 +66,10 @@ router.post('/', requireAuth, async (req, res) => {
     },
     include: { locations: { include: { location: true } } },
   });
+
+  // Agregar email al allowlist de Clerk
+  if (member.email) await addToAllowlist(member.email);
+
   res.status(201).json({ member });
 });
 
@@ -111,6 +116,7 @@ router.delete('/:id', requireAuth, async (req, res) => {
     where: { id, clubId: req.user.clubId ?? '' },
   });
   if (!existing) return res.status(404).json({ error: 'Miembro no encontrado' });
+  if (existing.email) await removeFromAllowlist(existing.email);
   await prisma.member.delete({ where: { id } });
   res.json({ ok: true });
 });

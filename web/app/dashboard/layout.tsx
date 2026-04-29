@@ -100,7 +100,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </nav>
 
         {/* User */}
-        <div className="px-4 py-4 border-t border-slate-200 flex items-center gap-3 cursor-pointer">
+        <div className="px-4 py-4 border-t border-slate-200 flex items-center gap-3">
           <UserButton />
           <span className="text-sm text-slate-600 truncate">Mi cuenta</span>
         </div>

@@ -2,10 +2,11 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { UserButton, useAuth } from '@clerk/nextjs';
 import { useEffect, useState } from 'react';
 import { apiFetch } from '@/lib/api-client';
+import LoadingScreen from '@/components/ui/loading-screen';
 import {
   LayoutDashboard,
   Users,
@@ -45,19 +46,32 @@ const roleColors: Record<string, string> = {
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
   const { getToken, isLoaded, isSignedIn } = useAuth();
   const [role, setRole] = useState<string | null>(null);
+  const [checking, setChecking] = useState(true);
 
   useEffect(() => {
-    if (!isLoaded || !isSignedIn) return;
+    if (!isLoaded) return;
+    if (!isSignedIn) { router.push('/sign-in'); return; }
     (async () => {
       try {
         const token = await getToken();
-        const res = await apiFetch<{ user?: { role: string } }>('/me', { token });
+        const res = await apiFetch<{ status: string; user?: { role: string } }>('/me', { token });
+        if (res.status === 'no_access') { router.replace('/no-access'); return; }
+        if (res.status === 'inactive') { router.replace('/inactivo'); return; }
+        if (res.status === 'superadmin') { router.replace('/superadmin'); return; }
+        if (res.status === 'complete_profile') { router.replace('/completar-perfil'); return; }
         setRole(res.user?.role ?? null);
-      } catch {}
+      } catch {
+        router.replace('/no-access');
+      } finally {
+        setChecking(false);
+      }
     })();
   }, [isLoaded, isSignedIn]);
+
+  if (checking) return <LoadingScreen />;
 
   return (
     <div className="flex min-h-screen bg-slate-50">

@@ -2,8 +2,11 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { usePathname } from 'next/navigation';
-import { UserButton } from '@clerk/nextjs';
+import { usePathname, useRouter } from 'next/navigation';
+import { UserButton, useAuth } from '@clerk/nextjs';
+import { useEffect, useState } from 'react';
+import { apiFetch } from '@/lib/api-client';
+import LoadingScreen from '@/components/ui/loading-screen';
 import {
   LayoutDashboard,
   Building2,
@@ -20,6 +23,27 @@ const navItems = [
 
 export default function SuperadminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const { getToken, isLoaded, isSignedIn } = useAuth();
+  const [checking, setChecking] = useState(true);
+
+  useEffect(() => {
+    if (!isLoaded) return;
+    if (!isSignedIn) { router.push('/sign-in'); return; }
+    (async () => {
+      try {
+        const token = await getToken();
+        const res = await apiFetch<{ status: string }>('/me', { token });
+        if (res.status !== 'superadmin') { router.replace('/dashboard'); return; }
+      } catch {
+        router.replace('/sign-in');
+      } finally {
+        setChecking(false);
+      }
+    })();
+  }, [isLoaded, isSignedIn]);
+
+  if (checking) return <LoadingScreen />;
 
   return (
     <div className="flex min-h-screen bg-slate-50">

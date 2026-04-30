@@ -24,7 +24,14 @@ interface Member {
 
 const ROLES: Record<string, string> = { ADMIN: 'Admin', COACH: 'Entrenador', STUDENT: 'Alumno' };
 const ROLE_COLORS: Record<string, string> = {
-  ADMIN: 'bg-red-100 text-red-700', COACH: 'bg-blue-100 text-blue-700', STUDENT: 'bg-green-100 text-green-700',
+  ADMIN:   'bg-amber-100 text-amber-700',
+  COACH:   'bg-emerald-100 text-emerald-700',
+  STUDENT: 'bg-violet-100 text-violet-700',
+};
+const ROLE_AVATAR: Record<string, string> = {
+  ADMIN:   'linear-gradient(135deg,#FFB703,#FB8500)',
+  COACH:   'linear-gradient(135deg,#06D6A0,#0CB68D)',
+  STUDENT: 'linear-gradient(135deg,#7C3AED,#A855F7)',
 };
 
 const emptyForm: { fullName: string; email: string; phone: string; birthDate: string; category: string; role: string; locationIds: string[] } = { fullName: '', email: '', phone: '', birthDate: '', category: '', role: 'STUDENT', locationIds: [] };
@@ -111,76 +118,150 @@ export default function MiembrosPage() {
   );
 
   return (
-    <div className="p-8">
-      <div className="flex items-center justify-between mb-6">
+    <div className="min-h-full bg-background">
+      {/* Header */}
+      <div className="px-5 pt-5 pb-4 bg-card border-b border-border flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-slate-900">Miembros</h2>
-          <p className="text-slate-500 text-sm mt-1">{members.length} miembro{members.length !== 1 ? 's' : ''} registrado{members.length !== 1 ? 's' : ''}</p>
+          <h1 className="text-[18px] font-bold text-foreground" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
+            Miembros
+          </h1>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            {members.length} miembro{members.length !== 1 ? 's' : ''} registrado{members.length !== 1 ? 's' : ''}
+          </p>
         </div>
-        <Button onClick={openNew}><Plus className="w-4 h-4 mr-2" />Nuevo miembro</Button>
+        <button
+          onClick={openNew}
+          className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold text-white transition-colors"
+          style={{ background: '#4361EE' }}
+        >
+          <Plus className="w-4 h-4" />
+          <span className="hidden sm:inline">Nuevo</span>
+        </button>
       </div>
 
-      {/* Search */}
-      <div className="relative mb-4">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-        <Input className="pl-9" placeholder="Buscar por nombre o email..." value={search} onChange={e => setSearch(e.target.value)} />
-      </div>
-
-      {loading ? (
-        <p className="text-slate-500">Cargando...</p>
-      ) : filtered.length === 0 ? (
-        <div className="bg-white rounded-xl border border-slate-200 p-12 text-center">
-          <Users className="w-10 h-10 text-slate-300 mx-auto mb-3" />
-          <p className="text-slate-500">{search ? 'Sin resultados.' : 'No hay miembros registrados aún.'}</p>
-          {!search && <Button variant="outline" className="mt-4" onClick={openNew}>Agregar primer miembro</Button>}
+      <div className="px-4 pt-4 space-y-3">
+        {/* Search */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            className="pl-9 bg-white border-border rounded-xl"
+            placeholder="Buscar por nombre o email..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+          />
         </div>
-      ) : (
-        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-          <table className="w-full text-sm">
-            <thead className="bg-slate-50 border-b border-slate-200">
-              <tr>
-                <th className="text-left px-4 py-3 font-medium text-slate-600">Nombre</th>
-                <th className="text-left px-4 py-3 font-medium text-slate-600">Email</th>
-                <th className="text-left px-4 py-3 font-medium text-slate-600">Rol</th>
-                <th className="text-left px-4 py-3 font-medium text-slate-600">Sedes</th>
-                <th className="text-left px-4 py-3 font-medium text-slate-600">Categoría</th>
-                <th className="px-4 py-3"></th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
+
+        {loading ? (
+          <div className="flex justify-center py-10">
+            <div className="w-6 h-6 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="bg-white rounded-xl border border-border p-10 text-center">
+            <Users className="w-10 h-10 text-muted-foreground/30 mx-auto mb-3" />
+            <p className="text-sm text-muted-foreground">{search ? 'Sin resultados.' : 'No hay miembros registrados aún.'}</p>
+            {!search && (
+              <button onClick={openNew} className="mt-4 px-4 py-2 rounded-xl text-sm font-semibold border border-border text-muted-foreground hover:bg-secondary transition-colors">
+                Agregar primer miembro
+              </button>
+            )}
+          </div>
+        ) : (
+          /* Mobile card list / Desktop table */
+          <>
+            {/* Mobile cards */}
+            <div className="md:hidden space-y-2 pb-4">
               {filtered.map(m => (
-                <tr key={m.id} className="hover:bg-slate-50 transition-colors">
-                  <td className="px-4 py-3 font-medium text-slate-900">{m.fullName}</td>
-                  <td className="px-4 py-3 text-slate-500">{m.email ?? '—'}</td>
-                  <td className="px-4 py-3">
-                    <span className={`text-xs font-medium px-2 py-1 rounded-full ${ROLE_COLORS[m.role]}`}>
-                      {ROLES[m.role]}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex flex-wrap gap-1">
-                      {m.locations.length === 0
-                        ? <span className="text-slate-400">—</span>
-                        : m.locations.map(l => (
-                          <Badge key={l.location.id} variant="secondary" className="text-xs">{l.location.name}</Badge>
-                        ))}
+                <div key={m.id} className="bg-white border border-border rounded-xl px-3 py-3 flex items-center gap-3">
+                  <div
+                    className="w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0"
+                    style={{ background: ROLE_AVATAR[m.role] ?? ROLE_AVATAR.STUDENT }}
+                  >
+                    {m.fullName.split(' ').slice(0, 2).map(w => w[0]).join('')}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5 mb-0.5">
+                      <p className="text-[13px] font-bold text-foreground truncate">{m.fullName}</p>
+                      <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full shrink-0 ${ROLE_COLORS[m.role]}`}>
+                        {ROLES[m.role]}
+                      </span>
                     </div>
-                  </td>
-                  <td className="px-4 py-3 text-slate-500">{m.category ?? '—'}</td>
-                  <td className="px-4 py-3">
-                    <div className="flex gap-1 justify-end">
-                      <Button size="sm" variant="ghost" onClick={() => openEdit(m)}><Pencil className="w-4 h-4" /></Button>
-                      <Button size="sm" variant="ghost" className="text-red-500 hover:text-red-700" onClick={() => handleDelete(m.id)}>
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </td>
-                </tr>
+                    <p className="text-[11px] text-muted-foreground truncate">{m.email ?? '—'}</p>
+                    {m.category && <p className="text-[10px] font-semibold mt-0.5" style={{ color: '#4361EE' }}>{m.category}</p>}
+                    {m.locations.length > 0 && (
+                      <p className="text-[10px] text-muted-foreground mt-0.5">{m.locations.map(l => l.location.name).join(' · ')}</p>
+                    )}
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <button onClick={() => openEdit(m)} className="w-7 h-7 rounded-lg bg-secondary flex items-center justify-center text-muted-foreground hover:text-foreground">
+                      <Pencil className="w-3.5 h-3.5" />
+                    </button>
+                    <button onClick={() => handleDelete(m.id)} className="w-7 h-7 rounded-lg bg-red-50 flex items-center justify-center text-red-400 hover:text-red-600">
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
               ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+            </div>
+
+            {/* Desktop table */}
+            <div className="hidden md:block bg-white rounded-xl border border-border overflow-hidden mb-4">
+              <table className="w-full text-sm">
+                <thead className="bg-secondary border-b border-border">
+                  <tr>
+                    <th className="text-left px-4 py-3 font-semibold text-muted-foreground text-xs uppercase tracking-wide">Nombre</th>
+                    <th className="text-left px-4 py-3 font-semibold text-muted-foreground text-xs uppercase tracking-wide">Email</th>
+                    <th className="text-left px-4 py-3 font-semibold text-muted-foreground text-xs uppercase tracking-wide">Rol</th>
+                    <th className="text-left px-4 py-3 font-semibold text-muted-foreground text-xs uppercase tracking-wide">Sedes</th>
+                    <th className="text-left px-4 py-3 font-semibold text-muted-foreground text-xs uppercase tracking-wide">Categoria</th>
+                    <th className="px-4 py-3"></th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {filtered.map(m => (
+                    <tr key={m.id} className="hover:bg-secondary/50 transition-colors">
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-2">
+                          <div
+                            className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold text-white shrink-0"
+                            style={{ background: ROLE_AVATAR[m.role] ?? ROLE_AVATAR.STUDENT }}
+                          >
+                            {m.fullName.split(' ').slice(0, 2).map(w => w[0]).join('')}
+                          </div>
+                          <span className="font-semibold text-foreground">{m.fullName}</span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 text-muted-foreground">{m.email ?? '—'}</td>
+                      <td className="px-4 py-3">
+                        <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${ROLE_COLORS[m.role]}`}>
+                          {ROLES[m.role]}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex flex-wrap gap-1">
+                          {m.locations.length === 0
+                            ? <span className="text-muted-foreground">—</span>
+                            : m.locations.map(l => (
+                              <Badge key={l.location.id} variant="secondary" className="text-xs">{l.location.name}</Badge>
+                            ))}
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 text-muted-foreground">{m.category ?? '—'}</td>
+                      <td className="px-4 py-3">
+                        <div className="flex gap-1 justify-end">
+                          <Button size="sm" variant="ghost" onClick={() => openEdit(m)}><Pencil className="w-4 h-4" /></Button>
+                          <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive" onClick={() => handleDelete(m.id)}>
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
+        )}
+      </div>
 
       {/* Dialog */}
       <Dialog open={open} onOpenChange={setOpen}>
@@ -235,8 +316,8 @@ export default function MiembrosPage() {
                       onClick={() => toggleLocation(loc.id)}
                       className={`px-3 py-1 rounded-full text-sm border transition-colors ${
                         form.locationIds.includes(loc.id)
-                          ? 'bg-slate-900 text-white border-slate-900'
-                          : 'bg-white text-slate-600 border-slate-300 hover:border-slate-500'
+                          ? 'bg-primary text-primary-foreground border-primary'
+                          : 'bg-white text-muted-foreground border-border hover:border-primary'
                       }`}
                     >
                       {loc.name}

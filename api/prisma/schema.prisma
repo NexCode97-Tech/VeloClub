@@ -7,16 +7,25 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// ─── Club ────────────────────────────────────────────────────────────────────
+
 model Club {
-  id        String     @id @default(cuid())
-  name      String
-  active    Boolean    @default(true)
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
-  users     User[]
-  locations Location[]
-  members   Member[]
+  id             String          @id @default(cuid())
+  name           String
+  active         Boolean         @default(true)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  users          User[]
+  locations      Location[]
+  members        Member[]
+  payments       Payment[]
+  cashEntries    CashEntry[]
+  competitions   Competition[]
+  calendarEvents CalendarEvent[]
+  attendances    Attendance[]
 }
+
+// ─── User (staff: ADMIN, COACH, SUPERADMIN) ──────────────────────────────────
 
 model User {
   id              String   @id @default(cuid())
@@ -34,18 +43,24 @@ model User {
   @@index([clubId])
 }
 
+// ─── Location (sedes) ────────────────────────────────────────────────────────
+
 model Location {
-  id        String           @id @default(cuid())
-  name      String
-  address   String?
-  clubId    String
-  club      Club             @relation(fields: [clubId], references: [id], onDelete: Cascade)
-  members   MemberLocation[]
-  createdAt DateTime         @default(now())
-  updatedAt DateTime         @updatedAt
+  id             String           @id @default(cuid())
+  name           String
+  address        String?
+  clubId         String
+  club           Club             @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  members        MemberLocation[]
+  attendances    Attendance[]
+  calendarEvents CalendarEvent[]
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
 
   @@index([clubId])
 }
+
+// ─── Member (deportistas) ────────────────────────────────────────────────────
 
 model Member {
   id                String           @id @default(cuid())
@@ -65,7 +80,11 @@ model Member {
   emergencyContact  String?
   emergencyPhone    String?
   category          String?
+  paymentDueDay     Int?
   locations         MemberLocation[]
+  attendances       Attendance[]
+  payments          Payment[]
+  eventResults      EventResult[]
   inviteStatus      InviteStatus     @default(PENDING)
   clerkId           String?          @unique
   role              Role             @default(STUDENT)
@@ -85,6 +104,133 @@ model MemberLocation {
   @@id([memberId, locationId])
 }
 
+// ─── Attendance (asistencia) ─────────────────────────────────────────────────
+
+model Attendance {
+  id         String           @id @default(cuid())
+  clubId     String
+  club       Club             @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  memberId   String
+  member     Member           @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  locationId String?
+  location   Location?        @relation(fields: [locationId], references: [id])
+  date       DateTime         @db.Date
+  status     AttendanceStatus
+  notes      String?
+  createdAt  DateTime         @default(now())
+
+  @@unique([memberId, date])
+  @@index([clubId, date])
+  @@index([memberId])
+}
+
+// ─── Payment (pagos de mensualidad) ──────────────────────────────────────────
+
+model Payment {
+  id        String        @id @default(cuid())
+  clubId    String
+  club      Club          @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  memberId  String
+  member    Member        @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  amount    Float
+  month     Int
+  year      Int
+  dueDate   DateTime?
+  paidAt    DateTime?
+  status    PaymentStatus @default(PENDING)
+  notes     String?
+  cashEntry CashEntry?
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  @@index([clubId])
+  @@index([memberId])
+  @@index([clubId, year, month])
+}
+
+// ─── CashEntry (flujo de caja) ───────────────────────────────────────────────
+
+model CashEntry {
+  id          String        @id @default(cuid())
+  clubId      String
+  club        Club          @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  type        CashEntryType
+  amount      Float
+  description String
+  date        DateTime      @default(now())
+  paymentId   String?       @unique
+  payment     Payment?      @relation(fields: [paymentId], references: [id])
+  createdAt   DateTime      @default(now())
+
+  @@index([clubId])
+  @@index([clubId, date])
+}
+
+// ─── Competition + Events + Results (logros) ─────────────────────────────────
+
+model Competition {
+  id        String             @id @default(cuid())
+  clubId    String
+  club      Club               @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  name      String
+  place     String?
+  date      DateTime
+  events    CompetitionEvent[]
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+
+  @@index([clubId])
+}
+
+model CompetitionEvent {
+  id            String        @id @default(cuid())
+  competitionId String
+  competition   Competition   @relation(fields: [competitionId], references: [id], onDelete: Cascade)
+  name          String
+  results       EventResult[]
+  createdAt     DateTime      @default(now())
+}
+
+model EventResult {
+  id           String           @id @default(cuid())
+  eventId      String
+  event        CompetitionEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  memberId     String
+  member       Member           @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  position     Int?
+  category     String?
+  observations String?
+  createdAt    DateTime         @default(now())
+
+  @@unique([eventId, memberId])
+  @@index([memberId])
+}
+
+// ─── CalendarEvent (calendario) ──────────────────────────────────────────────
+
+model CalendarEvent {
+  id          String            @id @default(cuid())
+  clubId      String
+  club        Club              @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  title       String
+  type        CalendarEventType
+  description String?
+  startDate   DateTime
+  endDate     DateTime?
+  allDay      Boolean           @default(true)
+  recurrence  RecurrenceType    @default(NONE)
+  weekDays    Int[]
+  locationId  String?
+  location    Location?         @relation(fields: [locationId], references: [id])
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  @@index([clubId])
+  @@index([clubId, startDate])
+}
+
+// ─── Enums ───────────────────────────────────────────────────────────────────
+
 enum Role {
   SUPERADMIN
   ADMIN
@@ -95,4 +241,37 @@ enum Role {
 enum InviteStatus {
   PENDING
   ACCEPTED
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  MEDICAL_EXCUSE
+  LATE
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  OVERDUE
+  REFUNDED
+}
+
+enum CashEntryType {
+  INCOME
+  EXPENSE
+  REFUND
+}
+
+enum CalendarEventType {
+  TRAINING
+  MEETUP
+  COMPETITION
+}
+
+enum RecurrenceType {
+  NONE
+  DAILY
+  WEEKLY
+  CUSTOM
 }

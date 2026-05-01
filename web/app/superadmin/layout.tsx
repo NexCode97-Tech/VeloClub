@@ -1,26 +1,60 @@
 'use client';
 
-import Link from 'next/link';
-import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { UserButton, useAuth } from '@clerk/nextjs';
 import { useEffect, useState } from 'react';
 import { apiFetch } from '@/lib/api-client';
 import LoadingScreen from '@/components/ui/loading-screen';
-import {
-  LayoutDashboard,
-  Building2,
-  Settings,
-  ShieldCheck,
-  RefreshCw,
-} from 'lucide-react';
-import { cn } from '@/lib/utils';
+import Link from 'next/link';
 
-const navItems = [
-  { href: '/superadmin',               label: 'Dashboard',     icon: LayoutDashboard, exact: true  },
-  { href: '/superadmin/clubs',         label: 'Clubs',         icon: Building2,       exact: false },
-  { href: '/superadmin/configuracion', label: 'Configuración', icon: Settings,        exact: false },
+const TABS = [
+  {
+    href: '/superadmin',
+    label: 'Dashboard',
+    exact: true,
+    icon: (c: string) => (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+        <rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>
+      </svg>
+    ),
+  },
+  {
+    href: '/superadmin/clubs',
+    label: 'Clubs',
+    exact: false,
+    icon: (c: string) => (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+        <polyline points="9 22 9 12 15 12 15 22"/>
+      </svg>
+    ),
+  },
+  {
+    href: '/superadmin/finanzas',
+    label: 'Finanzas',
+    exact: false,
+    icon: (c: string) => (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <line x1="12" y1="1" x2="12" y2="23"/>
+        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+      </svg>
+    ),
+  },
+  {
+    href: '/superadmin/configuracion',
+    label: 'Config',
+    exact: false,
+    icon: (c: string) => (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+      </svg>
+    ),
+  },
 ];
+
+const ACCENT = '#7C3AED';
 
 export default function SuperadminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -46,83 +80,60 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
   if (checking) return <LoadingScreen />;
 
   return (
-    <div className="flex h-dvh overflow-hidden bg-slate-50">
+    <div
+      className="flex flex-col h-dvh overflow-hidden"
+      style={{ background: '#F7F7FB', fontFamily: 'Plus Jakarta Sans, sans-serif' }}
+    >
+      {/* Main content */}
+      <main className="flex-1 overflow-y-auto overflow-x-hidden">
+        {children}
+      </main>
 
-      {/* Sidebar — iconos en móvil, iconos+texto en desktop */}
-      <aside className="w-14 md:w-64 bg-white border-r border-slate-200 flex flex-col shrink-0 transition-all duration-200">
-
-        {/* Logo + refresh */}
-        <div className="flex items-center justify-center md:justify-between px-0 md:px-5 py-4 border-b border-slate-200 min-h-[60px]">
-          <Image
-            src="/logo.png"
-            alt="VeloClub"
-            width={80}
-            height={24}
-            className="object-contain hidden md:block"
-          />
-          <Image
-            src="/favicon.png"
-            alt="VeloClub"
-            width={28}
-            height={28}
-            className="object-contain md:hidden rounded-md"
-          />
-          <button
-            onClick={() => window.location.reload()}
-            title="Actualizar"
-            className="hidden md:flex p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
-          >
-            <RefreshCw className="w-4 h-4" />
-          </button>
-        </div>
-
-        {/* Role badge — solo en desktop */}
-        <div className="hidden md:flex px-4 py-3 border-b border-slate-100 items-center gap-2">
-          <ShieldCheck className="w-4 h-4 text-purple-600" />
-          <span className="text-xs font-semibold text-purple-700 bg-purple-100 px-2 py-0.5 rounded-full">
-            Super Administrador
-          </span>
-        </div>
-
-        {/* Badge ícono — solo en móvil */}
-        <div className="md:hidden flex justify-center py-2 border-b border-slate-100">
-          <ShieldCheck className="w-4 h-4 text-purple-600" />
-        </div>
-
-        {/* Nav */}
-        <nav className="flex-1 px-2 py-3 space-y-1 overflow-y-auto">
-          {navItems.map(({ href, label, icon: Icon, exact }) => {
-            const active = exact ? pathname === href : pathname.startsWith(href);
+      {/* Bottom Tab Nav */}
+      <div
+        className="shrink-0"
+        style={{
+          background: '#FFFFFF',
+          borderTop: '1.5px solid rgba(120,80,200,0.10)',
+          boxShadow: '0 -4px 24px rgba(124,58,237,0.06)',
+        }}
+      >
+        <div className="flex items-center pt-1.5 pb-1">
+          {TABS.map((tab) => {
+            const active = tab.exact ? pathname === tab.href : pathname.startsWith(tab.href);
+            const color = active ? ACCENT : '#8E87A8';
             return (
               <Link
-                key={href}
-                href={href}
-                title={label}
-                className={cn(
-                  'flex items-center justify-center md:justify-start gap-3 px-0 md:px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
-                  active
-                    ? 'bg-purple-600 text-white'
-                    : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900'
-                )}
+                key={tab.href}
+                href={tab.href}
+                className="flex-1 flex flex-col items-center gap-1 py-1 relative"
               >
-                <Icon className="w-5 h-5 shrink-0" />
-                <span className="hidden md:block">{label}</span>
+                {active && (
+                  <div
+                    className="absolute top-0 left-1/2 -translate-x-1/2 w-11 h-8 rounded-xl"
+                    style={{ background: 'rgba(124,58,237,0.08)' }}
+                  />
+                )}
+                <div className="relative z-10">{tab.icon(color)}</div>
+                <span
+                  className="relative z-10 text-[9.5px] tracking-wide"
+                  style={{ color, fontWeight: active ? 700 : 500 }}
+                >
+                  {tab.label}
+                </span>
               </Link>
             );
           })}
-        </nav>
-
-        {/* Mi cuenta */}
-        <div className="flex items-center justify-center md:justify-start gap-3 px-0 md:px-4 py-4 border-t border-slate-200 shrink-0">
-          <UserButton />
-          <span className="hidden md:block text-sm text-slate-600 truncate">Mi cuenta</span>
+          {/* Account button */}
+          <div className="flex-1 flex flex-col items-center gap-1 py-1">
+            <UserButton />
+          </div>
         </div>
-      </aside>
-
-      {/* Main */}
-      <main className="flex-1 overflow-y-auto">
-        {children}
-      </main>
+        {/* Home indicator */}
+        <div className="flex justify-center pb-1.5">
+          <div className="w-24 h-1 rounded-full bg-[#8E87A8] opacity-20" />
+        </div>
+      </div>
     </div>
   );
 }

@@ -77,11 +77,79 @@ router.patch('/clubs/:id/toggle', requireAuth, requireSuperadmin, async (req, re
   res.json({ club: updated });
 });
 
+// PATCH /superadmin/clubs/:id — editar nombre del club
+router.patch('/clubs/:id', requireAuth, requireSuperadmin, async (req, res) => {
+  const id = String(req.params.id);
+  const { name } = req.body;
+  if (!name || String(name).trim().length < 2) return res.status(400).json({ error: 'Nombre inválido' });
+  const club = await prisma.club.update({ where: { id }, data: { name: String(name).trim() } });
+  res.json({ club });
+});
+
 router.delete('/clubs/:id', requireAuth, requireSuperadmin, async (req, res) => {
   const id = String(req.params.id);
   const members = await prisma.member.findMany({ where: { clubId: id }, select: { email: true } });
   await Promise.all(members.filter(m => m.email).map(m => removeFromAllowlist(m.email!)));
   await prisma.club.delete({ where: { id } });
+  res.json({ ok: true });
+});
+
+// GET /superadmin/clubs/:id/miembros — miembros no-STUDENT de un club
+router.get('/clubs/:id/miembros', requireAuth, requireSuperadmin, async (req, res) => {
+  const id = String(req.params.id);
+  const members = await prisma.member.findMany({
+    where: { clubId: id, role: { in: ['ADMIN', 'COACH'] } },
+    select: { id: true, fullName: true, email: true, role: true, inviteStatus: true },
+    orderBy: { createdAt: 'asc' },
+  });
+  res.json({ members });
+});
+
+// POST /superadmin/clubs/:id/miembros — agregar ADMIN o COACH a un club
+const addMemberSchema = z.object({
+  fullName: z.string().min(2).max(100),
+  email:    z.string().email(),
+  role:     z.enum(['ADMIN', 'COACH']),
+});
+
+router.post('/clubs/:id/miembros', requireAuth, requireSuperadmin, async (req, res) => {
+  const clubId = String(req.params.id);
+  const parsed = addMemberSchema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: parsed.error.issues });
+
+  const { fullName, email, role } = parsed.data;
+
+  const existing = await prisma.member.findFirst({ where: { email } });
+  if (existing) return res.status(400).json({ error: 'Este email ya está registrado' });
+
+  const member = await prisma.member.create({
+    data: { clubId, fullName, email, role, inviteStatus: 'PENDING' },
+  });
+
+  await addToAllowlist(email);
+
+  const club = await prisma.club.findUnique({ where: { id: clubId }, select: { name: true } });
+  const roleLabel = role === 'ADMIN' ? 'administrador' : 'entrenador';
+  await crearNotificacion('CLUB_CREADO', 'Nuevo miembro agregado', `${fullName} fue agregado como ${roleLabel} en ${club?.name}.`);
+
+  res.status(201).json({ member });
+});
+
+// PATCH /superadmin/clubs/:clubId/miembros/:memberId — cambiar rol
+router.patch('/clubs/:clubId/miembros/:memberId', requireAuth, requireSuperadmin, async (req, res) => {
+  const memberId = String(req.params.memberId);
+  const { role } = req.body;
+  if (!['ADMIN', 'COACH'].includes(role)) return res.status(400).json({ error: 'Rol inválido' });
+  const member = await prisma.member.update({ where: { id: memberId }, data: { role } });
+  res.json({ member });
+});
+
+// DELETE /superadmin/clubs/:clubId/miembros/:memberId
+router.delete('/clubs/:clubId/miembros/:memberId', requireAuth, requireSuperadmin, async (req, res) => {
+  const memberId = String(req.params.memberId);
+  const member = await prisma.member.findUnique({ where: { id: memberId }, select: { email: true } });
+  if (member?.email) await removeFromAllowlist(member.email);
+  await prisma.member.delete({ where: { id: memberId } });
   res.json({ ok: true });
 });
 

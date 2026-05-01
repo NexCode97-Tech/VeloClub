@@ -186,7 +186,7 @@ export default function ClubsPage() {
             ].map(({ label, key, type }) => (
               <div key={key} className="mb-2">
                 <p className="text-[11px] font-semibold mb-1 m-0" style={{ color: '#8E87A8' }}>{label}</p>
-                <input type={type} value={(newForm as any)[key]}
+                <input type={type} value={(newForm as Record<string, string>)[key]}
                   onChange={e => setNewForm(f => ({ ...f, [key]: e.target.value }))} style={inputStyle} />
               </div>
             ))}
@@ -352,7 +352,7 @@ export default function ClubsPage() {
                       <p className="text-[10px] m-0 truncate" style={{ color: '#8E87A8' }}>{m.email}</p>
                     </div>
                     {/* Role toggle */}
-                    <select value={m.role} onChange={e => handleChangeRole(club.id, m.id, e.target.value as any)}
+                    <select value={m.role} onChange={e => handleChangeRole(club.id, m.id, e.target.value as 'ADMIN' | 'COACH')}
                       className="text-[10px] font-semibold rounded-lg px-1.5 py-1"
                       style={{ border: `1px solid ${ROLE_COLOR[m.role]}40`, background: ROLE_BG[m.role], color: ROLE_COLOR[m.role], cursor: 'pointer', outline: 'none' }}>
                       <option value="ADMIN">Admin</option>

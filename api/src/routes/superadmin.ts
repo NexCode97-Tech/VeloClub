@@ -90,4 +90,97 @@ router.delete('/clubs/:id', requireAuth, requireSuperadmin, async (req, res) => 
   res.json({ ok: true });
 });
 
+// ─── Suscripciones (finanzas de plataforma) ───────────────────────────────────
+
+// GET /superadmin/suscripciones — trae todos los clubs con su suscripcion y pagos
+router.get('/suscripciones', requireAuth, requireSuperadmin, async (_req, res) => {
+  const clubs = await prisma.club.findMany({
+    select: {
+      id: true,
+      name: true,
+      active: true,
+      suscripcion: {
+        include: {
+          pagos: { orderBy: { createdAt: 'asc' } },
+        },
+      },
+    },
+    orderBy: { createdAt: 'desc' },
+  });
+  res.json({ clubs });
+});
+
+// POST /superadmin/suscripciones/:clubId — crea o actualiza suscripcion del club
+const suscripcionSchema = z.object({
+  planMonto: z.number().positive(),
+  año: z.number().int().min(2024),
+});
+
+router.post('/suscripciones/:clubId', requireAuth, requireSuperadmin, async (req, res) => {
+  const clubId = String(req.params.clubId);
+  const parsed = suscripcionSchema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: parsed.error.issues });
+
+  const suscripcion = await prisma.clubSuscripcion.upsert({
+    where: { clubId },
+    update: { planMonto: parsed.data.planMonto, año: parsed.data.año },
+    create: { clubId, planMonto: parsed.data.planMonto, año: parsed.data.año },
+  });
+  res.json({ suscripcion });
+});
+
+// POST /superadmin/suscripciones/:clubId/pagos — registra un abono
+const pagoSchema = z.object({
+  concepto: z.string().min(1),
+  monto: z.number().positive(),
+  fecha: z.string().optional(),
+  estado: z.enum(['PENDING', 'PAID', 'OVERDUE']).default('PAID'),
+});
+
+router.post('/suscripciones/:clubId/pagos', requireAuth, requireSuperadmin, async (req, res) => {
+  const clubId = String(req.params.clubId);
+  const parsed = pagoSchema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: parsed.error.issues });
+
+  // Buscar o crear suscripcion
+  let suscripcion = await prisma.clubSuscripcion.findUnique({ where: { clubId } });
+  if (!suscripcion) {
+    suscripcion = await prisma.clubSuscripcion.create({
+      data: { clubId, planMonto: 450000, año: new Date().getFullYear() },
+    });
+  }
+
+  const pago = await prisma.suscripcionPago.create({
+    data: {
+      suscripcionId: suscripcion.id,
+      concepto: parsed.data.concepto,
+      monto: parsed.data.monto,
+      fecha: parsed.data.fecha ? new Date(parsed.data.fecha) : new Date(),
+      estado: parsed.data.estado as any,
+    },
+  });
+  res.status(201).json({ pago });
+});
+
+// PATCH /superadmin/suscripciones/pagos/:pagoId — actualiza estado de un pago
+router.patch('/suscripciones/pagos/:pagoId', requireAuth, requireSuperadmin, async (req, res) => {
+  const pagoId = String(req.params.pagoId);
+  const { estado } = req.body;
+  if (!['PENDING', 'PAID', 'OVERDUE'].includes(estado)) {
+    return res.status(400).json({ error: 'Estado inválido' });
+  }
+  const pago = await prisma.suscripcionPago.update({
+    where: { id: pagoId },
+    data: { estado, fecha: estado === 'PAID' ? new Date() : undefined },
+  });
+  res.json({ pago });
+});
+
+// DELETE /superadmin/suscripciones/pagos/:pagoId
+router.delete('/suscripciones/pagos/:pagoId', requireAuth, requireSuperadmin, async (req, res) => {
+  const pagoId = String(req.params.pagoId);
+  await prisma.suscripcionPago.delete({ where: { id: pagoId } });
+  res.json({ ok: true });
+});
+
 export default router;

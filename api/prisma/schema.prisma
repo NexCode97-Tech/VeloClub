@@ -23,6 +23,7 @@ model Club {
   competitions   Competition[]
   calendarEvents CalendarEvent[]
   attendances    Attendance[]
+  suscripcion    ClubSuscripcion?
 }
 
 // ─── User (staff: ADMIN, COACH, SUPERADMIN) ──────────────────────────────────
@@ -227,6 +228,35 @@ model CalendarEvent {
 
   @@index([clubId])
   @@index([clubId, startDate])
+}
+
+// ─── ClubSuscripcion (cobros de plataforma por club) ─────────────────────────
+
+model ClubSuscripcion {
+  id        String              @id @default(cuid())
+  clubId    String              @unique
+  club      Club                @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  planMonto Float               @default(450000)
+  año       Int
+  pagos     SuscripcionPago[]
+  createdAt DateTime            @default(now())
+  updatedAt DateTime            @updatedAt
+
+  @@index([clubId])
+}
+
+model SuscripcionPago {
+  id              String          @id @default(cuid())
+  suscripcionId   String
+  suscripcion     ClubSuscripcion @relation(fields: [suscripcionId], references: [id], onDelete: Cascade)
+  concepto        String
+  monto           Float
+  fecha           DateTime?
+  estado          PaymentStatus   @default(PENDING)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  @@index([suscripcionId])
 }
 
 // ─── Enums ───────────────────────────────────────────────────────────────────

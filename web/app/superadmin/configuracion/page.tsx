@@ -4,11 +4,8 @@ import { useUser, UserButton } from '@clerk/nextjs';
 import Image from 'next/image';
 
 const INFO_ITEMS = [
-  { label: 'Versión',        value: 'v1.0.0' },
-  { label: 'Entorno',        value: 'Producción' },
-  { label: 'Base de datos',  value: 'PostgreSQL · Render' },
-  { label: 'Autenticación',  value: 'Clerk' },
-  { label: 'Frontend',       value: 'Next.js · Vercel' },
+  { label: 'Versión',       value: 'v1.0.0' },
+  { label: 'Autenticación', value: 'Clerk' },
 ];
 
 export default function ConfiguracionPage() {

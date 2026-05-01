@@ -36,16 +36,14 @@ const totalPayments = 6;
 
 export default function ReportesPage() {
   return (
-    <div className="flex flex-col gap-4 px-4 py-5 max-w-lg mx-auto w-full">
+    <div className="min-h-full bg-background">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <h1
-          className="text-2xl font-bold text-foreground"
-          style={{ fontFamily: 'var(--font-space-grotesk)' }}
-        >
+      <div className="px-5 py-3 bg-background border-b border-border">
+        <h1 className="text-[17px] font-bold text-foreground" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
           Reportes
         </h1>
       </div>
+      <div className="flex flex-col gap-4 px-4 py-4">
 
       {/* 2x2 stats grid */}
       <div className="grid grid-cols-2 gap-3">
@@ -143,6 +141,7 @@ export default function ReportesPage() {
             );
           })}
         </div>
+      </div>
       </div>
     </div>
   );

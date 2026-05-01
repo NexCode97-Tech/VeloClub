@@ -42,6 +42,7 @@ export default function MiembrosPage() {
   const [locations, setLocations] = useState<Location[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [roleFilter, setRoleFilter] = useState<'ALL' | 'STUDENT' | 'COACH' | 'ADMIN'>('ALL');
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Member | null>(null);
   const [form, setForm] = useState(emptyForm);
@@ -112,10 +113,12 @@ export default function MiembrosPage() {
     }));
   }
 
-  const filtered = members.filter(m =>
-    m.fullName.toLowerCase().includes(search.toLowerCase()) ||
-    m.email?.toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = members.filter(m => {
+    const q = search.toLowerCase();
+    const matchSearch = m.fullName.toLowerCase().includes(q) || m.email?.toLowerCase().includes(q);
+    const matchRole = roleFilter === 'ALL' || m.role === roleFilter;
+    return matchSearch && matchRole;
+  });
 
   return (
     <div className="min-h-full bg-background">
@@ -145,10 +148,27 @@ export default function MiembrosPage() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
             className="pl-9 bg-white border-border rounded-xl"
-            placeholder="Buscar por nombre o email..."
+            placeholder="Buscar miembro..."
             value={search}
             onChange={e => setSearch(e.target.value)}
           />
+        </div>
+
+        {/* Filter chips */}
+        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+          {([['ALL','Todos'],['STUDENT','Alumnos'],['COACH','Entrenadores'],['ADMIN','Admins']] as const).map(([val, label]) => (
+            <button
+              key={val}
+              onClick={() => setRoleFilter(val)}
+              className="shrink-0 px-3 py-1.5 rounded-full text-[11px] font-semibold border transition-colors"
+              style={roleFilter === val
+                ? { background: '#4361EE', color: '#fff', borderColor: '#4361EE' }
+                : { background: '#fff', color: '#8E87A8', borderColor: 'rgba(120,80,200,0.10)' }
+              }
+            >
+              {label}
+            </button>
+          ))}
         </div>
 
         {loading ? (

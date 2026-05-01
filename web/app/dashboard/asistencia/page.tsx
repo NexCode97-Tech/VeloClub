@@ -48,8 +48,8 @@ export default function AsistenciaPage() {
   return (
     <div className="min-h-full bg-background">
       {/* Header */}
-      <div className="px-5 pt-5 pb-4 bg-card border-b border-border">
-        <h1 className="text-[18px] font-bold text-foreground" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
+      <div className="px-5 py-3 bg-background border-b border-border">
+        <h1 className="text-[17px] font-bold text-foreground" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
           Asistencia
         </h1>
       </div>

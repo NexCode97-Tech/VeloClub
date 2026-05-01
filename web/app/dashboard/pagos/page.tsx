@@ -42,23 +42,22 @@ export default function PagosPage() {
   });
 
   return (
-    <div className="flex flex-col gap-4 px-4 py-5 max-w-lg mx-auto w-full">
+    <div className="min-h-full bg-background">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <h1
-          className="text-2xl font-bold text-foreground"
-          style={{ fontFamily: 'var(--font-space-grotesk)' }}
-        >
+      <div className="px-5 py-3 bg-background border-b border-border flex items-center justify-between">
+        <h1 className="text-[17px] font-bold text-foreground" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
           Pagos
         </h1>
         <button
-          className="flex items-center justify-center w-9 h-9 rounded-xl shadow-sm"
+          className="w-[34px] h-[34px] rounded-xl flex items-center justify-center"
           style={{ background: '#4361EE' }}
           aria-label="Agregar pago"
         >
           <Plus size={18} color="#fff" strokeWidth={2.5} />
         </button>
       </div>
+
+      <div className="px-4 pt-4 flex flex-col gap-4">
 
       {/* Gradient balance card */}
       <div
@@ -123,7 +122,7 @@ export default function PagosPage() {
               {/* Avatar */}
               <div
                 className="w-9 h-9 rounded-full flex items-center justify-center shrink-0"
-                style={{ background: sc.gradient }}
+                style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)' }}
               >
                 <span className="text-[11px] font-bold text-white">{getInitials(p.member)}</span>
               </div>
@@ -154,6 +153,7 @@ export default function PagosPage() {
             </div>
           );
         })}
+      </div>
       </div>
     </div>
   );

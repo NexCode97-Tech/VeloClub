@@ -24,23 +24,21 @@ const balancePct   = Math.round((balance / totalIncome) * 100);
 
 export default function FlujoCajaPage() {
   return (
-    <div className="flex flex-col gap-4 px-4 py-5 max-w-lg mx-auto w-full">
+    <div className="min-h-full bg-background">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <h1
-          className="text-2xl font-bold text-foreground"
-          style={{ fontFamily: 'var(--font-space-grotesk)' }}
-        >
+      <div className="px-5 py-3 bg-background border-b border-border flex items-center justify-between">
+        <h1 className="text-[17px] font-bold text-foreground" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
           Flujo de Caja
         </h1>
         <button
-          className="flex items-center justify-center w-9 h-9 rounded-xl shadow-sm"
+          className="w-[34px] h-[34px] rounded-xl flex items-center justify-center"
           style={{ background: '#4361EE' }}
           aria-label="Agregar transacción"
         >
           <Plus size={18} color="#fff" strokeWidth={2.5} />
         </button>
       </div>
+      <div className="flex flex-col gap-4 px-4 py-4">
 
       {/* Saldo card */}
       <div className="bg-card border border-border rounded-2xl p-4">
@@ -172,6 +170,7 @@ export default function FlujoCajaPage() {
             </div>
           );
         })}
+      </div>
       </div>
     </div>
   );

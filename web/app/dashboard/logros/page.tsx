@@ -32,16 +32,14 @@ for (const l of logros) {
 
 export default function LogrosPage() {
   return (
-    <div className="flex flex-col gap-4 px-4 py-5 max-w-lg mx-auto w-full">
+    <div className="min-h-full bg-background">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <h1
-          className="text-2xl font-bold text-foreground"
-          style={{ fontFamily: 'var(--font-space-grotesk)' }}
-        >
+      <div className="px-5 py-3 bg-background border-b border-border flex items-center justify-between">
+        <h1 className="text-[17px] font-bold text-foreground" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
           Logros
         </h1>
       </div>
+      <div className="flex flex-col gap-4 px-4 py-4">
 
       {/* Podium card */}
       <div className="bg-card border border-border rounded-2xl p-4 text-center">
@@ -124,6 +122,7 @@ export default function LogrosPage() {
             </div>
           );
         })}
+      </div>
       </div>
     </div>
   );

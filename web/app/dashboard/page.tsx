@@ -120,7 +120,6 @@ export default function DashboardPage() {
   const firstName = user?.name?.split(' ')[0] ?? '';
   const rc = roleColors[role] ?? roleColors.ADMIN;
   const stats = STATS_BY_ROLE[role] ?? STATS_BY_ROLE.ADMIN;
-  const quick = QUICK_BY_ROLE[role] ?? QUICK_BY_ROLE.ADMIN;
 
   return (
     <div className="min-h-full bg-background">
@@ -137,7 +136,7 @@ export default function DashboardPage() {
               className="text-[22px] font-extrabold text-foreground leading-tight"
               style={{ fontFamily: 'var(--font-space-grotesk)' }}
             >
-              Hola, {firstName}!
+              ¡Hola, {firstName}! 👋
             </h1>
             <p className="text-xs text-muted-foreground mt-0.5">
               {user?.club?.name ?? 'VeloClub'}
@@ -187,30 +186,6 @@ export default function DashboardPage() {
       </div>
 
       <div className="px-5 py-4 space-y-5">
-
-        {/* Quick access */}
-        <section>
-          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2.5">
-            Acceso rapido
-          </p>
-          <div className="grid grid-cols-4 gap-2">
-            {quick.map((q) => (
-              <Link
-                key={q.href}
-                href={q.href}
-                className="flex flex-col items-center gap-2 py-3 px-1 bg-white rounded-xl border border-border active:scale-95 transition-transform"
-              >
-                <div
-                  className="w-9 h-9 rounded-xl flex items-center justify-center"
-                  style={{ background: `${q.color}18`, color: q.color }}
-                >
-                  <q.icon className="w-4 h-4" />
-                </div>
-                <span className="text-[9.5px] font-semibold text-foreground text-center leading-tight">{q.label}</span>
-              </Link>
-            ))}
-          </div>
-        </section>
 
         {/* Upcoming events */}
         <section>

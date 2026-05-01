@@ -1,7 +1,7 @@
 'use client';
 
 import { usePathname, useRouter } from 'next/navigation';
-import { UserButton, useAuth } from '@clerk/nextjs';
+import { useAuth } from '@clerk/nextjs';
 import { useEffect, useState } from 'react';
 import { apiFetch } from '@/lib/api-client';
 import LoadingScreen from '@/components/ui/loading-screen';
@@ -56,6 +56,57 @@ const TABS = [
 
 const ACCENT = '#7C3AED';
 
+const SCREEN_LABELS: Record<string, string> = {
+  '/superadmin':               'Dashboard',
+  '/superadmin/clubs':         'Clubs',
+  '/superadmin/finanzas':      'Finanzas',
+  '/superadmin/configuracion': 'Configuración',
+};
+
+function GlobalHeader({ pathname }: { pathname: string }) {
+  const [spin, setSpin] = useState(false);
+  const title = SCREEN_LABELS[pathname] ?? 'VeloClub';
+  return (
+    <div
+      className="flex items-center gap-2 shrink-0"
+      style={{ padding: '12px 16px 10px', background: '#F7F7FB', borderBottom: '1px solid rgba(120,80,200,0.10)' }}
+    >
+      <h2
+        className="flex-1 m-0 text-[17px] font-bold"
+        style={{ fontFamily: 'Space Grotesk, sans-serif', color: '#1A1028' }}
+      >
+        {title}
+      </h2>
+      <button
+        onClick={() => { setSpin(true); setTimeout(() => { setSpin(false); window.location.reload(); }, 400); }}
+        className="w-[34px] h-[34px] rounded-full flex items-center justify-center"
+        style={{
+          background: '#F0EEF8', border: '1px solid rgba(120,80,200,0.10)', color: '#8E87A8',
+          transition: 'transform 0.4s',
+          transform: spin ? 'rotate(180deg)' : 'rotate(0deg)',
+        }}
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+        </svg>
+      </button>
+      <button
+        className="w-[34px] h-[34px] rounded-full flex items-center justify-center relative"
+        style={{ background: '#F0EEF8', border: '1px solid rgba(120,80,200,0.10)', color: '#8E87A8' }}
+      >
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+          <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+        </svg>
+        <div
+          className="absolute w-[7px] h-[7px] rounded-full"
+          style={{ top: 7, right: 8, background: '#EF476F', border: '1.5px solid #F7F7FB' }}
+        />
+      </button>
+    </div>
+  );
+}
+
 export default function SuperadminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -84,6 +135,9 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
       className="flex flex-col h-dvh overflow-hidden"
       style={{ background: '#F7F7FB', fontFamily: 'Plus Jakarta Sans, sans-serif' }}
     >
+      {/* Global Header — visible en todos los tabs */}
+      <GlobalHeader pathname={pathname} />
+
       {/* Main content */}
       <main className="flex-1 overflow-y-auto overflow-x-hidden">
         {children}
@@ -124,10 +178,6 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
               </Link>
             );
           })}
-          {/* Account button */}
-          <div className="flex-1 flex flex-col items-center gap-1 py-1">
-            <UserButton />
-          </div>
         </div>
         {/* Home indicator */}
         <div className="flex justify-center pb-1.5">

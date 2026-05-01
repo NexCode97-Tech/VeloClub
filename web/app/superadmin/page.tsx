@@ -1,7 +1,8 @@
 'use client';
 
 import { useAuth } from '@clerk/nextjs';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiFetch } from '@/lib/api-client';
 import Link from 'next/link';
@@ -35,44 +36,6 @@ const MOCK_SUSCRIPCIONES = [
   ]},
 ];
 
-function SAHeader({ title }: { title: string }) {
-  const [spin, setSpin] = useState(false);
-  return (
-    <div
-      className="px-4 flex items-center gap-2 shrink-0"
-      style={{ padding: '12px 16px 10px', background: '#F7F7FB', borderBottom: '1px solid rgba(120,80,200,0.10)' }}
-    >
-      <h2
-        className="flex-1 text-[17px] font-bold m-0"
-        style={{ fontFamily: 'Space Grotesk, sans-serif', color: '#1A1028' }}
-      >
-        {title}
-      </h2>
-      <button
-        onClick={() => { setSpin(true); setTimeout(() => { setSpin(false); window.location.reload(); }, 400); }}
-        className="w-[34px] h-[34px] rounded-full flex items-center justify-center transition-transform"
-        style={{
-          background: '#F0EEF8', border: '1px solid rgba(120,80,200,0.10)', color: '#8E87A8',
-          transform: spin ? 'rotate(180deg)' : 'rotate(0deg)',
-        }}
-      >
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
-        </svg>
-      </button>
-      <button
-        className="w-[34px] h-[34px] rounded-full flex items-center justify-center relative"
-        style={{ background: '#F0EEF8', border: '1px solid rgba(120,80,200,0.10)', color: '#8E87A8' }}
-      >
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-          <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-        </svg>
-        <div className="absolute w-[7px] h-[7px] rounded-full" style={{ top: 7, right: 8, background: '#EF476F', border: '1.5px solid #F7F7FB' }} />
-      </button>
-    </div>
-  );
-}
 
 export default function SuperadminDashboard() {
   const { getToken, isLoaded, isSignedIn } = useAuth();
@@ -115,8 +78,7 @@ export default function SuperadminDashboard() {
   if (loading) {
     return (
       <div style={{ background: '#F7F7FB', minHeight: '100%' }}>
-        <SAHeader title="Dashboard" />
-        <div className="flex items-center justify-center h-40">
+          <div className="flex items-center justify-center h-40">
           <div className="w-6 h-6 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: '#7C3AED', borderTopColor: 'transparent' }} />
         </div>
       </div>
@@ -125,8 +87,6 @@ export default function SuperadminDashboard() {
 
   return (
     <div style={{ background: '#F7F7FB', minHeight: '100%' }}>
-      <SAHeader title="Dashboard" />
-
       <div style={{ padding: '12px 16px 80px' }}>
 
         {/* Hero */}

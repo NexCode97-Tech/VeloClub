@@ -2,18 +2,6 @@
 
 import { UserButton } from '@clerk/nextjs';
 
-function SAHeader({ title }: { title: string }) {
-  return (
-    <div
-      className="flex items-center gap-2 shrink-0"
-      style={{ padding: '12px 16px 10px', background: '#F7F7FB', borderBottom: '1px solid rgba(120,80,200,0.10)' }}
-    >
-      <h2 className="flex-1 text-[17px] font-bold m-0" style={{ fontFamily: 'Space Grotesk, sans-serif', color: '#1A1028' }}>
-        {title}
-      </h2>
-    </div>
-  );
-}
 
 const INFO_ITEMS = [
   { label: 'Versión',        value: 'v1.0.0' },
@@ -26,8 +14,6 @@ const INFO_ITEMS = [
 export default function ConfiguracionPage() {
   return (
     <div style={{ background: '#F7F7FB', minHeight: '100%' }}>
-      <SAHeader title="Configuración" />
-
       <div style={{ padding: '16px 16px 80px' }}>
         {/* Mi cuenta */}
         <p className="text-[11px] font-semibold uppercase mb-2 m-0" style={{ color: '#8E87A8', letterSpacing: '0.8px' }}>

@@ -259,6 +259,17 @@ model SuscripcionPago {
   @@index([suscripcionId])
 }
 
+// ─── Notificacion (SA global) ─────────────────────────────────────────────────
+
+model Notificacion {
+  id        String           @id @default(cuid())
+  tipo      NotificacionTipo
+  titulo    String
+  cuerpo    String
+  leida     Boolean          @default(false)
+  createdAt DateTime         @default(now())
+}
+
 // ─── Enums ───────────────────────────────────────────────────────────────────
 
 enum Role {
@@ -304,4 +315,11 @@ enum RecurrenceType {
   DAILY
   WEEKLY
   CUSTOM
+}
+
+enum NotificacionTipo {
+  CLUB_CREADO
+  CLUB_DESACTIVADO
+  PAGO_VENCIDO
+  PAGO_REGISTRADO
 }

@@ -18,11 +18,13 @@ import { Plus, Pencil, Trash2, Users, Search } from 'lucide-react';
 interface Location { id: string; name: string }
 interface Member {
   id: string; fullName: string; email?: string; phone?: string;
-  birthDate?: string; category?: string; role: string;
+  birthDate?: string; category?: string; tipo?: string;
+  emergencyContact?: string; emergencyPhone?: string; eps?: string;
+  role: string;
   locations: { location: Location }[];
 }
 
-const ROLES: Record<string, string> = { ADMIN: 'Admin', COACH: 'Entrenador', STUDENT: 'Alumno' };
+const ROLES: Record<string, string> = { ADMIN: 'Admin', COACH: 'Entrenador', STUDENT: 'Deportista' };
 const ROLE_COLORS: Record<string, string> = {
   ADMIN:   'bg-amber-100 text-amber-700',
   COACH:   'bg-emerald-100 text-emerald-700',
@@ -34,7 +36,11 @@ const ROLE_AVATAR: Record<string, string> = {
   STUDENT: 'linear-gradient(135deg,#7C3AED,#A855F7)',
 };
 
-const emptyForm: { fullName: string; email: string; phone: string; birthDate: string; category: string; role: string; locationIds: string[] } = { fullName: '', email: '', phone: '', birthDate: '', category: '', role: 'STUDENT', locationIds: [] };
+const emptyForm = {
+  fullName: '', email: '', phone: '', birthDate: '',
+  category: '', tipo: '', emergencyContact: '', emergencyPhone: '',
+  eps: '', role: 'STUDENT', locationIds: [] as string[],
+};
 
 export default function MiembrosPage() {
   const { getToken } = useAuth();
@@ -71,7 +77,11 @@ export default function MiembrosPage() {
     setForm({
       fullName: m.fullName, email: m.email ?? '', phone: m.phone ?? '',
       birthDate: m.birthDate ? m.birthDate.split('T')[0] : '',
-      category: m.category ?? '', role: m.role,
+      category: m.category ?? '', tipo: m.tipo ?? '',
+      emergencyContact: m.emergencyContact ?? '',
+      emergencyPhone: m.emergencyPhone ?? '',
+      eps: m.eps ?? '',
+      role: m.role,
       locationIds: m.locations.map(l => l.location.id),
     });
     setError(null); setOpen(true);
@@ -122,7 +132,7 @@ export default function MiembrosPage() {
 
   return (
     <div className="min-h-full bg-background">
-      {/* Header */}
+      {/* Encabezado */}
       <div className="px-5 pt-5 pb-4 bg-card border-b border-border flex items-center justify-between">
         <div>
           <h1 className="text-[18px] font-bold text-foreground" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
@@ -143,7 +153,7 @@ export default function MiembrosPage() {
       </div>
 
       <div className="px-4 pt-4 space-y-3">
-        {/* Search */}
+        {/* Búsqueda */}
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
@@ -154,9 +164,9 @@ export default function MiembrosPage() {
           />
         </div>
 
-        {/* Filter chips */}
+        {/* Filtros */}
         <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
-          {([['ALL','Todos'],['STUDENT','Alumnos'],['COACH','Entrenadores'],['ADMIN','Admins']] as const).map(([val, label]) => (
+          {([['ALL','Todos'],['STUDENT','Deportistas'],['COACH','Entrenadores'],['ADMIN','Admins']] as const).map(([val, label]) => (
             <button
               key={val}
               onClick={() => setRoleFilter(val)}
@@ -186,9 +196,8 @@ export default function MiembrosPage() {
             )}
           </div>
         ) : (
-          /* Mobile card list / Desktop table */
           <>
-            {/* Mobile cards */}
+            {/* Tarjetas móvil */}
             <div className="md:hidden space-y-2 pb-4">
               {filtered.map(m => (
                 <div key={m.id} className="bg-white border border-border rounded-xl px-3 py-3 flex items-center gap-3">
@@ -206,7 +215,10 @@ export default function MiembrosPage() {
                       </span>
                     </div>
                     <p className="text-[11px] text-muted-foreground truncate">{m.email ?? '—'}</p>
-                    {m.category && <p className="text-[10px] font-semibold mt-0.5" style={{ color: '#4361EE' }}>{m.category}</p>}
+                    <div className="flex gap-2 mt-0.5">
+                      {m.category && <p className="text-[10px] font-semibold" style={{ color: '#4361EE' }}>{m.category}</p>}
+                      {m.tipo && <p className="text-[10px] text-muted-foreground">{m.tipo}</p>}
+                    </div>
                     {m.locations.length > 0 && (
                       <p className="text-[10px] text-muted-foreground mt-0.5">{m.locations.map(l => l.location.name).join(' · ')}</p>
                     )}
@@ -223,7 +235,7 @@ export default function MiembrosPage() {
               ))}
             </div>
 
-            {/* Desktop table */}
+            {/* Tabla desktop */}
             <div className="hidden md:block bg-white rounded-xl border border-border overflow-hidden mb-4">
               <table className="w-full text-sm">
                 <thead className="bg-secondary border-b border-border">
@@ -232,7 +244,8 @@ export default function MiembrosPage() {
                     <th className="text-left px-4 py-3 font-semibold text-muted-foreground text-xs uppercase tracking-wide">Email</th>
                     <th className="text-left px-4 py-3 font-semibold text-muted-foreground text-xs uppercase tracking-wide">Rol</th>
                     <th className="text-left px-4 py-3 font-semibold text-muted-foreground text-xs uppercase tracking-wide">Sedes</th>
-                    <th className="text-left px-4 py-3 font-semibold text-muted-foreground text-xs uppercase tracking-wide">Categoria</th>
+                    <th className="text-left px-4 py-3 font-semibold text-muted-foreground text-xs uppercase tracking-wide">Categoría</th>
+                    <th className="text-left px-4 py-3 font-semibold text-muted-foreground text-xs uppercase tracking-wide">Tipo</th>
                     <th className="px-4 py-3"></th>
                   </tr>
                 </thead>
@@ -266,6 +279,7 @@ export default function MiembrosPage() {
                         </div>
                       </td>
                       <td className="px-4 py-3 text-muted-foreground">{m.category ?? '—'}</td>
+                      <td className="px-4 py-3 text-muted-foreground">{m.tipo ?? '—'}</td>
                       <td className="px-4 py-3">
                         <div className="flex gap-1 justify-end">
                           <Button size="sm" variant="ghost" onClick={() => openEdit(m)}><Pencil className="w-4 h-4" /></Button>
@@ -283,20 +297,24 @@ export default function MiembrosPage() {
         )}
       </div>
 
-      {/* Dialog */}
+      {/* Modal crear / editar */}
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editing ? 'Editar miembro' : 'Nuevo miembro'}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 mt-2">
+
+            {/* Nombre */}
             <div className="space-y-2">
               <Label>Nombre completo *</Label>
               <Input value={form.fullName} onChange={e => setForm(f => ({ ...f, fullName: e.target.value }))} />
             </div>
+
+            {/* Email + Teléfono */}
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
-                <Label>Email</Label>
+                <Label>Correo electrónico</Label>
                 <Input type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} />
               </div>
               <div className="space-y-2">
@@ -304,27 +322,57 @@ export default function MiembrosPage() {
                 <Input value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} />
               </div>
             </div>
+
+            {/* Fecha de nacimiento + Rol */}
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
                 <Label>Fecha de nacimiento</Label>
                 <Input type="date" value={form.birthDate} onChange={e => setForm(f => ({ ...f, birthDate: e.target.value }))} />
               </div>
               <div className="space-y-2">
+                <Label>Rol</Label>
+                <Select value={form.role} onValueChange={v => setForm(f => ({ ...f, role: v ?? 'STUDENT' }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="STUDENT">Deportista</SelectItem>
+                    <SelectItem value="COACH">Entrenador</SelectItem>
+                    <SelectItem value="ADMIN">Admin</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Categoría + Tipo */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
                 <Label>Categoría</Label>
                 <Input value={form.category} placeholder="Ej: Juvenil A" onChange={e => setForm(f => ({ ...f, category: e.target.value }))} />
               </div>
+              <div className="space-y-2">
+                <Label>Tipo</Label>
+                <Input value={form.tipo} placeholder="Ej: Fondo, Velocidad" onChange={e => setForm(f => ({ ...f, tipo: e.target.value }))} />
+              </div>
             </div>
+
+            {/* EPS */}
             <div className="space-y-2">
-              <Label>Rol</Label>
-              <Select value={form.role} onValueChange={v => setForm(f => ({ ...f, role: v ?? 'STUDENT' }))}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="STUDENT">Alumno</SelectItem>
-                  <SelectItem value="COACH">Entrenador</SelectItem>
-                  <SelectItem value="ADMIN">Admin</SelectItem>
-                </SelectContent>
-              </Select>
+              <Label>EPS</Label>
+              <Input value={form.eps} placeholder="Nombre de la EPS" onChange={e => setForm(f => ({ ...f, eps: e.target.value }))} />
             </div>
+
+            {/* Contacto de emergencia + Teléfono de emergencia */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label>Contacto de emergencia</Label>
+                <Input value={form.emergencyContact} placeholder="Nombre" onChange={e => setForm(f => ({ ...f, emergencyContact: e.target.value }))} />
+              </div>
+              <div className="space-y-2">
+                <Label>Tel. emergencia</Label>
+                <Input value={form.emergencyPhone} placeholder="Número" onChange={e => setForm(f => ({ ...f, emergencyPhone: e.target.value }))} />
+              </div>
+            </div>
+
+            {/* Sedes */}
             {locations.length > 0 && (
               <div className="space-y-2">
                 <Label>Sedes</Label>
@@ -346,6 +394,7 @@ export default function MiembrosPage() {
                 </div>
               </div>
             )}
+
             {error && <p className="text-sm text-red-600">{error}</p>}
             <Button onClick={handleSave} disabled={saving || !form.fullName.trim()} className="w-full">
               {saving ? 'Guardando...' : editing ? 'Guardar cambios' : 'Crear miembro'}

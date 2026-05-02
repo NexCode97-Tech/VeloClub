@@ -68,7 +68,7 @@ router.get('/', requireAuth, async (req, res) => {
       picture: picture ?? null,
       role: member.role,
       clubId: member.clubId,
-      profileComplete: false,
+      profileComplete: true,
     },
     include: { club: true },
   });

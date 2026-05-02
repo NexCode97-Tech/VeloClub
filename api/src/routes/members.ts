@@ -14,7 +14,9 @@ const memberSchema = z.object({
   docNumber: z.string().optional(),
   emergencyContact: z.string().optional(),
   emergencyPhone: z.string().optional(),
+  eps: z.string().optional(),
   category: z.string().optional(),
+  tipo: z.string().optional(),
   locationIds: z.array(z.string()).optional(),
   role: z.enum(['ADMIN', 'COACH', 'STUDENT']).optional(),
 });

@@ -80,7 +80,9 @@ model Member {
   insurancePublicId String?
   emergencyContact  String?
   emergencyPhone    String?
+  eps               String?
   category          String?
+  tipo              String?
   paymentDueDay     Int?
   locations         MemberLocation[]
   attendances       Attendance[]

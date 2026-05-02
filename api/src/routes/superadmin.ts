@@ -144,6 +144,15 @@ router.patch('/clubs/:clubId/miembros/:memberId', requireAuth, requireSuperadmin
   res.json({ member });
 });
 
+// POST /superadmin/clubs/:clubId/miembros/:memberId/allowlist — re-sync email to Clerk allowlist
+router.post('/clubs/:clubId/miembros/:memberId/allowlist', requireAuth, requireSuperadmin, async (req, res) => {
+  const memberId = String(req.params.memberId);
+  const member = await prisma.member.findUnique({ where: { id: memberId }, select: { email: true } });
+  if (!member?.email) return res.status(404).json({ error: 'Miembro no encontrado' });
+  await addToAllowlist(member.email);
+  res.json({ ok: true });
+});
+
 // DELETE /superadmin/clubs/:clubId/miembros/:memberId
 router.delete('/clubs/:clubId/miembros/:memberId', requireAuth, requireSuperadmin, async (req, res) => {
   const memberId = String(req.params.memberId);

@@ -157,6 +157,12 @@ export default function ClubsPage() {
     await load();
   }
 
+  async function handleResendAccess(clubId: string, memberId: string) {
+    const token = await getToken();
+    await apiFetch(`/superadmin/clubs/${clubId}/miembros/${memberId}/allowlist`, { method: 'POST', token });
+    alert('Acceso re-enviado. El correo ya puede registrarse en la app.');
+  }
+
   return (
     <div style={{ background: '#F7F7FB', minHeight: '100%' }}>
       <div style={{ padding: '12px 16px 80px' }}>
@@ -358,6 +364,12 @@ export default function ClubsPage() {
                       <option value="ADMIN">Admin</option>
                       <option value="COACH">Entrenador</option>
                     </select>
+                    <button onClick={() => handleResendAccess(club.id, m.id)}
+                      title="Re-enviar acceso"
+                      className="w-7 h-7 flex items-center justify-center rounded-lg shrink-0"
+                      style={{ background: 'rgba(67,97,238,0.08)', border: '1px solid rgba(67,97,238,0.2)', color: '#4361EE', cursor: 'pointer' }}>
+                      🔑
+                    </button>
                     <button onClick={() => handleRemoveMember(club.id, m.id)}
                       className="w-7 h-7 flex items-center justify-center rounded-lg shrink-0"
                       style={{ background: 'rgba(239,71,111,0.08)', border: '1px solid rgba(239,71,111,0.2)', color: '#EF476F', cursor: 'pointer' }}>

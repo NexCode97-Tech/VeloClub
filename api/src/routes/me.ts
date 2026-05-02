@@ -45,9 +45,9 @@ router.get('/', requireAuth, async (req, res) => {
     return res.json({ status: 'ok', user });
   }
 
-  // New user — check if email was pre-registered as a Member
+  // New user — check if email was pre-registered as a Member (case-insensitive)
   const member = await prisma.member.findFirst({
-    where: { email },
+    where: { email: { equals: email, mode: 'insensitive' } },
     include: { club: true },
   });
 

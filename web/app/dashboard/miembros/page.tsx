@@ -329,19 +329,8 @@ export default function MiembrosPage() {
               </div>
             </div>
 
-            {/* Rol + Categoría */}
+            {/* Categoría + Nivel */}
             <div className="grid grid-cols-2 gap-2">
-              <div className="space-y-2">
-                <Label>Rol</Label>
-                <Select value={form.role} onValueChange={v => setForm(f => ({ ...f, role: v ?? 'STUDENT' }))}>
-                  <SelectTrigger><span className="text-sm">{ROLES[form.role] ?? form.role}</span></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="STUDENT">Deportista</SelectItem>
-                    <SelectItem value="COACH">Entrenador</SelectItem>
-                    <SelectItem value="ADMIN">Admin</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
               <div className="space-y-2">
                 <Label>Categoría</Label>
                 <Select value={form.category} onValueChange={v => setForm(f => ({ ...f, category: v ?? '' }))}>
@@ -353,10 +342,6 @@ export default function MiembrosPage() {
                   </SelectContent>
                 </Select>
               </div>
-            </div>
-
-            {/* Nivel */}
-            <div className="grid grid-cols-2 gap-2">
               <div className="space-y-2">
                 <Label>Nivel</Label>
                 <Select value={form.tipo} onValueChange={v => setForm(f => ({ ...f, tipo: v ?? '' }))}>
@@ -367,6 +352,21 @@ export default function MiembrosPage() {
                     <SelectItem value="Intermedio">Intermedio</SelectItem>
                     <SelectItem value="Avanzados">Avanzados</SelectItem>
                     <SelectItem value="Federados">Federados</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Rol */}
+            <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-2">
+                <Label>Rol</Label>
+                <Select value={form.role} onValueChange={v => setForm(f => ({ ...f, role: v ?? 'STUDENT' }))}>
+                  <SelectTrigger><span className="text-sm">{ROLES[form.role] ?? form.role}</span></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="STUDENT">Deportista</SelectItem>
+                    <SelectItem value="COACH">Entrenador</SelectItem>
+                    <SelectItem value="ADMIN">Admin</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

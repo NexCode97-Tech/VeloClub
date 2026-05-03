@@ -12,6 +12,7 @@ import paymentsRouter from './routes/payments';
 import competitionsRouter from './routes/competitions';
 import cashflowRouter from './routes/cashflow';
 import attendanceRouter from './routes/attendance';
+import trainingRouter from './routes/training';
 
 dotenv.config();
 
@@ -77,6 +78,7 @@ app.use('/payments', paymentsRouter);
 app.use('/competitions', competitionsRouter);
 app.use('/cashflow', cashflowRouter);
 app.use('/attendance', attendanceRouter);
+app.use('/training', trainingRouter);
 
 app.listen(PORT, () => {
   console.log(`API en http://localhost:${PORT}`);

@@ -21,8 +21,9 @@ model Club {
   members        Member[]
   payments       Payment[]
   cashEntries    CashEntry[]
-  competitions   Competition[]
-  calendarEvents CalendarEvent[]
+  competitions      Competition[]
+  trainingSessions  TrainingSession[]
+  calendarEvents    CalendarEvent[]
   attendances    Attendance[]
   suscripcion    ClubSuscripcion?
 }
@@ -53,9 +54,10 @@ model Location {
   address        String?
   clubId         String
   club           Club             @relation(fields: [clubId], references: [id], onDelete: Cascade)
-  members        MemberLocation[]
-  attendances    Attendance[]
-  calendarEvents CalendarEvent[]
+  members          MemberLocation[]
+  attendances      Attendance[]
+  trainingSessions TrainingSession[]
+  calendarEvents   CalendarEvent[]
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt
 
@@ -89,6 +91,7 @@ model Member {
   attendances       Attendance[]
   payments          Payment[]
   eventResults      EventResult[]
+  trainingResults   TrainingResult[]
   inviteStatus      InviteStatus     @default(PENDING)
   clerkId           String?          @unique
   role              Role             @default(STUDENT)
@@ -207,6 +210,41 @@ model EventResult {
   createdAt    DateTime         @default(now())
 
   @@unique([eventId, memberId])
+  @@index([memberId])
+}
+
+// ─── TrainingSession + Results (entrenamientos) ──────────────────────────────
+
+model TrainingSession {
+  id         String           @id @default(cuid())
+  clubId     String
+  club       Club             @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  title      String
+  date       DateTime
+  locationId String?
+  location   Location?        @relation(fields: [locationId], references: [id])
+  notes      String?
+  results    TrainingResult[]
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+
+  @@index([clubId])
+  @@index([clubId, date])
+}
+
+model TrainingResult {
+  id          String          @id @default(cuid())
+  sessionId   String
+  session     TrainingSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  memberId    String
+  member      Member          @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  time        String?
+  distance    String?
+  laps        Int?
+  observations String?
+  createdAt   DateTime        @default(now())
+
+  @@unique([sessionId, memberId])
   @@index([memberId])
 }
 

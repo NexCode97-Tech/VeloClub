@@ -324,7 +324,7 @@ export default function MiembrosPage() {
             </div>
 
             {/* Fecha de nacimiento + Rol */}
-            <div className="grid gap-3" style={{ gridTemplateColumns: '130px 1fr' }}>
+            <div className="grid gap-3" style={{ gridTemplateColumns: '105px 1fr' }}>
               <div className="space-y-2 min-w-0">
                 <Label>Fecha de nacimiento</Label>
                 <Input type="date" value={form.birthDate} className="w-full max-w-full" onChange={e => setForm(f => ({ ...f, birthDate: e.target.value }))} />

@@ -11,7 +11,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog';
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+  Select, SelectContent, SelectItem, SelectTrigger,
 } from '@/components/ui/select';
 import { Plus, Pencil, Trash2, Users, Search } from 'lucide-react';
 
@@ -325,14 +325,14 @@ export default function MiembrosPage() {
 
             {/* Fecha de nacimiento + Rol */}
             <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-2 min-w-0 overflow-hidden">
+              <div className="space-y-2 min-w-0">
                 <Label>Fecha de nacimiento</Label>
-                <Input type="date" value={form.birthDate} className="w-full" onChange={e => setForm(f => ({ ...f, birthDate: e.target.value }))} />
+                <Input type="date" value={form.birthDate} className="w-full max-w-full" onChange={e => setForm(f => ({ ...f, birthDate: e.target.value }))} />
               </div>
               <div className="space-y-2">
                 <Label>Rol</Label>
                 <Select value={form.role} onValueChange={v => setForm(f => ({ ...f, role: v ?? 'STUDENT' }))}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectTrigger><span className="text-sm">{ROLES[form.role] ?? form.role}</span></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="STUDENT">Deportista</SelectItem>
                     <SelectItem value="COACH">Entrenador</SelectItem>

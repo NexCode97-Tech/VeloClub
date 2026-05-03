@@ -25,10 +25,11 @@ router.get('/', requireAuth, async (req, res) => {
 
   if (user) {
     // Update name/picture if changed in Clerk
-    if (user.name !== name || user.picture !== picture) {
+    const resolvedName = name || user.name;
+    if (user.name !== resolvedName || user.picture !== picture) {
       user = await prisma.user.update({
         where: { clerkId },
-        data: { name, picture },
+        data: { name: resolvedName, picture },
         include: { club: true },
       });
     }

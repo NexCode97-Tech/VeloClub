@@ -38,7 +38,7 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
     req.auth = {
       clerkId,
       email: clerkUser.emailAddresses[0]?.emailAddress ?? '',
-      name: `${clerkUser.firstName ?? ''} ${clerkUser.lastName ?? ''}`.trim() || 'Usuario',
+      name: `${clerkUser.firstName ?? ''} ${clerkUser.lastName ?? ''}`.trim(),
       picture: clerkUser.imageUrl,
     };
 

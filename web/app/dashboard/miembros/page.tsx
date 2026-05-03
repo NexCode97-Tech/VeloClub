@@ -11,7 +11,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog';
 import {
-  Select, SelectContent, SelectItem, SelectTrigger,
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import { Plus, Pencil, Trash2, Users, Search } from 'lucide-react';
 
@@ -324,7 +324,7 @@ export default function MiembrosPage() {
             </div>
 
             {/* Fecha de nacimiento + Rol */}
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid gap-3" style={{ gridTemplateColumns: '130px 1fr' }}>
               <div className="space-y-2 min-w-0">
                 <Label>Fecha de nacimiento</Label>
                 <Input type="date" value={form.birthDate} className="w-full max-w-full" onChange={e => setForm(f => ({ ...f, birthDate: e.target.value }))} />
@@ -342,15 +342,31 @@ export default function MiembrosPage() {
               </div>
             </div>
 
-            {/* Categoría + Tipo */}
+            {/* Categoría + Nivel */}
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
                 <Label>Categoría</Label>
-                <Input value={form.category} placeholder="Ej: Juvenil A" onChange={e => setForm(f => ({ ...f, category: e.target.value }))} />
+                <Select value={form.category} onValueChange={v => setForm(f => ({ ...f, category: v }))}>
+                  <SelectTrigger><SelectValue placeholder="Seleccionar" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Menores 3-10 años">Menores 3-10 años</SelectItem>
+                    <SelectItem value="Transición 11-13 años">Transición 11-13 años</SelectItem>
+                    <SelectItem value="Mayores 14+ años">Mayores 14+ años</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div className="space-y-2">
-                <Label>Tipo</Label>
-                <Input value={form.tipo} placeholder="Ej: Fondo, Velocidad" onChange={e => setForm(f => ({ ...f, tipo: e.target.value }))} />
+                <Label>Nivel</Label>
+                <Select value={form.tipo} onValueChange={v => setForm(f => ({ ...f, tipo: v }))}>
+                  <SelectTrigger><SelectValue placeholder="Seleccionar" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Escuela">Escuela</SelectItem>
+                    <SelectItem value="Novatos">Novatos</SelectItem>
+                    <SelectItem value="Intermedio">Intermedio</SelectItem>
+                    <SelectItem value="Avanzados">Avanzados</SelectItem>
+                    <SelectItem value="Federados">Federados</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 

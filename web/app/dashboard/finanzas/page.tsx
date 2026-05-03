@@ -428,7 +428,16 @@ export default function FinanzasPage() {
             </div>
             <div className="space-y-2">
               <Label>Monto (COP) *</Label>
-              <Input type="number" value={payForm.amount} onChange={e => setPayForm(f => ({ ...f, amount: e.target.value }))} placeholder="ej. 150000" />
+              <Input
+                type="text"
+                inputMode="numeric"
+                value={payForm.amount ? Number(payForm.amount).toLocaleString('es-CO') : ''}
+                onChange={e => {
+                  const raw = e.target.value.replace(/\./g, '').replace(/\D/g, '');
+                  setPayForm(f => ({ ...f, amount: raw }));
+                }}
+                placeholder="ej. 150.000"
+              />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
@@ -496,7 +505,16 @@ export default function FinanzasPage() {
             </div>
             <div className="space-y-2">
               <Label>Monto (COP) *</Label>
-              <Input type="number" value={flowForm.amount} onChange={e => setFlowForm(f => ({ ...f, amount: e.target.value }))} placeholder="ej. 80000" />
+              <Input
+                type="text"
+                inputMode="numeric"
+                value={flowForm.amount ? Number(flowForm.amount).toLocaleString('es-CO') : ''}
+                onChange={e => {
+                  const raw = e.target.value.replace(/\./g, '').replace(/\D/g, '');
+                  setFlowForm(f => ({ ...f, amount: raw }));
+                }}
+                placeholder="ej. 80.000"
+              />
             </div>
             <div className="space-y-2">
               <Label>Fecha</Label>

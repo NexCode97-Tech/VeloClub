@@ -449,7 +449,7 @@ export default function FinanzasPage() {
             <div className="space-y-2">
               <Label>Estado</Label>
               <Select value={payForm.status} onValueChange={v => setPayForm(f => ({ ...f, status: v ?? 'PAID' }))}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger><span className="text-sm">{STATUS_LABELS[payForm.status]}</span></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="PAID">Pagado</SelectItem>
                   <SelectItem value="PENDING">Pendiente</SelectItem>

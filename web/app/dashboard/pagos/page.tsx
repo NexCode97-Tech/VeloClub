@@ -172,7 +172,7 @@ export default function PagosPage() {
 
         {/* Filtro mes/año */}
         <div className="flex gap-2 items-center">
-          <Select value={String(filterMonth)} onValueChange={v => setFilterMonth(parseInt(v))}>
+          <Select value={String(filterMonth)} onValueChange={v => setFilterMonth(parseInt(v ?? ''))}>
             <SelectTrigger className="w-36 bg-white">
               <SelectValue />
             </SelectTrigger>
@@ -182,7 +182,7 @@ export default function PagosPage() {
               ))}
             </SelectContent>
           </Select>
-          <Select value={String(filterYear)} onValueChange={v => setFilterYear(parseInt(v))}>
+          <Select value={String(filterYear)} onValueChange={v => setFilterYear(parseInt(v ?? ''))}>
             <SelectTrigger className="w-24 bg-white">
               <SelectValue />
             </SelectTrigger>

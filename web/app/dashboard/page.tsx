@@ -8,7 +8,7 @@ import Link from 'next/link';
 import {
   Users, CalendarCheck, CreditCard, TrendingUp,
   Trophy, CalendarDays, BarChart2, MapPin,
-  RefreshCw, Bell, ChevronRight,
+  RefreshCw, Bell,
 } from 'lucide-react';
 
 interface MeResponse {
@@ -40,10 +40,10 @@ const STATS_BY_ROLE: Record<string, StatCard[]> = {
     { label: 'Flujo',       value: '-', color: '#EF476F', icon: TrendingUp,    href: '/dashboard/flujo-caja' },
   ],
   COACH: [
-    { label: 'Alumnos',        value: '-', color: '#7C3AED', icon: Users,         href: '/dashboard/miembros' },
-    { label: 'Hoy asisten',    value: '-', color: '#06D6A0', icon: CalendarCheck, href: '/dashboard/asistencia' },
-    { label: 'Entrenamientos', value: '-', color: '#FFB703', icon: CalendarDays,  href: '/dashboard/calendario' },
-    { label: 'Logros mes',     value: '-', color: '#4361EE', icon: Trophy,        href: '/dashboard/logros' },
+    { label: 'Deportistas',     value: '-', color: '#7C3AED', icon: Users,         href: '/dashboard/miembros' },
+    { label: 'Hoy asisten',     value: '-', color: '#06D6A0', icon: CalendarCheck, href: '/dashboard/asistencia' },
+    { label: 'Entrenamientos',  value: '-', color: '#FFB703', icon: CalendarDays,  href: '/dashboard/calendario' },
+    { label: 'Logros mes',      value: '-', color: '#4361EE', icon: Trophy,        href: '/dashboard/logros' },
   ],
   STUDENT: [
     { label: 'Asistencia', value: '-', color: '#06D6A0', icon: CalendarCheck, href: '/dashboard/asistencia' },
@@ -120,6 +120,7 @@ export default function DashboardPage() {
   const firstName = user?.name?.split(' ')[0] ?? '';
   const rc = roleColors[role] ?? roleColors.ADMIN;
   const stats = STATS_BY_ROLE[role] ?? STATS_BY_ROLE.ADMIN;
+  const quickLinks = QUICK_BY_ROLE[role] ?? QUICK_BY_ROLE.ADMIN;
 
   return (
     <div className="min-h-full bg-background">
@@ -157,7 +158,6 @@ export default function DashboardPage() {
             </button>
             <button className="w-9 h-9 rounded-full border border-border bg-white flex items-center justify-center text-muted-foreground relative">
               <Bell className="w-[15px] h-[15px]" />
-              <span className="absolute top-[9px] right-[9px] w-1.5 h-1.5 rounded-full bg-destructive" />
             </button>
           </div>
         </div>
@@ -187,49 +187,47 @@ export default function DashboardPage() {
 
       <div className="px-5 py-4 space-y-5">
 
-        {/* Upcoming events */}
+        {/* Accesos rápidos */}
         <section>
-          <div className="flex items-center justify-between mb-2.5">
-            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Proximos eventos</p>
-            <Link href="/dashboard/calendario" className="text-[11px] font-semibold" style={{ color: '#7C3AED' }}>
-              Ver todos
-            </Link>
-          </div>
-          <div className="space-y-2">
-            {[
-              { title: 'Entrenamiento Juvenil A', time: '07:00', sede: 'Sede Norte', type: 'training' as const },
-              { title: 'Copa Regional Patinaje',  time: '09:00', sede: 'Estadio Sur', type: 'competition' as const },
-            ].map((ev) => {
-              const typeColor = ev.type === 'competition' ? '#EF476F' : '#4361EE';
-              const typeLabel = ev.type === 'competition' ? 'Competencia' : 'Entreno';
-              return (
+          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2.5">
+            Accesos rápidos
+          </p>
+          <div className="grid grid-cols-4 gap-2">
+            {quickLinks.map((q) => (
+              <Link
+                key={q.label}
+                href={q.href}
+                className="bg-white border border-border rounded-xl py-3 flex flex-col items-center gap-1.5 active:scale-95 transition-transform"
+              >
                 <div
-                  key={ev.title}
-                  className="bg-white border border-border rounded-xl px-3 py-2.5 flex items-center gap-3"
+                  className="w-9 h-9 rounded-xl flex items-center justify-center"
+                  style={{ background: `${q.color}18`, color: q.color }}
                 >
-                  <div
-                    className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
-                    style={{ background: `${typeColor}18`, color: typeColor }}
-                  >
-                    <CalendarDays className="w-4 h-4" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[13px] font-semibold text-foreground truncate">{ev.title}</p>
-                    <p className="text-[11px] text-muted-foreground">{ev.time} · {ev.sede}</p>
-                  </div>
-                  <span
-                    className="text-[9px] font-semibold px-2 py-0.5 rounded-full shrink-0"
-                    style={{ background: `${typeColor}18`, color: typeColor }}
-                  >
-                    {typeLabel}
-                  </span>
+                  <q.icon className="w-4 h-4" />
                 </div>
-              );
-            })}
+                <span className="text-[10px] font-semibold text-muted-foreground text-center leading-tight">
+                  {q.label}
+                </span>
+              </Link>
+            ))}
           </div>
         </section>
 
-        {/* Pending payments — ADMIN only */}
+        {/* Próximos eventos — vacío hasta que haya API */}
+        <section>
+          <div className="flex items-center justify-between mb-2.5">
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Próximos eventos</p>
+            <Link href="/dashboard/calendario" className="text-[11px] font-semibold" style={{ color: '#7C3AED' }}>
+              Ver calendario
+            </Link>
+          </div>
+          <div className="bg-white border border-border rounded-xl px-4 py-5 text-center">
+            <CalendarDays className="w-8 h-8 mx-auto mb-2 text-muted-foreground/30" />
+            <p className="text-[12px] text-muted-foreground">No hay eventos programados</p>
+          </div>
+        </section>
+
+        {/* Pagos pendientes — ADMIN only */}
         {(role === 'ADMIN' || role === 'SUPERADMIN') && (
           <section>
             <div className="flex items-center justify-between mb-2.5">
@@ -238,104 +236,38 @@ export default function DashboardPage() {
                 Ver todos
               </Link>
             </div>
-            <div className="bg-white border border-border rounded-xl overflow-hidden">
-              {[
-                { name: 'Santiago Mora',  concept: 'Mensualidad Abril', amount: '$120.000', status: 'Pendiente', sc: '#FFB703' },
-                { name: 'Mateo Gonzalez', concept: 'Mensualidad Marzo', amount: '$120.000', status: 'Vencido',   sc: '#EF476F' },
-              ].map((p, i) => (
-                <div key={p.name} className={`flex items-center gap-3 px-3 py-2.5 ${i > 0 ? 'border-t border-border' : ''}`}>
-                  <div
-                    className="w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-bold text-white shrink-0"
-                    style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)' }}
-                  >
-                    {p.name.split(' ').map((w) => w[0]).join('').slice(0, 2)}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[13px] font-semibold text-foreground">{p.name}</p>
-                    <p className="text-[11px] text-muted-foreground">{p.concept}</p>
-                  </div>
-                  <div className="text-right shrink-0">
-                    <p className="text-[13px] font-bold text-foreground" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
-                      {p.amount}
-                    </p>
-                    <span
-                      className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full"
-                      style={{ background: `${p.sc}18`, color: p.sc }}
-                    >
-                      {p.status}
-                    </span>
-                  </div>
-                </div>
-              ))}
-              <Link
-                href="/dashboard/pagos"
-                className="flex items-center justify-center gap-1 py-2.5 text-[11px] font-semibold border-t border-border"
-                style={{ color: '#7C3AED' }}
-              >
-                Ver todos los pagos <ChevronRight className="w-3 h-3" />
-              </Link>
+            <div className="bg-white border border-border rounded-xl px-4 py-5 text-center">
+              <CreditCard className="w-8 h-8 mx-auto mb-2 text-muted-foreground/30" />
+              <p className="text-[12px] text-muted-foreground">Sin pagos pendientes</p>
             </div>
           </section>
         )}
 
-        {/* Achievements — STUDENT only */}
+        {/* Logros — STUDENT only */}
         {role === 'STUDENT' && (
           <section>
             <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2.5">
               Mis logros recientes
             </p>
-            <div className="bg-white border border-border rounded-xl overflow-hidden">
-              <div className="flex items-center gap-3 px-3 py-3">
-                <div className="w-8 h-8 text-2xl flex items-center justify-center shrink-0">🥇</div>
-                <div className="flex-1">
-                  <p className="text-[13px] font-semibold text-foreground">Copa Regional</p>
-                  <p className="text-[11px] text-muted-foreground">Juvenil A · 2026-03-15</p>
-                </div>
-                <div
-                  className="text-lg font-black"
-                  style={{ color: '#FFD700', fontFamily: 'var(--font-space-grotesk)' }}
-                >
-                  #1
-                </div>
-              </div>
+            <div className="bg-white border border-border rounded-xl px-4 py-5 text-center">
+              <Trophy className="w-8 h-8 mx-auto mb-2 text-muted-foreground/30" />
+              <p className="text-[12px] text-muted-foreground">Sin logros registrados aún</p>
             </div>
           </section>
         )}
 
-        {/* Today attendance — COACH only */}
+        {/* Asistencia de hoy — COACH only */}
         {role === 'COACH' && (
           <section>
             <div className="flex items-center justify-between mb-2.5">
               <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Asistencia de hoy</p>
               <Link href="/dashboard/asistencia" className="text-[11px] font-semibold" style={{ color: '#7C3AED' }}>
-                Ver todos
+                Registrar
               </Link>
             </div>
-            <div className="bg-white border border-border rounded-xl overflow-hidden">
-              {[
-                { name: 'Valentina Rios',   cat: 'Juvenil A',  status: 'Presente', sc: '#06D6A0' },
-                { name: 'Santiago Mora',    cat: 'Infantil B', status: 'Tarde',    sc: '#FFB703' },
-                { name: 'Isabella Castro',  cat: 'Juvenil A',  status: 'Presente', sc: '#06D6A0' },
-              ].map((m, i) => (
-                <div key={m.name} className={`flex items-center gap-3 px-3 py-2.5 ${i > 0 ? 'border-t border-border' : ''}`}>
-                  <div
-                    className="w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-bold text-white shrink-0"
-                    style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)' }}
-                  >
-                    {m.name.split(' ').map((w) => w[0]).join('').slice(0, 2)}
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-[13px] font-semibold text-foreground">{m.name}</p>
-                    <p className="text-[11px] text-muted-foreground">{m.cat}</p>
-                  </div>
-                  <span
-                    className="text-[10px] font-bold px-2 py-0.5 rounded-full"
-                    style={{ background: `${m.sc}18`, color: m.sc }}
-                  >
-                    {m.status}
-                  </span>
-                </div>
-              ))}
+            <div className="bg-white border border-border rounded-xl px-4 py-5 text-center">
+              <CalendarCheck className="w-8 h-8 mx-auto mb-2 text-muted-foreground/30" />
+              <p className="text-[12px] text-muted-foreground">Ve a Asistencia para registrar el día de hoy</p>
             </div>
           </section>
         )}

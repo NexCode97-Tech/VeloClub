@@ -325,9 +325,9 @@ export default function MiembrosPage() {
 
             {/* Fecha de nacimiento + Rol */}
             <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-2">
+              <div className="space-y-2 min-w-0 overflow-hidden">
                 <Label>Fecha de nacimiento</Label>
-                <Input type="date" value={form.birthDate} onChange={e => setForm(f => ({ ...f, birthDate: e.target.value }))} />
+                <Input type="date" value={form.birthDate} className="w-full" onChange={e => setForm(f => ({ ...f, birthDate: e.target.value }))} />
               </div>
               <div className="space-y-2">
                 <Label>Rol</Label>

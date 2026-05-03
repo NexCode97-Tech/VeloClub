@@ -58,17 +58,25 @@ export default function AsistenciaPage() {
 
   useEffect(() => {
     (async () => {
-      const token = await getToken();
-      const [meRes, locsRes, clubRes] = await Promise.all([
-        apiFetch<{ status: string; user?: { role: string } }>('/me', { token }),
-        apiFetch<{ locations: Location[] }>('/locations', { token }),
-        apiFetch<{ club: { noAttendanceDays: number[] } }>('/clubs/settings', { token }),
-      ]);
-      setRole(meRes.user?.role ?? '');
-      setLocations(locsRes.locations);
-      setNoAttDays(clubRes.club.noAttendanceDays ?? []);
-      if (locsRes.locations.length > 0) setSelectedLoc(locsRes.locations[0].id);
-      setLoading(false);
+      try {
+        const token = await getToken();
+        const [meRes, locsRes] = await Promise.all([
+          apiFetch<{ status: string; user?: { role: string } }>('/me', { token }),
+          apiFetch<{ locations: Location[] }>('/locations', { token }),
+        ]);
+        setRole(meRes.user?.role ?? '');
+        setLocations(locsRes.locations);
+        if (locsRes.locations.length > 0) setSelectedLoc(locsRes.locations[0].id);
+
+        try {
+          const clubRes = await apiFetch<{ club: { noAttendanceDays: number[] } }>('/clubs/settings', { token });
+          setNoAttDays(clubRes.club.noAttendanceDays ?? []);
+        } catch {
+          // Si el endpoint falla, no bloqueamos la carga
+        }
+      } finally {
+        setLoading(false);
+      }
     })();
   }, []);
 

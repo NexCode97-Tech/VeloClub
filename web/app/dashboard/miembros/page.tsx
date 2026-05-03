@@ -61,6 +61,7 @@ export default function MiembrosPage() {
       apiFetch<{ members: Member[] }>('/members', { token }),
       apiFetch<{ locations: Location[] }>('/locations', { token }),
     ]);
+    setMembers([]);
     setMembers(membersRes.members);
     setLocations(locsRes.locations);
     setLoading(false);

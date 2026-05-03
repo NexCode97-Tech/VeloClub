@@ -1,13 +1,14 @@
 'use client';
 
 import Link from 'next/link';
-import { Trophy, CalendarDays, MapPin, BarChart2, ChevronRight } from 'lucide-react';
+import { Trophy, CalendarDays, MapPin, BarChart2, Settings, ChevronRight } from 'lucide-react';
 
 const MAS_ITEMS = [
   { label: 'Competencias', icon: Trophy,      color: '#FFB703', href: '/dashboard/logros' },
   { label: 'Calendario',   icon: CalendarDays, color: '#EF476F', href: '/dashboard/calendario' },
   { label: 'Sedes',        icon: MapPin,      color: '#06D6A0', href: '/dashboard/sedes' },
   { label: 'Reportes',     icon: BarChart2,   color: '#4361EE', href: '/dashboard/reportes' },
+  { label: 'Ajustes',      icon: Settings,    color: '#8B8FA8', href: '/dashboard/ajustes' },
 ];
 
 export default function MasPage() {

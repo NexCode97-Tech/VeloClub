@@ -10,11 +10,12 @@ datasource db {
 // ─── Club ────────────────────────────────────────────────────────────────────
 
 model Club {
-  id             String          @id @default(cuid())
-  name           String
-  active         Boolean         @default(true)
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
+  id                String          @id @default(cuid())
+  name              String
+  active            Boolean         @default(true)
+  noAttendanceDays  Int[]
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
   users          User[]
   locations      Location[]
   members        Member[]

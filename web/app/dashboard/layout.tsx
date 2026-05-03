@@ -19,7 +19,6 @@ import {
   MapPin,
   RefreshCw,
   MoreHorizontal,
-  X,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -77,7 +76,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const { getToken, isLoaded, isSignedIn } = useAuth();
   const [role, setRole] = useState<string | null>(null);
   const [checking, setChecking] = useState(true);
-  const [drawerOpen, setDrawerOpen] = useState(false);
 
   useEffect(() => {
     if (!isLoaded) return;
@@ -162,87 +160,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </div>
       </aside>
 
-      {/* ── Mobile drawer ───────────────────────────────────────────────── */}
-      {drawerOpen && (
-        <div
-          className="md:hidden fixed inset-0 z-40 bg-black/50 backdrop-blur-sm"
-          onClick={() => setDrawerOpen(false)}
-        />
-      )}
-      <div
-        className={cn(
-          'md:hidden fixed left-0 top-0 bottom-0 w-[78%] max-w-xs z-50 bg-card border-r border-border flex flex-col shadow-2xl transition-transform duration-300',
-          drawerOpen ? 'translate-x-0' : '-translate-x-full'
-        )}
-      >
-        <div className="flex items-center justify-between px-5 py-4 border-b border-border bg-gradient-to-br from-card to-secondary">
-          <div className="flex items-center gap-3">
-            <div
-              className="w-9 h-9 rounded-xl flex items-center justify-center text-white text-sm font-bold"
-              style={{ background: 'linear-gradient(135deg,#4361EE,#7C3AED)', fontFamily: 'var(--font-space-grotesk)' }}
-            >
-              VC
-            </div>
-            <div>
-              <p className="text-sm font-bold text-foreground" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
-                VeloClub
-              </p>
-              {role && (
-                <span className={cn('text-[10px] font-semibold px-2 py-0.5 rounded-full', roleBadgeStyle[role] ?? 'bg-secondary text-muted-foreground')}>
-                  {roleLabels[role] ?? role}
-                </span>
-              )}
-            </div>
-          </div>
-          <button
-            onClick={() => setDrawerOpen(false)}
-            className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center text-muted-foreground"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-
-        <nav className="flex-1 px-3 py-3 space-y-0.5 overflow-y-auto">
-          {ALL_NAV.map(({ href, label, icon: Icon }) => {
-            const active = href === '/dashboard' ? pathname === href : pathname.startsWith(href);
-            return (
-              <Link
-                key={href}
-                href={href}
-                onClick={() => setDrawerOpen(false)}
-                className={cn(
-                  'flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-semibold transition-all',
-                  active
-                    ? 'bg-primary text-primary-foreground'
-                    : 'text-muted-foreground hover:bg-secondary hover:text-foreground'
-                )}
-              >
-                <Icon className="w-5 h-5 shrink-0" />
-                <span>{label}</span>
-              </Link>
-            );
-          })}
-        </nav>
-
-        <div className="flex items-center gap-3 px-4 py-4 border-t border-border">
-          <UserButton />
-          <span className="text-sm text-muted-foreground">Mi cuenta</span>
-        </div>
-      </div>
-
       {/* ── Main content ────────────────────────────────────────────────── */}
       <div className="flex-1 flex flex-col overflow-hidden min-w-0">
 
         {/* Mobile top bar */}
         <header className="md:hidden flex items-center justify-between px-4 py-3 bg-card border-b border-border shrink-0">
-          <button
-            onClick={() => setDrawerOpen(true)}
-            className="w-9 h-9 flex flex-col items-center justify-center gap-[5px] rounded-xl bg-secondary"
-          >
-            <span className="w-4 h-0.5 rounded-full bg-muted-foreground" />
-            <span className="w-4 h-0.5 rounded-full bg-muted-foreground" />
-            <span className="w-4 h-0.5 rounded-full bg-muted-foreground" />
-          </button>
           <Image src="/favicon.png" alt="VeloClub" width={28} height={28} className="rounded-lg object-contain" />
           <UserButton />
         </header>

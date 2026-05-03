@@ -3,14 +3,7 @@
 import { useAuth } from '@clerk/nextjs';
 import { useEffect, useState } from 'react';
 import { apiFetch } from '@/lib/api-client';
-import { ChevronLeft, ChevronRight, CalendarDays, Plus, Trash2 } from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Button } from '@/components/ui/button';
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from '@/components/ui/select';
+import { ChevronLeft, ChevronRight, CalendarDays, Trash2 } from 'lucide-react';
 
 const MONTH_NAMES = [
   'Enero','Febrero','Marzo','Abril','Mayo','Junio',
@@ -41,8 +34,6 @@ interface CalendarEvent {
   location?: { id: string; name: string } | null;
 }
 
-interface Location { id: string; name: string }
-
 function getDaysInMonth(year: number, month: number) {
   return new Date(year, month + 1, 0).getDate();
 }
@@ -50,25 +41,15 @@ function getFirstDayOfMonth(year: number, month: number) {
   return new Date(year, month, 1).getDay();
 }
 
-const emptyForm = {
-  title: '', type: 'TRAINING' as const, description: '',
-  startDate: '', endDate: '', allDay: true, locationId: '',
-};
-
 export default function CalendarioPage() {
   const { getToken } = useAuth();
   const now = new Date();
-  const [year, setYear]           = useState(now.getFullYear());
-  const [month, setMonth]         = useState(now.getMonth());
+  const [year, setYear]               = useState(now.getFullYear());
+  const [month, setMonth]             = useState(now.getMonth());
   const [selectedDay, setSelectedDay] = useState(now.getDate());
-  const [events, setEvents]       = useState<CalendarEvent[]>([]);
-  const [locations, setLocations] = useState<Location[]>([]);
-  const [role, setRole]           = useState<string>('');
-  const [open, setOpen]           = useState(false);
-  const [form, setForm]           = useState(emptyForm);
-  const [saving, setSaving]       = useState(false);
-  const [error, setError]         = useState<string | null>(null);
-  const [deleting, setDeleting]   = useState<string | null>(null);
+  const [events, setEvents]           = useState<CalendarEvent[]>([]);
+  const [role, setRole]               = useState<string>('');
+  const [deleting, setDeleting]       = useState<string | null>(null);
 
   const today = now.getDate();
   const isCurrentMonth = year === now.getFullYear() && month === now.getMonth();
@@ -84,12 +65,8 @@ export default function CalendarioPage() {
   useEffect(() => {
     (async () => {
       const token = await getToken();
-      const [meRes, locsRes] = await Promise.all([
-        apiFetch<{ status: string; user?: { role: string } }>('/me', { token }),
-        apiFetch<{ locations: Location[] }>('/locations', { token }),
-      ]);
+      const meRes = await apiFetch<{ status: string; user?: { role: string } }>('/me', { token });
       setRole(meRes.user?.role ?? '');
-      setLocations(locsRes.locations);
     })();
   }, []);
 
@@ -121,37 +98,6 @@ export default function CalendarioPage() {
 
   const selectedEvents = eventsOnDay(selectedDay);
 
-  function openNew() {
-    const pad = (n: number) => String(n).padStart(2, '0');
-    const defaultDate = `${year}-${pad(month + 1)}-${pad(selectedDay)}`;
-    setForm({ ...emptyForm, startDate: defaultDate });
-    setError(null);
-    setOpen(true);
-  }
-
-  async function handleSave() {
-    if (!form.title.trim() || !form.startDate) return;
-    setSaving(true); setError(null);
-    try {
-      const token = await getToken();
-      await apiFetch('/events', {
-        method: 'POST', token,
-        body: JSON.stringify({
-          ...form,
-          locationId: form.locationId || undefined,
-          endDate:    form.endDate    || undefined,
-          description: form.description || undefined,
-        }),
-      });
-      setOpen(false);
-      await loadEvents();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Error');
-    } finally {
-      setSaving(false);
-    }
-  }
-
   async function handleDelete(id: string) {
     if (!confirm('¿Eliminar este evento?')) return;
     setDeleting(id);
@@ -168,22 +114,9 @@ export default function CalendarioPage() {
 
   return (
     <div className="flex flex-col gap-4 px-4 py-5 max-w-lg mx-auto w-full">
-      {/* Título */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-foreground" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
-          Calendario
-        </h1>
-        {canManage && (
-          <button
-            onClick={openNew}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold text-white transition-colors"
-            style={{ background: '#4361EE' }}
-          >
-            <Plus className="w-4 h-4" />
-            <span>Evento</span>
-          </button>
-        )}
-      </div>
+      <h1 className="text-2xl font-bold text-foreground" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
+        Calendario
+      </h1>
 
       {/* Tarjeta del mes */}
       <div className="bg-white border border-border rounded-xl p-3">
@@ -199,14 +132,12 @@ export default function CalendarioPage() {
           </button>
         </div>
 
-        {/* Cabecera días */}
         <div className="grid grid-cols-7 mb-1">
           {DAY_HEADERS.map((d) => (
             <div key={d} className="text-center text-[10px] font-semibold text-muted-foreground py-1">{d}</div>
           ))}
         </div>
 
-        {/* Cuadrícula */}
         <div className="grid grid-cols-7 gap-y-1">
           {cells.map((day, idx) => {
             if (day === null) return <div key={`blank-${idx}`} />;
@@ -267,7 +198,6 @@ export default function CalendarioPage() {
         </div>
       )}
 
-      {/* Todos los eventos del mes */}
       <p className="text-[10px] font-semibold tracking-widest text-muted-foreground uppercase px-1 mt-1">
         Todo el mes · {events.length} evento{events.length !== 1 ? 's' : ''}
       </p>
@@ -276,14 +206,6 @@ export default function CalendarioPage() {
         <div className="bg-white border border-border rounded-xl px-4 py-8 text-center">
           <CalendarDays className="w-8 h-8 mx-auto mb-2 text-muted-foreground/30" />
           <p className="text-[12px] text-muted-foreground">Sin eventos este mes</p>
-          {canManage && (
-            <button
-              onClick={openNew}
-              className="mt-3 px-4 py-2 rounded-xl text-sm font-semibold border border-border text-muted-foreground hover:bg-secondary transition-colors"
-            >
-              Crear primer evento
-            </button>
-          )}
         </div>
       ) : (
         <div className="space-y-2 pb-4">
@@ -292,69 +214,6 @@ export default function CalendarioPage() {
           ))}
         </div>
       )}
-
-      {/* Modal crear evento */}
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle>Nuevo evento</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 mt-2">
-
-            <div className="space-y-2">
-              <Label>Título *</Label>
-              <Input value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} placeholder="Nombre del evento" />
-            </div>
-
-            <div className="space-y-2">
-              <Label>Tipo</Label>
-              <Select value={form.type} onValueChange={v => setForm(f => ({ ...f, type: v as typeof form.type }))}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="TRAINING">Entrenamiento</SelectItem>
-                  <SelectItem value="MEETUP">Reunión</SelectItem>
-                  <SelectItem value="COMPETITION">Competencia</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-2">
-                <Label>Fecha inicio *</Label>
-                <Input type="date" value={form.startDate} onChange={e => setForm(f => ({ ...f, startDate: e.target.value }))} />
-              </div>
-              <div className="space-y-2">
-                <Label>Fecha fin</Label>
-                <Input type="date" value={form.endDate} onChange={e => setForm(f => ({ ...f, endDate: e.target.value }))} />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Descripción</Label>
-              <Input value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} placeholder="Opcional" />
-            </div>
-
-            {locations.length > 0 && (
-              <div className="space-y-2">
-                <Label>Sede</Label>
-                <Select value={form.locationId} onValueChange={v => setForm(f => ({ ...f, locationId: v ?? '' }))}>
-                  <SelectTrigger><SelectValue placeholder="Seleccionar sede" /></SelectTrigger>
-                  <SelectContent>
-                    {locations.map(l => (
-                      <SelectItem key={l.id} value={l.id}>{l.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-
-            {error && <p className="text-sm text-red-600">{error}</p>}
-            <Button onClick={handleSave} disabled={saving || !form.title.trim() || !form.startDate} className="w-full">
-              {saving ? 'Guardando...' : 'Crear evento'}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

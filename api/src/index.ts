@@ -10,6 +10,7 @@ import superadminRouter from './routes/superadmin';
 import eventsRouter from './routes/events';
 import paymentsRouter from './routes/payments';
 import competitionsRouter from './routes/competitions';
+import cashflowRouter from './routes/cashflow';
 
 dotenv.config();
 
@@ -73,6 +74,7 @@ app.use('/superadmin', superadminRouter);
 app.use('/events', eventsRouter);
 app.use('/payments', paymentsRouter);
 app.use('/competitions', competitionsRouter);
+app.use('/cashflow', cashflowRouter);
 
 app.listen(PORT, () => {
   console.log(`API en http://localhost:${PORT}`);

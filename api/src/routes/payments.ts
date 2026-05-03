@@ -5,6 +5,11 @@ import { prisma } from '../db/client';
 
 const router = Router();
 
+const MONTH_NAMES = [
+  'Enero','Febrero','Marzo','Abril','Mayo','Junio',
+  'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre',
+];
+
 const paymentSchema = z.object({
   memberId: z.string(),
   amount: z.number().positive(),
@@ -15,6 +20,20 @@ const paymentSchema = z.object({
   status: z.enum(['PENDING', 'PAID', 'OVERDUE', 'REFUNDED']).default('PENDING'),
   notes: z.string().optional(),
 });
+
+async function createCashEntry(clubId: string, paymentId: string, amount: number, memberName: string, month: number, year: number) {
+  const existing = await prisma.cashEntry.findUnique({ where: { paymentId } });
+  if (existing) return;
+  await prisma.cashEntry.create({
+    data: {
+      clubId,
+      type:        'INCOME',
+      amount,
+      description: `Mensualidad ${memberName} — ${MONTH_NAMES[month - 1]} ${year}`,
+      paymentId,
+    },
+  });
+}
 
 // GET /payments?month=&year=&status=
 router.get('/', requireAuth, async (req, res) => {
@@ -46,16 +65,21 @@ router.post('/', requireAuth, async (req, res) => {
   if (!parsed.success) return res.status(400).json({ error: parsed.error.issues });
 
   const { dueDate, paidAt, ...rest } = parsed.data;
+  const clubId = req.user.clubId ?? '';
 
   const payment = await prisma.payment.create({
     data: {
       ...rest,
-      clubId: req.user.clubId ?? '',
+      clubId,
       dueDate: dueDate ? new Date(dueDate) : null,
       paidAt:  paidAt  ? new Date(paidAt)  : rest.status === 'PAID' ? new Date() : null,
     },
     include: { member: { select: { id: true, fullName: true, email: true } } },
   });
+
+  if (payment.status === 'PAID') {
+    await createCashEntry(clubId, payment.id, payment.amount, payment.member.fullName, payment.month, payment.year);
+  }
 
   res.status(201).json({ payment });
 });
@@ -64,8 +88,12 @@ router.post('/', requireAuth, async (req, res) => {
 router.patch('/:id', requireAuth, async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'No autenticado' });
   const id = String(req.params.id);
+  const clubId = req.user.clubId ?? '';
 
-  const existing = await prisma.payment.findFirst({ where: { id, clubId: req.user.clubId ?? '' } });
+  const existing = await prisma.payment.findFirst({
+    where: { id, clubId },
+    include: { member: { select: { fullName: true } } },
+  });
   if (!existing) return res.status(404).json({ error: 'Pago no encontrado' });
 
   const { status, paidAt, notes, amount } = req.body as {
@@ -84,6 +112,15 @@ router.patch('/:id', requireAuth, async (req, res) => {
     data,
     include: { member: { select: { id: true, fullName: true, email: true } } },
   });
+
+  if (payment.status === 'PAID') {
+    await createCashEntry(
+      clubId, payment.id,
+      payment.amount,
+      existing.member.fullName,
+      payment.month, payment.year
+    );
+  }
 
   res.json({ payment });
 });

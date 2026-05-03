@@ -10,7 +10,7 @@ const bulkSchema = z.object({
   locationId: z.string().optional(),
   records: z.array(z.object({
     memberId: z.string(),
-    status:   z.enum(['PRESENT', 'LATE', 'ABSENT', 'MEDICAL']),
+    status:   z.enum(['PRESENT', 'LATE', 'ABSENT', 'MEDICAL_EXCUSE']),
     notes:    z.string().optional(),
   })),
 });

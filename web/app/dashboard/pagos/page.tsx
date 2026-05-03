@@ -174,7 +174,7 @@ export default function PagosPage() {
         <div className="flex gap-2 items-center">
           <Select value={String(filterMonth)} onValueChange={v => setFilterMonth(parseInt(v ?? ''))}>
             <SelectTrigger className="w-36 bg-white">
-              <SelectValue />
+              <span className="text-sm">{MONTH_NAMES[filterMonth - 1]}</span>
             </SelectTrigger>
             <SelectContent>
               {MONTH_NAMES.map((name, idx) => (
@@ -331,7 +331,7 @@ export default function PagosPage() {
               <div className="space-y-2">
                 <Label>Mes</Label>
                 <Select value={form.month} onValueChange={v => setForm(f => ({ ...f, month: v ?? '' }))}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectTrigger><span className="text-sm">{MONTH_NAMES[parseInt(form.month) - 1]}</span></SelectTrigger>
                   <SelectContent>
                     {MONTH_NAMES.map((name, idx) => (
                       <SelectItem key={idx + 1} value={String(idx + 1)}>{name}</SelectItem>

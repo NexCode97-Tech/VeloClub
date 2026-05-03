@@ -323,13 +323,15 @@ export default function MiembrosPage() {
               </div>
             </div>
 
-            {/* Fecha de nacimiento + Rol */}
-            <div className="flex gap-3 items-end">
-              <div className="space-y-2 shrink-0">
-                <Label>Fecha de nacimiento</Label>
-                <Input type="date" value={form.birthDate} className="!w-[130px] !min-w-0" onChange={e => setForm(f => ({ ...f, birthDate: e.target.value }))} />
-              </div>
-              <div className="space-y-2 flex-1 min-w-0">
+            {/* Fecha de nacimiento */}
+            <div className="space-y-2">
+              <Label>Fecha de nacimiento</Label>
+              <Input type="date" value={form.birthDate} className="!w-[130px] !min-w-0" onChange={e => setForm(f => ({ ...f, birthDate: e.target.value }))} />
+            </div>
+
+            {/* Rol + Categoría + Nivel */}
+            <div className="grid grid-cols-3 gap-2">
+              <div className="space-y-2">
                 <Label>Rol</Label>
                 <Select value={form.role} onValueChange={v => setForm(f => ({ ...f, role: v ?? 'STUDENT' }))}>
                   <SelectTrigger><span className="text-sm">{ROLES[form.role] ?? form.role}</span></SelectTrigger>
@@ -340,10 +342,6 @@ export default function MiembrosPage() {
                   </SelectContent>
                 </Select>
               </div>
-            </div>
-
-            {/* Categoría + Nivel */}
-            <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
                 <Label>Categoría</Label>
                 <Select value={form.category} onValueChange={v => setForm(f => ({ ...f, category: v ?? '' }))}>

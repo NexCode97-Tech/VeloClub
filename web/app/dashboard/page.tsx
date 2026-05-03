@@ -6,8 +6,8 @@ import { useEffect, useState } from 'react';
 import { apiFetch } from '@/lib/api-client';
 import Link from 'next/link';
 import {
-  Users, CalendarCheck, CreditCard, TrendingUp,
-  Trophy, CalendarDays, BarChart2, MapPin,
+  Users, CalendarCheck, CreditCard,
+  Trophy, CalendarDays, MapPin,
   RefreshCw, Bell,
 } from 'lucide-react';
 
@@ -34,10 +34,8 @@ type StatCard = { label: string; value: string | number; color: string; icon: Re
 
 const STATS_BY_ROLE: Record<string, StatCard[]> = {
   ADMIN: [
-    { label: 'Miembros',    value: '-', color: '#7C3AED', icon: Users,         href: '/dashboard/miembros' },
     { label: 'Asistencia',  value: '-', color: '#06D6A0', icon: CalendarCheck, href: '/dashboard/asistencia' },
-    { label: 'Pagos pend.', value: '-', color: '#FFB703', icon: CreditCard,    href: '/dashboard/pagos' },
-    { label: 'Flujo',       value: '-', color: '#EF476F', icon: TrendingUp,    href: '/dashboard/flujo-caja' },
+    { label: 'Pagos',       value: '-', color: '#FFB703', icon: CreditCard,    href: '/dashboard/pagos' },
   ],
   COACH: [
     { label: 'Deportistas',     value: '-', color: '#7C3AED', icon: Users,         href: '/dashboard/miembros' },
@@ -53,26 +51,6 @@ const STATS_BY_ROLE: Record<string, StatCard[]> = {
   ],
 };
 
-const QUICK_BY_ROLE: Record<string, { label: string; color: string; icon: React.ElementType; href: string }[]> = {
-  ADMIN: [
-    { label: 'Asistencia', color: '#06D6A0', icon: CalendarCheck, href: '/dashboard/asistencia' },
-    { label: 'Pagos',      color: '#FFB703', icon: CreditCard,    href: '/dashboard/pagos' },
-    { label: 'Logros',     color: '#7C3AED', icon: Trophy,        href: '/dashboard/logros' },
-    { label: 'Reportes',   color: '#EF476F', icon: BarChart2,     href: '/dashboard/reportes' },
-  ],
-  COACH: [
-    { label: 'Asistencia', color: '#06D6A0', icon: CalendarCheck, href: '/dashboard/asistencia' },
-    { label: 'Miembros',   color: '#7C3AED', icon: Users,         href: '/dashboard/miembros' },
-    { label: 'Logros',     color: '#FFB703', icon: Trophy,        href: '/dashboard/logros' },
-    { label: 'Calendario', color: '#4361EE', icon: CalendarDays,  href: '/dashboard/calendario' },
-  ],
-  STUDENT: [
-    { label: 'Asistencia', color: '#06D6A0', icon: CalendarCheck, href: '/dashboard/asistencia' },
-    { label: 'Logros',     color: '#FFB703', icon: Trophy,        href: '/dashboard/logros' },
-    { label: 'Calendario', color: '#7C3AED', icon: CalendarDays,  href: '/dashboard/calendario' },
-    { label: 'Sedes',      color: '#EF476F', icon: MapPin,        href: '/dashboard/sedes' },
-  ],
-};
 
 function todayLabel() {
   const d = new Date();
@@ -120,7 +98,6 @@ export default function DashboardPage() {
   const firstName = user?.name?.split(' ')[0] ?? '';
   const rc = roleColors[role] ?? roleColors.ADMIN;
   const stats = STATS_BY_ROLE[role] ?? STATS_BY_ROLE.ADMIN;
-  const quickLinks = QUICK_BY_ROLE[role] ?? QUICK_BY_ROLE.ADMIN;
 
   return (
     <div className="min-h-full bg-background">
@@ -163,55 +140,29 @@ export default function DashboardPage() {
         </div>
 
         {/* Stats grid */}
-        <div className="grid grid-cols-4 gap-2">
+        <div className={`grid gap-3 ${stats.length === 2 ? 'grid-cols-2' : 'grid-cols-4'}`}>
           {stats.map((s) => (
             <Link
               key={s.label}
               href={s.href}
-              className="bg-white border border-border rounded-xl p-2.5 text-center active:scale-95 transition-transform"
+              className={`bg-white border border-border rounded-xl text-center active:scale-95 transition-transform ${stats.length === 2 ? 'p-5' : 'p-2.5'}`}
             >
-              <div className="flex justify-center mb-1" style={{ color: s.color }}>
-                <s.icon className="w-[17px] h-[17px]" />
+              <div className={`flex justify-center ${stats.length === 2 ? 'mb-2' : 'mb-1'}`} style={{ color: s.color }}>
+                <s.icon className={stats.length === 2 ? 'w-6 h-6' : 'w-[17px] h-[17px]'} />
               </div>
               <div
-                className="text-base font-extrabold text-foreground leading-none mb-0.5"
+                className={`font-extrabold text-foreground leading-none mb-1 ${stats.length === 2 ? 'text-2xl' : 'text-base'}`}
                 style={{ fontFamily: 'var(--font-space-grotesk)' }}
               >
                 {s.value}
               </div>
-              <div className="text-[9px] text-muted-foreground leading-tight">{s.label}</div>
+              <div className={`text-muted-foreground leading-tight ${stats.length === 2 ? 'text-[11px]' : 'text-[9px]'}`}>{s.label}</div>
             </Link>
           ))}
         </div>
       </div>
 
       <div className="px-5 py-4 space-y-5">
-
-        {/* Accesos rápidos */}
-        <section>
-          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2.5">
-            Accesos rápidos
-          </p>
-          <div className="grid grid-cols-4 gap-2">
-            {quickLinks.map((q) => (
-              <Link
-                key={q.label}
-                href={q.href}
-                className="bg-white border border-border rounded-xl py-3 flex flex-col items-center gap-1.5 active:scale-95 transition-transform"
-              >
-                <div
-                  className="w-9 h-9 rounded-xl flex items-center justify-center"
-                  style={{ background: `${q.color}18`, color: q.color }}
-                >
-                  <q.icon className="w-4 h-4" />
-                </div>
-                <span className="text-[10px] font-semibold text-muted-foreground text-center leading-tight">
-                  {q.label}
-                </span>
-              </Link>
-            ))}
-          </div>
-        </section>
 
         {/* Próximos eventos — vacío hasta que haya API */}
         <section>

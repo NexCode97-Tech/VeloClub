@@ -11,7 +11,6 @@ import {
   LayoutDashboard,
   Users,
   CalendarCheck,
-  CreditCard,
   Trophy,
   CalendarDays,
   BarChart2,
@@ -19,6 +18,17 @@ import {
   RefreshCw,
   MoreHorizontal,
 } from 'lucide-react';
+
+function FinanzasIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+      <rect x="2" y="7" width="20" height="14" rx="2" />
+      <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2" />
+      <circle cx="12" cy="14" r="2" />
+      <path d="M12 12v0M12 16v0" />
+    </svg>
+  );
+}
 import { cn } from '@/lib/utils';
 
 const ROLE_TABS: Record<string, { href: string; label: string; icon: React.ElementType }[]> = {
@@ -26,7 +36,7 @@ const ROLE_TABS: Record<string, { href: string; label: string; icon: React.Eleme
     { href: '/dashboard',             label: 'Inicio',        icon: LayoutDashboard },
     { href: '/dashboard/miembros',    label: 'Miembros',      icon: Users },
     { href: '/dashboard/asistencia',  label: 'Asistencia',    icon: CalendarCheck },
-    { href: '/dashboard/finanzas',    label: 'Finanzas',      icon: CreditCard },
+    { href: '/dashboard/finanzas',    label: 'Finanzas',      icon: FinanzasIcon },
     { href: '/dashboard/mas',         label: 'Mas',           icon: MoreHorizontal },
   ],
   COACH: [
@@ -50,7 +60,7 @@ const ALL_NAV = [
   { href: '/dashboard/miembros',   label: 'Miembros',      icon: Users },
   { href: '/dashboard/sedes',      label: 'Sedes',         icon: MapPin },
   { href: '/dashboard/asistencia', label: 'Asistencia',    icon: CalendarCheck },
-  { href: '/dashboard/finanzas',   label: 'Finanzas',      icon: CreditCard },
+  { href: '/dashboard/finanzas',   label: 'Finanzas',      icon: FinanzasIcon },
   { href: '/dashboard/logros',     label: 'Competencias',  icon: Trophy },
   { href: '/dashboard/calendario', label: 'Calendario',    icon: CalendarDays },
   { href: '/dashboard/reportes',   label: 'Reportes',      icon: BarChart2 },

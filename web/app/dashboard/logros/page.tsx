@@ -216,7 +216,7 @@ export default function LogrosPage() {
           <div className="space-y-4 mt-2">
             <div className="space-y-2">
               <Label>Nombre *</Label>
-              <Input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="ej. Copa Ciclismo Antioquia 2025" />
+              <Input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="ej. Copa Patinaje Antioquia 2025" />
             </div>
             <div className="space-y-2">
               <Label>Lugar</Label>

@@ -311,22 +311,22 @@ export default function MiembrosPage() {
               <Input value={form.fullName} onChange={e => setForm(f => ({ ...f, fullName: e.target.value }))} />
             </div>
 
-            {/* Email + Teléfono */}
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-2">
-                <Label>Correo electrónico</Label>
-                <Input type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} />
-              </div>
-              <div className="space-y-2">
+            {/* Correo electrónico */}
+            <div className="space-y-2">
+              <Label>Correo electrónico</Label>
+              <Input type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} />
+            </div>
+
+            {/* Teléfono + Fecha de nacimiento */}
+            <div className="flex gap-3 items-end">
+              <div className="space-y-2 flex-1 min-w-0">
                 <Label>Teléfono</Label>
                 <Input value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} />
               </div>
-            </div>
-
-            {/* Fecha de nacimiento */}
-            <div className="space-y-2">
-              <Label>Fecha de nacimiento</Label>
-              <Input type="date" value={form.birthDate} className="!w-[130px] !min-w-0" onChange={e => setForm(f => ({ ...f, birthDate: e.target.value }))} />
+              <div className="space-y-2 shrink-0">
+                <Label>Fecha de nacimiento</Label>
+                <Input type="date" value={form.birthDate} className="!w-[130px] !min-w-0" onChange={e => setForm(f => ({ ...f, birthDate: e.target.value }))} />
+              </div>
             </div>
 
             {/* Rol + Categoría + Nivel */}

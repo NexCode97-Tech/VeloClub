@@ -324,22 +324,22 @@ export default function MiembrosPage() {
             </div>
 
             {/* Fecha de nacimiento */}
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-2">
-                <Label>Fecha de nacimiento</Label>
-                <Input type="date" value={form.birthDate} className="w-full" onChange={e => setForm(f => ({ ...f, birthDate: e.target.value }))} />
-              </div>
-              <div className="space-y-2">
-                <Label>Rol</Label>
-                <Select value={form.role} onValueChange={v => setForm(f => ({ ...f, role: v ?? 'STUDENT' }))}>
-                  <SelectTrigger><span className="text-sm">{ROLES[form.role] ?? form.role}</span></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="STUDENT">Deportista</SelectItem>
-                    <SelectItem value="COACH">Entrenador</SelectItem>
-                    <SelectItem value="ADMIN">Admin</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+            <div className="space-y-2">
+              <Label>Fecha de nacimiento</Label>
+              <Input type="date" value={form.birthDate} className="w-full" onChange={e => setForm(f => ({ ...f, birthDate: e.target.value }))} />
+            </div>
+
+            {/* Rol */}
+            <div className="space-y-2">
+              <Label>Rol</Label>
+              <Select value={form.role} onValueChange={v => setForm(f => ({ ...f, role: v ?? 'STUDENT' }))}>
+                <SelectTrigger><span className="text-sm">{ROLES[form.role] ?? form.role}</span></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="STUDENT">Deportista</SelectItem>
+                  <SelectItem value="COACH">Entrenador</SelectItem>
+                  <SelectItem value="ADMIN">Admin</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             {/* Categoría + Nivel */}

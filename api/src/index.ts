@@ -7,6 +7,8 @@ import clubsRouter from './routes/clubs';
 import locationsRouter from './routes/locations';
 import membersRouter from './routes/members';
 import superadminRouter from './routes/superadmin';
+import eventsRouter from './routes/events';
+import paymentsRouter from './routes/payments';
 
 dotenv.config();
 
@@ -67,6 +69,8 @@ app.use('/clubs', clubsRouter);
 app.use('/locations', locationsRouter);
 app.use('/members', membersRouter);
 app.use('/superadmin', superadminRouter);
+app.use('/events', eventsRouter);
+app.use('/payments', paymentsRouter);
 
 app.listen(PORT, () => {
   console.log(`API en http://localhost:${PORT}`);

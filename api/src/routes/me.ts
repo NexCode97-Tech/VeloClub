@@ -25,7 +25,11 @@ router.get('/', requireAuth, async (req, res) => {
 
   if (user) {
     // Update name/picture if changed in Clerk
-    const resolvedName = name || user.name;
+    let resolvedName = name || user.name;
+    if (!resolvedName || resolvedName === 'Usuario') {
+      const member = await prisma.member.findFirst({ where: { clerkId } });
+      if (member?.fullName) resolvedName = member.fullName;
+    }
     if (user.name !== resolvedName || user.picture !== picture) {
       user = await prisma.user.update({
         where: { clerkId },

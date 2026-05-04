@@ -2,13 +2,13 @@
 
 import { useAuth } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { apiFetch } from '@/lib/api-client';
 import Link from 'next/link';
 import {
   Users, CalendarCheck, CreditCard,
   Trophy, CalendarDays, MapPin,
-  RefreshCw, Bell,
+  RefreshCw, Bell, BellOff,
 } from 'lucide-react';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell,
@@ -60,8 +60,11 @@ const EMPTY_WEEKDAY = [0, 0, 0, 0, 0, 0, 0];
 export default function DashboardPage() {
   const { getToken, isLoaded, isSignedIn } = useAuth();
   const router = useRouter();
-  const [me, setMe] = useState<MeResponse | null>(null);
+  const [me, setMe]           = useState<MeResponse | null>(null);
   const [loading, setLoading] = useState(true);
+  const [spinning, setSpinning] = useState(false);
+  const [notifOpen, setNotifOpen] = useState(false);
+  const notifRef = useRef<HTMLDivElement>(null);
   const [stats, setStats] = useState<Stats>({
     asistenciaHoy: '—',
     pagosPendientes: '—',
@@ -69,6 +72,17 @@ export default function DashboardPage() {
     entrenamientosMes: '—',
     weekdayCounts: EMPTY_WEEKDAY,
   });
+
+  // Close notif panel when clicking outside
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (notifRef.current && !notifRef.current.contains(e.target as Node)) {
+        setNotifOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, []);
 
   const fetchStats = useCallback(async (role: string) => {
     try {
@@ -119,9 +133,15 @@ export default function DashboardPage() {
         }
       }
     } catch {
-      // silently keep previous values
+      // keep previous values
     }
   }, [getToken]);
+
+  async function handleRefresh(role: string) {
+    setSpinning(true);
+    await fetchStats(role);
+    setTimeout(() => setSpinning(false), 600);
+  }
 
   useEffect(() => {
     if (!isLoaded) return;
@@ -172,10 +192,10 @@ export default function DashboardPage() {
       { label: 'Pagos pendientes', value: stats.pagosPendientes, color: '#FFB703', icon: CreditCard,    href: '/dashboard/finanzas' },
     ],
     COACH: [
-      { label: 'Deportistas',    value: stats.totalMiembros,     color: '#7C3AED', icon: Users,         href: '/dashboard/miembros' },
-      { label: 'Presentes hoy',  value: stats.asistenciaHoy,     color: '#06D6A0', icon: CalendarCheck, href: '/dashboard/asistencia' },
-      { label: 'Entrenam. mes',  value: stats.entrenamientosMes, color: '#FFB703', icon: CalendarDays,  href: '/dashboard/logros' },
-      { label: 'Miembros',       value: stats.totalMiembros,     color: '#4361EE', icon: Trophy,        href: '/dashboard/logros' },
+      { label: 'Deportistas',   value: stats.totalMiembros,     color: '#7C3AED', icon: Users,        href: '/dashboard/miembros' },
+      { label: 'Presentes hoy', value: stats.asistenciaHoy,     color: '#06D6A0', icon: CalendarCheck, href: '/dashboard/asistencia' },
+      { label: 'Entrenam. mes', value: stats.entrenamientosMes, color: '#FFB703', icon: CalendarDays,  href: '/dashboard/logros' },
+      { label: 'Miembros',      value: stats.totalMiembros,     color: '#4361EE', icon: Trophy,        href: '/dashboard/logros' },
     ],
     STUDENT: [
       { label: 'Asistencia', value: '—', color: '#06D6A0', icon: CalendarCheck, href: '/dashboard/asistencia' },
@@ -189,6 +209,7 @@ export default function DashboardPage() {
   const maxCount = Math.max(...stats.weekdayCounts, 1);
   const chartData = DAY_LABELS.map((day, i) => ({ day, presentes: stats.weekdayCounts[i] }));
   const showChart = role === 'ADMIN' || role === 'COACH';
+  const hasData = stats.weekdayCounts.some(c => c > 0);
 
   return (
     <div className="min-h-full bg-background">
@@ -217,16 +238,38 @@ export default function DashboardPage() {
               {roleLabels[role] ?? role}
             </span>
           </div>
+
           <div className="flex items-center gap-2 mt-1">
+            {/* Refresh */}
             <button
-              onClick={() => fetchStats(role)}
-              className="w-9 h-9 rounded-full border border-border bg-white flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+              onClick={() => handleRefresh(role)}
+              className="w-9 h-9 rounded-full border border-border bg-white flex items-center justify-center text-muted-foreground hover:bg-secondary hover:text-foreground active:scale-90 transition-all"
             >
-              <RefreshCw className="w-[15px] h-[15px]" />
+              <RefreshCw className={`w-[15px] h-[15px] transition-transform duration-500 ${spinning ? 'animate-spin' : ''}`} />
             </button>
-            <button className="w-9 h-9 rounded-full border border-border bg-white flex items-center justify-center text-muted-foreground relative">
-              <Bell className="w-[15px] h-[15px]" />
-            </button>
+
+            {/* Notifications */}
+            <div className="relative" ref={notifRef}>
+              <button
+                onClick={() => setNotifOpen(o => !o)}
+                className={`w-9 h-9 rounded-full border border-border bg-white flex items-center justify-center transition-all active:scale-90 ${notifOpen ? 'bg-secondary text-foreground' : 'text-muted-foreground hover:bg-secondary hover:text-foreground'}`}
+              >
+                <Bell className="w-[15px] h-[15px]" />
+              </button>
+
+              {notifOpen && (
+                <div className="absolute right-0 top-11 w-72 bg-white border border-border rounded-2xl shadow-xl z-50 overflow-hidden">
+                  <div className="px-4 py-3 border-b border-border">
+                    <p className="text-[13px] font-bold text-foreground">Notificaciones</p>
+                  </div>
+                  <div className="flex flex-col items-center py-8 px-4 text-center">
+                    <BellOff className="w-8 h-8 mb-2 text-muted-foreground/30" />
+                    <p className="text-[12px] font-semibold text-muted-foreground">Sin notificaciones</p>
+                    <p className="text-[11px] text-muted-foreground/60 mt-0.5">Todo está al día</p>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
@@ -277,7 +320,7 @@ export default function DashboardPage() {
               <p className="text-[10px] text-muted-foreground">Últimas 8 semanas</p>
             </div>
             <div className="bg-white border border-border rounded-xl p-4">
-              {maxCount === 1 && stats.weekdayCounts.every(c => c === 0) ? (
+              {!hasData ? (
                 <div className="flex flex-col items-center py-4">
                   <CalendarCheck className="w-8 h-8 mb-2 text-muted-foreground/30" />
                   <p className="text-[12px] text-muted-foreground">Sin datos de asistencia aún</p>
@@ -300,13 +343,13 @@ export default function DashboardPage() {
                     <Tooltip
                       cursor={{ fill: 'rgba(67,97,238,0.06)' }}
                       contentStyle={{ borderRadius: 10, border: '1px solid #E8E6F0', fontSize: 12, padding: '4px 10px' }}
-                      formatter={(v: number) => [v, 'Presentes']}
+                      formatter={(v) => [Number(v ?? 0), 'Presentes']}
                     />
                     <Bar dataKey="presentes" radius={[6, 6, 0, 0]}>
                       {chartData.map((entry, i) => (
                         <Cell
                           key={i}
-                          fill={entry.presentes === maxCount ? '#4361EE' : '#C4C2CF'}
+                          fill={entry.presentes === maxCount && entry.presentes > 0 ? '#4361EE' : '#C4C2CF'}
                         />
                       ))}
                     </Bar>

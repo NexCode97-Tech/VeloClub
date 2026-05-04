@@ -138,7 +138,7 @@ export default function FinanzasPage() {
     setSavingPay(true); setPayError(null);
     try {
       const token = await getToken();
-      await apiFetch('/payments', {
+      const created = await apiFetch<{ payment: Payment }>('/payments', {
         method: 'POST', token,
         body: JSON.stringify({
           memberId: payForm.memberId, amount: parseFloat(payForm.amount),
@@ -148,6 +148,8 @@ export default function FinanzasPage() {
       });
       setPayOpen(false);
       await Promise.all([loadPayments(), loadFlow()]);
+      const memberName = members.find(m => m.id === payForm.memberId)?.fullName ?? '';
+      downloadInvoicePDF({ ...created.payment, memberName }, clubName);
     } catch (e) { setPayError(e instanceof Error ? e.message : 'Error'); }
     finally { setSavingPay(false); }
   }

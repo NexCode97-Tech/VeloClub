@@ -13,7 +13,7 @@ export function downloadMembersTemplate() {
     'Categoría',
     'Nivel / Tipo',
     'Rol (ADMIN / COACH / STUDENT)',
-    'Día de corte mensualidad (1-28)',
+    'Día de corte mensualidad (1-31)',
   ];
 
   const example = [
@@ -36,7 +36,7 @@ export function downloadMembersTemplate() {
     '* El correo debe ser único por deportista',
     '* Rol: ADMIN = Administrador, COACH = Entrenador, STUDENT = Deportista',
     '* Categoría y Nivel son opcionales',
-    '* Día de corte: número entre 1 y 28',
+    '* Día de corte: número entre 1 y 31',
   ];
 
   const wb = XLSX.utils.book_new();
@@ -101,8 +101,8 @@ export function parseMembersExcel(file: File): Promise<{ rows: MemberImportRow[]
           errors.push(`Fila ${rowNum}: Rol inválido "${roleRaw}" — usa ADMIN, COACH o STUDENT`); return;
         }
 
-        const dueDayRaw = parseInt(String(r['Día de corte mensualidad (1-28)'] ?? ''));
-        const paymentDueDay = !isNaN(dueDayRaw) && dueDayRaw >= 1 && dueDayRaw <= 28 ? dueDayRaw : undefined;
+        const dueDayRaw = parseInt(String(r['Día de corte mensualidad (1-31)'] ?? ''));
+        const paymentDueDay = !isNaN(dueDayRaw) && dueDayRaw >= 1 && dueDayRaw <= 31 ? dueDayRaw : undefined;
 
         rows.push({
           fullName,

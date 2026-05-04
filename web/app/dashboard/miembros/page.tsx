@@ -188,20 +188,20 @@ export default function MiembrosPage() {
             <span className="hidden sm:inline">PDF</span>
           </button>
           <button
-            onClick={() => downloadMembersTemplate()}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold border border-border text-muted-foreground hover:bg-secondary active:scale-95 transition-all"
-            title="Descargar plantilla Excel"
-          >
-            <FileSpreadsheet className="w-4 h-4" />
-            <span className="hidden sm:inline">Plantilla</span>
-          </button>
-          <button
             onClick={() => setImportOpen(true)}
             className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold border border-border text-muted-foreground hover:bg-secondary active:scale-95 transition-all"
             title="Importar desde Excel"
           >
             <Upload className="w-4 h-4" />
             <span className="hidden sm:inline">Importar</span>
+          </button>
+          <button
+            onClick={() => downloadMembersTemplate()}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold border border-border text-muted-foreground hover:bg-secondary active:scale-95 transition-all"
+            title="Descargar plantilla Excel"
+          >
+            <FileSpreadsheet className="w-4 h-4" />
+            <span className="hidden sm:inline">Plantilla</span>
           </button>
           <button
             onClick={openNew}
@@ -448,16 +448,16 @@ export default function MiembrosPage() {
                 <div className="space-y-2">
                   <Label>Día de pago mensual</Label>
                   <Input
-                    type="number" min={1} max={28}
+                    type="number" min={1} max={31}
                     value={form.paymentDueDay}
                     placeholder="ej. 5"
                     onChange={e => {
                       const v = e.target.value;
                       const n = parseInt(v);
-                      if (v === '' || (n >= 1 && n <= 28)) setForm(f => ({ ...f, paymentDueDay: v }));
+                      if (v === '' || (n >= 1 && n <= 31)) setForm(f => ({ ...f, paymentDueDay: v }));
                     }}
                   />
-                  <p className="text-[10px] text-muted-foreground">Día del mes (1–28)</p>
+                  <p className="text-[10px] text-muted-foreground">Día del mes (1–31)</p>
                 </div>
               )}
             </div>

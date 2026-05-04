@@ -37,6 +37,17 @@ router.get('/', requireAuth, async (req, res) => {
   res.json({ members });
 });
 
+// GET /members/me — retorna el Member vinculado al usuario autenticado
+router.get('/me', requireAuth, async (req, res) => {
+  if (!req.user) return res.status(401).json({ error: 'No autenticado' });
+  const member = await prisma.member.findFirst({
+    where: { clerkId: req.auth?.clerkId, clubId: req.user.clubId ?? '' },
+    select: { id: true, fullName: true, role: true },
+  });
+  if (!member) return res.status(404).json({ error: 'Miembro no encontrado' });
+  res.json({ member });
+});
+
 // GET /members/:id
 router.get('/:id', requireAuth, async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'No autenticado' });

@@ -36,6 +36,7 @@ export default function LogrosPage() {
   const [role, setRole]               = useState('');
   const [locations, setLocations]     = useState<Location[]>([]);
   const [loading, setLoading]         = useState(true);
+  const [myMemberId, setMyMemberId]   = useState<string | null>(null);
 
   // Competencias state
   const [competitions, setComps]      = useState<Competition[]>([]);
@@ -61,7 +62,12 @@ export default function LogrosPage() {
       apiFetch<{ sessions: TrainingSession[] }>('/training', { token }),
       apiFetch<{ locations: Location[] }>('/locations', { token }),
     ]);
-    setRole(meRes.user?.role ?? '');
+    const userRole = meRes.user?.role ?? '';
+    setRole(userRole);
+    if (userRole === 'STUDENT') {
+      const memberRes = await apiFetch<{ member: { id: string } }>('/members/me', { token }).catch(() => null);
+      setMyMemberId(memberRes?.member.id ?? null);
+    }
     setComps(compRes.competitions);
     setSessions(trainRes.sessions);
     setLocations(locsRes.locations);
@@ -71,6 +77,15 @@ export default function LogrosPage() {
   useEffect(() => { loadAll(); }, []);
 
   const canManage = role === 'ADMIN' || role === 'COACH';
+  const isStudent = role === 'STUDENT';
+
+  // Para STUDENT: solo competencias/entrenamientos donde tiene resultados
+  const visibleComps = isStudent && myMemberId
+    ? competitions.filter(c => c.events.some(e => e.results.some(r => r.member.id === myMemberId)))
+    : competitions;
+  const visibleSessions = isStudent && myMemberId
+    ? sessions.filter(s => s.results.some(r => r.member.id === myMemberId))
+    : sessions;
 
   // ── Competencias handlers ───────────────────────────────────────────────────
   async function handleSaveComp() {
@@ -130,8 +145,8 @@ export default function LogrosPage() {
   }
 
   // ── Render ──────────────────────────────────────────────────────────────────
-  const totalCompResults = competitions.reduce((s, c) => s + c.events.reduce((e, ev) => e + ev.results.length, 0), 0);
-  const totalTrainResults = sessions.reduce((s, ses) => s + ses.results.length, 0);
+  const totalCompResults = visibleComps.reduce((s, c) => s + c.events.reduce((e, ev) => e + ev.results.length, 0), 0);
+  const totalTrainResults = visibleSessions.reduce((s, ses) => s + ses.results.length, 0);
 
   return (
     <div className="min-h-full bg-background">
@@ -143,8 +158,8 @@ export default function LogrosPage() {
           </h1>
           <p className="text-xs text-muted-foreground mt-0.5">
             {tab === 'comp'
-              ? `${competitions.length} competencia${competitions.length !== 1 ? 's' : ''} · ${totalCompResults} resultado${totalCompResults !== 1 ? 's' : ''}`
-              : `${sessions.length} entrenamiento${sessions.length !== 1 ? 's' : ''} · ${totalTrainResults} resultado${totalTrainResults !== 1 ? 's' : ''}`
+              ? `${visibleComps.length} competencia${visibleComps.length !== 1 ? 's' : ''} · ${totalCompResults} resultado${totalCompResults !== 1 ? 's' : ''}`
+              : `${visibleSessions.length} entrenamiento${visibleSessions.length !== 1 ? 's' : ''} · ${totalTrainResults} resultado${totalTrainResults !== 1 ? 's' : ''}`
             }
           </p>
         </div>
@@ -185,7 +200,7 @@ export default function LogrosPage() {
           </div>
         ) : tab === 'comp' ? (
           /* ── Competencias ── */
-          competitions.length === 0 ? (
+          visibleComps.length === 0 ? (
             <div className="bg-white border border-border rounded-xl px-4 py-12 text-center">
               <Trophy className="w-10 h-10 mx-auto mb-3 text-muted-foreground/30" />
               <p className="text-[13px] font-semibold text-muted-foreground">Sin competencias registradas</p>
@@ -197,7 +212,7 @@ export default function LogrosPage() {
               )}
             </div>
           ) : (
-            competitions.map(c => {
+            visibleComps.map(c => {
               const resultCount = c.events.reduce((s, e) => s + e.results.length, 0);
               const dateStr = new Date(c.date).toLocaleDateString('es-CO', { day: 'numeric', month: 'short', year: 'numeric' });
               const podium = c.events.flatMap(e => e.results).filter(r => r.position && r.position <= 3).sort((a, b) => (a.position ?? 99) - (b.position ?? 99)).slice(0, 3);
@@ -244,7 +259,7 @@ export default function LogrosPage() {
           )
         ) : (
           /* ── Entrenamientos ── */
-          sessions.length === 0 ? (
+          visibleSessions.length === 0 ? (
             <div className="bg-white border border-border rounded-xl px-4 py-12 text-center">
               <Dumbbell className="w-10 h-10 mx-auto mb-3 text-muted-foreground/30" />
               <p className="text-[13px] font-semibold text-muted-foreground">Sin entrenamientos registrados</p>
@@ -256,7 +271,7 @@ export default function LogrosPage() {
               )}
             </div>
           ) : (
-            sessions.map(s => {
+            visibleSessions.map(s => {
               const dateStr = new Date(s.date).toLocaleDateString('es-CO', { day: 'numeric', month: 'short', year: 'numeric' });
               return (
                 <div key={s.id} className="bg-white border border-border rounded-xl overflow-hidden">

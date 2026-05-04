@@ -1,13 +1,15 @@
 'use client';
 
 import { useAuth } from '@clerk/nextjs';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { apiFetch } from '@/lib/api-client';
-import { CheckCircle2, Camera, Building2, ChevronDown, X } from 'lucide-react';
+import { CheckCircle2, Camera, Building2, ChevronDown, X, Crop } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { COLOMBIA, DEPARTMENTS } from '@/lib/colombia';
+import ReactCrop, { type Crop as CropType, centerCrop, makeAspectCrop } from 'react-image-crop';
+import 'react-image-crop/dist/ReactCrop.css';
 
 const DAYS = [
   { label: 'Domingo',   value: 0 },
@@ -118,6 +120,9 @@ export default function AjustesPage() {
   const [saved, setSaved]           = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [logoPreview, setLogoPreview]     = useState<string | null>(null);
+  const [cropSrc, setCropSrc]             = useState<string | null>(null);
+  const [crop, setCrop]                   = useState<CropType>();
+  const imgRef                            = useRef<HTMLImageElement>(null);
 
   const cityOptions = department ? (COLOMBIA[department] ?? []).sort() : [];
 
@@ -160,49 +165,57 @@ export default function AjustesPage() {
     }
   }
 
-  async function handleLogoChange(e: React.ChangeEvent<HTMLInputElement>) {
+  function handleLogoChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
     if (fileRef.current) fileRef.current.value = '';
-
     const reader = new FileReader();
-    reader.onload = async (ev) => {
-      const src = ev.target?.result as string;
-
-      // Recortar y redimensionar a 500×500 centrado con canvas
-      const img = new window.Image();
-      img.onload = async () => {
-        const SIZE = 500;
-        const canvas = document.createElement('canvas');
-        canvas.width  = SIZE;
-        canvas.height = SIZE;
-        const ctx = canvas.getContext('2d')!;
-        const side = Math.min(img.width, img.height);
-        const sx   = (img.width  - side) / 2;
-        const sy   = (img.height - side) / 2;
-        ctx.drawImage(img, sx, sy, side, side, 0, 0, SIZE, SIZE);
-        const base64 = canvas.toDataURL('image/jpeg', 0.85);
-
-        setLogoPreview(base64);
-        setUploadingLogo(true);
-        try {
-          const token = await getToken();
-          const res = await apiFetch<{ club: { id: string; logoUrl: string } }>('/clubs/logo', {
-            method: 'POST', token,
-            body: JSON.stringify({ base64 }),
-          });
-          setClub(prev => prev ? { ...prev, logoUrl: res.club.logoUrl } : prev);
-          setLogoPreview(null);
-        } catch (err) {
-          alert('Error al subir el logo: ' + (err instanceof Error ? err.message : 'intenta de nuevo'));
-          setLogoPreview(null);
-        } finally {
-          setUploadingLogo(false);
-        }
-      };
-      img.src = src;
-    };
+    reader.onload = (ev) => setCropSrc(ev.target?.result as string);
     reader.readAsDataURL(file);
+  }
+
+  const onImageLoad = useCallback((e: React.SyntheticEvent<HTMLImageElement>) => {
+    const { naturalWidth: w, naturalHeight: h } = e.currentTarget;
+    const initial = centerCrop(makeAspectCrop({ unit: '%', width: 90 }, 1, w, h), w, h);
+    setCrop(initial);
+  }, []);
+
+  async function handleCropConfirm() {
+    if (!imgRef.current || !crop) return;
+    const img  = imgRef.current;
+    const SIZE = 500;
+    const scaleX = img.naturalWidth  / img.width;
+    const scaleY = img.naturalHeight / img.height;
+    const canvas = document.createElement('canvas');
+    canvas.width  = SIZE;
+    canvas.height = SIZE;
+    const ctx = canvas.getContext('2d')!;
+    ctx.drawImage(
+      img,
+      (crop.x ?? 0) * scaleX,
+      (crop.y ?? 0) * scaleY,
+      (crop.width  ?? img.naturalWidth)  * scaleX,
+      (crop.height ?? img.naturalHeight) * scaleY,
+      0, 0, SIZE, SIZE,
+    );
+    const base64 = canvas.toDataURL('image/jpeg', 0.85);
+    setCropSrc(null);
+    setLogoPreview(base64);
+    setUploadingLogo(true);
+    try {
+      const token = await getToken();
+      const res = await apiFetch<{ club: { id: string; logoUrl: string } }>('/clubs/logo', {
+        method: 'POST', token,
+        body: JSON.stringify({ base64 }),
+      });
+      setClub(prev => prev ? { ...prev, logoUrl: res.club.logoUrl } : prev);
+      setLogoPreview(null);
+    } catch (err) {
+      alert('Error al subir el logo: ' + (err instanceof Error ? err.message : 'intenta de nuevo'));
+      setLogoPreview(null);
+    } finally {
+      setUploadingLogo(false);
+    }
   }
 
   if (loading) return (
@@ -252,10 +265,59 @@ export default function AjustesPage() {
                 <Camera className="w-3.5 h-3.5" />
                 {uploadingLogo ? 'Subiendo...' : logoSrc ? 'Cambiar logo' : 'Subir logo'}
               </button>
-              <p className="text-[10px] text-muted-foreground mt-1.5">PNG, JPG · máx. 5MB</p>
+              <p className="text-[10px] text-muted-foreground mt-1.5">PNG, JPG · máx. 500×500</p>
             </div>
           </div>
         </div>
+
+        {/* Modal recorte de logo */}
+        {cropSrc && (
+          <div className="fixed inset-0 z-50 bg-black/70 flex flex-col items-center justify-center px-4">
+            <div className="bg-white rounded-2xl overflow-hidden w-full max-w-sm">
+              <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+                <div className="flex items-center gap-2">
+                  <Crop className="w-4 h-4 text-primary" />
+                  <p className="text-[13px] font-bold text-foreground">Recortar logo</p>
+                </div>
+                <button onClick={() => setCropSrc(null)} className="text-muted-foreground hover:text-foreground">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+              <div className="p-4 flex justify-center bg-secondary/40">
+                <ReactCrop
+                  crop={crop}
+                  onChange={c => setCrop(c)}
+                  aspect={1}
+                  circularCrop={false}
+                  minWidth={50}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    ref={imgRef}
+                    src={cropSrc}
+                    alt="Recortar"
+                    onLoad={onImageLoad}
+                    className="max-h-72 w-auto"
+                  />
+                </ReactCrop>
+              </div>
+              <div className="flex gap-2 px-4 py-3">
+                <button
+                  onClick={() => setCropSrc(null)}
+                  className="flex-1 py-2 rounded-xl border border-border text-[13px] font-semibold text-muted-foreground"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleCropConfirm}
+                  className="flex-1 py-2 rounded-xl bg-primary text-white text-[13px] font-semibold"
+                >
+                  Confirmar
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Información */}
         <div className="bg-white border border-border rounded-xl p-4 space-y-3">

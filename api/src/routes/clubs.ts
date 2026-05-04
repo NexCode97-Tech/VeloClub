@@ -66,25 +66,31 @@ router.post('/logo', requireAuth, async (req, res) => {
 
   const clubId = req.user.clubId ?? '';
 
-  const existing = await prisma.club.findUnique({ where: { id: clubId }, select: { logoPublicId: true } });
-  if (existing?.logoPublicId) {
-    await cloudinary.uploader.destroy(existing.logoPublicId).catch(() => {});
+  try {
+    const existing = await prisma.club.findUnique({ where: { id: clubId }, select: { logoPublicId: true } });
+    if (existing?.logoPublicId) {
+      await cloudinary.uploader.destroy(existing.logoPublicId).catch(() => {});
+    }
+
+    const result = await cloudinary.uploader.upload(base64, {
+      folder:         'veloclub/logos',
+      public_id:      `club_${clubId}`,
+      overwrite:      true,
+      transformation: [{ width: 400, height: 400, crop: 'limit' }],
+    });
+
+    const club = await prisma.club.update({
+      where: { id: clubId },
+      data:  { logoUrl: result.secure_url, logoPublicId: result.public_id },
+      select: { id: true, logoUrl: true },
+    });
+
+    res.json({ club });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error('[logo upload]', msg);
+    res.status(500).json({ error: msg });
   }
-
-  const result = await cloudinary.uploader.upload(base64, {
-    folder:          'veloclub/logos',
-    public_id:       `club_${clubId}`,
-    overwrite:       true,
-    transformation:  [{ width: 400, height: 400, crop: 'limit' }],
-  });
-
-  const club = await prisma.club.update({
-    where: { id: clubId },
-    data:  { logoUrl: result.secure_url, logoPublicId: result.public_id },
-    select: { id: true, logoUrl: true },
-  });
-
-  res.json({ club });
 });
 
 // POST /clubs  — crear club

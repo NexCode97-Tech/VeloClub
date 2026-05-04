@@ -191,18 +191,20 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   key={href}
                   href={href}
                   className={cn(
-                    'flex-1 flex flex-col items-center gap-1 pt-2 pb-3 relative transition-colors',
+                    'flex-1 flex flex-col items-center gap-1 pt-2 pb-3 transition-colors',
                     active ? 'text-primary' : 'text-muted-foreground'
                   )}
                 >
-                  {active && (
-                    <span className="absolute top-0 left-1/2 -translate-x-1/2 w-11 h-8 rounded-xl bg-primary opacity-10" />
-                  )}
-                  <Icon
-                    className="w-[22px] h-[22px] relative z-10"
-                    strokeWidth={active ? 2.5 : 2}
-                  />
-                  <span className={cn('text-[9.5px] tracking-wide relative z-10', active ? 'font-bold' : 'font-medium')}>
+                  <div className="relative flex items-center justify-center w-11 h-8">
+                    {active && (
+                      <span className="absolute inset-0 rounded-xl bg-primary opacity-10" />
+                    )}
+                    <Icon
+                      className="w-[22px] h-[22px] relative z-10"
+                      strokeWidth={active ? 2.5 : 2}
+                    />
+                  </div>
+                  <span className={cn('text-[9.5px] tracking-wide', active ? 'font-bold' : 'font-medium')}>
                     {label}
                   </span>
                 </Link>

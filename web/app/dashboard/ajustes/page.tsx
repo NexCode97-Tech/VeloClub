@@ -71,7 +71,8 @@ function SearchableSelect({
                 value={query}
                 onChange={e => setQuery(e.target.value)}
                 placeholder="Buscar..."
-                className="w-full text-sm px-2 py-1 outline-none bg-transparent"
+                className="w-full text-base px-2 py-1 outline-none bg-transparent"
+                style={{ fontSize: '16px' }}
               />
             </div>
             <div className="max-h-52 overflow-y-auto">

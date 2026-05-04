@@ -36,6 +36,28 @@ router.get('/', requireAuth, async (req, res) => {
   res.json({ records });
 });
 
+// GET /attendance/weekday-stats — presentes por día de semana (últimas 8 semanas)
+router.get('/weekday-stats', requireAuth, async (req, res) => {
+  if (!req.user) return res.status(401).json({ error: 'No autenticado' });
+  const clubId = req.user.clubId ?? '';
+
+  const since = new Date();
+  since.setDate(since.getDate() - 56); // 8 semanas atrás
+
+  const records = await prisma.attendance.findMany({
+    where: { clubId, status: 'PRESENT', date: { gte: since } },
+    select: { date: true },
+  });
+
+  // Contar presentes por día de semana (0=Dom ... 6=Sáb)
+  const counts = [0, 0, 0, 0, 0, 0, 0];
+  for (const r of records) {
+    counts[new Date(r.date).getUTCDay()]++;
+  }
+
+  res.json({ counts });
+});
+
 // POST /attendance/bulk  — upsert all records for a date+location
 router.post('/bulk', requireAuth, async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'No autenticado' });

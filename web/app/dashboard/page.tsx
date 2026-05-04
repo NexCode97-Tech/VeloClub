@@ -10,6 +10,9 @@ import {
   Trophy, CalendarDays, MapPin,
   RefreshCw, Bell,
 } from 'lucide-react';
+import {
+  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell,
+} from 'recharts';
 
 interface MeResponse {
   status: 'ok' | 'superadmin' | 'complete_profile' | 'no_access' | 'inactive';
@@ -30,6 +33,8 @@ const roleColors: Record<string, { text: string; bg: string }> = {
   STUDENT:    { text: '#7C3AED', bg: 'rgba(124,58,237,0.10)' },
 };
 
+const DAY_LABELS = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+
 function todayISO() {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
@@ -47,7 +52,10 @@ interface Stats {
   pagosPendientes: number | string;
   totalMiembros: number | string;
   entrenamientosMes: number | string;
+  weekdayCounts: number[];
 }
+
+const EMPTY_WEEKDAY = [0, 0, 0, 0, 0, 0, 0];
 
 export default function DashboardPage() {
   const { getToken, isLoaded, isSignedIn } = useAuth();
@@ -59,6 +67,7 @@ export default function DashboardPage() {
     pagosPendientes: '—',
     totalMiembros: '—',
     entrenamientosMes: '—',
+    weekdayCounts: EMPTY_WEEKDAY,
   });
 
   const fetchStats = useCallback(async (role: string) => {
@@ -67,6 +76,9 @@ export default function DashboardPage() {
       const now = new Date();
       const month = now.getMonth() + 1;
       const year = now.getFullYear();
+
+      const weekdayRes = await apiFetch<{ counts: number[] }>('/attendance/weekday-stats', { token }).catch(() => null);
+      const weekdayCounts = weekdayRes?.counts ?? EMPTY_WEEKDAY;
 
       if (role === 'ADMIN' || role === 'COACH') {
         const [attRes, membersRes] = await Promise.allSettled([
@@ -91,7 +103,7 @@ export default function DashboardPage() {
             ? paymentsRes.payments.filter(p => p.status === 'PENDING' || p.status === 'OVERDUE').length
             : '—';
 
-          setStats(s => ({ ...s, asistenciaHoy: presentCount, pagosPendientes: pending, totalMiembros: memberCount }));
+          setStats(s => ({ ...s, asistenciaHoy: presentCount, pagosPendientes: pending, totalMiembros: memberCount, weekdayCounts }));
         } else {
           const trainingRes = await apiFetch<{ sessions: unknown[] }>(
             `/training?month=${month}&year=${year}`, { token }
@@ -102,6 +114,7 @@ export default function DashboardPage() {
             asistenciaHoy: presentCount,
             totalMiembros: memberCount,
             entrenamientosMes: trainingRes ? trainingRes.sessions.length : '—',
+            weekdayCounts,
           }));
         }
       }
@@ -131,7 +144,6 @@ export default function DashboardPage() {
     })();
   }, [isLoaded, isSignedIn]);
 
-  // Polling cada 30 segundos
   useEffect(() => {
     if (!me?.user?.role) return;
     const role = me.user.role;
@@ -156,24 +168,27 @@ export default function DashboardPage() {
 
   const statCards: Record<string, StatCard[]> = {
     ADMIN: [
-      { label: 'Asistencia hoy',    value: stats.asistenciaHoy,    color: '#06D6A0', icon: CalendarCheck, href: '/dashboard/asistencia' },
-      { label: 'Pagos pendientes',  value: stats.pagosPendientes,  color: '#FFB703', icon: CreditCard,    href: '/dashboard/finanzas' },
+      { label: 'Asistencia hoy',   value: stats.asistenciaHoy,   color: '#06D6A0', icon: CalendarCheck, href: '/dashboard/asistencia' },
+      { label: 'Pagos pendientes', value: stats.pagosPendientes, color: '#FFB703', icon: CreditCard,    href: '/dashboard/finanzas' },
     ],
     COACH: [
-      { label: 'Deportistas',       value: stats.totalMiembros,    color: '#7C3AED', icon: Users,         href: '/dashboard/miembros' },
-      { label: 'Presentes hoy',     value: stats.asistenciaHoy,    color: '#06D6A0', icon: CalendarCheck, href: '/dashboard/asistencia' },
-      { label: 'Entrenam. mes',     value: stats.entrenamientosMes,color: '#FFB703', icon: CalendarDays,  href: '/dashboard/logros' },
-      { label: 'Miembros',          value: stats.totalMiembros,    color: '#4361EE', icon: Trophy,        href: '/dashboard/logros' },
+      { label: 'Deportistas',    value: stats.totalMiembros,     color: '#7C3AED', icon: Users,         href: '/dashboard/miembros' },
+      { label: 'Presentes hoy',  value: stats.asistenciaHoy,     color: '#06D6A0', icon: CalendarCheck, href: '/dashboard/asistencia' },
+      { label: 'Entrenam. mes',  value: stats.entrenamientosMes, color: '#FFB703', icon: CalendarDays,  href: '/dashboard/logros' },
+      { label: 'Miembros',       value: stats.totalMiembros,     color: '#4361EE', icon: Trophy,        href: '/dashboard/logros' },
     ],
     STUDENT: [
-      { label: 'Asistencia',  value: '—', color: '#06D6A0', icon: CalendarCheck, href: '/dashboard/asistencia' },
-      { label: 'Logros',      value: '—', color: '#FFB703', icon: Trophy,        href: '/dashboard/logros' },
-      { label: 'Eventos',     value: '—', color: '#7C3AED', icon: CalendarDays,  href: '/dashboard/calendario' },
-      { label: 'Sedes',       value: '—', color: '#EF476F', icon: MapPin,        href: '/dashboard/sedes' },
+      { label: 'Asistencia', value: '—', color: '#06D6A0', icon: CalendarCheck, href: '/dashboard/asistencia' },
+      { label: 'Logros',     value: '—', color: '#FFB703', icon: Trophy,        href: '/dashboard/logros' },
+      { label: 'Eventos',    value: '—', color: '#7C3AED', icon: CalendarDays,  href: '/dashboard/calendario' },
+      { label: 'Sedes',      value: '—', color: '#EF476F', icon: MapPin,        href: '/dashboard/sedes' },
     ],
   };
 
   const cards = statCards[role] ?? statCards.ADMIN;
+  const maxCount = Math.max(...stats.weekdayCounts, 1);
+  const chartData = DAY_LABELS.map((day, i) => ({ day, presentes: stats.weekdayCounts[i] }));
+  const showChart = role === 'ADMIN' || role === 'COACH';
 
   return (
     <div className="min-h-full bg-background">
@@ -254,23 +269,50 @@ export default function DashboardPage() {
           </div>
         </section>
 
-        {/* Pagos pendientes — ADMIN only */}
-        {(role === 'ADMIN' || role === 'SUPERADMIN') && (
+        {/* Gráfica asistencia por día — ADMIN y COACH */}
+        {showChart && (
           <section>
             <div className="flex items-center justify-between mb-2.5">
-              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Pagos pendientes</p>
-              <Link href="/dashboard/finanzas" className="text-[11px] font-semibold" style={{ color: '#7C3AED' }}>
-                Ver todos
-              </Link>
+              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Asistencia por día</p>
+              <p className="text-[10px] text-muted-foreground">Últimas 8 semanas</p>
             </div>
-            <div className="bg-white border border-border rounded-xl px-4 py-5 text-center">
-              <CreditCard className="w-8 h-8 mx-auto mb-2 text-muted-foreground/30" />
-              <p className="text-[12px] text-muted-foreground">
-                {stats.pagosPendientes === '—' || stats.pagosPendientes === 0
-                  ? 'Sin pagos pendientes'
-                  : `${stats.pagosPendientes} pago${Number(stats.pagosPendientes) !== 1 ? 's' : ''} pendiente${Number(stats.pagosPendientes) !== 1 ? 's' : ''}`
-                }
-              </p>
+            <div className="bg-white border border-border rounded-xl p-4">
+              {maxCount === 1 && stats.weekdayCounts.every(c => c === 0) ? (
+                <div className="flex flex-col items-center py-4">
+                  <CalendarCheck className="w-8 h-8 mb-2 text-muted-foreground/30" />
+                  <p className="text-[12px] text-muted-foreground">Sin datos de asistencia aún</p>
+                </div>
+              ) : (
+                <ResponsiveContainer width="100%" height={160}>
+                  <BarChart data={chartData} barCategoryGap="20%" margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
+                    <XAxis
+                      dataKey="day"
+                      tick={{ fontSize: 11, fill: '#8E87A8', fontWeight: 600 }}
+                      axisLine={false}
+                      tickLine={false}
+                    />
+                    <YAxis
+                      allowDecimals={false}
+                      tick={{ fontSize: 10, fill: '#C4C2CF' }}
+                      axisLine={false}
+                      tickLine={false}
+                    />
+                    <Tooltip
+                      cursor={{ fill: 'rgba(67,97,238,0.06)' }}
+                      contentStyle={{ borderRadius: 10, border: '1px solid #E8E6F0', fontSize: 12, padding: '4px 10px' }}
+                      formatter={(v: number) => [v, 'Presentes']}
+                    />
+                    <Bar dataKey="presentes" radius={[6, 6, 0, 0]}>
+                      {chartData.map((entry, i) => (
+                        <Cell
+                          key={i}
+                          fill={entry.presentes === maxCount ? '#4361EE' : '#C4C2CF'}
+                        />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
             </div>
           </section>
         )}

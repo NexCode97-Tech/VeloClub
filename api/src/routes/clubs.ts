@@ -96,6 +96,23 @@ router.post('/logo', requireAuth, async (req, res) => {
   }
 });
 
+// DELETE /clubs/logo
+router.delete('/logo', requireAuth, async (req, res) => {
+  if (!req.user) return res.status(401).json({ error: 'No autenticado' });
+  if (req.user.role !== 'ADMIN') return res.status(403).json({ error: 'Solo administradores' });
+
+  const clubId = req.user.clubId ?? '';
+  const existing = await prisma.club.findUnique({ where: { id: clubId }, select: { logoPublicId: true } });
+  if (existing?.logoPublicId) {
+    await cloudinary.uploader.destroy(existing.logoPublicId).catch(() => {});
+  }
+  await prisma.club.update({
+    where: { id: clubId },
+    data:  { logoUrl: null, logoPublicId: null },
+  });
+  res.json({ ok: true });
+});
+
 // POST /clubs  — crear club
 router.post('/', requireAuth, async (req, res) => {
   if (!req.auth) return res.status(401).json({ error: 'No autenticado' });

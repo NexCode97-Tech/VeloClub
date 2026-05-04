@@ -118,8 +118,9 @@ export default function AjustesPage() {
   const [loading, setLoading]       = useState(true);
   const [saving, setSaving]         = useState(false);
   const [saved, setSaved]           = useState(false);
-  const [uploadingLogo, setUploadingLogo] = useState(false);
-  const [logoPreview, setLogoPreview]     = useState<string | null>(null);
+  const [uploadingLogo, setUploadingLogo]   = useState(false);
+  const [deletingLogo, setDeletingLogo]     = useState(false);
+  const [logoPreview, setLogoPreview]       = useState<string | null>(null);
   const [cropSrc, setCropSrc]             = useState<string | null>(null);
   const [crop, setCrop]                   = useState<CropType>();
   const imgRef                            = useRef<HTMLImageElement>(null);
@@ -218,6 +219,18 @@ export default function AjustesPage() {
     }
   }
 
+  async function handleDeleteLogo() {
+    if (!confirm('¿Eliminar el logo del club?')) return;
+    setDeletingLogo(true);
+    try {
+      const token = await getToken();
+      await apiFetch('/clubs/logo', { method: 'DELETE', token });
+      setClub(prev => prev ? { ...prev, logoUrl: undefined } : prev);
+    } finally {
+      setDeletingLogo(false);
+    }
+  }
+
   if (loading) return (
     <div className="flex justify-center py-20">
       <div className="w-6 h-6 rounded-full border-2 border-primary border-t-transparent animate-spin" />
@@ -257,14 +270,25 @@ export default function AjustesPage() {
             </div>
             <div>
               <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleLogoChange} />
-              <button
-                onClick={() => fileRef.current?.click()}
-                disabled={uploadingLogo}
-                className="flex items-center gap-2 px-3 py-2 rounded-xl border border-border text-[12px] font-semibold text-muted-foreground hover:bg-secondary transition-colors"
-              >
-                <Camera className="w-3.5 h-3.5" />
-                {uploadingLogo ? 'Subiendo...' : logoSrc ? 'Cambiar logo' : 'Subir logo'}
-              </button>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => fileRef.current?.click()}
+                  disabled={uploadingLogo || deletingLogo}
+                  className="flex items-center gap-2 px-3 py-2 rounded-xl border border-border text-[12px] font-semibold text-muted-foreground hover:bg-secondary transition-colors"
+                >
+                  <Camera className="w-3.5 h-3.5" />
+                  {uploadingLogo ? 'Subiendo...' : logoSrc ? 'Cambiar' : 'Subir logo'}
+                </button>
+                {logoSrc && (
+                  <button
+                    onClick={handleDeleteLogo}
+                    disabled={uploadingLogo || deletingLogo}
+                    className="flex items-center gap-2 px-3 py-2 rounded-xl border border-red-200 text-[12px] font-semibold text-red-400 hover:bg-red-50 transition-colors"
+                  >
+                    {deletingLogo ? '...' : <X className="w-3.5 h-3.5" />}
+                  </button>
+                )}
+              </div>
               <p className="text-[10px] text-muted-foreground mt-1.5">PNG, JPG · máx. 500×500</p>
             </div>
           </div>

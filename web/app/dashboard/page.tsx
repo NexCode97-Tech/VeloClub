@@ -90,60 +90,56 @@ export default function DashboardPage() {
   }, []);
 
   const fetchStats = useCallback(async (role: string) => {
-    try {
-      const token = await getToken();
-      const now = new Date();
-      const month = now.getMonth() + 1;
-      const year = now.getFullYear();
+    const token = await getToken();
+    const now = new Date();
+    const month = now.getMonth() + 1;
+    const year = now.getFullYear();
 
-      const weekdayRes = await apiFetch<{ counts: number[] }>('/attendance/weekday-stats', { token }).catch(() => null);
-      const weekdayCounts = weekdayRes?.counts ?? EMPTY_WEEKDAY;
+    const weekdayRes = await apiFetch<{ counts: number[] }>('/attendance/weekday-stats', { token }).catch(() => null);
+    const weekdayCounts = weekdayRes?.counts ?? EMPTY_WEEKDAY;
+
+    if (role === 'ADMIN') {
+      const notifRes = await apiFetch<{ notifications: typeof notifs }>('/payments/notifications', { token }).catch(() => null);
+      if (notifRes) setNotifs(notifRes.notifications);
+    }
+
+    if (role === 'ADMIN' || role === 'COACH') {
+      const [attRes, membersRes] = await Promise.allSettled([
+        apiFetch<{ records: { status: string }[] }>(`/attendance?date=${todayISO()}`, { token }),
+        apiFetch<{ members: unknown[] }>('/members', { token }),
+      ]);
+
+      const presentCount = attRes.status === 'fulfilled'
+        ? attRes.value.records.filter(r => r.status === 'PRESENT').length
+        : '—';
+
+      const memberCount = membersRes.status === 'fulfilled'
+        ? membersRes.value.members.length
+        : '—';
 
       if (role === 'ADMIN') {
-        const notifRes = await apiFetch<{ notifications: typeof notifs }>('/payments/notifications', { token }).catch(() => null);
-        if (notifRes) setNotifs(notifRes.notifications);
-      }
+        const paymentsRes = await apiFetch<{ payments: { status: string }[] }>(
+          `/payments?year=${year}&month=${month}`, { token }
+        ).catch(() => null);
 
-      if (role === 'ADMIN' || role === 'COACH') {
-        const [attRes, membersRes] = await Promise.allSettled([
-          apiFetch<{ records: { status: string }[] }>(`/attendance?date=${todayISO()}`, { token }),
-          apiFetch<{ members: unknown[] }>('/members', { token }),
-        ]);
-
-        const presentCount = attRes.status === 'fulfilled'
-          ? attRes.value.records.filter(r => r.status === 'PRESENT').length
+        const pending = paymentsRes
+          ? paymentsRes.payments.filter(p => p.status === 'PENDING' || p.status === 'OVERDUE').length
           : '—';
 
-        const memberCount = membersRes.status === 'fulfilled'
-          ? membersRes.value.members.length
-          : '—';
+        setStats(s => ({ ...s, asistenciaHoy: presentCount, pagosPendientes: pending, totalMiembros: memberCount, weekdayCounts }));
+      } else {
+        const trainingRes = await apiFetch<{ sessions: unknown[] }>(
+          `/training?month=${month}&year=${year}`, { token }
+        ).catch(() => null);
 
-        if (role === 'ADMIN') {
-          const paymentsRes = await apiFetch<{ payments: { status: string }[] }>(
-            `/payments?year=${year}&month=${month}`, { token }
-          ).catch(() => null);
-
-          const pending = paymentsRes
-            ? paymentsRes.payments.filter(p => p.status === 'PENDING' || p.status === 'OVERDUE').length
-            : '—';
-
-          setStats(s => ({ ...s, asistenciaHoy: presentCount, pagosPendientes: pending, totalMiembros: memberCount, weekdayCounts }));
-        } else {
-          const trainingRes = await apiFetch<{ sessions: unknown[] }>(
-            `/training?month=${month}&year=${year}`, { token }
-          ).catch(() => null);
-
-          setStats(s => ({
-            ...s,
-            asistenciaHoy: presentCount,
-            totalMiembros: memberCount,
-            entrenamientosMes: trainingRes ? trainingRes.sessions.length : '—',
-            weekdayCounts,
-          }));
-        }
+        setStats(s => ({
+          ...s,
+          asistenciaHoy: presentCount,
+          totalMiembros: memberCount,
+          entrenamientosMes: trainingRes ? trainingRes.sessions.length : '—',
+          weekdayCounts,
+        }));
       }
-    } catch {
-      // keep previous values
     }
   }, [getToken]);
 
@@ -151,6 +147,7 @@ export default function DashboardPage() {
     if (!me?.user?.role) return;
     setSpinning(true);
     try {
+      router.refresh();
       await fetchStats(me.user.role);
     } finally {
       setSpinning(false);
@@ -181,7 +178,7 @@ export default function DashboardPage() {
   useEffect(() => {
     if (!me?.user?.role) return;
     const role = me.user.role;
-    const interval = setInterval(() => fetchStats(role), 30_000);
+    const interval = setInterval(() => fetchStats(role).catch(() => {}), 30_000);
     return () => clearInterval(interval);
   }, [me?.user?.role, fetchStats]);
 

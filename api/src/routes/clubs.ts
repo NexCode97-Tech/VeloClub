@@ -19,6 +19,7 @@ const createClubSchema = z.object({
 const settingsSchema = z.object({
   name:             z.string().min(2).max(100).optional(),
   city:             z.string().max(100).optional(),
+  department:       z.string().max(100).optional(),
   noAttendanceDays: z.array(z.number().min(0).max(6)).optional(),
 });
 
@@ -27,7 +28,7 @@ router.get('/settings', requireAuth, async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'No autenticado' });
   const club = await prisma.club.findUnique({
     where: { id: req.user.clubId ?? '' },
-    select: { id: true, name: true, city: true, logoUrl: true, noAttendanceDays: true },
+    select: { id: true, name: true, city: true, department: true, logoUrl: true, noAttendanceDays: true },
   });
   if (!club) return res.status(404).json({ error: 'Club no encontrado' });
   res.json({ club });
@@ -44,12 +45,13 @@ router.patch('/settings', requireAuth, async (req, res) => {
   const data: Record<string, unknown> = {};
   if (parsed.data.name             !== undefined) data.name             = parsed.data.name;
   if (parsed.data.city             !== undefined) data.city             = parsed.data.city;
+  if (parsed.data.department       !== undefined) data.department       = parsed.data.department;
   if (parsed.data.noAttendanceDays !== undefined) data.noAttendanceDays = parsed.data.noAttendanceDays;
 
   const club = await prisma.club.update({
     where: { id: req.user.clubId ?? '' },
     data,
-    select: { id: true, name: true, city: true, logoUrl: true, noAttendanceDays: true },
+    select: { id: true, name: true, city: true, department: true, logoUrl: true, noAttendanceDays: true },
   });
   res.json({ club });
 });

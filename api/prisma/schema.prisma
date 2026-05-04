@@ -13,6 +13,7 @@ model Club {
   id                String          @id @default(cuid())
   name              String
   city              String?
+  department        String?
   logoUrl           String?
   logoPublicId      String?
   active            Boolean         @default(true)

@@ -3,11 +3,12 @@
 import { useAuth } from '@clerk/nextjs';
 import { useEffect, useRef, useState } from 'react';
 import { apiFetch } from '@/lib/api-client';
-import { CheckCircle2, Camera, Building2 } from 'lucide-react';
+import { CheckCircle2, Camera, Building2, ChevronDown, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import Image from 'next/image';
+import { COLOMBIA, DEPARTMENTS } from '@/lib/colombia';
 
 const DAYS = [
   { label: 'Domingo',   value: 0 },
@@ -20,23 +21,105 @@ const DAYS = [
 ];
 
 interface Club {
-  id: string; name: string; city?: string;
+  id: string; name: string; city?: string; department?: string;
   logoUrl?: string; noAttendanceDays: number[];
+}
+
+function SearchableSelect({
+  label, value, options, placeholder, onChange,
+}: {
+  label: string; value: string; options: string[]; placeholder: string;
+  onChange: (v: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState('');
+  const ref = useRef<HTMLDivElement>(null);
+
+  const filtered = options.filter(o => o.toLowerCase().includes(query.toLowerCase()));
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, []);
+
+  function select(v: string) {
+    onChange(v);
+    setQuery('');
+    setOpen(false);
+  }
+
+  return (
+    <div className="space-y-2">
+      <Label>{label}</Label>
+      <div className="relative" ref={ref}>
+        <button
+          type="button"
+          onClick={() => { setOpen(o => !o); setQuery(''); }}
+          className="w-full flex items-center justify-between px-3 py-2 rounded-md border border-input bg-background text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring"
+        >
+          <span className={value ? 'text-foreground' : 'text-muted-foreground'}>{value || placeholder}</span>
+          <ChevronDown className="w-4 h-4 text-muted-foreground shrink-0" />
+        </button>
+        {open && (
+          <div className="absolute z-50 mt-1 w-full bg-white border border-border rounded-xl shadow-lg overflow-hidden">
+            <div className="p-2 border-b border-border">
+              <input
+                autoFocus
+                value={query}
+                onChange={e => setQuery(e.target.value)}
+                placeholder="Buscar..."
+                className="w-full text-sm px-2 py-1 outline-none bg-transparent"
+              />
+            </div>
+            <div className="max-h-52 overflow-y-auto">
+              {value && (
+                <button
+                  type="button"
+                  onClick={() => select('')}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground hover:bg-secondary"
+                >
+                  <X className="w-3 h-3" /> Limpiar
+                </button>
+              )}
+              {filtered.length === 0 ? (
+                <p className="px-3 py-2 text-sm text-muted-foreground">Sin resultados</p>
+              ) : filtered.map(o => (
+                <button
+                  key={o}
+                  type="button"
+                  onClick={() => select(o)}
+                  className={`w-full text-left px-3 py-2 text-sm hover:bg-secondary transition-colors ${o === value ? 'font-semibold text-primary' : 'text-foreground'}`}
+                >
+                  {o}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
 }
 
 export default function AjustesPage() {
   const { getToken } = useAuth();
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const [club, setClub]           = useState<Club | null>(null);
-  const [name, setName]           = useState('');
-  const [city, setCity]           = useState('');
-  const [noAttDays, setNoAttDays] = useState<number[]>([]);
-  const [loading, setLoading]     = useState(true);
-  const [saving, setSaving]       = useState(false);
-  const [saved, setSaved]         = useState(false);
+  const [club, setClub]             = useState<Club | null>(null);
+  const [name, setName]             = useState('');
+  const [department, setDepartment] = useState('');
+  const [city, setCity]             = useState('');
+  const [noAttDays, setNoAttDays]   = useState<number[]>([]);
+  const [loading, setLoading]       = useState(true);
+  const [saving, setSaving]         = useState(false);
+  const [saved, setSaved]           = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [logoPreview, setLogoPreview]     = useState<string | null>(null);
+
+  const cityOptions = department ? (COLOMBIA[department] ?? []).sort() : [];
 
   useEffect(() => {
     (async () => {
@@ -44,6 +127,7 @@ export default function AjustesPage() {
       const res = await apiFetch<{ club: Club }>('/clubs/settings', { token });
       setClub(res.club);
       setName(res.club.name);
+      setDepartment(res.club.department ?? '');
       setCity(res.club.city ?? '');
       setNoAttDays(res.club.noAttendanceDays ?? []);
       setLoading(false);
@@ -61,7 +145,12 @@ export default function AjustesPage() {
       const token = await getToken();
       const res = await apiFetch<{ club: Club }>('/clubs/settings', {
         method: 'PATCH', token,
-        body: JSON.stringify({ name: name.trim(), city: city.trim() || undefined, noAttendanceDays: noAttDays }),
+        body: JSON.stringify({
+          name: name.trim(),
+          department: department || undefined,
+          city: city || undefined,
+          noAttendanceDays: noAttDays,
+        }),
       });
       setClub(res.club);
       setSaved(true);
@@ -156,10 +245,20 @@ export default function AjustesPage() {
             <Label>Nombre del club</Label>
             <Input value={name} onChange={e => { setName(e.target.value); setSaved(false); }} placeholder="Nombre del club" />
           </div>
-          <div className="space-y-2">
-            <Label>Ciudad</Label>
-            <Input value={city} onChange={e => { setCity(e.target.value); setSaved(false); }} placeholder="ej. Medellín" />
-          </div>
+          <SearchableSelect
+            label="Departamento"
+            value={department}
+            options={DEPARTMENTS}
+            placeholder="Seleccionar departamento"
+            onChange={v => { setDepartment(v); setCity(''); setSaved(false); }}
+          />
+          <SearchableSelect
+            label="Ciudad / Municipio"
+            value={city}
+            options={cityOptions}
+            placeholder={department ? 'Seleccionar ciudad' : 'Primero elige un departamento'}
+            onChange={v => { setCity(v); setSaved(false); }}
+          />
         </div>
 
         {/* Días sin entrenamiento */}

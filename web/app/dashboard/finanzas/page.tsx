@@ -335,7 +335,7 @@ export default function FinanzasPage() {
                         )}
                         <div className="flex gap-1 self-end">
                           <button
-                            onClick={() => downloadInvoicePDF(p, clubName)}
+                            onClick={() => downloadInvoicePDF({ ...p, memberName: p.member.fullName }, clubName)}
                             className="w-7 h-7 rounded-lg bg-secondary flex items-center justify-center text-muted-foreground hover:text-foreground active:scale-90 transition-all"
                             title="Descargar factura"
                           >

@@ -7,7 +7,6 @@ import { CheckCircle2, Camera, Building2, ChevronDown, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import Image from 'next/image';
 import { COLOMBIA, DEPARTMENTS } from '@/lib/colombia';
 
 const DAYS = [
@@ -211,9 +210,10 @@ export default function AjustesPage() {
           <p className="text-[13px] font-bold text-foreground mb-3">Logo del club</p>
           <div className="flex items-center gap-4">
             <div className="relative">
-              <div className="w-20 h-20 rounded-2xl border border-border overflow-hidden flex items-center justify-center bg-secondary shrink-0">
+              <div className="relative w-20 h-20 rounded-2xl border border-border overflow-hidden flex items-center justify-center bg-secondary shrink-0">
                 {logoSrc ? (
-                  <Image src={logoSrc} alt="Logo" fill className="object-cover" />
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={logoSrc} alt="Logo" className="w-full h-full object-cover" />
                 ) : (
                   <Building2 className="w-8 h-8 text-muted-foreground/40" />
                 )}

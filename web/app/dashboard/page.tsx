@@ -143,15 +143,9 @@ export default function DashboardPage() {
     }
   }, [getToken]);
 
-  async function handleRefresh() {
-    if (!me?.user?.role) return;
+  function handleRefresh() {
     setSpinning(true);
-    try {
-      router.refresh();
-      await fetchStats(me.user.role);
-    } finally {
-      setSpinning(false);
-    }
+    setTimeout(() => window.location.reload(), 400);
   }
 
   useEffect(() => {

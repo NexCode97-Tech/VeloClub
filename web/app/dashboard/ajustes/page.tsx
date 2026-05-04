@@ -170,6 +170,10 @@ export default function AjustesPage() {
     const file = e.target.files?.[0];
     if (!file) return;
     if (fileRef.current) fileRef.current.value = '';
+    if (file.size > 2 * 1024 * 1024) {
+      alert('La imagen no puede superar 2MB');
+      return;
+    }
     const reader = new FileReader();
     reader.onload = (ev) => setCropSrc(ev.target?.result as string);
     reader.readAsDataURL(file);
@@ -289,7 +293,7 @@ export default function AjustesPage() {
                   </button>
                 )}
               </div>
-              <p className="text-[10px] text-muted-foreground mt-1.5">PNG, JPG · cuadrada</p>
+              <p className="text-[10px] text-muted-foreground mt-1.5">PNG, JPG · 400×400px · máx. 2MB</p>
             </div>
           </div>
         </div>

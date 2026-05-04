@@ -330,8 +330,8 @@ export default function MiembrosPage() {
               </div>
             </div>
 
-            {/* Categoría + Nivel */}
-            <div className="grid grid-cols-2 gap-2">
+            {/* Categoría + Nivel — solo deportistas */}
+            {form.role === 'STUDENT' && <div className="grid grid-cols-2 gap-2">
               <div className="space-y-2">
                 <Label>Categoría</Label>
                 <Select value={form.category} onValueChange={v => setForm(f => ({ ...f, category: v ?? '' }))}>
@@ -360,7 +360,7 @@ export default function MiembrosPage() {
                   </SelectContent>
                 </Select>
               </div>
-            </div>
+            </div>}
 
             {/* Rol */}
             <div className="grid grid-cols-2 gap-2">

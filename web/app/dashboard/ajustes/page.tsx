@@ -272,9 +272,10 @@ export default function AjustesPage() {
 
         {/* Modal recorte de logo */}
         {cropSrc && (
-          <div className="fixed inset-0 z-50 bg-black/70 flex flex-col items-center justify-center px-4">
-            <div className="bg-white rounded-2xl overflow-hidden w-full max-w-sm">
-              <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+          <div className="fixed inset-0 z-50 bg-black/70 flex flex-col items-end justify-end sm:items-center sm:justify-center">
+            <div className="bg-white rounded-t-2xl sm:rounded-2xl w-full sm:max-w-sm flex flex-col" style={{ maxHeight: '90dvh' }}>
+              {/* Header */}
+              <div className="flex items-center justify-between px-4 py-3 border-b border-border shrink-0">
                 <div className="flex items-center gap-2">
                   <Crop className="w-4 h-4 text-primary" />
                   <p className="text-[13px] font-bold text-foreground">Recortar logo</p>
@@ -283,7 +284,8 @@ export default function AjustesPage() {
                   <X className="w-4 h-4" />
                 </button>
               </div>
-              <div className="p-4 flex justify-center bg-secondary/40">
+              {/* Imagen scrollable */}
+              <div className="flex-1 overflow-auto p-4 flex justify-center items-center bg-secondary/40 min-h-0">
                 <ReactCrop
                   crop={crop}
                   onChange={c => setCrop(c)}
@@ -297,20 +299,21 @@ export default function AjustesPage() {
                     src={cropSrc}
                     alt="Recortar"
                     onLoad={onImageLoad}
-                    className="max-h-72 w-auto"
+                    style={{ maxHeight: '55dvh', width: 'auto' }}
                   />
                 </ReactCrop>
               </div>
-              <div className="flex gap-2 px-4 py-3">
+              {/* Botones siempre visibles */}
+              <div className="flex gap-2 px-4 py-4 shrink-0 border-t border-border">
                 <button
                   onClick={() => setCropSrc(null)}
-                  className="flex-1 py-2 rounded-xl border border-border text-[13px] font-semibold text-muted-foreground"
+                  className="flex-1 py-2.5 rounded-xl border border-border text-[13px] font-semibold text-muted-foreground"
                 >
                   Cancelar
                 </button>
                 <button
                   onClick={handleCropConfirm}
-                  className="flex-1 py-2 rounded-xl bg-primary text-white text-[13px] font-semibold"
+                  className="flex-1 py-2.5 rounded-xl bg-primary text-white text-[13px] font-semibold"
                 >
                   Confirmar
                 </button>

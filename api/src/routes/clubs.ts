@@ -73,10 +73,9 @@ router.post('/logo', requireAuth, async (req, res) => {
     }
 
     const result = await cloudinary.uploader.upload(base64, {
-      folder:         'veloclub/logos',
-      public_id:      `club_${clubId}`,
-      overwrite:      true,
-      transformation: [{ width: 500, height: 500, crop: 'fill', gravity: 'center' }],
+      folder:     'veloclub/logos',
+      public_id:  `club_${clubId}`,
+      overwrite:  true,
     });
 
     const club = await prisma.club.update({

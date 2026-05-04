@@ -173,6 +173,7 @@ router.delete('/:id', requireAuth, async (req, res) => {
   const existing = await prisma.payment.findFirst({ where: { id, clubId: req.user.clubId ?? '' } });
   if (!existing) return res.status(404).json({ error: 'Pago no encontrado' });
 
+  await prisma.cashEntry.deleteMany({ where: { paymentId: id } });
   await prisma.payment.delete({ where: { id } });
   res.json({ ok: true });
 });

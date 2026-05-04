@@ -20,6 +20,7 @@ interface Member {
   id: string; fullName: string; email?: string; phone?: string;
   birthDate?: string; category?: string; tipo?: string;
   emergencyContact?: string; emergencyPhone?: string; eps?: string;
+  paymentDueDay?: number | null;
   role: string;
   locations: { location: Location }[];
 }
@@ -40,6 +41,7 @@ const emptyForm = {
   fullName: '', email: '', phone: '', birthDate: '',
   category: '', tipo: '', emergencyContact: '', emergencyPhone: '',
   eps: '', role: 'STUDENT', locationIds: [] as string[],
+  paymentDueDay: '' as string,
 };
 
 export default function MiembrosPage() {
@@ -84,6 +86,7 @@ export default function MiembrosPage() {
       eps: m.eps ?? '',
       role: m.role,
       locationIds: m.locations.map(l => l.location.id),
+      paymentDueDay: m.paymentDueDay != null ? String(m.paymentDueDay) : '',
     });
     setError(null); setOpen(true);
   }
@@ -93,7 +96,10 @@ export default function MiembrosPage() {
     setSaving(true); setError(null);
     try {
       const token = await getToken();
-      const body = JSON.stringify(form);
+      const body = JSON.stringify({
+        ...form,
+        paymentDueDay: form.paymentDueDay ? parseInt(form.paymentDueDay) : null,
+      });
       if (editing) {
         await apiFetch(`/members/${editing.id}`, { method: 'PUT', token, body });
       } else {
@@ -377,10 +383,28 @@ export default function MiembrosPage() {
               </div>
             </div>
 
-            {/* EPS */}
-            <div className="space-y-2">
-              <Label>EPS</Label>
-              <Input value={form.eps} placeholder="Nombre de la EPS" onChange={e => setForm(f => ({ ...f, eps: e.target.value }))} />
+            {/* EPS + Día de pago */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label>EPS</Label>
+                <Input value={form.eps} placeholder="Nombre de la EPS" onChange={e => setForm(f => ({ ...f, eps: e.target.value }))} />
+              </div>
+              {form.role === 'STUDENT' && (
+                <div className="space-y-2">
+                  <Label>Día de pago mensual</Label>
+                  <Input
+                    type="number" min={1} max={28}
+                    value={form.paymentDueDay}
+                    placeholder="ej. 5"
+                    onChange={e => {
+                      const v = e.target.value;
+                      const n = parseInt(v);
+                      if (v === '' || (n >= 1 && n <= 28)) setForm(f => ({ ...f, paymentDueDay: v }));
+                    }}
+                  />
+                  <p className="text-[10px] text-muted-foreground">Día del mes (1–28)</p>
+                </div>
+              )}
             </div>
 
             {/* Contacto de emergencia + Teléfono de emergencia */}

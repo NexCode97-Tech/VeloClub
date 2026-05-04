@@ -35,6 +35,46 @@ async function createCashEntry(clubId: string, paymentId: string, amount: number
   });
 }
 
+// GET /payments/notifications — pagos PENDING próximos a vencer o vencidos
+router.get('/notifications', requireAuth, async (req, res) => {
+  if (!req.user) return res.status(401).json({ error: 'No autenticado' });
+  if (req.user.role !== 'ADMIN') return res.json({ notifications: [] });
+
+  const clubId = req.user.clubId ?? '';
+  const now = new Date();
+  const today = now.getDate();
+  const month = now.getMonth() + 1;
+  const year  = now.getFullYear();
+
+  // Pagos PENDING o OVERDUE del mes actual con miembro que tenga paymentDueDay
+  const payments = await prisma.payment.findMany({
+    where: {
+      clubId,
+      status: { in: ['PENDING', 'OVERDUE'] },
+      year,
+      month,
+      member: { paymentDueDay: { not: null } },
+    },
+    include: { member: { select: { id: true, fullName: true, paymentDueDay: true } } },
+  });
+
+  const notifications = payments
+    .map(p => {
+      const dueDay = p.member.paymentDueDay!;
+      const daysLeft = dueDay - today;
+      if (daysLeft < 0) {
+        return { type: 'overdue' as const, memberId: p.member.id, memberName: p.member.fullName, daysLate: Math.abs(daysLeft), paymentId: p.id };
+      }
+      if (daysLeft <= 3) {
+        return { type: 'due_soon' as const, memberId: p.member.id, memberName: p.member.fullName, daysLeft, paymentId: p.id };
+      }
+      return null;
+    })
+    .filter(Boolean);
+
+  res.json({ notifications });
+});
+
 // GET /payments?month=&year=&status=
 router.get('/', requireAuth, async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'No autenticado' });

@@ -62,9 +62,14 @@ export default function DashboardPage() {
   const router = useRouter();
   const [me, setMe]           = useState<MeResponse | null>(null);
   const [loading, setLoading] = useState(true);
-  const [spinning, setSpinning] = useState(false);
+  const [spinning, setSpinning]   = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const notifRef = useRef<HTMLDivElement>(null);
+  const [notifs, setNotifs] = useState<{
+    type: 'overdue' | 'due_soon';
+    memberName: string; memberId: string; paymentId: string;
+    daysLate?: number; daysLeft?: number;
+  }[]>([]);
   const [stats, setStats] = useState<Stats>({
     asistenciaHoy: '—',
     pagosPendientes: '—',
@@ -93,6 +98,11 @@ export default function DashboardPage() {
 
       const weekdayRes = await apiFetch<{ counts: number[] }>('/attendance/weekday-stats', { token }).catch(() => null);
       const weekdayCounts = weekdayRes?.counts ?? EMPTY_WEEKDAY;
+
+      if (role === 'ADMIN') {
+        const notifRes = await apiFetch<{ notifications: typeof notifs }>('/payments/notifications', { token }).catch(() => null);
+        if (notifRes) setNotifs(notifRes.notifications);
+      }
 
       if (role === 'ADMIN' || role === 'COACH') {
         const [attRes, membersRes] = await Promise.allSettled([
@@ -252,21 +262,54 @@ export default function DashboardPage() {
             <div className="relative" ref={notifRef}>
               <button
                 onClick={() => setNotifOpen(o => !o)}
-                className={`w-9 h-9 rounded-full border border-border bg-white flex items-center justify-center transition-all active:scale-90 ${notifOpen ? 'bg-secondary text-foreground' : 'text-muted-foreground hover:bg-secondary hover:text-foreground'}`}
+                className={`w-9 h-9 rounded-full border border-border bg-white flex items-center justify-center transition-all active:scale-90 relative ${notifOpen ? 'bg-secondary text-foreground' : 'text-muted-foreground hover:bg-secondary hover:text-foreground'}`}
               >
                 <Bell className="w-[15px] h-[15px]" />
+                {notifs.length > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-red-500 text-white text-[9px] font-bold flex items-center justify-center">
+                    {notifs.length > 9 ? '9+' : notifs.length}
+                  </span>
+                )}
               </button>
 
               {notifOpen && (
                 <div className="absolute right-0 top-11 w-72 bg-white border border-border rounded-2xl shadow-xl z-50 overflow-hidden">
-                  <div className="px-4 py-3 border-b border-border">
+                  <div className="px-4 py-3 border-b border-border flex items-center justify-between">
                     <p className="text-[13px] font-bold text-foreground">Notificaciones</p>
+                    {notifs.length > 0 && (
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-50 text-red-500">{notifs.length} alerta{notifs.length !== 1 ? 's' : ''}</span>
+                    )}
                   </div>
-                  <div className="flex flex-col items-center py-8 px-4 text-center">
-                    <BellOff className="w-8 h-8 mb-2 text-muted-foreground/30" />
-                    <p className="text-[12px] font-semibold text-muted-foreground">Sin notificaciones</p>
-                    <p className="text-[11px] text-muted-foreground/60 mt-0.5">Todo está al día</p>
-                  </div>
+                  {notifs.length === 0 ? (
+                    <div className="flex flex-col items-center py-8 px-4 text-center">
+                      <BellOff className="w-8 h-8 mb-2 text-muted-foreground/30" />
+                      <p className="text-[12px] font-semibold text-muted-foreground">Sin notificaciones</p>
+                      <p className="text-[11px] text-muted-foreground/60 mt-0.5">Todo está al día</p>
+                    </div>
+                  ) : (
+                    <div className="max-h-72 overflow-y-auto divide-y divide-border">
+                      {notifs.map((n, i) => (
+                        <Link
+                          key={i}
+                          href="/dashboard/finanzas"
+                          onClick={() => setNotifOpen(false)}
+                          className="flex items-start gap-3 px-4 py-3 hover:bg-secondary transition-colors"
+                        >
+                          <div className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${n.type === 'overdue' ? 'bg-red-500' : 'bg-amber-400'}`} />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-[12px] font-semibold text-foreground truncate">{n.memberName}</p>
+                            <p className={`text-[11px] mt-0.5 ${n.type === 'overdue' ? 'text-red-500' : 'text-amber-500'}`}>
+                              {n.type === 'overdue'
+                                ? `Vencido hace ${n.daysLate} día${n.daysLate !== 1 ? 's' : ''}`
+                                : n.daysLeft === 0 ? 'Vence hoy'
+                                : `Vence en ${n.daysLeft} día${n.daysLeft !== 1 ? 's' : ''}`
+                              }
+                            </p>
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
             </div>

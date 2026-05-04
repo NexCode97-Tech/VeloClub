@@ -17,6 +17,7 @@ const memberSchema = z.object({
   eps: z.string().optional(),
   category: z.string().optional(),
   tipo: z.string().optional(),
+  paymentDueDay: z.number().min(1).max(28).nullable().optional(),
   locationIds: z.array(z.string()).optional(),
   role: z.enum(['ADMIN', 'COACH', 'STUDENT']).optional(),
 });

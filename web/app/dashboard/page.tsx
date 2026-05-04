@@ -150,8 +150,11 @@ export default function DashboardPage() {
   async function handleRefresh() {
     if (!me?.user?.role) return;
     setSpinning(true);
-    await fetchStats(me.user.role);
-    setTimeout(() => setSpinning(false), 700);
+    try {
+      await fetchStats(me.user.role);
+    } finally {
+      setSpinning(false);
+    }
   }
 
   useEffect(() => {

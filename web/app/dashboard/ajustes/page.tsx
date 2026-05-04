@@ -177,7 +177,8 @@ export default function AjustesPage() {
         });
         setClub(prev => prev ? { ...prev, logoUrl: res.club.logoUrl } : prev);
         setLogoPreview(null);
-      } catch {
+      } catch (err) {
+        alert('Error al subir el logo: ' + (err instanceof Error ? err.message : 'intenta de nuevo'));
         setLogoPreview(null);
       } finally {
         setUploadingLogo(false);

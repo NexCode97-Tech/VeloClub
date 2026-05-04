@@ -5,10 +5,14 @@ import { z } from 'zod';
 import { v2 as cloudinary } from 'cloudinary';
 
 cloudinary.config({
-  cloud_name:  process.env.CLOUDINARY_CLOUD_NAME,
-  api_key:     process.env.CLOUDINARY_API_KEY,
-  api_secret:  process.env.CLOUDINARY_API_SECRET,
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME?.trim(),
+  api_key:    process.env.CLOUDINARY_API_KEY?.trim(),
+  api_secret: process.env.CLOUDINARY_API_SECRET?.trim(),
 });
+
+console.log('[cloudinary] cloud_name:', process.env.CLOUDINARY_CLOUD_NAME?.trim());
+console.log('[cloudinary] api_key length:', process.env.CLOUDINARY_API_KEY?.trim().length);
+console.log('[cloudinary] api_secret length:', process.env.CLOUDINARY_API_SECRET?.trim().length);
 
 const router = Router();
 

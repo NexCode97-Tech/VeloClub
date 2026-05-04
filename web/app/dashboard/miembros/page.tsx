@@ -335,7 +335,9 @@ export default function MiembrosPage() {
               <div className="space-y-2">
                 <Label>Categoría</Label>
                 <Select value={form.category} onValueChange={v => setForm(f => ({ ...f, category: v ?? '' }))}>
-                  <SelectTrigger><SelectValue placeholder="Seleccionar" /></SelectTrigger>
+                  <SelectTrigger>
+                    <span className="text-sm">{form.category || 'Seleccionar'}</span>
+                  </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="Menores 3-10 años">Menores 3-10 años</SelectItem>
                     <SelectItem value="Transición 11-13 años">Transición 11-13 años</SelectItem>
@@ -346,7 +348,9 @@ export default function MiembrosPage() {
               <div className="space-y-2">
                 <Label>Nivel</Label>
                 <Select value={form.tipo} onValueChange={v => setForm(f => ({ ...f, tipo: v ?? '' }))}>
-                  <SelectTrigger><SelectValue placeholder="Seleccionar" /></SelectTrigger>
+                  <SelectTrigger>
+                    <span className="text-sm">{form.tipo || 'Seleccionar'}</span>
+                  </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="Escuela">Escuela</SelectItem>
                     <SelectItem value="Novatos">Novatos</SelectItem>

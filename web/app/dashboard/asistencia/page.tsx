@@ -19,11 +19,11 @@ interface Member {
 interface Location { id: string; name: string }
 interface AttRecord { memberId: string; status: Status }
 
-type Status = 'PRESENT' | 'LATE' | 'ABSENT' | 'MEDICAL';
-const CYCLE: Status[] = ['PRESENT', 'LATE', 'ABSENT', 'MEDICAL'];
-const STATUS_LABEL: Record<Status, string> = { PRESENT: 'P', LATE: 'T', ABSENT: 'A', MEDICAL: 'M' };
-const STATUS_COLOR: Record<Status, string> = { PRESENT: '#06D6A0', LATE: '#FFB703', ABSENT: '#EF476F', MEDICAL: '#8B8FA8' };
-const STATUS_NAME: Record<Status, string>  = { PRESENT: 'Pres.', LATE: 'Tarde', ABSENT: 'Aus.', MEDICAL: 'Med.' };
+type Status = 'PRESENT' | 'LATE' | 'ABSENT' | 'MEDICAL_EXCUSE';
+const CYCLE: Status[] = ['PRESENT', 'LATE', 'ABSENT', 'MEDICAL_EXCUSE'];
+const STATUS_LABEL: Record<Status, string> = { PRESENT: 'P', LATE: 'T', ABSENT: 'A', MEDICAL_EXCUSE: 'M' };
+const STATUS_COLOR: Record<Status, string> = { PRESENT: '#06D6A0', LATE: '#FFB703', ABSENT: '#EF476F', MEDICAL_EXCUSE: '#8B8FA8' };
+const STATUS_NAME: Record<Status, string>  = { PRESENT: 'Pres.', LATE: 'Tarde', ABSENT: 'Aus.', MEDICAL_EXCUSE: 'Med.' };
 const ROLE_BG: Record<string, string> = {
   COACH: 'linear-gradient(135deg,#06D6A0,#0CB68D)',
   ADMIN: 'linear-gradient(135deg,#FFB703,#FB8500)',

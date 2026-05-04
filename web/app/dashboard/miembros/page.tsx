@@ -13,8 +13,9 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
-import { Plus, Pencil, Trash2, Users, Search, Download } from 'lucide-react';
+import { Plus, Pencil, Trash2, Users, Search, Download, FileSpreadsheet, Upload } from 'lucide-react';
 import { downloadMembersPDF } from '@/lib/pdf';
+import { downloadMembersTemplate, parseMembersExcel } from '@/lib/excel';
 
 interface Location { id: string; name: string }
 interface Member {
@@ -58,6 +59,10 @@ export default function MiembrosPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [clubName, setClubName] = useState('VeloClub');
+  const [importing, setImporting] = useState(false);
+  const [importErrors, setImportErrors] = useState<string[]>([]);
+  const [importOpen, setImportOpen] = useState(false);
+  const importRef = useState(() => typeof document !== 'undefined' ? document.createElement('input') : null)[0];
 
   async function load() {
     const token = await getToken();
@@ -134,6 +139,25 @@ export default function MiembrosPage() {
     }));
   }
 
+  async function handleImport(file: File) {
+    setImporting(true); setImportErrors([]);
+    const { rows, errors } = await parseMembersExcel(file);
+    if (errors.length > 0) { setImportErrors(errors); setImporting(false); return; }
+    const token = await getToken();
+    const failed: string[] = [];
+    for (const row of rows) {
+      try {
+        await apiFetch('/members', { method: 'POST', token, body: JSON.stringify(row) });
+      } catch (e) {
+        failed.push(`${row.fullName}: ${e instanceof Error ? e.message : 'Error'}`);
+      }
+    }
+    setImporting(false);
+    if (failed.length > 0) setImportErrors(failed);
+    else setImportOpen(false);
+    await load();
+  }
+
   const filtered = members.filter(m => {
     const q = search.toLowerCase();
     const matchSearch = m.fullName.toLowerCase().includes(q) || m.email?.toLowerCase().includes(q);
@@ -158,9 +182,26 @@ export default function MiembrosPage() {
             onClick={() => downloadMembersPDF(members, clubName)}
             disabled={members.length === 0}
             className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold border border-border text-muted-foreground hover:bg-secondary active:scale-95 transition-all disabled:opacity-40"
+            title="Descargar PDF"
           >
             <Download className="w-4 h-4" />
             <span className="hidden sm:inline">PDF</span>
+          </button>
+          <button
+            onClick={() => downloadMembersTemplate()}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold border border-border text-muted-foreground hover:bg-secondary active:scale-95 transition-all"
+            title="Descargar plantilla Excel"
+          >
+            <FileSpreadsheet className="w-4 h-4" />
+            <span className="hidden sm:inline">Plantilla</span>
+          </button>
+          <button
+            onClick={() => setImportOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold border border-border text-muted-foreground hover:bg-secondary active:scale-95 transition-all"
+            title="Importar desde Excel"
+          >
+            <Upload className="w-4 h-4" />
+            <span className="hidden sm:inline">Importar</span>
           </button>
           <button
             onClick={openNew}
@@ -460,6 +501,51 @@ export default function MiembrosPage() {
             <Button onClick={handleSave} disabled={saving || !form.fullName.trim()} className="w-full">
               {saving ? 'Guardando...' : editing ? 'Guardar cambios' : 'Crear miembro'}
             </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal importar Excel */}
+      <Dialog open={importOpen} onOpenChange={v => { if (!importing) { setImportOpen(v); setImportErrors([]); } }}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader><DialogTitle>Importar deportistas desde Excel</DialogTitle></DialogHeader>
+          <div className="space-y-4 mt-2">
+            <p className="text-[12px] text-muted-foreground">
+              Sube el archivo Excel con la plantilla completada. Los deportistas existentes con el mismo correo no se duplicarán.
+            </p>
+            <div
+              className="border-2 border-dashed border-border rounded-xl p-6 flex flex-col items-center gap-3 cursor-pointer hover:border-primary transition-colors"
+              onClick={() => {
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.accept = '.xlsx,.xls';
+                input.onchange = (e) => {
+                  const file = (e.target as HTMLInputElement).files?.[0];
+                  if (file) handleImport(file);
+                };
+                input.click();
+              }}
+            >
+              <FileSpreadsheet className="w-8 h-8 text-muted-foreground/40" />
+              {importing
+                ? <p className="text-[12px] font-semibold text-primary">Importando...</p>
+                : <p className="text-[12px] font-semibold text-muted-foreground">Toca para seleccionar archivo .xlsx</p>
+              }
+            </div>
+            {importErrors.length > 0 && (
+              <div className="bg-red-50 rounded-xl p-3 space-y-1 max-h-40 overflow-y-auto">
+                {importErrors.map((e, i) => (
+                  <p key={i} className="text-[11px] text-red-600">{e}</p>
+                ))}
+              </div>
+            )}
+            <button
+              onClick={() => downloadMembersTemplate()}
+              className="w-full flex items-center justify-center gap-2 py-2 rounded-xl border border-border text-[12px] font-semibold text-muted-foreground hover:bg-secondary"
+            >
+              <FileSpreadsheet className="w-4 h-4" />
+              Descargar plantilla
+            </button>
           </div>
         </DialogContent>
       </Dialog>

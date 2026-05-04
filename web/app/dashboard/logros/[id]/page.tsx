@@ -171,7 +171,7 @@ export default function CompetitionDetailPage() {
           className="flex items-center gap-1.5 text-[12px] text-muted-foreground mb-2 hover:text-foreground transition-colors"
         >
           <ChevronLeft className="w-4 h-4" />
-          Logros
+          Resultados
         </button>
         <div className="flex items-start justify-between">
           <div>

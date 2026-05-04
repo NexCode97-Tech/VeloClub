@@ -204,7 +204,7 @@ export default function DashboardPage() {
     ],
     STUDENT: [
       { label: 'Asistencia', value: '—', color: '#06D6A0', icon: CalendarCheck, href: '/dashboard/asistencia' },
-      { label: 'Logros',     value: '—', color: '#FFB703', icon: Trophy,        href: '/dashboard/logros' },
+      { label: 'Resultados', value: '—', color: '#FFB703', icon: Trophy,        href: '/dashboard/logros' },
       { label: 'Eventos',    value: '—', color: '#7C3AED', icon: CalendarDays,  href: '/dashboard/calendario' },
       { label: 'Sedes',      value: '—', color: '#EF476F', icon: MapPin,        href: '/dashboard/sedes' },
     ],

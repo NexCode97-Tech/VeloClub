@@ -170,6 +170,10 @@ export default function AjustesPage() {
     const file = e.target.files?.[0];
     if (!file) return;
     if (fileRef.current) fileRef.current.value = '';
+    if (file.size > 5 * 1024 * 1024) {
+      alert('La imagen no puede superar 5MB');
+      return;
+    }
     const reader = new FileReader();
     reader.onload = (ev) => setCropSrc(ev.target?.result as string);
     reader.readAsDataURL(file);
@@ -184,7 +188,7 @@ export default function AjustesPage() {
   async function handleCropConfirm() {
     if (!imgRef.current || !crop) return;
     const img  = imgRef.current;
-    const SIZE = 500;
+    const SIZE = 80;
     const scaleX = img.naturalWidth  / img.width;
     const scaleY = img.naturalHeight / img.height;
     const canvas = document.createElement('canvas');
@@ -257,7 +261,7 @@ export default function AjustesPage() {
               <div className="relative w-20 h-20 rounded-2xl border border-border overflow-hidden flex items-center justify-center bg-secondary shrink-0">
                 {logoSrc ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={logoSrc} alt="Logo" className="w-full h-full object-cover" />
+                  <img src={logoSrc} alt="Logo" className="w-full h-full" style={{ objectFit: 'cover' }} />
                 ) : (
                   <Building2 className="w-8 h-8 text-muted-foreground/40" />
                 )}
@@ -289,7 +293,7 @@ export default function AjustesPage() {
                   </button>
                 )}
               </div>
-              <p className="text-[10px] text-muted-foreground mt-1.5">PNG, JPG · máx. 500×500</p>
+              <p className="text-[10px] text-muted-foreground mt-1.5">PNG, JPG · 80×80 · máx. 5MB</p>
             </div>
           </div>
         </div>

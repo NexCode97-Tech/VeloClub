@@ -294,6 +294,7 @@ export default function AjustesPage() {
                 )}
               </div>
               <p className="text-[10px] text-muted-foreground mt-1.5">PNG, JPG · 400×400px · máx. 2MB</p>
+              <p className="text-[10px] mt-0.5" style={{ color: '#7C3AED' }}>Se recomienda PNG sin fondo para un mejor diseño visual</p>
             </div>
           </div>
         </div>

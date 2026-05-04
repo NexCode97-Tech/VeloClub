@@ -230,7 +230,7 @@ export default function DashboardPage() {
               <p className="text-xs text-muted-foreground mb-0.5">{todayLabel()}</p>
               <div className="flex items-center gap-3">
                 {/* Logo — altura del saludo + nombre del club */}
-                <div className="w-12 rounded-xl border border-border bg-secondary overflow-hidden flex items-center justify-center shrink-0 self-stretch">
+                <div className="w-14 rounded-2xl border border-border bg-secondary overflow-hidden flex items-center justify-center shrink-0 self-stretch" style={{ boxShadow: '0 4px 12px rgba(67,97,238,0.15)' }}>
                   {user?.club?.logoUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={user.club.logoUrl} alt="Logo" className="w-full h-full" style={{ objectFit: 'cover' }} />

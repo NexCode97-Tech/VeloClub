@@ -107,6 +107,15 @@ router.put('/:id', requireAuth, async (req, res) => {
     },
     include: { locations: { include: { location: true } } },
   });
+
+  // Sincronizar rol en User si el miembro tiene cuenta vinculada
+  if (rest.role && member.clerkId) {
+    await prisma.user.updateMany({
+      where: { clerkId: member.clerkId },
+      data:  { role: rest.role },
+    });
+  }
+
   res.json({ member });
 });
 

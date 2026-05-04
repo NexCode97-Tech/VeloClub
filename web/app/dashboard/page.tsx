@@ -16,7 +16,7 @@ import {
 
 interface MeResponse {
   status: 'ok' | 'superadmin' | 'complete_profile' | 'no_access' | 'inactive';
-  user?: { name: string; role: string; club?: { name: string } };
+  user?: { name: string; role: string; club?: { name: string; logoUrl?: string } };
 }
 
 const roleLabels: Record<string, string> = {
@@ -225,23 +225,36 @@ export default function DashboardPage() {
         style={{ background: 'linear-gradient(135deg, #fff 0%, #F0EEF8 100%)' }}
       >
         <div className="flex items-start justify-between mb-4">
-          <div>
-            <p className="text-xs text-muted-foreground mb-0.5">{todayLabel()}</p>
-            <h1
-              className="text-[22px] font-extrabold text-foreground leading-tight"
-              style={{ fontFamily: 'var(--font-space-grotesk)' }}
-            >
-              ¡Hola, {firstName}! 👋
-            </h1>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              {user?.club?.name ?? 'VeloClub'}
-            </p>
-            <span
-              className="inline-block mt-2 text-[10px] font-bold px-2.5 py-0.5 rounded-full tracking-wider"
-              style={{ background: rc.bg, color: rc.text }}
-            >
-              {roleLabels[role] ?? role}
-            </span>
+          <div className="flex items-start gap-3">
+            {/* Logo del club */}
+            <div className="w-12 h-12 rounded-xl border border-border bg-secondary overflow-hidden flex items-center justify-center shrink-0 mt-0.5">
+              {user?.club?.logoUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={user.club.logoUrl} alt="Logo" className="w-full h-full" style={{ objectFit: 'cover' }} />
+              ) : (
+                <span className="text-[18px] font-extrabold text-primary" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
+                  {(user?.club?.name ?? 'V').charAt(0).toUpperCase()}
+                </span>
+              )}
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground mb-0.5">{todayLabel()}</p>
+              <h1
+                className="text-[22px] font-extrabold text-foreground leading-tight"
+                style={{ fontFamily: 'var(--font-space-grotesk)' }}
+              >
+                ¡Hola, {firstName}! 👋
+              </h1>
+              <p className="text-[14px] font-semibold text-foreground/70 mt-0.5">
+                {user?.club?.name ?? 'VeloClub'}
+              </p>
+              <span
+                className="inline-block mt-2 text-[10px] font-bold px-2.5 py-0.5 rounded-full tracking-wider"
+                style={{ background: rc.bg, color: rc.text }}
+              >
+                {roleLabels[role] ?? role}
+              </span>
+            </div>
           </div>
 
           <div className="flex items-center gap-2 mt-1">

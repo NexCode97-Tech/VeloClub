@@ -170,10 +170,6 @@ export default function AjustesPage() {
     const file = e.target.files?.[0];
     if (!file) return;
     if (fileRef.current) fileRef.current.value = '';
-    if (file.size > 5 * 1024 * 1024) {
-      alert('La imagen no puede superar 5MB');
-      return;
-    }
     const reader = new FileReader();
     reader.onload = (ev) => setCropSrc(ev.target?.result as string);
     reader.readAsDataURL(file);
@@ -188,7 +184,7 @@ export default function AjustesPage() {
   async function handleCropConfirm() {
     if (!imgRef.current || !crop) return;
     const img  = imgRef.current;
-    const SIZE = 80;
+    const SIZE = 400;
     const scaleX = img.naturalWidth  / img.width;
     const scaleY = img.naturalHeight / img.height;
     const canvas = document.createElement('canvas');
@@ -293,7 +289,7 @@ export default function AjustesPage() {
                   </button>
                 )}
               </div>
-              <p className="text-[10px] text-muted-foreground mt-1.5">PNG, JPG · 80×80 · máx. 5MB</p>
+              <p className="text-[10px] text-muted-foreground mt-1.5">PNG, JPG · cuadrada</p>
             </div>
           </div>
         </div>

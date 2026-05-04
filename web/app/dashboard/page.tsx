@@ -49,7 +49,7 @@ function todayLabel() {
 
 interface Stats {
   asistenciaHoy: number | string;
-  pagosPendientes: number | string;
+  totalMensualidades: number | string;
   totalMiembros: number | string;
   entrenamientosMes: number | string;
   weekdayCounts: number[];
@@ -72,7 +72,7 @@ export default function DashboardPage() {
   }[]>([]);
   const [stats, setStats] = useState<Stats>({
     asistenciaHoy: '—',
-    pagosPendientes: '—',
+    totalMensualidades: '—',
     totalMiembros: '—',
     entrenamientosMes: '—',
     weekdayCounts: EMPTY_WEEKDAY,
@@ -118,15 +118,15 @@ export default function DashboardPage() {
         : '—';
 
       if (role === 'ADMIN') {
-        const paymentsRes = await apiFetch<{ payments: { status: string }[] }>(
+        const paymentsRes = await apiFetch<{ payments: { status: string; amount: number }[] }>(
           `/payments?year=${year}&month=${month}`, { token }
         ).catch(() => null);
 
-        const pending = paymentsRes
-          ? paymentsRes.payments.filter(p => p.status === 'PENDING' || p.status === 'OVERDUE').length
+        const totalMensualidades = paymentsRes
+          ? paymentsRes.payments.filter(p => p.status === 'PAID').reduce((s, p) => s + p.amount, 0)
           : '—';
 
-        setStats(s => ({ ...s, asistenciaHoy: presentCount, pagosPendientes: pending, totalMiembros: memberCount, weekdayCounts }));
+        setStats(s => ({ ...s, asistenciaHoy: presentCount, totalMensualidades, totalMiembros: memberCount, weekdayCounts }));
       } else {
         const trainingRes = await apiFetch<{ sessions: unknown[] }>(
           `/training?month=${month}&year=${year}`, { token }
@@ -194,7 +194,7 @@ export default function DashboardPage() {
   const statCards: Record<string, StatCard[]> = {
     ADMIN: [
       { label: 'Asistencia hoy',   value: stats.asistenciaHoy,   color: '#06D6A0', icon: CalendarCheck, href: '/dashboard/asistencia' },
-      { label: 'Mensualidades', value: stats.pagosPendientes, color: '#FFB703', icon: CreditCard,    href: '/dashboard/finanzas' },
+      { label: 'Mensualidades', value: typeof stats.totalMensualidades === 'number' ? new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(stats.totalMensualidades) : stats.totalMensualidades, color: '#FFB703', icon: CreditCard, href: '/dashboard/finanzas' },
     ],
     COACH: [
       { label: 'Deportistas',   value: stats.totalMiembros,     color: '#7C3AED', icon: Users,        href: '/dashboard/miembros' },

@@ -163,27 +163,44 @@ export default function AjustesPage() {
   async function handleLogoChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
+    if (fileRef.current) fileRef.current.value = '';
 
     const reader = new FileReader();
     reader.onload = async (ev) => {
-      const base64 = ev.target?.result as string;
-      setLogoPreview(base64);
-      setUploadingLogo(true);
-      try {
-        const token = await getToken();
-        const res = await apiFetch<{ club: { id: string; logoUrl: string } }>('/clubs/logo', {
-          method: 'POST', token,
-          body: JSON.stringify({ base64 }),
-        });
-        setClub(prev => prev ? { ...prev, logoUrl: res.club.logoUrl } : prev);
-        setLogoPreview(null);
-      } catch (err) {
-        alert('Error al subir el logo: ' + (err instanceof Error ? err.message : 'intenta de nuevo'));
-        setLogoPreview(null);
-      } finally {
-        setUploadingLogo(false);
-        if (fileRef.current) fileRef.current.value = '';
-      }
+      const src = ev.target?.result as string;
+
+      // Recortar y redimensionar a 500×500 centrado con canvas
+      const img = new window.Image();
+      img.onload = async () => {
+        const SIZE = 500;
+        const canvas = document.createElement('canvas');
+        canvas.width  = SIZE;
+        canvas.height = SIZE;
+        const ctx = canvas.getContext('2d')!;
+        const side = Math.min(img.width, img.height);
+        const sx   = (img.width  - side) / 2;
+        const sy   = (img.height - side) / 2;
+        ctx.drawImage(img, sx, sy, side, side, 0, 0, SIZE, SIZE);
+        const base64 = canvas.toDataURL('image/jpeg', 0.85);
+
+        setLogoPreview(base64);
+        setUploadingLogo(true);
+        try {
+          const token = await getToken();
+          const res = await apiFetch<{ club: { id: string; logoUrl: string } }>('/clubs/logo', {
+            method: 'POST', token,
+            body: JSON.stringify({ base64 }),
+          });
+          setClub(prev => prev ? { ...prev, logoUrl: res.club.logoUrl } : prev);
+          setLogoPreview(null);
+        } catch (err) {
+          alert('Error al subir el logo: ' + (err instanceof Error ? err.message : 'intenta de nuevo'));
+          setLogoPreview(null);
+        } finally {
+          setUploadingLogo(false);
+        }
+      };
+      img.src = src;
     };
     reader.readAsDataURL(file);
   }

@@ -5,8 +5,9 @@ import { useEffect, useState } from 'react';
 import { apiFetch } from '@/lib/api-client';
 import {
   CreditCard, Plus, Trash2, CheckCircle2, Clock, AlertCircle,
-  TrendingUp, TrendingDown, Wallet,
+  TrendingUp, TrendingDown, Wallet, Download,
 } from 'lucide-react';
+import { downloadInvoicePDF } from '@/lib/pdf';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -59,6 +60,7 @@ const now = new Date();
 export default function FinanzasPage() {
   const { getToken } = useAuth();
   const [tab, setTab]             = useState<'pagos' | 'flujo'>('pagos');
+  const [clubName, setClubName]   = useState('VeloClub');
   const [filterMonth, setFilterMonth] = useState(now.getMonth() + 1);
   const [filterYear, setFilterYear]   = useState(now.getFullYear());
 
@@ -106,8 +108,12 @@ export default function FinanzasPage() {
   useEffect(() => {
     (async () => {
       const token = await getToken();
-      const membersRes = await apiFetch<{ members: Member[] }>('/members', { token });
+      const [membersRes, settingsRes] = await Promise.all([
+        apiFetch<{ members: Member[] }>('/members', { token }),
+        apiFetch<{ club: { name: string } }>('/clubs/settings', { token }).catch(() => null),
+      ]);
       setMembers(membersRes.members);
+      if (settingsRes) setClubName(settingsRes.club.name);
     })();
     loadPayments();
     loadFlow();
@@ -231,7 +237,7 @@ export default function FinanzasPage() {
                 : { color: '#8E87A8' }
               }
             >
-              {t === 'pagos' ? 'Pagos' : 'Flujo de Caja'}
+              {t === 'pagos' ? 'Mensualidades' : 'Flujo de Caja'}
             </button>
           ))}
         </div>
@@ -327,10 +333,19 @@ export default function FinanzasPage() {
                             Marcar pagado
                           </button>
                         )}
-                        <button onClick={() => handleDeletePay(p.id)} disabled={deletingPay === p.id}
-                          className="w-7 h-7 rounded-lg bg-red-50 flex items-center justify-center text-red-400 hover:text-red-600 self-end">
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
+                        <div className="flex gap-1 self-end">
+                          <button
+                            onClick={() => downloadInvoicePDF(p, clubName)}
+                            className="w-7 h-7 rounded-lg bg-secondary flex items-center justify-center text-muted-foreground hover:text-foreground active:scale-90 transition-all"
+                            title="Descargar factura"
+                          >
+                            <Download className="w-3.5 h-3.5" />
+                          </button>
+                          <button onClick={() => handleDeletePay(p.id)} disabled={deletingPay === p.id}
+                            className="w-7 h-7 rounded-lg bg-red-50 flex items-center justify-center text-red-400 hover:text-red-600">
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
                       </div>
                     </div>
                   );

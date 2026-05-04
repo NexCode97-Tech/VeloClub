@@ -147,10 +147,11 @@ export default function DashboardPage() {
     }
   }, [getToken]);
 
-  async function handleRefresh(role: string) {
+  async function handleRefresh() {
+    if (!me?.user?.role) return;
     setSpinning(true);
-    await fetchStats(role);
-    setTimeout(() => setSpinning(false), 600);
+    await fetchStats(me.user.role);
+    setTimeout(() => setSpinning(false), 700);
   }
 
   useEffect(() => {
@@ -199,7 +200,7 @@ export default function DashboardPage() {
   const statCards: Record<string, StatCard[]> = {
     ADMIN: [
       { label: 'Asistencia hoy',   value: stats.asistenciaHoy,   color: '#06D6A0', icon: CalendarCheck, href: '/dashboard/asistencia' },
-      { label: 'Pagos pendientes', value: stats.pagosPendientes, color: '#FFB703', icon: CreditCard,    href: '/dashboard/finanzas' },
+      { label: 'Mensualidades', value: stats.pagosPendientes, color: '#FFB703', icon: CreditCard,    href: '/dashboard/finanzas' },
     ],
     COACH: [
       { label: 'Deportistas',   value: stats.totalMiembros,     color: '#7C3AED', icon: Users,        href: '/dashboard/miembros' },
@@ -252,7 +253,7 @@ export default function DashboardPage() {
           <div className="flex items-center gap-2 mt-1">
             {/* Refresh */}
             <button
-              onClick={() => handleRefresh(role)}
+              onClick={handleRefresh}
               className="w-9 h-9 rounded-full border border-border bg-white flex items-center justify-center text-muted-foreground hover:bg-secondary hover:text-foreground active:scale-90 transition-all"
             >
               <RefreshCw className={`w-[15px] h-[15px] transition-transform duration-500 ${spinning ? 'animate-spin' : ''}`} />

@@ -13,7 +13,8 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
-import { Plus, Pencil, Trash2, Users, Search } from 'lucide-react';
+import { Plus, Pencil, Trash2, Users, Search, Download } from 'lucide-react';
+import { downloadMembersPDF } from '@/lib/pdf';
 
 interface Location { id: string; name: string }
 interface Member {
@@ -56,16 +57,19 @@ export default function MiembrosPage() {
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [clubName, setClubName] = useState('VeloClub');
 
   async function load() {
     const token = await getToken();
-    const [membersRes, locsRes] = await Promise.all([
+    const [membersRes, locsRes, settingsRes] = await Promise.all([
       apiFetch<{ members: Member[] }>('/members', { token }),
       apiFetch<{ locations: Location[] }>('/locations', { token }),
+      apiFetch<{ club: { name: string } }>('/clubs/settings', { token }).catch(() => null),
     ]);
     setMembers([]);
     setMembers(membersRes.members);
     setLocations(locsRes.locations);
+    if (settingsRes) setClubName(settingsRes.club.name);
     setLoading(false);
   }
 
@@ -149,14 +153,24 @@ export default function MiembrosPage() {
             {members.length} miembro{members.length !== 1 ? 's' : ''} registrado{members.length !== 1 ? 's' : ''}
           </p>
         </div>
-        <button
-          onClick={openNew}
-          className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold text-white transition-colors"
-          style={{ background: '#4361EE' }}
-        >
-          <Plus className="w-4 h-4" />
-          <span className="hidden sm:inline">Nuevo</span>
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => downloadMembersPDF(members, clubName)}
+            disabled={members.length === 0}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold border border-border text-muted-foreground hover:bg-secondary active:scale-95 transition-all disabled:opacity-40"
+          >
+            <Download className="w-4 h-4" />
+            <span className="hidden sm:inline">PDF</span>
+          </button>
+          <button
+            onClick={openNew}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold text-white transition-colors active:scale-95"
+            style={{ background: '#4361EE' }}
+          >
+            <Plus className="w-4 h-4" />
+            <span className="hidden sm:inline">Nuevo</span>
+          </button>
+        </div>
       </div>
 
       <div className="px-4 pt-4 space-y-3">

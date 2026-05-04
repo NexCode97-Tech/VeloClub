@@ -2,7 +2,7 @@
 
 import { useAuth } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { apiFetch } from '@/lib/api-client';
 import Link from 'next/link';
 import {
@@ -30,27 +30,10 @@ const roleColors: Record<string, { text: string; bg: string }> = {
   STUDENT:    { text: '#7C3AED', bg: 'rgba(124,58,237,0.10)' },
 };
 
-type StatCard = { label: string; value: string | number; color: string; icon: React.ElementType; href: string };
-
-const STATS_BY_ROLE: Record<string, StatCard[]> = {
-  ADMIN: [
-    { label: 'Asistencia',  value: '-', color: '#06D6A0', icon: CalendarCheck, href: '/dashboard/asistencia' },
-    { label: 'Pagos',       value: '-', color: '#FFB703', icon: CreditCard,    href: '/dashboard/pagos' },
-  ],
-  COACH: [
-    { label: 'Deportistas',     value: '-', color: '#7C3AED', icon: Users,         href: '/dashboard/miembros' },
-    { label: 'Hoy asisten',     value: '-', color: '#06D6A0', icon: CalendarCheck, href: '/dashboard/asistencia' },
-    { label: 'Entrenamientos',  value: '-', color: '#FFB703', icon: CalendarDays,  href: '/dashboard/calendario' },
-    { label: 'Logros mes',      value: '-', color: '#4361EE', icon: Trophy,        href: '/dashboard/logros' },
-  ],
-  STUDENT: [
-    { label: 'Asistencia', value: '-', color: '#06D6A0', icon: CalendarCheck, href: '/dashboard/asistencia' },
-    { label: 'Logros',     value: '-', color: '#FFB703', icon: Trophy,        href: '/dashboard/logros' },
-    { label: 'Eventos',    value: '-', color: '#7C3AED', icon: CalendarDays,  href: '/dashboard/calendario' },
-    { label: 'Sedes',      value: '-', color: '#EF476F', icon: MapPin,        href: '/dashboard/sedes' },
-  ],
-};
-
+function todayISO() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
 
 function todayLabel() {
   const d = new Date();
@@ -59,11 +42,73 @@ function todayLabel() {
   return `${day.charAt(0).toUpperCase() + day.slice(1)}, ${rest}`;
 }
 
+interface Stats {
+  asistenciaHoy: number | string;
+  pagosPendientes: number | string;
+  totalMiembros: number | string;
+  entrenamientosMes: number | string;
+}
+
 export default function DashboardPage() {
   const { getToken, isLoaded, isSignedIn } = useAuth();
   const router = useRouter();
   const [me, setMe] = useState<MeResponse | null>(null);
   const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState<Stats>({
+    asistenciaHoy: '—',
+    pagosPendientes: '—',
+    totalMiembros: '—',
+    entrenamientosMes: '—',
+  });
+
+  const fetchStats = useCallback(async (role: string) => {
+    try {
+      const token = await getToken();
+      const now = new Date();
+      const month = now.getMonth() + 1;
+      const year = now.getFullYear();
+
+      if (role === 'ADMIN' || role === 'COACH') {
+        const [attRes, membersRes] = await Promise.allSettled([
+          apiFetch<{ records: { status: string }[] }>(`/attendance?date=${todayISO()}`, { token }),
+          apiFetch<{ members: unknown[] }>('/members', { token }),
+        ]);
+
+        const presentCount = attRes.status === 'fulfilled'
+          ? attRes.value.records.filter(r => r.status === 'PRESENT').length
+          : '—';
+
+        const memberCount = membersRes.status === 'fulfilled'
+          ? membersRes.value.members.length
+          : '—';
+
+        if (role === 'ADMIN') {
+          const paymentsRes = await apiFetch<{ payments: { status: string }[] }>(
+            `/payments?year=${year}&month=${month}`, { token }
+          ).catch(() => null);
+
+          const pending = paymentsRes
+            ? paymentsRes.payments.filter(p => p.status === 'PENDING' || p.status === 'OVERDUE').length
+            : '—';
+
+          setStats(s => ({ ...s, asistenciaHoy: presentCount, pagosPendientes: pending, totalMiembros: memberCount }));
+        } else {
+          const trainingRes = await apiFetch<{ sessions: unknown[] }>(
+            `/training?month=${month}&year=${year}`, { token }
+          ).catch(() => null);
+
+          setStats(s => ({
+            ...s,
+            asistenciaHoy: presentCount,
+            totalMiembros: memberCount,
+            entrenamientosMes: trainingRes ? trainingRes.sessions.length : '—',
+          }));
+        }
+      }
+    } catch {
+      // silently keep previous values
+    }
+  }, [getToken]);
 
   useEffect(() => {
     if (!isLoaded) return;
@@ -77,13 +122,22 @@ export default function DashboardPage() {
         if (res.status === 'inactive')         { router.push('/inactivo');         return; }
         if (res.status === 'complete_profile') { router.push('/completar-perfil'); return; }
         setMe(res);
+        await fetchStats(res.user?.role ?? 'ADMIN');
       } catch (err) {
         console.error(err);
       } finally {
         setLoading(false);
       }
     })();
-  }, [isLoaded, isSignedIn, getToken, router]);
+  }, [isLoaded, isSignedIn]);
+
+  // Polling cada 30 segundos
+  useEffect(() => {
+    if (!me?.user?.role) return;
+    const role = me.user.role;
+    const interval = setInterval(() => fetchStats(role), 30_000);
+    return () => clearInterval(interval);
+  }, [me?.user?.role, fetchStats]);
 
   if (loading) {
     return (
@@ -97,7 +151,29 @@ export default function DashboardPage() {
   const role = user?.role ?? 'ADMIN';
   const firstName = user?.name?.split(' ')[0] ?? '';
   const rc = roleColors[role] ?? roleColors.ADMIN;
-  const stats = STATS_BY_ROLE[role] ?? STATS_BY_ROLE.ADMIN;
+
+  type StatCard = { label: string; value: string | number; color: string; icon: React.ElementType; href: string };
+
+  const statCards: Record<string, StatCard[]> = {
+    ADMIN: [
+      { label: 'Asistencia hoy',    value: stats.asistenciaHoy,    color: '#06D6A0', icon: CalendarCheck, href: '/dashboard/asistencia' },
+      { label: 'Pagos pendientes',  value: stats.pagosPendientes,  color: '#FFB703', icon: CreditCard,    href: '/dashboard/finanzas' },
+    ],
+    COACH: [
+      { label: 'Deportistas',       value: stats.totalMiembros,    color: '#7C3AED', icon: Users,         href: '/dashboard/miembros' },
+      { label: 'Presentes hoy',     value: stats.asistenciaHoy,    color: '#06D6A0', icon: CalendarCheck, href: '/dashboard/asistencia' },
+      { label: 'Entrenam. mes',     value: stats.entrenamientosMes,color: '#FFB703', icon: CalendarDays,  href: '/dashboard/logros' },
+      { label: 'Miembros',          value: stats.totalMiembros,    color: '#4361EE', icon: Trophy,        href: '/dashboard/logros' },
+    ],
+    STUDENT: [
+      { label: 'Asistencia',  value: '—', color: '#06D6A0', icon: CalendarCheck, href: '/dashboard/asistencia' },
+      { label: 'Logros',      value: '—', color: '#FFB703', icon: Trophy,        href: '/dashboard/logros' },
+      { label: 'Eventos',     value: '—', color: '#7C3AED', icon: CalendarDays,  href: '/dashboard/calendario' },
+      { label: 'Sedes',       value: '—', color: '#EF476F', icon: MapPin,        href: '/dashboard/sedes' },
+    ],
+  };
+
+  const cards = statCards[role] ?? statCards.ADMIN;
 
   return (
     <div className="min-h-full bg-background">
@@ -128,7 +204,7 @@ export default function DashboardPage() {
           </div>
           <div className="flex items-center gap-2 mt-1">
             <button
-              onClick={() => window.location.reload()}
+              onClick={() => fetchStats(role)}
               className="w-9 h-9 rounded-full border border-border bg-white flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
             >
               <RefreshCw className="w-[15px] h-[15px]" />
@@ -140,23 +216,23 @@ export default function DashboardPage() {
         </div>
 
         {/* Stats grid */}
-        <div className={`grid gap-3 ${stats.length === 2 ? 'grid-cols-2' : 'grid-cols-4'}`}>
-          {stats.map((s) => (
+        <div className={`grid gap-3 ${cards.length === 2 ? 'grid-cols-2' : 'grid-cols-4'}`}>
+          {cards.map((s) => (
             <Link
               key={s.label}
               href={s.href}
-              className={`bg-white border border-border rounded-xl text-center active:scale-95 transition-transform ${stats.length === 2 ? 'p-5' : 'p-2.5'}`}
+              className={`bg-white border border-border rounded-xl text-center active:scale-95 transition-transform ${cards.length === 2 ? 'p-5' : 'p-2.5'}`}
             >
-              <div className={`flex justify-center ${stats.length === 2 ? 'mb-2' : 'mb-1'}`} style={{ color: s.color }}>
-                <s.icon className={stats.length === 2 ? 'w-6 h-6' : 'w-[17px] h-[17px]'} />
+              <div className={`flex justify-center ${cards.length === 2 ? 'mb-2' : 'mb-1'}`} style={{ color: s.color }}>
+                <s.icon className={cards.length === 2 ? 'w-6 h-6' : 'w-[17px] h-[17px]'} />
               </div>
               <div
-                className={`font-extrabold text-foreground leading-none mb-1 ${stats.length === 2 ? 'text-2xl' : 'text-base'}`}
+                className={`font-extrabold text-foreground leading-none mb-1 ${cards.length === 2 ? 'text-2xl' : 'text-base'}`}
                 style={{ fontFamily: 'var(--font-space-grotesk)' }}
               >
                 {s.value}
               </div>
-              <div className={`text-muted-foreground leading-tight ${stats.length === 2 ? 'text-[11px]' : 'text-[9px]'}`}>{s.label}</div>
+              <div className={`text-muted-foreground leading-tight ${cards.length === 2 ? 'text-[11px]' : 'text-[9px]'}`}>{s.label}</div>
             </Link>
           ))}
         </div>
@@ -164,7 +240,7 @@ export default function DashboardPage() {
 
       <div className="px-5 py-4 space-y-5">
 
-        {/* Próximos eventos — vacío hasta que haya API */}
+        {/* Próximos eventos */}
         <section>
           <div className="flex items-center justify-between mb-2.5">
             <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Próximos eventos</p>
@@ -183,13 +259,18 @@ export default function DashboardPage() {
           <section>
             <div className="flex items-center justify-between mb-2.5">
               <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Pagos pendientes</p>
-              <Link href="/dashboard/pagos" className="text-[11px] font-semibold" style={{ color: '#7C3AED' }}>
+              <Link href="/dashboard/finanzas" className="text-[11px] font-semibold" style={{ color: '#7C3AED' }}>
                 Ver todos
               </Link>
             </div>
             <div className="bg-white border border-border rounded-xl px-4 py-5 text-center">
               <CreditCard className="w-8 h-8 mx-auto mb-2 text-muted-foreground/30" />
-              <p className="text-[12px] text-muted-foreground">Sin pagos pendientes</p>
+              <p className="text-[12px] text-muted-foreground">
+                {stats.pagosPendientes === '—' || stats.pagosPendientes === 0
+                  ? 'Sin pagos pendientes'
+                  : `${stats.pagosPendientes} pago${Number(stats.pagosPendientes) !== 1 ? 's' : ''} pendiente${Number(stats.pagosPendientes) !== 1 ? 's' : ''}`
+                }
+              </p>
             </div>
           </section>
         )}

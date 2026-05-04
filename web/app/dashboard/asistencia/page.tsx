@@ -146,7 +146,7 @@ export default function AsistenciaPage() {
             style={{ background: saved ? '#06D6A0' : '#4361EE' }}
           >
             <CheckCircle2 className="w-4 h-4" />
-            <span className="hidden sm:inline">{saving ? 'Guardando...' : saved ? 'Guardado' : 'Guardar'}</span>
+            <span>{saving ? 'Guardando...' : saved ? 'Guardado' : 'Guardar'}</span>
           </button>
         )}
       </div>

@@ -27,6 +27,15 @@ function getId(req: Request): string {
   return String(req.params.id);
 }
 
+function toTitleCase(str: string): string {
+  return str
+    .toLowerCase()
+    .split(' ')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ')
+    .trim();
+}
+
 // GET /members
 router.get('/', requireAuth, async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'No autenticado' });
@@ -68,6 +77,7 @@ router.post('/', requireAuth, async (req, res) => {
   if (!parsed.success) return res.status(400).json({ error: parsed.error.issues });
 
   const { locationIds, birthDate, ...rest } = parsed.data;
+  rest.fullName = toTitleCase(rest.fullName);
 
   let member;
   try {
@@ -113,6 +123,7 @@ router.put('/:id', requireAuth, async (req, res) => {
   if (!parsed.success) return res.status(400).json({ error: parsed.error.issues });
 
   const { locationIds, birthDate, ...rest } = parsed.data;
+  if (rest.fullName) rest.fullName = toTitleCase(rest.fullName);
 
   if (locationIds !== undefined) {
     await prisma.memberLocation.deleteMany({ where: { memberId: id } });

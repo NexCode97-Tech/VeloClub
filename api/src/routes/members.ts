@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { Prisma } from '@prisma/client';
 import { requireAuth } from '../auth/middleware';
 import { prisma } from '../db/client';
-import { addToAllowlist, removeFromAllowlist } from '../lib/clerk-allowlist';
+import { addToAllowlist, removeFromAllowlist, revokeClerkAccess } from '../lib/clerk-allowlist';
 
 const router = Router();
 
@@ -162,9 +162,15 @@ router.delete('/:id', requireAuth, async (req, res) => {
     where: { id, clubId: req.user.clubId ?? '' },
   });
   if (!existing) return res.status(404).json({ error: 'Miembro no encontrado' });
+
+  // Revocar acceso Clerk: quitar del allowlist + banear cuenta si existe
   if (existing.email) {
-    try { await removeFromAllowlist(existing.email); } catch { /* ya eliminado o error de Clerk */ }
+    try { await removeFromAllowlist(existing.email); } catch { /* ignorar */ }
   }
+  if (existing.clerkId) {
+    await revokeClerkAccess(existing.clerkId);
+  }
+
   await prisma.member.delete({ where: { id } });
   res.json({ ok: true });
 });

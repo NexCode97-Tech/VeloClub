@@ -282,4 +282,23 @@ router.patch('/notificaciones/leer-todas', requireAuth, requireSuperadmin, async
   res.json({ ok: true });
 });
 
+// POST /superadmin/fix-member-names — normalizar todos los nombres a Title Case
+router.post('/fix-member-names', requireAuth, requireSuperadmin, async (_req, res) => {
+  function toTitleCase(str: string): string {
+    return str.toLowerCase().split(' ')
+      .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+      .join(' ').trim();
+  }
+  const members = await prisma.member.findMany({ select: { id: true, fullName: true } });
+  let updated = 0;
+  for (const m of members) {
+    const normalized = toTitleCase(m.fullName);
+    if (normalized !== m.fullName) {
+      await prisma.member.update({ where: { id: m.id }, data: { fullName: normalized } });
+      updated++;
+    }
+  }
+  res.json({ ok: true, total: members.length, updated });
+});
+
 export default router;

@@ -4,6 +4,20 @@ const clerk = createClerkClient({
   secretKey: process.env.CLERK_SECRET_KEY!,
 });
 
+export async function revokeClerkAccess(clerkId: string): Promise<void> {
+  try {
+    // Revocar todas las sesiones activas del usuario
+    const sessions = await clerk.sessions.getSessionList({ userId: clerkId });
+    await Promise.all(
+      sessions.data.map(s => clerk.sessions.revokeSession(s.id).catch(() => {}))
+    );
+    // Banear la cuenta para que no pueda volver a entrar
+    await clerk.users.banUser(clerkId);
+  } catch (err: unknown) {
+    console.error('Error revoking Clerk access:', err instanceof Error ? err.message : err);
+  }
+}
+
 export async function addToAllowlist(email: string): Promise<void> {
   try {
     await clerk.allowlistIdentifiers.createAllowlistIdentifier({

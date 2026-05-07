@@ -474,8 +474,8 @@ export default function MiembrosPage() {
               </div>
             </div>
 
-            {/* Sedes */}
-            {locations.length > 0 && (
+            {/* Sedes — solo para Entrenador y Deportista */}
+            {locations.length > 0 && form.role !== 'ADMIN' && (
               <div className="space-y-2">
                 <Label>Sedes</Label>
                 <div className="flex flex-wrap gap-2">

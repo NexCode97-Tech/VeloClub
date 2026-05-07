@@ -123,7 +123,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       {/* ── Desktop sidebar ─────────────────────────────────────────────── */}
       <aside className="hidden md:flex w-64 bg-card border-r border-border flex-col shrink-0">
         <div className="flex items-center justify-between px-5 py-4 border-b border-border min-h-[60px]">
-          <Image src="/logo.png" alt="VeloClub" width={96} height={28} className="object-contain" />
+          <Image src="/logo-full.jpg" alt="VeloClub" width={110} height={32} className="object-contain" />
           <button
             onClick={() => window.location.reload()}
             title="Actualizar"

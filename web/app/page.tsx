@@ -62,7 +62,7 @@ export default function HomePage() {
       {/* Nav */}
       <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-[rgba(120,80,200,0.08)]">
         <div className="max-w-5xl mx-auto flex items-center justify-between px-5 py-3.5">
-          <Image src="/logo.png" alt="VeloClub" width={120} height={36} className="object-contain" />
+          <Image src="/logo-full.jpg" alt="VeloClub" width={130} height={40} className="object-contain" />
           <Link
             href="/sign-in"
             className="flex items-center gap-1.5 text-sm font-semibold text-[#7C3AED] hover:text-[#6D28D9] transition-colors"

@@ -3,16 +3,47 @@
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { useAuth } from '@clerk/nextjs';
-import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import Image from 'next/image';
-import { CheckCircle2, Users, CalendarCheck, CreditCard, Trophy } from 'lucide-react';
+import { Users, CalendarCheck, CreditCard, Trophy, CheckCircle2, ChevronRight, Zap, Shield, Smartphone } from 'lucide-react';
 
 const features = [
-  { icon: Users, label: 'Gestión de miembros', desc: 'Administra alumnos, entrenadores y perfiles completos.' },
-  { icon: CalendarCheck, label: 'Asistencia', desc: 'Registra presente, ausente, tarde o excusa médica.' },
-  { icon: CreditCard, label: 'Pagos y flujo de caja', desc: 'Mensualidades, ingresos, egresos y saldo en tiempo real.' },
-  { icon: Trophy, label: 'Logros y competencias', desc: 'Historial de resultados por deportista y prueba.' },
+  {
+    icon: Users,
+    label: 'Gestión de miembros',
+    desc: 'Administra deportistas, entrenadores y admins con perfiles completos y fotos.',
+    color: '#7C3AED',
+    bg: 'rgba(124,58,237,0.10)',
+  },
+  {
+    icon: CalendarCheck,
+    label: 'Asistencia',
+    desc: 'Registra presente, ausente, tardanza o excusa médica por sede y fecha.',
+    color: '#06D6A0',
+    bg: 'rgba(6,214,160,0.10)',
+  },
+  {
+    icon: CreditCard,
+    label: 'Pagos y finanzas',
+    desc: 'Mensualidades, flujo de caja, ingresos y egresos en tiempo real.',
+    color: '#4361EE',
+    bg: 'rgba(67,97,238,0.10)',
+  },
+  {
+    icon: Trophy,
+    label: 'Resultados',
+    desc: 'Historial de competencias y entrenamientos por deportista y prueba.',
+    color: '#FFB703',
+    bg: 'rgba(255,183,3,0.10)',
+  },
+];
+
+const benefits = [
+  { icon: Zap, text: 'Multi-sede: gestiona varios lugares de entrenamiento desde una cuenta.' },
+  { icon: Shield, text: 'Acceso controlado: tú decides quién entra a tu club.' },
+  { icon: Users, text: 'Roles diferenciados: admin, entrenador y deportista con acceso personalizado.' },
+  { icon: Smartphone, text: 'Instálala como app en tu celular, sin pasar por tiendas.' },
+  { icon: CheckCircle2, text: 'Historial completo: asistencia, pagos y resultados de cada deportista.' },
 ];
 
 export default function HomePage() {
@@ -26,69 +57,145 @@ export default function HomePage() {
   if (!isLoaded || isSignedIn) return null;
 
   return (
-    <main className="min-h-screen bg-white">
+    <main className="min-h-dvh bg-[#F7F7FB] overflow-x-hidden">
+
       {/* Nav */}
-      <nav className="flex items-center px-8 py-4 border-b border-slate-100">
-        <Image src="/logo.png" alt="VeloClub" width={140} height={40} className="object-contain" />
+      <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-[rgba(120,80,200,0.08)]">
+        <div className="max-w-5xl mx-auto flex items-center justify-between px-5 py-3.5">
+          <Image src="/logo.png" alt="VeloClub" width={120} height={36} className="object-contain" />
+          <Link
+            href="/sign-in"
+            className="flex items-center gap-1.5 text-sm font-semibold text-[#7C3AED] hover:text-[#6D28D9] transition-colors"
+          >
+            Iniciar sesión
+            <ChevronRight className="w-4 h-4" />
+          </Link>
+        </div>
       </nav>
 
       {/* Hero */}
-      <section className="flex flex-col items-center text-center px-6 py-24 max-w-3xl mx-auto">
-        <span className="text-xs font-semibold uppercase tracking-widest text-blue-600 bg-blue-50 px-3 py-1 rounded-full mb-6">
+      <section className="relative px-5 pt-16 pb-20 max-w-2xl mx-auto text-center overflow-hidden">
+        {/* Blob de fondo */}
+        <div
+          className="absolute -top-20 left-1/2 -translate-x-1/2 w-[500px] h-[500px] rounded-full opacity-[0.07] blur-3xl pointer-events-none"
+          style={{ background: 'radial-gradient(circle, #7C3AED 0%, #A855F7 60%, transparent 100%)' }}
+        />
+
+        <span className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-[#7C3AED] bg-[rgba(124,58,237,0.08)] border border-[rgba(124,58,237,0.15)] px-3.5 py-1.5 rounded-full mb-6">
+          <span className="w-1.5 h-1.5 rounded-full bg-[#7C3AED] animate-pulse" />
           Plataforma para clubes de patinaje
         </span>
-        <h1 className="text-5xl font-extrabold text-slate-900 leading-tight mb-6">
-          Gestiona tu club<br />desde un solo lugar
+
+        <h1
+          className="text-4xl sm:text-5xl font-extrabold text-[#1A1028] leading-[1.15] tracking-tight mb-5"
+          style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif' }}
+        >
+          Gestiona tu club{' '}
+          <span
+            className="inline-block"
+            style={{ background: 'linear-gradient(135deg, #7C3AED, #A855F7)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}
+          >
+            desde un solo lugar
+          </span>
         </h1>
-        <p className="text-lg text-slate-500 mb-10 max-w-xl">
-          VeloClub es la herramienta todo en uno para clubes de patinaje. Miembros, asistencia, pagos, logros y calendario, sin complicaciones.
+
+        <p className="text-base sm:text-lg text-[#8E87A8] leading-relaxed mb-10 max-w-lg mx-auto">
+          Todo lo que necesitas para administrar tu club: miembros, asistencia, pagos, resultados y calendario, sin complicaciones.
         </p>
-        <Link href="/sign-in">
-          <Button size="lg" className="px-10">Iniciar sesión</Button>
+
+        <Link
+          href="/sign-in"
+          className="inline-flex items-center gap-2 px-8 py-3.5 rounded-2xl text-white font-bold text-base shadow-lg shadow-[rgba(124,58,237,0.35)] transition-all active:scale-95 hover:shadow-xl hover:shadow-[rgba(124,58,237,0.4)] hover:-translate-y-0.5"
+          style={{ background: 'linear-gradient(135deg, #7C3AED, #9333EA)' }}
+        >
+          Entrar a VeloClub
+          <ChevronRight className="w-4 h-4" />
         </Link>
       </section>
 
       {/* Features */}
-      <section className="bg-slate-50 px-6 py-20">
-        <div className="max-w-4xl mx-auto">
-          <h2 className="text-2xl font-bold text-slate-900 text-center mb-12">Todo lo que necesitas</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            {features.map(({ icon: Icon, label, desc }) => (
-              <div key={label} className="bg-white rounded-xl p-6 border border-slate-200 flex gap-4">
-                <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center shrink-0">
-                  <Icon className="w-5 h-5 text-blue-600" />
-                </div>
-                <div>
-                  <p className="font-semibold text-slate-900 mb-1">{label}</p>
-                  <p className="text-sm text-slate-500">{desc}</p>
-                </div>
+      <section className="px-5 py-16 max-w-2xl mx-auto">
+        <p className="text-xs font-bold uppercase tracking-widest text-[#8E87A8] text-center mb-3">Funcionalidades</p>
+        <h2
+          className="text-2xl sm:text-3xl font-extrabold text-[#1A1028] text-center mb-10 tracking-tight"
+          style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif' }}
+        >
+          Todo lo que necesitas
+        </h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {features.map(({ icon: Icon, label, desc, color, bg }) => (
+            <div
+              key={label}
+              className="bg-white rounded-2xl p-5 border border-[rgba(120,80,200,0.08)] shadow-sm hover:shadow-md transition-shadow"
+            >
+              <div
+                className="w-10 h-10 rounded-xl flex items-center justify-center mb-3"
+                style={{ background: bg }}
+              >
+                <Icon className="w-5 h-5" style={{ color }} />
               </div>
-            ))}
-          </div>
+              <p className="font-bold text-[#1A1028] text-sm mb-1" style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif' }}>
+                {label}
+              </p>
+              <p className="text-xs text-[#8E87A8] leading-relaxed">{desc}</p>
+            </div>
+          ))}
         </div>
       </section>
 
       {/* Benefits */}
-      <section className="px-6 py-20 max-w-3xl mx-auto">
-        <h2 className="text-2xl font-bold text-slate-900 text-center mb-10">¿Por qué VeloClub?</h2>
-        <ul className="space-y-4">
-          {[
-            'Multi-sede: gestiona varios lugares de entrenamiento desde una sola cuenta.',
-            'Roles diferenciados: admin, entrenador y alumno con acceso personalizado.',
-            'Acceso controlado: tú decides quién entra a tu club.',
-            'Historial completo: asistencia, pagos y logros de cada deportista.',
-            'Disponible desde cualquier dispositivo con conexión a internet.',
-          ].map(item => (
-            <li key={item} className="flex items-start gap-3 text-slate-600">
-              <CheckCircle2 className="w-5 h-5 text-green-500 shrink-0 mt-0.5" />
-              {item}
-            </li>
-          ))}
-        </ul>
+      <section className="px-5 py-16 max-w-2xl mx-auto">
+        <div className="bg-white rounded-3xl border border-[rgba(120,80,200,0.08)] shadow-sm p-7 sm:p-10">
+          <p className="text-xs font-bold uppercase tracking-widest text-[#8E87A8] mb-3">¿Por qué VeloClub?</p>
+          <h2
+            className="text-2xl font-extrabold text-[#1A1028] mb-8 tracking-tight"
+            style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif' }}
+          >
+            Diseñado para clubes reales
+          </h2>
+          <ul className="space-y-4">
+            {benefits.map(({ icon: Icon, text }) => (
+              <li key={text} className="flex items-start gap-3">
+                <div className="w-7 h-7 rounded-lg bg-[rgba(124,58,237,0.08)] flex items-center justify-center shrink-0 mt-0.5">
+                  <Icon className="w-3.5 h-3.5 text-[#7C3AED]" />
+                </div>
+                <p className="text-sm text-[#4A4060] leading-relaxed">{text}</p>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+
+      {/* CTA final */}
+      <section className="px-5 pb-20 max-w-2xl mx-auto">
+        <div
+          className="rounded-3xl p-8 sm:p-12 text-center text-white relative overflow-hidden"
+          style={{ background: 'linear-gradient(135deg, #7C3AED 0%, #9333EA 60%, #A855F7 100%)' }}
+        >
+          <div className="absolute inset-0 opacity-10"
+            style={{ backgroundImage: 'radial-gradient(circle at 80% 20%, #fff 0%, transparent 50%)' }}
+          />
+          <h2
+            className="text-2xl sm:text-3xl font-extrabold mb-3 tracking-tight relative"
+            style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif' }}
+          >
+            ¿Listo para empezar?
+          </h2>
+          <p className="text-purple-200 text-sm mb-7 relative">
+            Ingresa a tu club y empieza a gestionar todo desde hoy.
+          </p>
+          <Link
+            href="/sign-in"
+            className="inline-flex items-center gap-2 px-7 py-3 bg-white text-[#7C3AED] font-bold text-sm rounded-xl shadow-lg transition-all hover:-translate-y-0.5 active:scale-95 relative"
+          >
+            Iniciar sesión
+            <ChevronRight className="w-4 h-4" />
+          </Link>
+        </div>
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-slate-100 px-8 py-6 text-center text-sm text-slate-400">
+      <footer className="border-t border-[rgba(120,80,200,0.08)] px-5 py-6 text-center text-xs text-[#8E87A8]">
         © {new Date().getFullYear()} VeloClub · Todos los derechos reservados
       </footer>
     </main>

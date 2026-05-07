@@ -1,5 +1,6 @@
 import { Router, Request } from 'express';
 import { z } from 'zod';
+import { Prisma } from '@prisma/client';
 import { requireAuth } from '../auth/middleware';
 import { prisma } from '../db/client';
 import { addToAllowlist, removeFromAllowlist } from '../lib/clerk-allowlist';
@@ -68,18 +69,27 @@ router.post('/', requireAuth, async (req, res) => {
 
   const { locationIds, birthDate, ...rest } = parsed.data;
 
-  const member = await prisma.member.create({
-    data: {
-      ...rest,
-      email: rest.email || undefined,
-      birthDate: birthDate ? new Date(birthDate) : undefined,
-      clubId: req.user.clubId ?? '',
-      locations: locationIds?.length
-        ? { create: locationIds.map((locId) => ({ locationId: locId })) }
-        : undefined,
-    },
-    include: { locations: { include: { location: true } } },
-  });
+  let member;
+  try {
+    member = await prisma.member.create({
+      data: {
+        ...rest,
+        email: rest.email || undefined,
+        birthDate: birthDate ? new Date(birthDate) : undefined,
+        clubId: req.user.clubId ?? '',
+        locations: locationIds?.length
+          ? { create: locationIds.map((locId) => ({ locationId: locId })) }
+          : undefined,
+      },
+      include: { locations: { include: { location: true } } },
+    });
+  } catch (err) {
+    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
+      return res.status(409).json({ error: `El correo "${rest.email}" ya está registrado en este club` });
+    }
+    const msg = err instanceof Error ? err.message : 'Error al crear el miembro';
+    return res.status(500).json({ error: msg });
+  }
 
   // Agregar email al allowlist de Clerk (ignorar si ya existe o falla)
   if (member.email) {

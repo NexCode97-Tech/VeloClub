@@ -77,6 +77,32 @@ export interface MemberImportRow {
   paymentDueDay?: number;
 }
 
+function parseBirthDate(raw: unknown): string | undefined {
+  if (!raw) return undefined;
+  const str = String(raw).trim();
+  if (!str) return undefined;
+
+  // Serial numérico de Excel (ej: "45123" o 45123)
+  const serial = Number(str);
+  if (!isNaN(serial) && serial > 1000) {
+    const date = XLSX.SSF.parse_date_code(serial);
+    if (date) {
+      const mm = String(date.m).padStart(2, '0');
+      const dd = String(date.d).padStart(2, '0');
+      return `${date.y}-${mm}-${dd}`;
+    }
+  }
+
+  // Formatos DD/MM/YYYY o DD-MM-YYYY
+  const dmY = str.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+  if (dmY) return `${dmY[3]}-${dmY[2].padStart(2, '0')}-${dmY[1].padStart(2, '0')}`;
+
+  // Ya viene en YYYY-MM-DD
+  if (/^\d{4}-\d{2}-\d{2}$/.test(str)) return str;
+
+  return undefined; // formato desconocido, ignorar
+}
+
 export function parseMembersExcel(file: File): Promise<{ rows: MemberImportRow[]; errors: string[] }> {
   return new Promise((resolve) => {
     const reader = new FileReader();
@@ -84,7 +110,7 @@ export function parseMembersExcel(file: File): Promise<{ rows: MemberImportRow[]
       const data = new Uint8Array(e.target?.result as ArrayBuffer);
       const wb = XLSX.read(data, { type: 'array' });
       const ws = wb.Sheets[wb.SheetNames[0]];
-      const raw = XLSX.utils.sheet_to_json<Record<string, string>>(ws, { defval: '' });
+      const raw = XLSX.utils.sheet_to_json<Record<string, unknown>>(ws, { defval: '', raw: false });
 
       const rows: MemberImportRow[] = [];
       const errors: string[] = [];
@@ -108,7 +134,7 @@ export function parseMembersExcel(file: File): Promise<{ rows: MemberImportRow[]
           fullName,
           email:            email || undefined,
           phone:            String(r['Teléfono'] ?? '').trim() || undefined,
-          birthDate:        String(r['Fecha de nacimiento (YYYY-MM-DD)'] ?? '').trim() || undefined,
+          birthDate:        parseBirthDate(r['Fecha de nacimiento (YYYY-MM-DD)']),
           docNumber:        String(r['Número de documento'] ?? '').trim() || undefined,
           emergencyContact: String(r['Contacto de emergencia'] ?? '').trim() || undefined,
           emergencyPhone:   String(r['Teléfono de emergencia'] ?? '').trim() || undefined,

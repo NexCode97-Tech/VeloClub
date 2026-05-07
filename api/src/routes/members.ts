@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { Prisma } from '@prisma/client';
 import { requireAuth } from '../auth/middleware';
 import { prisma } from '../db/client';
-import { addToAllowlist, removeFromAllowlist, revokeClerkAccess } from '../lib/clerk-allowlist';
+import { addToAllowlist, removeFromAllowlist, revokeClerkAccess, revokeClerkSessions } from '../lib/clerk-allowlist';
 
 const router = Router();
 
@@ -142,12 +142,15 @@ router.put('/:id', requireAuth, async (req, res) => {
     include: { locations: { include: { location: true } } },
   });
 
-  // Sincronizar rol en User si el miembro tiene cuenta vinculada
+  // Sincronizar rol en User y revocar sesiones si el rol cambió
   if (rest.role && member.clerkId) {
     await prisma.user.updateMany({
       where: { clerkId: member.clerkId },
       data:  { role: rest.role },
     });
+    // Forzar nuevo login para que el JWT refleje el rol actualizado
+    const roleCambio = existing.role !== rest.role;
+    if (roleCambio) await revokeClerkSessions(member.clerkId);
   }
 
   res.json({ member });

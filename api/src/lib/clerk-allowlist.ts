@@ -4,17 +4,28 @@ const clerk = createClerkClient({
   secretKey: process.env.CLERK_SECRET_KEY!,
 });
 
+// Revocar sesiones + banear — usar al ELIMINAR un miembro
 export async function revokeClerkAccess(clerkId: string): Promise<void> {
   try {
-    // Revocar todas las sesiones activas del usuario
     const sessions = await clerk.sessions.getSessionList({ userId: clerkId });
     await Promise.all(
       sessions.data.map(s => clerk.sessions.revokeSession(s.id).catch(() => {}))
     );
-    // Banear la cuenta para que no pueda volver a entrar
     await clerk.users.banUser(clerkId);
   } catch (err: unknown) {
     console.error('Error revoking Clerk access:', err instanceof Error ? err.message : err);
+  }
+}
+
+// Solo revocar sesiones — usar al CAMBIAR ROL (fuerza nuevo login con rol actualizado)
+export async function revokeClerkSessions(clerkId: string): Promise<void> {
+  try {
+    const sessions = await clerk.sessions.getSessionList({ userId: clerkId });
+    await Promise.all(
+      sessions.data.map(s => clerk.sessions.revokeSession(s.id).catch(() => {}))
+    );
+  } catch (err: unknown) {
+    console.error('Error revoking Clerk sessions:', err instanceof Error ? err.message : err);
   }
 }
 

@@ -92,8 +92,10 @@ Desarrollada por NexCode97. Modelo: suscripción mensual por club.
 - `GET/PATCH /superadmin/notificaciones`
 - `POST /superadmin/fix-member-names` (one-shot, normalizar nombres)
 
-## Bugs pendientes (no tocar hasta confirmar)
-- [ ] **BUG — Rol/sesión no se actualiza en tiempo real:** Al cambiar el rol de un miembro (ej. ADMIN → COACH) la sesión activa sigue con los permisos anteriores porque el JWT de Clerk no se invalida. ⚠️ No implementar mientras el usuario esté trabajando desde ese perfil.
+## Bugs resueltos
+- [x] **Rol/sesión no se actualiza en tiempo real:** Al cambiar rol se revocan las sesiones activas de Clerk → el usuario es forzado a nuevo login con JWT actualizado.
+- [x] **Miembro eliminado conserva acceso:** Al eliminar se revocan sesiones + banea cuenta Clerk.
+- [x] **Import Excel 500:** Prisma create sin try/catch + fechas seriales de Excel sin parsear.
 
 ## Posibles mejoras futuras
 - Botón de WhatsApp para notificar morosos (wa.me, gratis, sin API)

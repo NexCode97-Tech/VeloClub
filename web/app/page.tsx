@@ -82,7 +82,7 @@ export default function HomePage() {
       {/* Nav */}
       <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-[rgba(120,80,200,0.08)]">
         <div className="max-w-5xl mx-auto flex items-center justify-between px-5 py-3.5">
-          <Image src="/logo-full.jpg" alt="VeloClub" width={130} height={40} className="object-contain" />
+          <Image src="/logo-full.jpg" alt="VeloClub" width={90} height={28} className="object-contain" />
 
           {/* Desktop links */}
           <div className="hidden sm:flex items-center gap-6">
@@ -103,11 +103,11 @@ export default function HomePage() {
 
           {/* Mobile hamburger */}
           <button
-            className="sm:hidden p-2 rounded-xl text-[#4A4060] hover:bg-[rgba(124,58,237,0.06)] transition-colors"
+            className="sm:hidden p-2.5 rounded-xl text-[#4A4060] hover:bg-[rgba(124,58,237,0.06)] transition-colors"
             onClick={() => setMenuOpen(v => !v)}
             aria-label={menuOpen ? 'Cerrar menú' : 'Abrir menú'}
           >
-            {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            {menuOpen ? <X className="w-7 h-7" /> : <Menu className="w-7 h-7" />}
           </button>
         </div>
 
@@ -275,8 +275,19 @@ export default function HomePage() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-[rgba(120,80,200,0.08)] px-5 py-6 text-center text-xs text-[#8E87A8]">
-        © {new Date().getFullYear()} VeloClub · Todos los derechos reservados
+      <footer className="border-t border-[rgba(120,80,200,0.08)] px-5 py-6 text-center text-xs text-[#8E87A8] space-y-1">
+        <p>© {new Date().getFullYear()} VeloClub · Todos los derechos reservados</p>
+        <p>
+          Desarrollado por{' '}
+          <a
+            href="https://nexcode97.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-semibold text-[#7C3AED] hover:text-[#6D28D9] transition-colors"
+          >
+            NexCode97
+          </a>
+        </p>
       </footer>
     </main>
   );

@@ -281,7 +281,7 @@ export default function MiembrosPage() {
                       {m.category && <p className="text-[10px] font-semibold" style={{ color: '#4361EE' }}>{m.category}</p>}
                       {m.tipo && <p className="text-[10px] text-muted-foreground">{m.tipo}</p>}
                     </div>
-                    {m.locations.length > 0 && (
+                    {m.locations.length > 0 && m.role !== 'ADMIN' && (
                       <p className="text-[10px] text-muted-foreground mt-0.5">{m.locations.map(l => l.location.name).join(' · ')}</p>
                     )}
                   </div>
@@ -333,7 +333,7 @@ export default function MiembrosPage() {
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex flex-wrap gap-1">
-                          {m.locations.length === 0
+                          {m.role === 'ADMIN' || m.locations.length === 0
                             ? <span className="text-muted-foreground">—</span>
                             : m.locations.map(l => (
                               <Badge key={l.location.id} variant="secondary" className="text-xs">{l.location.name}</Badge>

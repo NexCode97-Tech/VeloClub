@@ -173,7 +173,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
         {/* Mobile top bar */}
         <header className="md:hidden flex items-center justify-between px-4 py-3 bg-card border-b border-border shrink-0">
-          <Image src="/favicon.png" alt="VeloClub" width={28} height={28} className="rounded-lg object-contain" />
+          <Image src="/logo-full.jpg" alt="VeloClub" width={90} height={28} className="object-contain" />
           <UserButton />
         </header>
 

@@ -17,7 +17,7 @@ const memberSchema = z.object({
   eps: z.string().optional(),
   category: z.string().optional(),
   tipo: z.string().optional(),
-  paymentDueDay: z.number().min(1).max(28).nullable().optional(),
+  paymentDueDay: z.number().min(1).max(31).nullable().optional(),
   locationIds: z.array(z.string()).optional(),
   role: z.enum(['ADMIN', 'COACH', 'STUDENT']).optional(),
 });
@@ -81,8 +81,10 @@ router.post('/', requireAuth, async (req, res) => {
     include: { locations: { include: { location: true } } },
   });
 
-  // Agregar email al allowlist de Clerk
-  if (member.email) await addToAllowlist(member.email);
+  // Agregar email al allowlist de Clerk (ignorar si ya existe o falla)
+  if (member.email) {
+    try { await addToAllowlist(member.email); } catch { /* ya existe o error de Clerk */ }
+  }
 
   res.status(201).json({ member });
 });
@@ -139,7 +141,9 @@ router.delete('/:id', requireAuth, async (req, res) => {
     where: { id, clubId: req.user.clubId ?? '' },
   });
   if (!existing) return res.status(404).json({ error: 'Miembro no encontrado' });
-  if (existing.email) await removeFromAllowlist(existing.email);
+  if (existing.email) {
+    try { await removeFromAllowlist(existing.email); } catch { /* ya eliminado o error de Clerk */ }
+  }
   await prisma.member.delete({ where: { id } });
   res.json({ ok: true });
 });

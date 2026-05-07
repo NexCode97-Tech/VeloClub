@@ -1,11 +1,11 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuth } from '@clerk/nextjs';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Users, CalendarCheck, CreditCard, Trophy, CheckCircle2, ChevronRight, Zap, Shield, Smartphone } from 'lucide-react';
+import { Users, CalendarCheck, CreditCard, Trophy, CheckCircle2, ChevronRight, Zap, Shield, Smartphone, Menu, X } from 'lucide-react';
 
 const features = [
   {
@@ -46,13 +46,33 @@ const benefits = [
   { icon: CheckCircle2, text: 'Historial completo: asistencia, pagos y resultados de cada deportista.' },
 ];
 
+const NAV_LINKS = [
+  { href: '#funcionalidades', label: 'Funcionalidades' },
+  { href: '#por-que', label: '¿Por qué VeloClub?' },
+  { href: '/sign-in', label: 'Iniciar sesión' },
+];
+
 export default function HomePage() {
   const { isLoaded, isSignedIn } = useAuth();
   const router = useRouter();
+  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
     if (isLoaded && isSignedIn) router.push('/dashboard');
   }, [isLoaded, isSignedIn, router]);
+
+  // Close menu on resize to desktop
+  useEffect(() => {
+    const handler = () => { if (window.innerWidth >= 640) setMenuOpen(false); };
+    window.addEventListener('resize', handler);
+    return () => window.removeEventListener('resize', handler);
+  }, []);
+
+  // Lock body scroll when menu is open
+  useEffect(() => {
+    document.body.style.overflow = menuOpen ? 'hidden' : '';
+    return () => { document.body.style.overflow = ''; };
+  }, [menuOpen]);
 
   if (!isLoaded || isSignedIn) return null;
 
@@ -63,13 +83,73 @@ export default function HomePage() {
       <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-[rgba(120,80,200,0.08)]">
         <div className="max-w-5xl mx-auto flex items-center justify-between px-5 py-3.5">
           <Image src="/logo-full.jpg" alt="VeloClub" width={130} height={40} className="object-contain" />
-          <Link
-            href="/sign-in"
-            className="flex items-center gap-1.5 text-sm font-semibold text-[#7C3AED] hover:text-[#6D28D9] transition-colors"
+
+          {/* Desktop links */}
+          <div className="hidden sm:flex items-center gap-6">
+            <a href="#funcionalidades" className="text-sm font-medium text-[#4A4060] hover:text-[#7C3AED] transition-colors">
+              Funcionalidades
+            </a>
+            <a href="#por-que" className="text-sm font-medium text-[#4A4060] hover:text-[#7C3AED] transition-colors">
+              ¿Por qué VeloClub?
+            </a>
+            <Link
+              href="/sign-in"
+              className="flex items-center gap-1.5 text-sm font-semibold text-[#7C3AED] hover:text-[#6D28D9] transition-colors"
+            >
+              Iniciar sesión
+              <ChevronRight className="w-4 h-4" />
+            </Link>
+          </div>
+
+          {/* Mobile hamburger */}
+          <button
+            className="sm:hidden p-2 rounded-xl text-[#4A4060] hover:bg-[rgba(124,58,237,0.06)] transition-colors"
+            onClick={() => setMenuOpen(v => !v)}
+            aria-label={menuOpen ? 'Cerrar menú' : 'Abrir menú'}
           >
-            Iniciar sesión
-            <ChevronRight className="w-4 h-4" />
-          </Link>
+            {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          </button>
+        </div>
+
+        {/* Mobile dropdown menu */}
+        <div
+          className={`sm:hidden overflow-hidden transition-all duration-300 ease-in-out ${
+            menuOpen ? 'max-h-64 opacity-100' : 'max-h-0 opacity-0'
+          }`}
+        >
+          <div className="px-5 pb-4 pt-1 flex flex-col gap-1 border-t border-[rgba(120,80,200,0.08)]">
+            <a
+              href="#funcionalidades"
+              onClick={() => setMenuOpen(false)}
+              className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium text-[#4A4060] hover:bg-[rgba(124,58,237,0.06)] hover:text-[#7C3AED] transition-colors"
+            >
+              <div className="w-7 h-7 rounded-lg bg-[rgba(124,58,237,0.08)] flex items-center justify-center shrink-0">
+                <Zap className="w-3.5 h-3.5 text-[#7C3AED]" />
+              </div>
+              Funcionalidades
+            </a>
+            <a
+              href="#por-que"
+              onClick={() => setMenuOpen(false)}
+              className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium text-[#4A4060] hover:bg-[rgba(124,58,237,0.06)] hover:text-[#7C3AED] transition-colors"
+            >
+              <div className="w-7 h-7 rounded-lg bg-[rgba(124,58,237,0.08)] flex items-center justify-center shrink-0">
+                <Shield className="w-3.5 h-3.5 text-[#7C3AED]" />
+              </div>
+              ¿Por qué VeloClub?
+            </a>
+            <Link
+              href="/sign-in"
+              onClick={() => setMenuOpen(false)}
+              className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-semibold text-white transition-colors mt-1"
+              style={{ background: 'linear-gradient(135deg, #7C3AED, #9333EA)' }}
+            >
+              <div className="w-7 h-7 rounded-lg bg-white/20 flex items-center justify-center shrink-0">
+                <ChevronRight className="w-3.5 h-3.5 text-white" />
+              </div>
+              Iniciar sesión
+            </Link>
+          </div>
         </div>
       </nav>
 
@@ -114,7 +194,7 @@ export default function HomePage() {
       </section>
 
       {/* Features */}
-      <section className="px-5 py-16 max-w-2xl mx-auto">
+      <section id="funcionalidades" className="px-5 py-16 max-w-2xl mx-auto">
         <p className="text-xs font-bold uppercase tracking-widest text-[#8E87A8] text-center mb-3">Funcionalidades</p>
         <h2
           className="text-2xl sm:text-3xl font-extrabold text-[#1A1028] text-center mb-10 tracking-tight"
@@ -144,7 +224,7 @@ export default function HomePage() {
       </section>
 
       {/* Benefits */}
-      <section className="px-5 py-16 max-w-2xl mx-auto">
+      <section id="por-que" className="px-5 py-16 max-w-2xl mx-auto">
         <div className="bg-white rounded-3xl border border-[rgba(120,80,200,0.08)] shadow-sm p-7 sm:p-10">
           <p className="text-xs font-bold uppercase tracking-widest text-[#8E87A8] mb-3">¿Por qué VeloClub?</p>
           <h2

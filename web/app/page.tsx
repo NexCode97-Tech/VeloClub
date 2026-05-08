@@ -82,9 +82,7 @@ export default function HomePage() {
       {/* Nav */}
       <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-[rgba(120,80,200,0.08)]">
         <div className="max-w-5xl mx-auto flex items-center justify-between px-5 py-3.5">
-          <Image src="/logo-full.jpg" alt="VeloClub" width={90} height={28} className="object-contain" />
-
-          {/* Desktop links */}
+          {/* Desktop links — izquierda */}
           <div className="hidden sm:flex items-center gap-6">
             <a href="#funcionalidades" className="text-sm font-medium text-[#4A4060] hover:text-[#7C3AED] transition-colors">
               Funcionalidades
@@ -92,6 +90,12 @@ export default function HomePage() {
             <a href="#por-que" className="text-sm font-medium text-[#4A4060] hover:text-[#7C3AED] transition-colors">
               ¿Por qué VeloClub?
             </a>
+          </div>
+
+          <Image src="/logo-full.jpg" alt="VeloClub" width={90} height={28} className="object-contain sm:absolute sm:left-1/2 sm:-translate-x-1/2" />
+
+          {/* Desktop — derecha */}
+          <div className="hidden sm:flex items-center">
             <Link
               href="/sign-in"
               className="flex items-center gap-1.5 text-sm font-semibold text-[#7C3AED] hover:text-[#6D28D9] transition-colors"

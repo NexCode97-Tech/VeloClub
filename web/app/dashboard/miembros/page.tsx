@@ -143,15 +143,34 @@ export default function MiembrosPage() {
     setImporting(true); setImportErrors([]);
     const { rows, errors } = await parseMembersExcel(file);
     if (errors.length > 0) { setImportErrors(errors); setImporting(false); return; }
+
     const token = await getToken();
     const failed: string[] = [];
+
     for (const row of rows) {
       try {
-        await apiFetch('/members', { method: 'POST', token, body: JSON.stringify(row) });
+        // Resolver nombre de sede → ID (comparación sin distinción de mayúsculas)
+        const { locationName, ...rest } = row;
+        let locationIds: string[] | undefined;
+        if (locationName) {
+          const found = locations.find(
+            l => l.name.toLowerCase().trim() === locationName.toLowerCase().trim()
+          );
+          if (!found) {
+            failed.push(`${row.fullName}: la sede "${locationName}" no existe en este club`);
+            continue;
+          }
+          locationIds = [found.id];
+        }
+        await apiFetch('/members', {
+          method: 'POST', token,
+          body: JSON.stringify({ ...rest, locationIds }),
+        });
       } catch (e) {
         failed.push(`${row.fullName}: ${e instanceof Error ? e.message : 'Error'}`);
       }
     }
+
     setImporting(false);
     if (failed.length > 0) setImportErrors(failed);
     else setImportOpen(false);
@@ -196,7 +215,7 @@ export default function MiembrosPage() {
             <span className="hidden sm:inline">Importar</span>
           </button>
           <button
-            onClick={() => downloadMembersTemplate()}
+            onClick={() => downloadMembersTemplate(locations)}
             className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold border border-border text-muted-foreground hover:bg-secondary active:scale-95 transition-all"
             title="Descargar plantilla Excel"
           >
@@ -540,7 +559,7 @@ export default function MiembrosPage() {
               </div>
             )}
             <button
-              onClick={() => downloadMembersTemplate()}
+              onClick={() => downloadMembersTemplate(locations)}
               className="w-full flex items-center justify-center gap-2 py-2 rounded-xl border border-border text-[12px] font-semibold text-muted-foreground hover:bg-secondary"
             >
               <FileSpreadsheet className="w-4 h-4" />

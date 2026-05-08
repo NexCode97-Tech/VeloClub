@@ -1,6 +1,16 @@
 import * as XLSX from 'xlsx';
 
-export function downloadMembersTemplate() {
+interface LocationOption {
+  id: string;
+  name: string;
+}
+
+export function downloadMembersTemplate(locations: LocationOption[] = []) {
+  const ROLES      = ['ADMIN', 'COACH', 'STUDENT'];
+  const CATEGORIAS = ['Menores 3-10 años', 'Transición 11-13 años', 'Mayores 14+ años'];
+  const NIVELES    = ['Escuela', 'Novatos', 'Intermedio', 'Avanzados', 'Federados'];
+  const SEDES      = locations.map(l => l.name);
+
   const headers = [
     'Nombre Completo *',
     'Correo electrónico *',
@@ -14,6 +24,7 @@ export function downloadMembersTemplate() {
     'Nivel / Tipo',
     'Rol (ADMIN / COACH / STUDENT)',
     'Día de corte mensualidad (1-31)',
+    'Sede',
   ];
 
   const example = [
@@ -25,39 +36,97 @@ export function downloadMembersTemplate() {
     'María Pérez',
     '3109876543',
     'Sura',
-    'Juvenil',
-    'Velocidad',
+    'Menores 3-10 años',
+    'Escuela',
     'STUDENT',
     '15',
+    SEDES[0] ?? '',
   ];
 
   const notes = [
     '* Campos obligatorios',
     '* El correo debe ser único por deportista',
     '* Rol: ADMIN = Administrador, COACH = Entrenador, STUDENT = Deportista',
-    '* Categoría y Nivel son opcionales',
+    '* Categoría y Nivel son opcionales (solo aplican a STUDENT)',
     '* Día de corte: número entre 1 y 31',
+    '* Sede: selecciona de la lista desplegable (opcional)',
   ];
 
   const wb = XLSX.utils.book_new();
 
-  // Hoja principal con plantilla
+  // ── Hoja principal ─────────────────────────────────────────────────────────
   const wsData = [headers, example];
   const ws = XLSX.utils.aoa_to_sheet(wsData);
 
-  // Ancho de columnas
   ws['!cols'] = [
     { wch: 25 }, { wch: 28 }, { wch: 14 }, { wch: 28 },
     { wch: 20 }, { wch: 25 }, { wch: 24 }, { wch: 14 },
-    { wch: 14 }, { wch: 16 }, { wch: 28 }, { wch: 30 },
+    { wch: 22 }, { wch: 16 }, { wch: 28 }, { wch: 30 }, { wch: 25 },
   ];
+
+  // ── Hoja oculta "Listas" con las sedes del club ────────────────────────────
+  if (SEDES.length > 0) {
+    const wsListas = XLSX.utils.aoa_to_sheet(SEDES.map(s => [s]));
+    wsListas['!cols'] = [{ wch: 30 }];
+    XLSX.utils.book_append_sheet(wb, wsListas, 'Listas');
+  }
+
+  // ── Validaciones de datos (dropdowns) ──────────────────────────────────────
+  // Columnas: I=Categoría(8), J=Nivel(9), K=Rol(10), M=Sede(12)
+  const validations: XLSX.DataValidation[] = [
+    {
+      sqref: 'K2:K1000',
+      type: 'list',
+      formula1: `"${ROLES.join(',')}"`,
+      showErrorMessage: true,
+      errorTitle: 'Rol inválido',
+      error: 'Selecciona ADMIN, COACH o STUDENT de la lista',
+    },
+    {
+      sqref: 'I2:I1000',
+      type: 'list',
+      formula1: `"${CATEGORIAS.join(',')}"`,
+      showErrorMessage: true,
+      errorTitle: 'Categoría inválida',
+      error: 'Selecciona una categoría de la lista',
+    },
+    {
+      sqref: 'J2:J1000',
+      type: 'list',
+      formula1: `"${NIVELES.join(',')}"`,
+      showErrorMessage: true,
+      errorTitle: 'Nivel inválido',
+      error: 'Selecciona un nivel de la lista',
+    },
+  ];
+
+  if (SEDES.length > 0) {
+    validations.push({
+      sqref: 'M2:M1000',
+      type: 'list',
+      formula1: `Listas!$A$1:$A$${SEDES.length}`,
+      showErrorMessage: true,
+      errorTitle: 'Sede inválida',
+      error: 'Selecciona una sede de la lista',
+    });
+  }
+
+  ws['!dataValidations'] = validations;
 
   XLSX.utils.book_append_sheet(wb, ws, 'Deportistas');
 
-  // Hoja de instrucciones
+  // ── Hoja de instrucciones ──────────────────────────────────────────────────
   const wsNotes = XLSX.utils.aoa_to_sheet(notes.map(n => [n]));
   wsNotes['!cols'] = [{ wch: 60 }];
   XLSX.utils.book_append_sheet(wb, wsNotes, 'Instrucciones');
+
+  // ── Ocultar hoja Listas ────────────────────────────────────────────────────
+  if (SEDES.length > 0) {
+    wb.Workbook = wb.Workbook ?? {};
+    wb.Workbook.Sheets = wb.Workbook.Sheets ?? [];
+    // Índices: 0=Listas, 1=Deportistas, 2=Instrucciones
+    wb.Workbook.Sheets[0] = { ...wb.Workbook.Sheets[0], Hidden: 1 };
+  }
 
   XLSX.writeFile(wb, 'plantilla_deportistas_veloclub.xlsx');
 }
@@ -75,6 +144,7 @@ export interface MemberImportRow {
   tipo?: string;
   role: 'ADMIN' | 'COACH' | 'STUDENT';
   paymentDueDay?: number;
+  locationName?: string;
 }
 
 function parseBirthDate(raw: unknown): string | undefined {
@@ -100,7 +170,7 @@ function parseBirthDate(raw: unknown): string | undefined {
   // Ya viene en YYYY-MM-DD
   if (/^\d{4}-\d{2}-\d{2}$/.test(str)) return str;
 
-  return undefined; // formato desconocido, ignorar
+  return undefined;
 }
 
 export function parseMembersExcel(file: File): Promise<{ rows: MemberImportRow[]; errors: string[] }> {
@@ -130,6 +200,8 @@ export function parseMembersExcel(file: File): Promise<{ rows: MemberImportRow[]
         const dueDayRaw = parseInt(String(r['Día de corte mensualidad (1-31)'] ?? ''));
         const paymentDueDay = !isNaN(dueDayRaw) && dueDayRaw >= 1 && dueDayRaw <= 31 ? dueDayRaw : undefined;
 
+        const locationName = String(r['Sede'] ?? '').trim() || undefined;
+
         rows.push({
           fullName,
           email:            email || undefined,
@@ -143,6 +215,7 @@ export function parseMembersExcel(file: File): Promise<{ rows: MemberImportRow[]
           tipo:             String(r['Nivel / Tipo'] ?? '').trim() || undefined,
           role:             roleRaw as 'ADMIN' | 'COACH' | 'STUDENT',
           paymentDueDay,
+          locationName,
         });
       });
 

@@ -81,7 +81,7 @@ export default function HomePage() {
 
       {/* Nav */}
       <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-[rgba(120,80,200,0.08)]">
-        <div className="max-w-5xl mx-auto flex items-center justify-between px-5 py-3.5">
+        <div className="max-w-5xl mx-auto flex items-center justify-between px-5 py-0 sm:h-20">
           {/* Desktop links — izquierda */}
           <div className="hidden sm:flex items-center gap-6">
             <a href="#funcionalidades" className="text-sm font-medium text-[#4A4060] hover:text-[#7C3AED] transition-colors">
@@ -92,7 +92,7 @@ export default function HomePage() {
             </a>
           </div>
 
-          <Image src="/logo-full.jpg" alt="VeloClub" width={120} height={120} className="object-contain h-14 w-auto sm:h-16 sm:absolute sm:left-1/2 sm:-translate-x-1/2" />
+          <Image src="/logo-full.jpg" alt="VeloClub" width={120} height={120} className="object-contain h-14 w-auto sm:h-20 sm:absolute sm:left-1/2 sm:-translate-x-1/2" />
 
           {/* Desktop — derecha */}
           <div className="hidden sm:flex items-center">

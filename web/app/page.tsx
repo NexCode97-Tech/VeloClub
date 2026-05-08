@@ -96,13 +96,15 @@ export default function HomePage() {
 
           {/* Desktop — derecha */}
           <div className="hidden sm:flex items-center">
-            <Link
-              href="/sign-in"
+            <a
+              href="https://wa.me/573153171225"
+              target="_blank"
+              rel="noopener noreferrer"
               className="flex items-center gap-1.5 text-sm font-semibold text-[#7C3AED] hover:text-[#6D28D9] transition-colors"
             >
-              Iniciar sesión
+              Soporte
               <ChevronRight className="w-4 h-4" />
-            </Link>
+            </a>
           </div>
 
           {/* Mobile hamburger */}
@@ -142,8 +144,10 @@ export default function HomePage() {
               </div>
               ¿Por qué VeloClub?
             </a>
-            <Link
-              href="/sign-in"
+            <a
+              href="https://wa.me/573153171225"
+              target="_blank"
+              rel="noopener noreferrer"
               onClick={() => setMenuOpen(false)}
               className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-semibold text-white transition-colors mt-1"
               style={{ background: 'linear-gradient(135deg, #7C3AED, #9333EA)' }}
@@ -151,8 +155,8 @@ export default function HomePage() {
               <div className="w-7 h-7 rounded-lg bg-white/20 flex items-center justify-center shrink-0">
                 <ChevronRight className="w-3.5 h-3.5 text-white" />
               </div>
-              Iniciar sesión
-            </Link>
+              Soporte
+            </a>
           </div>
         </div>
       </nav>

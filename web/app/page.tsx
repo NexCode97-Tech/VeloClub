@@ -92,7 +92,7 @@ export default function HomePage() {
             </a>
           </div>
 
-          <Image src="/logo-full.jpg" alt="VeloClub" width={120} height={120} className="object-contain h-14 w-auto sm:h-10 sm:absolute sm:left-1/2 sm:-translate-x-1/2" />
+          <Image src="/logo-full.jpg" alt="VeloClub" width={120} height={120} className="object-contain h-14 w-auto sm:h-16 sm:absolute sm:left-1/2 sm:-translate-x-1/2" />
 
           {/* Desktop — derecha */}
           <div className="hidden sm:flex items-center">

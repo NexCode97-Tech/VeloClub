@@ -73,7 +73,7 @@ export function downloadMembersTemplate(locations: LocationOption[] = []) {
 
   // ── Validaciones de datos (dropdowns) ──────────────────────────────────────
   // Columnas: I=Categoría(8), J=Nivel(9), K=Rol(10), M=Sede(12)
-  const validations: XLSX.DataValidation[] = [
+  const validations: object[] = [
     {
       sqref: 'K2:K1000',
       type: 'list',

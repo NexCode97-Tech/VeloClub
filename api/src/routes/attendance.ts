@@ -61,6 +61,7 @@ router.get('/weekday-stats', requireAuth, async (req, res) => {
 // POST /attendance/bulk  — upsert all records for a date+location
 router.post('/bulk', requireAuth, async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'No autenticado' });
+  if (!['ADMIN', 'COACH'].includes(req.user.role)) return res.status(403).json({ error: 'Sin permisos' });
   const clubId = req.user.clubId ?? '';
 
   const parsed = bulkSchema.safeParse(req.body);
@@ -68,6 +69,18 @@ router.post('/bulk', requireAuth, async (req, res) => {
 
   const { date: dateStr, locationId, records } = parsed.data;
   const date = new Date(dateStr);
+
+  // Validar que todos los memberIds pertenecen al club (previene ataque cross-tenant)
+  const memberIds = records.map(r => r.memberId);
+  const validMembers = await prisma.member.findMany({
+    where: { id: { in: memberIds }, clubId },
+    select: { id: true },
+  });
+  const validIds = new Set(validMembers.map(m => m.id));
+  const invalidIds = memberIds.filter(id => !validIds.has(id));
+  if (invalidIds.length > 0) {
+    return res.status(403).json({ error: 'Uno o más miembros no pertenecen a este club' });
+  }
 
   await prisma.$transaction(
     records.map(r =>

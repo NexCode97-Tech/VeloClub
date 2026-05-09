@@ -1,7 +1,8 @@
-import express from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import dotenv from 'dotenv';
+import rateLimit from 'express-rate-limit';
 import meRouter from './routes/me';
 import clubsRouter from './routes/clubs';
 import locationsRouter from './routes/locations';
@@ -19,66 +20,60 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 4000;
 
+// ── Seguridad ─────────────────────────────────────────────────────────────────
 app.use(helmet());
+app.disable('x-powered-by');
+
 const allowedOrigin = (process.env.WEB_ORIGIN || 'http://localhost:3000').replace(/\/$/, '');
 app.use(cors({ origin: allowedOrigin, credentials: true }));
-app.use(express.json({ limit: '10mb' }));
 
+// Límite de body reducido — ningún endpoint necesita más de 100kb
+app.use(express.json({ limit: '100kb' }));
+
+// Rate limiting global: 120 req / 15min por IP
+const globalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 120,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Demasiadas solicitudes, intenta más tarde' },
+});
+
+// Rate limiting estricto para endpoints sensibles: 20 req / 15min
+const strictLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Demasiadas solicitudes, intenta más tarde' },
+});
+
+app.use(globalLimiter);
+
+// ── Health check ──────────────────────────────────────────────────────────────
 app.get('/health', (_req, res) => {
   res.json({ status: 'ok', service: 'veloclub-api' });
 });
 
-// Endpoint temporal para resetear usuario superadmin (GET para evitar CORS)
-app.get('/reset-user/:email', async (req, res) => {
-  const secret = req.query['secret'];
-  if (secret !== process.env.RESET_SECRET) return res.status(403).json({ error: 'Forbidden' });
-  const { prisma } = await import('./db/client');
-  const email = String(req.params.email);
-  try {
-    await prisma.user.delete({ where: { email } });
-    res.json({ ok: true, deleted: email });
-  } catch {
-    res.json({ ok: false, message: 'User not found or already deleted' });
-  }
-});
-
-// Endpoint temporal para listar usuarios en DB
-app.get('/debug-users', async (req, res) => {
-  const secret = req.query['secret'];
-  if (secret !== process.env.RESET_SECRET) return res.status(403).json({ error: 'Forbidden' });
-  const { prisma } = await import('./db/client');
-  const users = await prisma.user.findMany({ select: { email: true, role: true, profileComplete: true, clerkId: true } });
-  res.json({ users });
-});
-
-// Endpoint temporal para asignar rol SUPERADMIN por email
-app.get('/make-superadmin/:email', async (req, res) => {
-  const secret = req.query['secret'];
-  if (secret !== process.env.RESET_SECRET) return res.status(403).json({ error: 'Forbidden' });
-  const { prisma } = await import('./db/client');
-  const email = String(req.params.email);
-  try {
-    const user = await prisma.user.update({
-      where: { email },
-      data: { role: 'SUPERADMIN', profileComplete: true, clubId: null },
-    });
-    res.json({ ok: true, user: { email: user.email, role: user.role } });
-  } catch {
-    res.json({ ok: false, message: 'User not found' });
-  }
-});
-
-app.use('/me', meRouter);
+// ── Rutas ─────────────────────────────────────────────────────────────────────
+app.use('/me', strictLimiter, meRouter);
 app.use('/clubs', clubsRouter);
 app.use('/locations', locationsRouter);
 app.use('/members', membersRouter);
-app.use('/superadmin', superadminRouter);
+app.use('/superadmin', strictLimiter, superadminRouter);
 app.use('/events', eventsRouter);
 app.use('/payments', paymentsRouter);
 app.use('/competitions', competitionsRouter);
 app.use('/cashflow', cashflowRouter);
 app.use('/attendance', attendanceRouter);
 app.use('/training', trainingRouter);
+
+// ── Manejador global de errores ───────────────────────────────────────────────
+// Evita que stack traces o mensajes internos lleguen al cliente
+app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
+  console.error('[Error]', err.message, err.stack);
+  res.status(500).json({ error: 'Error interno del servidor' });
+});
 
 app.listen(PORT, () => {
   console.log(`API en http://localhost:${PORT}`);

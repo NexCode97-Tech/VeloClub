@@ -49,7 +49,7 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
     next();
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
-    console.error('Auth error:', msg);
-    res.status(401).json({ error: 'Token inválido', detail: msg });
+    console.error('Auth error:', msg); // solo en servidor
+    res.status(401).json({ error: 'No autenticado' });
   }
 }

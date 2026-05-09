@@ -101,6 +101,7 @@ router.get('/', requireAuth, async (req, res) => {
 // POST /payments
 router.post('/', requireAuth, async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'No autenticado' });
+  if (req.user.role !== 'ADMIN') return res.status(403).json({ error: 'Sin permisos' });
   const parsed = paymentSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.issues });
 
@@ -127,6 +128,7 @@ router.post('/', requireAuth, async (req, res) => {
 // PATCH /payments/:id
 router.patch('/:id', requireAuth, async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'No autenticado' });
+  if (req.user.role !== 'ADMIN') return res.status(403).json({ error: 'Sin permisos' });
   const id = String(req.params.id);
   const clubId = req.user.clubId ?? '';
 
@@ -139,6 +141,11 @@ router.patch('/:id', requireAuth, async (req, res) => {
   const { status, paidAt, notes, amount } = req.body as {
     status?: string; paidAt?: string; notes?: string; amount?: number;
   };
+
+  const VALID_STATUSES = ['PENDING', 'PAID', 'OVERDUE', 'REFUNDED'];
+  if (status !== undefined && !VALID_STATUSES.includes(status)) {
+    return res.status(400).json({ error: 'Estado inválido' });
+  }
 
   const data: Record<string, unknown> = {};
   if (status !== undefined) data.status = status;
@@ -168,6 +175,7 @@ router.patch('/:id', requireAuth, async (req, res) => {
 // DELETE /payments/:id
 router.delete('/:id', requireAuth, async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'No autenticado' });
+  if (req.user.role !== 'ADMIN') return res.status(403).json({ error: 'Sin permisos' });
   const id = String(req.params.id);
 
   const existing = await prisma.payment.findFirst({ where: { id, clubId: req.user.clubId ?? '' } });

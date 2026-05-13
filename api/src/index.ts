@@ -20,6 +20,9 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 4000;
 
+// Confiar en el proxy de Railway para leer X-Forwarded-For correctamente
+app.set('trust proxy', 1);
+
 // ── Seguridad ─────────────────────────────────────────────────────────────────
 app.use(helmet());
 app.disable('x-powered-by');

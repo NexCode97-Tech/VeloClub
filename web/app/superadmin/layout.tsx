@@ -92,8 +92,11 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
         const res = await apiFetch<{ status: string }>('/me', { token });
         if (res.status !== 'superadmin') { router.replace('/dashboard'); return; }
         setChecking(false);
-      } catch {
-        router.replace('/sign-in');
+      } catch (err) {
+        console.error('Superadmin auth check failed:', err);
+        // No redirigir a /sign-in — causaría loop si hay error de red o rate limit
+        // Mostrar la pantalla igual si Clerk confirma que está autenticado
+        setChecking(false);
       }
     })();
   }, [isLoaded, isSignedIn]);

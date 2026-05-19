@@ -59,7 +59,7 @@ app.get('/health', (_req, res) => {
 });
 
 // ── Rutas ─────────────────────────────────────────────────────────────────────
-app.use('/me', strictLimiter, meRouter);
+app.use('/me', meRouter); // /me se llama en cada carga — el globalLimiter es suficiente
 app.use('/clubs', clubsRouter);
 app.use('/locations', locationsRouter);
 app.use('/members', membersRouter);

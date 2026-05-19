@@ -80,23 +80,38 @@ export default function AsistenciaPage() {
     })();
   }, []);
 
+  // Función reutilizable para cargar miembros + asistencia de la sede activa
+  const fetchMembers = async (locId: string) => {
+    if (!locId) return;
+    const token = await getToken();
+    const [membersRes, attRes] = await Promise.all([
+      apiFetch<{ members: Member[] }>('/members', { token }),
+      apiFetch<{ records: AttRecord[] }>(`/attendance?date=${todayISO()}&locationId=${locId}`, { token }),
+    ]);
+    const forLoc = membersRes.members.filter(
+      m => m.locations.some(l => l.location.id === locId)
+    );
+    setMembers(forLoc);
+    const base = Object.fromEntries(forLoc.map(m => [m.id, 'PRESENT' as Status]));
+    const existing: Record<string, Status> = {};
+    for (const r of attRes.records) existing[r.memberId] = r.status as Status;
+    setAtt({ ...base, ...existing });
+  };
+
+  // Carga inicial y al cambiar sede
   useEffect(() => {
-    if (!selectedLoc) return;
-    (async () => {
-      const token = await getToken();
-      const [membersRes, attRes] = await Promise.all([
-        apiFetch<{ members: Member[] }>('/members', { token }),
-        apiFetch<{ records: AttRecord[] }>(`/attendance?date=${todayISO()}&locationId=${selectedLoc}`, { token }),
-      ]);
-      const forLoc = membersRes.members.filter(
-        m => m.locations.some(l => l.location.id === selectedLoc)
-      );
-      setMembers(forLoc);
-      const base = Object.fromEntries(forLoc.map(m => [m.id, 'PRESENT' as Status]));
-      const existing: Record<string, Status> = {};
-      for (const r of attRes.records) existing[r.memberId] = r.status as Status;
-      setAtt({ ...base, ...existing });
-    })();
+    fetchMembers(selectedLoc);
+  }, [selectedLoc]);
+
+  // Refresco automático al volver a esta pantalla (cambio de pestaña o navegación interna)
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible' && selectedLoc) {
+        fetchMembers(selectedLoc);
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => document.removeEventListener('visibilitychange', handleVisibility);
   }, [selectedLoc]);
 
   function toggle(id: string) {

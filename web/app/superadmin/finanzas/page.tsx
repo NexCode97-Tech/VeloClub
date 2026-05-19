@@ -291,44 +291,53 @@ export default function FinanzasPage() {
                         <div key={p.id}>
                           {editPagoId === p.id ? (
                             /* Formulario edición inline */
-                            <div className="rounded-xl p-2.5" style={{ background: '#F0EEF8', border: '1px solid rgba(124,58,237,0.15)' }}>
-                              <p className="text-[10px] font-bold m-0 mb-2" style={{ color: '#7C3AED' }}>Editar abono</p>
-                              <div className="grid grid-cols-2 gap-1.5 mb-1.5">
-                                <div>
-                                  <p className="text-[9px] font-semibold m-0 mb-0.5" style={{ color: '#8E87A8' }}>Concepto</p>
-                                  <input type="text" value={editPagoForm.concepto}
-                                    onChange={e => setEditPagoForm(f => ({ ...f, concepto: e.target.value }))} style={{ ...inputStyle, fontSize: 12 }} />
-                                </div>
+                            <div className="rounded-xl p-3" style={{ background: '#F0EEF8', border: '1px solid rgba(124,58,237,0.15)' }}>
+                              <p className="text-[10px] font-bold m-0 mb-2.5" style={{ color: '#7C3AED' }}>Editar abono</p>
+
+                              {/* Fila 1: Concepto (ancho completo) */}
+                              <div className="mb-2">
+                                <p className="text-[9px] font-semibold m-0 mb-0.5" style={{ color: '#8E87A8' }}>Concepto</p>
+                                <input type="text" value={editPagoForm.concepto}
+                                  onChange={e => setEditPagoForm(f => ({ ...f, concepto: e.target.value }))}
+                                  style={{ ...inputStyle, fontSize: 14 }} />
+                              </div>
+
+                              {/* Fila 2: Monto + Estado lado a lado */}
+                              <div className="grid grid-cols-2 gap-2 mb-2">
                                 <div>
                                   <p className="text-[9px] font-semibold m-0 mb-0.5" style={{ color: '#8E87A8' }}>Monto</p>
                                   <input type="number" value={editPagoForm.monto}
-                                    onChange={e => setEditPagoForm(f => ({ ...f, monto: e.target.value }))} style={{ ...inputStyle, fontSize: 12 }} />
-                                </div>
-                              </div>
-                              <div className="grid grid-cols-2 gap-1.5 mb-2">
-                                <div>
-                                  <p className="text-[9px] font-semibold m-0 mb-0.5" style={{ color: '#8E87A8' }}>Fecha</p>
-                                  <input type="date" value={editPagoForm.fecha}
-                                    onChange={e => setEditPagoForm(f => ({ ...f, fecha: e.target.value }))} style={{ ...inputStyle, fontSize: 12 }} />
+                                    onChange={e => setEditPagoForm(f => ({ ...f, monto: e.target.value }))}
+                                    style={{ ...inputStyle, fontSize: 14 }} />
                                 </div>
                                 <div>
                                   <p className="text-[9px] font-semibold m-0 mb-0.5" style={{ color: '#8E87A8' }}>Estado</p>
                                   <select value={editPagoForm.estado}
-                                    onChange={e => setEditPagoForm(f => ({ ...f, estado: e.target.value }))} style={{ ...inputStyle, fontSize: 12 }}>
+                                    onChange={e => setEditPagoForm(f => ({ ...f, estado: e.target.value }))}
+                                    style={{ ...inputStyle, fontSize: 14 }}>
                                     <option value="PAID">Pagado</option>
                                     <option value="PENDING">Pendiente</option>
                                     <option value="OVERDUE">Vencido</option>
                                   </select>
                                 </div>
                               </div>
+
+                              {/* Fila 3: Fecha (ancho completo para evitar overflow en móvil) */}
+                              <div className="mb-3">
+                                <p className="text-[9px] font-semibold m-0 mb-0.5" style={{ color: '#8E87A8' }}>Fecha</p>
+                                <input type="date" value={editPagoForm.fecha}
+                                  onChange={e => setEditPagoForm(f => ({ ...f, fecha: e.target.value }))}
+                                  style={{ ...inputStyle, fontSize: 14 }} />
+                              </div>
+
                               <div className="flex gap-1.5">
                                 <button onClick={() => setEditPagoId(null)}
-                                  className="flex-1 text-[11px] font-semibold py-1.5 rounded-xl"
+                                  className="flex-1 text-[11px] font-semibold py-2 rounded-xl"
                                   style={{ border: '1px solid rgba(120,80,200,0.10)', background: 'transparent', color: '#8E87A8', cursor: 'pointer' }}>
                                   Cancelar
                                 </button>
                                 <button onClick={saveEditPago} disabled={savingEdit}
-                                  className="flex-[2] text-[11px] font-bold py-1.5 rounded-xl text-white"
+                                  className="flex-[2] text-[11px] font-bold py-2 rounded-xl text-white"
                                   style={{ background: savingEdit ? '#A855F7' : '#7C3AED', border: 'none', cursor: 'pointer' }}>
                                   {savingEdit ? 'Guardando...' : 'Guardar cambios'}
                                 </button>

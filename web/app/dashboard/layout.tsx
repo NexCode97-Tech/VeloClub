@@ -15,6 +15,7 @@ import {
   CalendarDays,
   BarChart2,
   MapPin,
+  CreditCard,
   RefreshCw,
   MoreHorizontal,
 } from 'lucide-react';
@@ -48,14 +49,14 @@ const ROLE_TABS: Record<string, { href: string; label: string; icon: React.Eleme
   ],
   STUDENT: [
     { href: '/dashboard',             label: 'Inicio',        icon: LayoutDashboard },
-    { href: '/dashboard/asistencia',  label: 'Asistencia',    icon: CalendarCheck },
     { href: '/dashboard/logros',      label: 'Resultados',    icon: Trophy },
     { href: '/dashboard/calendario',  label: 'Calendario',    icon: CalendarDays },
+    { href: '/dashboard/pagos',       label: 'Mis Pagos',     icon: CreditCard },
     { href: '/dashboard/mas',         label: 'Mas',           icon: MoreHorizontal },
   ],
 };
 
-const ALL_NAV = [
+const ADMIN_NAV = [
   { href: '/dashboard',            label: 'Dashboard',     icon: LayoutDashboard },
   { href: '/dashboard/miembros',   label: 'Miembros',      icon: Users },
   { href: '/dashboard/sedes',      label: 'Sedes',         icon: MapPin },
@@ -65,6 +66,28 @@ const ALL_NAV = [
   { href: '/dashboard/calendario', label: 'Calendario',    icon: CalendarDays },
   { href: '/dashboard/reportes',   label: 'Reportes',      icon: BarChart2 },
 ];
+
+const COACH_NAV = [
+  { href: '/dashboard',            label: 'Dashboard',     icon: LayoutDashboard },
+  { href: '/dashboard/miembros',   label: 'Miembros',      icon: Users },
+  { href: '/dashboard/sedes',      label: 'Sedes',         icon: MapPin },
+  { href: '/dashboard/asistencia', label: 'Asistencia',    icon: CalendarCheck },
+  { href: '/dashboard/logros',     label: 'Resultados',    icon: Trophy },
+  { href: '/dashboard/calendario', label: 'Calendario',    icon: CalendarDays },
+];
+
+const STUDENT_NAV = [
+  { href: '/dashboard',            label: 'Inicio',        icon: LayoutDashboard },
+  { href: '/dashboard/logros',     label: 'Resultados',    icon: Trophy },
+  { href: '/dashboard/calendario', label: 'Calendario',    icon: CalendarDays },
+  { href: '/dashboard/pagos',      label: 'Mis Pagos',     icon: CreditCard },
+];
+
+const ROLE_NAV: Record<string, typeof ADMIN_NAV> = {
+  ADMIN:   ADMIN_NAV,
+  COACH:   COACH_NAV,
+  STUDENT: STUDENT_NAV,
+};
 
 const roleLabels: Record<string, string> = {
   ADMIN: 'Administrador',
@@ -150,7 +173,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         )}
 
         <nav className="flex-1 px-2 py-3 space-y-0.5 overflow-y-auto">
-          {ALL_NAV.map(({ href, label, icon: Icon }) => {
+          {(ROLE_NAV[role ?? 'ADMIN'] ?? ADMIN_NAV).map(({ href, label, icon: Icon }) => {
             const active = href === '/dashboard' ? pathname === href : pathname.startsWith(href);
             return (
               <Link

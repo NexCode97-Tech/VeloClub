@@ -58,6 +58,8 @@ export default function PagosPage() {
   const { getToken } = useAuth();
   const [payments, setPayments]   = useState<Payment[]>([]);
   const [members, setMembers]     = useState<Member[]>([]);
+  const [role, setRole]           = useState('');
+  const [myMemberId, setMyMemberId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<typeof TABS[number]>('Todos');
   const [filterMonth, setFilterMonth] = useState(now.getMonth() + 1);
   const [filterYear, setFilterYear]   = useState(now.getFullYear());
@@ -68,29 +70,49 @@ export default function PagosPage() {
   const [error, setError]         = useState<string | null>(null);
   const [deleting, setDeleting]   = useState<string | null>(null);
 
-  async function loadPayments() {
+  const canManage = role === 'ADMIN' || role === 'COACH';
+
+  async function loadPayments(memberId?: string | null) {
     const token = await getToken();
     const res = await apiFetch<{ payments: Payment[] }>(
       `/payments?month=${filterMonth}&year=${filterYear}`, { token }
     );
-    setPayments(res.payments);
+    const all = res.payments;
+    // STUDENT: filtrar solo sus propios pagos
+    setPayments(memberId !== undefined
+      ? (memberId ? all.filter(p => p.memberId === memberId) : all)
+      : all
+    );
   }
 
   useEffect(() => {
     (async () => {
       const token = await getToken();
+      const meRes = await apiFetch<{ status: string; user?: { role: string } }>('/me', { token });
+      const userRole = meRes.user?.role ?? '';
+      setRole(userRole);
+
+      let memberId: string | null = null;
+      if (userRole === 'STUDENT') {
+        const memberRes = await apiFetch<{ member: { id: string } }>('/members/me', { token }).catch(() => null);
+        memberId = memberRes?.member.id ?? null;
+        setMyMemberId(memberId);
+      }
+
       const [paymentsRes, membersRes] = await Promise.all([
         apiFetch<{ payments: Payment[] }>(`/payments?month=${filterMonth}&year=${filterYear}`, { token }),
-        apiFetch<{ members: Member[] }>('/members', { token }),
+        userRole !== 'STUDENT' ? apiFetch<{ members: Member[] }>('/members', { token }) : Promise.resolve({ members: [] }),
       ]);
-      setPayments(paymentsRes.payments);
+
+      const all = paymentsRes.payments;
+      setPayments(userRole === 'STUDENT' && memberId ? all.filter(p => p.memberId === memberId) : all);
       setMembers(membersRes.members);
       setLoading(false);
     })();
   }, []);
 
   useEffect(() => {
-    if (!loading) loadPayments();
+    if (!loading) loadPayments(myMemberId !== null ? myMemberId : undefined);
   }, [filterMonth, filterYear]);
 
   const filtered = payments.filter(p => {
@@ -156,16 +178,18 @@ export default function PagosPage() {
       {/* Encabezado */}
       <div className="px-5 py-3 bg-background border-b border-border flex items-center justify-between">
         <h1 className="text-[17px] font-bold text-foreground" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
-          Pagos
+          {canManage ? 'Pagos' : 'Mis Pagos'}
         </h1>
-        <button
-          onClick={openNew}
-          className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold text-white"
-          style={{ background: '#4361EE' }}
-        >
-          <Plus className="w-4 h-4" />
-          <span className="hidden sm:inline">Registrar</span>
-        </button>
+        {canManage && (
+          <button
+            onClick={openNew}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold text-white"
+            style={{ background: '#4361EE' }}
+          >
+            <Plus className="w-4 h-4" />
+            <span className="hidden sm:inline">Registrar</span>
+          </button>
+        )}
       </div>
 
       <div className="px-4 pt-4 flex flex-col gap-4">
@@ -272,24 +296,26 @@ export default function PagosPage() {
                     <p className="text-[10px] text-muted-foreground">{MONTH_NAMES[p.month - 1]} {p.year}</p>
                     {p.notes && <p className="text-[10px] text-muted-foreground mt-0.5">{p.notes}</p>}
                   </div>
-                  <div className="flex flex-col gap-1 shrink-0">
-                    {p.status !== 'PAID' && (
+                  {canManage && (
+                    <div className="flex flex-col gap-1 shrink-0">
+                      {p.status !== 'PAID' && (
+                        <button
+                          onClick={() => handleMarkPaid(p.id)}
+                          className="px-2 py-1 rounded-lg text-[10px] font-semibold"
+                          style={{ background: 'rgba(6,214,160,0.12)', color: '#06D6A0' }}
+                        >
+                          Marcar pagado
+                        </button>
+                      )}
                       <button
-                        onClick={() => handleMarkPaid(p.id)}
-                        className="px-2 py-1 rounded-lg text-[10px] font-semibold"
-                        style={{ background: 'rgba(6,214,160,0.12)', color: '#06D6A0' }}
+                        onClick={() => handleDelete(p.id)}
+                        disabled={deleting === p.id}
+                        className="w-7 h-7 rounded-lg bg-red-50 flex items-center justify-center text-red-400 hover:text-red-600 self-end"
                       >
-                        Marcar pagado
+                        <Trash2 className="w-3.5 h-3.5" />
                       </button>
-                    )}
-                    <button
-                      onClick={() => handleDelete(p.id)}
-                      disabled={deleting === p.id}
-                      className="w-7 h-7 rounded-lg bg-red-50 flex items-center justify-center text-red-400 hover:text-red-600 self-end"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
+                    </div>
+                  )}
                 </div>
               );
             })}
@@ -297,8 +323,8 @@ export default function PagosPage() {
         )}
       </div>
 
-      {/* Modal registrar pago */}
-      <Dialog open={open} onOpenChange={setOpen}>
+      {/* Modal registrar pago — solo ADMIN/COACH */}
+      {canManage && <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
             <DialogTitle>Registrar pago</DialogTitle>
@@ -379,7 +405,7 @@ export default function PagosPage() {
             </Button>
           </div>
         </DialogContent>
-      </Dialog>
+      </Dialog>}
     </div>
   );
 }

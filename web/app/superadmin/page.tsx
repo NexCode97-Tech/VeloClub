@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiFetch } from '@/lib/api-client';
 import Link from 'next/link';
-import { Users, Building2, TrendingUp, CircleDollarSign, ChevronRight, CheckCircle2, XCircle } from 'lucide-react';
+import { Users, Building2, CircleDollarSign, ChevronRight, CheckCircle2, XCircle } from 'lucide-react';
 
 const fmt = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 });
 
@@ -77,7 +77,7 @@ export default function SuperadminDashboard() {
               className="text-[22px] font-extrabold text-foreground leading-tight"
               style={{ fontFamily: 'var(--font-space-grotesk)' }}
             >
-              Panel de Control 🛡️
+              Panel de Control
             </h1>
             <p className="text-[14px] font-semibold text-foreground/70 mt-0.5">VeloClub · Sistema</p>
             <span
@@ -219,28 +219,6 @@ export default function SuperadminDashboard() {
               })}
             </div>
           )}
-        </section>
-
-        {/* Accesos rápidos */}
-        <section>
-          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2.5">Accesos rápidos</p>
-          <div className="grid grid-cols-2 gap-2">
-            {[
-              { href: '/superadmin/clubs',        label: 'Gestionar Clubs',  icon: Building2,        color: '#7C3AED' },
-              { href: '/superadmin/finanzas',     label: 'Finanzas',         icon: TrendingUp,        color: '#06D6A0' },
-            ].map(item => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="bg-white border border-border rounded-xl p-4 flex flex-col items-center gap-2 active:scale-95 transition-transform"
-              >
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: `${item.color}18` }}>
-                  <item.icon className="w-5 h-5" style={{ color: item.color }} />
-                </div>
-                <span className="text-[11px] font-semibold text-foreground text-center leading-tight">{item.label}</span>
-              </Link>
-            ))}
-          </div>
         </section>
 
       </div>

@@ -270,12 +270,12 @@ export default function ClubsPage() {
               <button onClick={() => openMembers(club.id)}
                 className="flex-1 text-[11px] font-semibold py-1.5 rounded-xl"
                 style={{ border: '1px solid rgba(124,58,237,0.25)', background: membersClubId === club.id ? 'rgba(124,58,237,0.12)' : 'rgba(124,58,237,0.06)', color: '#7C3AED', cursor: 'pointer' }}>
-                👥 Miembros
+                Miembros
               </button>
               <button onClick={() => handleToggle(club.id)}
                 className="flex-1 text-[11px] font-semibold py-1.5 rounded-xl"
                 style={{ border: `1px solid ${club.active ? 'rgba(255,183,3,0.3)' : 'rgba(6,214,160,0.3)'}`, background: club.active ? 'rgba(255,183,3,0.08)' : 'rgba(6,214,160,0.08)', color: club.active ? '#FFB703' : '#06D6A0', cursor: 'pointer' }}>
-                {club.active ? '⏸ Desactivar' : '▶ Activar'}
+                {club.active ? 'Desactivar' : 'Activar'}
               </button>
               <button onClick={() => handleDelete(club.id)}
                 className="w-9 flex items-center justify-center rounded-xl"

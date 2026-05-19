@@ -243,16 +243,27 @@ router.post('/suscripciones/:clubId/pagos', requireAuth, requireSuperadmin, asyn
   res.status(201).json({ pago });
 });
 
+const editPagoSchema = z.object({
+  estado:   z.enum(['PENDING', 'PAID', 'OVERDUE']).optional(),
+  concepto: z.string().min(1).optional(),
+  monto:    z.number().positive().optional(),
+  fecha:    z.string().optional(),
+});
+
 router.patch('/suscripciones/pagos/:pagoId', requireAuth, requireSuperadmin, async (req, res) => {
   const pagoId = String(req.params.pagoId);
-  const { estado } = req.body;
-  if (!['PENDING', 'PAID', 'OVERDUE'].includes(estado)) {
-    return res.status(400).json({ error: 'Estado inválido' });
-  }
-  const pago = await prisma.suscripcionPago.update({
-    where: { id: pagoId },
-    data: { estado, fecha: estado === 'PAID' ? new Date() : undefined },
-  });
+  const parsed = editPagoSchema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: parsed.error.issues });
+
+  const data: Record<string, unknown> = {};
+  if (parsed.data.estado)   data.estado = parsed.data.estado;
+  if (parsed.data.concepto) data.concepto = parsed.data.concepto;
+  if (parsed.data.monto)    data.monto = parsed.data.monto;
+  if (parsed.data.fecha)    data.fecha = new Date(parsed.data.fecha);
+  // Si se paga ahora y no se envía fecha, poner hoy
+  if (parsed.data.estado === 'PAID' && !parsed.data.fecha) data.fecha = new Date();
+
+  const pago = await prisma.suscripcionPago.update({ where: { id: pagoId }, data });
   res.json({ pago });
 });
 

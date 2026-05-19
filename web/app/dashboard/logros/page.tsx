@@ -6,7 +6,7 @@ import { apiFetch } from '@/lib/api-client';
 import Link from 'next/link';
 import {
   Trophy, Plus, Trash2, MapPin, CalendarDays, ChevronRight,
-  Dumbbell, Clock, Ruler, RefreshCw,
+  Dumbbell,
 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -296,10 +296,8 @@ export default function LogrosPage() {
                     {s.results.length > 0 && (
                       <div className="flex flex-wrap gap-2 mt-2 pt-2 border-t border-border/50">
                         {s.results.slice(0, 3).map(r => (
-                          <span key={r.id} className="text-[11px] text-muted-foreground flex items-center gap-1">
-                            {r.time && <><Clock className="w-2.5 h-2.5" />{r.time}</>}
-                            {r.distance && <><Ruler className="w-2.5 h-2.5" />{r.distance}</>}
-                            {!r.time && !r.distance && r.member.fullName.split(' ')[0]}
+                          <span key={r.id} className="text-[11px] text-muted-foreground">
+                            {r.member.fullName.split(' ')[0]}
                           </span>
                         ))}
                         {s.results.length > 3 && <span className="text-[11px] text-muted-foreground">+{s.results.length - 3} más</span>}

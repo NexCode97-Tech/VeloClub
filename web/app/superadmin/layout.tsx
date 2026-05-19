@@ -209,30 +209,50 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
         {children}
       </main>
 
-      {/* Bottom Tab Nav */}
-      <div className="shrink-0" style={{ background: '#FFFFFF', borderTop: '1.5px solid rgba(120,80,200,0.10)', boxShadow: '0 -4px 24px rgba(124,58,237,0.06)' }}>
-        <div className="flex items-center pt-1.5 pb-1">
-          {TABS.map((tab) => {
-            const active = tab.exact ? pathname === tab.href : pathname.startsWith(tab.href);
-            const color  = active ? ACCENT : '#8E87A8';
-            return (
-              <Link key={tab.href} href={tab.href} className="flex-1 flex flex-col items-center gap-1 py-1 relative">
-                {active && (
-                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-11 h-8 rounded-xl" style={{ background: 'rgba(124,58,237,0.08)' }} />
-                )}
-                <div className="relative z-10">
-                  <tab.Icon size={22} color={color} strokeWidth={active ? 2.5 : 2} />
-                </div>
-                <span className="relative z-10 text-[9.5px] tracking-wide" style={{ color, fontWeight: active ? 700 : 500 }}>
-                  {tab.label}
-                </span>
-              </Link>
-            );
-          })}
-        </div>
-        <div className="flex justify-center pb-1.5">
-          <div className="w-24 h-1 rounded-full opacity-20" style={{ background: '#8E87A8' }} />
-        </div>
+      {/* Bottom Tab Nav — pill deslizante */}
+      <div className="shrink-0" style={{ background: '#fff', borderTop: '1px solid rgba(0,0,0,0.07)' }}>
+        {(() => {
+          const activeIdx = TABS.findIndex(t => t.exact ? pathname === t.href : pathname.startsWith(t.href));
+          return (
+            <div className="relative flex items-end px-2 pt-2" style={{ paddingBottom: 6 }}>
+              {/* Pill deslizante */}
+              {activeIdx >= 0 && (
+                <div
+                  className="absolute top-2 rounded-2xl pointer-events-none"
+                  style={{
+                    width: `calc((100% - 16px) / ${TABS.length})`,
+                    height: 36,
+                    left: `calc(8px + ${activeIdx} * (100% - 16px) / ${TABS.length})`,
+                    background: 'rgba(124,58,237,0.10)',
+                    transition: 'left 0.3s cubic-bezier(0.34,1.2,0.64,1)',
+                  }}
+                />
+              )}
+              {TABS.map((tab) => {
+                const active = tab.exact ? pathname === tab.href : pathname.startsWith(tab.href);
+                return (
+                  <Link key={tab.href} href={tab.href} className="flex-1 flex flex-col items-center gap-0.5 relative z-10">
+                    <div className="flex items-center justify-center" style={{ height: 36 }}>
+                      <tab.Icon
+                        size={21}
+                        color={active ? ACCENT : '#8E87A8'}
+                        strokeWidth={active ? 2.5 : 1.8}
+                        style={{ transition: 'color 0.2s' }}
+                      />
+                    </div>
+                    <span
+                      className="text-[9px] tracking-wide"
+                      style={{ color: active ? ACCENT : '#8E87A8', fontWeight: active ? 700 : 500, transition: 'color 0.2s' }}
+                    >
+                      {tab.label}
+                    </span>
+                  </Link>
+                );
+              })}
+            </div>
+          );
+        })()}
+        <div style={{ height: 6 }} />
       </div>
     </div>
   );

@@ -391,31 +391,42 @@ export default function FinanzasPage() {
                           ) : (
                             /* Fila normal del pago */
                             <div
-                              className="flex items-center justify-between rounded-xl px-3 py-2"
+                              className="flex items-center gap-3 rounded-xl px-3 py-2.5"
                               style={{ background: ESTADO_BG[p.estado], border: `1px solid ${ESTADO_COLOR[p.estado]}30` }}
                             >
+                              {/* Indicador color */}
+                              <div className="w-1 self-stretch rounded-full shrink-0" style={{ background: ESTADO_COLOR[p.estado] }} />
+
+                              {/* Info izquierda */}
                               <div className="flex-1 min-w-0">
-                                <p className="text-[12px] font-semibold m-0 truncate" style={{ color: '#1A1028' }}>{p.concepto}</p>
-                                <p className="text-[10px] m-0" style={{ color: '#8E87A8' }}>
-                                  {p.fecha ? new Date(p.fecha).toLocaleDateString('es-CO') : 'Sin fecha'}
+                                <p className="text-[12px] font-bold m-0 truncate" style={{ color: '#1A1028' }}>{p.concepto}</p>
+                                <p className="text-[10px] m-0 mt-0.5" style={{ color: '#8E87A8' }}>
+                                  {p.fecha ? new Date(p.fecha).toLocaleDateString('es-CO', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Sin fecha'}
                                 </p>
                               </div>
-                              <div className="flex items-center gap-1.5 shrink-0 ml-2">
-                                <div className="text-right">
-                                  <p className="text-[13px] font-bold m-0" style={{ color: ESTADO_COLOR[p.estado], fontFamily: 'Space Grotesk, sans-serif' }}>
-                                    {fmt.format(p.monto)}
-                                  </p>
-                                  <span className="text-[9px] font-semibold" style={{ color: ESTADO_COLOR[p.estado] }}>
-                                    {ESTADO_LABEL[p.estado]}
-                                  </span>
-                                </div>
+
+                              {/* Monto + badge */}
+                              <div className="flex flex-col items-end gap-0.5 shrink-0">
+                                <p className="text-[14px] font-extrabold m-0 leading-none" style={{ color: ESTADO_COLOR[p.estado], fontFamily: 'Space Grotesk, sans-serif' }}>
+                                  {fmt.format(p.monto)}
+                                </p>
+                                <span
+                                  className="text-[9px] font-bold px-1.5 py-0.5 rounded-full leading-none"
+                                  style={{ background: `${ESTADO_COLOR[p.estado]}20`, color: ESTADO_COLOR[p.estado] }}
+                                >
+                                  {ESTADO_LABEL[p.estado]}
+                                </span>
+                              </div>
+
+                              {/* Acciones */}
+                              <div className="flex gap-1 shrink-0">
                                 <button onClick={() => startEditPago(p)}
-                                  className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0"
+                                  className="w-7 h-7 rounded-lg flex items-center justify-center"
                                   style={{ background: 'rgba(124,58,237,0.08)', border: '1px solid rgba(124,58,237,0.15)', color: '#7C3AED', cursor: 'pointer' }}>
                                   <Pencil className="w-3 h-3" />
                                 </button>
                                 <button onClick={() => deletePago(p.id)}
-                                  className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0"
+                                  className="w-7 h-7 rounded-lg flex items-center justify-center"
                                   style={{ background: 'rgba(239,71,111,0.08)', border: '1px solid rgba(239,71,111,0.20)', color: '#EF476F', cursor: 'pointer' }}>
                                   <Trash2 className="w-3 h-3" />
                                 </button>

@@ -144,18 +144,34 @@ router.post('/:id/events/:eventId/results', requireAuth, async (req, res) => {
   const parsed = resultSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.issues });
 
-  const result = await prisma.eventResult.create({
-    data: {
-      eventId,
-      memberId:     parsed.data.memberId,
-      position:     parsed.data.position ?? null,
-      category:     parsed.data.category ?? null,
-      observations: parsed.data.observations ?? null,
-    },
-    include: { member: { select: { id: true, fullName: true } } },
+  // Verificar que el miembro pertenece al mismo club
+  const member = await prisma.member.findFirst({
+    where: { id: parsed.data.memberId, clubId: req.user.clubId ?? '' },
   });
+  if (!member) return res.status(404).json({ error: 'Miembro no encontrado en este club' });
 
-  res.status(201).json({ result });
+  try {
+    const result = await prisma.eventResult.upsert({
+      where: { eventId_memberId: { eventId, memberId: parsed.data.memberId } },
+      create: {
+        eventId,
+        memberId:     parsed.data.memberId,
+        position:     parsed.data.position  ?? null,
+        category:     parsed.data.category  ?? null,
+        observations: parsed.data.observations ?? null,
+      },
+      update: {
+        position:     parsed.data.position  ?? null,
+        category:     parsed.data.category  ?? null,
+        observations: parsed.data.observations ?? null,
+      },
+      include: { member: { select: { id: true, fullName: true } } },
+    });
+    res.status(201).json({ result });
+  } catch (err) {
+    console.error('Error al guardar resultado de competencia:', err);
+    res.status(500).json({ error: 'Error al guardar el resultado' });
+  }
 });
 
 // DELETE /competitions/:id/events/:eventId/results/:resultId

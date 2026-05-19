@@ -324,7 +324,11 @@ export default function CompetitionDetailPage() {
             <div className="space-y-2">
               <Label>Deportista *</Label>
               <Select value={resultForm.memberId} onValueChange={v => setResultForm(f => ({ ...f, memberId: v ?? '' }))}>
-                <SelectTrigger><SelectValue placeholder="Seleccionar deportista" /></SelectTrigger>
+                <SelectTrigger>
+                  <span className="text-sm">
+                    {members.find(m => m.id === resultForm.memberId)?.fullName ?? 'Seleccionar deportista'}
+                  </span>
+                </SelectTrigger>
                 <SelectContent>
                   {members.map(m => (
                     <SelectItem key={m.id} value={m.id}>{m.fullName}</SelectItem>

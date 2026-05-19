@@ -9,8 +9,8 @@ router.get('/', requireAuth, async (req, res) => {
 
   const { clerkId, email, name, picture } = req.auth;
 
-  // Superadmin check (case-insensitive)
-  const superadminEmails = (process.env.SUPERADMIN_EMAILS ?? '').split(',').map(e => e.trim().toLowerCase()).filter(Boolean);
+  // Superadmin check (case-insensitive, soporta coma o salto de línea como separador)
+  const superadminEmails = (process.env.SUPERADMIN_EMAILS ?? '').split(/[,\n]/).map(e => e.trim().toLowerCase()).filter(Boolean);
   if (superadminEmails.includes(email.toLowerCase())) {
     const user = await prisma.user.upsert({
       where: { clerkId },

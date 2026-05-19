@@ -4,13 +4,9 @@ import { useAuth } from '@clerk/nextjs';
 import { useEffect, useState } from 'react';
 import { apiFetch } from '@/lib/api-client';
 import { Pencil, Trash2, X, Check } from 'lucide-react';
-import {
-  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell,
-} from 'recharts';
 
 const fmt = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 });
 
-const MONTH_NAMES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
 
 interface Pago {
   id: string;
@@ -171,16 +167,6 @@ export default function FinanzasPage() {
   const totalPendiente = allPagos.filter(p => p.estado !== 'PAID').reduce((a, p) => a + p.monto, 0);
   const pctGlobal = totalPlan > 0 ? Math.round(totalRecaudado / totalPlan * 100) : 0;
 
-  // Gráfica: ingresos mensuales de pagos PAID con fecha
-  const monthlyData = MONTH_NAMES.map((name, i) => {
-    const total = allPagos
-      .filter(p => p.estado === 'PAID' && p.fecha)
-      .filter(p => new Date(p.fecha!).getMonth() === i)
-      .reduce((a, p) => a + p.monto, 0);
-    return { name, total };
-  });
-  const maxMonthly = Math.max(...monthlyData.map(d => d.total), 1);
-  const hasMonthlyData = monthlyData.some(d => d.total > 0);
 
   if (loading) {
     return (
@@ -224,46 +210,6 @@ export default function FinanzasPage() {
           </div>
         )}
 
-        {/* Gráfica ingresos mensuales */}
-        <div className="rounded-2xl mb-3" style={{ background: '#fff', border: '1px solid rgba(120,80,200,0.10)', padding: 14 }}>
-          <p className="text-[11px] font-semibold uppercase mb-3 m-0" style={{ color: '#8E87A8', letterSpacing: '0.8px' }}>
-            Ingresos mensuales
-          </p>
-          {!hasMonthlyData ? (
-            <div className="flex flex-col items-center py-4 gap-1">
-              <p className="text-[12px] m-0" style={{ color: '#8E87A8' }}>Sin ingresos registrados aún</p>
-            </div>
-          ) : (
-            <ResponsiveContainer width="100%" height={160}>
-              <BarChart data={monthlyData} barCategoryGap="20%" margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
-                <XAxis
-                  dataKey="name"
-                  tick={{ fontSize: 10, fill: '#8E87A8', fontWeight: 600 }}
-                  axisLine={false} tickLine={false}
-                />
-                <YAxis
-                  allowDecimals={false}
-                  tick={{ fontSize: 9, fill: '#C4C2CF' }}
-                  axisLine={false} tickLine={false}
-                  tickFormatter={v => v > 0 ? `${(v/1000).toFixed(0)}k` : '0'}
-                />
-                <Tooltip
-                  cursor={{ fill: 'rgba(124,58,237,0.06)' }}
-                  contentStyle={{ borderRadius: 10, border: '1px solid #E8E6F0', fontSize: 12, padding: '4px 10px' }}
-                  formatter={(v) => [fmt.format(Number(v ?? 0)), 'Recaudado']}
-                />
-                <Bar dataKey="total" radius={[5, 5, 0, 0]}>
-                  {monthlyData.map((entry, i) => (
-                    <Cell
-                      key={i}
-                      fill={entry.total === maxMonthly && entry.total > 0 ? '#7C3AED' : '#C4C2CF'}
-                    />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          )}
-        </div>
 
         {clubs.length === 0 && (
           <div className="rounded-2xl p-8 text-center" style={{ background: '#fff', border: '1px solid rgba(120,80,200,0.10)', color: '#8E87A8', fontSize: 13 }}>

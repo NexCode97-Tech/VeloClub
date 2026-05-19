@@ -103,28 +103,39 @@ router.delete('/:id', requireAuth, async (req, res) => {
 router.post('/:id/results', requireAuth, async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'No autenticado' });
   const sessionId = String(req.params.id);
+  const clubId    = req.user.clubId ?? '';
 
   const session = await prisma.trainingSession.findFirst({
-    where: { id: sessionId, clubId: req.user.clubId ?? '' },
+    where: { id: sessionId, clubId },
   });
   if (!session) return res.status(404).json({ error: 'Sesión no encontrada' });
 
   const parsed = resultSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.issues });
 
-  const result = await prisma.trainingResult.upsert({
-    where: { sessionId_memberId: { sessionId, memberId: parsed.data.memberId } },
-    create: { sessionId, ...parsed.data },
-    update: {
-      time:         parsed.data.time         ?? null,
-      distance:     parsed.data.distance     ?? null,
-      laps:         parsed.data.laps         ?? null,
-      observations: parsed.data.observations ?? null,
-    },
-    include: { member: { select: { id: true, fullName: true } } },
+  // Verificar que el miembro pertenece al mismo club
+  const member = await prisma.member.findFirst({
+    where: { id: parsed.data.memberId, clubId },
   });
+  if (!member) return res.status(404).json({ error: 'Miembro no encontrado en este club' });
 
-  res.status(201).json({ result });
+  try {
+    const result = await prisma.trainingResult.upsert({
+      where: { sessionId_memberId: { sessionId, memberId: parsed.data.memberId } },
+      create: { sessionId, ...parsed.data },
+      update: {
+        time:         parsed.data.time         ?? null,
+        distance:     parsed.data.distance     ?? null,
+        laps:         parsed.data.laps         ?? null,
+        observations: parsed.data.observations ?? null,
+      },
+      include: { member: { select: { id: true, fullName: true } } },
+    });
+    res.status(201).json({ result });
+  } catch (err) {
+    console.error('Error al guardar resultado:', err);
+    res.status(500).json({ error: 'Error al guardar el resultado' });
+  }
 });
 
 // DELETE /training/:id/results/:resultId

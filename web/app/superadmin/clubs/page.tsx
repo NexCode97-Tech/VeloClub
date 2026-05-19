@@ -29,7 +29,7 @@ const ROLE_LABEL  = { ADMIN: 'Administrador', COACH: 'Entrenador' };
 const inputStyle = {
   width: '100%', padding: '8px 10px', borderRadius: 8,
   border: '1px solid rgba(120,80,200,0.10)',
-  background: '#F7F7FB', color: '#1A1028', fontSize: 13, outline: 'none',
+  background: '#F7F7FB', color: '#1A1028', fontSize: 16, outline: 'none',
   boxSizing: 'border-box' as const, fontFamily: 'Plus Jakarta Sans, sans-serif',
 };
 

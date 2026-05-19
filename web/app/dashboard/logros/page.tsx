@@ -293,16 +293,6 @@ export default function LogrosPage() {
                       </div>
                       <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
                     </div>
-                    {s.results.length > 0 && (
-                      <div className="flex flex-wrap gap-2 mt-2 pt-2 border-t border-border/50">
-                        {s.results.slice(0, 3).map(r => (
-                          <span key={r.id} className="text-[11px] text-muted-foreground">
-                            {r.member.fullName.split(' ')[0]}
-                          </span>
-                        ))}
-                        {s.results.length > 3 && <span className="text-[11px] text-muted-foreground">+{s.results.length - 3} más</span>}
-                      </div>
-                    )}
                   </Link>
                   {canManage && (
                     <div className="px-4 pb-3 flex justify-end">

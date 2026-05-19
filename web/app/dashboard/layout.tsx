@@ -137,10 +137,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   if (checking) return <LoadingScreen />;
 
-  const tabItems = role ? (ROLE_TABS[role] ?? ROLE_TABS.ADMIN) : ROLE_TABS.ADMIN;
-  const tabHrefs = new Set(tabItems.map((t) => t.href));
-  const isOnExtra =
-    !tabHrefs.has(pathname) && pathname !== '/dashboard' && pathname.startsWith('/dashboard/');
+  const tabItems   = role ? (ROLE_TABS[role] ?? ROLE_TABS.ADMIN) : ROLE_TABS.ADMIN;
+  const sideNavItems = (ROLE_NAV[role ?? 'ADMIN'] ?? ADMIN_NAV);
+  const tabHrefs   = new Set(tabItems.map((t) => t.href));
+  const isOnExtra  = !tabHrefs.has(pathname) && pathname !== '/dashboard' && pathname.startsWith('/dashboard/');
 
   function isTabActive(href: string) {
     if (href === '/dashboard') return pathname === '/dashboard';
@@ -148,54 +148,91 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     return pathname === href || pathname.startsWith(href + '/');
   }
 
+  function isSideActive(href: string) {
+    if (href === '/dashboard') return pathname === '/dashboard';
+    return pathname === href || pathname.startsWith(href + '/');
+  }
+
+  // Índice activo para el pill deslizante del bottom bar
+  const activeTabIndex = tabItems.findIndex(t => isTabActive(t.href));
+  const activeSideIndex = sideNavItems.findIndex(t => isSideActive(t.href));
+
+  // Color de acento según rol
+  const accentColor = role === 'COACH' ? '#06D6A0' : role === 'STUDENT' ? '#7C3AED' : '#4361EE';
+  const accentBg    = role === 'COACH' ? 'rgba(6,214,160,0.12)' : role === 'STUDENT' ? 'rgba(124,58,237,0.12)' : 'rgba(67,97,238,0.12)';
+
   return (
     <div className="flex h-dvh overflow-hidden bg-background">
 
       {/* ── Desktop sidebar ─────────────────────────────────────────────── */}
-      <aside className="hidden md:flex w-64 bg-card border-r border-border flex-col shrink-0">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-border min-h-[60px]">
-          <Image src="/logo-full.jpg" alt="VeloClub" width={110} height={32} className="object-contain" />
+      <aside className="hidden md:flex w-60 flex-col shrink-0" style={{ background: '#fff', borderRight: '1px solid rgba(0,0,0,0.07)' }}>
+        {/* Logo */}
+        <div className="flex items-center justify-between px-4 py-4 shrink-0" style={{ borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
+          <Image src="/logo-full.jpg" alt="VeloClub" width={100} height={30} className="object-contain" />
           <button
             onClick={() => window.location.reload()}
             title="Actualizar"
-            className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+            className="p-1.5 rounded-lg transition-colors"
+            style={{ color: '#8E87A8' }}
           >
-            <RefreshCw className="w-4 h-4" />
+            <RefreshCw className="w-3.5 h-3.5" />
           </button>
         </div>
 
+        {/* Rol badge */}
         {role && (
-          <div className="px-4 py-3 border-b border-border">
-            <span className={cn('text-xs font-semibold px-2.5 py-1 rounded-full', roleBadgeStyle[role] ?? 'bg-secondary text-muted-foreground')}>
+          <div className="px-4 py-2.5 shrink-0" style={{ borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
+            <span
+              className="text-[10px] font-bold px-2.5 py-1 rounded-full tracking-wider"
+              style={{ background: accentBg, color: accentColor }}
+            >
               {roleLabels[role] ?? role}
             </span>
           </div>
         )}
 
-        <nav className="flex-1 px-2 py-3 space-y-0.5 overflow-y-auto">
-          {(ROLE_NAV[role ?? 'ADMIN'] ?? ADMIN_NAV).map(({ href, label, icon: Icon }) => {
-            const active = href === '/dashboard' ? pathname === href : pathname.startsWith(href);
-            return (
-              <Link
-                key={href}
-                href={href}
-                className={cn(
-                  'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all',
-                  active
-                    ? 'bg-primary text-primary-foreground shadow-sm'
-                    : 'text-muted-foreground hover:bg-secondary hover:text-foreground'
-                )}
-              >
-                <Icon className="w-5 h-5 shrink-0" />
-                <span>{label}</span>
-              </Link>
-            );
-          })}
+        {/* Nav items con pill deslizante */}
+        <nav className="flex-1 px-2 py-2 overflow-y-auto relative">
+          {/* Pill deslizante */}
+          {activeSideIndex >= 0 && (
+            <div
+              className="absolute left-2 right-2 rounded-xl pointer-events-none"
+              style={{
+                height: 44,
+                top: `calc(${activeSideIndex} * 48px + 8px)`,
+                background: accentBg,
+                transition: 'top 0.25s cubic-bezier(0.34,1.2,0.64,1)',
+              }}
+            />
+          )}
+          <div className="space-y-1 relative">
+            {sideNavItems.map(({ href, label, icon: Icon }) => {
+              const active = isSideActive(href);
+              return (
+                <Link
+                  key={href}
+                  href={href}
+                  className="flex items-center gap-3 px-3 rounded-xl text-sm font-semibold transition-colors relative z-10"
+                  style={{
+                    height: 44,
+                    color: active ? accentColor : '#8E87A8',
+                  }}
+                >
+                  <Icon className="w-[18px] h-[18px] shrink-0" strokeWidth={active ? 2.5 : 2} />
+                  <span>{label}</span>
+                </Link>
+              );
+            })}
+          </div>
         </nav>
 
-        <div className="flex items-center gap-3 px-4 py-4 border-t border-border shrink-0">
+        {/* User */}
+        <div
+          className="flex items-center gap-3 px-4 py-3 shrink-0"
+          style={{ borderTop: '1px solid rgba(0,0,0,0.06)' }}
+        >
           <UserButton />
-          <span className="text-sm text-muted-foreground truncate">Mi cuenta</span>
+          <span className="text-[12px] font-semibold truncate" style={{ color: '#8E87A8' }}>Mi cuenta</span>
         </div>
       </aside>
 
@@ -212,37 +249,58 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           {children}
         </main>
 
-        {/* Mobile bottom tab bar */}
-        <nav className="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-card border-t border-border">
-          <div className="flex items-stretch">
+        {/* ── Mobile bottom tab bar con pill deslizante ── */}
+        <nav
+          className="md:hidden fixed bottom-0 left-0 right-0 z-30"
+          style={{ background: '#fff', borderTop: '1px solid rgba(0,0,0,0.07)' }}
+        >
+          <div className="relative flex items-end px-2 pt-2 pb-1">
+            {/* Pill deslizante */}
+            {activeTabIndex >= 0 && (
+              <div
+                className="absolute top-2 rounded-2xl pointer-events-none"
+                style={{
+                  width: `calc((100% - 16px) / ${tabItems.length})`,
+                  height: 36,
+                  left: `calc(8px + ${activeTabIndex} * (100% - 16px) / ${tabItems.length})`,
+                  background: accentBg,
+                  transition: 'left 0.3s cubic-bezier(0.34,1.2,0.64,1)',
+                }}
+              />
+            )}
+
             {tabItems.map(({ href, label, icon: Icon }) => {
               const active = isTabActive(href);
               return (
                 <Link
                   key={href}
                   href={href}
-                  className={cn(
-                    'flex-1 flex flex-col items-center gap-1 pt-2 pb-3 transition-colors',
-                    active ? 'text-primary' : 'text-muted-foreground'
-                  )}
+                  className="flex-1 flex flex-col items-center gap-0.5 relative z-10"
+                  style={{ paddingBottom: 6 }}
                 >
-                  <div className="relative flex items-center justify-center w-11 h-8">
-                    {active && (
-                      <span className="absolute inset-0 rounded-xl bg-primary opacity-10" />
-                    )}
+                  <div className="flex items-center justify-center" style={{ height: 36 }}>
                     <Icon
-                      className="w-[22px] h-[22px] relative z-10"
-                      strokeWidth={active ? 2.5 : 2}
+                      className="w-[21px] h-[21px]"
+                      strokeWidth={active ? 2.5 : 1.8}
+                      style={{ color: active ? accentColor : '#8E87A8', transition: 'color 0.2s' }}
                     />
                   </div>
-                  <span className={cn('text-[9.5px] tracking-wide', active ? 'font-bold' : 'font-medium')}>
+                  <span
+                    className="text-[9px] tracking-wide"
+                    style={{
+                      color: active ? accentColor : '#8E87A8',
+                      fontWeight: active ? 700 : 500,
+                      transition: 'color 0.2s',
+                    }}
+                  >
                     {label}
                   </span>
                 </Link>
               );
             })}
           </div>
-          <div className="h-1" />
+          {/* Safe area */}
+          <div style={{ height: 6 }} />
         </nav>
       </div>
     </div>

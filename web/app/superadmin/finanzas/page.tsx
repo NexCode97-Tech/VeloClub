@@ -250,7 +250,7 @@ export default function FinanzasPage() {
                 <Tooltip
                   cursor={{ fill: 'rgba(124,58,237,0.06)' }}
                   contentStyle={{ borderRadius: 10, border: '1px solid #E8E6F0', fontSize: 12, padding: '4px 10px' }}
-                  formatter={(v: number) => [fmt.format(v), 'Recaudado']}
+                  formatter={(v) => [fmt.format(Number(v ?? 0)), 'Recaudado']}
                 />
                 <Bar dataKey="total" radius={[5, 5, 0, 0]}>
                   {monthlyData.map((entry, i) => (

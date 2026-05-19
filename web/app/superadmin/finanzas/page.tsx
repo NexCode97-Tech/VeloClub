@@ -19,6 +19,7 @@ interface Pago {
 interface Suscripcion {
   id: string;
   planMonto: number;
+  tipoPlan: 'MENSUAL' | 'ANUAL';
   año: number;
   pagos: Pago[];
 }
@@ -68,9 +69,10 @@ export default function FinanzasPage() {
   const [editPagoForm, setEditPagoForm] = useState({ concepto: '', monto: '', fecha: '', estado: 'PAID' });
   const [savingEdit, setSavingEdit] = useState(false);
 
-  // Editar planMonto
+  // Editar planMonto + tipoPlan
   const [editPlanId, setEditPlanId] = useState<string | null>(null);
   const [editPlanMonto, setEditPlanMonto] = useState('');
+  const [editTipoPlan, setEditTipoPlan] = useState<'MENSUAL' | 'ANUAL'>('MENSUAL');
   const [savingPlan, setSavingPlan] = useState(false);
 
   async function load() {
@@ -152,7 +154,7 @@ export default function FinanzasPage() {
       const token = await getToken();
       await apiFetch(`/superadmin/suscripciones/${clubId}`, {
         method: 'POST', token,
-        body: JSON.stringify({ planMonto: parseFloat(editPlanMonto), año }),
+        body: JSON.stringify({ planMonto: parseFloat(editPlanMonto), tipoPlan: editTipoPlan, año }),
       });
       setEditPlanId(null);
       await load();
@@ -161,8 +163,13 @@ export default function FinanzasPage() {
   }
 
   // Totales globales
+  // Meta por club: MENSUAL = planMonto × 12, ANUAL = planMonto
   const allPagos = clubs.flatMap(c => c.suscripcion?.pagos ?? []);
-  const totalPlan = clubs.reduce((a, c) => a + (c.suscripcion?.planMonto ?? 0), 0);
+  const totalPlan = clubs.reduce((a, c) => {
+    if (!c.suscripcion) return a;
+    const meta = c.suscripcion.tipoPlan === 'ANUAL' ? c.suscripcion.planMonto : c.suscripcion.planMonto * 12;
+    return a + meta;
+  }, 0);
   const totalRecaudado = allPagos.filter(p => p.estado === 'PAID').reduce((a, p) => a + p.monto, 0);
   const totalPendiente = allPagos.filter(p => p.estado !== 'PAID').reduce((a, p) => a + p.monto, 0);
   const pctGlobal = totalPlan > 0 ? Math.round(totalRecaudado / totalPlan * 100) : 0;
@@ -225,8 +232,11 @@ export default function FinanzasPage() {
           const sus = c.suscripcion;
           const pagos = sus?.pagos ?? [];
           const rec = pagos.filter(p => p.estado === 'PAID').reduce((a, p) => a + p.monto, 0);
-          const plan = sus?.planMonto ?? 0;
-          const pctClub = plan > 0 ? Math.round(rec / plan * 100) : 0;
+          const planMonto = sus?.planMonto ?? 0;
+          const tipoPlan = sus?.tipoPlan ?? 'MENSUAL';
+          // Meta: si es MENSUAL la meta anual = planMonto × 12, si ANUAL = planMonto (pago único)
+          const planMeta = tipoPlan === 'ANUAL' ? planMonto : planMonto * 12;
+          const pctClub = planMeta > 0 ? Math.min(100, Math.round(rec / planMeta * 100)) : 0;
           const colorPct = pctClub >= 100 ? '#06D6A0' : pctClub > 50 ? '#FFB703' : '#EF476F';
 
           return (
@@ -238,31 +248,53 @@ export default function FinanzasPage() {
                   <p className="text-[14px] font-bold m-0 truncate" style={{ color: '#1A1028' }}>{c.name}</p>
                   {/* Plan editable */}
                   {editPlanId === c.id ? (
-                    <div className="flex items-center gap-1.5 mt-1">
-                      <input
-                        type="number"
-                        value={editPlanMonto}
-                        onChange={e => setEditPlanMonto(e.target.value)}
-                        style={{ ...inputStyle, width: 130, fontSize: 12, padding: '5px 8px' }}
-                        autoFocus
-                      />
-                      <button onClick={() => savePlanMonto(c.id, sus?.id, sus?.año ?? new Date().getFullYear())} disabled={savingPlan}
-                        className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'rgba(6,214,160,0.12)', color: '#06D6A0', border: 'none', cursor: 'pointer' }}>
-                        <Check className="w-3.5 h-3.5" />
-                      </button>
-                      <button onClick={() => setEditPlanId(null)}
-                        className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'rgba(239,71,111,0.08)', color: '#EF476F', border: 'none', cursor: 'pointer' }}>
-                        <X className="w-3.5 h-3.5" />
-                      </button>
+                    <div className="mt-1.5">
+                      {/* Selector tipo plan */}
+                      <div className="flex rounded-lg overflow-hidden mb-1.5" style={{ border: '1px solid rgba(120,80,200,0.20)' }}>
+                        {(['MENSUAL', 'ANUAL'] as const).map(t => (
+                          <button key={t} onClick={() => setEditTipoPlan(t)}
+                            className="flex-1 text-[10px] font-bold py-1.5"
+                            style={{
+                              background: editTipoPlan === t ? '#7C3AED' : 'transparent',
+                              color: editTipoPlan === t ? '#fff' : '#8E87A8',
+                              border: 'none', cursor: 'pointer',
+                              borderRight: t === 'MENSUAL' ? '1px solid rgba(120,80,200,0.20)' : 'none',
+                            }}>
+                            {t === 'MENSUAL' ? 'Mensual' : 'Anual'}
+                          </button>
+                        ))}
+                      </div>
+                      <p className="text-[9px] m-0 mb-1" style={{ color: '#8E87A8' }}>
+                        {editTipoPlan === 'MENSUAL' ? 'Monto por mes (meta anual = ×12)' : 'Monto total anual (pago único)'}
+                      </p>
+                      <div className="flex items-center gap-1.5">
+                        <input
+                          type="number"
+                          value={editPlanMonto}
+                          onChange={e => setEditPlanMonto(e.target.value)}
+                          style={{ ...inputStyle, fontSize: 12, padding: '5px 8px' }}
+                          autoFocus
+                        />
+                        <button onClick={() => savePlanMonto(c.id, sus?.id, sus?.año ?? new Date().getFullYear())} disabled={savingPlan}
+                          className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'rgba(6,214,160,0.12)', color: '#06D6A0', border: 'none', cursor: 'pointer' }}>
+                          <Check className="w-3.5 h-3.5" />
+                        </button>
+                        <button onClick={() => setEditPlanId(null)}
+                          className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'rgba(239,71,111,0.08)', color: '#EF476F', border: 'none', cursor: 'pointer' }}>
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     </div>
                   ) : (
                     <button
-                      onClick={() => { setEditPlanId(c.id); setEditPlanMonto(String(plan || '')); }}
+                      onClick={() => { setEditPlanId(c.id); setEditPlanMonto(String(planMonto || '')); setEditTipoPlan(tipoPlan); }}
                       className="flex items-center gap-1 mt-0.5"
                       style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
                     >
                       <p className="text-[11px] m-0" style={{ color: '#8E87A8' }}>
-                        {sus ? `Plan anual · ${fmt.format(plan)}` : 'Sin plan configurado'}
+                        {sus
+                          ? `${tipoPlan === 'MENSUAL' ? 'Mensual' : 'Anual'} · ${fmt.format(planMonto)}${tipoPlan === 'MENSUAL' ? '/mes' : '/año'}`
+                          : 'Sin plan configurado'}
                       </p>
                       <Pencil className="w-2.5 h-2.5" style={{ color: '#8E87A8' }} />
                     </button>
@@ -273,7 +305,7 @@ export default function FinanzasPage() {
                     <p className="text-[16px] font-extrabold m-0" style={{ color: colorPct, fontFamily: 'Space Grotesk, sans-serif' }}>
                       {pctClub}%
                     </p>
-                    <p className="text-[10px] m-0" style={{ color: '#8E87A8' }}>{fmt.format(rec)}</p>
+                    <p className="text-[10px] m-0" style={{ color: '#8E87A8' }}>{fmt.format(rec)} / {fmt.format(planMeta)}</p>
                   </div>
                 )}
               </div>

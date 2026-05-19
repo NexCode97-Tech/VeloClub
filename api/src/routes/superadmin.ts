@@ -178,6 +178,7 @@ router.get('/suscripciones', requireAuth, requireSuperadmin, async (_req, res) =
 
 const suscripcionSchema = z.object({
   planMonto: z.number().positive(),
+  tipoPlan: z.enum(['MENSUAL', 'ANUAL']).default('MENSUAL'),
   año: z.number().int().min(2024),
 });
 
@@ -188,8 +189,8 @@ router.post('/suscripciones/:clubId', requireAuth, requireSuperadmin, async (req
 
   const suscripcion = await prisma.clubSuscripcion.upsert({
     where: { clubId },
-    update: { planMonto: parsed.data.planMonto, año: parsed.data.año },
-    create: { clubId, planMonto: parsed.data.planMonto, año: parsed.data.año },
+    update: { planMonto: parsed.data.planMonto, tipoPlan: parsed.data.tipoPlan as any, año: parsed.data.año },
+    create: { clubId, planMonto: parsed.data.planMonto, tipoPlan: parsed.data.tipoPlan as any, año: parsed.data.año },
   });
   res.json({ suscripcion });
 });

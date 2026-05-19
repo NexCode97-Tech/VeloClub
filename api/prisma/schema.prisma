@@ -282,6 +282,7 @@ model ClubSuscripcion {
   clubId    String              @unique
   club      Club                @relation(fields: [clubId], references: [id], onDelete: Cascade)
   planMonto Float               @default(450000)
+  tipoPlan  TipoPlan            @default(MENSUAL)
   año       Int
   pagos     SuscripcionPago[]
   createdAt DateTime            @default(now())
@@ -367,4 +368,9 @@ enum NotificacionTipo {
   CLUB_DESACTIVADO
   PAGO_VENCIDO
   PAGO_REGISTRADO
+}
+
+enum TipoPlan {
+  MENSUAL
+  ANUAL
 }

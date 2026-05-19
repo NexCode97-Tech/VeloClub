@@ -63,7 +63,7 @@ app.use('/me', meRouter); // /me se llama en cada carga — el globalLimiter es 
 app.use('/clubs', clubsRouter);
 app.use('/locations', locationsRouter);
 app.use('/members', membersRouter);
-app.use('/superadmin', strictLimiter, superadminRouter);
+app.use('/superadmin', superadminRouter); // ya protegido por requireSuperadmin, globalLimiter es suficiente
 app.use('/events', eventsRouter);
 app.use('/payments', paymentsRouter);
 app.use('/competitions', competitionsRouter);

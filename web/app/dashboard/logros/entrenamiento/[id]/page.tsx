@@ -58,8 +58,8 @@ export default function TrainingDetailPage() {
   useEffect(() => { load(); }, []);
 
   const canManage = role === 'ADMIN' || role === 'COACH';
-  const usedMemberIds = new Set(session?.results.map(r => r.member.id) ?? []);
-  const availableMembers = members.filter(m => !usedMemberIds.has(m.id));
+  // Todos los miembros disponibles — el backend hace upsert, así que si ya tiene resultado lo actualiza
+  const availableMembers = members;
 
   async function handleSave() {
     if (!form.memberId) return;
@@ -114,7 +114,7 @@ export default function TrainingDetailPage() {
           </h1>
           <p className="text-[11px] text-muted-foreground capitalize">{dateStr}</p>
         </div>
-        {canManage && availableMembers.length > 0 && (
+        {canManage && members.length > 0 && (
           <button
             onClick={() => { setForm(emptyForm); setError(null); setOpen(true); }}
             className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold text-white shrink-0"

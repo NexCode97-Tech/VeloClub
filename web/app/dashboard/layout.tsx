@@ -98,8 +98,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         if (res.status === 'complete_profile') { router.replace('/completar-perfil'); return; }
         setRole(res.user?.role ?? null);
         setChecking(false);
-      } catch {
-        router.replace('/no-access');
+      } catch (err) {
+        // Solo redirigir a /no-access si es un error real de acceso (401/403)
+        // Un 429 o error de red no debe cerrar la sesión del usuario
+        const { ApiError } = await import('@/lib/api-client');
+        if (err instanceof ApiError && (err.status === 401 || err.status === 403)) {
+          router.replace('/no-access');
+        } else {
+          // Error temporal (rate limit, red) — dejar pasar, Clerk ya validó la sesión
+          setChecking(false);
+        }
       }
     })();
   }, [isLoaded, isSignedIn]);

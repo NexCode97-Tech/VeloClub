@@ -1,5 +1,12 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
 
+export class ApiError extends Error {
+  constructor(public status: number, message: string) {
+    super(message);
+    this.name = 'ApiError';
+  }
+}
+
 export async function apiFetch<T>(
   path: string,
   options: RequestInit & { token?: string | null } = {}
@@ -15,7 +22,7 @@ export async function apiFetch<T>(
   });
   if (!res.ok) {
     const text = await res.text();
-    throw new Error(`API error ${res.status}: ${text}`);
+    throw new ApiError(res.status, `API error ${res.status}: ${text}`);
   }
   return res.json();
 }

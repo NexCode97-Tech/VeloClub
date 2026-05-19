@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiFetch } from '@/lib/api-client';
 import Link from 'next/link';
+import { Users, Building2, TrendingUp, CircleDollarSign, ChevronRight, CheckCircle2, XCircle } from 'lucide-react';
 
 const fmt = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 });
 
@@ -14,6 +15,13 @@ interface Club {
   id: string; name: string; active: boolean;
   createdAt: string; _count: { members: number };
   suscripcion?: Suscripcion | null;
+}
+
+function todayLabel() {
+  const d = new Date();
+  const day = d.toLocaleDateString('es-CO', { weekday: 'long' });
+  const rest = d.toLocaleDateString('es-CO', { day: 'numeric', month: 'long' });
+  return `${day.charAt(0).toUpperCase() + day.slice(1)}, ${rest}`;
 }
 
 export default function SuperadminDashboard() {
@@ -28,7 +36,6 @@ export default function SuperadminDashboard() {
     (async () => {
       try {
         const token = await getToken();
-        // Traemos clubs con suscripciones en una sola llamada
         const res = await apiFetch<{ clubs: Club[] }>('/superadmin/suscripciones', { token });
         setClubs(res.clubs);
       } catch (e) {
@@ -39,124 +46,203 @@ export default function SuperadminDashboard() {
     })();
   }, [isLoaded, isSignedIn]);
 
-  const total        = clubs.length;
-  const activos      = clubs.filter(c => c.active).length;
-  const inactivos    = clubs.filter(c => !c.active).length;
+  const total         = clubs.length;
+  const activos       = clubs.filter(c => c.active).length;
+  const inactivos     = clubs.filter(c => !c.active).length;
   const totalMiembros = clubs.reduce((sum, c) => sum + (c._count?.members ?? 0), 0);
 
-  // Finanzas reales
-  const clubsConPlan    = clubs.filter(c => c.suscripcion);
-  const totalPlan       = clubsConPlan.reduce((a, c) => a + (c.suscripcion?.planMonto ?? 0), 0);
-  const allPagos        = clubsConPlan.flatMap(c => c.suscripcion?.pagos ?? []);
-  const totalRecaudado  = allPagos.filter(p => p.estado === 'PAID').reduce((a, p) => a + p.monto, 0);
-  const pctRecaudado    = totalPlan > 0 ? Math.round(totalRecaudado / totalPlan * 100) : 0;
-
-  const stats = [
-    { label: 'Total Clubs',     value: total,         color: '#7C3AED' },
-    { label: 'Clubs Activos',   value: activos,       color: '#06D6A0' },
-    { label: 'Clubs Inactivos', value: inactivos,     color: '#EF476F' },
-    { label: 'Total Miembros',  value: totalMiembros, color: '#FFB703' },
-  ];
+  const allPagos       = clubs.flatMap(c => c.suscripcion?.pagos ?? []);
+  const totalRecaudado = allPagos.filter(p => p.estado === 'PAID').reduce((a, p) => a + p.monto, 0);
+  const totalPlan      = clubs.reduce((a, c) => a + (c.suscripcion?.planMonto ?? 0), 0);
+  const pctRecaudado   = totalPlan > 0 ? Math.round(totalRecaudado / totalPlan * 100) : 0;
 
   if (loading) return (
-    <div style={{ background: '#F7F7FB', minHeight: '100%' }} className="flex items-center justify-center h-40">
-      <div className="w-6 h-6 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: '#7C3AED', borderTopColor: 'transparent' }} />
+    <div className="flex items-center justify-center h-40 bg-background">
+      <div className="w-6 h-6 rounded-full border-2 border-primary border-t-transparent animate-spin" />
     </div>
   );
 
   return (
-    <div style={{ background: '#F7F7FB', minHeight: '100%' }}>
-      <div style={{ padding: '12px 16px 80px' }}>
+    <div className="min-h-full bg-background">
 
-        {/* Hero */}
-        <div className="rounded-2xl p-4 mb-3.5 relative overflow-hidden" style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)' }}>
-          <div className="absolute rounded-full" style={{ right: -20, top: -20, width: 80, height: 80, background: 'rgba(255,255,255,0.07)' }} />
-          <p className="text-[11px] mb-0.5" style={{ color: 'rgba(255,255,255,0.7)' }}>SUPER ADMIN</p>
-          <p className="text-[16px] font-extrabold m-0" style={{ color: '#fff', fontFamily: 'Space Grotesk, sans-serif' }}>Panel de Control</p>
-          <p className="text-[11px] mt-0.5" style={{ color: 'rgba(255,255,255,0.65)' }}>
-            Sistema VeloClub · {activos} club{activos !== 1 ? 's' : ''} activo{activos !== 1 ? 's' : ''}
-          </p>
+      {/* Hero greeting */}
+      <div
+        className="px-5 pt-5 pb-4 border-b border-border"
+        style={{ background: 'linear-gradient(135deg, #fff 0%, #F0EEF8 100%)' }}
+      >
+        <div className="flex items-start justify-between mb-4">
+          <div>
+            <p className="text-xs text-muted-foreground mb-0.5">{todayLabel()}</p>
+            <h1
+              className="text-[22px] font-extrabold text-foreground leading-tight"
+              style={{ fontFamily: 'var(--font-space-grotesk)' }}
+            >
+              Panel de Control 🛡️
+            </h1>
+            <p className="text-[14px] font-semibold text-foreground/70 mt-0.5">VeloClub · Sistema</p>
+            <span
+              className="inline-block mt-2 text-[10px] font-bold px-2.5 py-0.5 rounded-full tracking-wider"
+              style={{ background: 'rgba(239,71,111,0.12)', color: '#EF476F' }}
+            >
+              SUPER ADMIN
+            </span>
+          </div>
         </div>
 
         {/* Stats 2x2 */}
-        <div className="grid grid-cols-2 gap-2 mb-3.5">
-          {stats.map(s => (
-            <div key={s.label} className="rounded-2xl" style={{ background: '#fff', border: '1px solid rgba(120,80,200,0.10)', padding: '12px 14px' }}>
-              <p className="text-[10px] font-semibold mb-1" style={{ color: '#8E87A8' }}>{s.label}</p>
-              <p className="text-[26px] font-extrabold m-0 leading-none" style={{ color: s.color, fontFamily: 'Space Grotesk, sans-serif' }}>{s.value}</p>
+        <div className="grid grid-cols-2 gap-3">
+          {[
+            { label: 'Total Clubs',     value: total,         color: '#7C3AED', icon: Building2 },
+            { label: 'Clubs Activos',   value: activos,       color: '#06D6A0', icon: CheckCircle2 },
+            { label: 'Total Miembros',  value: totalMiembros, color: '#FFB703', icon: Users },
+            { label: 'Clubs Inactivos', value: inactivos,     color: '#EF476F', icon: XCircle },
+          ].map(s => (
+            <div key={s.label} className="bg-white border border-border rounded-xl p-4 text-center">
+              <div className="flex justify-center mb-2" style={{ color: s.color }}>
+                <s.icon className="w-5 h-5" />
+              </div>
+              <div
+                className="text-2xl font-extrabold leading-none mb-1"
+                style={{ color: s.color, fontFamily: 'var(--font-space-grotesk)' }}
+              >
+                {s.value}
+              </div>
+              <div className="text-[10px] text-muted-foreground">{s.label}</div>
             </div>
           ))}
         </div>
+      </div>
 
-        {/* Resumen finanzas — solo si hay datos reales */}
+      <div className="px-5 py-4 space-y-5">
+
+        {/* Resumen finanzas */}
         {totalPlan > 0 && (
-          <>
-            <p className="text-[11px] font-semibold uppercase mb-2" style={{ color: '#8E87A8', letterSpacing: '0.8px' }}>Resumen de finanzas</p>
-            <div className="rounded-2xl mb-3" style={{ background: '#fff', border: '1px solid rgba(120,80,200,0.10)', padding: 14 }}>
-              <div className="flex justify-between mb-2.5">
-                <div>
-                  <p className="text-[10px] font-semibold m-0" style={{ color: '#8E87A8' }}>RECAUDADO</p>
-                  <p className="text-[20px] font-extrabold m-0" style={{ color: '#06D6A0', fontFamily: 'Space Grotesk, sans-serif' }}>{fmt.format(totalRecaudado)}</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-[10px] font-semibold m-0" style={{ color: '#8E87A8' }}>PENDIENTE</p>
-                  <p className="text-[20px] font-extrabold m-0" style={{ color: '#EF476F', fontFamily: 'Space Grotesk, sans-serif' }}>{fmt.format(totalPlan - totalRecaudado)}</p>
-                </div>
-              </div>
-              <div className="h-[7px] rounded-full overflow-hidden mb-1.5" style={{ background: 'rgba(120,80,200,0.10)' }}>
-                <div className="h-full rounded-full" style={{ width: `${pctRecaudado}%`, background: 'linear-gradient(90deg,#06D6A0,#7C3AED)' }} />
-              </div>
-              <div className="flex justify-between mb-3">
-                <span className="text-[10px] font-semibold" style={{ color: '#06D6A0' }}>{pctRecaudado}% cobrado</span>
-                <span className="text-[10px]" style={{ color: '#8E87A8' }}>Meta: {fmt.format(totalPlan)}</span>
-              </div>
-              {/* Bar chart por club */}
-              <div className="flex gap-2 items-end" style={{ height: 56 }}>
-                {clubsConPlan.map(c => {
-                  const rec = (c.suscripcion?.pagos ?? []).filter(p => p.estado === 'PAID').reduce((a, p) => a + p.monto, 0);
-                  const p   = rec / (c.suscripcion?.planMonto ?? 1);
-                  return (
-                    <div key={c.id} className="flex-1 flex flex-col items-center gap-1">
-                      <div className="w-full rounded-t-[4px]" style={{ height: `${Math.max(p * 40, 4)}px`, background: 'linear-gradient(180deg,#7C3AED,#A855F7)', opacity: p > 0 ? 1 : 0.2 }} />
-                      <p className="text-[9px] text-center leading-tight m-0 truncate w-full" style={{ color: '#8E87A8' }}>{c.name.split(' ')[0]}</p>
-                    </div>
-                  );
-                })}
-              </div>
-              <Link href="/superadmin/finanzas" className="flex items-center justify-center w-full mt-2.5 text-[11px] font-bold"
-                style={{ padding: 7, borderRadius: 8, border: '1px solid rgba(124,58,237,0.25)', background: 'rgba(124,58,237,0.07)', color: '#7C3AED' }}>
-                Ver detalle completo →
+          <section>
+            <div className="flex items-center justify-between mb-2.5">
+              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Resumen de finanzas</p>
+              <Link href="/superadmin/finanzas" className="text-[11px] font-semibold" style={{ color: '#7C3AED' }}>
+                Ver detalle
               </Link>
             </div>
-          </>
+            <div className="bg-white border border-border rounded-xl p-4">
+              <div className="flex justify-between mb-3">
+                <div>
+                  <p className="text-[10px] font-semibold text-muted-foreground mb-0.5">RECAUDADO</p>
+                  <p className="text-[18px] font-extrabold" style={{ color: '#06D6A0', fontFamily: 'var(--font-space-grotesk)' }}>
+                    {fmt.format(totalRecaudado)}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="text-[10px] font-semibold text-muted-foreground mb-0.5">PENDIENTE</p>
+                  <p className="text-[18px] font-extrabold" style={{ color: '#EF476F', fontFamily: 'var(--font-space-grotesk)' }}>
+                    {fmt.format(totalPlan - totalRecaudado)}
+                  </p>
+                </div>
+              </div>
+              <div className="h-[6px] rounded-full overflow-hidden mb-1.5 bg-border">
+                <div
+                  className="h-full rounded-full transition-all"
+                  style={{ width: `${pctRecaudado}%`, background: 'linear-gradient(90deg, #06D6A0, #7C3AED)' }}
+                />
+              </div>
+              <div className="flex justify-between">
+                <span className="text-[10px] font-semibold" style={{ color: '#06D6A0' }}>{pctRecaudado}% cobrado</span>
+                <span className="text-[10px] text-muted-foreground">Meta: {fmt.format(totalPlan)}</span>
+              </div>
+            </div>
+          </section>
         )}
 
         {/* Clubs registrados */}
-        <p className="text-[11px] font-semibold uppercase mb-2" style={{ color: '#8E87A8', letterSpacing: '0.8px' }}>Clubs registrados</p>
-        {clubs.length === 0 && (
-          <div className="rounded-2xl p-8 text-center" style={{ background: '#fff', border: '1px solid rgba(120,80,200,0.10)', color: '#8E87A8', fontSize: 13 }}>
-            No hay clubs registrados aún.
+        <section>
+          <div className="flex items-center justify-between mb-2.5">
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Clubs registrados</p>
+            <Link href="/superadmin/clubs" className="text-[11px] font-semibold" style={{ color: '#7C3AED' }}>
+              Gestionar
+            </Link>
           </div>
-        )}
-        {clubs.map(club => (
-          <div key={club.id} className="rounded-xl flex items-center gap-2.5 mb-2" style={{ background: '#fff', border: '1px solid rgba(120,80,200,0.10)', padding: '10px 12px' }}>
-            <div className="w-9 h-9 rounded-[9px] flex items-center justify-center shrink-0" style={{ background: 'rgba(124,58,237,0.10)' }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
-              </svg>
+
+          {clubs.length === 0 ? (
+            <div className="bg-white border border-border rounded-xl px-4 py-8 text-center">
+              <Building2 className="w-8 h-8 mx-auto mb-2 text-muted-foreground/30" />
+              <p className="text-[12px] text-muted-foreground">No hay clubs registrados aún</p>
             </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-1.5">
-                <p className="text-[13px] font-bold m-0 truncate" style={{ color: '#1A1028' }}>{club.name}</p>
-                <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full shrink-0"
-                  style={{ background: club.active ? 'rgba(6,214,160,0.12)' : 'rgba(239,71,111,0.12)', color: club.active ? '#06D6A0' : '#EF476F' }}>
-                  {club.active ? 'Activo' : 'Inactivo'}
-                </span>
-              </div>
-              <p className="text-[11px] m-0 mt-0.5" style={{ color: '#8E87A8' }}>{club._count?.members ?? 0} miembros</p>
+          ) : (
+            <div className="space-y-2">
+              {clubs.map(club => {
+                const recaudado = (club.suscripcion?.pagos ?? []).filter(p => p.estado === 'PAID').reduce((a, p) => a + p.monto, 0);
+                return (
+                  <Link
+                    key={club.id}
+                    href="/superadmin/clubs"
+                    className="bg-white border border-border rounded-xl flex items-center gap-3 px-4 py-3 active:scale-[0.99] transition-transform"
+                  >
+                    {/* Avatar */}
+                    <div
+                      className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 text-[15px] font-extrabold"
+                      style={{ background: 'rgba(124,58,237,0.10)', color: '#7C3AED', fontFamily: 'var(--font-space-grotesk)' }}
+                    >
+                      {club.name.charAt(0).toUpperCase()}
+                    </div>
+
+                    {/* Info */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5 mb-0.5">
+                        <p className="text-[13px] font-bold text-foreground truncate">{club.name}</p>
+                        <span
+                          className="text-[9px] font-bold px-1.5 py-0.5 rounded-full shrink-0"
+                          style={{
+                            background: club.active ? 'rgba(6,214,160,0.12)' : 'rgba(239,71,111,0.12)',
+                            color: club.active ? '#06D6A0' : '#EF476F',
+                          }}
+                        >
+                          {club.active ? 'Activo' : 'Inactivo'}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[11px] text-muted-foreground flex items-center gap-1">
+                          <Users className="w-3 h-3" />
+                          {club._count?.members ?? 0} miembros
+                        </span>
+                        {recaudado > 0 && (
+                          <span className="text-[11px] text-muted-foreground flex items-center gap-1">
+                            <CircleDollarSign className="w-3 h-3" />
+                            {fmt.format(recaudado)}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <ChevronRight className="w-4 h-4 text-muted-foreground/40 shrink-0" />
+                  </Link>
+                );
+              })}
             </div>
+          )}
+        </section>
+
+        {/* Accesos rápidos */}
+        <section>
+          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2.5">Accesos rápidos</p>
+          <div className="grid grid-cols-2 gap-2">
+            {[
+              { href: '/superadmin/clubs',        label: 'Gestionar Clubs',  icon: Building2,        color: '#7C3AED' },
+              { href: '/superadmin/finanzas',     label: 'Finanzas',         icon: TrendingUp,        color: '#06D6A0' },
+            ].map(item => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="bg-white border border-border rounded-xl p-4 flex flex-col items-center gap-2 active:scale-95 transition-transform"
+              >
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: `${item.color}18` }}>
+                  <item.icon className="w-5 h-5" style={{ color: item.color }} />
+                </div>
+                <span className="text-[11px] font-semibold text-foreground text-center leading-tight">{item.label}</span>
+              </Link>
+            ))}
           </div>
-        ))}
+        </section>
+
       </div>
     </div>
   );

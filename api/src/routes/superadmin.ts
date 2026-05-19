@@ -167,7 +167,8 @@ router.delete('/clubs/:clubId/miembros/:memberId', requireAuth, requireSuperadmi
 router.get('/suscripciones', requireAuth, requireSuperadmin, async (_req, res) => {
   const clubs = await prisma.club.findMany({
     select: {
-      id: true, name: true, active: true,
+      id: true, name: true, active: true, createdAt: true,
+      _count: { select: { members: true } },
       suscripcion: { include: { pagos: { orderBy: { createdAt: 'asc' } } } },
     },
     orderBy: { createdAt: 'desc' },

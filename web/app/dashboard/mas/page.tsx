@@ -9,7 +9,6 @@ import { Trophy, CalendarDays, MapPin, BarChart2, ChevronRight } from 'lucide-re
 
 const ITEMS_BY_ROLE: Record<string, { label: string; icon: React.ElementType; color: string; href: string }[]> = {
   ADMIN: [
-    { label: 'Resultados', icon: Trophy,       color: '#FFB703', href: '/dashboard/logros' },
     { label: 'Calendario', icon: CalendarDays,  color: '#EF476F', href: '/dashboard/calendario' },
     { label: 'Sedes',      icon: MapPin,        color: '#06D6A0', href: '/dashboard/sedes' },
     { label: 'Reportes',   icon: BarChart2,     color: '#4361EE', href: '/dashboard/reportes' },

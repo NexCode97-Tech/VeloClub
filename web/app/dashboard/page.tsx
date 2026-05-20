@@ -8,7 +8,7 @@ import Link from 'next/link';
 import {
   Users, CalendarCheck, CreditCard,
   Trophy, CalendarDays, MapPin,
-  RefreshCw, Bell, BellOff,
+  RefreshCw, Bell, BellOff, Dumbbell,
 } from 'lucide-react';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell,
@@ -90,6 +90,7 @@ export default function DashboardPage() {
   });
   const [logros, setLogros]         = useState<LogroReciente[]>([]);
   const [logrosLoading, setLogrosLoading] = useState(false);
+  const [proximosEventos, setProximosEventos] = useState<{ id: string; titulo: string; tipo: 'COMPETITION' | 'TRAINING'; fecha: Date; lugar?: string | null }[]>([]);
 
   // Close notif panel when clicking outside
   useEffect(() => {
@@ -225,6 +226,29 @@ export default function DashboardPage() {
           } catch { /* silencioso */ }
           finally { setLogrosLoading(false); }
         }
+
+        // Próximos eventos — competencias y entrenamientos futuros (todos los roles)
+        try {
+          const token3 = await session?.getToken();
+          const now2 = new Date();
+          const month2 = now2.getMonth() + 1;
+          const year2 = now2.getFullYear();
+          const [compRes2, trainRes2] = await Promise.allSettled([
+            apiFetch<{ competitions: { id: string; name: string; date: string; place?: string | null }[] }>('/competitions', { token: token3 }),
+            apiFetch<{ sessions: { id: string; title: string; date: string; location?: { name: string } | null }[] }>(`/training?month=${month2}&year=${year2}`, { token: token3 }),
+          ]);
+          const comps2 = compRes2.status === 'fulfilled' ? compRes2.value.competitions : [];
+          const trains2 = trainRes2.status === 'fulfilled' ? trainRes2.value.sessions : [];
+          const futuros: { id: string; titulo: string; tipo: 'COMPETITION' | 'TRAINING'; fecha: Date; lugar?: string | null }[] = [
+            ...comps2.map(c => ({ id: c.id, titulo: c.name, tipo: 'COMPETITION' as const, fecha: new Date(c.date), lugar: c.place })),
+            ...trains2.map(s => ({ id: s.id, titulo: s.title, tipo: 'TRAINING' as const, fecha: new Date(s.date), lugar: s.location?.name ?? null })),
+          ]
+            .filter(e => e.fecha >= now2)
+            .sort((a, b) => a.fecha.getTime() - b.fecha.getTime())
+            .slice(0, 3);
+          setProximosEventos(futuros);
+        } catch { /* silencioso */ }
+
       } catch (err) {
         console.error(err);
       } finally {
@@ -424,10 +448,43 @@ export default function DashboardPage() {
               Ver calendario
             </Link>
           </div>
-          <div className="bg-white border border-border rounded-xl px-4 py-5 text-center">
-            <CalendarDays className="w-8 h-8 mx-auto mb-2 text-muted-foreground/30" />
-            <p className="text-[12px] text-muted-foreground">No hay eventos programados</p>
-          </div>
+          {proximosEventos.length === 0 ? (
+            <div className="bg-white border border-border rounded-xl px-4 py-5 text-center">
+              <CalendarDays className="w-8 h-8 mx-auto mb-2 text-muted-foreground/30" />
+              <p className="text-[12px] text-muted-foreground">No hay eventos próximos</p>
+            </div>
+          ) : (
+            <div className="bg-white border border-border rounded-xl overflow-hidden divide-y divide-border">
+              {proximosEventos.map(ev => {
+                const isComp = ev.tipo === 'COMPETITION';
+                const color  = isComp ? '#EF476F' : '#4361EE';
+                const d = ev.fecha;
+                const dia = d.toLocaleDateString('es-CO', { weekday: 'short' });
+                const fecha = d.toLocaleDateString('es-CO', { day: 'numeric', month: 'short' });
+                return (
+                  <div key={ev.id} className="flex items-center gap-3 px-4 py-3">
+                    {/* Ícono tipo */}
+                    <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: `${color}18` }}>
+                      {isComp
+                        ? <Trophy className="w-4 h-4" style={{ color }} />
+                        : <Dumbbell className="w-4 h-4" style={{ color }} />
+                      }
+                    </div>
+                    {/* Info */}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[13px] font-semibold text-foreground truncate">{ev.titulo}</p>
+                      {ev.lugar && <p className="text-[11px] text-muted-foreground truncate">{ev.lugar}</p>}
+                    </div>
+                    {/* Fecha */}
+                    <div className="text-right shrink-0">
+                      <p className="text-[12px] font-bold" style={{ color }}>{fecha}</p>
+                      <p className="text-[10px] text-muted-foreground capitalize">{dia}</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </section>
 
         {/* Gráfica asistencia por día — ADMIN y COACH */}

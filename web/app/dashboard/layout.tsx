@@ -110,8 +110,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
     (async () => {
       try {
-        // Usar session.getToken() directamente para evitar tokens cacheados del session anterior
-        const token = await session?.getToken();
+        // skipCache: true fuerza un JWT fresco — evita token de sesión anterior en caché
+        const token = await session?.getToken({ skipCache: true });
         if (stale) return;
         const res = await apiFetch<{ status: string; user?: { role: string } }>('/me', { token });
         if (stale) return; // userId cambió mientras esperábamos la API

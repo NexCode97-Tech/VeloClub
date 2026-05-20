@@ -61,7 +61,7 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
 
     (async () => {
       try {
-        const token = await session?.getToken();
+        const token = await session?.getToken({ skipCache: true });
         if (stale) return;
         const res = await apiFetch<{ status: string }>('/me', { token });
         if (stale) return;

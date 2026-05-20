@@ -173,7 +173,7 @@ export default function DashboardPage() {
 
     (async () => {
       try {
-        const token = await session?.getToken();
+        const token = await session?.getToken({ skipCache: true });
         const res = await apiFetch<MeResponse>('/me', { token });
         if (res.status === 'superadmin')       { router.push('/superadmin');       return; }
         if (res.status === 'no_access')        { router.push('/no-access');        return; }

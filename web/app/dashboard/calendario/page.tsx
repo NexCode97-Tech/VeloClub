@@ -3,7 +3,7 @@
 import { useAuth } from '@clerk/nextjs';
 import { useEffect, useState } from 'react';
 import { apiFetch } from '@/lib/api-client';
-import { ChevronLeft, ChevronRight, CalendarDays, Trash2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, CalendarDays, Trophy, Dumbbell, MapPin } from 'lucide-react';
 
 const MONTH_NAMES = [
   'Enero','Febrero','Marzo','Abril','Mayo','Junio',
@@ -11,28 +11,26 @@ const MONTH_NAMES = [
 ];
 const DAY_HEADERS = ['D', 'L', 'M', 'X', 'J', 'V', 'S'];
 
-const EVENT_TYPE_LABELS: Record<string, string> = {
-  TRAINING:    'Entrenamiento',
-  MEETUP:      'Reunión',
-  COMPETITION: 'Competencia',
-};
+type EventType = 'COMPETITION' | 'TRAINING';
 
-const EVENT_TYPE_COLORS: Record<string, string> = {
-  TRAINING:    '#4361EE',
-  MEETUP:      '#06D6A0',
-  COMPETITION: '#EF476F',
-};
-
-interface CalendarEvent {
+interface CalEvent {
   id: string;
   title: string;
-  type: 'TRAINING' | 'MEETUP' | 'COMPETITION';
-  description?: string;
-  startDate: string;
-  endDate?: string;
-  allDay: boolean;
-  location?: { id: string; name: string } | null;
+  type: EventType;
+  date: Date;
+  place?: string | null;
+  location?: string | null;
 }
+
+const TYPE_COLOR: Record<EventType, string> = {
+  COMPETITION: '#EF476F',
+  TRAINING:    '#4361EE',
+};
+
+const TYPE_LABEL: Record<EventType, string> = {
+  COMPETITION: 'Competencia',
+  TRAINING:    'Entrenamiento',
+};
 
 function getDaysInMonth(year: number, month: number) {
   return new Date(year, month + 1, 0).getDate();
@@ -47,28 +45,43 @@ export default function CalendarioPage() {
   const [year, setYear]               = useState(now.getFullYear());
   const [month, setMonth]             = useState(now.getMonth());
   const [selectedDay, setSelectedDay] = useState(now.getDate());
-  const [events, setEvents]           = useState<CalendarEvent[]>([]);
-  const [role, setRole]               = useState<string>('');
-  const [deleting, setDeleting]       = useState<string | null>(null);
+  const [events, setEvents]           = useState<CalEvent[]>([]);
+  const [loading, setLoading]         = useState(false);
 
   const today = now.getDate();
   const isCurrentMonth = year === now.getFullYear() && month === now.getMonth();
 
   async function loadEvents() {
-    const token = await getToken();
-    const res = await apiFetch<{ events: CalendarEvent[] }>(
-      `/events?month=${month + 1}&year=${year}`, { token }
-    );
-    setEvents(res.events);
-  }
-
-  useEffect(() => {
-    (async () => {
+    setLoading(true);
+    try {
       const token = await getToken();
-      const meRes = await apiFetch<{ status: string; user?: { role: string } }>('/me', { token });
-      setRole(meRes.user?.role ?? '');
-    })();
-  }, []);
+      const [compRes, trainRes] = await Promise.all([
+        apiFetch<{ competitions: Array<{ id: string; name: string; place?: string | null; date: string }> }>('/competitions', { token }),
+        apiFetch<{ sessions: Array<{ id: string; title: string; date: string; location?: { name: string } | null }> }>(`/training?month=${month + 1}&year=${year}`, { token }),
+      ]);
+
+      const comps: CalEvent[] = (compRes.competitions ?? [])
+        .map(c => ({
+          id:    c.id,
+          title: c.name,
+          type:  'COMPETITION' as EventType,
+          date:  new Date(c.date),
+          place: c.place,
+        }))
+        .filter(c => c.date.getFullYear() === year && c.date.getMonth() === month);
+
+      const trains: CalEvent[] = (trainRes.sessions ?? []).map(s => ({
+        id:       s.id,
+        title:    s.title,
+        type:     'TRAINING' as EventType,
+        date:     new Date(s.date),
+        location: s.location?.name ?? null,
+      }));
+
+      setEvents([...comps, ...trains].sort((a, b) => a.date.getTime() - b.date.getTime()));
+    } catch { /* silencioso */ }
+    finally { setLoading(false); }
+  }
 
   useEffect(() => { loadEvents(); }, [month, year]);
 
@@ -91,26 +104,9 @@ export default function CalendarioPage() {
   }
 
   const eventsOnDay = (day: number) =>
-    events.filter(e => {
-      const d = new Date(e.startDate);
-      return d.getFullYear() === year && d.getMonth() === month && d.getDate() === day;
-    });
+    events.filter(e => e.date.getDate() === day);
 
   const selectedEvents = eventsOnDay(selectedDay);
-
-  async function handleDelete(id: string) {
-    if (!confirm('¿Eliminar este evento?')) return;
-    setDeleting(id);
-    try {
-      const token = await getToken();
-      await apiFetch(`/events/${id}`, { method: 'DELETE', token });
-      await loadEvents();
-    } finally {
-      setDeleting(null);
-    }
-  }
-
-  const canManage = role === 'ADMIN' || role === 'COACH';
 
   return (
     <div className="flex flex-col gap-4 px-4 py-5 max-w-lg mx-auto w-full">
@@ -162,7 +158,7 @@ export default function CalendarioPage() {
                     <div
                       key={e.id}
                       className="w-1 h-1 rounded-full"
-                      style={{ background: EVENT_TYPE_COLORS[e.type] ?? '#4361EE' }}
+                      style={{ background: TYPE_COLOR[e.type] }}
                     />
                   ))}
                 </div>
@@ -172,10 +168,20 @@ export default function CalendarioPage() {
         </div>
       </div>
 
+      {/* Leyenda */}
+      <div className="flex gap-4 px-1">
+        {(['COMPETITION', 'TRAINING'] as EventType[]).map(t => (
+          <div key={t} className="flex items-center gap-1.5">
+            <div className="w-2 h-2 rounded-full" style={{ background: TYPE_COLOR[t] }} />
+            <span className="text-[10px] font-semibold text-muted-foreground">{TYPE_LABEL[t]}</span>
+          </div>
+        ))}
+      </div>
+
       {/* Eventos del día seleccionado */}
       <div className="flex items-center justify-between">
         <p className="text-[10px] font-semibold tracking-widest text-muted-foreground uppercase">
-          Eventos — {selectedDay} de {MONTH_NAMES[month]}
+          {selectedDay} de {MONTH_NAMES[month]}
         </p>
         <span
           className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
@@ -185,81 +191,72 @@ export default function CalendarioPage() {
         </span>
       </div>
 
-      {selectedEvents.length === 0 ? (
+      {loading ? (
+        <div className="flex justify-center py-6">
+          <div className="w-5 h-5 rounded-full border-2 animate-spin" style={{ borderColor: '#4361EE', borderTopColor: 'transparent' }} />
+        </div>
+      ) : selectedEvents.length === 0 ? (
         <div className="bg-white border border-border rounded-xl px-4 py-6 text-center">
           <CalendarDays className="w-8 h-8 mx-auto mb-2 text-muted-foreground/30" />
-          <p className="text-[12px] text-muted-foreground">No hay eventos el día {selectedDay}</p>
+          <p className="text-[12px] text-muted-foreground">Sin eventos el día {selectedDay}</p>
         </div>
       ) : (
         <div className="space-y-2">
-          {selectedEvents.map(e => (
-            <EventCard key={e.id} event={e} canManage={canManage} deleting={deleting} onDelete={handleDelete} />
-          ))}
+          {selectedEvents.map(e => <EventCard key={e.id} event={e} />)}
         </div>
       )}
 
+      {/* Todo el mes */}
       <p className="text-[10px] font-semibold tracking-widest text-muted-foreground uppercase px-1 mt-1">
         Todo el mes · {events.length} evento{events.length !== 1 ? 's' : ''}
       </p>
 
-      {events.length === 0 ? (
+      {events.length === 0 && !loading ? (
         <div className="bg-white border border-border rounded-xl px-4 py-8 text-center">
           <CalendarDays className="w-8 h-8 mx-auto mb-2 text-muted-foreground/30" />
           <p className="text-[12px] text-muted-foreground">Sin eventos este mes</p>
         </div>
       ) : (
         <div className="space-y-2 pb-4">
-          {events.map(e => (
-            <EventCard key={e.id} event={e} canManage={canManage} deleting={deleting} onDelete={handleDelete} />
-          ))}
+          {events.map(e => <EventCard key={e.id} event={e} />)}
         </div>
       )}
     </div>
   );
 }
 
-function EventCard({
-  event, canManage, deleting, onDelete,
-}: {
-  event: CalendarEvent;
-  canManage: boolean;
-  deleting: string | null;
-  onDelete: (id: string) => void;
-}) {
-  const color = EVENT_TYPE_COLORS[event.type] ?? '#4361EE';
-  const d = new Date(event.startDate);
-  const dateStr = d.toLocaleDateString('es-CO', { day: 'numeric', month: 'short' });
+function EventCard({ event }: { event: CalEvent }) {
+  const color = TYPE_COLOR[event.type];
+  const Icon  = event.type === 'COMPETITION' ? Trophy : Dumbbell;
+  const dateStr = event.date.toLocaleDateString('es-CO', { day: 'numeric', month: 'short' });
+  const sub = event.place ?? event.location;
 
   return (
     <div className="bg-white border border-border rounded-xl px-4 py-3 flex items-start gap-3">
-      <div className="w-1 self-stretch rounded-full shrink-0" style={{ background: color }} />
+      <div
+        className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 mt-0.5"
+        style={{ background: `${color}18`, color }}
+      >
+        <Icon className="w-4 h-4" />
+      </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-0.5">
           <span
             className="text-[10px] font-bold px-1.5 py-0.5 rounded-full"
             style={{ background: `${color}1A`, color }}
           >
-            {EVENT_TYPE_LABELS[event.type]}
+            {TYPE_LABEL[event.type]}
           </span>
           <span className="text-[10px] text-muted-foreground">{dateStr}</span>
         </div>
         <p className="text-[13px] font-semibold text-foreground truncate">{event.title}</p>
-        {event.description && (
-          <p className="text-[11px] text-muted-foreground mt-0.5 truncate">{event.description}</p>
-        )}
-        {event.location && (
-          <p className="text-[10px] text-muted-foreground mt-0.5">{event.location.name}</p>
+        {sub && (
+          <div className="flex items-center gap-1 mt-0.5">
+            <MapPin className="w-3 h-3 text-muted-foreground shrink-0" />
+            <p className="text-[11px] text-muted-foreground truncate">{sub}</p>
+          </div>
         )}
       </div>
-      {canManage && (
-        <button
-          onClick={() => onDelete(event.id)}
-          disabled={deleting === event.id}
-          className="w-7 h-7 rounded-lg bg-red-50 flex items-center justify-center text-red-400 hover:text-red-600 shrink-0"
-        >
-          <Trash2 className="w-3.5 h-3.5" />
-        </button>
-      )}
     </div>
   );
 }

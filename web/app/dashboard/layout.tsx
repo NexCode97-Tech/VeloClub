@@ -19,6 +19,7 @@ import {
   RefreshCw,
   MoreHorizontal,
 } from 'lucide-react';
+import { UserButton } from '@clerk/nextjs';
 
 function FinanzasIcon({ className }: { className?: string }) {
   return (
@@ -52,7 +53,6 @@ const ROLE_TABS: Record<string, { href: string; label: string; icon: React.Eleme
     { href: '/dashboard/logros',      label: 'Resultados',    icon: Trophy },
     { href: '/dashboard/calendario',  label: 'Calendario',    icon: CalendarDays },
     { href: '/dashboard/pagos',       label: 'Mis Pagos',     icon: CreditCard },
-    { href: '/dashboard/mas',         label: 'Mas',           icon: MoreHorizontal },
   ],
 };
 
@@ -265,66 +265,94 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
         {/* ── Mobile bottom tab bar — glassmorphism, círculo degradado ── */}
         <nav className="md:hidden fixed bottom-0 left-0 right-0 z-30" style={{ padding: '10px 16px 20px', pointerEvents: 'none' }}>
-          <div
-            className="relative flex w-full"
-            style={{
-              background: 'rgba(255,255,255,0.82)',
-              backdropFilter: 'blur(20px)',
-              WebkitBackdropFilter: 'blur(20px)',
-              borderRadius: 40,
-              padding: '8px 0',
-              border: '1px solid rgba(124,58,237,0.14)',
-              boxShadow: '0 8px 32px rgba(124,58,237,0.13), 0 2px 8px rgba(0,0,0,0.06)',
-              pointerEvents: 'auto',
-            }}
-          >
-            {/* Círculo deslizante — degradado marca */}
-            {activeTabIndex >= 0 && (
+          {(() => {
+            const isStudent = role === 'STUDENT';
+            const totalSlots = isStudent ? tabItems.length + 1 : tabItems.length;
+            return (
               <div
-                className="absolute pointer-events-none"
+                className="relative flex w-full"
                 style={{
-                  width: 56,
-                  height: 56,
-                  borderRadius: '50%',
-                  background: 'linear-gradient(135deg, #7C3AED 0%, #4361EE 55%, #06D6A0 100%)',
-                  left: `calc((${activeTabIndex} + 0.5) / ${tabItems.length} * 100% - 28px)`,
-                  top: 6,
-                  transition: 'left 0.35s cubic-bezier(0.34,1.2,0.64,1)',
-                  boxShadow: '0 4px 20px rgba(124,58,237,0.40)',
+                  background: 'rgba(255,255,255,0.82)',
+                  backdropFilter: 'blur(20px)',
+                  WebkitBackdropFilter: 'blur(20px)',
+                  borderRadius: 40,
+                  padding: '8px 0',
+                  border: '1px solid rgba(124,58,237,0.14)',
+                  boxShadow: '0 8px 32px rgba(124,58,237,0.13), 0 2px 8px rgba(0,0,0,0.06)',
+                  pointerEvents: 'auto',
                 }}
-              />
-            )}
-
-            {tabItems.map(({ href, label, icon: Icon }) => {
-              const active = isTabActive(href);
-              return (
-                <Link
-                  key={href}
-                  href={href}
-                  className="flex-1 flex flex-col items-center relative z-10"
-                  style={{ gap: 5, paddingBottom: 2 }}
-                >
-                  <div className="flex items-center justify-center" style={{ width: 56, height: 56 }}>
-                    <Icon
-                      className="w-[26px] h-[26px]"
-                      strokeWidth={active ? 2.2 : 1.7}
-                      style={{ color: active ? '#fff' : '#8E87A8', transition: 'color 0.2s' }}
-                    />
-                  </div>
-                  <span
-                    className="text-[9px] tracking-wide leading-none"
+              >
+                {/* Círculo deslizante — degradado marca */}
+                {activeTabIndex >= 0 && (
+                  <div
+                    className="absolute pointer-events-none"
                     style={{
-                      color: active ? accentColor : '#8E87A8',
-                      fontWeight: active ? 700 : 500,
-                      transition: 'color 0.2s',
+                      width: 56,
+                      height: 56,
+                      borderRadius: '50%',
+                      background: 'linear-gradient(135deg, #7C3AED 0%, #4361EE 55%, #06D6A0 100%)',
+                      left: `calc((${activeTabIndex} + 0.5) / ${totalSlots} * 100% - 28px)`,
+                      top: 6,
+                      transition: 'left 0.35s cubic-bezier(0.34,1.2,0.64,1)',
+                      boxShadow: '0 4px 20px rgba(124,58,237,0.40)',
                     }}
+                  />
+                )}
+
+                {tabItems.map(({ href, label, icon: Icon }) => {
+                  const active = isTabActive(href);
+                  return (
+                    <Link
+                      key={href}
+                      href={href}
+                      className="flex-1 flex flex-col items-center relative z-10"
+                      style={{ gap: 5, paddingBottom: 2 }}
+                    >
+                      <div className="flex items-center justify-center" style={{ width: 56, height: 56 }}>
+                        <Icon
+                          className="w-[26px] h-[26px]"
+                          strokeWidth={active ? 2.2 : 1.7}
+                          style={{ color: active ? '#fff' : '#8E87A8', transition: 'color 0.2s' }}
+                        />
+                      </div>
+                      <span
+                        className="text-[9px] tracking-wide leading-none"
+                        style={{
+                          color: active ? accentColor : '#8E87A8',
+                          fontWeight: active ? 700 : 500,
+                          transition: 'color 0.2s',
+                        }}
+                      >
+                        {label}
+                      </span>
+                    </Link>
+                  );
+                })}
+
+                {/* Tab 5 para STUDENT: Clerk UserButton */}
+                {isStudent && (
+                  <div
+                    className="flex-1 flex flex-col items-center relative z-10"
+                    style={{ gap: 5, paddingBottom: 2 }}
                   >
-                    {label}
-                  </span>
-                </Link>
-              );
-            })}
-          </div>
+                    <div className="flex items-center justify-center" style={{ width: 56, height: 56 }}>
+                      <UserButton
+                        appearance={{
+                          elements: {
+                            avatarBox: { width: 36, height: 36, borderRadius: '50%' },
+                            userButtonPopoverCard: { borderRadius: 16 },
+                          },
+                        }}
+                      />
+                    </div>
+                    <span className="text-[9px] tracking-wide leading-none" style={{ color: '#8E87A8', fontWeight: 500 }}>
+                      Perfil
+                    </span>
+                  </div>
+                )}
+              </div>
+            );
+          })()}
         </nav>
       </div>
     </div>

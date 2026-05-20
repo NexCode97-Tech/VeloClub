@@ -444,12 +444,18 @@ export default function MiembrosPage() {
             {/* ── 3. DATOS PERSONALES ───────────────────────── */}
             <div className="space-y-3">
               <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Datos personales</p>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1.5">
+              <div className="flex gap-3 items-start">
+                <div className="space-y-1.5 shrink-0" style={{ width: 148 }}>
                   <Label>Fecha de nacimiento</Label>
-                  <Input type="date" value={form.birthDate} className="h-9 text-sm px-2" onChange={e => setForm(f => ({ ...f, birthDate: e.target.value }))} />
+                  <Input
+                    type="date"
+                    value={form.birthDate}
+                    className="text-sm"
+                    style={{ width: 148 }}
+                    onChange={e => setForm(f => ({ ...f, birthDate: e.target.value }))}
+                  />
                 </div>
-                <div className="space-y-1.5">
+                <div className="space-y-1.5 flex-1 min-w-0">
                   <Label>EPS</Label>
                   <Input value={form.eps} placeholder="Nombre de la EPS" onChange={e => setForm(f => ({ ...f, eps: e.target.value }))} />
                 </div>

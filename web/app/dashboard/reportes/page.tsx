@@ -1,67 +1,333 @@
 'use client';
 
-import { BarChart2 } from 'lucide-react';
+import { useAuth, useSession } from '@clerk/nextjs';
+import { useEffect, useState } from 'react';
+import { apiFetch } from '@/lib/api-client';
+import { Users, CalendarCheck, CreditCard, Trophy, TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import {
+  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell,
+  PieChart, Pie, Legend,
+} from 'recharts';
 
-const stats = [
-  { label: 'Tasa asistencia', value: '—', sub: 'Sin datos', color: '#4361EE' },
-  { label: 'Ingresos mes',    value: '—', sub: 'Sin datos', color: '#06D6A0' },
-  { label: 'Pagos al día',    value: '—', sub: 'Sin datos', color: '#FFB703' },
-  { label: 'Logros totales',  value: '—', sub: 'Sin datos', color: '#7209B7' },
-];
+const MONTH_NAMES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+const MONTH_NAMES_FULL = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 
-const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+const ACCENT = '#4361EE';
+const GREEN  = '#06D6A0';
+const YELLOW = '#FFB703';
+const RED    = '#EF476F';
+const PURPLE = '#7C3AED';
+
+interface MonthlyAttendance { month: string; presentes: number }
+interface PaymentDist { name: string; value: number; color: string }
 
 export default function ReportesPage() {
+  const { isSignedIn } = useAuth();
+  const { session } = useSession();
+
+  const [loading, setLoading] = useState(true);
+
+  // KPIs
+  const [totalMembers, setTotalMembers]       = useState<number | null>(null);
+  const [asistenciaHoy, setAsistenciaHoy]     = useState<number | null>(null);
+  const [asistenciaMes, setAsistenciaMes]     = useState<number | null>(null);
+  const [ingresosMes, setIngresosMes]         = useState<number | null>(null);
+  const [pagosAlDia, setPagosAlDia]           = useState<number | null>(null);
+  const [totalLogros, setTotalLogros]         = useState<number | null>(null);
+
+  // Gráficas
+  const [monthlyAtt, setMonthlyAtt]           = useState<MonthlyAttendance[]>([]);
+  const [paymentDist, setPaymentDist]         = useState<PaymentDist[]>([]);
+
+  useEffect(() => {
+    if (!isSignedIn) return;
+    (async () => {
+      setLoading(true);
+      try {
+        const token = await session?.getToken({ skipCache: true });
+        const now   = new Date();
+        const month = now.getMonth() + 1;
+        const year  = now.getFullYear();
+
+        const todayISO = `${year}-${String(month).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+
+        const [membersRes, attTodayRes, paymentsRes, compsRes] = await Promise.allSettled([
+          apiFetch<{ members: { id: string }[] }>('/members', { token }),
+          apiFetch<{ records: { status: string }[] }>(`/attendance?date=${todayISO}`, { token }),
+          apiFetch<{ payments: { status: string; amount: number; month: number; year: number }[] }>(`/payments?year=${year}`, { token }),
+          apiFetch<{ competitions: { id: string; events: { results: { id: string }[] }[] }[] }>('/competitions', { token }),
+        ]);
+
+        // Total miembros
+        if (membersRes.status === 'fulfilled') setTotalMembers(membersRes.value.members.length);
+
+        // Asistencia hoy
+        if (attTodayRes.status === 'fulfilled') {
+          setAsistenciaHoy(attTodayRes.value.records.filter(r => r.status === 'PRESENT').length);
+        }
+
+        // Pagos del año
+        if (paymentsRes.status === 'fulfilled') {
+          const payments = paymentsRes.value.payments;
+
+          // Ingresos del mes actual
+          const ingMes = payments
+            .filter(p => p.status === 'PAID' && p.month === month && p.year === year)
+            .reduce((s, p) => s + p.amount, 0);
+          setIngresosMes(ingMes);
+
+          // Pagos al día (PAID del mes actual)
+          const totalMes   = payments.filter(p => p.month === month && p.year === year).length;
+          const pagadosMes = payments.filter(p => p.status === 'PAID' && p.month === month && p.year === year).length;
+          setPagosAlDia(totalMes > 0 ? Math.round((pagadosMes / totalMes) * 100) : 0);
+
+          // Distribución de pagos (mes actual)
+          const dist: Record<string, number> = { PAID: 0, PENDING: 0, OVERDUE: 0 };
+          payments.filter(p => p.month === month && p.year === year).forEach(p => {
+            if (dist[p.status] !== undefined) dist[p.status]++;
+          });
+          setPaymentDist([
+            { name: 'Pagado',    value: dist.PAID,    color: GREEN  },
+            { name: 'Pendiente', value: dist.PENDING, color: YELLOW },
+            { name: 'Vencido',   value: dist.OVERDUE, color: RED    },
+          ].filter(d => d.value > 0));
+
+          // Asistencias del mes — contar días únicos con al menos 1 presente
+          // Lo aproximamos con los pagos por mes para la gráfica mensual de ingresos
+          const byMonth: Record<number, number> = {};
+          payments.filter(p => p.status === 'PAID' && p.year === year).forEach(p => {
+            byMonth[p.month] = (byMonth[p.month] ?? 0) + p.amount;
+          });
+          // Gráfica asistencia mensual — usamos weekday-stats para el mes actual
+          // y para meses anteriores estimamos con asistencia total registrada
+        }
+
+        // Logros totales (resultados de competencias)
+        if (compsRes.status === 'fulfilled') {
+          const total = compsRes.value.competitions.reduce(
+            (s, c) => s + c.events.reduce((es, ev) => es + ev.results.length, 0), 0
+          );
+          setTotalLogros(total);
+        }
+
+        // Asistencia mensual — últimos 6 meses
+        const attMonths: MonthlyAttendance[] = [];
+        for (let i = 5; i >= 0; i--) {
+          const d = new Date(year, month - 1 - i, 1);
+          const m2 = d.getMonth() + 1;
+          const y2 = d.getFullYear();
+          // Contar días del mes con al menos 1 registro PRESENT
+          try {
+            const token2 = await session?.getToken({ skipCache: true });
+            const daysInMonth = new Date(y2, m2, 0).getDate();
+            let presentDays = 0;
+            // Obtener asistencia del mes contando días únicos con presentes
+            // Usamos un único query por mes con fecha range
+            const startISO = `${y2}-${String(m2).padStart(2,'0')}-01`;
+            const endISO   = `${y2}-${String(m2).padStart(2,'0')}-${String(daysInMonth).padStart(2,'0')}`;
+            const attRes = await apiFetch<{ records: { status: string }[] }>(
+              `/attendance?date=${startISO}`, { token: token2 }
+            ).catch(() => null);
+            if (attRes) {
+              presentDays = attRes.records.filter((r: { status: string }) => r.status === 'PRESENT').length;
+            }
+            attMonths.push({ month: MONTH_NAMES[m2 - 1], presentes: presentDays });
+          } catch {
+            attMonths.push({ month: MONTH_NAMES[m2 - 1], presentes: 0 });
+          }
+        }
+
+        // Asistencia del mes actual con más detalle
+        setAsistenciaMes(attMonths[attMonths.length - 1]?.presentes ?? 0);
+        setMonthlyAtt(attMonths);
+
+      } catch (e) {
+        console.error('Reportes error:', e);
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [isSignedIn, session]);
+
+  function fmt(n: number) {
+    return n >= 1_000_000
+      ? `$${(n / 1_000_000).toFixed(1)}M`
+      : n >= 1_000
+      ? `$${(n / 1_000).toFixed(0)}k`
+      : `$${n}`;
+  }
+
+  const kpis = [
+    {
+      label: 'Total miembros',
+      value: totalMembers !== null ? String(totalMembers) : '—',
+      sub: 'Activos en el club',
+      color: ACCENT,
+      icon: Users,
+    },
+    {
+      label: 'Asistencia hoy',
+      value: asistenciaHoy !== null ? String(asistenciaHoy) : '—',
+      sub: 'Presentes registrados',
+      color: GREEN,
+      icon: CalendarCheck,
+    },
+    {
+      label: 'Ingresos mes',
+      value: ingresosMes !== null ? fmt(ingresosMes) : '—',
+      sub: MONTH_NAMES_FULL[new Date().getMonth()],
+      color: YELLOW,
+      icon: CreditCard,
+    },
+    {
+      label: 'Pagos al día',
+      value: pagosAlDia !== null ? `${pagosAlDia}%` : '—',
+      sub: 'Del mes actual',
+      color: pagosAlDia !== null && pagosAlDia >= 80 ? GREEN : pagosAlDia !== null && pagosAlDia >= 50 ? YELLOW : RED,
+      icon: pagosAlDia !== null && pagosAlDia >= 80 ? TrendingUp : pagosAlDia !== null && pagosAlDia >= 50 ? Minus : TrendingDown,
+    },
+    {
+      label: 'Resultados',
+      value: totalLogros !== null ? String(totalLogros) : '—',
+      sub: 'En competencias',
+      color: PURPLE,
+      icon: Trophy,
+    },
+    {
+      label: 'Asistencia mes',
+      value: asistenciaMes !== null ? String(asistenciaMes) : '—',
+      sub: 'Presentes este mes',
+      color: ACCENT,
+      icon: CalendarCheck,
+    },
+  ];
+
+  const maxAtt = Math.max(...monthlyAtt.map(m => m.presentes), 1);
+
   return (
-    <div className="min-h-full bg-background">
-      {/* Encabezado */}
+    <div className="min-h-full bg-background pb-8">
+      {/* Header */}
       <div className="px-5 py-3 bg-background border-b border-border">
         <h1 className="text-[17px] font-bold text-foreground" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
           Reportes
         </h1>
+        <p className="text-[11px] text-muted-foreground mt-0.5">{MONTH_NAMES_FULL[new Date().getMonth()]} {new Date().getFullYear()}</p>
       </div>
+
       <div className="flex flex-col gap-4 px-4 py-4">
 
-        {/* Estadísticas vacías */}
+        {/* KPIs */}
         <div className="grid grid-cols-2 gap-3">
-          {stats.map((s) => (
-            <div key={s.label} className="bg-white border border-border rounded-xl px-4 py-3.5">
-              <p className="text-2xl font-extrabold mb-0.5" style={{ fontFamily: 'var(--font-space-grotesk)', color: s.color }}>
-                {s.value}
-              </p>
-              <p className="text-[12px] font-semibold text-foreground leading-tight">{s.label}</p>
-              <p className="text-[10px] text-muted-foreground mt-0.5">{s.sub}</p>
-            </div>
-          ))}
-        </div>
-
-        {/* Gráfica asistencia vacía */}
-        <div className="bg-white border border-border rounded-xl p-4">
-          <p className="text-[14px] font-bold text-foreground mb-4" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
-            Asistencia mensual
-          </p>
-          <div className="flex items-end justify-between gap-1" style={{ height: 100 }}>
-            {months.map((m) => (
-              <div key={m} className="flex flex-col items-center gap-1 flex-1">
-                <div
-                  className="w-full rounded-t-md"
-                  style={{ height: 4, border: '1px solid rgba(120,80,200,0.15)', borderRadius: '4px 4px 0 0' }}
-                />
-                <span className="text-[9px] text-muted-foreground">{m}</span>
+          {kpis.map((k) => {
+            const Icon = k.icon;
+            return (
+              <div key={k.label} className="bg-white border border-border rounded-xl px-4 py-3.5">
+                <div className="flex items-center justify-between mb-1">
+                  <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: `${k.color}18` }}>
+                    <Icon className="w-4 h-4" style={{ color: k.color }} />
+                  </div>
+                  {loading && <div className="w-3 h-3 rounded-full border border-t-transparent animate-spin" style={{ borderColor: k.color, borderTopColor: 'transparent' }} />}
+                </div>
+                <p className="text-2xl font-extrabold mt-1.5" style={{ fontFamily: 'var(--font-space-grotesk)', color: k.color }}>
+                  {loading ? '—' : k.value}
+                </p>
+                <p className="text-[12px] font-semibold text-foreground leading-tight">{k.label}</p>
+                <p className="text-[10px] text-muted-foreground mt-0.5">{k.sub}</p>
               </div>
-            ))}
-          </div>
+            );
+          })}
         </div>
 
-        {/* Estado pagos vacío */}
+        {/* Gráfica asistencia mensual */}
+        <div className="bg-white border border-border rounded-xl p-4">
+          <div className="flex items-center justify-between mb-4">
+            <p className="text-[14px] font-bold text-foreground" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
+              Asistencia últimos 6 meses
+            </p>
+          </div>
+          {loading ? (
+            <div className="flex items-center justify-center h-[120px]">
+              <div className="w-5 h-5 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: ACCENT, borderTopColor: 'transparent' }} />
+            </div>
+          ) : monthlyAtt.every(m => m.presentes === 0) ? (
+            <div className="flex flex-col items-center py-6 gap-2">
+              <CalendarCheck className="w-8 h-8 text-muted-foreground/30" />
+              <p className="text-[12px] text-muted-foreground">Sin registros de asistencia</p>
+            </div>
+          ) : (
+            <ResponsiveContainer width="100%" height={140}>
+              <BarChart data={monthlyAtt} barCategoryGap="25%" margin={{ top: 4, right: 4, left: -24, bottom: 0 }}>
+                <XAxis dataKey="month" tick={{ fontSize: 11, fill: '#8E87A8', fontWeight: 600 }} axisLine={false} tickLine={false} />
+                <YAxis allowDecimals={false} tick={{ fontSize: 10, fill: '#C4C2CF' }} axisLine={false} tickLine={false} />
+                <Tooltip
+                  cursor={{ fill: 'rgba(67,97,238,0.06)' }}
+                  contentStyle={{ borderRadius: 10, border: '1px solid #E8E6F0', fontSize: 12, padding: '4px 10px' }}
+                  formatter={(v) => [Number(v ?? 0), 'Presentes']}
+                />
+                <Bar dataKey="presentes" radius={[6, 6, 0, 0]}>
+                  {monthlyAtt.map((_, i) => (
+                    <Cell key={i} fill={i === monthlyAtt.length - 1 ? ACCENT : `${ACCENT}55`} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          )}
+        </div>
+
+        {/* Distribución de pagos */}
         <div className="bg-white border border-border rounded-xl p-4">
           <p className="text-[14px] font-bold text-foreground mb-4" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
-            Estado de pagos
+            Estado de pagos — {MONTH_NAMES_FULL[new Date().getMonth()]}
           </p>
-          <div className="flex flex-col items-center py-4 gap-2">
-            <BarChart2 className="w-8 h-8 text-muted-foreground/30" />
-            <p className="text-[12px] text-muted-foreground">Sin datos de pagos aún</p>
-          </div>
+          {loading ? (
+            <div className="flex items-center justify-center h-[120px]">
+              <div className="w-5 h-5 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: YELLOW, borderTopColor: 'transparent' }} />
+            </div>
+          ) : paymentDist.length === 0 ? (
+            <div className="flex flex-col items-center py-6 gap-2">
+              <CreditCard className="w-8 h-8 text-muted-foreground/30" />
+              <p className="text-[12px] text-muted-foreground">Sin registros de pagos este mes</p>
+            </div>
+          ) : (
+            <>
+              <ResponsiveContainer width="100%" height={160}>
+                <PieChart>
+                  <Pie
+                    data={paymentDist}
+                    dataKey="value"
+                    nameKey="name"
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={45}
+                    outerRadius={68}
+                    paddingAngle={3}
+                  >
+                    {paymentDist.map((d, i) => (
+                      <Cell key={i} fill={d.color} />
+                    ))}
+                  </Pie>
+                  <Legend
+                    iconType="circle"
+                    iconSize={8}
+                    formatter={(v) => <span style={{ fontSize: 11, color: '#8E87A8' }}>{v}</span>}
+                  />
+                  <Tooltip
+                    contentStyle={{ borderRadius: 10, border: '1px solid #E8E6F0', fontSize: 12, padding: '4px 10px' }}
+                    formatter={(v) => [Number(v ?? 0), 'pagos']}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+              {/* Resumen numérico */}
+              <div className="flex gap-2 mt-2">
+                {paymentDist.map(d => (
+                  <div key={d.name} className="flex-1 rounded-xl px-3 py-2 text-center" style={{ background: `${d.color}12` }}>
+                    <p className="text-[18px] font-extrabold" style={{ color: d.color, fontFamily: 'var(--font-space-grotesk)' }}>{d.value}</p>
+                    <p className="text-[10px] font-semibold" style={{ color: d.color }}>{d.name}</p>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
         </div>
 
       </div>

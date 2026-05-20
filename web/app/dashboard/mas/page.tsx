@@ -50,17 +50,16 @@ export default function MasPage() {
         Más opciones
       </h1>
 
-      {/* ── Perfil de usuario — clic directo sobre el UserButton de Clerk ── */}
-      <div className="bg-white border border-border rounded-2xl px-4 py-3.5 flex items-center gap-3 mb-4">
-        <UserButton
-          appearance={{
-            elements: {
-              avatarBox: { width: 48, height: 48, borderRadius: '50%' },
-              userButtonPopoverCard: { borderRadius: 16 },
-              userButtonTrigger: { cursor: 'pointer' },
-            },
-          }}
-        />
+      {/* ── Perfil de usuario — tarjeta completa abre el popover de Clerk ── */}
+      <div className="relative bg-white border border-border rounded-2xl px-4 py-3.5 flex items-center gap-3 mb-4 overflow-hidden">
+        {/* Avatar visible */}
+        <div className="w-12 h-12 rounded-full bg-violet-100 shrink-0 flex items-center justify-center overflow-hidden pointer-events-none">
+          {user?.imageUrl
+            ? <img src={user.imageUrl} alt="avatar" className="w-full h-full object-cover" />
+            : <span className="text-violet-500 font-bold text-lg">{(user?.firstName ?? 'U')[0]}</span>
+          }
+        </div>
+        {/* Texto */}
         <div className="flex-1 min-w-0 pointer-events-none">
           <p className="text-[14px] font-bold text-foreground truncate" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
             {user?.fullName ?? user?.firstName ?? 'Mi cuenta'}
@@ -70,6 +69,17 @@ export default function MasPage() {
           </p>
         </div>
         <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0 pointer-events-none" />
+        {/* UserButton invisible superpuesto — cubre toda la tarjeta */}
+        <div className="absolute inset-0 flex items-center justify-start px-4 opacity-0">
+          <UserButton
+            appearance={{
+              elements: {
+                avatarBox: { width: '100%', height: '100%', borderRadius: 0 },
+                userButtonTrigger: { width: '100vw', height: '100%', position: 'absolute', inset: 0, borderRadius: 0 },
+              },
+            }}
+          />
+        </div>
       </div>
 
       {/* ── Ítems según rol ── */}

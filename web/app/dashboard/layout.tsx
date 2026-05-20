@@ -275,7 +275,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   backdropFilter: 'blur(20px)',
                   WebkitBackdropFilter: 'blur(20px)',
                   borderRadius: 40,
-                  padding: '6px 0 8px',
+                  padding: '6px 0',
                   border: '1px solid rgba(124,58,237,0.14)',
                   boxShadow: '0 8px 32px rgba(124,58,237,0.13), 0 2px 8px rgba(0,0,0,0.06)',
                   pointerEvents: 'auto',
@@ -291,7 +291,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                       borderRadius: '50%',
                       background: 'linear-gradient(135deg, #7C3AED 0%, #4361EE 55%, #06D6A0 100%)',
                       left: `calc((${activeTabIndex} + 0.5) / ${totalSlots} * 100% - 22px)`,
-                      top: 8,
+                      top: 6,
                       transition: 'left 0.35s cubic-bezier(0.34,1.2,0.64,1)',
                       boxShadow: '0 4px 20px rgba(124,58,237,0.40)',
                     }}
@@ -309,7 +309,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     >
                       <div className="flex items-center justify-center" style={{ width: 44, height: 44 }}>
                         <Icon
-                          className="w-[22px] h-[22px]"
+                          className="w-[26px] h-[26px]"
                           strokeWidth={active ? 2.2 : 1.7}
                           style={{ color: active ? '#fff' : '#8E87A8', transition: 'color 0.2s' }}
                         />

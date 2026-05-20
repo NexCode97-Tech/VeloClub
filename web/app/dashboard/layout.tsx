@@ -263,31 +263,34 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           {children}
         </main>
 
-        {/* ── Mobile bottom tab bar — cápsula ancha, círculo sobre ícono ── */}
+        {/* ── Mobile bottom tab bar — glassmorphism, círculo degradado ── */}
         <nav className="md:hidden fixed bottom-0 left-0 right-0 z-30" style={{ padding: '10px 16px 20px', pointerEvents: 'none' }}>
           <div
             className="relative flex w-full"
             style={{
-              background: '#1A1035',
+              background: 'rgba(255,255,255,0.82)',
+              backdropFilter: 'blur(20px)',
+              WebkitBackdropFilter: 'blur(20px)',
               borderRadius: 40,
               padding: '8px 0',
-              boxShadow: '0 8px 32px rgba(0,0,0,0.28)',
+              border: '1px solid rgba(124,58,237,0.14)',
+              boxShadow: '0 8px 32px rgba(124,58,237,0.13), 0 2px 8px rgba(0,0,0,0.06)',
               pointerEvents: 'auto',
             }}
           >
-            {/* Círculo deslizante — alineado solo con la zona del ícono */}
+            {/* Círculo deslizante — degradado marca */}
             {activeTabIndex >= 0 && (
               <div
                 className="absolute pointer-events-none"
                 style={{
-                  width: 52,
-                  height: 52,
+                  width: 56,
+                  height: 56,
                   borderRadius: '50%',
-                  background: '#7C3AED',
-                  left: `calc((${activeTabIndex} + 0.5) / ${tabItems.length} * 100% - 26px)`,
-                  top: 8,
+                  background: 'linear-gradient(135deg, #7C3AED 0%, #4361EE 55%, #06D6A0 100%)',
+                  left: `calc((${activeTabIndex} + 0.5) / ${tabItems.length} * 100% - 28px)`,
+                  top: 6,
                   transition: 'left 0.35s cubic-bezier(0.34,1.2,0.64,1)',
-                  boxShadow: '0 4px 18px rgba(124,58,237,0.55)',
+                  boxShadow: '0 4px 20px rgba(124,58,237,0.40)',
                 }}
               />
             )}
@@ -299,22 +302,20 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   key={href}
                   href={href}
                   className="flex-1 flex flex-col items-center relative z-10"
-                  style={{ gap: 4, paddingBottom: 2 }}
+                  style={{ gap: 5, paddingBottom: 2 }}
                 >
-                  {/* Zona ícono = mismo tamaño que el círculo */}
-                  <div className="flex items-center justify-center" style={{ width: 52, height: 52 }}>
+                  <div className="flex items-center justify-center" style={{ width: 56, height: 56 }}>
                     <Icon
-                      className="w-[22px] h-[22px]"
-                      strokeWidth={active ? 2.5 : 1.8}
-                      style={{ color: active ? '#fff' : 'rgba(255,255,255,0.42)', transition: 'color 0.2s' }}
+                      className="w-[26px] h-[26px]"
+                      strokeWidth={active ? 2.2 : 1.7}
+                      style={{ color: active ? '#fff' : '#8E87A8', transition: 'color 0.2s' }}
                     />
                   </div>
-                  {/* Label fuera del círculo */}
                   <span
                     className="text-[9px] tracking-wide leading-none"
                     style={{
-                      color: active ? '#fff' : 'rgba(255,255,255,0.42)',
-                      fontWeight: active ? 700 : 400,
+                      color: active ? accentColor : '#8E87A8',
+                      fontWeight: active ? 700 : 500,
                       transition: 'color 0.2s',
                     }}
                   >

@@ -209,7 +209,7 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
         {children}
       </main>
 
-      {/* Bottom Tab Nav — cápsula violeta suave, ancho completo */}
+      {/* Bottom Tab Nav — glassmorphism, ancho completo */}
       <div className="shrink-0 flex justify-center" style={{ padding: '10px 16px 20px', background: 'transparent' }}>
         {(() => {
           const activeIdx = TABS.findIndex(t => t.exact ? pathname === t.href : pathname.startsWith(t.href));
@@ -217,27 +217,28 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
             <div
               className="relative flex w-full"
               style={{
-                background: '#3D1A6E',
+                background: 'rgba(255,255,255,0.82)',
+                backdropFilter: 'blur(20px)',
+                WebkitBackdropFilter: 'blur(20px)',
                 borderRadius: 40,
                 padding: '8px 0',
-                boxShadow: '0 8px 32px rgba(61,26,110,0.35), 0 2px 8px rgba(0,0,0,0.15)',
+                border: '1px solid rgba(124,58,237,0.14)',
+                boxShadow: '0 8px 32px rgba(124,58,237,0.13), 0 2px 8px rgba(0,0,0,0.06)',
               }}
             >
-              {/* Círculo deslizante — solo sobre el ícono */}
+              {/* Círculo deslizante con degradado de la app */}
               {activeIdx >= 0 && (
                 <div
                   className="absolute pointer-events-none"
                   style={{
-                    width: 52,
-                    height: 52,
+                    width: 56,
+                    height: 56,
                     borderRadius: '50%',
-                    background: '#7C3AED',
-                    /* Centro del tab activo: (activeIdx + 0.5) / N * 100% */
-                    left: `calc((${activeIdx} + 0.5) / ${TABS.length} * 100% - 26px)`,
-                    /* Alinear con la zona del ícono (no el label) */
-                    top: 8,
+                    background: 'linear-gradient(135deg, #7C3AED 0%, #4361EE 55%, #06D6A0 100%)',
+                    left: `calc((${activeIdx} + 0.5) / ${TABS.length} * 100% - 28px)`,
+                    top: 6,
                     transition: 'left 0.35s cubic-bezier(0.34,1.2,0.64,1)',
-                    boxShadow: '0 4px 18px rgba(124,58,237,0.55)',
+                    boxShadow: '0 4px 20px rgba(124,58,237,0.40)',
                   }}
                 />
               )}
@@ -249,23 +250,21 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
                     key={tab.href}
                     href={tab.href}
                     className="flex-1 flex flex-col items-center relative z-10"
-                    style={{ gap: 4, paddingBottom: 2 }}
+                    style={{ gap: 5, paddingBottom: 2 }}
                   >
-                    {/* Zona del ícono — mismo tamaño que el círculo */}
-                    <div className="flex items-center justify-center" style={{ width: 52, height: 52 }}>
+                    <div className="flex items-center justify-center" style={{ width: 56, height: 56 }}>
                       <tab.Icon
-                        size={22}
-                        color={active ? '#fff' : 'rgba(255,255,255,0.42)'}
-                        strokeWidth={active ? 2.5 : 1.8}
+                        size={26}
+                        color={active ? '#fff' : '#8E87A8'}
+                        strokeWidth={active ? 2.2 : 1.7}
                         style={{ transition: 'color 0.2s' }}
                       />
                     </div>
-                    {/* Label fuera del círculo */}
                     <span
                       className="text-[9px] tracking-wide leading-none"
                       style={{
-                        color: active ? '#fff' : 'rgba(255,255,255,0.42)',
-                        fontWeight: active ? 700 : 400,
+                        color: active ? '#7C3AED' : '#8E87A8',
+                        fontWeight: active ? 700 : 500,
                         transition: 'color 0.2s',
                       }}
                     >

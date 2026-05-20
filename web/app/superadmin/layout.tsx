@@ -209,40 +209,50 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
         {children}
       </main>
 
-      {/* Bottom Tab Nav — pill deslizante */}
-      <div className="shrink-0" style={{ background: '#fff', borderTop: '1px solid rgba(0,0,0,0.07)' }}>
+      {/* Bottom Tab Nav — cápsula oscura flotante */}
+      <div className="shrink-0 flex justify-center" style={{ paddingBottom: 20, background: 'transparent', position: 'relative' }}>
         {(() => {
           const activeIdx = TABS.findIndex(t => t.exact ? pathname === t.href : pathname.startsWith(t.href));
           return (
-            <div className="relative flex items-end px-2 pt-2" style={{ paddingBottom: 6 }}>
-              {/* Pill deslizante */}
+            <div
+              className="relative flex items-center"
+              style={{
+                background: '#1A1A2E',
+                borderRadius: 40,
+                padding: '6px 8px',
+                boxShadow: '0 8px 32px rgba(0,0,0,0.28)',
+              }}
+            >
+              {/* Círculo deslizante */}
               {activeIdx >= 0 && (
                 <div
-                  className="absolute top-2 rounded-2xl pointer-events-none"
+                  className="absolute pointer-events-none"
                   style={{
-                    width: `calc((100% - 16px) / ${TABS.length})`,
-                    height: 36,
-                    left: `calc(8px + ${activeIdx} * (100% - 16px) / ${TABS.length})`,
-                    background: 'rgba(124,58,237,0.10)',
-                    transition: 'left 0.3s cubic-bezier(0.34,1.2,0.64,1)',
+                    width: 52,
+                    height: 52,
+                    borderRadius: '50%',
+                    background: '#7C3AED',
+                    left: `calc(8px + ${activeIdx} * 60px + 4px)`,
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    transition: 'left 0.35s cubic-bezier(0.34,1.2,0.64,1)',
+                    boxShadow: '0 4px 16px rgba(124,58,237,0.45)',
                   }}
                 />
               )}
               {TABS.map((tab) => {
                 const active = tab.exact ? pathname === tab.href : pathname.startsWith(tab.href);
                 return (
-                  <Link key={tab.href} href={tab.href} className="flex-1 flex flex-col items-center gap-0.5 relative z-10">
-                    <div className="flex items-center justify-center" style={{ height: 36 }}>
-                      <tab.Icon
-                        size={21}
-                        color={active ? ACCENT : '#8E87A8'}
-                        strokeWidth={active ? 2.5 : 1.8}
-                        style={{ transition: 'color 0.2s' }}
-                      />
-                    </div>
+                  <Link key={tab.href} href={tab.href} className="flex flex-col items-center justify-center relative z-10" style={{ width: 60, height: 64, gap: 3 }}>
+                    <tab.Icon
+                      size={22}
+                      color={active ? '#fff' : 'rgba(255,255,255,0.38)'}
+                      strokeWidth={active ? 2.5 : 1.8}
+                      style={{ transition: 'color 0.2s' }}
+                    />
                     <span
-                      className="text-[9px] tracking-wide"
-                      style={{ color: active ? ACCENT : '#8E87A8', fontWeight: active ? 700 : 500, transition: 'color 0.2s' }}
+                      className="text-[9px] tracking-wide leading-none"
+                      style={{ color: active ? '#fff' : 'rgba(255,255,255,0.38)', fontWeight: active ? 700 : 400, transition: 'color 0.2s' }}
                     >
                       {tab.label}
                     </span>
@@ -252,7 +262,6 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
             </div>
           );
         })()}
-        <div style={{ height: 6 }} />
       </div>
     </div>
   );

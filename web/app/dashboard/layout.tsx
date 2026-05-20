@@ -245,62 +245,74 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <UserButton appearance={{ elements: { avatarBox: { width: 44, height: 44 } } }} />
         </header>
 
-        <main className="flex-1 overflow-y-auto pb-20 md:pb-0">
+        <main className="flex-1 overflow-y-auto pb-28 md:pb-0">
           {children}
         </main>
 
-        {/* ── Mobile bottom tab bar con pill deslizante ── */}
-        <nav
-          className="md:hidden fixed bottom-0 left-0 right-0 z-30"
-          style={{ background: '#fff', borderTop: '1px solid rgba(0,0,0,0.07)' }}
-        >
-          <div className="relative flex items-end px-2 pt-2 pb-1">
-            {/* Pill deslizante */}
-            {activeTabIndex >= 0 && (
-              <div
-                className="absolute top-2 rounded-2xl pointer-events-none"
-                style={{
-                  width: `calc((100% - 16px) / ${tabItems.length})`,
-                  height: 36,
-                  left: `calc(8px + ${activeTabIndex} * (100% - 16px) / ${tabItems.length})`,
-                  background: accentBg,
-                  transition: 'left 0.3s cubic-bezier(0.34,1.2,0.64,1)',
-                }}
-              />
-            )}
+        {/* ── Mobile bottom tab bar — cápsula oscura flotante ── */}
+        <nav className="md:hidden fixed bottom-0 left-0 right-0 z-30" style={{ pointerEvents: 'none' }}>
+          <div className="flex justify-center" style={{ paddingBottom: 20 }}>
+            <div
+              className="relative flex items-center"
+              style={{
+                background: '#1A1A2E',
+                borderRadius: 40,
+                padding: '6px 8px',
+                gap: 0,
+                boxShadow: '0 8px 32px rgba(0,0,0,0.28)',
+                pointerEvents: 'auto',
+              }}
+            >
+              {/* Círculo deslizante detrás del ícono activo */}
+              {activeTabIndex >= 0 && (
+                <div
+                  className="absolute pointer-events-none"
+                  style={{
+                    width: 52,
+                    height: 52,
+                    borderRadius: '50%',
+                    background: '#7C3AED',
+                    left: `calc(8px + ${activeTabIndex} * 60px + 4px)`,
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    transition: 'left 0.35s cubic-bezier(0.34,1.2,0.64,1)',
+                    boxShadow: '0 4px 16px rgba(124,58,237,0.45)',
+                  }}
+                />
+              )}
 
-            {tabItems.map(({ href, label, icon: Icon }) => {
-              const active = isTabActive(href);
-              return (
-                <Link
-                  key={href}
-                  href={href}
-                  className="flex-1 flex flex-col items-center gap-0.5 relative z-10"
-                  style={{ paddingBottom: 6 }}
-                >
-                  <div className="flex items-center justify-center" style={{ height: 36 }}>
-                    <Icon
-                      className="w-[21px] h-[21px]"
-                      strokeWidth={active ? 2.5 : 1.8}
-                      style={{ color: active ? accentColor : '#8E87A8', transition: 'color 0.2s' }}
-                    />
-                  </div>
-                  <span
-                    className="text-[9px] tracking-wide"
-                    style={{
-                      color: active ? accentColor : '#8E87A8',
-                      fontWeight: active ? 700 : 500,
-                      transition: 'color 0.2s',
-                    }}
+              {tabItems.map(({ href, label, icon: Icon }) => {
+                const active = isTabActive(href);
+                return (
+                  <Link
+                    key={href}
+                    href={href}
+                    className="flex flex-col items-center justify-center relative z-10"
+                    style={{ width: 60, height: 64, gap: 3 }}
                   >
-                    {label}
-                  </span>
-                </Link>
-              );
-            })}
+                    <Icon
+                      className="w-[22px] h-[22px]"
+                      strokeWidth={active ? 2.5 : 1.8}
+                      style={{
+                        color: active ? '#fff' : 'rgba(255,255,255,0.38)',
+                        transition: 'color 0.2s',
+                      }}
+                    />
+                    <span
+                      className="text-[9px] tracking-wide leading-none"
+                      style={{
+                        color: active ? '#fff' : 'rgba(255,255,255,0.38)',
+                        fontWeight: active ? 700 : 400,
+                        transition: 'color 0.2s',
+                      }}
+                    >
+                      {label}
+                    </span>
+                  </Link>
+                );
+              })}
+            </div>
           </div>
-          {/* Safe area */}
-          <div style={{ height: 6 }} />
         </nav>
       </div>
     </div>

@@ -1,24 +1,52 @@
 'use client';
 
 import Link from 'next/link';
+import { useAuth } from '@clerk/nextjs';
+import { useEffect, useState } from 'react';
+import { apiFetch } from '@/lib/api-client';
 import { Trophy, CalendarDays, MapPin, BarChart2, Settings, ChevronRight } from 'lucide-react';
 
-const MAS_ITEMS = [
-  { label: 'Resultados',   icon: Trophy,      color: '#FFB703', href: '/dashboard/logros' },
-  { label: 'Calendario',   icon: CalendarDays, color: '#EF476F', href: '/dashboard/calendario' },
-  { label: 'Sedes',        icon: MapPin,      color: '#06D6A0', href: '/dashboard/sedes' },
-  { label: 'Reportes',     icon: BarChart2,   color: '#4361EE', href: '/dashboard/reportes' },
-  { label: 'Ajustes',      icon: Settings,    color: '#8B8FA8', href: '/dashboard/ajustes' },
-];
+const ITEMS_BY_ROLE: Record<string, { label: string; icon: React.ElementType; color: string; href: string }[]> = {
+  ADMIN: [
+    { label: 'Resultados', icon: Trophy,      color: '#FFB703', href: '/dashboard/logros' },
+    { label: 'Calendario', icon: CalendarDays, color: '#EF476F', href: '/dashboard/calendario' },
+    { label: 'Sedes',      icon: MapPin,      color: '#06D6A0', href: '/dashboard/sedes' },
+    { label: 'Reportes',   icon: BarChart2,   color: '#4361EE', href: '/dashboard/reportes' },
+    { label: 'Ajustes',    icon: Settings,    color: '#8B8FA8', href: '/dashboard/ajustes' },
+  ],
+  COACH: [
+    { label: 'Calendario', icon: CalendarDays, color: '#EF476F', href: '/dashboard/calendario' },
+    { label: 'Sedes',      icon: MapPin,      color: '#06D6A0', href: '/dashboard/sedes' },
+    { label: 'Ajustes',    icon: Settings,    color: '#8B8FA8', href: '/dashboard/ajustes' },
+  ],
+  STUDENT: [
+    { label: 'Ajustes',    icon: Settings,    color: '#8B8FA8', href: '/dashboard/ajustes' },
+  ],
+};
 
 export default function MasPage() {
+  const { getToken } = useAuth();
+  const [role, setRole] = useState<string | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const token = await getToken();
+        const res = await apiFetch<{ user?: { role: string } }>('/me', { token });
+        setRole(res.user?.role ?? 'ADMIN');
+      } catch { setRole('ADMIN'); }
+    })();
+  }, []);
+
+  const items = ITEMS_BY_ROLE[role ?? 'ADMIN'] ?? ITEMS_BY_ROLE.ADMIN;
+
   return (
     <div className="min-h-full bg-background px-4 py-4">
       <h1 className="text-lg font-bold text-foreground mb-4" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
-        Mas opciones
+        Más opciones
       </h1>
       <div className="space-y-2">
-        {MAS_ITEMS.map(({ label, icon: Icon, color, href }) => (
+        {items.map(({ label, icon: Icon, color, href }) => (
           <Link
             key={href}
             href={href}

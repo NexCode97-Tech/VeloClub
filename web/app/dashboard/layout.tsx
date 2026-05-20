@@ -119,7 +119,21 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         if (res.status === 'inactive')         { router.replace('/inactivo');         return; }
         if (res.status === 'superadmin')       { router.replace('/superadmin');       return; }
         if (res.status === 'complete_profile') { router.replace('/completar-perfil'); return; }
-        setRole(res.user?.role ?? null);
+        const userRole = res.user?.role ?? null;
+        setRole(userRole);
+
+        // Proteger rutas por rol — redirigir si el STUDENT intenta acceder a módulos de admin
+        if (userRole === 'STUDENT') {
+          const STUDENT_ALLOWED = ['/dashboard', '/dashboard/logros', '/dashboard/calendario', '/dashboard/pagos', '/dashboard/mas', '/dashboard/ajustes'];
+          const allowed = STUDENT_ALLOWED.some(r => pathname === r || pathname.startsWith(r + '/'));
+          if (!allowed) { router.replace('/dashboard'); return; }
+        }
+        if (userRole === 'COACH') {
+          const COACH_BLOCKED = ['/dashboard/finanzas', '/dashboard/reportes', '/dashboard/pagos', '/dashboard/flujo-caja'];
+          const blocked = COACH_BLOCKED.some(r => pathname === r || pathname.startsWith(r + '/'));
+          if (blocked) { router.replace('/dashboard'); return; }
+        }
+
         setChecking(false);
       } catch (err) {
         // Solo redirigir a /no-access si es un error real de acceso (401/403)

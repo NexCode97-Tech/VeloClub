@@ -103,13 +103,18 @@ const roleBadgeStyle: Record<string, string> = {
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { getToken, isLoaded, isSignedIn } = useAuth();
+  const { getToken, isLoaded, isSignedIn, userId } = useAuth();
   const [role, setRole] = useState<string | null>(null);
   const [checking, setChecking] = useState(true);
 
   useEffect(() => {
     if (!isLoaded) return;
     if (!isSignedIn) { router.push('/sign-in'); return; }
+
+    // Resetear estado al cambiar de sesión (multi-cuenta en mismo dispositivo)
+    setRole(null);
+    setChecking(true);
+
     (async () => {
       try {
         const token = await getToken();
@@ -146,7 +151,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         }
       }
     })();
-  }, [isLoaded, isSignedIn]);
+  }, [isLoaded, isSignedIn, userId]); // userId garantiza re-evaluación al cambiar sesión activa
 
   if (checking) return <LoadingScreen />;
 

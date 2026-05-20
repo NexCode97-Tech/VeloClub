@@ -42,7 +42,7 @@ const ACCENT = '#7C3AED';
 export default function SuperadminLayout({ children }: { children: React.ReactNode }) {
   const pathname  = usePathname();
   const router    = useRouter();
-  const { getToken, isLoaded, isSignedIn } = useAuth();
+  const { getToken, isLoaded, isSignedIn, userId } = useAuth();
 
   const [checking, setChecking]       = useState(true);
   const [spin, setSpin]               = useState(false);
@@ -50,10 +50,14 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
   const [notifs, setNotifs]           = useState<Notif[]>([]);
   const [notifsLoading, setNotifsLoading] = useState(false);
 
-  // Auth check
+  // Auth check — userId en deps garantiza re-evaluación al cambiar de sesión activa
   useEffect(() => {
     if (!isLoaded) return;
     if (!isSignedIn) { router.push('/sign-in'); return; }
+
+    // Resetear al cambiar de cuenta (multi-sesión en mismo dispositivo)
+    setChecking(true);
+
     (async () => {
       try {
         const token = await getToken();
@@ -62,12 +66,10 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
         setChecking(false);
       } catch (err) {
         console.error('Superadmin auth check failed:', err);
-        // No redirigir a /sign-in — causaría loop si hay error de red o rate limit
-        // Mostrar la pantalla igual si Clerk confirma que está autenticado
         setChecking(false);
       }
     })();
-  }, [isLoaded, isSignedIn]);
+  }, [isLoaded, isSignedIn, userId]);
 
   // Cargar notificaciones
   const loadNotifs = useCallback(async () => {

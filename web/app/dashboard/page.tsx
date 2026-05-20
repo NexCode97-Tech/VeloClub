@@ -68,7 +68,7 @@ interface LogroReciente {
 const EMPTY_WEEKDAY = [0, 0, 0, 0, 0, 0, 0];
 
 export default function DashboardPage() {
-  const { getToken, isLoaded, isSignedIn } = useAuth();
+  const { getToken, isLoaded, isSignedIn, userId } = useAuth();
   const router = useRouter();
   const [me, setMe]           = useState<MeResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -163,6 +163,12 @@ export default function DashboardPage() {
   useEffect(() => {
     if (!isLoaded) return;
     if (!isSignedIn) { router.push('/sign-in'); return; }
+
+    // Resetear datos al cambiar de sesión activa (multi-cuenta)
+    setMe(null);
+    setLogros([]);
+    setLoading(true);
+
     (async () => {
       try {
         const token = await getToken();
@@ -224,7 +230,7 @@ export default function DashboardPage() {
         setLoading(false);
       }
     })();
-  }, [isLoaded, isSignedIn]);
+  }, [isLoaded, isSignedIn, userId]); // userId garantiza re-render al cambiar sesión activa
 
   useEffect(() => {
     if (!me?.user?.role) return;

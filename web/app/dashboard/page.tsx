@@ -1,6 +1,6 @@
 'use client';
 
-import { useAuth } from '@clerk/nextjs';
+import { useAuth, useSession } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { apiFetch } from '@/lib/api-client';
@@ -68,7 +68,8 @@ interface LogroReciente {
 const EMPTY_WEEKDAY = [0, 0, 0, 0, 0, 0, 0];
 
 export default function DashboardPage() {
-  const { getToken, isLoaded, isSignedIn, userId, sessionId } = useAuth();
+  const { isLoaded, isSignedIn, userId, sessionId } = useAuth();
+  const { session } = useSession();
   const router = useRouter();
   const [me, setMe]           = useState<MeResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -102,7 +103,7 @@ export default function DashboardPage() {
   }, []);
 
   const fetchStats = useCallback(async (role: string) => {
-    const token = await getToken();
+    const token = await session?.getToken();
     const now = new Date();
     const month = now.getMonth() + 1;
     const year = now.getFullYear();
@@ -153,7 +154,7 @@ export default function DashboardPage() {
         }));
       }
     }
-  }, [getToken]);
+  }, [session]);
 
   function handleRefresh() {
     setSpinning(true);
@@ -171,7 +172,7 @@ export default function DashboardPage() {
 
     (async () => {
       try {
-        const token = await getToken();
+        const token = await session?.getToken();
         const res = await apiFetch<MeResponse>('/me', { token });
         if (res.status === 'superadmin')       { router.push('/superadmin');       return; }
         if (res.status === 'no_access')        { router.push('/no-access');        return; }
@@ -184,7 +185,7 @@ export default function DashboardPage() {
         if (res.user?.role === 'STUDENT') {
           setLogrosLoading(true);
           try {
-            const token2 = await getToken();
+            const token2 = await session?.getToken();
             const [meRes, compRes] = await Promise.allSettled([
               apiFetch<{ member: { id: string } }>('/members/me', { token: token2 }),
               apiFetch<{

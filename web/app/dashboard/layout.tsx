@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
-import { UserButton, useAuth } from '@clerk/nextjs';
+import { UserButton, useAuth, useSession } from '@clerk/nextjs';
 import { useEffect, useState } from 'react';
 import { apiFetch } from '@/lib/api-client';
 import LoadingScreen from '@/components/ui/loading-screen';
@@ -93,7 +93,8 @@ const roleBadgeStyle: Record<string, string> = {
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { getToken, isLoaded, isSignedIn, userId, sessionId } = useAuth();
+  const { isLoaded, isSignedIn, userId, sessionId } = useAuth();
+  const { session } = useSession();
   const [role, setRole] = useState<string | null>(null);
   const [checking, setChecking] = useState(true);
 
@@ -109,8 +110,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
     (async () => {
       try {
-        const token = await getToken();
-        if (stale) return; // userId cambió mientras esperábamos el token
+        // Usar session.getToken() directamente para evitar tokens cacheados del session anterior
+        const token = await session?.getToken();
+        if (stale) return;
         const res = await apiFetch<{ status: string; user?: { role: string } }>('/me', { token });
         if (stale) return; // userId cambió mientras esperábamos la API
         if (res.status === 'no_access')        { router.replace('/no-access');       return; }

@@ -1,7 +1,7 @@
 'use client';
 
 import { usePathname, useRouter } from 'next/navigation';
-import { useAuth, UserButton } from '@clerk/nextjs';
+import { useAuth, useSession, UserButton } from '@clerk/nextjs';
 import { useEffect, useState, useCallback } from 'react';
 import { apiFetch, ApiError } from '@/lib/api-client';
 import LoadingScreen from '@/components/ui/loading-screen';
@@ -42,7 +42,8 @@ const ACCENT = '#7C3AED';
 export default function SuperadminLayout({ children }: { children: React.ReactNode }) {
   const pathname  = usePathname();
   const router    = useRouter();
-  const { getToken, isLoaded, isSignedIn, userId, sessionId } = useAuth();
+  const { isLoaded, isSignedIn, userId, sessionId } = useAuth();
+  const { session } = useSession();
 
   const [checking, setChecking]       = useState(true);
   const [spin, setSpin]               = useState(false);
@@ -60,7 +61,7 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
 
     (async () => {
       try {
-        const token = await getToken();
+        const token = await session?.getToken();
         if (stale) return;
         const res = await apiFetch<{ status: string }>('/me', { token });
         if (stale) return;
@@ -81,12 +82,12 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
     if (!isSignedIn) return;
     setNotifsLoading(true);
     try {
-      const token = await getToken();
+      const token = await session?.getToken();
       const res = await apiFetch<{ notificaciones: Notif[] }>('/superadmin/notificaciones', { token });
       setNotifs(res.notificaciones);
     } catch { /* silencioso */ }
     finally { setNotifsLoading(false); }
-  }, [isSignedIn, getToken]);
+  }, [isSignedIn, session]);
 
   // Polling cada 60s
   useEffect(() => {
@@ -97,13 +98,13 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
   }, [checking, loadNotifs]);
 
   async function marcarLeida(id: string) {
-    const token = await getToken();
+    const token = await session?.getToken();
     await apiFetch(`/superadmin/notificaciones/${id}/leer`, { method: 'PATCH', token });
     setNotifs(prev => prev.map(n => n.id === id ? { ...n, leida: true } : n));
   }
 
   async function marcarTodas() {
-    const token = await getToken();
+    const token = await session?.getToken();
     await apiFetch('/superadmin/notificaciones/leer-todas', { method: 'PATCH', token });
     setNotifs(prev => prev.map(n => ({ ...n, leida: true })));
   }

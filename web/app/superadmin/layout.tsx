@@ -42,7 +42,7 @@ const ACCENT = '#7C3AED';
 export default function SuperadminLayout({ children }: { children: React.ReactNode }) {
   const pathname  = usePathname();
   const router    = useRouter();
-  const { getToken, isLoaded, isSignedIn, userId } = useAuth();
+  const { getToken, isLoaded, isSignedIn, userId, sessionId } = useAuth();
 
   const [checking, setChecking]       = useState(true);
   const [spin, setSpin]               = useState(false);
@@ -74,7 +74,7 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
     })();
 
     return () => { stale = true; };
-  }, [isLoaded, isSignedIn, userId]);
+  }, [isLoaded, isSignedIn, userId, sessionId]);
 
   // Cargar notificaciones
   const loadNotifs = useCallback(async () => {

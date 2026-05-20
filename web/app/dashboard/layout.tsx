@@ -93,7 +93,7 @@ const roleBadgeStyle: Record<string, string> = {
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { getToken, isLoaded, isSignedIn, userId } = useAuth();
+  const { getToken, isLoaded, isSignedIn, userId, sessionId } = useAuth();
   const [role, setRole] = useState<string | null>(null);
   const [checking, setChecking] = useState(true);
 
@@ -145,7 +145,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
     // Cleanup: marcar como stale para que la async no aplique resultados viejos
     return () => { stale = true; };
-  }, [isLoaded, isSignedIn, userId]);
+  }, [isLoaded, isSignedIn, userId, sessionId]);
 
   if (checking) return <LoadingScreen />;
 

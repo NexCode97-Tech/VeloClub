@@ -68,7 +68,7 @@ interface LogroReciente {
 const EMPTY_WEEKDAY = [0, 0, 0, 0, 0, 0, 0];
 
 export default function DashboardPage() {
-  const { getToken, isLoaded, isSignedIn, userId } = useAuth();
+  const { getToken, isLoaded, isSignedIn, userId, sessionId } = useAuth();
   const router = useRouter();
   const [me, setMe]           = useState<MeResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -230,7 +230,7 @@ export default function DashboardPage() {
         setLoading(false);
       }
     })();
-  }, [isLoaded, isSignedIn, userId]); // userId garantiza re-render al cambiar sesión activa
+  }, [isLoaded, isSignedIn, userId, sessionId]);
 
   useEffect(() => {
     if (!me?.user?.role) return;

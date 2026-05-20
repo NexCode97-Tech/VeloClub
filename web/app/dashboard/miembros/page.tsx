@@ -395,87 +395,98 @@ export default function MiembrosPage() {
           <DialogHeader>
             <DialogTitle>{editing ? 'Editar miembro' : 'Nuevo miembro'}</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 mt-2">
 
-            {/* Nombre */}
-            <div className="space-y-2">
-              <Label>Nombre completo *</Label>
-              <Input value={form.fullName} onChange={e => setForm(f => ({ ...f, fullName: e.target.value }))} />
-            </div>
+          <div className="space-y-5 mt-2">
 
-            {/* Correo electrónico */}
-            <div className="space-y-2">
-              <Label>Correo electrónico</Label>
-              <Input type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} />
-            </div>
+            {/* ── 1. IDENTIDAD ─────────────────────────────── */}
+            <div className="space-y-3">
+              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Identidad</p>
 
-            {/* Teléfono + Fecha de nacimiento */}
-            <div className="flex gap-3 items-end">
-              <div className="space-y-2 flex-1 min-w-0">
-                <Label>Teléfono</Label>
-                <Input value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} />
+              {/* Nombre completo */}
+              <div className="space-y-1.5">
+                <Label>Nombre completo <span className="text-red-500">*</span></Label>
+                <Input
+                  placeholder="ej. Juan Pérez"
+                  value={form.fullName}
+                  onChange={e => setForm(f => ({ ...f, fullName: e.target.value }))}
+                />
               </div>
-              <div className="space-y-2 shrink-0">
-                <Label>Fecha de nacimiento</Label>
-                <Input type="date" value={form.birthDate} className="!w-[130px] !min-w-0" onChange={e => setForm(f => ({ ...f, birthDate: e.target.value }))} />
-              </div>
-            </div>
 
-            {/* Categoría + Nivel — solo deportistas */}
-            {form.role === 'STUDENT' && <div className="grid grid-cols-2 gap-2">
-              <div className="space-y-2">
-                <Label>Categoría</Label>
-                <Select value={form.category} onValueChange={v => setForm(f => ({ ...f, category: v ?? '' }))}>
-                  <SelectTrigger>
-                    <span className="text-sm">{form.category || 'Seleccionar'}</span>
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Menores 3-10 años">Menores 3-10 años</SelectItem>
-                    <SelectItem value="Transición 11-13 años">Transición 11-13 años</SelectItem>
-                    <SelectItem value="Mayores 14+ años">Mayores 14+ años</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>Nivel</Label>
-                <Select value={form.tipo} onValueChange={v => setForm(f => ({ ...f, tipo: v ?? '' }))}>
-                  <SelectTrigger>
-                    <span className="text-sm">{form.tipo || 'Seleccionar'}</span>
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Escuela">Escuela</SelectItem>
-                    <SelectItem value="Novatos">Novatos</SelectItem>
-                    <SelectItem value="Intermedio">Intermedio</SelectItem>
-                    <SelectItem value="Avanzados">Avanzados</SelectItem>
-                    <SelectItem value="Federados">Federados</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>}
-
-            {/* Rol */}
-            <div className="grid grid-cols-2 gap-2">
-              <div className="space-y-2">
+              {/* Rol — justo después del nombre */}
+              <div className="space-y-1.5">
                 <Label>Rol</Label>
                 <Select value={form.role} onValueChange={v => setForm(f => ({ ...f, role: v ?? 'STUDENT' }))}>
-                  <SelectTrigger><span className="text-sm">{ROLES[form.role] ?? form.role}</span></SelectTrigger>
+                  <SelectTrigger>
+                    <span className="text-sm">{ROLES[form.role] ?? form.role}</span>
+                  </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="STUDENT">Deportista</SelectItem>
                     <SelectItem value="COACH">Entrenador</SelectItem>
-                    <SelectItem value="ADMIN">Admin</SelectItem>
+                    <SelectItem value="ADMIN">Administrador</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             </div>
 
-            {/* EPS + Día de pago */}
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-2">
-                <Label>EPS</Label>
-                <Input value={form.eps} placeholder="Nombre de la EPS" onChange={e => setForm(f => ({ ...f, eps: e.target.value }))} />
+            {/* ── 2. CONTACTO ──────────────────────────────── */}
+            <div className="space-y-3">
+              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Contacto</p>
+              <div className="space-y-1.5">
+                <Label>Correo electrónico</Label>
+                <Input type="email" placeholder="correo@ejemplo.com" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} />
               </div>
-              {form.role === 'STUDENT' && (
-                <div className="space-y-2">
+              <div className="space-y-1.5">
+                <Label>Teléfono</Label>
+                <Input placeholder="ej. 3001234567" value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} />
+              </div>
+            </div>
+
+            {/* ── 3. DATOS PERSONALES ───────────────────────── */}
+            <div className="space-y-3">
+              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Datos personales</p>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label>Fecha de nacimiento</Label>
+                  <Input type="date" value={form.birthDate} onChange={e => setForm(f => ({ ...f, birthDate: e.target.value }))} />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>EPS</Label>
+                  <Input value={form.eps} placeholder="Nombre de la EPS" onChange={e => setForm(f => ({ ...f, eps: e.target.value }))} />
+                </div>
+              </div>
+            </div>
+
+            {/* ── 4. INFO DEPORTIVA — solo STUDENT ─────────── */}
+            {form.role === 'STUDENT' && (
+              <div className="space-y-3">
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Info deportiva</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label>Categoría</Label>
+                    <Select value={form.category} onValueChange={v => setForm(f => ({ ...f, category: v ?? '' }))}>
+                      <SelectTrigger><span className="text-sm">{form.category || 'Seleccionar'}</span></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Menores 3-10 años">Menores 3-10 años</SelectItem>
+                        <SelectItem value="Transición 11-13 años">Transición 11-13 años</SelectItem>
+                        <SelectItem value="Mayores 14+ años">Mayores 14+ años</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Nivel</Label>
+                    <Select value={form.tipo} onValueChange={v => setForm(f => ({ ...f, tipo: v ?? '' }))}>
+                      <SelectTrigger><span className="text-sm">{form.tipo || 'Seleccionar'}</span></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Escuela">Escuela</SelectItem>
+                        <SelectItem value="Novatos">Novatos</SelectItem>
+                        <SelectItem value="Intermedio">Intermedio</SelectItem>
+                        <SelectItem value="Avanzados">Avanzados</SelectItem>
+                        <SelectItem value="Federados">Federados</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="space-y-1.5">
                   <Label>Día de pago mensual</Label>
                   <Input
                     type="number" min={1} max={31}
@@ -487,34 +498,37 @@ export default function MiembrosPage() {
                       if (v === '' || (n >= 1 && n <= 31)) setForm(f => ({ ...f, paymentDueDay: v }));
                     }}
                   />
-                  <p className="text-[10px] text-muted-foreground">Día del mes (1–31)</p>
+                  <p className="text-[10px] text-muted-foreground">Día del mes (1–31) en que se genera el cobro</p>
                 </div>
-              )}
+              </div>
+            )}
+
+            {/* ── 5. EMERGENCIA ─────────────────────────────── */}
+            <div className="space-y-3">
+              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Contacto de emergencia</p>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label>Nombre</Label>
+                  <Input value={form.emergencyContact} placeholder="Nombre completo" onChange={e => setForm(f => ({ ...f, emergencyContact: e.target.value }))} />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Teléfono</Label>
+                  <Input value={form.emergencyPhone} placeholder="Número" onChange={e => setForm(f => ({ ...f, emergencyPhone: e.target.value }))} />
+                </div>
+              </div>
             </div>
 
-            {/* Contacto de emergencia + Teléfono de emergencia */}
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-2">
-                <Label>Contacto de emergencia</Label>
-                <Input value={form.emergencyContact} placeholder="Nombre" onChange={e => setForm(f => ({ ...f, emergencyContact: e.target.value }))} />
-              </div>
-              <div className="space-y-2">
-                <Label>Tel. emergencia</Label>
-                <Input value={form.emergencyPhone} placeholder="Número" onChange={e => setForm(f => ({ ...f, emergencyPhone: e.target.value }))} />
-              </div>
-            </div>
-
-            {/* Sedes — solo para Entrenador y Deportista */}
+            {/* ── 6. SEDES — STUDENT y COACH ───────────────── */}
             {locations.length > 0 && form.role !== 'ADMIN' && (
-              <div className="space-y-2">
-                <Label>Sedes</Label>
+              <div className="space-y-3">
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Sede(s)</p>
                 <div className="flex flex-wrap gap-2">
                   {locations.map(loc => (
                     <button
                       key={loc.id}
                       type="button"
                       onClick={() => toggleLocation(loc.id)}
-                      className={`px-3 py-1 rounded-full text-sm border transition-colors ${
+                      className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-colors ${
                         form.locationIds.includes(loc.id)
                           ? 'bg-primary text-primary-foreground border-primary'
                           : 'bg-white text-muted-foreground border-border hover:border-primary'
@@ -528,6 +542,7 @@ export default function MiembrosPage() {
             )}
 
             {error && <p className="text-sm text-red-600">{error}</p>}
+
             <Button onClick={handleSave} disabled={saving || !form.fullName.trim()} className="w-full">
               {saving ? 'Guardando...' : editing ? 'Guardar cambios' : 'Crear miembro'}
             </Button>

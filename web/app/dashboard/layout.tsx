@@ -158,7 +158,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   function isTabActive(href: string) {
     if (href === '/dashboard') return pathname === '/dashboard';
-    if (href === '/dashboard/mas') return isOnExtra;
+    if (href === '/dashboard/mas') return pathname === '/dashboard/mas' || isOnExtra;
     return pathname === href || pathname.startsWith(href + '/');
   }
 

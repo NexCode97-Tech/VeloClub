@@ -447,7 +447,7 @@ export default function MiembrosPage() {
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <Label>Fecha de nacimiento</Label>
-                  <Input type="date" value={form.birthDate} onChange={e => setForm(f => ({ ...f, birthDate: e.target.value }))} />
+                  <Input type="date" value={form.birthDate} className="h-9 text-sm px-2" onChange={e => setForm(f => ({ ...f, birthDate: e.target.value }))} />
                 </div>
                 <div className="space-y-1.5">
                   <Label>EPS</Label>

@@ -18,18 +18,8 @@ import {
   CreditCard,
   RefreshCw,
   MoreHorizontal,
+  CircleDollarSign,
 } from 'lucide-react';
-
-function FinanzasIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-      <rect x="2" y="7" width="20" height="14" rx="2" />
-      <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2" />
-      <circle cx="12" cy="14" r="2" />
-      <path d="M12 12v0M12 16v0" />
-    </svg>
-  );
-}
 import { cn } from '@/lib/utils';
 
 const ROLE_TABS: Record<string, { href: string; label: string; icon: React.ElementType }[]> = {
@@ -37,7 +27,7 @@ const ROLE_TABS: Record<string, { href: string; label: string; icon: React.Eleme
     { href: '/dashboard',             label: 'Inicio',        icon: LayoutDashboard },
     { href: '/dashboard/miembros',    label: 'Miembros',      icon: Users },
     { href: '/dashboard/asistencia',  label: 'Asistencia',    icon: CalendarCheck },
-    { href: '/dashboard/finanzas',    label: 'Finanzas',      icon: FinanzasIcon },
+    { href: '/dashboard/finanzas',    label: 'Finanzas',      icon: CircleDollarSign },
     { href: '/dashboard/mas',         label: 'Mas',           icon: MoreHorizontal },
   ],
   COACH: [
@@ -60,7 +50,7 @@ const ADMIN_NAV = [
   { href: '/dashboard/miembros',   label: 'Miembros',      icon: Users },
   { href: '/dashboard/sedes',      label: 'Sedes',         icon: MapPin },
   { href: '/dashboard/asistencia', label: 'Asistencia',    icon: CalendarCheck },
-  { href: '/dashboard/finanzas',   label: 'Finanzas',      icon: FinanzasIcon },
+  { href: '/dashboard/finanzas',   label: 'Finanzas',      icon: CircleDollarSign },
   { href: '/dashboard/logros',     label: 'Resultados',    icon: Trophy },
   { href: '/dashboard/calendario', label: 'Calendario',    icon: CalendarDays },
   { href: '/dashboard/reportes',   label: 'Reportes',      icon: BarChart2 },
@@ -111,14 +101,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     if (!isLoaded) return;
     if (!isSignedIn) { router.push('/sign-in'); return; }
 
-    // Resetear estado al cambiar de sesión (multi-cuenta en mismo dispositivo)
+    // Flag para cancelar operaciones async si el userId cambia antes de que terminen
+    let stale = false;
+
     setRole(null);
     setChecking(true);
 
     (async () => {
       try {
         const token = await getToken();
+        if (stale) return; // userId cambió mientras esperábamos el token
         const res = await apiFetch<{ status: string; user?: { role: string } }>('/me', { token });
+        if (stale) return; // userId cambió mientras esperábamos la API
         if (res.status === 'no_access')        { router.replace('/no-access');       return; }
         if (res.status === 'inactive')         { router.replace('/inactivo');         return; }
         if (res.status === 'superadmin')       { router.replace('/superadmin');       return; }
@@ -126,7 +120,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         const userRole = res.user?.role ?? null;
         setRole(userRole);
 
-        // Proteger rutas por rol — redirigir si el STUDENT intenta acceder a módulos de admin
         if (userRole === 'STUDENT') {
           const STUDENT_ALLOWED = ['/dashboard', '/dashboard/logros', '/dashboard/calendario', '/dashboard/pagos', '/dashboard/mas', '/dashboard/ajustes'];
           const allowed = STUDENT_ALLOWED.some(r => pathname === r || pathname.startsWith(r + '/'));
@@ -140,18 +133,19 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
         setChecking(false);
       } catch (err) {
-        // Solo redirigir a /no-access si es un error real de acceso (401/403)
-        // Un 429 o error de red no debe cerrar la sesión del usuario
+        if (stale) return;
         const { ApiError } = await import('@/lib/api-client');
         if (err instanceof ApiError && (err.status === 401 || err.status === 403)) {
           router.replace('/no-access');
         } else {
-          // Error temporal (rate limit, red) — dejar pasar, Clerk ya validó la sesión
           setChecking(false);
         }
       }
     })();
-  }, [isLoaded, isSignedIn, userId]); // userId garantiza re-evaluación al cambiar sesión activa
+
+    // Cleanup: marcar como stale para que la async no aplique resultados viejos
+    return () => { stale = true; };
+  }, [isLoaded, isSignedIn, userId]);
 
   if (checking) return <LoadingScreen />;
 

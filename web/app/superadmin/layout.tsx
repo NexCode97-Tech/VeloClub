@@ -50,25 +50,30 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
   const [notifs, setNotifs]           = useState<Notif[]>([]);
   const [notifsLoading, setNotifsLoading] = useState(false);
 
-  // Auth check — userId en deps garantiza re-evaluación al cambiar de sesión activa
+  // Auth check — stale flag evita condición de carrera al cambiar sesión activa
   useEffect(() => {
     if (!isLoaded) return;
     if (!isSignedIn) { router.push('/sign-in'); return; }
 
-    // Resetear al cambiar de cuenta (multi-sesión en mismo dispositivo)
+    let stale = false;
     setChecking(true);
 
     (async () => {
       try {
         const token = await getToken();
+        if (stale) return;
         const res = await apiFetch<{ status: string }>('/me', { token });
+        if (stale) return;
         if (res.status !== 'superadmin') { router.replace('/dashboard'); return; }
         setChecking(false);
       } catch (err) {
+        if (stale) return;
         console.error('Superadmin auth check failed:', err);
         setChecking(false);
       }
     })();
+
+    return () => { stale = true; };
   }, [isLoaded, isSignedIn, userId]);
 
   // Cargar notificaciones

@@ -12,16 +12,38 @@ router.get('/', requireAuth, async (req, res) => {
   // Superadmin check (case-insensitive, soporta coma o salto de línea como separador)
   const superadminEmails = (process.env.SUPERADMIN_EMAILS ?? '').split(/[,\n]/).map(e => e.trim().toLowerCase()).filter(Boolean);
   if (superadminEmails.includes(email.toLowerCase())) {
-    const user = await prisma.user.upsert({
-      where: { clerkId },
-      update: { name, picture, role: 'SUPERADMIN', profileComplete: true },
-      create: { clerkId, email, name, picture: picture ?? null, role: 'SUPERADMIN', profileComplete: true },
-    });
+    // Buscar por email primero — el clerkId puede haber cambiado al migrar de instancia
+    const existingByEmail = await prisma.user.findUnique({ where: { email: email.toLowerCase() } });
+    let user;
+    if (existingByEmail && existingByEmail.clerkId !== clerkId) {
+      // Actualizar el clerkId al de la nueva instancia
+      user = await prisma.user.update({
+        where: { email: email.toLowerCase() },
+        data: { clerkId, name, picture, role: 'SUPERADMIN', profileComplete: true },
+      });
+    } else {
+      user = await prisma.user.upsert({
+        where: { clerkId },
+        update: { name, picture, role: 'SUPERADMIN', profileComplete: true },
+        create: { clerkId, email: email.toLowerCase(), name, picture: picture ?? null, role: 'SUPERADMIN', profileComplete: true },
+      });
+    }
     return res.json({ status: 'superadmin', user });
   }
 
-  // Check if user already exists in DB
+  // Check if user already exists in DB — buscar por clerkId o por email (migración de instancia)
   let user = await prisma.user.findUnique({ where: { clerkId }, include: { club: true } });
+  if (!user) {
+    const byEmail = await prisma.user.findUnique({ where: { email: email.toLowerCase() }, include: { club: true } });
+    if (byEmail) {
+      // Actualizar clerkId al de la nueva instancia
+      user = await prisma.user.update({
+        where: { email: email.toLowerCase() },
+        data: { clerkId },
+        include: { club: true },
+      });
+    }
+  }
 
   if (user) {
     // Update name/picture if changed in Clerk

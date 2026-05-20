@@ -1,0 +1,2 @@
+-- AlterEnum
+ALTER TYPE "TipoPlan" ADD VALUE 'TRIMESTRAL';

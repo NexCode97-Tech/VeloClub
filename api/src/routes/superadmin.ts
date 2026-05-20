@@ -178,7 +178,7 @@ router.get('/suscripciones', requireAuth, requireSuperadmin, async (_req, res) =
 
 const suscripcionSchema = z.object({
   planMonto: z.number().positive(),
-  tipoPlan: z.enum(['MENSUAL', 'ANUAL']).default('MENSUAL'),
+  tipoPlan: z.enum(['MENSUAL', 'TRIMESTRAL', 'ANUAL']).default('MENSUAL'),
   año: z.number().int().min(2024),
 });
 

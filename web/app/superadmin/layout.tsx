@@ -209,21 +209,21 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
         {children}
       </main>
 
-      {/* Bottom Tab Nav — cápsula oscura flotante */}
-      <div className="shrink-0 flex justify-center" style={{ paddingBottom: 20, background: 'transparent', position: 'relative' }}>
+      {/* Bottom Tab Nav — cápsula violeta suave, ancho completo */}
+      <div className="shrink-0 flex justify-center" style={{ padding: '10px 16px 20px', background: 'transparent' }}>
         {(() => {
           const activeIdx = TABS.findIndex(t => t.exact ? pathname === t.href : pathname.startsWith(t.href));
           return (
             <div
-              className="relative flex items-center"
+              className="relative flex w-full"
               style={{
-                background: '#1A1A2E',
+                background: '#3D1A6E',
                 borderRadius: 40,
-                padding: '6px 8px',
-                boxShadow: '0 8px 32px rgba(0,0,0,0.28)',
+                padding: '8px 0',
+                boxShadow: '0 8px 32px rgba(61,26,110,0.35), 0 2px 8px rgba(0,0,0,0.15)',
               }}
             >
-              {/* Círculo deslizante */}
+              {/* Círculo deslizante — solo sobre el ícono */}
               {activeIdx >= 0 && (
                 <div
                   className="absolute pointer-events-none"
@@ -232,27 +232,42 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
                     height: 52,
                     borderRadius: '50%',
                     background: '#7C3AED',
-                    left: `calc(8px + ${activeIdx} * 60px + 4px)`,
-                    top: '50%',
-                    transform: 'translateY(-50%)',
+                    /* Centro del tab activo: (activeIdx + 0.5) / N * 100% */
+                    left: `calc((${activeIdx} + 0.5) / ${TABS.length} * 100% - 26px)`,
+                    /* Alinear con la zona del ícono (no el label) */
+                    top: 8,
                     transition: 'left 0.35s cubic-bezier(0.34,1.2,0.64,1)',
-                    boxShadow: '0 4px 16px rgba(124,58,237,0.45)',
+                    boxShadow: '0 4px 18px rgba(124,58,237,0.55)',
                   }}
                 />
               )}
+
               {TABS.map((tab) => {
                 const active = tab.exact ? pathname === tab.href : pathname.startsWith(tab.href);
                 return (
-                  <Link key={tab.href} href={tab.href} className="flex flex-col items-center justify-center relative z-10" style={{ width: 60, height: 64, gap: 3 }}>
-                    <tab.Icon
-                      size={22}
-                      color={active ? '#fff' : 'rgba(255,255,255,0.38)'}
-                      strokeWidth={active ? 2.5 : 1.8}
-                      style={{ transition: 'color 0.2s' }}
-                    />
+                  <Link
+                    key={tab.href}
+                    href={tab.href}
+                    className="flex-1 flex flex-col items-center relative z-10"
+                    style={{ gap: 4, paddingBottom: 2 }}
+                  >
+                    {/* Zona del ícono — mismo tamaño que el círculo */}
+                    <div className="flex items-center justify-center" style={{ width: 52, height: 52 }}>
+                      <tab.Icon
+                        size={22}
+                        color={active ? '#fff' : 'rgba(255,255,255,0.42)'}
+                        strokeWidth={active ? 2.5 : 1.8}
+                        style={{ transition: 'color 0.2s' }}
+                      />
+                    </div>
+                    {/* Label fuera del círculo */}
                     <span
                       className="text-[9px] tracking-wide leading-none"
-                      style={{ color: active ? '#fff' : 'rgba(255,255,255,0.38)', fontWeight: active ? 700 : 400, transition: 'color 0.2s' }}
+                      style={{
+                        color: active ? '#fff' : 'rgba(255,255,255,0.42)',
+                        fontWeight: active ? 700 : 400,
+                        transition: 'color 0.2s',
+                      }}
                     >
                       {tab.label}
                     </span>

@@ -263,69 +263,66 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           {children}
         </main>
 
-        {/* ── Mobile bottom tab bar — cápsula oscura flotante ── */}
-        <nav className="md:hidden fixed bottom-0 left-0 right-0 z-30" style={{ pointerEvents: 'none' }}>
-          <div className="flex justify-center" style={{ paddingBottom: 20 }}>
-            <div
-              className="relative flex items-center"
-              style={{
-                background: '#1A1A2E',
-                borderRadius: 40,
-                padding: '6px 8px',
-                gap: 0,
-                boxShadow: '0 8px 32px rgba(0,0,0,0.28)',
-                pointerEvents: 'auto',
-              }}
-            >
-              {/* Círculo deslizante detrás del ícono activo */}
-              {activeTabIndex >= 0 && (
-                <div
-                  className="absolute pointer-events-none"
-                  style={{
-                    width: 52,
-                    height: 52,
-                    borderRadius: '50%',
-                    background: '#7C3AED',
-                    left: `calc(8px + ${activeTabIndex} * 60px + 4px)`,
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    transition: 'left 0.35s cubic-bezier(0.34,1.2,0.64,1)',
-                    boxShadow: '0 4px 16px rgba(124,58,237,0.45)',
-                  }}
-                />
-              )}
+        {/* ── Mobile bottom tab bar — cápsula ancha, círculo sobre ícono ── */}
+        <nav className="md:hidden fixed bottom-0 left-0 right-0 z-30" style={{ padding: '10px 16px 20px', pointerEvents: 'none' }}>
+          <div
+            className="relative flex w-full"
+            style={{
+              background: '#1A1035',
+              borderRadius: 40,
+              padding: '8px 0',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.28)',
+              pointerEvents: 'auto',
+            }}
+          >
+            {/* Círculo deslizante — alineado solo con la zona del ícono */}
+            {activeTabIndex >= 0 && (
+              <div
+                className="absolute pointer-events-none"
+                style={{
+                  width: 52,
+                  height: 52,
+                  borderRadius: '50%',
+                  background: '#7C3AED',
+                  left: `calc((${activeTabIndex} + 0.5) / ${tabItems.length} * 100% - 26px)`,
+                  top: 8,
+                  transition: 'left 0.35s cubic-bezier(0.34,1.2,0.64,1)',
+                  boxShadow: '0 4px 18px rgba(124,58,237,0.55)',
+                }}
+              />
+            )}
 
-              {tabItems.map(({ href, label, icon: Icon }) => {
-                const active = isTabActive(href);
-                return (
-                  <Link
-                    key={href}
-                    href={href}
-                    className="flex flex-col items-center justify-center relative z-10"
-                    style={{ width: 60, height: 64, gap: 3 }}
-                  >
+            {tabItems.map(({ href, label, icon: Icon }) => {
+              const active = isTabActive(href);
+              return (
+                <Link
+                  key={href}
+                  href={href}
+                  className="flex-1 flex flex-col items-center relative z-10"
+                  style={{ gap: 4, paddingBottom: 2 }}
+                >
+                  {/* Zona ícono = mismo tamaño que el círculo */}
+                  <div className="flex items-center justify-center" style={{ width: 52, height: 52 }}>
                     <Icon
                       className="w-[22px] h-[22px]"
                       strokeWidth={active ? 2.5 : 1.8}
-                      style={{
-                        color: active ? '#fff' : 'rgba(255,255,255,0.38)',
-                        transition: 'color 0.2s',
-                      }}
+                      style={{ color: active ? '#fff' : 'rgba(255,255,255,0.42)', transition: 'color 0.2s' }}
                     />
-                    <span
-                      className="text-[9px] tracking-wide leading-none"
-                      style={{
-                        color: active ? '#fff' : 'rgba(255,255,255,0.38)',
-                        fontWeight: active ? 700 : 400,
-                        transition: 'color 0.2s',
-                      }}
-                    >
-                      {label}
-                    </span>
-                  </Link>
-                );
-              })}
-            </div>
+                  </div>
+                  {/* Label fuera del círculo */}
+                  <span
+                    className="text-[9px] tracking-wide leading-none"
+                    style={{
+                      color: active ? '#fff' : 'rgba(255,255,255,0.42)',
+                      fontWeight: active ? 700 : 400,
+                      transition: 'color 0.2s',
+                    }}
+                  >
+                    {label}
+                  </span>
+                </Link>
+              );
+            })}
           </div>
         </nav>
       </div>

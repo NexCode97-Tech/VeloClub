@@ -372,5 +372,6 @@ enum NotificacionTipo {
 
 enum TipoPlan {
   MENSUAL
+  TRIMESTRAL
   ANUAL
 }

@@ -6,20 +6,19 @@ import { useEffect, useState, useCallback } from 'react';
 import { apiFetch, ApiError } from '@/lib/api-client';
 import LoadingScreen from '@/components/ui/loading-screen';
 import Link from 'next/link';
-import { LayoutDashboard, Building2, CircleDollarSign, Settings } from 'lucide-react';
+import { LayoutDashboard, Building2, CircleDollarSign } from 'lucide-react';
 
+// Config fue fusionado con Perfil (UserButton) — 3 tabs + UserButton = 4 slots
 const TABS = [
-  { href: '/superadmin',               label: 'Dashboard', exact: true,  Icon: LayoutDashboard    },
-  { href: '/superadmin/clubs',         label: 'Clubs',     exact: false, Icon: Building2          },
-  { href: '/superadmin/finanzas',      label: 'Finanzas',  exact: false, Icon: CircleDollarSign   },
-  { href: '/superadmin/configuracion', label: 'Config',    exact: false, Icon: Settings           },
+  { href: '/superadmin',          label: 'Dashboard', exact: true,  Icon: LayoutDashboard  },
+  { href: '/superadmin/clubs',    label: 'Clubs',     exact: false, Icon: Building2        },
+  { href: '/superadmin/finanzas', label: 'Finanzas',  exact: false, Icon: CircleDollarSign },
 ];
 
 const SCREEN_LABELS: Record<string, string> = {
-  '/superadmin':               'Dashboard',
-  '/superadmin/clubs':         'Clubs',
-  '/superadmin/finanzas':      'Finanzas',
-  '/superadmin/configuracion': 'Configuración',
+  '/superadmin':          'Dashboard',
+  '/superadmin/clubs':    'Clubs',
+  '/superadmin/finanzas': 'Finanzas',
 };
 
 const TIPO_ICON: Record<string, string> = {
@@ -226,16 +225,16 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
                 boxShadow: '0 8px 32px rgba(124,58,237,0.13), 0 2px 8px rgba(0,0,0,0.06)',
               }}
             >
-              {/* Círculo deslizante — solo para los 4 tabs de navegación */}
+              {/* Círculo deslizante */}
               {activeIdx >= 0 && (
                 <div
                   className="absolute pointer-events-none"
                   style={{
-                    width: 56,
-                    height: 56,
+                    width: 46,
+                    height: 46,
                     borderRadius: '50%',
                     background: 'linear-gradient(135deg, #7C3AED 0%, #4361EE 55%, #06D6A0 100%)',
-                    left: `calc((${activeIdx} + 0.5) / ${TABS.length + 1} * 100% - 28px)`,
+                    left: `calc((${activeIdx} + 0.5) / ${TABS.length + 1} * 100% - 23px)`,
                     top: 6,
                     transition: 'left 0.35s cubic-bezier(0.34,1.2,0.64,1)',
                     boxShadow: '0 4px 20px rgba(124,58,237,0.40)',
@@ -243,7 +242,7 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
                 />
               )}
 
-              {/* Tabs 1-4: navegación */}
+              {/* Tabs de navegación */}
               {TABS.map((tab) => {
                 const active = tab.exact ? pathname === tab.href : pathname.startsWith(tab.href);
                 return (
@@ -251,11 +250,11 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
                     key={tab.href}
                     href={tab.href}
                     className="flex-1 flex flex-col items-center relative z-10"
-                    style={{ gap: 5, paddingBottom: 2 }}
+                    style={{ gap: 4, paddingBottom: 2 }}
                   >
-                    <div className="flex items-center justify-center" style={{ width: 56, height: 56 }}>
+                    <div className="flex items-center justify-center" style={{ width: 46, height: 46 }}>
                       <tab.Icon
-                        size={26}
+                        size={22}
                         color={active ? '#fff' : '#8E87A8'}
                         strokeWidth={active ? 2.2 : 1.7}
                         style={{ transition: 'color 0.2s' }}
@@ -275,16 +274,16 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
                 );
               })}
 
-              {/* Tab 5: Perfil Clerk — estilo WhatsApp "Tú" */}
+              {/* Tab Perfil — UserButton (reemplaza Config) */}
               <div
                 className="flex-1 flex flex-col items-center relative z-10"
-                style={{ gap: 5, paddingBottom: 2 }}
+                style={{ gap: 4, paddingBottom: 2 }}
               >
-                <div className="flex items-center justify-center" style={{ width: 56, height: 56 }}>
+                <div className="flex items-center justify-center" style={{ width: 46, height: 46 }}>
                   <UserButton
                     appearance={{
                       elements: {
-                        avatarBox: { width: 36, height: 36, borderRadius: '50%' },
+                        avatarBox: { width: 32, height: 32, borderRadius: '50%' },
                         userButtonPopoverCard: { borderRadius: 16 },
                       },
                     }}

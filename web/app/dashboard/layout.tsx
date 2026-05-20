@@ -19,7 +19,6 @@ import {
   RefreshCw,
   MoreHorizontal,
 } from 'lucide-react';
-import { UserButton } from '@clerk/nextjs';
 
 function FinanzasIcon({ className }: { className?: string }) {
   return (

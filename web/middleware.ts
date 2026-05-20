@@ -1,4 +1,5 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
+import { NextResponse } from 'next/server';
 
 const isProtectedRoute = createRouteMatcher([
   '/dashboard(.*)',
@@ -8,7 +9,11 @@ const isProtectedRoute = createRouteMatcher([
 
 export default clerkMiddleware(async (auth, req) => {
   if (isProtectedRoute(req)) {
-    await auth.protect();
+    const { userId } = await auth();
+    // Redirigir a /sign-in local en vez de dejar que Clerk use su Account Portal
+    if (!userId) {
+      return NextResponse.redirect(new URL('/sign-in', req.url));
+    }
   }
 });
 

@@ -50,20 +50,18 @@ export default function MasPage() {
         Más opciones
       </h1>
 
-      {/* ── Perfil de usuario — estilo WhatsApp "Tú" ── */}
-      <div
-        className="bg-white border border-border rounded-2xl px-4 py-3.5 flex items-center gap-3 mb-4 active:bg-secondary transition-colors"
-        style={{ cursor: 'default' }}
-      >
+      {/* ── Perfil de usuario — clic directo sobre el UserButton de Clerk ── */}
+      <div className="bg-white border border-border rounded-2xl px-4 py-3.5 flex items-center gap-3 mb-4">
         <UserButton
           appearance={{
             elements: {
               avatarBox: { width: 48, height: 48, borderRadius: '50%' },
               userButtonPopoverCard: { borderRadius: 16 },
+              userButtonTrigger: { cursor: 'pointer' },
             },
           }}
         />
-        <div className="flex-1 min-w-0">
+        <div className="flex-1 min-w-0 pointer-events-none">
           <p className="text-[14px] font-bold text-foreground truncate" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
             {user?.fullName ?? user?.firstName ?? 'Mi cuenta'}
           </p>
@@ -71,7 +69,7 @@ export default function MasPage() {
             {user?.primaryEmailAddress?.emailAddress ?? roleLabel[role ?? 'ADMIN']}
           </p>
         </div>
-        <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
+        <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0 pointer-events-none" />
       </div>
 
       {/* ── Ítems según rol ── */}

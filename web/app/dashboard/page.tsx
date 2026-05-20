@@ -203,10 +203,9 @@ export default function DashboardPage() {
       { label: 'Miembros',      value: stats.totalMiembros,     color: '#4361EE', icon: Trophy,        href: '/dashboard/logros' },
     ],
     STUDENT: [
-      { label: 'Asistencia', value: '—', color: '#06D6A0', icon: CalendarCheck, href: '/dashboard/asistencia' },
-      { label: 'Resultados', value: '—', color: '#FFB703', icon: Trophy,        href: '/dashboard/logros' },
-      { label: 'Eventos',    value: '—', color: '#7C3AED', icon: CalendarDays,  href: '/dashboard/calendario' },
-      { label: 'Sedes',      value: '—', color: '#EF476F', icon: MapPin,        href: '/dashboard/sedes' },
+      { label: 'Resultados', value: '—', color: '#FFB703', icon: Trophy,       href: '/dashboard/logros' },
+      { label: 'Calendario', value: '—', color: '#7C3AED', icon: CalendarDays, href: '/dashboard/calendario' },
+      { label: 'Mis Pagos',  value: '—', color: '#06D6A0', icon: CreditCard,   href: '/dashboard/pagos' },
     ],
   };
 
@@ -270,8 +269,8 @@ export default function DashboardPage() {
               <RefreshCw className={`w-[15px] h-[15px] transition-transform duration-500 ${spinning ? 'animate-spin' : ''}`} />
             </button>
 
-            {/* Notifications */}
-            <div className="relative" ref={notifRef}>
+            {/* Notifications — solo ADMIN */}
+            {role === 'ADMIN' && <div className="relative" ref={notifRef}>
               <button
                 onClick={() => setNotifOpen(o => !o)}
                 className={`w-9 h-9 rounded-full border border-border bg-white flex items-center justify-center transition-all active:scale-90 relative ${notifOpen ? 'bg-secondary text-foreground' : 'text-muted-foreground hover:bg-secondary hover:text-foreground'}`}
@@ -324,7 +323,7 @@ export default function DashboardPage() {
                   )}
                 </div>
               )}
-            </div>
+            </div>}
           </div>
         </div>
 

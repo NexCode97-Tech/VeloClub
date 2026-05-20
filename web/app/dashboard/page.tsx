@@ -55,6 +55,16 @@ interface Stats {
   weekdayCounts: number[];
 }
 
+interface LogroReciente {
+  id: string;
+  tipo: 'COMPETENCIA' | 'ENTRENAMIENTO';
+  titulo: string;
+  fecha: string;
+  position?: number | null;
+  categoria?: string | null;
+  observaciones?: string | null;
+}
+
 const EMPTY_WEEKDAY = [0, 0, 0, 0, 0, 0, 0];
 
 export default function DashboardPage() {
@@ -77,6 +87,8 @@ export default function DashboardPage() {
     entrenamientosMes: '—',
     weekdayCounts: EMPTY_WEEKDAY,
   });
+  const [logros, setLogros]         = useState<LogroReciente[]>([]);
+  const [logrosLoading, setLogrosLoading] = useState(false);
 
   // Close notif panel when clicking outside
   useEffect(() => {
@@ -161,6 +173,51 @@ export default function DashboardPage() {
         if (res.status === 'complete_profile') { router.push('/completar-perfil'); return; }
         setMe(res);
         await fetchStats(res.user?.role ?? 'ADMIN');
+
+        // Logros recientes — solo STUDENT
+        if (res.user?.role === 'STUDENT') {
+          setLogrosLoading(true);
+          try {
+            const token2 = await getToken();
+            const [meRes, compRes] = await Promise.allSettled([
+              apiFetch<{ member: { id: string } }>('/members/me', { token: token2 }),
+              apiFetch<{
+                competitions: {
+                  id: string; name: string; date: string;
+                  events: { results: { member: { id: string }; position?: number | null; category?: string | null; observations?: string | null }[] }[];
+                }[];
+              }>('/competitions', { token: token2 }),
+            ]);
+
+            const memberId = meRes.status === 'fulfilled' ? meRes.value.member.id : null;
+            const comps    = compRes.status === 'fulfilled' ? compRes.value.competitions : [];
+
+            if (memberId) {
+              const resultados: LogroReciente[] = [];
+              for (const c of comps) {
+                for (const ev of c.events) {
+                  for (const r of ev.results) {
+                    if (r.member.id === memberId) {
+                      resultados.push({
+                        id:           `${c.id}-${memberId}`,
+                        tipo:         'COMPETENCIA',
+                        titulo:       c.name,
+                        fecha:        c.date,
+                        position:     r.position,
+                        categoria:    r.category,
+                        observaciones: r.observations,
+                      });
+                    }
+                  }
+                }
+              }
+              // Ordenar por fecha desc, mostrar los 5 más recientes
+              resultados.sort((a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime());
+              setLogros(resultados.slice(0, 5));
+            }
+          } catch { /* silencioso */ }
+          finally { setLogrosLoading(false); }
+        }
       } catch (err) {
         console.error(err);
       } finally {
@@ -414,16 +471,63 @@ export default function DashboardPage() {
           </section>
         )}
 
-        {/* Logros — STUDENT only */}
+        {/* Logros recientes — STUDENT */}
         {role === 'STUDENT' && (
           <section>
-            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2.5">
-              Mis logros recientes
-            </p>
-            <div className="bg-white border border-border rounded-xl px-4 py-5 text-center">
-              <Trophy className="w-8 h-8 mx-auto mb-2 text-muted-foreground/30" />
-              <p className="text-[12px] text-muted-foreground">Sin logros registrados aún</p>
+            <div className="flex items-center justify-between mb-2.5">
+              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Mis logros recientes</p>
+              <Link href="/dashboard/logros" className="text-[11px] font-semibold" style={{ color: '#7C3AED' }}>Ver todos</Link>
             </div>
+
+            {logrosLoading ? (
+              <div className="flex justify-center py-6">
+                <div className="w-5 h-5 rounded-full border-2 animate-spin" style={{ borderColor: '#7C3AED', borderTopColor: 'transparent' }} />
+              </div>
+            ) : logros.length === 0 ? (
+              <div className="bg-white border border-border rounded-xl px-4 py-5 text-center">
+                <Trophy className="w-8 h-8 mx-auto mb-2 text-muted-foreground/30" />
+                <p className="text-[12px] text-muted-foreground">Sin logros registrados aún</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {logros.map((l) => {
+                  const isPodio = l.position && l.position <= 3;
+                  const medalColor = l.position === 1 ? '#FFB703' : l.position === 2 ? '#8E87A8' : '#CD7F32';
+                  const medal = l.position === 1 ? '🥇' : l.position === 2 ? '🥈' : l.position === 3 ? '🥉' : null;
+                  const fecha = new Date(l.fecha).toLocaleDateString('es-CO', { day: 'numeric', month: 'short', year: 'numeric' });
+                  return (
+                    <div key={l.id} className="bg-white border border-border rounded-xl px-4 py-3 flex items-start gap-3">
+                      <div
+                        className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 text-[18px]"
+                        style={{ background: isPodio ? `${medalColor}18` : 'rgba(124,58,237,0.08)' }}
+                      >
+                        {medal ?? <Trophy className="w-4 h-4" style={{ color: '#7C3AED' }} />}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-0.5">
+                          {l.position && (
+                            <span
+                              className="text-[10px] font-bold px-1.5 py-0.5 rounded-full"
+                              style={{ background: `${medalColor}18`, color: medalColor }}
+                            >
+                              {l.position}° lugar
+                            </span>
+                          )}
+                          {l.categoria && (
+                            <span className="text-[10px] font-semibold text-muted-foreground">{l.categoria}</span>
+                          )}
+                        </div>
+                        <p className="text-[13px] font-semibold text-foreground truncate">{l.titulo}</p>
+                        <p className="text-[10px] text-muted-foreground mt-0.5">{fecha}</p>
+                        {l.observaciones && (
+                          <p className="text-[11px] text-muted-foreground mt-0.5 truncate">{l.observaciones}</p>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </section>
         )}
 

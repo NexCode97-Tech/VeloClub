@@ -1,6 +1,6 @@
 'use client';
 
-import { useAuth } from '@clerk/nextjs';
+import { useAuth, useUser } from '@clerk/nextjs';
 import { useEffect, useState } from 'react';
 import { apiFetch } from '@/lib/api-client';
 import { Button } from '@/components/ui/button';
@@ -48,6 +48,7 @@ const emptyForm = {
 
 export default function MiembrosPage() {
   const { getToken } = useAuth();
+  const { user } = useUser();
   const [members, setMembers] = useState<Member[]>([]);
   const [locations, setLocations] = useState<Location[]>([]);
   const [loading, setLoading] = useState(true);
@@ -110,7 +111,17 @@ export default function MiembrosPage() {
         paymentDueDay: form.paymentDueDay ? parseInt(form.paymentDueDay) : null,
       });
       if (editing) {
+        const roleChanged = editing.role !== form.role;
+        const isSelf = editing.email && user?.primaryEmailAddress?.emailAddress
+          ? editing.email === user.primaryEmailAddress.emailAddress
+          : false;
         await apiFetch(`/members/${editing.id}`, { method: 'PUT', token, body });
+        // Si cambió el rol del usuario actual, recargar la app completa
+        // para que el layout actualice permisos, nav y accesos inmediatamente
+        if (roleChanged && isSelf) {
+          window.location.href = '/dashboard';
+          return;
+        }
       } else {
         await apiFetch('/members', { method: 'POST', token, body });
       }

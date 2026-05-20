@@ -213,9 +213,13 @@ export default function LogrosPage() {
             </div>
           ) : (
             visibleComps.map(c => {
-              const resultCount = c.events.reduce((s, e) => s + e.results.length, 0);
+              const allResults = c.events.flatMap(e => e.results);
+              const visibleResults = isStudent && myMemberId
+                ? allResults.filter(r => r.member.id === myMemberId)
+                : allResults;
+              const resultCount = visibleResults.length;
               const dateStr = new Date(c.date).toLocaleDateString('es-CO', { day: 'numeric', month: 'short', year: 'numeric' });
-              const podium = c.events.flatMap(e => e.results).filter(r => r.position && r.position <= 3).sort((a, b) => (a.position ?? 99) - (b.position ?? 99)).slice(0, 3);
+              const podium = visibleResults.filter(r => r.position && r.position <= 3).sort((a, b) => (a.position ?? 99) - (b.position ?? 99)).slice(0, 3);
               return (
                 <div key={c.id} className="bg-white border border-border rounded-xl overflow-hidden">
                   <Link href={`/dashboard/logros/${c.id}`} className="block px-4 py-3 hover:bg-secondary/30 transition-colors">
@@ -287,7 +291,12 @@ export default function LogrosPage() {
                           <span className="flex items-center gap-1 text-[10px] text-muted-foreground"><CalendarDays className="w-3 h-3" />{dateStr}</span>
                         </div>
                         <div className="flex items-center gap-3 mt-1">
-                          <span className="text-[10px] text-muted-foreground">{s.results.length} resultado{s.results.length !== 1 ? 's' : ''}</span>
+                          {(() => {
+                            const rc = isStudent && myMemberId
+                              ? s.results.filter(r => r.member.id === myMemberId).length
+                              : s.results.length;
+                            return <span className="text-[10px] text-muted-foreground">{rc} resultado{rc !== 1 ? 's' : ''}</span>;
+                          })()}
                           {s.notes && <span className="text-[10px] text-muted-foreground truncate max-w-[120px]">{s.notes}</span>}
                         </div>
                       </div>

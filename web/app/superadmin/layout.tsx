@@ -1,7 +1,7 @@
 'use client';
 
 import { usePathname, useRouter } from 'next/navigation';
-import { useAuth } from '@clerk/nextjs';
+import { useAuth, UserButton } from '@clerk/nextjs';
 import { useEffect, useState, useCallback } from 'react';
 import { apiFetch, ApiError } from '@/lib/api-client';
 import LoadingScreen from '@/components/ui/loading-screen';
@@ -226,7 +226,7 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
                 boxShadow: '0 8px 32px rgba(124,58,237,0.13), 0 2px 8px rgba(0,0,0,0.06)',
               }}
             >
-              {/* Círculo deslizante con degradado de la app */}
+              {/* Círculo deslizante — solo para los 4 tabs de navegación */}
               {activeIdx >= 0 && (
                 <div
                   className="absolute pointer-events-none"
@@ -235,7 +235,7 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
                     height: 56,
                     borderRadius: '50%',
                     background: 'linear-gradient(135deg, #7C3AED 0%, #4361EE 55%, #06D6A0 100%)',
-                    left: `calc((${activeIdx} + 0.5) / ${TABS.length} * 100% - 28px)`,
+                    left: `calc((${activeIdx} + 0.5) / ${TABS.length + 1} * 100% - 28px)`,
                     top: 6,
                     transition: 'left 0.35s cubic-bezier(0.34,1.2,0.64,1)',
                     boxShadow: '0 4px 20px rgba(124,58,237,0.40)',
@@ -243,6 +243,7 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
                 />
               )}
 
+              {/* Tabs 1-4: navegación */}
               {TABS.map((tab) => {
                 const active = tab.exact ? pathname === tab.href : pathname.startsWith(tab.href);
                 return (
@@ -273,6 +274,26 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
                   </Link>
                 );
               })}
+
+              {/* Tab 5: Perfil Clerk — estilo WhatsApp "Tú" */}
+              <div
+                className="flex-1 flex flex-col items-center relative z-10"
+                style={{ gap: 5, paddingBottom: 2 }}
+              >
+                <div className="flex items-center justify-center" style={{ width: 56, height: 56 }}>
+                  <UserButton
+                    appearance={{
+                      elements: {
+                        avatarBox: { width: 36, height: 36, borderRadius: '50%' },
+                        userButtonPopoverCard: { borderRadius: 16 },
+                      },
+                    }}
+                  />
+                </div>
+                <span className="text-[9px] tracking-wide leading-none" style={{ color: '#8E87A8', fontWeight: 500 }}>
+                  Perfil
+                </span>
+              </div>
             </div>
           );
         })()}

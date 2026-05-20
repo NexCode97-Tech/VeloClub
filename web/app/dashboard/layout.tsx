@@ -275,23 +275,23 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   backdropFilter: 'blur(20px)',
                   WebkitBackdropFilter: 'blur(20px)',
                   borderRadius: 40,
-                  padding: '8px 0',
+                  padding: '6px 0 8px',
                   border: '1px solid rgba(124,58,237,0.14)',
                   boxShadow: '0 8px 32px rgba(124,58,237,0.13), 0 2px 8px rgba(0,0,0,0.06)',
                   pointerEvents: 'auto',
                 }}
               >
-                {/* Círculo deslizante — degradado marca */}
+                {/* Círculo deslizante — mismo tamaño que el avatar del UserButton */}
                 {activeTabIndex >= 0 && (
                   <div
                     className="absolute pointer-events-none"
                     style={{
-                      width: 56,
-                      height: 56,
+                      width: 44,
+                      height: 44,
                       borderRadius: '50%',
                       background: 'linear-gradient(135deg, #7C3AED 0%, #4361EE 55%, #06D6A0 100%)',
-                      left: `calc((${activeTabIndex} + 0.5) / ${totalSlots} * 100% - 28px)`,
-                      top: 6,
+                      left: `calc((${activeTabIndex} + 0.5) / ${totalSlots} * 100% - 22px)`,
+                      top: 8,
                       transition: 'left 0.35s cubic-bezier(0.34,1.2,0.64,1)',
                       boxShadow: '0 4px 20px rgba(124,58,237,0.40)',
                     }}
@@ -305,11 +305,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                       key={href}
                       href={href}
                       className="flex-1 flex flex-col items-center relative z-10"
-                      style={{ gap: 5, paddingBottom: 2 }}
+                      style={{ gap: 4, paddingBottom: 2 }}
                     >
-                      <div className="flex items-center justify-center" style={{ width: 56, height: 56 }}>
+                      <div className="flex items-center justify-center" style={{ width: 44, height: 44 }}>
                         <Icon
-                          className="w-[26px] h-[26px]"
+                          className="w-[22px] h-[22px]"
                           strokeWidth={active ? 2.2 : 1.7}
                           style={{ color: active ? '#fff' : '#8E87A8', transition: 'color 0.2s' }}
                         />
@@ -328,17 +328,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   );
                 })}
 
-                {/* Tab 5 para STUDENT: Clerk UserButton */}
+                {/* Tab Perfil para STUDENT: Clerk UserButton — mismo tamaño 44px */}
                 {isStudent && (
                   <div
                     className="flex-1 flex flex-col items-center relative z-10"
-                    style={{ gap: 5, paddingBottom: 2 }}
+                    style={{ gap: 4, paddingBottom: 2 }}
                   >
-                    <div className="flex items-center justify-center" style={{ width: 56, height: 56 }}>
+                    <div className="flex items-center justify-center" style={{ width: 44, height: 44 }}>
                       <UserButton
                         appearance={{
                           elements: {
-                            avatarBox: { width: 36, height: 36, borderRadius: '50%' },
+                            avatarBox: { width: 38, height: 38, borderRadius: '50%' },
                             userButtonPopoverCard: { borderRadius: 16 },
                           },
                         }}

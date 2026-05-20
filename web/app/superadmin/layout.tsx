@@ -220,22 +220,22 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
                 backdropFilter: 'blur(20px)',
                 WebkitBackdropFilter: 'blur(20px)',
                 borderRadius: 40,
-                padding: '8px 0',
+                padding: '6px 0 8px',
                 border: '1px solid rgba(124,58,237,0.14)',
                 boxShadow: '0 8px 32px rgba(124,58,237,0.13), 0 2px 8px rgba(0,0,0,0.06)',
               }}
             >
-              {/* Círculo deslizante */}
+              {/* Círculo deslizante — mismo tamaño que el avatar del UserButton */}
               {activeIdx >= 0 && (
                 <div
                   className="absolute pointer-events-none"
                   style={{
-                    width: 46,
-                    height: 46,
+                    width: 44,
+                    height: 44,
                     borderRadius: '50%',
                     background: 'linear-gradient(135deg, #7C3AED 0%, #4361EE 55%, #06D6A0 100%)',
-                    left: `calc((${activeIdx} + 0.5) / ${TABS.length + 1} * 100% - 23px)`,
-                    top: 6,
+                    left: `calc((${activeIdx} + 0.5) / ${TABS.length + 1} * 100% - 22px)`,
+                    top: 8,
                     transition: 'left 0.35s cubic-bezier(0.34,1.2,0.64,1)',
                     boxShadow: '0 4px 20px rgba(124,58,237,0.40)',
                   }}
@@ -252,7 +252,7 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
                     className="flex-1 flex flex-col items-center relative z-10"
                     style={{ gap: 4, paddingBottom: 2 }}
                   >
-                    <div className="flex items-center justify-center" style={{ width: 46, height: 46 }}>
+                    <div className="flex items-center justify-center" style={{ width: 44, height: 44 }}>
                       <tab.Icon
                         size={22}
                         color={active ? '#fff' : '#8E87A8'}
@@ -274,16 +274,16 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
                 );
               })}
 
-              {/* Tab Perfil — UserButton (reemplaza Config) */}
+              {/* Tab Perfil — UserButton (fusiona Config + Perfil) */}
               <div
                 className="flex-1 flex flex-col items-center relative z-10"
                 style={{ gap: 4, paddingBottom: 2 }}
               >
-                <div className="flex items-center justify-center" style={{ width: 46, height: 46 }}>
+                <div className="flex items-center justify-center" style={{ width: 44, height: 44 }}>
                   <UserButton
                     appearance={{
                       elements: {
-                        avatarBox: { width: 32, height: 32, borderRadius: '50%' },
+                        avatarBox: { width: 38, height: 38, borderRadius: '50%' },
                         userButtonPopoverCard: { borderRadius: 16 },
                       },
                     }}

@@ -1,9 +1,25 @@
-import { SignIn } from '@clerk/nextjs';
+'use client';
+
+import { SignIn, useAuth } from '@clerk/nextjs';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 
 export default function SignInPage() {
+  const { isSignedIn, isLoaded } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (isLoaded && isSignedIn) {
+      router.replace('/dashboard');
+    }
+  }, [isLoaded, isSignedIn]);
+
+  // No renderizar nada hasta saber si está autenticado
+  if (!isLoaded || isSignedIn) return null;
+
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 gap-6">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 gap-5">
       <Image
         src="/logo-full.jpg"
         alt="VeloClub"
@@ -11,6 +27,9 @@ export default function SignInPage() {
         height={42}
         className="object-contain rounded-xl"
       />
+      <p className="text-[12px] font-semibold text-slate-400 tracking-wide -mb-2">
+        Inicia sesión con:
+      </p>
       <div className="sign-in-wrapper">
         <SignIn
           appearance={{
@@ -24,19 +43,6 @@ export default function SignInPage() {
           }}
         />
       </div>
-      <style>{`
-        .sign-in-wrapper .cl-socialButtonsBlock::before {
-          content: 'Inicia sesión con:';
-          display: block;
-          text-align: center;
-          font-size: 12px;
-          font-weight: 600;
-          color: #94a3b8;
-          margin-bottom: 8px;
-          font-family: var(--font-space-grotesk), sans-serif;
-          letter-spacing: 0.02em;
-        }
-      `}</style>
     </div>
   );
 }

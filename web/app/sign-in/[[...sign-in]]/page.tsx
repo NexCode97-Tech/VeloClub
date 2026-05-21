@@ -26,17 +26,22 @@ export default function SignInPage() {
         height={42}
         className="object-contain rounded-xl"
       />
-      <SignIn
-        appearance={{
-          elements: {
-            footer: 'hidden',
-            card: 'shadow-md rounded-2xl border border-slate-200',
-            headerTitle: 'hidden',
-            headerSubtitle: 'hidden',
-            dividerRow: 'hidden',
-          },
-        }}
-      />
+      <div className="relative">
+        <SignIn
+          appearance={{
+            elements: {
+              footer: 'hidden',
+              card: 'shadow-md rounded-2xl border border-slate-200 pt-8',
+              headerTitle: 'hidden',
+              headerSubtitle: 'hidden',
+              dividerRow: 'hidden',
+            },
+          }}
+        />
+        <p className="absolute top-4 left-0 right-0 text-center text-[14px] font-semibold text-slate-500 pointer-events-none">
+          Inicia sesión con:
+        </p>
+      </div>
     </div>
   );
 }

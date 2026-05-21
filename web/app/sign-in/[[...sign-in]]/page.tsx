@@ -27,9 +27,6 @@ export default function SignInPage() {
         className="object-contain rounded-xl"
       />
       <SignIn
-        localization={{
-          socialButtonsBlockButton: 'Inicia sesión con {{provider|titleize}}',
-        }}
         appearance={{
           elements: {
             footer: 'hidden',

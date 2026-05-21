@@ -26,31 +26,20 @@ export default function SignInPage() {
         height={42}
         className="object-contain rounded-xl"
       />
-      <div className="sign-in-wrapper">
-        <SignIn
-          appearance={{
-            elements: {
-              footer: 'hidden',
-              card: 'shadow-md rounded-2xl border border-slate-200',
-              headerTitle: 'hidden',
-              headerSubtitle: 'hidden',
-              dividerRow: 'hidden',
-            },
-          }}
-        />
-      </div>
-      <style>{`
-        .sign-in-wrapper [class*="socialButtons"]::before {
-          content: 'Inicia sesión con:';
-          display: block;
-          text-align: center;
-          font-size: 15px;
-          font-weight: 700;
-          color: #475569;
-          margin-bottom: 12px;
-          letter-spacing: 0.01em;
-        }
-      `}</style>
+      <SignIn
+        localization={{
+          socialButtonsBlockButton: 'Inicia sesión con {{provider|titleize}}',
+        }}
+        appearance={{
+          elements: {
+            footer: 'hidden',
+            card: 'shadow-md rounded-2xl border border-slate-200',
+            headerTitle: 'hidden',
+            headerSubtitle: 'hidden',
+            dividerRow: 'hidden',
+          },
+        }}
+      />
     </div>
   );
 }

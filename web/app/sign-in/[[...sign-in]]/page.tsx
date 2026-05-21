@@ -15,7 +15,6 @@ export default function SignInPage() {
     }
   }, [isLoaded, isSignedIn]);
 
-  // No renderizar nada hasta saber si está autenticado
   if (!isLoaded || isSignedIn) return null;
 
   return (
@@ -27,9 +26,6 @@ export default function SignInPage() {
         height={42}
         className="object-contain rounded-xl"
       />
-      <p className="text-[12px] font-semibold text-slate-400 tracking-wide -mb-2">
-        Inicia sesión con:
-      </p>
       <div className="sign-in-wrapper">
         <SignIn
           appearance={{
@@ -39,10 +35,25 @@ export default function SignInPage() {
               headerTitle: 'hidden',
               headerSubtitle: 'hidden',
               dividerRow: 'hidden',
+              socialButtonsBlock: 'signin-social-block',
             },
           }}
         />
       </div>
+      <style>{`
+        .sign-in-wrapper .cl-socialButtonsBlock::before,
+        .sign-in-wrapper [class*="socialButtonsBlock"]::before,
+        .sign-in-wrapper .signin-social-block::before {
+          content: 'Inicia sesión con:';
+          display: block;
+          text-align: center;
+          font-size: 15px;
+          font-weight: 700;
+          color: #475569;
+          margin-bottom: 12px;
+          letter-spacing: 0.01em;
+        }
+      `}</style>
     </div>
   );
 }

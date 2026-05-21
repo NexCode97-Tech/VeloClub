@@ -35,15 +35,12 @@ export default function SignInPage() {
               headerTitle: 'hidden',
               headerSubtitle: 'hidden',
               dividerRow: 'hidden',
-              socialButtonsBlock: 'signin-social-block',
             },
           }}
         />
       </div>
       <style>{`
-        .sign-in-wrapper .cl-socialButtonsBlock::before,
-        .sign-in-wrapper [class*="socialButtonsBlock"]::before,
-        .sign-in-wrapper .signin-social-block::before {
+        .sign-in-wrapper [class*="socialButtons"]::before {
           content: 'Inicia sesión con:';
           display: block;
           text-align: center;

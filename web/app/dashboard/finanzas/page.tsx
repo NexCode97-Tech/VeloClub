@@ -1,6 +1,7 @@
 'use client';
 
 import { useAuth } from '@clerk/nextjs';
+import { useClubStream } from '@/hooks/useClubStream';
 import { useEffect, useState } from 'react';
 import { apiFetch } from '@/lib/api-client';
 import {
@@ -125,13 +126,10 @@ export default function FinanzasPage() {
     loadFlow();
   }, [filterMonth, filterYear]);
 
-  // Tiempo real: refrescar al volver al tab + polling 30s
-  useEffect(() => {
-    const refresh = () => { if (document.visibilityState === 'visible') { loadPayments(); loadFlow(); } };
-    document.addEventListener('visibilitychange', refresh);
-    const interval = setInterval(() => { if (document.visibilityState === 'visible') { loadPayments(); loadFlow(); } }, 30_000);
-    return () => { document.removeEventListener('visibilitychange', refresh); clearInterval(interval); };
-  }, [filterMonth, filterYear]);
+  // Tiempo real: SSE push desde el servidor
+  useClubStream((ev) => {
+    if (ev === 'payments' || ev === 'cashflow') { loadPayments(); loadFlow(); }
+  });
 
   // Pagos helpers
   const filteredPay = payments.filter(p => {

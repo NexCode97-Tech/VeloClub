@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { requireAuth } from '../auth/middleware';
 import { prisma } from '../db/client';
+import { emitToClub } from '../lib/sse';
 
 const router = Router();
 
@@ -85,6 +86,7 @@ router.post('/', requireAuth, async (req, res) => {
     },
   });
 
+  emitToClub(req.user.clubId ?? '', 'training');
   res.status(201).json({ session });
 });
 
@@ -96,6 +98,7 @@ router.delete('/:id', requireAuth, async (req, res) => {
   });
   if (!existing) return res.status(404).json({ error: 'Sesión no encontrada' });
   await prisma.trainingSession.delete({ where: { id: existing.id } });
+  emitToClub(req.user.clubId ?? '', 'training');
   res.json({ ok: true });
 });
 
@@ -131,6 +134,7 @@ router.post('/:id/results', requireAuth, async (req, res) => {
       },
       include: { member: { select: { id: true, fullName: true } } },
     });
+    emitToClub(clubId, 'training');
     res.status(201).json({ result });
   } catch (err) {
     console.error('Error al guardar resultado:', err);
@@ -150,6 +154,7 @@ router.delete('/:id/results/:resultId', requireAuth, async (req, res) => {
   if (!session) return res.status(404).json({ error: 'Sesión no encontrada' });
 
   await prisma.trainingResult.delete({ where: { id: resultId } });
+  emitToClub(req.user.clubId ?? '', 'training');
   res.json({ ok: true });
 });
 

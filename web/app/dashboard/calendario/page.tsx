@@ -1,6 +1,7 @@
 'use client';
 
 import { useAuth } from '@clerk/nextjs';
+import { useClubStream } from '@/hooks/useClubStream';
 import { useEffect, useState } from 'react';
 import { apiFetch } from '@/lib/api-client';
 import { ChevronLeft, ChevronRight, CalendarDays, Trophy, Dumbbell, MapPin } from 'lucide-react';
@@ -85,13 +86,8 @@ export default function CalendarioPage() {
 
   useEffect(() => { loadEvents(); }, [month, year]);
 
-  // Tiempo real: refrescar al volver al tab + polling 30s
-  useEffect(() => {
-    const refresh = () => { if (document.visibilityState === 'visible') loadEvents(); };
-    document.addEventListener('visibilitychange', refresh);
-    const interval = setInterval(() => { if (document.visibilityState === 'visible') loadEvents(); }, 30_000);
-    return () => { document.removeEventListener('visibilitychange', refresh); clearInterval(interval); };
-  }, [month, year]);
+  // Tiempo real: SSE push desde el servidor
+  useClubStream((ev) => { if (ev === 'calendar' || ev === 'training') loadEvents(); });
 
   const daysInMonth = getDaysInMonth(year, month);
   const firstDay    = getFirstDayOfMonth(year, month);

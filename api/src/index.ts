@@ -14,6 +14,7 @@ import competitionsRouter from './routes/competitions';
 import cashflowRouter from './routes/cashflow';
 import attendanceRouter from './routes/attendance';
 import trainingRouter from './routes/training';
+import streamRouter from './routes/stream';
 
 dotenv.config();
 
@@ -70,6 +71,7 @@ app.use('/competitions', competitionsRouter);
 app.use('/cashflow', cashflowRouter);
 app.use('/attendance', attendanceRouter);
 app.use('/training', trainingRouter);
+app.use('/stream', streamRouter);
 
 // ── Manejador global de errores ───────────────────────────────────────────────
 // Evita que stack traces o mensajes internos lleguen al cliente

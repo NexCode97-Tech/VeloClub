@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { Prisma } from '@prisma/client';
 import { requireAuth } from '../auth/middleware';
 import { prisma } from '../db/client';
+import { emitToClub } from '../lib/sse';
 import { addToAllowlist, removeFromAllowlist, revokeClerkAccess, revokeClerkSessions } from '../lib/clerk-allowlist';
 
 const router = Router();
@@ -106,6 +107,7 @@ router.post('/', requireAuth, async (req, res) => {
     try { await addToAllowlist(member.email); } catch { /* ya existe o error de Clerk */ }
   }
 
+  emitToClub(req.user.clubId ?? '', 'members');
   res.status(201).json({ member });
 });
 
@@ -153,6 +155,7 @@ router.put('/:id', requireAuth, async (req, res) => {
     if (roleCambio) await revokeClerkSessions(member.clerkId);
   }
 
+  emitToClub(req.user.clubId ?? '', 'members');
   res.json({ member });
 });
 
@@ -175,6 +178,7 @@ router.delete('/:id', requireAuth, async (req, res) => {
   }
 
   await prisma.member.delete({ where: { id } });
+  emitToClub(req.user.clubId ?? '', 'members');
   res.json({ ok: true });
 });
 

@@ -1,6 +1,7 @@
 'use client';
 
 import { useAuth, useSession } from '@clerk/nextjs';
+import { useClubStream } from '@/hooks/useClubStream';
 import { useEffect, useState } from 'react';
 import { apiFetch } from '@/lib/api-client';
 import { Users, CalendarCheck, CreditCard, Trophy, TrendingUp, TrendingDown, Minus } from 'lucide-react';
@@ -101,12 +102,12 @@ export default function ReportesPage() {
 
   useEffect(() => { loadReportes(); }, [isSignedIn, session]);
 
-  useEffect(() => {
-    const refresh = () => { if (document.visibilityState === 'visible') loadReportes(); };
-    document.addEventListener('visibilitychange', refresh);
-    const interval = setInterval(() => { if (document.visibilityState === 'visible') loadReportes(); }, 30_000);
-    return () => { document.removeEventListener('visibilitychange', refresh); clearInterval(interval); };
-  }, [isSignedIn, session]);
+  // Tiempo real: SSE push desde el servidor
+  useClubStream((ev) => {
+    if (['members', 'payments', 'attendance', 'competitions', 'training'].includes(ev)) {
+      loadReportes();
+    }
+  });
 
   function fmt(n: number) {
     return n >= 1_000_000

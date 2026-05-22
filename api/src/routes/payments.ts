@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { requireAuth } from '../auth/middleware';
 import { prisma } from '../db/client';
+import { emitToClub } from '../lib/sse';
 
 const router = Router();
 
@@ -122,6 +123,7 @@ router.post('/', requireAuth, async (req, res) => {
     await createCashEntry(clubId, payment.id, payment.amount, payment.member.fullName, payment.month, payment.year);
   }
 
+  emitToClub(clubId, 'payments');
   res.status(201).json({ payment });
 });
 
@@ -169,6 +171,7 @@ router.patch('/:id', requireAuth, async (req, res) => {
     );
   }
 
+  emitToClub(clubId, 'payments');
   res.json({ payment });
 });
 
@@ -183,6 +186,7 @@ router.delete('/:id', requireAuth, async (req, res) => {
 
   await prisma.cashEntry.deleteMany({ where: { paymentId: id } });
   await prisma.payment.delete({ where: { id } });
+  emitToClub(req.user.clubId ?? '', 'payments');
   res.json({ ok: true });
 });
 

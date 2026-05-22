@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { requireAuth } from '../auth/middleware';
 import { prisma } from '../db/client';
+import { emitToClub } from '../lib/sse';
 
 const router = Router();
 
@@ -53,6 +54,7 @@ router.post('/', requireAuth, async (req, res) => {
     },
   });
 
+  emitToClub(req.user.clubId ?? '', 'cashflow');
   res.status(201).json({ entry });
 });
 
@@ -66,6 +68,7 @@ router.delete('/:id', requireAuth, async (req, res) => {
   if (entry.paymentId) return res.status(400).json({ error: 'No se puede eliminar una entrada automática. Elimina el pago correspondiente.' });
 
   await prisma.cashEntry.delete({ where: { id } });
+  emitToClub(req.user.clubId ?? '', 'cashflow');
   res.json({ ok: true });
 });
 

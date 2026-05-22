@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { requireAuth } from '../auth/middleware';
 import { prisma } from '../db/client';
+import { emitToClub } from '../lib/sse';
 
 const router = Router();
 
@@ -59,6 +60,7 @@ router.post('/', requireAuth, async (req, res) => {
     include: { location: true },
   });
 
+  emitToClub(req.user.clubId ?? '', 'calendar');
   res.status(201).json({ event });
 });
 
@@ -71,6 +73,7 @@ router.delete('/:id', requireAuth, async (req, res) => {
   if (!event) return res.status(404).json({ error: 'Evento no encontrado' });
 
   await prisma.calendarEvent.delete({ where: { id } });
+  emitToClub(req.user.clubId ?? '', 'calendar');
   res.json({ ok: true });
 });
 

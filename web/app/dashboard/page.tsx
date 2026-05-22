@@ -1,6 +1,7 @@
 'use client';
 
 import { useAuth, useSession } from '@clerk/nextjs';
+import { useClubStream } from '@/hooks/useClubStream';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { apiFetch } from '@/lib/api-client';
@@ -256,15 +257,13 @@ export default function DashboardPage() {
     })();
   }, [isLoaded, isSignedIn, userId, sessionId]);
 
-  // Tiempo real: refrescar al volver al tab + polling 30s
-  useEffect(() => {
+  // Tiempo real: SSE push desde el servidor
+  useClubStream((ev) => {
     if (!me?.user?.role) return;
-    const role = me.user.role;
-    const refresh = () => { if (document.visibilityState === 'visible') fetchStats(role).catch(() => {}); };
-    document.addEventListener('visibilitychange', refresh);
-    const interval = setInterval(() => { if (document.visibilityState === 'visible') fetchStats(role).catch(() => {}); }, 30_000);
-    return () => { document.removeEventListener('visibilitychange', refresh); clearInterval(interval); };
-  }, [me?.user?.role, fetchStats]);
+    if (['members', 'payments', 'attendance'].includes(ev)) {
+      fetchStats(me.user.role).catch(() => {});
+    }
+  });
 
   if (loading) {
     return (

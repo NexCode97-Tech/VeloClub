@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { requireAuth } from '../auth/middleware';
 import { prisma } from '../db/client';
+import { emitToClub } from '../lib/sse';
 
 const router = Router();
 
@@ -132,6 +133,7 @@ router.post('/bulk', requireAuth, async (req, res) => {
     )
   );
 
+  emitToClub(clubId, 'attendance');
   res.json({ ok: true, saved: records.length });
 });
 

@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { requireAuth } from '../auth/middleware';
 import { prisma } from '../db/client';
+import { emitToClub } from '../lib/sse';
 
 const router = Router();
 
@@ -57,6 +58,7 @@ router.post('/', requireAuth, async (req, res) => {
     include: { events: true },
   });
 
+  emitToClub(req.user.clubId ?? '', 'competitions');
   res.status(201).json({ competition });
 });
 
@@ -93,6 +95,7 @@ router.delete('/:id', requireAuth, async (req, res) => {
   if (!competition) return res.status(404).json({ error: 'Competencia no encontrada' });
 
   await prisma.competition.delete({ where: { id } });
+  emitToClub(req.user.clubId ?? '', 'competitions');
   res.json({ ok: true });
 });
 
@@ -114,6 +117,7 @@ router.post('/:id/events', requireAuth, async (req, res) => {
     include: { results: true },
   });
 
+  emitToClub(req.user.clubId ?? '', 'competitions');
   res.status(201).json({ event });
 });
 
@@ -127,6 +131,7 @@ router.delete('/:id/events/:eventId', requireAuth, async (req, res) => {
   if (!competition) return res.status(404).json({ error: 'Competencia no encontrada' });
 
   await prisma.competitionEvent.delete({ where: { id: eventId } });
+  emitToClub(req.user.clubId ?? '', 'competitions');
   res.json({ ok: true });
 });
 
@@ -167,6 +172,7 @@ router.post('/:id/events/:eventId/results', requireAuth, async (req, res) => {
       },
       include: { member: { select: { id: true, fullName: true } } },
     });
+    emitToClub(req.user.clubId ?? '', 'competitions');
     res.status(201).json({ result });
   } catch (err) {
     console.error('Error al guardar resultado de competencia:', err);
@@ -184,6 +190,7 @@ router.delete('/:id/events/:eventId/results/:resultId', requireAuth, async (req,
   if (!competition) return res.status(404).json({ error: 'Competencia no encontrada' });
 
   await prisma.eventResult.delete({ where: { id: resultId } });
+  emitToClub(req.user.clubId ?? '', 'competitions');
   res.json({ ok: true });
 });
 

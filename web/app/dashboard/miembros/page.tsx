@@ -1,6 +1,7 @@
 'use client';
 
 import { useAuth, useUser } from '@clerk/nextjs';
+import { useClubStream } from '@/hooks/useClubStream';
 import { useEffect, useState } from 'react';
 import { apiFetch } from '@/lib/api-client';
 import { Button } from '@/components/ui/button';
@@ -81,13 +82,8 @@ export default function MiembrosPage() {
 
   useEffect(() => { load(); }, []);
 
-  // Tiempo real: refrescar al volver al tab + polling 30s
-  useEffect(() => {
-    const refresh = () => { if (document.visibilityState === 'visible') load(); };
-    document.addEventListener('visibilitychange', refresh);
-    const interval = setInterval(() => { if (document.visibilityState === 'visible') load(); }, 30_000);
-    return () => { document.removeEventListener('visibilitychange', refresh); clearInterval(interval); };
-  }, []);
+  // Tiempo real: SSE push desde el servidor
+  useClubStream((ev) => { if (ev === 'members') load(); });
 
   function openNew() {
     setEditing(null); setForm(emptyForm); setError(null); setOpen(true);

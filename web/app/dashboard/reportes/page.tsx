@@ -51,11 +51,12 @@ export default function ReportesPage() {
 
         const todayISO = `${year}-${String(month).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
 
-        const [membersRes, attTodayRes, paymentsRes, compsRes] = await Promise.allSettled([
+        const [membersRes, attTodayRes, paymentsRes, compsRes, attMonthlyRes] = await Promise.allSettled([
           apiFetch<{ members: { id: string }[] }>('/members', { token }),
           apiFetch<{ records: { status: string }[] }>(`/attendance?date=${todayISO}`, { token }),
           apiFetch<{ payments: { status: string; amount: number; month: number; year: number }[] }>(`/payments?year=${year}`, { token }),
           apiFetch<{ competitions: { id: string; events: { results: { id: string }[] }[] }[] }>('/competitions', { token }),
+          apiFetch<{ months: { month: number; year: number; presentes: number }[] }>('/attendance/monthly-stats', { token }),
         ]);
 
         // Total miembros
@@ -91,15 +92,6 @@ export default function ReportesPage() {
             { name: 'Pendiente', value: dist.PENDING, color: YELLOW },
             { name: 'Vencido',   value: dist.OVERDUE, color: RED    },
           ].filter(d => d.value > 0));
-
-          // Asistencias del mes — contar días únicos con al menos 1 presente
-          // Lo aproximamos con los pagos por mes para la gráfica mensual de ingresos
-          const byMonth: Record<number, number> = {};
-          payments.filter(p => p.status === 'PAID' && p.year === year).forEach(p => {
-            byMonth[p.month] = (byMonth[p.month] ?? 0) + p.amount;
-          });
-          // Gráfica asistencia mensual — usamos weekday-stats para el mes actual
-          // y para meses anteriores estimamos con asistencia total registrada
         }
 
         // Logros totales (resultados de competencias)
@@ -110,36 +102,15 @@ export default function ReportesPage() {
           setTotalLogros(total);
         }
 
-        // Asistencia mensual — últimos 6 meses
-        const attMonths: MonthlyAttendance[] = [];
-        for (let i = 5; i >= 0; i--) {
-          const d = new Date(year, month - 1 - i, 1);
-          const m2 = d.getMonth() + 1;
-          const y2 = d.getFullYear();
-          // Contar días del mes con al menos 1 registro PRESENT
-          try {
-            const token2 = await session?.getToken({ skipCache: true });
-            const daysInMonth = new Date(y2, m2, 0).getDate();
-            let presentDays = 0;
-            // Obtener asistencia del mes contando días únicos con presentes
-            // Usamos un único query por mes con fecha range
-            const startISO = `${y2}-${String(m2).padStart(2,'0')}-01`;
-            const endISO   = `${y2}-${String(m2).padStart(2,'0')}-${String(daysInMonth).padStart(2,'0')}`;
-            const attRes = await apiFetch<{ records: { status: string }[] }>(
-              `/attendance?date=${startISO}`, { token: token2 }
-            ).catch(() => null);
-            if (attRes) {
-              presentDays = attRes.records.filter((r: { status: string }) => r.status === 'PRESENT').length;
-            }
-            attMonths.push({ month: MONTH_NAMES[m2 - 1], presentes: presentDays });
-          } catch {
-            attMonths.push({ month: MONTH_NAMES[m2 - 1], presentes: 0 });
-          }
+        // Asistencia mensual — últimos 6 meses desde endpoint dedicado
+        if (attMonthlyRes.status === 'fulfilled') {
+          const attMonths: MonthlyAttendance[] = attMonthlyRes.value.months.map(m => ({
+            month: MONTH_NAMES[m.month - 1],
+            presentes: m.presentes,
+          }));
+          setAsistenciaMes(attMonths[attMonths.length - 1]?.presentes ?? 0);
+          setMonthlyAtt(attMonths);
         }
-
-        // Asistencia del mes actual con más detalle
-        setAsistenciaMes(attMonths[attMonths.length - 1]?.presentes ?? 0);
-        setMonthlyAtt(attMonths);
 
       } catch (e) {
         console.error('Reportes error:', e);

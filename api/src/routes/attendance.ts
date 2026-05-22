@@ -36,6 +36,35 @@ router.get('/', requireAuth, async (req, res) => {
   res.json({ records });
 });
 
+// GET /attendance/monthly-stats — total presentes por mes (últimos 6 meses)
+router.get('/monthly-stats', requireAuth, async (req, res) => {
+  if (!req.user) return res.status(401).json({ error: 'No autenticado' });
+  const clubId = req.user.clubId ?? '';
+
+  const now = new Date();
+  const months: { month: number; year: number; label: string }[] = [];
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    months.push({ month: d.getMonth() + 1, year: d.getFullYear(), label: `${d.getMonth() + 1}-${d.getFullYear()}` });
+  }
+
+  const since = new Date(months[0].year, months[0].month - 1, 1);
+  const records = await prisma.attendance.findMany({
+    where: { clubId, status: 'PRESENT', date: { gte: since } },
+    select: { date: true },
+  });
+
+  const counts: Record<string, number> = {};
+  for (const r of records) {
+    const d = new Date(r.date);
+    const key = `${d.getMonth() + 1}-${d.getFullYear()}`;
+    counts[key] = (counts[key] ?? 0) + 1;
+  }
+
+  const result = months.map(m => ({ month: m.month, year: m.year, presentes: counts[m.label] ?? 0 }));
+  res.json({ months: result });
+});
+
 // GET /attendance/weekday-stats — presentes por día de semana (últimas 8 semanas)
 router.get('/weekday-stats', requireAuth, async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'No autenticado' });

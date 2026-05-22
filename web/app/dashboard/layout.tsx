@@ -26,15 +26,15 @@ const ROLE_TABS: Record<string, { href: string; label: string; icon: React.Eleme
     { href: '/dashboard',             label: 'Inicio',        icon: LayoutDashboard },
     { href: '/dashboard/miembros',    label: 'Miembros',      icon: Users },
     { href: '/dashboard/asistencia',  label: 'Asistencia',    icon: CalendarCheck },
-    { href: '/dashboard/finanzas',    label: 'Finanzas',      icon: CircleDollarSign },
-    { href: '/dashboard/mas',         label: 'Mas',           icon: MoreHorizontal },
+    { href: '/dashboard/logros',      label: 'Resultados',    icon: Trophy },
+    { href: '/dashboard/mas',         label: 'Más',           icon: MoreHorizontal },
   ],
   COACH: [
     { href: '/dashboard',             label: 'Inicio',        icon: LayoutDashboard },
     { href: '/dashboard/miembros',    label: 'Miembros',      icon: Users },
     { href: '/dashboard/asistencia',  label: 'Asistencia',    icon: CalendarCheck },
     { href: '/dashboard/logros',      label: 'Resultados',    icon: Trophy },
-    { href: '/dashboard/mas',         label: 'Mas',           icon: MoreHorizontal },
+    { href: '/dashboard/mas',         label: 'Más',           icon: MoreHorizontal },
   ],
   STUDENT: [
     { href: '/dashboard',             label: 'Inicio',        icon: LayoutDashboard },

@@ -85,6 +85,14 @@ export default function CalendarioPage() {
 
   useEffect(() => { loadEvents(); }, [month, year]);
 
+  // Tiempo real: refrescar al volver al tab + polling 30s
+  useEffect(() => {
+    const refresh = () => { if (document.visibilityState === 'visible') loadEvents(); };
+    document.addEventListener('visibilitychange', refresh);
+    const interval = setInterval(() => { if (document.visibilityState === 'visible') loadEvents(); }, 30_000);
+    return () => { document.removeEventListener('visibilitychange', refresh); clearInterval(interval); };
+  }, [month, year]);
+
   const daysInMonth = getDaysInMonth(year, month);
   const firstDay    = getFirstDayOfMonth(year, month);
   const cells: (number | null)[] = [

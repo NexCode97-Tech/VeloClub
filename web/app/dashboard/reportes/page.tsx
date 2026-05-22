@@ -27,6 +27,66 @@ export default function ReportesPage() {
 
   const [loading, setLoading] = useState(true);
 
+  async function loadReportes() {
+    if (!isSignedIn) return;
+    setLoading(true);
+    try {
+      const token = await session?.getToken({ skipCache: true });
+      const now   = new Date();
+      const month = now.getMonth() + 1;
+      const year  = now.getFullYear();
+      const todayISO = `${year}-${String(month).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+
+      const [membersRes, attTodayRes, paymentsRes, compsRes, attMonthlyRes] = await Promise.allSettled([
+        apiFetch<{ members: { id: string }[] }>('/members', { token }),
+        apiFetch<{ records: { status: string }[] }>(`/attendance?date=${todayISO}`, { token }),
+        apiFetch<{ payments: { status: string; amount: number; month: number; year: number }[] }>(`/payments?year=${year}`, { token }),
+        apiFetch<{ competitions: { id: string; events: { results: { id: string }[] }[] }[] }>('/competitions', { token }),
+        apiFetch<{ months: { month: number; year: number; presentes: number }[] }>('/attendance/monthly-stats', { token }),
+      ]);
+
+      if (membersRes.status === 'fulfilled') setTotalMembers(membersRes.value.members.length);
+      if (attTodayRes.status === 'fulfilled') {
+        setAsistenciaHoy(attTodayRes.value.records.filter(r => r.status === 'PRESENT').length);
+      }
+      if (paymentsRes.status === 'fulfilled') {
+        const payments = paymentsRes.value.payments;
+        const ingMes = payments
+          .filter(p => p.status === 'PAID' && p.month === month && p.year === year)
+          .reduce((s, p) => s + p.amount, 0);
+        setIngresosMes(ingMes);
+        const totalMes   = payments.filter(p => p.month === month && p.year === year).length;
+        const pagadosMes = payments.filter(p => p.status === 'PAID' && p.month === month && p.year === year).length;
+        setPagosAlDia(totalMes > 0 ? Math.round((pagadosMes / totalMes) * 100) : 0);
+        const dist: Record<string, number> = { PAID: 0, PENDING: 0, OVERDUE: 0 };
+        payments.filter(p => p.month === month && p.year === year).forEach(p => {
+          if (dist[p.status] !== undefined) dist[p.status]++;
+        });
+        setPaymentDist([
+          { name: 'Pagado',    value: dist.PAID,    color: GREEN  },
+          { name: 'Pendiente', value: dist.PENDING, color: YELLOW },
+          { name: 'Vencido',   value: dist.OVERDUE, color: RED    },
+        ].filter(d => d.value > 0));
+      }
+      if (compsRes.status === 'fulfilled') {
+        const total = compsRes.value.competitions.reduce(
+          (s, c) => s + c.events.reduce((es, ev) => es + ev.results.length, 0), 0
+        );
+        setTotalLogros(total);
+      }
+      if (attMonthlyRes.status === 'fulfilled') {
+        const attMonths: MonthlyAttendance[] = attMonthlyRes.value.months.map(m => ({
+          month: MONTH_NAMES[m.month - 1],
+          presentes: m.presentes,
+        }));
+        setAsistenciaMes(attMonths[attMonths.length - 1]?.presentes ?? 0);
+        setMonthlyAtt(attMonths);
+      }
+    } catch { /* silencioso */ } finally {
+      setLoading(false);
+    }
+  }
+
   // KPIs
   const [totalMembers, setTotalMembers]       = useState<number | null>(null);
   const [asistenciaHoy, setAsistenciaHoy]     = useState<number | null>(null);
@@ -39,84 +99,13 @@ export default function ReportesPage() {
   const [monthlyAtt, setMonthlyAtt]           = useState<MonthlyAttendance[]>([]);
   const [paymentDist, setPaymentDist]         = useState<PaymentDist[]>([]);
 
+  useEffect(() => { loadReportes(); }, [isSignedIn, session]);
+
   useEffect(() => {
-    if (!isSignedIn) return;
-    (async () => {
-      setLoading(true);
-      try {
-        const token = await session?.getToken({ skipCache: true });
-        const now   = new Date();
-        const month = now.getMonth() + 1;
-        const year  = now.getFullYear();
-
-        const todayISO = `${year}-${String(month).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
-
-        const [membersRes, attTodayRes, paymentsRes, compsRes, attMonthlyRes] = await Promise.allSettled([
-          apiFetch<{ members: { id: string }[] }>('/members', { token }),
-          apiFetch<{ records: { status: string }[] }>(`/attendance?date=${todayISO}`, { token }),
-          apiFetch<{ payments: { status: string; amount: number; month: number; year: number }[] }>(`/payments?year=${year}`, { token }),
-          apiFetch<{ competitions: { id: string; events: { results: { id: string }[] }[] }[] }>('/competitions', { token }),
-          apiFetch<{ months: { month: number; year: number; presentes: number }[] }>('/attendance/monthly-stats', { token }),
-        ]);
-
-        // Total miembros
-        if (membersRes.status === 'fulfilled') setTotalMembers(membersRes.value.members.length);
-
-        // Asistencia hoy
-        if (attTodayRes.status === 'fulfilled') {
-          setAsistenciaHoy(attTodayRes.value.records.filter(r => r.status === 'PRESENT').length);
-        }
-
-        // Pagos del año
-        if (paymentsRes.status === 'fulfilled') {
-          const payments = paymentsRes.value.payments;
-
-          // Ingresos del mes actual
-          const ingMes = payments
-            .filter(p => p.status === 'PAID' && p.month === month && p.year === year)
-            .reduce((s, p) => s + p.amount, 0);
-          setIngresosMes(ingMes);
-
-          // Pagos al día (PAID del mes actual)
-          const totalMes   = payments.filter(p => p.month === month && p.year === year).length;
-          const pagadosMes = payments.filter(p => p.status === 'PAID' && p.month === month && p.year === year).length;
-          setPagosAlDia(totalMes > 0 ? Math.round((pagadosMes / totalMes) * 100) : 0);
-
-          // Distribución de pagos (mes actual)
-          const dist: Record<string, number> = { PAID: 0, PENDING: 0, OVERDUE: 0 };
-          payments.filter(p => p.month === month && p.year === year).forEach(p => {
-            if (dist[p.status] !== undefined) dist[p.status]++;
-          });
-          setPaymentDist([
-            { name: 'Pagado',    value: dist.PAID,    color: GREEN  },
-            { name: 'Pendiente', value: dist.PENDING, color: YELLOW },
-            { name: 'Vencido',   value: dist.OVERDUE, color: RED    },
-          ].filter(d => d.value > 0));
-        }
-
-        // Logros totales (resultados de competencias)
-        if (compsRes.status === 'fulfilled') {
-          const total = compsRes.value.competitions.reduce(
-            (s, c) => s + c.events.reduce((es, ev) => es + ev.results.length, 0), 0
-          );
-          setTotalLogros(total);
-        }
-
-        // Asistencia mensual — últimos 6 meses desde endpoint dedicado
-        if (attMonthlyRes.status === 'fulfilled') {
-          const attMonths: MonthlyAttendance[] = attMonthlyRes.value.months.map(m => ({
-            month: MONTH_NAMES[m.month - 1],
-            presentes: m.presentes,
-          }));
-          setAsistenciaMes(attMonths[attMonths.length - 1]?.presentes ?? 0);
-          setMonthlyAtt(attMonths);
-        }
-
-      } catch (e) {
-      } finally {
-        setLoading(false);
-      }
-    })();
+    const refresh = () => { if (document.visibilityState === 'visible') loadReportes(); };
+    document.addEventListener('visibilitychange', refresh);
+    const interval = setInterval(() => { if (document.visibilityState === 'visible') loadReportes(); }, 30_000);
+    return () => { document.removeEventListener('visibilitychange', refresh); clearInterval(interval); };
   }, [isSignedIn, session]);
 
   function fmt(n: number) {

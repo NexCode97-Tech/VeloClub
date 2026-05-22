@@ -125,6 +125,14 @@ export default function FinanzasPage() {
     loadFlow();
   }, [filterMonth, filterYear]);
 
+  // Tiempo real: refrescar al volver al tab + polling 30s
+  useEffect(() => {
+    const refresh = () => { if (document.visibilityState === 'visible') { loadPayments(); loadFlow(); } };
+    document.addEventListener('visibilitychange', refresh);
+    const interval = setInterval(() => { if (document.visibilityState === 'visible') { loadPayments(); loadFlow(); } }, 30_000);
+    return () => { document.removeEventListener('visibilitychange', refresh); clearInterval(interval); };
+  }, [filterMonth, filterYear]);
+
   // Pagos helpers
   const filteredPay = payments.filter(p => {
     const f = PAY_FILTER[payTab];
@@ -214,7 +222,7 @@ export default function FinanzasPage() {
         </h1>
         <button
           onClick={() => tab === 'pagos'
-            ? (setPayForm({ memberId: '', amount: '', month: String(now.getMonth() + 1), year: String(now.getFullYear()), status: 'PAID', notes: '' }), setPayError(null), setPayOpen(true))
+            ? (setPayForm({ memberId: '', amount: '', month: String(filterMonth), year: String(filterYear), status: 'PAID', notes: '' }), setPayError(null), setPayOpen(true))
             : (setFlowForm({ type: 'INCOME', amount: '', description: '', date: '' }), setFlowError(null), setFlowOpen(true))
           }
           className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold text-white"

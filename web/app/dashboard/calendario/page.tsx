@@ -109,118 +109,145 @@ export default function CalendarioPage() {
   const selectedEvents = eventsOnDay(selectedDay);
 
   return (
-    <div className="flex flex-col gap-4 px-4 py-5 max-w-lg mx-auto w-full">
-      <h1 className="text-2xl font-bold text-foreground" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
-        Calendario
-      </h1>
+    <div className="min-h-full bg-background px-4 py-5">
+      {/* Header */}
+      <div className="mb-5">
+        <h1 className="text-2xl font-bold text-foreground" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
+          Calendario
+        </h1>
+        <p className="text-[12px] text-muted-foreground mt-0.5">{MONTH_NAMES[month]} {year}</p>
+      </div>
 
-      {/* Tarjeta del mes */}
-      <div className="bg-white border border-border rounded-xl p-3">
-        <div className="flex items-center justify-between mb-3">
-          <button onClick={prevMonth} className="w-7 h-7 rounded-lg flex items-center justify-center hover:bg-secondary transition-colors">
-            <ChevronLeft size={16} className="text-muted-foreground" />
-          </button>
-          <p className="text-[15px] font-bold text-foreground" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
-            {MONTH_NAMES[month]} {year}
-          </p>
-          <button onClick={nextMonth} className="w-7 h-7 rounded-lg flex items-center justify-center hover:bg-secondary transition-colors">
-            <ChevronRight size={16} className="text-muted-foreground" />
-          </button>
-        </div>
+      {/* Layout: columna única en móvil, dos columnas en desktop */}
+      <div className="flex flex-col md:flex-row gap-5 md:items-start">
 
-        <div className="grid grid-cols-7 mb-1">
-          {DAY_HEADERS.map((d) => (
-            <div key={d} className="text-center text-[10px] font-semibold text-muted-foreground py-1">{d}</div>
-          ))}
-        </div>
+        {/* ── Columna izquierda — Calendario ── */}
+        <div className="flex flex-col gap-4 md:w-[420px] shrink-0">
+          {/* Tarjeta del mes */}
+          <div className="bg-white border border-border rounded-xl p-4">
+            <div className="flex items-center justify-between mb-4">
+              <button onClick={prevMonth} className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-secondary transition-colors">
+                <ChevronLeft size={16} className="text-muted-foreground" />
+              </button>
+              <p className="text-[16px] font-bold text-foreground" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
+                {MONTH_NAMES[month]} {year}
+              </p>
+              <button onClick={nextMonth} className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-secondary transition-colors">
+                <ChevronRight size={16} className="text-muted-foreground" />
+              </button>
+            </div>
 
-        <div className="grid grid-cols-7 gap-y-1">
-          {cells.map((day, idx) => {
-            if (day === null) return <div key={`blank-${idx}`} />;
-            const isToday    = isCurrentMonth && day === today;
-            const isSelected = day === selectedDay;
-            const isActive   = isSelected || isToday;
-            const dayEvents  = eventsOnDay(day);
-            return (
-              <div
-                key={day}
-                className="flex flex-col items-center gap-0.5 cursor-pointer"
-                onClick={() => setSelectedDay(day)}
-              >
-                <div
-                  className="w-8 h-8 rounded-lg flex items-center justify-center text-[12px] font-semibold transition-colors"
-                  style={isActive ? { background: '#4361EE', color: '#fff' } : { color: '#1A1028' }}
-                >
-                  {day}
-                </div>
-                <div className="flex gap-[2px] h-1.5 items-center">
-                  {dayEvents.slice(0, 3).map(e => (
+            <div className="grid grid-cols-7 mb-2">
+              {DAY_HEADERS.map((d) => (
+                <div key={d} className="text-center text-[11px] font-semibold text-muted-foreground py-1">{d}</div>
+              ))}
+            </div>
+
+            <div className="grid grid-cols-7 gap-y-1">
+              {cells.map((day, idx) => {
+                if (day === null) return <div key={`blank-${idx}`} />;
+                const isToday    = isCurrentMonth && day === today;
+                const isSelected = day === selectedDay;
+                const isActive   = isSelected || isToday;
+                const dayEvents  = eventsOnDay(day);
+                return (
+                  <div
+                    key={day}
+                    className="flex flex-col items-center gap-0.5 cursor-pointer"
+                    onClick={() => setSelectedDay(day)}
+                  >
                     <div
-                      key={e.id}
-                      className="w-1 h-1 rounded-full"
-                      style={{ background: TYPE_COLOR[e.type] }}
-                    />
-                  ))}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Leyenda */}
-      <div className="flex gap-4 px-1">
-        {(['COMPETITION', 'TRAINING'] as EventType[]).map(t => (
-          <div key={t} className="flex items-center gap-1.5">
-            <div className="w-2 h-2 rounded-full" style={{ background: TYPE_COLOR[t] }} />
-            <span className="text-[10px] font-semibold text-muted-foreground">{TYPE_LABEL[t]}</span>
+                      className="w-9 h-9 rounded-lg flex items-center justify-center text-[13px] font-semibold transition-colors"
+                      style={isActive ? { background: '#4361EE', color: '#fff' } : { color: '#1A1028' }}
+                    >
+                      {day}
+                    </div>
+                    <div className="flex gap-[2px] h-1.5 items-center">
+                      {dayEvents.slice(0, 3).map(e => (
+                        <div
+                          key={e.id}
+                          className="w-1 h-1 rounded-full"
+                          style={{ background: TYPE_COLOR[e.type] }}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
-        ))}
+
+          {/* Leyenda */}
+          <div className="flex gap-4 px-1">
+            {(['COMPETITION', 'TRAINING'] as EventType[]).map(t => (
+              <div key={t} className="flex items-center gap-1.5">
+                <div className="w-2 h-2 rounded-full" style={{ background: TYPE_COLOR[t] }} />
+                <span className="text-[11px] font-semibold text-muted-foreground">{TYPE_LABEL[t]}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* ── Columna derecha — Eventos ── */}
+        <div className="flex-1 flex flex-col gap-4 min-w-0">
+
+          {/* Eventos del día */}
+          <div className="bg-white border border-border rounded-xl p-4">
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-[13px] font-bold text-foreground" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
+                {selectedDay} de {MONTH_NAMES[month]}
+              </p>
+              <span
+                className="text-[11px] font-semibold px-2 py-0.5 rounded-full"
+                style={{ background: 'rgba(67,97,238,0.12)', color: '#4361EE' }}
+              >
+                {selectedEvents.length} evento{selectedEvents.length !== 1 ? 's' : ''}
+              </span>
+            </div>
+
+            {loading ? (
+              <div className="flex justify-center py-6">
+                <div className="w-5 h-5 rounded-full border-2 animate-spin" style={{ borderColor: '#4361EE', borderTopColor: 'transparent' }} />
+              </div>
+            ) : selectedEvents.length === 0 ? (
+              <div className="flex flex-col items-center py-6 gap-2">
+                <CalendarDays className="w-8 h-8 text-muted-foreground/30" />
+                <p className="text-[12px] text-muted-foreground">Sin eventos el día {selectedDay}</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {selectedEvents.map(e => <EventCard key={e.id} event={e} />)}
+              </div>
+            )}
+          </div>
+
+          {/* Todos los eventos del mes */}
+          <div className="bg-white border border-border rounded-xl p-4">
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-[13px] font-bold text-foreground" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
+                Todo el mes
+              </p>
+              <span
+                className="text-[11px] font-semibold px-2 py-0.5 rounded-full"
+                style={{ background: 'rgba(67,97,238,0.12)', color: '#4361EE' }}
+              >
+                {events.length} evento{events.length !== 1 ? 's' : ''}
+              </span>
+            </div>
+
+            {events.length === 0 && !loading ? (
+              <div className="flex flex-col items-center py-6 gap-2">
+                <CalendarDays className="w-8 h-8 text-muted-foreground/30" />
+                <p className="text-[12px] text-muted-foreground">Sin eventos este mes</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {events.map(e => <EventCard key={e.id} event={e} />)}
+              </div>
+            )}
+          </div>
+        </div>
       </div>
-
-      {/* Eventos del día seleccionado */}
-      <div className="flex items-center justify-between">
-        <p className="text-[10px] font-semibold tracking-widest text-muted-foreground uppercase">
-          {selectedDay} de {MONTH_NAMES[month]}
-        </p>
-        <span
-          className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
-          style={{ background: 'rgba(67,97,238,0.12)', color: '#4361EE' }}
-        >
-          {selectedEvents.length}
-        </span>
-      </div>
-
-      {loading ? (
-        <div className="flex justify-center py-6">
-          <div className="w-5 h-5 rounded-full border-2 animate-spin" style={{ borderColor: '#4361EE', borderTopColor: 'transparent' }} />
-        </div>
-      ) : selectedEvents.length === 0 ? (
-        <div className="bg-white border border-border rounded-xl px-4 py-6 text-center">
-          <CalendarDays className="w-8 h-8 mx-auto mb-2 text-muted-foreground/30" />
-          <p className="text-[12px] text-muted-foreground">Sin eventos el día {selectedDay}</p>
-        </div>
-      ) : (
-        <div className="space-y-2">
-          {selectedEvents.map(e => <EventCard key={e.id} event={e} />)}
-        </div>
-      )}
-
-      {/* Todo el mes */}
-      <p className="text-[10px] font-semibold tracking-widest text-muted-foreground uppercase px-1 mt-1">
-        Todo el mes · {events.length} evento{events.length !== 1 ? 's' : ''}
-      </p>
-
-      {events.length === 0 && !loading ? (
-        <div className="bg-white border border-border rounded-xl px-4 py-8 text-center">
-          <CalendarDays className="w-8 h-8 mx-auto mb-2 text-muted-foreground/30" />
-          <p className="text-[12px] text-muted-foreground">Sin eventos este mes</p>
-        </div>
-      ) : (
-        <div className="space-y-2 pb-4">
-          {events.map(e => <EventCard key={e.id} event={e} />)}
-        </div>
-      )}
     </div>
   );
 }
@@ -232,7 +259,7 @@ function EventCard({ event }: { event: CalEvent }) {
   const sub = event.place ?? event.location;
 
   return (
-    <div className="bg-white border border-border rounded-xl px-4 py-3 flex items-start gap-3">
+    <div className="border border-border rounded-xl px-4 py-3 flex items-start gap-3">
       <div
         className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 mt-0.5"
         style={{ background: `${color}18`, color }}

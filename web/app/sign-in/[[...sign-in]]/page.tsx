@@ -42,6 +42,17 @@ export default function SignInPage() {
           Inicia sesión con:
         </p>
       </div>
+      <p className="text-[11px] text-slate-400">
+        Desarrollado por{' '}
+        <a
+          href="https://nexcode97.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="font-semibold text-slate-500 hover:text-slate-700 transition-colors"
+        >
+          NexCode97
+        </a>
+      </p>
     </div>
   );
 }

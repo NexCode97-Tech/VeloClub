@@ -46,7 +46,7 @@ const ROLE_TABS: Record<string, { href: string; label: string; icon: React.Eleme
 };
 
 const ADMIN_NAV = [
-  { href: '/dashboard',            label: 'Dashboard',     icon: LayoutDashboard },
+  { href: '/dashboard',            label: 'Inicio',        icon: LayoutDashboard },
   { href: '/dashboard/miembros',   label: 'Miembros',      icon: Users },
   { href: '/dashboard/sedes',      label: 'Sedes',         icon: MapPin },
   { href: '/dashboard/asistencia', label: 'Asistencia',    icon: CalendarCheck },
@@ -58,7 +58,7 @@ const ADMIN_NAV = [
 ];
 
 const COACH_NAV = [
-  { href: '/dashboard',            label: 'Dashboard',     icon: LayoutDashboard },
+  { href: '/dashboard',            label: 'Inicio',        icon: LayoutDashboard },
   { href: '/dashboard/miembros',   label: 'Miembros',      icon: Users },
   { href: '/dashboard/sedes',      label: 'Sedes',         icon: MapPin },
   { href: '/dashboard/asistencia', label: 'Asistencia',    icon: CalendarCheck },
@@ -181,9 +181,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const activeTabIndex = tabItems.findIndex(t => isTabActive(t.href));
   const activeSideIndex = sideNavItems.findIndex(t => isSideActive(t.href));
 
-  // Color de acento según rol
-  const accentColor = role === 'COACH' ? '#06D6A0' : role === 'STUDENT' ? '#7C3AED' : '#4361EE';
-  const accentBg    = role === 'COACH' ? 'rgba(6,214,160,0.12)' : role === 'STUDENT' ? 'rgba(124,58,237,0.12)' : 'rgba(67,97,238,0.12)';
+  // Color de acento — uniforme para todos los roles
+  const accentColor = '#4361EE';
+  const accentBg    = 'rgba(67,97,238,0.12)';
 
   return (
     <div className="flex h-dvh overflow-hidden bg-background">

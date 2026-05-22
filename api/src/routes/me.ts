@@ -11,8 +11,7 @@ router.get('/', requireAuth, async (req, res) => {
 
   // Superadmin check (case-insensitive, soporta coma o salto de línea como separador)
   const superadminEmails = (process.env.SUPERADMIN_EMAILS ?? '').split(/[,\n]/).map(e => e.trim().toLowerCase()).filter(Boolean);
-  console.log('[me] email:', email, '| superadminEmails:', superadminEmails, '| match:', superadminEmails.includes(email.toLowerCase()));
-  if (superadminEmails.includes(email.toLowerCase())) {
+if (superadminEmails.includes(email.toLowerCase())) {
     // Buscar por email (case-insensitive) — el clerkId puede haber cambiado al migrar de instancia
     const existingByEmail = await prisma.user.findFirst({
       where: { email: { equals: email, mode: 'insensitive' } },

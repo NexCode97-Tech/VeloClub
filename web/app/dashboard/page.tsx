@@ -257,12 +257,6 @@ export default function DashboardPage() {
     })();
   }, [isLoaded, isSignedIn, userId, sessionId]);
 
-  useEffect(() => {
-    if (!me?.user?.role) return;
-    const role = me.user.role;
-    const interval = setInterval(() => fetchStats(role).catch(() => {}), 30_000);
-    return () => clearInterval(interval);
-  }, [me?.user?.role, fetchStats]);
 
   if (loading) {
     return (

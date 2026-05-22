@@ -198,14 +198,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         {/* Logo */}
         <div className="flex items-center justify-between px-4 py-4 shrink-0" style={{ borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
           <Image src="/logo-full.jpg" alt="VeloClub" width={100} height={30} className="object-contain" />
-          <button
-            onClick={() => window.location.reload()}
-            title="Actualizar"
-            className="p-1.5 rounded-lg transition-colors"
-            style={{ color: '#8E87A8' }}
-          >
-            <RefreshCw className="w-3.5 h-3.5" />
-          </button>
         </div>
 
 

@@ -145,7 +145,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       } catch (err) {
         if (stale) return;
         const { ApiError } = await import('@/lib/api-client');
-        if (err instanceof ApiError && (err.status === 401 || err.status === 403)) {
+        if (err instanceof ApiError && err.status === 401) {
+          router.replace('/sign-in');
+        } else if (err instanceof ApiError && err.status === 403) {
           router.replace('/no-access');
         } else {
           setChecking(false);

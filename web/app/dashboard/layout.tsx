@@ -105,16 +105,31 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     // Flag para cancelar operaciones async si el userId cambia antes de que terminen
     let stale = false;
 
-    setRole(null);
     setChecking(true);
 
     (async () => {
       try {
-        // skipCache: true fuerza un JWT fresco — evita token de sesión anterior en caché
         const token = await session?.getToken({ skipCache: true });
         if (stale) return;
-        const res = await apiFetch<{ status: string; user?: { role: string } }>('/me', { token });
-        if (stale) return; // userId cambió mientras esperábamos la API
+
+        let res: { status: string; user?: { role: string } } | null = null;
+        let attempts = 0;
+        while (attempts < 3) {
+          try {
+            res = await apiFetch<{ status: string; user?: { role: string } }>('/me', { token });
+            break;
+          } catch (err) {
+            const { ApiError } = await import('@/lib/api-client');
+            if (err instanceof ApiError && err.status === 429) {
+              attempts++;
+              await new Promise(r => setTimeout(r, 1500 * attempts));
+              continue;
+            }
+            throw err;
+          }
+        }
+
+        if (!res || stale) return;
         if (res.status === 'no_access')        { router.replace('/no-access');       return; }
         if (res.status === 'inactive')         { router.replace('/inactivo');         return; }
         if (res.status === 'superadmin')       { router.replace('/superadmin');       return; }

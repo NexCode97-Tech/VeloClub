@@ -33,19 +33,19 @@ app.use(cors({ origin: allowedOrigin, credentials: true }));
 // Límite de body reducido — ningún endpoint necesita más de 100kb
 app.use(express.json({ limit: '100kb' }));
 
-// Rate limiting global: 600 req / 15min por IP
+// Rate limiting global: 1000 req / 15min por IP
 const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 600,
+  max: 1000,
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'Demasiadas solicitudes, intenta más tarde' },
 });
 
-// Rate limiting estricto para endpoints sensibles: 60 req / 15min
+// Rate limiting estricto para endpoints sensibles: 100 req / 15min
 const strictLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 60,
+  max: 100,
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'Demasiadas solicitudes, intenta más tarde' },

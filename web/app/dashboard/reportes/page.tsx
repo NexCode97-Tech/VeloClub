@@ -113,7 +113,6 @@ export default function ReportesPage() {
         }
 
       } catch (e) {
-        console.error('Reportes error:', e);
       } finally {
         setLoading(false);
       }
@@ -173,7 +172,6 @@ export default function ReportesPage() {
     },
   ];
 
-  const maxAtt = Math.max(...monthlyAtt.map(m => m.presentes), 1);
 
   return (
     <div className="min-h-full bg-background pb-8">

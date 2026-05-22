@@ -77,17 +77,7 @@ const ROLE_NAV: Record<string, typeof ADMIN_NAV> = {
   STUDENT: STUDENT_NAV,
 };
 
-const roleLabels: Record<string, string> = {
-  ADMIN: 'Administrador',
-  COACH: 'Entrenador',
-  STUDENT: 'Deportista',
-};
 
-const roleBadgeStyle: Record<string, string> = {
-  ADMIN:   'bg-amber-100 text-amber-700',
-  COACH:   'bg-emerald-100 text-emerald-700',
-  STUDENT: 'bg-violet-100 text-violet-700',
-};
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();

@@ -250,7 +250,6 @@ export default function DashboardPage() {
         } catch { /* silencioso */ }
 
       } catch (err) {
-        console.error(err);
       } finally {
         setLoading(false);
       }

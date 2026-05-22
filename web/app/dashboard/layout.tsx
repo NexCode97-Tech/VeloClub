@@ -208,17 +208,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </button>
         </div>
 
-        {/* Rol badge */}
-        {role && (
-          <div className="px-4 py-2.5 shrink-0" style={{ borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
-            <span
-              className="text-[10px] font-bold px-2.5 py-1 rounded-full tracking-wider"
-              style={{ background: accentBg, color: accentColor }}
-            >
-              {roleLabels[role] ?? role}
-            </span>
-          </div>
-        )}
 
         {/* Nav items con pill deslizante */}
         <nav className="flex-1 px-2 py-2 overflow-y-auto relative">

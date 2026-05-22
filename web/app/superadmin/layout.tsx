@@ -10,13 +10,13 @@ import { LayoutDashboard, Building2, CircleDollarSign } from 'lucide-react';
 
 // Config fue fusionado con Perfil (UserButton) — 3 tabs + UserButton = 4 slots
 const TABS = [
-  { href: '/superadmin',          label: 'Dashboard', exact: true,  Icon: LayoutDashboard  },
+  { href: '/superadmin',          label: 'Inicio',    exact: true,  Icon: LayoutDashboard  },
   { href: '/superadmin/clubs',    label: 'Clubs',     exact: false, Icon: Building2        },
   { href: '/superadmin/finanzas', label: 'Finanzas',  exact: false, Icon: CircleDollarSign },
 ];
 
 const SCREEN_LABELS: Record<string, string> = {
-  '/superadmin':          'Dashboard',
+  '/superadmin':          'Inicio',
   '/superadmin/clubs':    'Clubs',
   '/superadmin/finanzas': 'Finanzas',
 };

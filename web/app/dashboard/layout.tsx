@@ -18,6 +18,7 @@ import {
   CreditCard,
   MoreHorizontal,
   CircleDollarSign,
+  HelpCircle,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -53,6 +54,7 @@ const ADMIN_NAV = [
   { href: '/dashboard/logros',     label: 'Resultados',    icon: Trophy },
   { href: '/dashboard/calendario', label: 'Calendario',    icon: CalendarDays },
   { href: '/dashboard/reportes',   label: 'Reportes',      icon: BarChart2 },
+  { href: '/dashboard/ayuda',      label: 'Ayuda',         icon: HelpCircle },
 ];
 
 const COACH_NAV = [
@@ -62,6 +64,7 @@ const COACH_NAV = [
   { href: '/dashboard/asistencia', label: 'Asistencia',    icon: CalendarCheck },
   { href: '/dashboard/logros',     label: 'Resultados',    icon: Trophy },
   { href: '/dashboard/calendario', label: 'Calendario',    icon: CalendarDays },
+  { href: '/dashboard/ayuda',      label: 'Ayuda',         icon: HelpCircle },
 ];
 
 const STUDENT_NAV = [
@@ -69,6 +72,7 @@ const STUDENT_NAV = [
   { href: '/dashboard/logros',     label: 'Resultados',    icon: Trophy },
   { href: '/dashboard/calendario', label: 'Calendario',    icon: CalendarDays },
   { href: '/dashboard/pagos',      label: 'Mis Pagos',     icon: CreditCard },
+  { href: '/dashboard/ayuda',      label: 'Ayuda',         icon: HelpCircle },
 ];
 
 const ROLE_NAV: Record<string, typeof ADMIN_NAV> = {
@@ -127,7 +131,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         setRole(userRole);
 
         if (userRole === 'STUDENT') {
-          const STUDENT_ALLOWED = ['/dashboard', '/dashboard/logros', '/dashboard/calendario', '/dashboard/pagos', '/dashboard/mas', '/dashboard/ajustes'];
+          const STUDENT_ALLOWED = ['/dashboard', '/dashboard/logros', '/dashboard/calendario', '/dashboard/pagos', '/dashboard/mas', '/dashboard/ajustes', '/dashboard/ayuda'];
           const allowed = STUDENT_ALLOWED.some(r => pathname === r || pathname.startsWith(r + '/'));
           if (!allowed) { router.replace('/dashboard'); return; }
         }

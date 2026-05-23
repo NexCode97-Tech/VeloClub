@@ -55,29 +55,43 @@ const strictLimiter = rateLimit({
 
 app.use(globalLimiter);
 
+// ── Logging estructurado ──────────────────────────────────────────────────────
+app.use((req: Request, res: Response, next: NextFunction) => {
+  const start = Date.now();
+  const reqId = Math.random().toString(36).slice(2, 9);
+  res.on('finish', () => {
+    const ms = Date.now() - start;
+    const level = res.statusCode >= 500 ? 'ERROR' : res.statusCode >= 400 ? 'WARN' : 'INFO';
+    // Ocultar token SSE en los logs
+    const path = req.path === '/stream' ? '/stream?token=[REDACTED]' : req.originalUrl;
+    console.log(JSON.stringify({ level, reqId, method: req.method, path, status: res.statusCode, ms }));
+  });
+  next();
+});
+
 // ── Health check ──────────────────────────────────────────────────────────────
 app.get('/health', (_req, res) => {
   res.json({ status: 'ok', service: 'veloclub-api' });
 });
 
 // ── Rutas ─────────────────────────────────────────────────────────────────────
-app.use('/me', meRouter); // /me se llama en cada carga — el globalLimiter es suficiente
+app.use('/me', meRouter);
 app.use('/clubs', clubsRouter);
 app.use('/locations', locationsRouter);
 app.use('/members', membersRouter);
-app.use('/superadmin', superadminRouter); // ya protegido por requireSuperadmin, globalLimiter es suficiente
+app.use('/superadmin', strictLimiter, superadminRouter);
 app.use('/events', eventsRouter);
 app.use('/payments', paymentsRouter);
 app.use('/competitions', competitionsRouter);
 app.use('/cashflow', cashflowRouter);
 app.use('/attendance', attendanceRouter);
 app.use('/training', trainingRouter);
-app.use('/stream', streamRouter);
+app.use('/stream', strictLimiter, streamRouter);
 
 // ── Manejador global de errores ───────────────────────────────────────────────
 // Evita que stack traces o mensajes internos lleguen al cliente
 app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
-  console.error('[Error]', err.message, err.stack);
+  console.error(JSON.stringify({ level: 'ERROR', msg: err.message }));
   res.status(500).json({ error: 'Error interno del servidor' });
 });
 

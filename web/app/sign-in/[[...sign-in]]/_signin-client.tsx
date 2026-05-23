@@ -11,21 +11,16 @@ export default function SignInClient() {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    if (isLoaded && isSignedIn) {
-      router.replace('/dashboard');
-    }
-    if (isLoaded && !isSignedIn) {
-      setVisible(true);
-    }
+    if (!isLoaded) return;
+    if (isSignedIn) { router.replace('/dashboard'); return; }
+    setVisible(true);
   }, [isLoaded, isSignedIn]);
 
+  if (!visible) return <div style={{ minHeight: '100dvh', background: '#fff' }} />;
   if (isSignedIn) return null;
 
   return (
-    <div
-      className="min-h-screen flex flex-col items-center justify-center bg-slate-50 gap-5"
-      style={{ opacity: visible ? 1 : 0 }}
-    >
+    <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 gap-5">
       <Image
         src="/logo-full.jpg"
         alt="VeloClub"

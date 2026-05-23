@@ -15,7 +15,8 @@ export default function SignInPage() {
     }
   }, [isLoaded, isSignedIn]);
 
-  if (!isLoaded || isSignedIn) return null;
+  if (!isLoaded) return <div className="min-h-screen bg-slate-50" />;
+  if (isSignedIn) return null;
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 gap-5">

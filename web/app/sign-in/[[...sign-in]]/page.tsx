@@ -22,6 +22,7 @@ export default function SignInPage() {
           elements: {
             card: 'shadow-md rounded-2xl border border-slate-200',
             logoImage: 'h-36 md:h-[72px] w-auto',
+            formFieldInput: { fontSize: '13px' },
           },
         }}
       />

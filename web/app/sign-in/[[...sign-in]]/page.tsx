@@ -20,7 +20,8 @@ export default function SignInPage() {
         <SignIn
           appearance={{
             elements: {
-              card: { boxShadow: 'none', border: 'none', borderRadius: 0 },
+              card: { boxShadow: 'none', border: 'none', borderRadius: 0, paddingBottom: 0 },
+              footer: { borderBottomLeftRadius: 0, borderBottomRightRadius: 0 },
               logoImage: { height: '72px', width: 'auto' },
               logoBox: { marginBottom: '4px' },
             },

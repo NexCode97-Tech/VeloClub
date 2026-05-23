@@ -16,12 +16,16 @@ export default function SignInPage() {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-slate-50">
+      <style>{`
+        .cl-logo-custom { height: 72px; width: auto; }
+        @media (max-width: 767px) { .cl-logo-custom { height: 140px !important; width: auto !important; } }
+      `}</style>
       <SignIn
         appearance={{
           variables: { colorPrimary: '#7C3AED' },
           elements: {
             card: 'shadow-md rounded-2xl border border-slate-200',
-            logoImage: 'h-36 md:h-[72px] w-auto',
+            logoImage: 'cl-logo-custom',
             formFieldInput: { fontSize: '13px' },
           },
         }}

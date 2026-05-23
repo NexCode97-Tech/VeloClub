@@ -7,9 +7,9 @@ export default function manifest(): MetadataRoute.Manifest {
     description: "Plataforma para clubes de patinaje",
     start_url: "/dashboard",
     display: "standalone",
-    background_color: "#ffffff",
-    theme_color: "#0f172a",
-    orientation: "portrait",
+    background_color: "#F7F7FB",
+    theme_color: "#7C3AED",
+    orientation: "any",
     icons: [
       {
         src: "/icon-desktop-192.png",

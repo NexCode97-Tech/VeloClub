@@ -15,11 +15,12 @@ export default function SignInPage() {
     }
   }, [isLoaded, isSignedIn]);
 
-  if (!isLoaded) return <div className="min-h-screen bg-slate-50" />;
   if (isSignedIn) return null;
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 gap-5">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 gap-5"
+      style={{ opacity: isLoaded ? 1 : 0, transition: 'opacity 0.15s ease' }}
+    >
       <Image
         src="/logo-full.jpg"
         alt="VeloClub"

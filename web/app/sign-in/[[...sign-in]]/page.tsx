@@ -15,33 +15,27 @@ export default function SignInPage() {
   if (!isLoaded || isSignedIn) return null;
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50">
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', background: '#fff', borderRadius: '1rem', border: '1px solid #e2e8f0', boxShadow: '0 4px 16px 0 rgba(0,0,0,0.08)', overflow: 'hidden' }}>
-        <SignIn
-          appearance={{
-            variables: {
-              colorPrimary: '#7C3AED',
-            },
-            elements: {
-              card: { boxShadow: 'none', border: 'none', borderRadius: 0, paddingBottom: 0 },
-              footer: { background: '#fff', borderRadius: 0, borderTop: 'none' },
-              logoImage: { height: '72px', width: 'auto' },
-              logoBox: { marginBottom: '4px' },
-            },
-          }}
-        />
-        <p style={{ fontSize: '11px', color: '#94a3b8', paddingBottom: '16px', marginTop: '-8px' }}>
-          Desarrollado por{' '}
-          <a
-            href="https://nexcode97.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{ fontWeight: 600, color: '#64748b' }}
-          >
-            NexCode97
-          </a>
-        </p>
-      </div>
+    <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-slate-50">
+      <SignIn
+        appearance={{
+          variables: { colorPrimary: '#7C3AED' },
+          elements: {
+            card: 'shadow-md rounded-2xl border border-slate-200',
+            logoImage: { height: '72px', width: 'auto' },
+          },
+        }}
+      />
+      <p className="text-[11px] text-slate-400">
+        Desarrollado por{' '}
+        <a
+          href="https://nexcode97.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="font-semibold text-slate-500 hover:text-slate-700 transition-colors"
+        >
+          NexCode97
+        </a>
+      </p>
     </div>
   );
 }

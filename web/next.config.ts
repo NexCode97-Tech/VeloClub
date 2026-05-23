@@ -2,7 +2,6 @@ import type { NextConfig } from "next";
 import withPWA from "@ducanh2912/next-pwa";
 
 const nextConfig: NextConfig = {
-  serverExternalPackages: ['@clerk/nextjs', '@clerk/backend', '@clerk/shared'],
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: 'img.clerk.com' },

@@ -30,3 +30,5 @@ yarn-error.log*
 # Prisma
 api/prisma/dev.db
 .claude/
+
+.vercel

@@ -16,14 +16,28 @@ export default function SignInPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-50">
-      <SignIn
-        appearance={{
-          elements: {
-            footer: 'hidden',
-            card: 'shadow-md rounded-2xl border border-slate-200',
-          },
-        }}
-      />
+      <div className="flex flex-col items-center bg-white shadow-md rounded-2xl border border-slate-200 overflow-hidden">
+        <SignIn
+          appearance={{
+            elements: {
+              card: 'shadow-none border-0 rounded-none',
+              logoImage: 'h-20 w-auto',
+              logoBox: 'mb-1',
+            },
+          }}
+        />
+        <p className="text-[11px] text-slate-400 pb-4 -mt-2">
+          Desarrollado por{' '}
+          <a
+            href="https://nexcode97.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-semibold text-slate-500 hover:text-slate-700 transition-colors"
+          >
+            NexCode97
+          </a>
+        </p>
+      </div>
     </div>
   );
 }

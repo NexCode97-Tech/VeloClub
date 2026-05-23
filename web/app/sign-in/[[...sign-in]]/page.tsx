@@ -24,6 +24,7 @@ export default function SignInPage() {
               footer: { borderBottomLeftRadius: 0, borderBottomRightRadius: 0 },
               logoImage: { height: '72px', width: 'auto' },
               logoBox: { marginBottom: '4px' },
+              formButtonPrimary: { backgroundColor: '#7C3AED', '&:hover': { backgroundColor: '#6D28D9' } },
             },
           }}
         />

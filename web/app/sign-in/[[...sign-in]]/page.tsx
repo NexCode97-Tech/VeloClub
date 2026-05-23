@@ -3,15 +3,19 @@
 import { SignIn, useAuth } from '@clerk/nextjs';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 export default function SignInPage() {
   const { isSignedIn, isLoaded } = useAuth();
   const router = useRouter();
+  const [visible, setVisible] = useState(false);
 
   useEffect(() => {
     if (isLoaded && isSignedIn) {
       router.replace('/dashboard');
+    }
+    if (isLoaded && !isSignedIn) {
+      setVisible(true);
     }
   }, [isLoaded, isSignedIn]);
 
@@ -19,7 +23,7 @@ export default function SignInPage() {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 gap-5"
-      style={{ opacity: isLoaded ? 1 : 0, transition: 'opacity 0.15s ease' }}
+      style={{ opacity: visible ? 1 : 0 }}
     >
       <Image
         src="/logo-full.jpg"
@@ -28,22 +32,17 @@ export default function SignInPage() {
         height={42}
         className="object-contain rounded-xl"
       />
-      <div className="relative">
-        <SignIn
-          appearance={{
-            elements: {
-              footer: 'hidden',
-              card: 'shadow-md rounded-2xl border border-slate-200 pt-8',
-              headerTitle: 'hidden',
-              headerSubtitle: 'hidden',
-              dividerRow: 'hidden',
-            },
-          }}
-        />
-        <p className="absolute top-4 left-0 right-0 text-center text-[14px] font-semibold text-slate-500 pointer-events-none">
-          Inicia sesión con:
-        </p>
-      </div>
+      <SignIn
+        appearance={{
+          elements: {
+            footer: 'hidden',
+            card: 'shadow-md rounded-2xl border border-slate-200',
+            headerTitle: 'hidden',
+            headerSubtitle: 'hidden',
+            dividerRow: 'hidden',
+          },
+        }}
+      />
       <p className="text-[11px] text-slate-400">
         Desarrollado por{' '}
         <a

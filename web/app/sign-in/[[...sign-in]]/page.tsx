@@ -5,6 +5,10 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
+// Fuerza renderizado solo en cliente para evitar flash de contenido
+export const dynamic = 'force-dynamic';
+export const fetchCache = 'force-no-store';
+
 export default function SignInPage() {
   const { isSignedIn, isLoaded } = useAuth();
   const router = useRouter();

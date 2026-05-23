@@ -1,7 +1,9 @@
 import type { NextConfig } from "next";
 import withPWA from "@ducanh2912/next-pwa";
+import path from "path";
 
 const nextConfig: NextConfig = {
+  outputFileTracingRoot: path.join(__dirname, "../../"),
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: 'img.clerk.com' },

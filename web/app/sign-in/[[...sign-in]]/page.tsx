@@ -21,7 +21,7 @@ export default function SignInPage() {
           variables: { colorPrimary: '#7C3AED' },
           elements: {
             card: 'shadow-md rounded-2xl border border-slate-200',
-            logoImage: { height: '72px', width: 'auto' },
+            logoImage: 'h-36 md:h-[72px] w-auto',
           },
         }}
       />

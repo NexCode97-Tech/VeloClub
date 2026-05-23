@@ -1,9 +1,29 @@
 'use client';
 
-import dynamic from 'next/dynamic';
-
-const SignInClient = dynamic(() => import('./_signin-client'), { ssr: false });
+import { SignIn, useAuth } from '@clerk/nextjs';
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 
 export default function SignInPage() {
-  return <SignInClient />;
+  const { isSignedIn, isLoaded } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (isLoaded && isSignedIn) router.replace('/dashboard');
+  }, [isLoaded, isSignedIn]);
+
+  if (!isLoaded || isSignedIn) return null;
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-slate-50">
+      <SignIn
+        appearance={{
+          elements: {
+            footer: 'hidden',
+            card: 'shadow-md rounded-2xl border border-slate-200',
+          },
+        }}
+      />
+    </div>
+  );
 }

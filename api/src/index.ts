@@ -28,8 +28,9 @@ app.set('trust proxy', 1);
 app.use(helmet());
 app.disable('x-powered-by');
 
-const allowedOrigin = (process.env.WEB_ORIGIN || 'http://localhost:3000').replace(/\/$/, '');
-app.use(cors({ origin: allowedOrigin, credentials: true }));
+const baseOrigin = (process.env.WEB_ORIGIN || 'http://localhost:3000').replace(/\/$/, '');
+const allowedOrigins = [baseOrigin, baseOrigin.replace('https://', 'https://www.')].filter(Boolean);
+app.use(cors({ origin: allowedOrigins, credentials: true }));
 
 // Límite de body reducido — ningún endpoint necesita más de 100kb
 app.use(express.json({ limit: '100kb' }));

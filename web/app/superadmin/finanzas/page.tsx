@@ -3,7 +3,7 @@
 import { useAuth } from '@clerk/nextjs';
 import { useEffect, useState } from 'react';
 import { apiFetch } from '@/lib/api-client';
-import { Pencil, Trash2, X, Check, TrendingUp, CalendarClock, RefreshCw } from 'lucide-react';
+import { Pencil, Trash2, X, Check, TrendingUp, CalendarClock, RefreshCw, CircleDollarSign } from 'lucide-react';
 import { motion, AnimatePresence, type Variants } from 'framer-motion';
 
 // ── Formateo ──────────────────────────────────────────────────────────────────
@@ -50,6 +50,12 @@ const ESTADO: Record<EstadoPago, { label: string; color: string; bg: string; bor
   PAID:    { label: 'Pagado',    color: '#06D6A0', bg: 'rgba(6,214,160,0.10)',   border: 'rgba(6,214,160,0.25)'   },
   PENDING: { label: 'Pendiente', color: '#FFB703', bg: 'rgba(255,183,3,0.10)',   border: 'rgba(255,183,3,0.25)'   },
   OVERDUE: { label: 'Vencido',   color: '#EF476F', bg: 'rgba(239,71,111,0.10)',  border: 'rgba(239,71,111,0.25)'  },
+};
+
+const PLAN_BADGE: Record<TipoPlan, { label: string; color: string; bg: string }> = {
+  MENSUAL:    { label: 'Mensual',    color: '#7C3AED', bg: 'rgba(124,58,237,0.10)' },
+  TRIMESTRAL: { label: 'Trimestral', color: '#4361EE', bg: 'rgba(67,97,238,0.10)'  },
+  ANUAL:      { label: 'Anual',      color: '#06D6A0', bg: 'rgba(6,214,160,0.10)'  },
 };
 
 // ── Input base ────────────────────────────────────────────────────────────────
@@ -308,9 +314,18 @@ export default function FinanzasPage() {
         </p>
 
         {clubs.length === 0 && (
-          <div style={{ background: '#fff', border: '1px solid rgba(120,80,200,0.10)', borderRadius: 20, padding: '40px 16px', textAlign: 'center', color: '#8E87A8', fontSize: 13 }}>
-            No hay clubs registrados.
-          </div>
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.28, ease: EASE }}
+            style={{ background: '#fff', border: '1px solid rgba(120,80,200,0.10)', borderRadius: 20, padding: '40px 16px', textAlign: 'center' }}
+          >
+            <div style={{ width: 48, height: 48, borderRadius: 14, background: 'rgba(124,58,237,0.07)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
+              <CircleDollarSign size={22} color="#7C3AED" />
+            </div>
+            <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: '#8E87A8' }}>Sin clubs con suscripciones</p>
+            <p style={{ margin: '4px 0 0', fontSize: 11, color: '#C4BFD8' }}>Configura un plan desde el módulo de Clubs</p>
+          </motion.div>
         )}
 
         <motion.div variants={stagger} initial="hidden" animate="show">
@@ -366,8 +381,13 @@ export default function FinanzasPage() {
                       <motion.button
                         onClick={() => { setEditPlanId(c.id); setEditPlanMonto(formatMiles(String(Math.round(monto)))); setEditTipoPlan(tipo); }}
                         whileTap={{ scale: 0.97 }}
-                        style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, marginTop: 2 }}
+                        style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, marginTop: 3 }}
                       >
+                        {sus && (
+                          <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 7px', borderRadius: 99, background: PLAN_BADGE[tipo].bg, color: PLAN_BADGE[tipo].color }}>
+                            {PLAN_BADGE[tipo].label}
+                          </span>
+                        )}
                         <span style={{ fontSize: 11, color: '#8E87A8', fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
                           {sus ? `${fmt.format(monto)}${planSuffix(tipo)}` : 'Sin plan — toca para configurar'}
                         </span>

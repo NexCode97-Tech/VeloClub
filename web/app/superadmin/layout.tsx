@@ -127,7 +127,7 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
         <motion.button
           onClick={() => { setSpin(true); setTimeout(() => { setSpin(false); window.location.reload(); }, 400); }}
           whileTap={{ scale: 0.9 }}
-          transition={{ duration: 0.12, ease: [0.23, 1, 0.32, 1] }}
+          transition={{ duration: 0.12, ease: [0.23, 1, 0.32, 1] as [number,number,number,number] }}
           className="w-[34px] h-[34px] rounded-full flex items-center justify-center"
           style={{ background: '#F0EEF8', border: '1px solid rgba(120,80,200,0.10)', color: '#8E87A8', transition: 'transform 0.4s', transform: spin ? 'rotate(180deg)' : 'rotate(0deg)' }}
         >
@@ -139,7 +139,7 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
         <motion.button
           onClick={() => { setPanelOpen(true); loadNotifs(); }}
           whileTap={{ scale: 0.9 }}
-          transition={{ duration: 0.12, ease: [0.23, 1, 0.32, 1] }}
+          transition={{ duration: 0.12, ease: [0.23, 1, 0.32, 1] as [number,number,number,number] }}
           className="w-[34px] h-[34px] rounded-full flex items-center justify-center relative"
           style={{ background: '#F0EEF8', border: '1px solid rgba(120,80,200,0.10)', color: '#8E87A8' }}
         >
@@ -174,7 +174,7 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
             initial={{ x: '100%' }}
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
-            transition={{ duration: 0.32, ease: [0.32, 0.72, 0, 1] }}
+            transition={{ duration: 0.32, ease: [0.32, 0.72, 0, 1] as [number,number,number,number] }}
           >
             {/* Panel header */}
             <div className="flex items-center gap-2 px-4 py-3 shrink-0" style={{ borderBottom: '1px solid rgba(120,80,200,0.10)' }}>

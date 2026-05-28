@@ -279,7 +279,7 @@ export default function SuperadminDashboard() {
                 <p style={{ margin: '0 0 2px', fontSize: 13, fontWeight: 700, color: '#1A1028', fontFamily: 'Space Grotesk, sans-serif' }}>
                   Ingresos por mes
                 </p>
-                <p style={{ margin: '0 0 12px', fontSize: 10, color: '#8E87A8' }}>{currentYear} · acumulado mensual</p>
+                <p style={{ margin: '0 0 12px', fontSize: 10, color: '#8E87A8' }}>{currentYear} · por mes</p>
               </div>
               {!hasIncomeData ? (
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 80, paddingBottom: 16 }}>
@@ -287,7 +287,7 @@ export default function SuperadminDashboard() {
                 </div>
               ) : (
                 <ResponsiveContainer width="100%" height={160}>
-                  <AreaChart data={incomeDataTrimmed} margin={{ top: 4, right: 16, left: -10, bottom: 0 }}>
+                  <AreaChart data={monthlyIncome.slice(0, nowMonth + 1)} margin={{ top: 4, right: 16, left: -10, bottom: 0 }}>
                     <defs>
                       <linearGradient id="incomeGrad" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="5%"  stopColor="#7C3AED" stopOpacity={0.16} />

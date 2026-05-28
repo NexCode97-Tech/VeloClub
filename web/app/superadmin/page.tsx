@@ -201,7 +201,7 @@ export default function SuperadminDashboard() {
               {[
                 { label: 'Recaudado',  value: totalRecaudado, color: '#06D6A0', bg: 'rgba(6,214,160,0.08)',   border: 'rgba(6,214,160,0.18)'   },
                 { label: 'Pendiente',  value: totalPendiente, color: '#EF476F', bg: 'rgba(239,71,111,0.08)',  border: 'rgba(239,71,111,0.18)'  },
-                { label: 'Meta anual', value: totalMeta,      color: '#7C3AED', bg: 'rgba(124,58,237,0.07)', border: 'rgba(124,58,237,0.18)'  },
+                { label: 'Total',      value: totalMeta,      color: '#7C3AED', bg: 'rgba(124,58,237,0.07)', border: 'rgba(124,58,237,0.18)'  },
               ].map(s => (
                 <motion.div key={s.label} variants={cardVariant}
                   style={{ background: s.bg, border: `1px solid ${s.border}`, borderRadius: 16, padding: '12px 10px' }}

@@ -327,7 +327,7 @@ export default function ClubsPage() {
                     style={{ display: 'flex', gap: 8, marginBottom: 12 }}
                   >
                     <input value={editName} onChange={e => setEditName(e.target.value)}
-                      style={{ ...inp, flex: 1, fontSize: 16 }} autoFocus />
+                      style={{ ...inp, flex: 1 }} autoFocus />
                     <motion.button onClick={() => handleEdit(club.id)}
                       whileTap={{ scale: 0.94 }} transition={{ duration: 0.12 }}
                       style={{ padding: '0 14px', height: 42, borderRadius: 10, background: '#7C3AED', border: 'none', color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
@@ -437,13 +437,13 @@ export default function ClubsPage() {
                               <p style={{ margin: '0 0 4px', fontSize: 9, fontWeight: 600, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Nombre completo</p>
                               <input type="text" value={memberForm.fullName} placeholder="Nombre completo"
                                 onChange={e => setMemberForm(f => ({ ...f, fullName: e.target.value }))}
-                                style={{ ...inp, fontSize: 16 }} />
+                                style={{ ...inp, fontSize: 12 }} />
                             </div>
                             <div style={{ marginBottom: 8 }}>
                               <p style={{ margin: '0 0 4px', fontSize: 9, fontWeight: 600, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Email</p>
                               <input type="email" value={memberForm.email} placeholder="email@ejemplo.com"
                                 onChange={e => setMemberForm(f => ({ ...f, email: e.target.value }))}
-                                style={{ ...inp, fontSize: 16 }} />
+                                style={{ ...inp, fontSize: 12 }} />
                             </div>
                             <div style={{ marginBottom: 10 }}>
                               <p style={{ margin: '0 0 6px', fontSize: 9, fontWeight: 600, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Rol</p>

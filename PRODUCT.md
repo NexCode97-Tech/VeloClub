@@ -1,7 +1,7 @@
 # PRODUCT.md — VeloClub
 
 ## Product Purpose
-SaaS platform for managing inline skating and cycling clubs. Admins manage members, attendance, payments, competitions, and training. Superadmin manages all clubs and subscriptions across the platform.
+SaaS platform for managing inline skating clubs. Admins manage members, attendance, payments, competitions, and training. Superadmin manages all clubs and subscriptions across the platform.
 
 ## Users
 - **Superadmin**: NexCode97 operator. Manages all clubs, billing, subscriptions. Power user, high data density needed, mobile + desktop.

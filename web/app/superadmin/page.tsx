@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { apiFetch } from '@/lib/api-client';
 import Link from 'next/link';
 import { Users, Building2, CircleDollarSign, ChevronRight, CheckCircle2, XCircle } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, type Variants } from 'framer-motion';
 import {
   AreaChart, Area, BarChart, Bar,
   XAxis, YAxis, Tooltip, ResponsiveContainer,
@@ -18,17 +18,19 @@ const fmtShort = (v: number) => v >= 1_000_000 ? `$${(v/1_000_000).toFixed(1)}M`
 const MONTH_SHORT = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
 
 // ── Variantes Emil Kowalski ────────────────────────────────────────────────────
-const fadeUp = {
+const EASE = [0.23, 1, 0.32, 1] as [number,number,number,number];
+
+const fadeUp: Variants = {
   hidden: { opacity: 0, y: 16 },
-  show:   { opacity: 1, y: 0,  transition: { duration: 0.28, ease: [0.23, 1, 0.32, 1] } },
+  show:   { opacity: 1, y: 0,  transition: { duration: 0.28, ease: EASE } },
 };
-const stagger = {
+const stagger: Variants = {
   hidden: {},
   show:   { transition: { staggerChildren: 0.07, delayChildren: 0.05 } },
 };
-const cardVariant = {
+const cardVariant: Variants = {
   hidden: { opacity: 0, y: 12, scale: 0.97 },
-  show:   { opacity: 1, y: 0,  scale: 1, transition: { duration: 0.24, ease: [0.23, 1, 0.32, 1] } },
+  show:   { opacity: 1, y: 0,  scale: 1, transition: { duration: 0.24, ease: EASE } },
 };
 
 interface Pago { id: string; estado: string; monto: number; fecha?: string | null; }
@@ -113,7 +115,7 @@ export default function SuperadminDashboard() {
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
+        transition={{ duration: 0.3, ease: EASE }}
         className="px-5 pt-5 pb-4 border-b border-border"
         style={{ background: 'linear-gradient(135deg,#fff 0%,#F0EEF8 100%)' }}
       >
@@ -220,7 +222,7 @@ export default function SuperadminDashboard() {
                     style={{ background: 'linear-gradient(90deg,#06D6A0,#7C3AED)' }}
                     initial={{ width: 0 }}
                     whileInView={{ width: `${pctRecaudado}%` }}
-                    transition={{ duration: 0.7, ease: [0.23, 1, 0.32, 1], delay: 0.1 }}
+                    transition={{ duration: 0.7, ease: EASE, delay: 0.1 }}
                     viewport={{ once: true }}
                   />
                 </div>
@@ -298,7 +300,7 @@ export default function SuperadminDashboard() {
                       <motion.div
                         className="bg-white border border-border rounded-xl flex items-center gap-3 px-4 py-3 cursor-pointer"
                         whileTap={{ scale: 0.98 }}
-                        transition={{ duration: 0.12, ease: [0.23, 1, 0.32, 1] }}
+                        transition={{ duration: 0.12, ease: EASE }}
                       >
                         <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 text-[15px] font-extrabold"
                           style={{ background: 'rgba(124,58,237,0.10)', color: '#7C3AED', fontFamily: 'var(--font-space-grotesk)' }}>

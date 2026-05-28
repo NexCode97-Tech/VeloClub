@@ -4,7 +4,7 @@ import { useAuth } from '@clerk/nextjs';
 import { useEffect, useState } from 'react';
 import { apiFetch } from '@/lib/api-client';
 import { Pencil, Trash2, X, Check, TrendingUp, CalendarClock, RefreshCw } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, type Variants } from 'framer-motion';
 
 // ── Formateo ──────────────────────────────────────────────────────────────────
 const fmt = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 });
@@ -61,18 +61,21 @@ const inp: React.CSSProperties = {
 };
 
 // ── Variantes de animación ────────────────────────────────────────────────────
-const fadeUp = {
+const EASE     = [0.23, 1, 0.32, 1]  as [number,number,number,number];
+const EASE_IN  = [0.55, 0, 1, 0.45] as [number,number,number,number];
+
+const fadeUp: Variants = {
   hidden: { opacity: 0, y: 14 },
-  show:   { opacity: 1, y: 0, transition: { duration: 0.26, ease: [0.23, 1, 0.32, 1] } },
+  show:   { opacity: 1, y: 0, transition: { duration: 0.26, ease: EASE } },
 };
-const stagger = {
+const stagger: Variants = {
   hidden: {},
   show:   { transition: { staggerChildren: 0.07, delayChildren: 0.04 } },
 };
-const expandY = {
+const expandY: Variants = {
   hidden: { opacity: 0, height: 0, overflow: 'hidden' },
-  show:   { opacity: 1, height: 'auto', overflow: 'hidden', transition: { duration: 0.28, ease: [0.23, 1, 0.32, 1] } },
-  exit:   { opacity: 0, height: 0, overflow: 'hidden', transition: { duration: 0.20, ease: [0.55, 0, 1, 0.45] } },
+  show:   { opacity: 1, height: 'auto', overflow: 'hidden', transition: { duration: 0.28, ease: EASE } },
+  exit:   { opacity: 0, height: 0, overflow: 'hidden', transition: { duration: 0.20, ease: EASE_IN } },
 };
 
 // ── Segmented control plan ────────────────────────────────────────────────────
@@ -86,7 +89,7 @@ function PlanSelector({ value, onChange }: { value: TipoPlan; onChange: (v: Tipo
             key={opt.value}
             onClick={() => onChange(opt.value)}
             whileTap={{ scale: 0.97 }}
-            transition={{ duration: 0.12, ease: [0.23, 1, 0.32, 1] }}
+            transition={{ duration: 0.12, ease: EASE }}
             style={{
               flex: 1, padding: '7px 4px', border: 'none', borderRadius: 10, cursor: 'pointer',
               background: active ? '#7C3AED' : 'transparent',
@@ -252,7 +255,7 @@ export default function FinanzasPage() {
               <motion.button
                 onClick={load}
                 whileTap={{ scale: 0.90, rotate: 180 }}
-                transition={{ duration: 0.35, ease: [0.23, 1, 0.32, 1] }}
+                transition={{ duration: 0.35, ease: EASE }}
                 style={{ background: 'rgba(120,80,200,0.07)', border: 'none', borderRadius: '50%', width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#8E87A8' }}
               >
                 <RefreshCw size={13} />
@@ -289,7 +292,7 @@ export default function FinanzasPage() {
                 style={{ height: '100%', borderRadius: 99, background: 'linear-gradient(90deg, #06D6A0, #7C3AED)' }}
                 initial={{ width: 0 }}
                 animate={{ width: `${pctGlobal}%` }}
-                transition={{ duration: 0.8, ease: [0.23, 1, 0.32, 1], delay: 0.2 }}
+                transition={{ duration: 0.8, ease: EASE, delay: 0.2 }}
               />
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -393,7 +396,7 @@ export default function FinanzasPage() {
                       style={{ height: '100%', borderRadius: 99, background: `linear-gradient(90deg, ${colorPct === '#06D6A0' ? '#06D6A0, #7C3AED' : colorPct === '#FFB703' ? '#FFB703, #FB8500' : '#EF476F, #F72585'})` }}
                       initial={{ width: 0 }}
                       animate={{ width: `${pctClub}%` }}
-                      transition={{ duration: 0.7, ease: [0.23, 1, 0.32, 1], delay: 0.15 }}
+                      transition={{ duration: 0.7, ease: EASE, delay: 0.15 }}
                     />
                   </div>
                 )}
@@ -411,7 +414,7 @@ export default function FinanzasPage() {
                                 /* Edición inline */
                                 <motion.div key="edit"
                                   initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }}
-                                  transition={{ duration: 0.2, ease: [0.23, 1, 0.32, 1] }}
+                                  transition={{ duration: 0.2, ease: EASE }}
                                   style={{ background: '#F7F5FF', border: '1.5px solid rgba(124,58,237,0.15)', borderRadius: 14, padding: 14 }}
                                 >
                                   <p style={{ margin: '0 0 12px', fontSize: 11, fontWeight: 700, color: '#7C3AED' }}>Editar abono</p>
@@ -551,7 +554,7 @@ export default function FinanzasPage() {
                     <motion.button key="btn"
                       onClick={() => setAbonoOpen(c.id)}
                       whileTap={{ scale: 0.97 }}
-                      transition={{ duration: 0.12, ease: [0.23, 1, 0.32, 1] }}
+                      transition={{ duration: 0.12, ease: EASE }}
                       style={{ width: '100%', padding: '11px 0', borderRadius: 12, border: '1.5px solid rgba(124,58,237,0.22)', background: 'rgba(124,58,237,0.05)', color: '#7C3AED', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
                       + Registrar abono
                     </motion.button>

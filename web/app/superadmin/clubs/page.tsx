@@ -4,15 +4,16 @@ import { useAuth } from '@clerk/nextjs';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiFetch } from '@/lib/api-client';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, type Variants } from 'framer-motion';
 
-const stagger = {
+const EASE = [0.23, 1, 0.32, 1] as [number,number,number,number];
+const stagger: Variants = {
   hidden: {},
   show: { transition: { staggerChildren: 0.06, delayChildren: 0.04 } },
 };
-const cardVariant = {
+const cardVariant: Variants = {
   hidden: { opacity: 0, y: 10, scale: 0.98 },
-  show:   { opacity: 1, y: 0,  scale: 1, transition: { duration: 0.22, ease: [0.23, 1, 0.32, 1] as [number,number,number,number] } },
+  show:   { opacity: 1, y: 0,  scale: 1, transition: { duration: 0.22, ease: EASE } },
 };
 
 interface Member {

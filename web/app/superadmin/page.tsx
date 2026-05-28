@@ -270,6 +270,45 @@ export default function SuperadminDashboard() {
                 </div>
               </div>
             </motion.div>
+
+            {/* Gráfica de ingresos por mes */}
+            <motion.div variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true, margin: '-40px' }}
+              style={{ background: '#fff', border: '1px solid rgba(120,80,200,0.10)', borderRadius: 20, overflow: 'hidden', marginBottom: 20 }}
+            >
+              <div style={{ padding: '14px 16px 0' }}>
+                <p style={{ margin: '0 0 2px', fontSize: 13, fontWeight: 700, color: '#1A1028', fontFamily: 'Space Grotesk, sans-serif' }}>
+                  Ingresos por mes
+                </p>
+                <p style={{ margin: '0 0 12px', fontSize: 10, color: '#8E87A8' }}>{currentYear} · acumulado mensual</p>
+              </div>
+              {!hasIncomeData ? (
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 80, paddingBottom: 16 }}>
+                  <p style={{ fontSize: 12, color: '#8E87A8', margin: 0 }}>Sin ingresos registrados aún</p>
+                </div>
+              ) : (
+                <ResponsiveContainer width="100%" height={160}>
+                  <AreaChart data={incomeDataTrimmed} margin={{ top: 4, right: 16, left: -10, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="incomeGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%"  stopColor="#7C3AED" stopOpacity={0.16} />
+                        <stop offset="95%" stopColor="#7C3AED" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="4 4" stroke="rgba(0,0,0,0.04)" vertical={false} />
+                    <XAxis dataKey="name" tick={{ fontSize: 10, fill: '#8E87A8', fontWeight: 600 }} axisLine={false} tickLine={false} />
+                    <YAxis tick={{ fontSize: 9, fill: '#8E87A8' }} axisLine={false} tickLine={false} tickFormatter={fmtShort} />
+                    <Tooltip
+                      contentStyle={{ borderRadius: 10, border: '1px solid #E8E6F0', fontSize: 12, padding: '6px 12px', boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}
+                      formatter={(v) => [fmt.format(Number(v ?? 0)), 'Recaudado']}
+                      labelStyle={{ fontWeight: 700, color: '#1A1028' }}
+                    />
+                    <Area type="monotone" dataKey="total" stroke="#7C3AED" strokeWidth={2.2}
+                      fill="url(#incomeGrad)" dot={false}
+                      activeDot={{ r: 5, fill: '#7C3AED', stroke: '#fff', strokeWidth: 2 }} />
+                  </AreaChart>
+                </ResponsiveContainer>
+              )}
+            </motion.div>
           </motion.section>
         )}
 

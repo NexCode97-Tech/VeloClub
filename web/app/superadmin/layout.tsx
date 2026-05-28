@@ -7,6 +7,7 @@ import { apiFetch, ApiError } from '@/lib/api-client';
 import LoadingScreen from '@/components/ui/loading-screen';
 import Link from 'next/link';
 import { LayoutDashboard, Building2, CircleDollarSign } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 // Config fue fusionado con Perfil (UserButton) — 3 tabs + UserButton = 4 slots
 const TABS = [
@@ -123,18 +124,22 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
           {title}
         </h2>
         {/* Refresh */}
-        <button
+        <motion.button
           onClick={() => { setSpin(true); setTimeout(() => { setSpin(false); window.location.reload(); }, 400); }}
+          whileTap={{ scale: 0.9 }}
+          transition={{ duration: 0.12, ease: [0.23, 1, 0.32, 1] }}
           className="w-[34px] h-[34px] rounded-full flex items-center justify-center"
           style={{ background: '#F0EEF8', border: '1px solid rgba(120,80,200,0.10)', color: '#8E87A8', transition: 'transform 0.4s', transform: spin ? 'rotate(180deg)' : 'rotate(0deg)' }}
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
           </svg>
-        </button>
+        </motion.button>
         {/* Bell */}
-        <button
+        <motion.button
           onClick={() => { setPanelOpen(true); loadNotifs(); }}
+          whileTap={{ scale: 0.9 }}
+          transition={{ duration: 0.12, ease: [0.23, 1, 0.32, 1] }}
           className="w-[34px] h-[34px] rounded-full flex items-center justify-center relative"
           style={{ background: '#F0EEF8', border: '1px solid rgba(120,80,200,0.10)', color: '#8E87A8' }}
         >
@@ -147,14 +152,30 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
               {noLeidas > 9 ? '9+' : noLeidas}
             </div>
           )}
-        </button>
+        </motion.button>
       </div>
 
       {/* Notification Panel Overlay */}
+      <AnimatePresence>
       {panelOpen && (
         <>
-          <div className="fixed inset-0 z-40" style={{ background: 'rgba(0,0,0,0.4)' }} onClick={() => setPanelOpen(false)} />
-          <div className="fixed top-0 right-0 bottom-0 z-50 flex flex-col" style={{ width: '85%', maxWidth: 360, background: '#fff', boxShadow: '-8px 0 32px rgba(0,0,0,0.15)' }}>
+          <motion.div
+            className="fixed inset-0 z-40"
+            style={{ background: 'rgba(0,0,0,0.4)' }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            onClick={() => setPanelOpen(false)}
+          />
+          <motion.div
+            className="fixed top-0 right-0 bottom-0 z-50 flex flex-col"
+            style={{ width: '85%', maxWidth: 360, background: '#fff', boxShadow: '-8px 0 32px rgba(0,0,0,0.15)' }}
+            initial={{ x: '100%' }}
+            animate={{ x: 0 }}
+            exit={{ x: '100%' }}
+            transition={{ duration: 0.32, ease: [0.32, 0.72, 0, 1] }}
+          >
             {/* Panel header */}
             <div className="flex items-center gap-2 px-4 py-3 shrink-0" style={{ borderBottom: '1px solid rgba(120,80,200,0.10)' }}>
               <h3 className="flex-1 m-0 text-[15px] font-bold" style={{ fontFamily: 'Space Grotesk, sans-serif', color: '#1A1028' }}>
@@ -207,9 +228,10 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
                 ))
               )}
             </div>
-          </div>
+          </motion.div>
         </>
       )}
+      </AnimatePresence>
 
       {/* Main content */}
       <main className="flex-1 overflow-y-auto overflow-x-hidden">

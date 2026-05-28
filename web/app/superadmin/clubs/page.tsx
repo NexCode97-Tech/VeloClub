@@ -4,6 +4,16 @@ import { useAuth } from '@clerk/nextjs';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiFetch } from '@/lib/api-client';
+import { motion, AnimatePresence } from 'framer-motion';
+
+const stagger = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.06, delayChildren: 0.04 } },
+};
+const cardVariant = {
+  hidden: { opacity: 0, y: 10, scale: 0.98 },
+  show:   { opacity: 1, y: 0,  scale: 1, transition: { duration: 0.22, ease: [0.23, 1, 0.32, 1] } },
+};
 
 interface Member {
   id: string;
@@ -220,8 +230,10 @@ export default function ClubsPage() {
           <div className="rounded-2xl p-12 text-center" style={{ background: '#fff', border: '1px solid rgba(120,80,200,0.10)', color: '#8E87A8', fontSize: 13 }}>
             No hay clubs registrados aún.
           </div>
-        ) : clubs.map(club => (
-          <div key={club.id} className="rounded-2xl mb-3" style={{ background: '#fff', border: '1px solid rgba(120,80,200,0.10)', padding: 14 }}>
+        ) : (
+        <motion.div variants={stagger} initial="hidden" animate="show">
+        {clubs.map(club => (
+          <motion.div key={club.id} variants={cardVariant} className="rounded-2xl mb-3" style={{ background: '#fff', border: '1px solid rgba(120,80,200,0.10)', padding: 14 }}>
 
             {/* Edit name inline */}
             {editId === club.id ? (
@@ -287,8 +299,16 @@ export default function ClubsPage() {
             </div>
 
             {/* Members panel */}
+            <AnimatePresence>
             {membersClubId === club.id && (
-              <div className="rounded-xl overflow-hidden" style={{ border: '1px solid rgba(120,80,200,0.10)', marginTop: 4 }}>
+              <motion.div
+                className="rounded-xl overflow-hidden"
+                style={{ border: '1px solid rgba(120,80,200,0.10)', marginTop: 4 }}
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.25, ease: [0.23, 1, 0.32, 1] }}
+              >
                 <div className="flex items-center justify-between px-3 py-2" style={{ background: '#F0EEF8', borderBottom: '1px solid rgba(120,80,200,0.10)' }}>
                   <p className="text-[11px] font-bold m-0" style={{ color: '#7C3AED' }}>Admins y Entrenadores</p>
                   <button onClick={() => { setShowAddMember(v => !v); setMemberError(null); }}
@@ -379,10 +399,13 @@ export default function ClubsPage() {
                     </button>
                   </div>
                 ))}
-              </div>
+              </motion.div>
             )}
-          </div>
+            </AnimatePresence>
+          </motion.div>
         ))}
+        </motion.div>
+        )}
       </div>
     </div>
   );

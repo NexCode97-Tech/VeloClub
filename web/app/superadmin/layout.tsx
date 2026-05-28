@@ -22,12 +22,36 @@ const SCREEN_LABELS: Record<string, string> = {
   '/superadmin/finanzas': 'Finanzas',
 };
 
-const TIPO_ICON: Record<string, string> = {
-  CLUB_CREADO:      '🏠',
-  CLUB_DESACTIVADO: '⏸',
-  PAGO_VENCIDO:     '⚠️',
-  PAGO_REGISTRADO:  '💳',
-};
+// Ícono SVG por tipo de notificación — sin emojis
+function TipoIcono({ tipo }: { tipo: string }) {
+  const map: Record<string, { icon: React.ReactNode; color: string; bg: string }> = {
+    CLUB_CREADO:      {
+      icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>,
+      color: '#7C3AED', bg: 'rgba(124,58,237,0.10)',
+    },
+    CLUB_DESACTIVADO: {
+      icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="10" y1="15" x2="10" y2="9"/><line x1="14" y1="15" x2="14" y2="9"/></svg>,
+      color: '#FFB703', bg: 'rgba(255,183,3,0.10)',
+    },
+    PAGO_VENCIDO:     {
+      icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>,
+      color: '#EF476F', bg: 'rgba(239,71,111,0.10)',
+    },
+    PAGO_REGISTRADO:  {
+      icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>,
+      color: '#06D6A0', bg: 'rgba(6,214,160,0.10)',
+    },
+  };
+  const m = map[tipo] ?? {
+    icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>,
+    color: '#8E87A8', bg: 'rgba(142,135,168,0.10)',
+  };
+  return (
+    <div style={{ width: 34, height: 34, borderRadius: 10, background: m.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', color: m.color, flexShrink: 0 }}>
+      {m.icon}
+    </div>
+  );
+}
 
 interface Notif {
   id: string;
@@ -155,77 +179,128 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
         </motion.button>
       </div>
 
-      {/* Notification Panel Overlay */}
+      {/* Notification Panel */}
       <AnimatePresence>
       {panelOpen && (
         <>
+          {/* Overlay */}
           <motion.div
             className="fixed inset-0 z-40"
-            style={{ background: 'rgba(0,0,0,0.4)' }}
+            style={{ background: 'rgba(15,5,30,0.45)' }}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
+            transition={{ duration: 0.22 }}
             onClick={() => setPanelOpen(false)}
           />
+
+          {/* Drawer */}
           <motion.div
             className="fixed top-0 right-0 bottom-0 z-50 flex flex-col"
-            style={{ width: '85%', maxWidth: 360, background: '#fff', boxShadow: '-8px 0 32px rgba(0,0,0,0.15)' }}
+            style={{ width: '88%', maxWidth: 380, background: '#F7F7FB', boxShadow: '-12px 0 48px rgba(15,5,30,0.18)' }}
             initial={{ x: '100%' }}
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
-            transition={{ duration: 0.32, ease: [0.32, 0.72, 0, 1] as [number,number,number,number] }}
+            transition={{ duration: 0.35, ease: [0.32, 0.72, 0, 1] as [number,number,number,number] }}
           >
-            {/* Panel header */}
-            <div className="flex items-center gap-2 px-4 py-3 shrink-0" style={{ borderBottom: '1px solid rgba(120,80,200,0.10)' }}>
-              <h3 className="flex-1 m-0 text-[15px] font-bold" style={{ fontFamily: 'Space Grotesk, sans-serif', color: '#1A1028' }}>
-                Notificaciones
-              </h3>
-              {noLeidas > 0 && (
-                <button onClick={marcarTodas} className="text-[11px] font-semibold" style={{ color: '#7C3AED', background: 'none', border: 'none', cursor: 'pointer' }}>
-                  Marcar todas
-                </button>
-              )}
-              <button onClick={() => setPanelOpen(false)} className="w-8 h-8 flex items-center justify-center rounded-lg" style={{ background: '#F0EEF8', border: 'none', cursor: 'pointer', color: '#8E87A8' }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-              </button>
-            </div>
-
-            {/* Panel body */}
-            <div className="flex-1 overflow-y-auto">
-              {notifsLoading ? (
-                <div className="flex items-center justify-center h-32">
-                  <div className="w-5 h-5 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: '#7C3AED', borderTopColor: 'transparent' }} />
-                </div>
-              ) : notifs.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-40 gap-2" style={{ color: '#8E87A8' }}>
-                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.4 }}>
+            {/* Header */}
+            <div style={{ padding: '16px 16px 14px', background: '#F7F7FB', borderBottom: '1px solid rgba(120,80,200,0.08)', flexShrink: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                {/* Ícono campana */}
+                <div style={{ width: 36, height: 36, borderRadius: 11, background: 'rgba(124,58,237,0.10)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#7C3AED', flexShrink: 0 }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
                     <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
                   </svg>
-                  <p className="text-[13px]">Sin notificaciones</p>
+                </div>
+                <div style={{ flex: 1 }}>
+                  <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: '#1A1028', fontFamily: 'Space Grotesk, sans-serif', lineHeight: 1.2 }}>
+                    Notificaciones
+                  </h3>
+                  {noLeidas > 0 && (
+                    <p style={{ margin: 0, fontSize: 11, color: '#8E87A8' }}>
+                      {noLeidas} sin leer
+                    </p>
+                  )}
+                </div>
+                {noLeidas > 0 && (
+                  <motion.button
+                    onClick={marcarTodas}
+                    whileTap={{ scale: 0.95 }}
+                    transition={{ duration: 0.12 }}
+                    style={{ padding: '5px 10px', borderRadius: 8, background: 'rgba(124,58,237,0.08)', border: '1px solid rgba(124,58,237,0.18)', color: '#7C3AED', fontSize: 10, fontWeight: 700, cursor: 'pointer', fontFamily: 'Plus Jakarta Sans, sans-serif' }}
+                  >
+                    Marcar todas
+                  </motion.button>
+                )}
+                <motion.button
+                  onClick={() => setPanelOpen(false)}
+                  whileTap={{ scale: 0.90 }}
+                  transition={{ duration: 0.12 }}
+                  style={{ width: 32, height: 32, borderRadius: 10, background: 'rgba(120,80,200,0.07)', border: 'none', cursor: 'pointer', color: '#8E87A8', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                  </svg>
+                </motion.button>
+              </div>
+            </div>
+
+            {/* Body */}
+            <div style={{ flex: 1, overflowY: 'auto', padding: '10px 12px 24px' }}>
+              {notifsLoading ? (
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 120 }}>
+                  <div className="w-5 h-5 rounded-full border-2 border-t-transparent animate-spin"
+                    style={{ borderColor: '#7C3AED', borderTopColor: 'transparent' }} />
+                </div>
+              ) : notifs.length === 0 ? (
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: 180, gap: 10 }}>
+                  <div style={{ width: 52, height: 52, borderRadius: 16, background: 'rgba(124,58,237,0.07)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(142,135,168,0.40)' }}>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                      <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                    </svg>
+                  </div>
+                  <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: '#8E87A8' }}>Sin notificaciones</p>
+                  <p style={{ margin: 0, fontSize: 11, color: '#C4BFD8' }}>Todo está al día</p>
                 </div>
               ) : (
-                notifs.map(n => (
-                  <button
-                    key={n.id}
-                    onClick={() => marcarLeida(n.id)}
-                    className="w-full flex items-start gap-3 px-4 py-3 text-left"
-                    style={{ borderBottom: '1px solid rgba(120,80,200,0.07)', background: n.leida ? 'transparent' : 'rgba(124,58,237,0.04)', cursor: 'pointer', border: 'none' }}
-                  >
-                    <span className="text-xl shrink-0 mt-0.5">{TIPO_ICON[n.tipo] ?? '🔔'}</span>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-1.5">
-                        <p className="text-[13px] font-semibold m-0 truncate" style={{ color: '#1A1028' }}>{n.titulo}</p>
-                        {!n.leida && <div className="w-2 h-2 rounded-full shrink-0" style={{ background: '#7C3AED' }} />}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  {notifs.map((n, i) => (
+                    <motion.button
+                      key={n.id}
+                      onClick={() => marcarLeida(n.id)}
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.22, ease: [0.23, 1, 0.32, 1] as [number,number,number,number], delay: i * 0.04 }}
+                      whileTap={{ scale: 0.98 }}
+                      style={{
+                        width: '100%', display: 'flex', alignItems: 'flex-start', gap: 10,
+                        padding: '12px 12px', borderRadius: 16, textAlign: 'left', cursor: 'pointer',
+                        background: n.leida ? '#fff' : 'rgba(124,58,237,0.05)',
+                        border: n.leida ? '1px solid rgba(120,80,200,0.08)' : '1px solid rgba(124,58,237,0.16)',
+                        boxShadow: n.leida ? 'none' : '0 2px 8px rgba(124,58,237,0.06)',
+                        transition: 'background 0.15s',
+                      }}
+                    >
+                      <TipoIcono tipo={n.tipo} />
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+                          <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: '#1A1028', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
+                            {n.titulo}
+                          </p>
+                          {!n.leida && (
+                            <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#7C3AED', flexShrink: 0 }} />
+                          )}
+                        </div>
+                        <p style={{ margin: 0, fontSize: 11, color: '#8E87A8', lineHeight: 1.4 }}>{n.cuerpo}</p>
+                        <p style={{ margin: '4px 0 0', fontSize: 10, color: '#C4BFD8', fontWeight: 500 }}>
+                          {new Date(n.createdAt).toLocaleString('es-CO', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                        </p>
                       </div>
-                      <p className="text-[11px] m-0 mt-0.5" style={{ color: '#8E87A8' }}>{n.cuerpo}</p>
-                      <p className="text-[10px] m-0 mt-1" style={{ color: '#8E87A8' }}>
-                        {new Date(n.createdAt).toLocaleString('es-CO', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
-                      </p>
-                    </div>
-                  </button>
-                ))
+                    </motion.button>
+                  ))}
+                </div>
               )}
             </div>
           </motion.div>

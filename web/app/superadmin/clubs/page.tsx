@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiFetch } from '@/lib/api-client';
 import { motion, AnimatePresence, type Variants } from 'framer-motion';
-import { KeyRound, Trash2 } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
 
 // ── Easing ────────────────────────────────────────────────────────────────────
 const EASE    = [0.23, 1, 0.32, 1]  as [number,number,number,number];
@@ -203,12 +203,6 @@ export default function ClubsPage() {
     await apiFetch(`/superadmin/clubs/${clubId}/miembros/${memberId}`, { method: 'DELETE', token });
     await loadMembers(clubId);
     await load();
-  }
-
-  async function handleResendAccess(clubId: string, memberId: string) {
-    const token = await getToken();
-    await apiFetch(`/superadmin/clubs/${clubId}/miembros/${memberId}/allowlist`, { method: 'POST', token });
-    alert('Acceso re-enviado. El correo ya puede registrarse en la app.');
   }
 
   return (
@@ -502,15 +496,6 @@ export default function ClubsPage() {
                             </div>
                             {/* Toggle de rol — sin native select */}
                             <RoleToggle value={m.role} onChange={r => handleChangeRole(club.id, m.id, r)} />
-                            {/* Reenviar acceso */}
-                            <motion.button
-                              onClick={() => handleResendAccess(club.id, m.id)}
-                              whileTap={{ scale: 0.88 }} transition={{ duration: 0.12 }}
-                              title="Re-enviar acceso"
-                              style={{ width: 28, height: 28, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(67,97,238,0.08)', border: '1px solid rgba(67,97,238,0.18)', color: '#4361EE', cursor: 'pointer', flexShrink: 0 }}
-                            >
-                              <KeyRound size={12} />
-                            </motion.button>
                             {/* Quitar miembro */}
                             <motion.button
                               onClick={() => handleRemoveMember(club.id, m.id)}

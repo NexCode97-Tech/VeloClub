@@ -237,8 +237,6 @@ export default function FinanzasPage() {
   const totalMeta      = clubs.reduce((a, c) => a + (c.suscripcion ? planMeta(c.suscripcion.planMonto, c.suscripcion.tipoPlan) : 0), 0);
   const totalRecaudado = allPagos.filter(p => p.estado === 'PAID').reduce((a, p) => a + p.monto, 0);
   const totalPendiente = allPagos.filter(p => p.estado !== 'PAID').reduce((a, p) => a + p.monto, 0);
-  const pctGlobal      = totalMeta > 0 ? Math.min(100, Math.round(totalRecaudado / totalMeta * 100)) : 0;
-
   if (loading) return (
     <div className="flex items-center justify-center h-40" style={{ background: '#F7F7FB' }}>
       <div className="w-6 h-6 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: '#7C3AED', borderTopColor: 'transparent' }} />
@@ -248,65 +246,6 @@ export default function FinanzasPage() {
   return (
     <div style={{ background: '#F7F7FB', minHeight: '100%' }}>
       <div style={{ padding: '12px 16px 100px' }}>
-
-        {/* ── Resumen global ─────────────────────────────────────────────── */}
-        {totalMeta > 0 && (
-          <motion.div variants={fadeUp} initial="hidden" animate="show"
-            style={{ background: '#fff', border: '1px solid rgba(120,80,200,0.10)', borderRadius: 20, padding: '16px 16px 14px', marginBottom: 16 }}>
-
-            <div className="flex items-center justify-between mb-3">
-              <p style={{ margin: 0, fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', color: '#8E87A8', textTransform: 'uppercase' }}>
-                Resumen de suscripciones
-              </p>
-              <motion.button
-                onClick={load}
-                whileTap={{ scale: 0.90, rotate: 180 }}
-                transition={{ duration: 0.35, ease: EASE }}
-                style={{ background: 'rgba(120,80,200,0.07)', border: 'none', borderRadius: '50%', width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#8E87A8' }}
-              >
-                <RefreshCw size={13} />
-              </motion.button>
-            </div>
-
-            {/* Tres métricas en fila */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1px 1fr 1px 1fr', gap: 0, marginBottom: 14 }}>
-              <div style={{ textAlign: 'center', padding: '4px 0' }}>
-                <p style={{ margin: 0, fontSize: 9, fontWeight: 600, color: '#8E87A8', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 3 }}>Recaudado</p>
-                <p style={{ margin: 0, fontSize: 20, fontWeight: 800, color: '#06D6A0', fontFamily: 'Space Grotesk, sans-serif', lineHeight: 1 }}>
-                  {fmt.format(totalRecaudado)}
-                </p>
-              </div>
-              <div style={{ background: 'rgba(120,80,200,0.10)', width: 1 }} />
-              <div style={{ textAlign: 'center', padding: '4px 0' }}>
-                <p style={{ margin: 0, fontSize: 9, fontWeight: 600, color: '#8E87A8', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 3 }}>Pendiente</p>
-                <p style={{ margin: 0, fontSize: 20, fontWeight: 800, color: '#EF476F', fontFamily: 'Space Grotesk, sans-serif', lineHeight: 1 }}>
-                  {fmt.format(totalPendiente)}
-                </p>
-              </div>
-              <div style={{ background: 'rgba(120,80,200,0.10)', width: 1 }} />
-              <div style={{ textAlign: 'center', padding: '4px 0' }}>
-                <p style={{ margin: 0, fontSize: 9, fontWeight: 600, color: '#8E87A8', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 3 }}>Meta anual</p>
-                <p style={{ margin: 0, fontSize: 20, fontWeight: 800, color: '#7C3AED', fontFamily: 'Space Grotesk, sans-serif', lineHeight: 1 }}>
-                  {fmt.format(totalMeta)}
-                </p>
-              </div>
-            </div>
-
-            {/* Barra de progreso animada */}
-            <div style={{ height: 6, borderRadius: 99, background: 'rgba(120,80,200,0.10)', overflow: 'hidden', marginBottom: 6 }}>
-              <motion.div
-                style={{ height: '100%', borderRadius: 99, background: 'linear-gradient(90deg, #06D6A0, #7C3AED)' }}
-                initial={{ width: 0 }}
-                animate={{ width: `${pctGlobal}%` }}
-                transition={{ duration: 0.8, ease: EASE, delay: 0.2 }}
-              />
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span style={{ fontSize: 11, fontWeight: 700, color: pctGlobal >= 100 ? '#06D6A0' : '#7C3AED' }}>{pctGlobal}% cobrado</span>
-              <span style={{ fontSize: 11, color: '#8E87A8' }}>{clubs.filter(c => c.suscripcion).length} clubs activos</span>
-            </div>
-          </motion.div>
-        )}
 
         {/* ── Detalle por club ───────────────────────────────────────────── */}
         <p style={{ margin: '0 0 10px', fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', color: '#8E87A8', textTransform: 'uppercase' }}>

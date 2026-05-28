@@ -10,7 +10,7 @@ import { motion, type Variants } from 'framer-motion';
 import {
   AreaChart, Area, BarChart, Bar,
   XAxis, YAxis, Tooltip, ResponsiveContainer,
-  CartesianGrid,
+  CartesianGrid, PieChart, Pie, Cell,
 } from 'recharts';
 
 const fmt      = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 });
@@ -80,8 +80,15 @@ export default function SuperadminDashboard() {
   const totalMiembros  = clubs.reduce((s, c) => s + (c._count?.members ?? 0), 0);
   const allPagos       = clubs.flatMap(c => c.suscripcion?.pagos ?? []);
   const totalRecaudado = allPagos.filter(p => p.estado === 'PAID').reduce((a, p) => a + p.monto, 0);
+  const totalPendiente = allPagos.filter(p => p.estado !== 'PAID').reduce((a, p) => a + p.monto, 0);
   const totalPlan      = clubs.reduce((a, c) => a + (c.suscripcion?.planMonto ?? 0), 0);
-  const pctRecaudado   = totalPlan > 0 ? Math.round(totalRecaudado / totalPlan * 100) : 0;
+  const totalMeta      = totalPlan;
+  const pctRecaudado   = totalMeta > 0 ? Math.min(100, Math.round(totalRecaudado / totalMeta * 100)) : 0;
+  const clubsConSus    = clubs.filter(c => c.suscripcion).length;
+  const donutData      = [
+    { name: 'Cobrado',   value: totalRecaudado || 0.001 },
+    { name: 'Pendiente', value: Math.max(totalMeta - totalRecaudado, 0) || (totalMeta === 0 ? 0.999 : 0) },
+  ];
 
   // ── Gráfica 1: Ingresos acumulados ─────────────────────────────────────────
   const currentYear = new Date().getFullYear();
@@ -173,8 +180,8 @@ export default function SuperadminDashboard() {
           ))}
         </motion.div>
 
-        {/* ── Finanzas ────────────────────────────────────────────────────── */}
-        {totalPlan > 0 && (
+        {/* ── Resumen financiero — 3 tarjetas + donut ─────────────────────── */}
+        {totalMeta > 0 && (
           <motion.section variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true, margin: '-40px' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
               <p style={{ margin: 0, fontSize: 10, fontWeight: 700, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
@@ -187,75 +194,82 @@ export default function SuperadminDashboard() {
               </motion.div>
             </div>
 
-            <div style={{ background: '#fff', border: '1px solid rgba(120,80,200,0.10)', borderRadius: 20, overflow: 'hidden', marginBottom: 20 }}>
-              <div style={{ padding: '14px 16px 12px' }}>
-                <p style={{ margin: '0 0 2px', fontSize: 13, fontWeight: 700, color: '#1A1028', fontFamily: 'Space Grotesk, sans-serif' }}>
-                  Ingresos acumulados
+            {/* 3 tarjetas de métricas */}
+            <motion.div variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }}
+              style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 10 }}
+            >
+              {[
+                { label: 'Recaudado',  value: totalRecaudado, color: '#06D6A0', bg: 'rgba(6,214,160,0.08)',   border: 'rgba(6,214,160,0.18)'   },
+                { label: 'Pendiente',  value: totalPendiente, color: '#EF476F', bg: 'rgba(239,71,111,0.08)',  border: 'rgba(239,71,111,0.18)'  },
+                { label: 'Meta anual', value: totalMeta,      color: '#7C3AED', bg: 'rgba(124,58,237,0.07)', border: 'rgba(124,58,237,0.18)'  },
+              ].map(s => (
+                <motion.div key={s.label} variants={cardVariant}
+                  style={{ background: s.bg, border: `1px solid ${s.border}`, borderRadius: 16, padding: '12px 10px' }}
+                >
+                  <p style={{ margin: '0 0 6px', fontSize: 9, fontWeight: 700, color: s.color, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                    {s.label}
+                  </p>
+                  <p style={{ margin: 0, fontSize: 14, fontWeight: 800, color: s.color, fontFamily: 'Space Grotesk, sans-serif', lineHeight: 1.1 }}>
+                    {fmtShort(s.value)}
+                  </p>
+                </motion.div>
+              ))}
+            </motion.div>
+
+            {/* Donut + leyenda */}
+            <motion.div variants={cardVariant} initial="hidden" whileInView="show" viewport={{ once: true }}
+              style={{ background: '#fff', border: '1px solid rgba(120,80,200,0.10)', borderRadius: 20, padding: '16px', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 0 }}
+            >
+              {/* Donut */}
+              <div style={{ position: 'relative', flexShrink: 0 }}>
+                <ResponsiveContainer width={110} height={110}>
+                  <PieChart>
+                    <Pie
+                      data={donutData}
+                      cx="50%" cy="50%"
+                      innerRadius={36} outerRadius={50}
+                      startAngle={90} endAngle={-270}
+                      paddingAngle={donutData[1].value > 0.001 ? 3 : 0}
+                      dataKey="value"
+                      strokeWidth={0}
+                    >
+                      <Cell fill="#06D6A0" />
+                      <Cell fill="rgba(239,71,111,0.18)" />
+                    </Pie>
+                  </PieChart>
+                </ResponsiveContainer>
+                {/* % centrado */}
+                <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
+                  <p style={{ margin: 0, fontSize: 18, fontWeight: 800, color: pctRecaudado >= 100 ? '#06D6A0' : '#1A1028', fontFamily: 'Space Grotesk, sans-serif', lineHeight: 1 }}>
+                    {pctRecaudado}%
+                  </p>
+                </div>
+              </div>
+
+              {/* Leyenda */}
+              <div style={{ flex: 1, paddingLeft: 16 }}>
+                <p style={{ margin: '0 0 10px', fontSize: 13, fontWeight: 700, color: '#1A1028', fontFamily: 'Space Grotesk, sans-serif' }}>
+                  Progreso de cobro
                 </p>
-                <p style={{ margin: '0 0 12px', fontSize: 10, color: '#8E87A8' }}>{currentYear} · por mes</p>
-                {!hasIncomeData ? (
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 80 }}>
-                    <p style={{ fontSize: 12, color: '#8E87A8', margin: 0 }}>Sin ingresos registrados aún</p>
-                  </div>
-                ) : (
-                  <ResponsiveContainer width="100%" height={150}>
-                    <AreaChart data={incomeDataTrimmed} margin={{ top: 6, right: 4, left: -10, bottom: 0 }}>
-                      <defs>
-                        <linearGradient id="incomeGrad" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%"  stopColor="#7C3AED" stopOpacity={0.16} />
-                          <stop offset="95%" stopColor="#7C3AED" stopOpacity={0} />
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid strokeDasharray="4 4" stroke="rgba(0,0,0,0.04)" vertical={false} />
-                      <XAxis dataKey="name" tick={{ fontSize: 10, fill: '#8E87A8', fontWeight: 600 }} axisLine={false} tickLine={false} />
-                      <YAxis tick={{ fontSize: 9, fill: '#8E87A8' }} axisLine={false} tickLine={false} tickFormatter={fmtShort} />
-                      <Tooltip
-                        contentStyle={{ borderRadius: 10, border: '1px solid #E8E6F0', fontSize: 12, padding: '6px 12px', boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}
-                        formatter={(v) => [fmt.format(Number(v ?? 0)), 'Facturado']}
-                        labelStyle={{ fontWeight: 700, color: '#1A1028' }}
-                      />
-                      <Area type="monotone" dataKey="total" stroke="#7C3AED" strokeWidth={2.2}
-                        fill="url(#incomeGrad)" dot={false}
-                        activeDot={{ r: 5, fill: '#7C3AED', stroke: '#fff', strokeWidth: 2 }} />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                )}
-              </div>
-
-              <div style={{ height: 1, background: 'rgba(120,80,200,0.07)', margin: '0 16px' }} />
-
-              <div style={{ padding: '14px 16px' }}>
-                {/* Recaudado / Pendiente */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1px 1fr', gap: 0, marginBottom: 12 }}>
-                  <div style={{ paddingRight: 12 }}>
-                    <p style={{ margin: '0 0 2px', fontSize: 9, fontWeight: 600, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Recaudado</p>
-                    <p style={{ margin: 0, fontSize: 18, fontWeight: 800, color: '#06D6A0', fontFamily: 'Space Grotesk, sans-serif', lineHeight: 1 }}>
-                      {fmt.format(totalRecaudado)}
-                    </p>
-                  </div>
-                  <div style={{ background: 'rgba(120,80,200,0.08)' }} />
-                  <div style={{ paddingLeft: 12 }}>
-                    <p style={{ margin: '0 0 2px', fontSize: 9, fontWeight: 600, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Pendiente</p>
-                    <p style={{ margin: 0, fontSize: 18, fontWeight: 800, color: '#EF476F', fontFamily: 'Space Grotesk, sans-serif', lineHeight: 1 }}>
-                      {fmt.format(totalPlan - totalRecaudado)}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  {[
+                    { label: 'Cobrado',   color: '#06D6A0', value: totalRecaudado },
+                    { label: 'Pendiente', color: '#EF476F', value: totalPendiente },
+                  ].map(l => (
+                    <div key={l.label} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <div style={{ width: 8, height: 8, borderRadius: 2, background: l.color, flexShrink: 0 }} />
+                      <p style={{ margin: 0, fontSize: 11, color: '#8E87A8', flex: 1 }}>{l.label}</p>
+                      <p style={{ margin: 0, fontSize: 11, fontWeight: 700, color: l.color }}>{fmtShort(l.value)}</p>
+                    </div>
+                  ))}
+                  <div style={{ marginTop: 2, paddingTop: 6, borderTop: '1px solid rgba(120,80,200,0.07)' }}>
+                    <p style={{ margin: 0, fontSize: 10, color: '#8E87A8' }}>
+                      {clubsConSus} club{clubsConSus !== 1 ? 's' : ''} con suscripción activa
                     </p>
                   </div>
                 </div>
-                <div style={{ height: 5, borderRadius: 99, background: 'rgba(120,80,200,0.08)', overflow: 'hidden', marginBottom: 5 }}>
-                  <motion.div
-                    style={{ height: '100%', borderRadius: 99, background: 'linear-gradient(90deg,#06D6A0,#7C3AED)' }}
-                    initial={{ width: 0 }}
-                    whileInView={{ width: `${pctRecaudado}%` }}
-                    transition={{ duration: 0.8, ease: EASE, delay: 0.15 }}
-                    viewport={{ once: true }}
-                  />
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ fontSize: 10, fontWeight: 700, color: '#06D6A0' }}>{pctRecaudado}% cobrado</span>
-                  <span style={{ fontSize: 10, color: '#8E87A8' }}>Meta: {fmt.format(totalPlan)}</span>
-                </div>
               </div>
-            </div>
+            </motion.div>
           </motion.section>
         )}
 

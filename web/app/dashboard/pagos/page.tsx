@@ -3,7 +3,7 @@
 import { useAuth } from '@clerk/nextjs';
 import { useEffect, useState } from 'react';
 import { apiFetch } from '@/lib/api-client';
-import { CreditCard, Plus, Trash2, CheckCircle2, Clock, AlertCircle } from 'lucide-react';
+import { CreditCard, Plus, Trash2, CheckCircle2, Clock, AlertCircle, CalendarDays, TrendingUp } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -173,12 +173,213 @@ export default function PagosPage() {
     }
   }
 
+  // ── Skeleton mientras carga el rol ───────────────────────────────────────
+  if (!role) {
+    return (
+      <div className="min-h-full bg-background px-4 pt-4 flex flex-col gap-3">
+        <div className="h-8 w-32 rounded-lg bg-white border border-border animate-pulse" />
+        <div className="h-32 rounded-2xl bg-white border border-border animate-pulse" />
+        <div className="h-16 rounded-xl bg-white border border-border animate-pulse" />
+        <div className="h-16 rounded-xl bg-white border border-border animate-pulse" />
+      </div>
+    );
+  }
+
+  // ── Vista STUDENT ────────────────────────────────────────────────────────
+  if (role === 'STUDENT') {
+    const pending = payments.filter(p => p.status === 'PENDING' || p.status === 'OVERDUE');
+    const paid    = payments.filter(p => p.status === 'PAID');
+    const totalOwed = pending.reduce((s, p) => s + p.amount, 0);
+    const totalPaidStudent = paid.reduce((s, p) => s + p.amount, 0);
+    const hasOverdue = pending.some(p => p.status === 'OVERDUE');
+
+    return (
+      <div className="min-h-full bg-background">
+        {/* Header */}
+        <div className="px-5 py-3 bg-background border-b border-border">
+          <h1 className="text-[17px] font-bold text-foreground" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
+            Mis Pagos
+          </h1>
+        </div>
+
+        <div className="px-4 pt-4 pb-8 flex flex-col gap-4">
+
+          {loading ? (
+            <div className="flex flex-col gap-3">
+              <div className="h-32 rounded-2xl bg-white border border-border animate-pulse" />
+              <div className="h-16 rounded-xl bg-white border border-border animate-pulse" />
+              <div className="h-16 rounded-xl bg-white border border-border animate-pulse" />
+            </div>
+          ) : (
+            <>
+              {/* Tarjeta estado actual */}
+              <div
+                className="rounded-2xl p-5 text-white"
+                style={{
+                  background: hasOverdue
+                    ? 'linear-gradient(135deg,#EF476F,#B5002E)'
+                    : pending.length > 0
+                    ? 'linear-gradient(135deg,#FFB703,#F48C06)'
+                    : 'linear-gradient(135deg,#06D6A0,#028A5B)',
+                }}
+              >
+                <div className="flex items-center gap-2 mb-3 opacity-90">
+                  {hasOverdue ? (
+                    <AlertCircle className="w-4 h-4" />
+                  ) : pending.length > 0 ? (
+                    <Clock className="w-4 h-4" />
+                  ) : (
+                    <CheckCircle2 className="w-4 h-4" />
+                  )}
+                  <p className="text-[11px] font-bold tracking-widest uppercase">
+                    {hasOverdue ? 'Pago vencido' : pending.length > 0 ? 'Pago pendiente' : 'Al día'}
+                  </p>
+                </div>
+
+                {pending.length > 0 ? (
+                  <>
+                    <p className="text-[11px] opacity-75 uppercase tracking-wide mb-1">Por pagar</p>
+                    <p className="text-4xl font-extrabold mb-1" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
+                      {fmt.format(totalOwed)}
+                    </p>
+                    <p className="text-[11px] opacity-70">
+                      {pending.length} {pending.length === 1 ? 'cuota pendiente' : 'cuotas pendientes'}
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-3xl font-extrabold mb-1" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
+                      ¡Todo pagado!
+                    </p>
+                    <p className="text-[11px] opacity-75">No tienes pagos pendientes</p>
+                  </>
+                )}
+              </div>
+
+              {/* Resumen rápido */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-white border border-border rounded-2xl p-4 flex flex-col gap-1">
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <TrendingUp className="w-3.5 h-3.5" style={{ color: '#06D6A0' }} />
+                    <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Total pagado</p>
+                  </div>
+                  <p className="text-[18px] font-extrabold text-foreground" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
+                    {fmt.format(totalPaidStudent)}
+                  </p>
+                  <p className="text-[10px] text-muted-foreground">{paid.length} {paid.length === 1 ? 'pago' : 'pagos'}</p>
+                </div>
+                <div className="bg-white border border-border rounded-2xl p-4 flex flex-col gap-1">
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <CalendarDays className="w-3.5 h-3.5" style={{ color: '#4361EE' }} />
+                    <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Historial</p>
+                  </div>
+                  <p className="text-[18px] font-extrabold text-foreground" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
+                    {payments.length}
+                  </p>
+                  <p className="text-[10px] text-muted-foreground">registros totales</p>
+                </div>
+              </div>
+
+              {/* Pendientes / vencidos primero */}
+              {pending.length > 0 && (
+                <div>
+                  <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground mb-2 px-1">
+                    Pendientes
+                  </p>
+                  <div className="space-y-2">
+                    {pending.map(p => {
+                      const sc = STATUS_COLORS[p.status] ?? STATUS_COLORS.PENDING;
+                      const StatusIcon = sc.icon;
+                      return (
+                        <div
+                          key={p.id}
+                          className="bg-white border rounded-xl px-4 py-3.5 flex items-center gap-3"
+                          style={{ borderColor: sc.text + '33' }}
+                        >
+                          <div
+                            className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                            style={{ background: sc.bg }}
+                          >
+                            <StatusIcon className="w-5 h-5" style={{ color: sc.text }} />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-[13px] font-bold text-foreground">
+                              {MONTH_NAMES[p.month - 1]} {p.year}
+                            </p>
+                            {p.notes && (
+                              <p className="text-[11px] text-muted-foreground truncate">{p.notes}</p>
+                            )}
+                          </div>
+                          <div className="text-right shrink-0">
+                            <p className="text-[14px] font-extrabold" style={{ color: sc.text, fontFamily: 'var(--font-space-grotesk)' }}>
+                              {fmt.format(p.amount)}
+                            </p>
+                            <span
+                              className="text-[10px] font-bold px-1.5 py-0.5 rounded-full"
+                              style={{ background: sc.bg, color: sc.text }}
+                            >
+                              {STATUS_LABELS[p.status]}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Historial de pagados */}
+              {paid.length > 0 && (
+                <div>
+                  <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground mb-2 px-1">
+                    Historial
+                  </p>
+                  <div className="space-y-2">
+                    {[...paid].reverse().map(p => (
+                      <div key={p.id} className="bg-white border border-border rounded-xl px-4 py-3.5 flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(6,214,160,0.10)' }}>
+                          <CheckCircle2 className="w-5 h-5" style={{ color: '#06D6A0' }} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[13px] font-bold text-foreground">
+                            {MONTH_NAMES[p.month - 1]} {p.year}
+                          </p>
+                          {p.paidAt && (
+                            <p className="text-[11px] text-muted-foreground">
+                              Pagado el {new Date(p.paidAt).toLocaleDateString('es-CO', { day: 'numeric', month: 'short' })}
+                            </p>
+                          )}
+                        </div>
+                        <p className="text-[14px] font-extrabold text-foreground shrink-0" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
+                          {fmt.format(p.amount)}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {payments.length === 0 && (
+                <div className="bg-white border border-border rounded-xl px-4 py-10 text-center">
+                  <CreditCard className="w-10 h-10 mx-auto mb-3 text-muted-foreground/30" />
+                  <p className="text-[13px] font-semibold text-muted-foreground">Sin pagos registrados</p>
+                  <p className="text-[11px] text-muted-foreground mt-1">Tu historial de pagos aparecerá aquí</p>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // ── Vista ADMIN / COACH ───────────────────────────────────────────────────
   return (
     <div className="min-h-full bg-background">
       {/* Encabezado */}
       <div className="px-5 py-3 bg-background border-b border-border flex items-center justify-between">
         <h1 className="text-[17px] font-bold text-foreground" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
-          {canManage ? 'Pagos' : 'Mis Pagos'}
+          Pagos
         </h1>
         {canManage && (
           <button

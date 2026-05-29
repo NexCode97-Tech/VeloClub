@@ -37,7 +37,7 @@ export default function MasPage() {
     })();
   }, []);
 
-  const items = ITEMS_BY_ROLE[role ?? 'ADMIN'] ?? [];
+  const items = role ? (ITEMS_BY_ROLE[role] ?? []) : null;
 
   const roleLabel: Record<string, string> = {
     ADMIN: 'Administrador',
@@ -52,7 +52,7 @@ export default function MasPage() {
       </h1>
 
       {/* Tarjeta Mi cuenta — solo para STUDENT (ADMIN y COACH la tienen en el header) */}
-      {role === 'STUDENT' && (
+      {items !== null && role === 'STUDENT' && (
         <div className="relative bg-white border border-border rounded-2xl px-4 py-3.5 flex items-center gap-3 mb-4 overflow-hidden">
           <div className="w-12 h-12 rounded-full bg-violet-100 shrink-0 flex items-center justify-center overflow-hidden pointer-events-none">
             {user?.imageUrl
@@ -83,7 +83,17 @@ export default function MasPage() {
       )}
 
       {/* ── Ítems según rol ── */}
-      {items.length > 0 && (
+      {items === null && (
+        <div className="space-y-2">
+          {[1, 2, 3].map(i => (
+            <div key={i} className="w-full bg-white border border-border rounded-xl px-4 py-3.5 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-secondary animate-pulse shrink-0" />
+              <div className="flex-1 h-4 rounded bg-secondary animate-pulse" />
+            </div>
+          ))}
+        </div>
+      )}
+      {items !== null && items.length > 0 && (
         <div className="space-y-2">
           {items.map(({ label, icon: Icon, color, href }) => (
             <Link

@@ -773,8 +773,8 @@ export default function FinanzasPage() {
                       boxShadow: active ? `0 0 0 1px ${color}22` : '0 1px 3px rgba(0,0,0,0.06)',
                     }}
                   >
-                    <p className="text-[22px] font-extrabold leading-none" style={{ fontFamily: 'var(--font-space-grotesk)', color }}>{value}</p>
-                    <p className="text-[10px] font-semibold" style={{ color: active ? color : '#8E87A8' }}>{label}</p>
+                    <p className="text-[22px] md:text-[48px] font-extrabold leading-none" style={{ fontFamily: 'var(--font-space-grotesk)', color }}>{value}</p>
+                    <p className="text-[10px] md:text-[13px] font-semibold mt-0.5" style={{ color: active ? color : '#8E87A8' }}>{label}</p>
                   </motion.button>
                 );
               })}

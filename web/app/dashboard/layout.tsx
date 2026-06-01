@@ -293,62 +293,83 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           )}
         </AnimatePresence>
 
-        {/* ── Mobile bottom tab bar — glassmorphism, círculo degradado ── */}
-        <nav className="md:hidden fixed bottom-0 left-0 right-0 z-30" style={{ padding: '10px 16px 20px', pointerEvents: 'none', position: 'relative' }}>
-
-          {/* Bump circular — abraza el botón + por arriba */}
-          {role !== 'STUDENT' && (
-            <div
-              style={{
-                position: 'absolute',
-                width: 76,
-                height: 76,
-                borderRadius: '50%',
-                background: '#FFFFFF',
-                boxShadow: '0 -2px 8px rgba(124,58,237,0.10)',
-                left: '50%',
-                transform: 'translateX(-50%)',
-                top: -8,
-                zIndex: 2,
-                pointerEvents: 'none',
-              }}
-            />
-          )}
+        {/* ── Mobile bottom tab bar — SVG shape con notch convexo ── */}
+        <nav className="md:hidden fixed bottom-0 left-0 right-0 z-30" style={{ padding: '0 16px 20px', pointerEvents: 'none' }}>
 
           {(() => {
             const isStudent = role === 'STUDENT';
             const totalSlots = isStudent ? tabItems.length + 1 : tabItems.length;
+            const hasNotch = role !== 'STUDENT';
+            // Dimensiones del bar
+            const BAR_H = 58;
+            const NOTCH_R = 34; // radio del arco convexo
+            const NOTCH_DEPTH = 18; // cuánto sube el arco sobre el bar
+            const PILL_R = 29; // radio de las esquinas pill
+            const SVG_H = BAR_H + NOTCH_DEPTH + 2; // +2 para la sombra
             return (
               <div
                 className="relative flex w-full"
                 style={{
-                  background: '#FFFFFF',
-                  backdropFilter: 'blur(20px)',
-                  WebkitBackdropFilter: 'blur(20px)',
-                  borderRadius: 40,
-                  padding: '6px 0',
-                  boxShadow: '0 8px 32px rgba(124,58,237,0.13), 0 2px 8px rgba(0,0,0,0.06), inset 0 0 0 1px rgba(124,58,237,0.14)',
+                  height: SVG_H,
                   pointerEvents: 'auto',
-                  position: 'relative',
-                  zIndex: 1,
+                  paddingTop: hasNotch ? NOTCH_DEPTH + 8 : 8,
                 }}
               >
-                {/* Círculo deslizante — mismo tamaño que el avatar del UserButton */}
-                {activeTabIndex >= 0 && (
-                  <div
-                    className="absolute pointer-events-none"
-                    style={{
-                      width: 44,
-                      height: 44,
-                      borderRadius: '50%',
-                      background: 'linear-gradient(135deg, #7C3AED 0%, #4361EE 55%, #06D6A0 100%)',
-                      left: `calc((${activeTabIndex} + 0.5) / ${totalSlots} * 100% - 22px)`,
-                      top: 6,
-                      transition: 'left 0.35s cubic-bezier(0.34,1.2,0.64,1)',
-                      boxShadow: '0 4px 20px rgba(124,58,237,0.40)',
-                    }}
+                {/* SVG fondo — pill con notch convexo integrado, una sola forma */}
+                <svg
+                  viewBox={`0 0 400 ${SVG_H}`}
+                  preserveAspectRatio="none"
+                  className="absolute inset-0 w-full h-full"
+                  style={{ pointerEvents: 'none', filter: 'drop-shadow(0 -2px 8px rgba(124,58,237,0.10)) drop-shadow(0 4px 16px rgba(124,58,237,0.08))' }}
+                >
+                  <path
+                    d={hasNotch
+                      ? `M${PILL_R},${NOTCH_DEPTH + 2}
+                         L${200 - NOTCH_R - 8},${NOTCH_DEPTH + 2}
+                         C${200 - NOTCH_R + 4},${NOTCH_DEPTH + 2} ${200 - NOTCH_R + 10},${NOTCH_DEPTH - 2} ${200 - NOTCH_R + 16},${NOTCH_DEPTH - 8}
+                         A${NOTCH_R},${NOTCH_R} 0 0,1 ${200 + NOTCH_R - 16},${NOTCH_DEPTH - 8}
+                         C${200 + NOTCH_R - 10},${NOTCH_DEPTH - 2} ${200 + NOTCH_R - 4},${NOTCH_DEPTH + 2} ${200 + NOTCH_R + 8},${NOTCH_DEPTH + 2}
+                         L${400 - PILL_R},${NOTCH_DEPTH + 2}
+                         Q400,${NOTCH_DEPTH + 2} 400,${NOTCH_DEPTH + 2 + PILL_R}
+                         L400,${SVG_H - PILL_R}
+                         Q400,${SVG_H} ${400 - PILL_R},${SVG_H}
+                         L${PILL_R},${SVG_H}
+                         Q0,${SVG_H} 0,${SVG_H - PILL_R}
+                         L0,${NOTCH_DEPTH + 2 + PILL_R}
+                         Q0,${NOTCH_DEPTH + 2} ${PILL_R},${NOTCH_DEPTH + 2}
+                         Z`
+                      : `M${PILL_R},2
+                         L${400 - PILL_R},2
+                         Q400,2 400,${2 + PILL_R}
+                         L400,${SVG_H - PILL_R}
+                         Q400,${SVG_H} ${400 - PILL_R},${SVG_H}
+                         L${PILL_R},${SVG_H}
+                         Q0,${SVG_H} 0,${SVG_H - PILL_R}
+                         L0,${2 + PILL_R}
+                         Q0,2 ${PILL_R},2
+                         Z`
+                    }
+                    fill="#FFFFFF"
+                    stroke="rgba(124,58,237,0.14)"
+                    strokeWidth="1"
                   />
-                )}
+                </svg>
+                  {/* Círculo deslizante — mismo tamaño que el avatar del UserButton */}
+                  {activeTabIndex >= 0 && (
+                    <div
+                      className="absolute pointer-events-none"
+                      style={{
+                        width: 44,
+                        height: 44,
+                        borderRadius: '50%',
+                        background: 'linear-gradient(135deg, #7C3AED 0%, #4361EE 55%, #06D6A0 100%)',
+                        left: `calc((${activeTabIndex} + 0.5) / ${totalSlots} * 100% - 22px)`,
+                        top: 6,
+                        transition: 'left 0.35s cubic-bezier(0.34,1.2,0.64,1)',
+                        boxShadow: '0 4px 20px rgba(124,58,237,0.40)',
+                      }}
+                    />
+                  )}
 
                 {tabItems.map(({ href, label, icon: Icon }) => {
                   // Slot del CircleMenu (centro)
@@ -358,7 +379,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                       <div
                         key="mas-circle"
                         className="flex-1 flex flex-col items-center relative z-[41]"
-                        style={{ marginTop: -14 }}
+                        style={{ marginTop: -28 }}
                       >
                         <BottomCircleMenu
                           items={masItems}

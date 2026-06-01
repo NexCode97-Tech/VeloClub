@@ -137,20 +137,27 @@ function StudentRow({
     <motion.div variants={reducedMotion ? undefined : rowVariants} layout>
       {/* Fila principal — dos filas internas para evitar que el chip se parta */}
       <div className="bg-white border border-border rounded-xl px-4 py-3">
-        {/* Fila superior: avatar + nombre + botones icono */}
-        <div className="flex items-center gap-3">
+        {/* Fila superior: avatar + [nombre + fecha] + botones icono */}
+        <div className="flex items-start gap-3">
           {/* Avatar */}
           <div
-            className="w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-[11px] shrink-0"
+            className="w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-[11px] shrink-0 mt-0.5"
             style={{ background: avatarColor }}
           >
             {getInitials(m.fullName)}
           </div>
 
-          {/* Nombre */}
-          <p className="text-[13px] font-bold text-foreground truncate flex-1 min-w-0">{m.fullName}</p>
+          {/* Nombre + fecha de cobro en la misma columna */}
+          <div className="flex-1 min-w-0">
+            <p className="text-[13px] font-bold text-foreground truncate">{m.fullName}</p>
+            {configured && m.paymentDueDay && (
+              <p className="text-[10px] font-semibold text-muted-foreground mt-0.5">
+                Cobro el día {m.paymentDueDay} de cada mes
+              </p>
+            )}
+          </div>
 
-          {/* Botones icono + texto compactos */}
+          {/* Botones icono */}
           <div className="flex items-center gap-1 shrink-0">
             {/* WhatsApp */}
             {isPendingOrOverdue && (
@@ -214,15 +221,8 @@ function StudentRow({
           </div>
         </div>
 
-        {/* Fila 2: fecha de cobro */}
-        {configured && m.paymentDueDay && (
-          <p className="text-[10px] font-semibold text-muted-foreground mt-1.5 ml-12">
-            Cobro el día {m.paymentDueDay} de cada mes
-          </p>
-        )}
-
         {/* Fila 3: chip de estado + botón Cobrar/Pagado */}
-        <div className="flex items-center gap-2 mt-1.5 ml-12">
+        <div className="flex items-center gap-2 mt-2 ml-12">
           <div className="flex-1 min-w-0">
             {payment && sc && StatusIcon ? (
               <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-full whitespace-nowrap" style={{ background: sc.bg, color: sc.text }}>

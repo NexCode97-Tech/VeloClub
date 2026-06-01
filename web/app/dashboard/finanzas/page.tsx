@@ -54,11 +54,11 @@ const rowVariants = {
 };
 
 // ── WhatsApp helpers ──────────────────────────────────────────────────────────
-function buildWhatsAppUrl(phone: string, memberName: string, amount: number, month: number, year: number): string {
+function buildWhatsAppUrl(phone: string, memberName: string, amount: number, month: number, year: number, clubName: string): string {
   const clean = phone.replace(/\D/g, '');
   const normalized = clean.startsWith('57') ? clean : `57${clean}`;
   const text = encodeURIComponent(
-    `Hola ${memberName}, te recordamos que tienes pendiente tu mensualidad de ${MONTH_NAMES[month - 1]} ${year} por ${fmt.format(amount)}. Por favor comunícate con nosotros para coordinar tu pago. ¡Gracias! — VeloClub`
+    `Hola ${memberName}, te recordamos que tienes pendiente tu mensualidad de ${MONTH_NAMES[month - 1]} ${year} por ${fmt.format(amount)}. Por favor comunícate con nosotros para coordinar tu pago. ¡Gracias! — ${clubName}`
   );
   return `https://wa.me/${normalized}?text=${text}`;
 }
@@ -186,7 +186,7 @@ export default function FinanzasPage() {
 
   function handleWhatsApp(p: Payment) {
     if (!p.member.phone) return;
-    const url = buildWhatsAppUrl(p.member.phone, p.member.fullName, p.amount, p.month, p.year);
+    const url = buildWhatsAppUrl(p.member.phone, p.member.fullName, p.amount, p.month, p.year, clubName);
     window.open(url, '_blank');
     setSentWa(prev => new Set(prev).add(p.id));
   }

@@ -1,8 +1,10 @@
 'use client';
 
 import { useAuth } from '@clerk/nextjs';
+import { useQuery } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import { apiFetch } from '@/lib/api-client';
+import { QK } from '@/hooks/useVeloQuery';
 import { Users, MapPin, CheckCircle2 } from 'lucide-react';
 import {
   Select, SelectContent, SelectItem, SelectTrigger,
@@ -43,76 +45,69 @@ function avatarBg(role: string) { return ROLE_BG[role] ?? 'linear-gradient(135de
 
 export default function AsistenciaPage() {
   const { getToken } = useAuth();
-  const [locations, setLocations]     = useState<Location[]>([]);
   const [selectedLoc, setSelectedLoc] = useState<string>('');
-  const [members, setMembers]         = useState<Member[]>([]);
   const [att, setAtt]                 = useState<Record<string, Status>>({});
-  const [noAttDays, setNoAttDays]     = useState<number[]>([]);
-  const [loading, setLoading]         = useState(true);
   const [saving, setSaving]           = useState(false);
   const [saved, setSaved]             = useState(false);
   const [role, setRole]               = useState('');
+  const [noAttDays, setNoAttDays]     = useState<number[]>([]);
 
   const todayDay = new Date().getDay();
   const isBlocked = noAttDays.includes(todayDay);
+  const todayStr = todayISO();
 
+  // ── Datos con caché ──────────────────────────────────────────────────────────
+  const { data: locsData, isLoading: loadingLocs } = useQuery({
+    queryKey: QK.locations(),
+    queryFn: async () => { const token = await getToken(); return apiFetch<{ locations: Location[] }>('/locations', { token }); },
+  });
+  const { data: membersData, isLoading: loadingMembers } = useQuery({
+    queryKey: QK.members(),
+    queryFn: async () => { const token = await getToken(); return apiFetch<{ members: Member[] }>('/members', { token }); },
+  });
+  const { data: attData, isLoading: loadingAtt } = useQuery({
+    queryKey: QK.attendance(todayStr),
+    queryFn: async () => { const token = await getToken(); return apiFetch<{ records: AttRecord[] }>(`/attendance?date=${todayStr}`, { token }); },
+    staleTime: 0, // asistencia siempre fresca (cambia con frecuencia)
+  });
+
+  const locations = locsData?.locations ?? [];
+  const loading   = loadingLocs || loadingMembers || loadingAtt;
+
+  // Seleccionar primera sede cuando cargan las sedes
   useEffect(() => {
-    (async () => {
-      try {
-        const token = await getToken();
-        const [meRes, locsRes] = await Promise.all([
-          apiFetch<{ status: string; user?: { role: string } }>('/me', { token }),
-          apiFetch<{ locations: Location[] }>('/locations', { token }),
-        ]);
-        setRole(meRes.user?.role ?? '');
-        setLocations(locsRes.locations);
-        if (locsRes.locations.length > 0) setSelectedLoc(locsRes.locations[0].id);
+    if (locations.length > 0 && !selectedLoc) setSelectedLoc(locations[0].id);
+  }, [locations, selectedLoc]);
 
-        try {
-          const clubRes = await apiFetch<{ club: { noAttendanceDays: number[] } }>('/clubs/settings', { token });
-          setNoAttDays(clubRes.club.noAttendanceDays ?? []);
-        } catch {
-          // Si el endpoint falla, no bloqueamos la carga
-        }
-      } finally {
-        setLoading(false);
-      }
-    })();
+  // Rol y noAttDays (sin bloquear)
+  useEffect(() => {
+    getToken().then(async token => {
+      const [meRes, clubRes] = await Promise.all([
+        apiFetch<{ status: string; user?: { role: string } }>('/me', { token }),
+        apiFetch<{ club: { noAttendanceDays: number[] } }>('/clubs/settings', { token }).catch(() => null),
+      ]);
+      setRole(meRes.user?.role ?? '');
+      setNoAttDays(clubRes?.club.noAttendanceDays ?? []);
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Función reutilizable para cargar miembros + asistencia de la sede activa
-  const fetchMembers = async (locId: string) => {
-    if (!locId) return;
-    const token = await getToken();
-    const [membersRes, attRes] = await Promise.all([
-      apiFetch<{ members: Member[] }>('/members', { token }),
-      apiFetch<{ records: AttRecord[] }>(`/attendance?date=${todayISO()}&locationId=${locId}`, { token }),
-    ]);
-    const forLoc = membersRes.members.filter(
-      m => m.locations.some(l => l.location.id === locId)
+  // Recalcular lista de miembros y asistencia al cambiar sede o cuando llegan datos
+  useEffect(() => {
+    if (!selectedLoc || !membersData || !attData) return;
+    const forLoc = membersData.members.filter(
+      m => m.locations.some(l => l.location.id === selectedLoc)
     );
-    setMembers(forLoc);
     const base = Object.fromEntries(forLoc.map(m => [m.id, 'PRESENT' as Status]));
     const existing: Record<string, Status> = {};
-    for (const r of attRes.records) existing[r.memberId] = r.status as Status;
+    for (const r of attData.records) existing[r.memberId] = r.status as Status;
     setAtt({ ...base, ...existing });
-  };
+  }, [selectedLoc, membersData, attData]);
 
-  // Carga inicial y al cambiar sede
-  useEffect(() => {
-    fetchMembers(selectedLoc);
-  }, [selectedLoc]);
-
-  // Refresco automático al volver a esta pantalla (cambio de pestaña o navegación interna)
-  useEffect(() => {
-    const handleVisibility = () => {
-      if (document.visibilityState === 'visible' && selectedLoc) {
-        fetchMembers(selectedLoc);
-      }
-    };
-    document.addEventListener('visibilitychange', handleVisibility);
-    return () => document.removeEventListener('visibilitychange', handleVisibility);
-  }, [selectedLoc]);
+  // Miembros filtrados por sede seleccionada
+  const members = (membersData?.members ?? []).filter(
+    m => m.locations.some(l => l.location.id === selectedLoc)
+  );
 
   function toggle(id: string) {
     setAtt(prev => {

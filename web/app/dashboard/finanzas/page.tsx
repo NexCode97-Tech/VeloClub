@@ -2,8 +2,10 @@
 
 import { useAuth } from '@clerk/nextjs';
 import { useClubStream } from '@/hooks/useClubStream';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState, useMemo } from 'react';
 import { apiFetch } from '@/lib/api-client';
+import { QK } from '@/hooks/useVeloQuery';
 import {
   CreditCard, Plus, Trash2, CheckCircle2, Clock, AlertCircle,
   TrendingUp, TrendingDown, Wallet, Download, MessageCircle, Check,
@@ -91,6 +93,7 @@ const now = new Date();
 export default function FinanzasPage() {
   const { getToken } = useAuth();
   const reducedMotion = useReducedMotion();
+  const qc = useQueryClient();
   const [tab, setTab]             = useState<'pagos' | 'estado' | 'flujo'>('pagos');
   const [clubName, setClubName]   = useState('VeloClub');
   const [filterMonth, setFilterMonth] = useState(now.getMonth() + 1);
@@ -98,11 +101,8 @@ export default function FinanzasPage() {
   const [sentWa, setSentWa]       = useState<Set<string>>(new Set());
   const [generatingPay, setGeneratingPay] = useState<string | null>(null);
 
-  // Pagos state
-  const [payments, setPayments]     = useState<Payment[]>([]);
-  const [members, setMembers]       = useState<Member[]>([]);
+  // UI state
   const [payTab, setPayTab]         = useState<typeof PAY_TABS[number]>('Todos');
-  const [loadingPay, setLoadingPay] = useState(true);
   const [payOpen, setPayOpen]       = useState(false);
   const [payForm, setPayForm]       = useState({
     memberId: '', amount: '', month: String(now.getMonth() + 1),
@@ -111,58 +111,44 @@ export default function FinanzasPage() {
   const [savingPay, setSavingPay]   = useState(false);
   const [payError, setPayError]     = useState<string | null>(null);
   const [deletingPay, setDeletingPay] = useState<string | null>(null);
-
-  // Flujo state
-  const [entries, setEntries]         = useState<CashEntry[]>([]);
-  const [loadingFlow, setLoadingFlow] = useState(true);
   const [flowOpen, setFlowOpen]       = useState(false);
   const [flowForm, setFlowForm]       = useState({ type: 'INCOME', amount: '', description: '', date: '' });
   const [savingFlow, setSavingFlow]   = useState(false);
   const [flowError, setFlowError]     = useState<string | null>(null);
   const [deletingFlow, setDeletingFlow] = useState<string | null>(null);
 
-  async function loadPayments() {
-    const token = await getToken();
-    const res = await apiFetch<{ payments: Payment[] }>(
-      `/payments?month=${filterMonth}&year=${filterYear}`, { token }
-    );
-    setPayments(res.payments);
-    setLoadingPay(false);
-  }
+  // ── Datos con caché ──────────────────────────────────────────────────────────
+  const { data: membersData } = useQuery({
+    queryKey: QK.members(),
+    queryFn: async () => { const token = await getToken(); return apiFetch<{ members: Member[] }>('/members', { token }); },
+  });
+  const { data: paymentsData, isLoading: loadingPay } = useQuery({
+    queryKey: QK.payments(filterMonth, filterYear),
+    queryFn: async () => { const token = await getToken(); return apiFetch<{ payments: Payment[] }>(`/payments?month=${filterMonth}&year=${filterYear}`, { token }); },
+  });
+  const { data: cashflowData, isLoading: loadingFlow } = useQuery({
+    queryKey: QK.cashflow(filterMonth, filterYear),
+    queryFn: async () => { const token = await getToken(); return apiFetch<{ entries: CashEntry[] }>(`/cashflow?month=${filterMonth}&year=${filterYear}`, { token }); },
+  });
 
-  async function loadFlow() {
-    const token = await getToken();
-    const res = await apiFetch<{ entries: CashEntry[] }>(
-      `/cashflow?month=${filterMonth}&year=${filterYear}`, { token }
-    );
-    setEntries(res.entries);
-    setLoadingFlow(false);
-  }
+  const members  = membersData?.members  ?? [];
+  const payments = paymentsData?.payments ?? [];
+  const entries  = cashflowData?.entries  ?? [];
 
+  // Nombre del club (sin bloquear)
   useEffect(() => {
-    (async () => {
-      const token = await getToken();
-      const [membersRes, settingsRes] = await Promise.all([
-        apiFetch<{ members: Member[] }>('/members', { token }),
-        apiFetch<{ club: { name: string } }>('/clubs/settings', { token }).catch(() => null),
-      ]);
-      setMembers(membersRes.members);
-      if (settingsRes) setClubName(settingsRes.club.name);
-    })();
-    loadPayments();
-    loadFlow();
+    getToken().then(token =>
+      apiFetch<{ club: { name: string } }>('/clubs/settings', { token })
+        .then(r => setClubName(r.club.name)).catch(() => {})
+    );
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  useEffect(() => {
-    setLoadingPay(true); setLoadingFlow(true);
-    loadPayments();
-    loadFlow();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filterMonth, filterYear]);
-
+  // SSE invalida caché → TanStack Query refetch en background sin spinner
   useClubStream((ev) => {
-    if (ev === 'payments' || ev === 'cashflow') { loadPayments(); loadFlow(); }
+    if (ev === 'payments') qc.invalidateQueries({ queryKey: ['payments'] });
+    if (ev === 'cashflow') qc.invalidateQueries({ queryKey: ['cashflow'] });
+    if (ev === 'members')  qc.invalidateQueries({ queryKey: QK.members() });
   });
 
   // ── Estado de deportistas (computed) ─────────────────────────────────────────
@@ -203,7 +189,7 @@ export default function FinanzasPage() {
         }),
       });
       setPayOpen(false);
-      await Promise.all([loadPayments(), loadFlow()]);
+      invalidatePay(); invalidateFlow();
       const memberName = members.find(m => m.id === payForm.memberId)?.fullName ?? '';
       if (created.payment.status === 'PAID') {
         downloadInvoicePDF({ ...created.payment, memberName }, clubName);
@@ -218,10 +204,13 @@ export default function FinanzasPage() {
     if (payId) setSentWa(prev => new Set(prev).add(payId));
   }
 
+  const invalidatePay  = () => qc.invalidateQueries({ queryKey: QK.payments(filterMonth, filterYear) });
+  const invalidateFlow = () => qc.invalidateQueries({ queryKey: QK.cashflow(filterMonth, filterYear) });
+
   async function handleMarkPaid(id: string) {
     const token = await getToken();
     await apiFetch(`/payments/${id}`, { method: 'PATCH', token, body: JSON.stringify({ status: 'PAID' }) });
-    await Promise.all([loadPayments(), loadFlow()]);
+    invalidatePay(); invalidateFlow();
   }
 
   async function handleDeletePay(id: string) {
@@ -230,7 +219,7 @@ export default function FinanzasPage() {
     try {
       const token = await getToken();
       await apiFetch(`/payments/${id}`, { method: 'DELETE', token });
-      await Promise.all([loadPayments(), loadFlow()]);
+      invalidatePay(); invalidateFlow();
     } finally { setDeletingPay(null); }
   }
 
@@ -240,11 +229,9 @@ export default function FinanzasPage() {
       const token = await getToken();
       await apiFetch('/payments', {
         method: 'POST', token,
-        body: JSON.stringify({
-          memberId, amount, month: filterMonth, year: filterYear, status: 'PENDING',
-        }),
+        body: JSON.stringify({ memberId, amount, month: filterMonth, year: filterYear, status: 'PENDING' }),
       });
-      await loadPayments();
+      invalidatePay();
     } catch (e) { console.error(e); }
     finally { setGeneratingPay(null); }
   }
@@ -263,13 +250,12 @@ export default function FinanzasPage() {
         method: 'POST', token,
         body: JSON.stringify({
           type: flowForm.type, amount: parseFloat(flowForm.amount),
-          description: flowForm.description,
-          date: flowForm.date || undefined,
+          description: flowForm.description, date: flowForm.date || undefined,
         }),
       });
       setFlowOpen(false);
       setFlowForm({ type: 'INCOME', amount: '', description: '', date: '' });
-      await loadFlow();
+      invalidateFlow();
     } catch (e) { setFlowError(e instanceof Error ? e.message : 'Error'); }
     finally { setSavingFlow(false); }
   }
@@ -280,7 +266,7 @@ export default function FinanzasPage() {
     try {
       const token = await getToken();
       await apiFetch(`/cashflow/${id}`, { method: 'DELETE', token });
-      await loadFlow();
+      invalidateFlow();
     } finally { setDeletingFlow(null); }
   }
 

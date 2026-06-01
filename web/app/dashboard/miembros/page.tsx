@@ -2,9 +2,11 @@
 
 import { useAuth, useUser } from '@clerk/nextjs';
 import { useClubStream } from '@/hooks/useClubStream';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState, useMemo } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { apiFetch } from '@/lib/api-client';
+import { QK } from '@/hooks/useVeloQuery';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -63,10 +65,8 @@ export default function MiembrosPage() {
   const { getToken } = useAuth();
   const { user } = useUser();
   const reducedMotion = useReducedMotion();
+  const qc = useQueryClient();
 
-  const [members, setMembers]   = useState<Member[]>([]);
-  const [locations, setLocations] = useState<Location[]>([]);
-  const [loading, setLoading]   = useState(true);
   const [search, setSearch]     = useState('');
   const [roleFilter, setRoleFilter] = useState<'ALL'|'STUDENT'|'COACH'|'ADMIN'>('ALL');
   const [clubName, setClubName] = useState('VeloClub');
@@ -101,22 +101,38 @@ export default function MiembrosPage() {
     return s;
   }, [form.role, locations.length]);
 
-  // ── Data ────────────────────────────────────────────────────────────────────
-  async function load() {
-    const token = await getToken();
-    const [membersRes, locsRes, settingsRes] = await Promise.all([
-      apiFetch<{ members: Member[] }>('/members', { token }),
-      apiFetch<{ locations: Location[] }>('/locations', { token }),
-      apiFetch<{ club: { name: string } }>('/clubs/settings', { token }).catch(() => null),
-    ]);
-    setMembers(membersRes.members);
-    setLocations(locsRes.locations);
-    if (settingsRes) setClubName(settingsRes.club.name);
-    setLoading(false);
-  }
+  // ── Data con caché TanStack Query ───────────────────────────────────────────
+  const { data: membersData, isLoading: loadingMembers } = useQuery({
+    queryKey: QK.members(),
+    queryFn: async () => {
+      const token = await getToken();
+      return apiFetch<{ members: Member[] }>('/members', { token });
+    },
+  });
+  const { data: locsData, isLoading: loadingLocs } = useQuery({
+    queryKey: QK.locations(),
+    queryFn: async () => {
+      const token = await getToken();
+      return apiFetch<{ locations: Location[] }>('/locations', { token });
+    },
+  });
 
-  useEffect(() => { load(); }, []);
-  useClubStream(ev => { if (ev === 'members') load(); });
+  const members   = membersData?.members   ?? [];
+  const locations = locsData?.locations    ?? [];
+  const loading   = loadingMembers || loadingLocs;
+
+  // Cargar nombre del club (sin bloquear)
+  useEffect(() => {
+    getToken().then(token =>
+      apiFetch<{ club: { name: string } }>('/clubs/settings', { token }).then(r => setClubName(r.club.name)).catch(() => {})
+    );
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // SSE invalida la caché → TanStack Query refetch en bg, sin spinner
+  useClubStream(ev => {
+    if (ev === 'members') qc.invalidateQueries({ queryKey: QK.members() });
+  });
 
   // ── Panel actions ───────────────────────────────────────────────────────────
   function openNew() {
@@ -172,7 +188,7 @@ export default function MiembrosPage() {
         await apiFetch('/members', { method: 'POST', token, body });
       }
       setOpen(false);
-      await load();
+      qc.invalidateQueries({ queryKey: QK.members() });
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Error al guardar');
     } finally {
@@ -184,7 +200,7 @@ export default function MiembrosPage() {
     if (!confirm('¿Eliminar este miembro?')) return;
     const token = await getToken();
     await apiFetch(`/members/${id}`, { method: 'DELETE', token });
-    await load();
+    qc.invalidateQueries({ queryKey: QK.members() });
   }
 
   function toggleLocation(id: string) {
@@ -216,7 +232,7 @@ export default function MiembrosPage() {
     }
     setImporting(false);
     if (failed.length > 0) setImportErrors(failed); else setImportOpen(false);
-    await load();
+    qc.invalidateQueries({ queryKey: QK.members() });
   }
 
   // ── Filtered list ────────────────────────────────────────────────────────────

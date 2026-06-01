@@ -639,17 +639,68 @@ export default function FinanzasPage() {
         {/* ── MENSUALIDADES ─────────────────────────────────────────────────── */}
         {tab === 'mensualidades' && (
           <>
-            {/* Tarjeta cobrado — ocupa todo el ancho */}
-            <div className="rounded-2xl p-4 text-white" style={{ background: 'linear-gradient(135deg,#4361EE,#7209B7)' }}>
-              <p className="text-[9px] font-semibold tracking-widest opacity-80 uppercase mb-1">Cobrado</p>
-              <p className="text-[28px] font-extrabold leading-none" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
-                {fmt.format(totalPaid)}
-              </p>
-              {totalPending > 0 && (
-                <p className="text-[11px] mt-1.5 opacity-80">
-                  <span style={{ color: '#FFB703' }}>{fmt.format(totalPending)}</span> pendiente
-                </p>
-              )}
+            {/* Tarjeta débito bancaria */}
+            <div
+              className="relative overflow-hidden text-white select-none"
+              style={{
+                borderRadius: 20,
+                background: 'linear-gradient(135deg, #2B2D8E 0%, #4361EE 45%, #7209B7 100%)',
+                boxShadow: '0 8px 32px rgba(67,97,238,0.35), 0 2px 8px rgba(0,0,0,0.18)',
+                aspectRatio: '1.586 / 1', // ratio estándar tarjeta bancaria
+              }}
+            >
+              {/* Círculos decorativos de fondo */}
+              <div className="absolute" style={{ width: 220, height: 220, borderRadius: '50%', background: 'rgba(255,255,255,0.06)', top: -60, right: -60 }} />
+              <div className="absolute" style={{ width: 160, height: 160, borderRadius: '50%', background: 'rgba(255,255,255,0.04)', bottom: -50, left: -40 }} />
+              <div className="absolute" style={{ width: 80, height: 80, borderRadius: '50%', background: 'rgba(255,255,255,0.07)', top: '30%', right: '20%' }} />
+
+              {/* Contenido */}
+              <div className="relative h-full flex flex-col justify-between p-5">
+                {/* Fila superior: nombre del club + chip */}
+                <div className="flex items-center justify-between">
+                  <p className="text-[11px] font-bold tracking-[0.15em] uppercase opacity-90"
+                    style={{ fontFamily: 'var(--font-space-grotesk)' }}>
+                    {clubName}
+                  </p>
+                  {/* Chip EMV decorativo */}
+                  <div className="w-8 h-6 rounded-[4px] opacity-80"
+                    style={{ background: 'linear-gradient(135deg, #FFD166, #F4A623)', boxShadow: '0 1px 3px rgba(0,0,0,0.3)' }}>
+                    <div className="w-full h-full rounded-[4px] grid grid-cols-2 gap-px p-0.5 opacity-60"
+                      style={{ background: 'repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,0,0,0.15) 3px, rgba(0,0,0,0.15) 4px)' }} />
+                  </div>
+                </div>
+
+                {/* Monto cobrado — centro */}
+                <div>
+                  <p className="text-[10px] font-semibold tracking-widest uppercase opacity-60 mb-1">
+                    Cobrado {MONTH_NAMES[filterMonth - 1]} {filterYear}
+                  </p>
+                  <p className="text-[32px] font-extrabold leading-none tracking-tight"
+                    style={{ fontFamily: 'var(--font-space-grotesk)', textShadow: '0 2px 8px rgba(0,0,0,0.2)' }}>
+                    {fmt.format(totalPaid)}
+                  </p>
+                  {totalPending > 0 && (
+                    <p className="text-[11px] mt-1 opacity-75">
+                      <span style={{ color: '#FFD166' }}>{fmt.format(totalPending)}</span> pendiente
+                    </p>
+                  )}
+                </div>
+
+                {/* Fila inferior: mes/año + logo Visa estilo */}
+                <div className="flex items-end justify-between">
+                  <div>
+                    <p className="text-[8px] opacity-50 uppercase tracking-widest mb-0.5">Mes de corte</p>
+                    <p className="text-[13px] font-bold opacity-90" style={{ fontFamily: 'var(--font-space-grotesk)', letterSpacing: '0.1em' }}>
+                      {String(filterMonth).padStart(2,'0')} / {filterYear}
+                    </p>
+                  </div>
+                  {/* Círculos MasterCard estilo */}
+                  <div className="flex items-center" style={{ gap: -8 }}>
+                    <div className="w-8 h-8 rounded-full opacity-70" style={{ background: '#EB001B' }} />
+                    <div className="w-8 h-8 rounded-full opacity-70 -ml-3" style={{ background: '#F79E1B' }} />
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Filtros de estado — fila debajo de la tarjeta morada */}

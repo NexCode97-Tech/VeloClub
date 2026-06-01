@@ -5,14 +5,15 @@ import { UserButton, useUser } from '@clerk/nextjs';
 import { useEffect, useState } from 'react';
 import { apiFetch } from '@/lib/api-client';
 import Link from 'next/link';
-import { Trophy, CalendarDays, MapPin, BarChart2, HelpCircle, ChevronRight } from 'lucide-react';
+import { Trophy, CalendarDays, MapPin, BarChart2, HelpCircle, ChevronRight, CircleDollarSign } from 'lucide-react';
 
 const ITEMS_BY_ROLE: Record<string, { label: string; icon: React.ElementType; color: string; href: string }[]> = {
   ADMIN: [
-    { label: 'Calendario', icon: CalendarDays,  color: '#EF476F', href: '/dashboard/calendario' },
-    { label: 'Sedes',      icon: MapPin,        color: '#06D6A0', href: '/dashboard/sedes' },
-    { label: 'Reportes',   icon: BarChart2,     color: '#4361EE', href: '/dashboard/reportes' },
-    { label: 'Ayuda',      icon: HelpCircle,    color: '#8E87A8', href: '/dashboard/ayuda' },
+    { label: 'Calendario', icon: CalendarDays,      color: '#EF476F', href: '/dashboard/calendario' },
+    { label: 'Sedes',      icon: MapPin,            color: '#06D6A0', href: '/dashboard/sedes' },
+    { label: 'Finanzas',   icon: CircleDollarSign,  color: '#7C3AED', href: '/dashboard/finanzas' },
+    { label: 'Reportes',   icon: BarChart2,         color: '#4361EE', href: '/dashboard/reportes' },
+    { label: 'Ayuda',      icon: HelpCircle,        color: '#8E87A8', href: '/dashboard/ayuda' },
   ],
   COACH: [
     { label: 'Calendario', icon: CalendarDays,  color: '#EF476F', href: '/dashboard/calendario' },

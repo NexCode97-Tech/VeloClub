@@ -20,10 +20,10 @@ interface BottomCircleMenuProps {
   onClose: () => void;
 }
 
-// Abanico hacia arriba — ángulos más verticales para evitar clipping en los bordes
+// Abanico hacia arriba — abierto y bien elevado sobre el bar
 function pointOnArc(i: number, n: number, r: number) {
-  const startDeg = n <= 1 ? -90 : -148;
-  const endDeg   = n <= 1 ? -90 : -32;
+  const startDeg = n <= 1 ? -90 : -152;
+  const endDeg   = n <= 1 ? -90 : -28;
   const deg = n <= 1 ? -90 : startDeg + (endDeg - startDeg) * (i / (n - 1));
   const theta = deg * (Math.PI / 180);
   return {
@@ -32,8 +32,8 @@ function pointOnArc(i: number, n: number, r: number) {
   };
 }
 
-// Radio ajustado: ítems bien separados y bien arriba del bar
-const RADIUS = 114;
+// Radio mayor: más separación entre ítems y más altura sobre el bar
+const RADIUS = 134;
 
 export function BottomCircleMenu({ items, pathname, isOpen, onToggle, onClose }: BottomCircleMenuProps) {
   const router = useRouter();

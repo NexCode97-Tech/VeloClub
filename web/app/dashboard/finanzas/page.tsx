@@ -332,6 +332,7 @@ export default function FinanzasPage() {
 
   // UI state
   const [generatingMonth, setGeneratingMonth] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<'ALL'|'PAID'|'PENDING'|'NONE'>('ALL');
   const [generatingPay, setGeneratingPay]     = useState<string | null>(null);
   const [deletingPay, setDeletingPay]         = useState<string | null>(null);
   const [markingPaid, setMarkingPaid]         = useState<string | null>(null);
@@ -412,6 +413,15 @@ export default function FinanzasPage() {
   // ── Invalidadores ────────────────────────────────────────────────────────────
   const invalidatePay  = () => qc.invalidateQueries({ queryKey: QK.payments(filterMonth, filterYear) });
   const invalidateFlow = () => qc.invalidateQueries({ queryKey: QK.cashflow(filterMonth, filterYear) });
+
+  // ── Lista filtrada por estado ─────────────────────────────────────────────────
+  const filteredRows = useMemo(() => {
+    if (statusFilter === 'ALL') return studentRows;
+    if (statusFilter === 'PAID')    return studentRows.filter(r => r.payment?.status === 'PAID');
+    if (statusFilter === 'PENDING') return studentRows.filter(r => r.payment && r.payment.status !== 'PAID');
+    if (statusFilter === 'NONE')    return studentRows.filter(r => !r.payment);
+    return studentRows;
+  }, [studentRows, statusFilter]);
 
   // ── Resumen ──────────────────────────────────────────────────────────────────
   const totalPaid    = payments.filter(p => p.status === 'PAID').reduce((s, p) => s + p.amount, 0);
@@ -615,7 +625,7 @@ export default function FinanzasPage() {
 
         {/* Filtro mes/año */}
         <div className="flex gap-2 items-center">
-          <Select value={String(filterMonth)} onValueChange={v => setFilterMonth(parseInt(v ?? ''))}>
+          <Select value={String(filterMonth)} onValueChange={v => { setFilterMonth(parseInt(v ?? '')); setStatusFilter('ALL'); }}>
             <SelectTrigger className="w-36 bg-white">
               <span className="text-sm">{MONTH_NAMES[filterMonth - 1]}</span>
             </SelectTrigger>
@@ -638,34 +648,45 @@ export default function FinanzasPage() {
         {/* ── MENSUALIDADES ─────────────────────────────────────────────────── */}
         {tab === 'mensualidades' && (
           <>
-            {/* Resumen + botón generar */}
-            <div className="flex gap-2 items-stretch">
-              {/* Tarjeta cobrado */}
-              <div className="flex-1 rounded-2xl p-3 text-white" style={{ background: 'linear-gradient(135deg,#4361EE,#7209B7)' }}>
-                <p className="text-[9px] font-semibold tracking-widest opacity-80 uppercase mb-0.5">Cobrado</p>
-                <p className="text-[22px] font-extrabold leading-none" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
-                  {fmt.format(totalPaid)}
+            {/* Tarjeta cobrado — ocupa todo el ancho */}
+            <div className="rounded-2xl p-4 text-white" style={{ background: 'linear-gradient(135deg,#4361EE,#7209B7)' }}>
+              <p className="text-[9px] font-semibold tracking-widest opacity-80 uppercase mb-1">Cobrado</p>
+              <p className="text-[28px] font-extrabold leading-none" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
+                {fmt.format(totalPaid)}
+              </p>
+              {totalPending > 0 && (
+                <p className="text-[11px] mt-1.5 opacity-80">
+                  <span style={{ color: '#FFB703' }}>{fmt.format(totalPending)}</span> pendiente
                 </p>
-                {totalPending > 0 && (
-                  <p className="text-[10px] mt-1 opacity-80">
-                    <span style={{ color: '#FFB703' }}>{fmt.format(totalPending)}</span> pendiente
-                  </p>
-                )}
-              </div>
+              )}
+            </div>
 
-              {/* Mini stats */}
-              <div className="flex flex-col gap-1.5 shrink-0">
-                {[
-                  { label: 'Pagados',   value: countPaid,    color: '#06D6A0' },
-                  { label: 'Pendiente', value: countPending, color: '#FFB703' },
-                  { label: 'Sin cobro', value: countNone,    color: '#8E87A8' },
-                ].map(({ label, value, color }) => (
-                  <div key={label} className="bg-white border border-border rounded-xl px-3 py-1.5 flex items-center gap-2">
-                    <p className="text-[16px] font-extrabold" style={{ fontFamily: 'var(--font-space-grotesk)', color }}>{value}</p>
-                    <p className="text-[9px] text-muted-foreground">{label}</p>
-                  </div>
-                ))}
-              </div>
+            {/* Filtros de estado — fila debajo de la tarjeta morada */}
+            <div className="grid grid-cols-3 gap-2">
+              {([
+                { key: 'PAID',    label: 'Pagados',   value: countPaid,    color: '#06D6A0', bg: 'rgba(6,214,160,0.10)' },
+                { key: 'PENDING', label: 'Pendiente', value: countPending, color: '#FFB703', bg: 'rgba(255,183,3,0.10)'  },
+                { key: 'NONE',    label: 'Sin cobro', value: countNone,    color: '#8E87A8', bg: 'rgba(142,135,168,0.08)'},
+              ] as const).map(({ key, label, value, color, bg }) => {
+                const active = statusFilter === key;
+                return (
+                  <motion.button
+                    key={key}
+                    whileTap={reducedMotion ? {} : { scale: 0.96 }}
+                    transition={{ duration: 0.12, ease: EASE_OUT }}
+                    onClick={() => setStatusFilter(active ? 'ALL' : key)}
+                    className="rounded-xl px-3 py-2.5 flex flex-col items-center gap-0.5 border-2 transition-all cursor-pointer"
+                    style={{
+                      background: active ? bg : '#fff',
+                      borderColor: active ? color : 'transparent',
+                      boxShadow: active ? `0 0 0 1px ${color}22` : '0 1px 3px rgba(0,0,0,0.06)',
+                    }}
+                  >
+                    <p className="text-[18px] font-extrabold leading-none" style={{ fontFamily: 'var(--font-space-grotesk)', color }}>{value}</p>
+                    <p className="text-[9px] font-semibold" style={{ color: active ? color : '#8E87A8' }}>{label}</p>
+                  </motion.button>
+                );
+              })}
             </div>
 
             {/* Botón generar cobros del mes */}
@@ -694,7 +715,7 @@ export default function FinanzasPage() {
                   </div>
                 ))}
               </div>
-            ) : studentRows.length === 0 ? (
+            ) : filteredRows.length === 0 ? (
               <div className="bg-white border border-border rounded-xl px-4 py-10 text-center">
                 <CreditCard className="w-10 h-10 mx-auto mb-3 text-muted-foreground/30" />
                 <p className="text-[13px] font-semibold text-muted-foreground">No hay deportistas registrados</p>
@@ -706,7 +727,7 @@ export default function FinanzasPage() {
                 initial={reducedMotion ? undefined : 'hidden'}
                 animate={reducedMotion ? undefined : 'visible'}
               >
-                {studentRows.map(({ member: m, payment, configured }) => (
+                {filteredRows.map(({ member: m, payment, configured }) => (
                   <StudentRow
                     key={m.id}
                     member={m}

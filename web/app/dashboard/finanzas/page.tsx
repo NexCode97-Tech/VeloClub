@@ -737,7 +737,7 @@ export default function FinanzasPage() {
                   <img
                     src="/icon-desktop-192.png"
                     alt="VeloClub"
-                    className="w-10 h-10 object-contain"
+                    className="w-14 h-14 object-contain"
                     style={{ mixBlendMode: 'multiply', opacity: 0.92 }}
                   />
                 </div>

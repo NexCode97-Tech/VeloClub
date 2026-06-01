@@ -239,8 +239,12 @@ function StudentRow({
             )}
           </div>
 
-          {/* Marcar pagado */}
-          {isPendingOrOverdue && (
+          {/* Estado del cobro — botón acción o badge según estado */}
+          {payment?.status === 'PAID' ? (
+            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-bold shrink-0" style={{ background: 'rgba(6,214,160,0.12)', color: '#06D6A0' }}>
+              <Check className="w-3 h-3" /> Pagado
+            </span>
+          ) : isPendingOrOverdue ? (
             <button
               onClick={() => !marking && onMarkPaid(payment!.id)}
               disabled={marking}
@@ -249,19 +253,16 @@ function StudentRow({
             >
               {marking ? '...' : 'Cobrar'}
             </button>
-          )}
-
-          {/* Generar pago PENDING */}
-          {configured && !payment && (
+          ) : configured && !payment ? (
             <button
               onClick={() => onGenerate(m.id, m.monthlyFee!)}
               disabled={generating}
               className="px-2.5 py-1 rounded-lg text-[10px] font-bold cursor-pointer disabled:opacity-50 shrink-0"
               style={{ background: 'rgba(67,97,238,0.10)', color: '#4361EE' }}
             >
-              {generating ? '...' : '+ Cobro'}
+              {generating ? '...' : 'Generar cobro'}
             </button>
-          )}
+          ) : null}
         </div>
       </div>
 

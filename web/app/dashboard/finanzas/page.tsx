@@ -784,18 +784,16 @@ export default function FinanzasPage() {
                           )}
                         </div>
                       </div>
-                      {!isAuto && (
-                        <div className="flex gap-1">
-                          <button onClick={() => openEditFlow(e)}
-                            className="w-7 h-7 rounded-lg bg-secondary flex items-center justify-center text-muted-foreground cursor-pointer hover:text-foreground transition-colors">
-                            <Pencil className="w-3.5 h-3.5" />
-                          </button>
-                          <button onClick={() => handleDeleteFlow(e.id)} disabled={deletingFlow === e.id}
-                            className="w-7 h-7 rounded-lg bg-red-50 flex items-center justify-center text-red-400 cursor-pointer disabled:opacity-50">
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      )}
+                      <div className="flex gap-1">
+                        <button onClick={() => openEditFlow(e)}
+                          className="w-7 h-7 rounded-lg bg-secondary flex items-center justify-center text-muted-foreground cursor-pointer hover:text-foreground transition-colors">
+                          <Pencil className="w-3.5 h-3.5" />
+                        </button>
+                        <button onClick={() => handleDeleteFlow(e.id)} disabled={deletingFlow === e.id}
+                          className="w-7 h-7 rounded-lg bg-red-50 flex items-center justify-center text-red-400 cursor-pointer disabled:opacity-50">
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     </div>
                   );
                 })}

@@ -65,7 +65,6 @@ router.patch('/:id', requireAuth, async (req, res) => {
 
   const entry = await prisma.cashEntry.findFirst({ where: { id, clubId: req.user.clubId ?? '' } });
   if (!entry) return res.status(404).json({ error: 'Entrada no encontrada' });
-  if (entry.paymentId) return res.status(400).json({ error: 'No se puede editar una entrada automática.' });
 
   const parsed = entrySchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.issues });
@@ -91,7 +90,6 @@ router.delete('/:id', requireAuth, async (req, res) => {
 
   const entry = await prisma.cashEntry.findFirst({ where: { id, clubId: req.user.clubId ?? '' } });
   if (!entry) return res.status(404).json({ error: 'Entrada no encontrada' });
-  if (entry.paymentId) return res.status(400).json({ error: 'No se puede eliminar una entrada automática. Elimina el pago correspondiente.' });
 
   await prisma.cashEntry.delete({ where: { id } });
   emitToClub(req.user.clubId ?? '', 'cashflow');

@@ -92,7 +92,7 @@ router.get('/', requireAuth, async (req, res) => {
 
   const payments = await prisma.payment.findMany({
     where,
-    include: { member: { select: { id: true, fullName: true, email: true } } },
+    include: { member: { select: { id: true, fullName: true, email: true, phone: true } } },
     orderBy: { createdAt: 'desc' },
   });
 

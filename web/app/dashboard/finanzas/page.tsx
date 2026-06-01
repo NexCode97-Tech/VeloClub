@@ -2,11 +2,12 @@
 
 import { useAuth } from '@clerk/nextjs';
 import { useClubStream } from '@/hooks/useClubStream';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { apiFetch } from '@/lib/api-client';
 import {
   CreditCard, Plus, Trash2, CheckCircle2, Clock, AlertCircle,
-  TrendingUp, TrendingDown, Wallet, Download,
+  TrendingUp, TrendingDown, Wallet, Download, MessageCircle, Check,
+  PhoneOff,
 } from 'lucide-react';
 import { downloadInvoicePDF } from '@/lib/pdf';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -16,6 +17,7 @@ import { Button } from '@/components/ui/button';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 
 const fmt = new Intl.NumberFormat('es-CO', {
   style: 'currency', currency: 'COP', maximumFractionDigits: 0,
@@ -41,7 +43,27 @@ const PAY_FILTER: Record<string, string | null> = {
   Todos: null, Pagados: 'PAID', Pendientes: 'PENDING', Vencidos: 'OVERDUE',
 };
 
-interface PayMember { id: string; fullName: string; email?: string }
+// ── Animation variants (Emil Kowalski / DESIGN.md) ───────────────────────────
+const listVariants = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { staggerChildren: 0.06, delayChildren: 0.05 } },
+};
+const rowVariants = {
+  hidden: { opacity: 0, y: 10 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.24, ease: [0.23, 1, 0.32, 1] } },
+};
+
+// ── WhatsApp helpers ──────────────────────────────────────────────────────────
+function buildWhatsAppUrl(phone: string, memberName: string, amount: number, month: number, year: number): string {
+  const clean = phone.replace(/\D/g, '');
+  const normalized = clean.startsWith('57') ? clean : `57${clean}`;
+  const text = encodeURIComponent(
+    `Hola ${memberName}, te recordamos que tienes pendiente tu mensualidad de ${MONTH_NAMES[month - 1]} ${year} por ${fmt.format(amount)}. Por favor comunícate con nosotros para coordinar tu pago. ¡Gracias! — VeloClub`
+  );
+  return `https://wa.me/${normalized}?text=${text}`;
+}
+
+interface PayMember { id: string; fullName: string; email?: string; phone?: string }
 interface Payment {
   id: string; memberId: string; amount: number;
   month: number; year: number; status: string;
@@ -60,10 +82,12 @@ const now = new Date();
 
 export default function FinanzasPage() {
   const { getToken } = useAuth();
+  const reducedMotion = useReducedMotion();
   const [tab, setTab]             = useState<'pagos' | 'flujo'>('pagos');
   const [clubName, setClubName]   = useState('VeloClub');
   const [filterMonth, setFilterMonth] = useState(now.getMonth() + 1);
   const [filterYear, setFilterYear]   = useState(now.getFullYear());
+  const [sentWa, setSentWa]       = useState<Set<string>>(new Set());
 
   // Pagos state
   const [payments, setPayments]     = useState<Payment[]>([]);
@@ -158,6 +182,13 @@ export default function FinanzasPage() {
       downloadInvoicePDF({ ...created.payment, memberName }, clubName);
     } catch (e) { setPayError(e instanceof Error ? e.message : 'Error'); }
     finally { setSavingPay(false); }
+  }
+
+  function handleWhatsApp(p: Payment) {
+    if (!p.member.phone) return;
+    const url = buildWhatsAppUrl(p.member.phone, p.member.fullName, p.amount, p.month, p.year);
+    window.open(url, '_blank');
+    setSentWa(prev => new Set(prev).add(p.id));
   }
 
   async function handleMarkPaid(id: string) {
@@ -309,19 +340,48 @@ export default function FinanzasPage() {
             </div>
 
             {loadingPay ? (
-              <div className="flex justify-center py-10"><div className="w-6 h-6 rounded-full border-2 border-primary border-t-transparent animate-spin" /></div>
+              <div className="space-y-2">
+                {[1,2,3].map(i => (
+                  <div key={i} className="bg-white border border-border rounded-xl px-4 py-3 flex items-center gap-3 animate-pulse">
+                    <div className="flex-1 space-y-2">
+                      <div className="h-3 w-32 bg-secondary rounded-full" />
+                      <div className="h-3 w-20 bg-secondary rounded-full" />
+                    </div>
+                    <div className="h-7 w-16 bg-secondary rounded-lg" />
+                  </div>
+                ))}
+              </div>
             ) : filteredPay.length === 0 ? (
-              <div className="bg-white border border-border rounded-xl px-4 py-10 text-center">
+              <motion.div
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.24, ease: [0.23, 1, 0.32, 1] }}
+                className="bg-white border border-border rounded-xl px-4 py-10 text-center"
+              >
                 <CreditCard className="w-10 h-10 mx-auto mb-3 text-muted-foreground/30" />
                 <p className="text-[13px] font-semibold text-muted-foreground">Sin pagos registrados</p>
-              </div>
+              </motion.div>
             ) : (
-              <div className="space-y-2 pb-4">
+              <motion.div
+                className="space-y-2 pb-4"
+                variants={reducedMotion ? undefined : listVariants}
+                initial={reducedMotion ? undefined : 'hidden'}
+                animate={reducedMotion ? undefined : 'visible'}
+              >
                 {filteredPay.map(p => {
                   const sc = STATUS_COLORS[p.status] ?? STATUS_COLORS.PENDING;
                   const StatusIcon = sc.icon;
+                  const hasPhone = !!p.member.phone;
+                  const wasSent  = sentWa.has(p.id);
+                  const isPending = p.status !== 'PAID';
+
                   return (
-                    <div key={p.id} className="bg-white border border-border rounded-xl px-4 py-3 flex items-center gap-3">
+                    <motion.div
+                      key={p.id}
+                      variants={reducedMotion ? undefined : rowVariants}
+                      className="bg-white border border-border rounded-xl px-4 py-3 flex items-center gap-3"
+                    >
+                      {/* Info */}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-0.5">
                           <p className="text-[13px] font-bold text-foreground truncate">{p.member.fullName}</p>
@@ -333,32 +393,101 @@ export default function FinanzasPage() {
                         <p className="text-[10px] text-muted-foreground">{MONTH_NAMES[p.month - 1]} {p.year}</p>
                         {p.notes && <p className="text-[10px] text-muted-foreground mt-0.5">{p.notes}</p>}
                       </div>
-                      <div className="flex flex-col gap-1 shrink-0">
-                        {p.status !== 'PAID' && (
-                          <button onClick={() => handleMarkPaid(p.id)}
-                            className="px-2 py-1 rounded-lg text-[10px] font-semibold"
-                            style={{ background: 'rgba(6,214,160,0.12)', color: '#06D6A0' }}>
+
+                      {/* Acciones */}
+                      <div className="flex flex-col gap-1.5 shrink-0 items-end">
+                        {/* Marcar pagado */}
+                        {isPending && (
+                          <motion.button
+                            onClick={() => handleMarkPaid(p.id)}
+                            whileHover={{ scale: reducedMotion ? 1 : 1.02 }}
+                            whileTap={{ scale: reducedMotion ? 1 : 0.97 }}
+                            transition={{ duration: 0.12, ease: [0.23, 1, 0.32, 1] }}
+                            className="px-2.5 py-1 rounded-lg text-[10px] font-bold cursor-pointer"
+                            style={{ background: 'rgba(6,214,160,0.12)', color: '#06D6A0' }}
+                          >
                             Marcar pagado
-                          </button>
+                          </motion.button>
                         )}
-                        <div className="flex gap-1 self-end">
-                          <button
+
+                        <div className="flex gap-1.5 items-center">
+                          {/* Botón WhatsApp — solo en pendientes/vencidos */}
+                          {isPending && (
+                            <motion.button
+                              onClick={() => handleWhatsApp(p)}
+                              whileHover={hasPhone && !reducedMotion ? { scale: 1.08, y: -1 } : {}}
+                              whileTap={hasPhone && !reducedMotion ? { scale: 0.97 } : {}}
+                              transition={{ duration: 0.12, ease: [0.23, 1, 0.32, 1] }}
+                              disabled={!hasPhone}
+                              title={hasPhone ? `Recordar a ${p.member.fullName} por WhatsApp` : 'Sin número registrado'}
+                              className="relative w-7 h-7 rounded-lg flex items-center justify-center cursor-pointer transition-shadow"
+                              style={{
+                                background: hasPhone
+                                  ? wasSent ? 'rgba(6,214,160,0.15)' : 'rgba(37,211,102,0.12)'
+                                  : 'rgba(142,135,168,0.10)',
+                                boxShadow: hasPhone && !wasSent ? '0 1px 6px rgba(37,211,102,0.18)' : 'none',
+                                cursor: hasPhone ? 'pointer' : 'not-allowed',
+                              }}
+                            >
+                              <AnimatePresence mode="wait">
+                                {wasSent ? (
+                                  <motion.span
+                                    key="sent"
+                                    initial={{ scale: 0.5, opacity: 0 }}
+                                    animate={{ scale: 1, opacity: 1 }}
+                                    exit={{ scale: 0.5, opacity: 0 }}
+                                    transition={{ duration: 0.18, ease: [0.23, 1, 0.32, 1] }}
+                                  >
+                                    <Check className="w-3.5 h-3.5" style={{ color: '#06D6A0' }} />
+                                  </motion.span>
+                                ) : hasPhone ? (
+                                  <motion.span
+                                    key="wa"
+                                    initial={{ scale: 0.5, opacity: 0 }}
+                                    animate={{ scale: 1, opacity: 1 }}
+                                    exit={{ scale: 0.5, opacity: 0 }}
+                                    transition={{ duration: 0.18, ease: [0.23, 1, 0.32, 1] }}
+                                  >
+                                    <MessageCircle className="w-3.5 h-3.5" style={{ color: '#25D366' }} />
+                                  </motion.span>
+                                ) : (
+                                  <motion.span key="no-phone">
+                                    <PhoneOff className="w-3.5 h-3.5" style={{ color: '#8E87A8' }} />
+                                  </motion.span>
+                                )}
+                              </AnimatePresence>
+                            </motion.button>
+                          )}
+
+                          {/* Descargar factura */}
+                          <motion.button
                             onClick={() => downloadInvoicePDF({ ...p, memberName: p.member.fullName }, clubName)}
-                            className="w-7 h-7 rounded-lg bg-secondary flex items-center justify-center text-muted-foreground hover:text-foreground active:scale-90 transition-all"
+                            whileHover={{ scale: reducedMotion ? 1 : 1.08, y: reducedMotion ? 0 : -1 }}
+                            whileTap={{ scale: reducedMotion ? 1 : 0.97 }}
+                            transition={{ duration: 0.12, ease: [0.23, 1, 0.32, 1] }}
+                            className="w-7 h-7 rounded-lg bg-secondary flex items-center justify-center text-muted-foreground cursor-pointer"
                             title="Descargar factura"
                           >
                             <Download className="w-3.5 h-3.5" />
-                          </button>
-                          <button onClick={() => handleDeletePay(p.id)} disabled={deletingPay === p.id}
-                            className="w-7 h-7 rounded-lg bg-red-50 flex items-center justify-center text-red-400 hover:text-red-600">
+                          </motion.button>
+
+                          {/* Eliminar */}
+                          <motion.button
+                            onClick={() => handleDeletePay(p.id)}
+                            disabled={deletingPay === p.id}
+                            whileHover={{ scale: reducedMotion ? 1 : 1.08, y: reducedMotion ? 0 : -1 }}
+                            whileTap={{ scale: reducedMotion ? 1 : 0.97 }}
+                            transition={{ duration: 0.12, ease: [0.23, 1, 0.32, 1] }}
+                            className="w-7 h-7 rounded-lg bg-red-50 flex items-center justify-center text-red-400 cursor-pointer"
+                          >
                             <Trash2 className="w-3.5 h-3.5" />
-                          </button>
+                          </motion.button>
                         </div>
                       </div>
-                    </div>
+                    </motion.div>
                   );
                 })}
-              </div>
+              </motion.div>
             )}
           </>
         )}

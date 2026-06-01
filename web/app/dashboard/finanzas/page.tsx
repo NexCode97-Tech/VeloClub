@@ -239,19 +239,28 @@ function StudentRow({
             )}
           </div>
 
-          {/* Estado del cobro: Cobrar → Pagado */}
+          {/* Flujo: Sin pago → Cobrar (crea PENDING) → Pagado (marca PAID) */}
           {payment?.status === 'PAID' ? (
             <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-bold shrink-0" style={{ background: 'rgba(6,214,160,0.12)', color: '#06D6A0' }}>
               <Check className="w-3 h-3" /> Pagado
             </span>
-          ) : configured ? (
+          ) : isPendingOrOverdue ? (
             <button
-              onClick={() => !marking && !generating && (payment ? onMarkPaid(payment.id) : onGenerate(m.id, m.monthlyFee!))}
-              disabled={marking || generating}
+              onClick={() => !marking && onMarkPaid(payment!.id)}
+              disabled={marking}
+              className="px-2.5 py-1 rounded-lg text-[10px] font-bold cursor-pointer disabled:opacity-50 shrink-0"
+              style={{ background: 'rgba(67,97,238,0.12)', color: '#4361EE' }}
+            >
+              {marking ? '...' : 'Pagado'}
+            </button>
+          ) : configured && !payment ? (
+            <button
+              onClick={() => !generating && onGenerate(m.id, m.monthlyFee!)}
+              disabled={generating}
               className="px-2.5 py-1 rounded-lg text-[10px] font-bold cursor-pointer disabled:opacity-50 shrink-0"
               style={{ background: 'rgba(6,214,160,0.12)', color: '#06D6A0' }}
             >
-              {(marking || generating) ? '...' : 'Cobrar'}
+              {generating ? '...' : 'Cobrar'}
             </button>
           ) : null}
         </div>
@@ -465,9 +474,9 @@ export default function FinanzasPage() {
       const token = await getToken();
       await apiFetch('/payments', {
         method: 'POST', token,
-        body: JSON.stringify({ memberId, amount, month: filterMonth, year: filterYear, status: 'PAID' }),
+        body: JSON.stringify({ memberId, amount, month: filterMonth, year: filterYear, status: 'PENDING' }),
       });
-      invalidatePay(); invalidateFlow();
+      invalidatePay();
     } catch (e) { console.error(e); }
     finally { setGeneratingPay(null); }
   }

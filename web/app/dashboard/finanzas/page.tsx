@@ -664,7 +664,7 @@ export default function FinanzasPage() {
           <div className="flex flex-col gap-3 md:flex-row md:gap-4 md:items-stretch">
 
           {/* Tarjeta bancaria */}
-          <div className="md:w-80 md:shrink-0">
+          <div className="md:w-96 md:shrink-0">
 
             {/* Tarjeta débito bancaria */}
             <div

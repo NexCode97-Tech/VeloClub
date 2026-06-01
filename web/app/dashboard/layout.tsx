@@ -305,7 +305,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 height: 74,
                 borderRadius: '50%',
                 background: '#FFFFFF',
-                border: '1px solid rgba(124,58,237,0.14)',
                 left: '50%',
                 transform: 'translateX(-50%)',
                 top: -4,

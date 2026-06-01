@@ -79,8 +79,9 @@ export function BottomCircleMenu({ items, pathname, isOpen, onToggle, onClose }:
                       x: 0, y: 0, opacity: 0, scale: 0.5,
                       transition: {
                         delay: (items.length - 1 - i) * 0.045,
-                        duration: 0.26,
-                        ease: [0.23, 1, 0.32, 1] as [number, number, number, number],
+                        type: 'spring',
+                        stiffness: 300,
+                        damping: 24,
                       },
                     }
                 }

@@ -91,6 +91,7 @@ model Member {
   category          String?
   tipo              String?
   paymentDueDay     Int?
+  monthlyFee        Float?
   locations         MemberLocation[]
   attendances       Attendance[]
   payments          Payment[]

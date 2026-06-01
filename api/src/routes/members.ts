@@ -20,6 +20,7 @@ const memberSchema = z.object({
   category: z.string().optional(),
   tipo: z.string().optional(),
   paymentDueDay: z.number().min(1).max(31).nullable().optional(),
+  monthlyFee: z.number().positive().nullable().optional(),
   locationIds: z.array(z.string()).optional(),
   role: z.enum(['ADMIN', 'COACH', 'STUDENT']).optional(),
 });

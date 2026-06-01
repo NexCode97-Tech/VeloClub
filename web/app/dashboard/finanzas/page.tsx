@@ -705,11 +705,13 @@ export default function FinanzasPage() {
                       {String(filterMonth).padStart(2,'0')} / {filterYear}
                     </p>
                   </div>
-                  {/* Círculos MasterCard estilo */}
-                  <div className="flex items-center" style={{ gap: -8 }}>
-                    <div className="w-8 h-8 rounded-full opacity-70" style={{ background: '#EB001B' }} />
-                    <div className="w-8 h-8 rounded-full opacity-70 -ml-3" style={{ background: '#F79E1B' }} />
-                  </div>
+                  {/* Logo VeloClub */}
+                  <img
+                    src="/icon-desktop-192.png"
+                    alt="VeloClub"
+                    className="w-10 h-10 rounded-xl object-contain"
+                    style={{ filter: 'brightness(0) invert(1)', opacity: 0.85 }}
+                  />
                 </div>
               </div>
             </div>

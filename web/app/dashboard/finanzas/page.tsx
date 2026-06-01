@@ -2,12 +2,12 @@
 
 import { useAuth } from '@clerk/nextjs';
 import { useClubStream } from '@/hooks/useClubStream';
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { apiFetch } from '@/lib/api-client';
 import {
   CreditCard, Plus, Trash2, CheckCircle2, Clock, AlertCircle,
   TrendingUp, TrendingDown, Wallet, Download, MessageCircle, Check,
-  PhoneOff,
+  PhoneOff, Users, Settings,
 } from 'lucide-react';
 import { downloadInvoicePDF } from '@/lib/pdf';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -43,7 +43,7 @@ const PAY_FILTER: Record<string, string | null> = {
   Todos: null, Pagados: 'PAID', Pendientes: 'PENDING', Vencidos: 'OVERDUE',
 };
 
-// ── Animation variants (Emil Kowalski / DESIGN.md) ───────────────────────────
+// ── Animation variants ────────────────────────────────────────────────────────
 const listVariants: Variants = {
   hidden: { opacity: 0 },
   visible: { opacity: 1, transition: { staggerChildren: 0.06, delayChildren: 0.05 } },
@@ -58,9 +58,13 @@ function buildWhatsAppUrl(phone: string, memberName: string, amount: number, mon
   const clean = phone.replace(/\D/g, '');
   const normalized = clean.startsWith('57') ? clean : `57${clean}`;
   const text = encodeURIComponent(
-    `Hola ${memberName}, te recordamos que tienes pendiente tu mensualidad de ${MONTH_NAMES[month - 1]} ${year} por ${fmt.format(amount)}. Por favor comunícate con nosotros para coordinar tu pago. ¡Gracias! — ${clubName}`
+    `Hola, soy del ${clubName}. Le recordamos que la mensualidad de ${memberName} correspondiente a ${MONTH_NAMES[month - 1]} ${year} por ${fmt.format(amount)} está pendiente de pago. Por favor comuníquese con nosotros para coordinar. ¡Gracias!`
   );
   return `https://wa.me/${normalized}?text=${text}`;
+}
+
+function getInitials(name: string) {
+  return name.split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase();
 }
 
 interface PayMember { id: string; fullName: string; email?: string; phone?: string }
@@ -69,7 +73,11 @@ interface Payment {
   month: number; year: number; status: string;
   paidAt?: string; notes?: string; member: PayMember;
 }
-interface Member { id: string; fullName: string }
+interface Member {
+  id: string; fullName: string; role: string;
+  phone?: string; emergencyPhone?: string;
+  monthlyFee?: number | null; paymentDueDay?: number | null;
+}
 
 // ── CashEntry types ───────────────────────────────────────────────────────────
 interface CashEntry {
@@ -83,11 +91,12 @@ const now = new Date();
 export default function FinanzasPage() {
   const { getToken } = useAuth();
   const reducedMotion = useReducedMotion();
-  const [tab, setTab]             = useState<'pagos' | 'flujo'>('pagos');
+  const [tab, setTab]             = useState<'pagos' | 'estado' | 'flujo'>('pagos');
   const [clubName, setClubName]   = useState('VeloClub');
   const [filterMonth, setFilterMonth] = useState(now.getMonth() + 1);
   const [filterYear, setFilterYear]   = useState(now.getFullYear());
   const [sentWa, setSentWa]       = useState<Set<string>>(new Set());
+  const [generatingPay, setGeneratingPay] = useState<string | null>(null);
 
   // Pagos state
   const [payments, setPayments]     = useState<Payment[]>([]);
@@ -142,18 +151,35 @@ export default function FinanzasPage() {
     })();
     loadPayments();
     loadFlow();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
     setLoadingPay(true); setLoadingFlow(true);
     loadPayments();
     loadFlow();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filterMonth, filterYear]);
 
-  // Tiempo real: SSE push desde el servidor
   useClubStream((ev) => {
     if (ev === 'payments' || ev === 'cashflow') { loadPayments(); loadFlow(); }
   });
+
+  // ── Estado de deportistas (computed) ─────────────────────────────────────────
+  const studentStatus = useMemo(() => {
+    const students = members.filter(m => m.role === 'STUDENT');
+    return students.map(m => {
+      const pay = payments.find(p => p.memberId === m.id);
+      const configured = !!(m.monthlyFee && m.paymentDueDay);
+      return { member: m, payment: pay ?? null, configured };
+    }).sort((a, b) => {
+      // Ordenar: OVERDUE → PENDING → sin pago → PAID → sin configurar
+      const order: Record<string, number> = { OVERDUE: 0, PENDING: 1, NONE: 2, PAID: 3, UNCONFIGURED: 4 };
+      const keyA = !a.configured ? 'UNCONFIGURED' : !a.payment ? 'NONE' : a.payment.status;
+      const keyB = !b.configured ? 'UNCONFIGURED' : !b.payment ? 'NONE' : b.payment.status;
+      return (order[keyA] ?? 5) - (order[keyB] ?? 5);
+    });
+  }, [members, payments]);
 
   // Pagos helpers
   const filteredPay = payments.filter(p => {
@@ -179,16 +205,17 @@ export default function FinanzasPage() {
       setPayOpen(false);
       await Promise.all([loadPayments(), loadFlow()]);
       const memberName = members.find(m => m.id === payForm.memberId)?.fullName ?? '';
-      downloadInvoicePDF({ ...created.payment, memberName }, clubName);
+      if (created.payment.status === 'PAID') {
+        downloadInvoicePDF({ ...created.payment, memberName }, clubName);
+      }
     } catch (e) { setPayError(e instanceof Error ? e.message : 'Error'); }
     finally { setSavingPay(false); }
   }
 
-  function handleWhatsApp(p: Payment) {
-    if (!p.member.phone) return;
-    const url = buildWhatsAppUrl(p.member.phone, p.member.fullName, p.amount, p.month, p.year, clubName);
+  function handleWhatsApp(phone: string, memberName: string, amount: number, payId?: string) {
+    const url = buildWhatsAppUrl(phone, memberName, amount, filterMonth, filterYear, clubName);
     window.open(url, '_blank');
-    setSentWa(prev => new Set(prev).add(p.id));
+    if (payId) setSentWa(prev => new Set(prev).add(payId));
   }
 
   async function handleMarkPaid(id: string) {
@@ -205,6 +232,21 @@ export default function FinanzasPage() {
       await apiFetch(`/payments/${id}`, { method: 'DELETE', token });
       await Promise.all([loadPayments(), loadFlow()]);
     } finally { setDeletingPay(null); }
+  }
+
+  async function handleGeneratePending(memberId: string, amount: number) {
+    setGeneratingPay(memberId);
+    try {
+      const token = await getToken();
+      await apiFetch('/payments', {
+        method: 'POST', token,
+        body: JSON.stringify({
+          memberId, amount, month: filterMonth, year: filterYear, status: 'PENDING',
+        }),
+      });
+      await loadPayments();
+    } catch (e) { console.error(e); }
+    finally { setGeneratingPay(null); }
   }
 
   // Flujo helpers
@@ -249,34 +291,40 @@ export default function FinanzasPage() {
         <h1 className="text-[17px] font-bold text-foreground" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
           Finanzas
         </h1>
-        <button
-          onClick={() => tab === 'pagos'
-            ? (setPayForm({ memberId: '', amount: '', month: String(filterMonth), year: String(filterYear), status: 'PAID', notes: '' }), setPayError(null), setPayOpen(true))
-            : (setFlowForm({ type: 'INCOME', amount: '', description: '', date: '' }), setFlowError(null), setFlowOpen(true))
-          }
-          className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold text-white"
-          style={{ background: '#4361EE' }}
-        >
-          <Plus className="w-4 h-4" />
-          <span className="hidden sm:inline">{tab === 'pagos' ? 'Registrar' : 'Agregar'}</span>
-        </button>
+        {tab !== 'estado' && (
+          <button
+            onClick={() => tab === 'pagos'
+              ? (setPayForm({ memberId: '', amount: '', month: String(filterMonth), year: String(filterYear), status: 'PAID', notes: '' }), setPayError(null), setPayOpen(true))
+              : (setFlowForm({ type: 'INCOME', amount: '', description: '', date: '' }), setFlowError(null), setFlowOpen(true))
+            }
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold text-white cursor-pointer"
+            style={{ background: '#4361EE' }}
+          >
+            <Plus className="w-4 h-4" />
+            <span className="hidden sm:inline">{tab === 'pagos' ? 'Registrar' : 'Agregar'}</span>
+          </button>
+        )}
       </div>
 
       <div className="px-4 pt-4 flex flex-col gap-4">
 
-        {/* Tabs Pagos / Flujo de Caja */}
+        {/* Tabs */}
         <div className="flex gap-1 bg-secondary rounded-xl p-1">
-          {(['pagos', 'flujo'] as const).map(t => (
+          {([
+            { key: 'pagos',  label: 'Mensualidades' },
+            { key: 'estado', label: 'Estado' },
+            { key: 'flujo',  label: 'Flujo de Caja' },
+          ] as const).map(({ key, label }) => (
             <button
-              key={t}
-              onClick={() => setTab(t)}
-              className="flex-1 py-2 rounded-lg text-[12px] font-semibold transition-all"
-              style={tab === t
+              key={key}
+              onClick={() => setTab(key)}
+              className="flex-1 py-2 rounded-lg text-[11px] font-semibold transition-all cursor-pointer"
+              style={tab === key
                 ? { background: '#fff', color: '#1A1028', boxShadow: '0 1px 4px rgba(0,0,0,0.08)' }
                 : { color: '#8E87A8' }
               }
             >
-              {t === 'pagos' ? 'Mensualidades' : 'Flujo de Caja'}
+              {label}
             </button>
           ))}
         </div>
@@ -330,7 +378,7 @@ export default function FinanzasPage() {
             <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
               {PAY_TABS.map(t => (
                 <button key={t} onClick={() => setPayTab(t)}
-                  className="shrink-0 px-4 py-1.5 rounded-full text-[12px] font-semibold border"
+                  className="shrink-0 px-4 py-1.5 rounded-full text-[12px] font-semibold border cursor-pointer"
                   style={payTab === t
                     ? { background: '#4361EE', color: '#fff', borderColor: '#4361EE' }
                     : { background: '#fff', color: '#1A1028', borderColor: 'rgba(120,80,200,0.10)' }
@@ -381,7 +429,6 @@ export default function FinanzasPage() {
                       variants={reducedMotion ? undefined : rowVariants}
                       className="bg-white border border-border rounded-xl px-4 py-3 flex items-center gap-3"
                     >
-                      {/* Info */}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-0.5">
                           <p className="text-[13px] font-bold text-foreground truncate">{p.member.fullName}</p>
@@ -394,9 +441,7 @@ export default function FinanzasPage() {
                         {p.notes && <p className="text-[10px] text-muted-foreground mt-0.5">{p.notes}</p>}
                       </div>
 
-                      {/* Acciones */}
                       <div className="flex flex-col gap-1.5 shrink-0 items-end">
-                        {/* Marcar pagado */}
                         {isPending && (
                           <motion.button
                             onClick={() => handleMarkPaid(p.id)}
@@ -411,43 +456,27 @@ export default function FinanzasPage() {
                         )}
 
                         <div className="flex gap-1.5 items-center">
-                          {/* Botón WhatsApp — solo en pendientes/vencidos */}
                           {isPending && (
                             <motion.button
-                              onClick={() => handleWhatsApp(p)}
+                              onClick={() => p.member.phone && handleWhatsApp(p.member.phone, p.member.fullName, p.amount, p.id)}
                               whileHover={hasPhone && !reducedMotion ? { scale: 1.08, y: -1 } : {}}
                               whileTap={hasPhone && !reducedMotion ? { scale: 0.97 } : {}}
                               transition={{ duration: 0.12, ease: [0.23, 1, 0.32, 1] }}
                               disabled={!hasPhone}
-                              title={hasPhone ? `Recordar a ${p.member.fullName} por WhatsApp` : 'Sin número registrado'}
-                              className="relative w-7 h-7 rounded-lg flex items-center justify-center cursor-pointer transition-shadow"
+                              title={hasPhone ? `Recordar a ${p.member.fullName}` : 'Sin número'}
+                              className="relative w-7 h-7 rounded-lg flex items-center justify-center cursor-pointer"
                               style={{
-                                background: hasPhone
-                                  ? wasSent ? 'rgba(6,214,160,0.15)' : 'rgba(37,211,102,0.12)'
-                                  : 'rgba(142,135,168,0.10)',
-                                boxShadow: hasPhone && !wasSent ? '0 1px 6px rgba(37,211,102,0.18)' : 'none',
+                                background: hasPhone ? (wasSent ? 'rgba(6,214,160,0.15)' : 'rgba(37,211,102,0.12)') : 'rgba(142,135,168,0.10)',
                                 cursor: hasPhone ? 'pointer' : 'not-allowed',
                               }}
                             >
                               <AnimatePresence mode="wait">
                                 {wasSent ? (
-                                  <motion.span
-                                    key="sent"
-                                    initial={{ scale: 0.5, opacity: 0 }}
-                                    animate={{ scale: 1, opacity: 1 }}
-                                    exit={{ scale: 0.5, opacity: 0 }}
-                                    transition={{ duration: 0.18, ease: [0.23, 1, 0.32, 1] }}
-                                  >
+                                  <motion.span key="sent" initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.5, opacity: 0 }} transition={{ duration: 0.18, ease: [0.23, 1, 0.32, 1] }}>
                                     <Check className="w-3.5 h-3.5" style={{ color: '#06D6A0' }} />
                                   </motion.span>
                                 ) : hasPhone ? (
-                                  <motion.span
-                                    key="wa"
-                                    initial={{ scale: 0.5, opacity: 0 }}
-                                    animate={{ scale: 1, opacity: 1 }}
-                                    exit={{ scale: 0.5, opacity: 0 }}
-                                    transition={{ duration: 0.18, ease: [0.23, 1, 0.32, 1] }}
-                                  >
+                                  <motion.span key="wa" initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.5, opacity: 0 }} transition={{ duration: 0.18, ease: [0.23, 1, 0.32, 1] }}>
                                     <MessageCircle className="w-3.5 h-3.5" style={{ color: '#25D366' }} />
                                   </motion.span>
                                 ) : (
@@ -459,7 +488,6 @@ export default function FinanzasPage() {
                             </motion.button>
                           )}
 
-                          {/* Descargar factura */}
                           <motion.button
                             onClick={() => downloadInvoicePDF({ ...p, memberName: p.member.fullName }, clubName)}
                             whileHover={{ scale: reducedMotion ? 1 : 1.08, y: reducedMotion ? 0 : -1 }}
@@ -471,7 +499,6 @@ export default function FinanzasPage() {
                             <Download className="w-3.5 h-3.5" />
                           </motion.button>
 
-                          {/* Eliminar */}
                           <motion.button
                             onClick={() => handleDeletePay(p.id)}
                             disabled={deletingPay === p.id}
@@ -492,10 +519,149 @@ export default function FinanzasPage() {
           </>
         )}
 
+        {/* ── ESTADO TAB ────────────────────────────────────────────────────── */}
+        {tab === 'estado' && (
+          <>
+            {/* Mini resumen */}
+            <div className="grid grid-cols-3 gap-2">
+              {[
+                { label: 'Pagados',    value: studentStatus.filter(s => s.payment?.status === 'PAID').length,    color: '#06D6A0' },
+                { label: 'Pendientes', value: studentStatus.filter(s => s.payment && s.payment.status !== 'PAID').length, color: '#FFB703' },
+                { label: 'Sin pago',   value: studentStatus.filter(s => !s.payment && s.configured).length,     color: '#8E87A8' },
+              ].map(({ label, value, color }) => (
+                <div key={label} className="bg-white border border-border rounded-xl p-3 text-center">
+                  <p className="text-2xl font-extrabold" style={{ fontFamily: 'var(--font-space-grotesk)', color }}>{value}</p>
+                  <p className="text-[9px] text-muted-foreground mt-0.5">{label}</p>
+                </div>
+              ))}
+            </div>
+
+            {studentStatus.length === 0 ? (
+              <div className="bg-white border border-border rounded-xl px-4 py-10 text-center">
+                <Users className="w-10 h-10 mx-auto mb-3 text-muted-foreground/30" />
+                <p className="text-[13px] font-semibold text-muted-foreground">No hay deportistas registrados</p>
+              </div>
+            ) : (
+              <motion.div
+                className="space-y-2 pb-4"
+                variants={reducedMotion ? undefined : listVariants}
+                initial={reducedMotion ? undefined : 'hidden'}
+                animate={reducedMotion ? undefined : 'visible'}
+              >
+                {studentStatus.map(({ member: m, payment, configured }) => {
+                  const sc = payment ? (STATUS_COLORS[payment.status] ?? STATUS_COLORS.PENDING) : null;
+                  const StatusIcon = sc?.icon;
+                  const hasPendingOrOverdue = payment && payment.status !== 'PAID';
+                  const contactPhone = m.emergencyPhone || m.phone;
+                  const waKey = `estado-${m.id}`;
+                  const wasSent = sentWa.has(waKey);
+
+                  return (
+                    <motion.div
+                      key={m.id}
+                      variants={reducedMotion ? undefined : rowVariants}
+                      className="bg-white border border-border rounded-xl px-4 py-3 flex items-center gap-3"
+                    >
+                      {/* Avatar */}
+                      <div
+                        className="w-9 h-9 rounded-full flex items-center justify-center shrink-0 text-white font-bold text-[12px]"
+                        style={{ background: sc ? sc.text : '#8E87A8' }}
+                      >
+                        {getInitials(m.fullName)}
+                      </div>
+
+                      {/* Info */}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[13px] font-bold text-foreground truncate">{m.fullName}</p>
+                        <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                          {payment && sc && StatusIcon ? (
+                            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full flex items-center gap-1" style={{ background: sc.bg, color: sc.text }}>
+                              <StatusIcon className="w-2.5 h-2.5" />
+                              {STATUS_LABELS[payment.status]} — {fmt.format(payment.amount)}
+                            </span>
+                          ) : configured ? (
+                            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(142,135,168,0.10)', color: '#8E87A8' }}>
+                              Sin pago este mes
+                            </span>
+                          ) : (
+                            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full flex items-center gap-1" style={{ background: 'rgba(142,135,168,0.08)', color: '#8E87A8' }}>
+                              <Settings className="w-2.5 h-2.5" />Sin configurar
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Acciones */}
+                      <div className="flex flex-col gap-1.5 shrink-0 items-end">
+                        {/* Marcar pagado directamente */}
+                        {hasPendingOrOverdue && (
+                          <button
+                            onClick={() => handleMarkPaid(payment!.id)}
+                            className="px-2.5 py-1 rounded-lg text-[10px] font-bold cursor-pointer"
+                            style={{ background: 'rgba(6,214,160,0.12)', color: '#06D6A0' }}
+                          >
+                            Marcar pagado
+                          </button>
+                        )}
+
+                        <div className="flex gap-1.5 items-center">
+                          {/* Generar pago PENDING si está configurado y no tiene pago este mes */}
+                          {configured && !payment && (
+                            <button
+                              onClick={() => handleGeneratePending(m.id, m.monthlyFee!)}
+                              disabled={generatingPay === m.id}
+                              className="px-2.5 py-1 rounded-lg text-[10px] font-bold cursor-pointer"
+                              style={{ background: 'rgba(67,97,238,0.10)', color: '#4361EE' }}
+                            >
+                              {generatingPay === m.id ? '...' : 'Generar'}
+                            </button>
+                          )}
+
+                          {/* WhatsApp al acudiente — solo si hay pago pendiente/vencido */}
+                          {hasPendingOrOverdue && (
+                            <motion.button
+                              onClick={() => contactPhone && handleWhatsApp(contactPhone, m.fullName, payment!.amount, waKey)}
+                              disabled={!contactPhone}
+                              whileHover={contactPhone && !reducedMotion ? { scale: 1.08, y: -1 } : {}}
+                              whileTap={contactPhone && !reducedMotion ? { scale: 0.97 } : {}}
+                              transition={{ duration: 0.12, ease: [0.23, 1, 0.32, 1] }}
+                              title={contactPhone ? 'Recordar por WhatsApp' : 'Sin número de contacto'}
+                              className="w-7 h-7 rounded-lg flex items-center justify-center cursor-pointer"
+                              style={{
+                                background: !contactPhone ? 'rgba(142,135,168,0.10)' : wasSent ? 'rgba(6,214,160,0.15)' : 'rgba(37,211,102,0.12)',
+                                cursor: contactPhone ? 'pointer' : 'not-allowed',
+                              }}
+                            >
+                              <AnimatePresence mode="wait">
+                                {wasSent ? (
+                                  <motion.span key="sent" initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.5, opacity: 0 }} transition={{ duration: 0.18 }}>
+                                    <Check className="w-3.5 h-3.5" style={{ color: '#06D6A0' }} />
+                                  </motion.span>
+                                ) : contactPhone ? (
+                                  <motion.span key="wa" initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.5, opacity: 0 }} transition={{ duration: 0.18 }}>
+                                    <MessageCircle className="w-3.5 h-3.5" style={{ color: '#25D366' }} />
+                                  </motion.span>
+                                ) : (
+                                  <motion.span key="none">
+                                    <PhoneOff className="w-3.5 h-3.5" style={{ color: '#8E87A8' }} />
+                                  </motion.span>
+                                )}
+                              </AnimatePresence>
+                            </motion.button>
+                          )}
+                        </div>
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </motion.div>
+            )}
+          </>
+        )}
+
         {/* ── FLUJO DE CAJA TAB ─────────────────────────────────────────────── */}
         {tab === 'flujo' && (
           <>
-            {/* Resumen */}
             <div className="grid grid-cols-3 gap-2">
               {[
                 { label: 'Ingresos', value: totalIncome,  color: '#06D6A0', icon: TrendingUp },
@@ -553,7 +719,7 @@ export default function FinanzasPage() {
                       </div>
                       {!isAuto && (
                         <button onClick={() => handleDeleteFlow(e.id)} disabled={deletingFlow === e.id}
-                          className="w-7 h-7 rounded-lg bg-red-50 flex items-center justify-center text-red-400 hover:text-red-600 shrink-0">
+                          className="w-7 h-7 rounded-lg bg-red-50 flex items-center justify-center text-red-400 cursor-pointer">
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
                       )}
@@ -575,7 +741,7 @@ export default function FinanzasPage() {
               <Label>Deportista *</Label>
               <Select value={payForm.memberId} onValueChange={v => setPayForm(f => ({ ...f, memberId: v ?? '' }))}>
                 <SelectTrigger><SelectValue placeholder="Seleccionar miembro" /></SelectTrigger>
-                <SelectContent>{members.map(m => <SelectItem key={m.id} value={m.id}>{m.fullName}</SelectItem>)}</SelectContent>
+                <SelectContent>{members.filter(m => m.role === 'STUDENT').map(m => <SelectItem key={m.id} value={m.id}>{m.fullName}</SelectItem>)}</SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
@@ -640,7 +806,7 @@ export default function FinanzasPage() {
               <div className="grid grid-cols-2 gap-2">
                 {(['INCOME', 'EXPENSE'] as const).map(t => (
                   <button key={t} onClick={() => setFlowForm(f => ({ ...f, type: t }))}
-                    className="py-2 rounded-xl text-[12px] font-semibold border transition-all"
+                    className="py-2 rounded-xl text-[12px] font-semibold border transition-all cursor-pointer"
                     style={flowForm.type === t
                       ? { background: t === 'INCOME' ? '#06D6A0' : '#EF476F', color: '#fff', borderColor: 'transparent' }
                       : { background: '#fff', color: '#8E87A8', borderColor: 'rgba(120,80,200,0.10)' }

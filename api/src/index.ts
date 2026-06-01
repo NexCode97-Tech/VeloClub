@@ -15,6 +15,7 @@ import cashflowRouter from './routes/cashflow';
 import attendanceRouter from './routes/attendance';
 import trainingRouter from './routes/training';
 import streamRouter from './routes/stream';
+import cronRouter from './routes/cron';
 
 dotenv.config();
 
@@ -87,6 +88,7 @@ app.use('/cashflow', cashflowRouter);
 app.use('/attendance', attendanceRouter);
 app.use('/training', trainingRouter);
 app.use('/stream', strictLimiter, streamRouter);
+app.use('/cron', cronRouter);
 
 // ── Manejador global de errores ───────────────────────────────────────────────
 // Evita que stack traces o mensajes internos lleguen al cliente

@@ -61,4 +61,63 @@ Actualizar al final de cada sesión o cuando se complete un bloque de trabajo im
 
 ### Próximos pasos
 - 
-```
+
+---
+
+## Sesión 2026-06-01
+
+**Modelo:** Claude Opus 4.6
+**Commit final:** `5447bdd`
+
+### Completado esta sesión
+
+#### UI — Bottom bar + BottomCircleMenu
+- Integración visual bump/bar: bump como hijo del bar con `overflow: visible` + `filter: drop-shadow` unificado → silueta de una sola pieza
+- Burbujas del menú Más: color sólido, íconos blancos, etiquetas con `textShadow`
+- Animación entrada/salida simétricas (mismo spring: stiffness 300, damping 24)
+- Componente convertido a controlado (isOpen/onToggle/onClose) — estado en layout
+- Overlay oscuro con blur cuando el menú está abierto
+
+#### Modal de miembros — Rediseño completo
+- Reemplazado Dialog por bottom sheet multi-paso con animación iOS (cubic-bezier 0.32,0.72,0,1 / 460ms)
+- Pasos dinámicos por rol: STUDENT (5 pasos), COACH (3), ADMIN (2)
+- Paso "Acudiente": guardianName/guardianPhone → emergencyContact/emergencyPhone
+- Campo monthlyFee con formato COP y día de pago en la misma fila
+- Avatar en tiempo real con iniciales mientras se escribe el nombre
+- Step indicator animado (pill activo con flex:2)
+
+#### API — Cron endpoints proactivos
+- `POST /cron/generate-payments`: genera pagos PENDING del mes actual para todos los miembros con `monthlyFee` + `paymentDueDay` configurados (idempotente, no duplica si ya existe)
+- `POST /cron/mark-overdue`: marca PENDING → OVERDUE cuando `dueDate` pasó
+- Protección por header `X-Cron-Secret` (env var `CRON_SECRET`)
+- Notificación SSE por cada club afectado
+
+#### Finanzas — Tab "Estado"
+- Nuevo tab "Estado de deportistas" entre Mensualidades y Flujo de Caja
+- Vista de todos los STUDENTs con su estado de pago del mes seleccionado
+- Estado: PAID / PENDING / OVERDUE / Sin pago este mes / Sin configurar
+- Ordenamiento: OVERDUE → PENDING → sin pago → PAID → sin configurar
+- Botón "Generar": crea pago PENDING con la tarifa configurada del miembro
+- Botón "Marcar pagado" directo sin abrir modal
+- WhatsApp al emergencyPhone (o phone) — solo aparece cuando hay pago pendiente/vencido
+- Mini resumen numérico: Pagados / Pendientes / Sin pago
+
+#### Base de datos
+- `monthlyFee Float?` agregado a schema.prisma (ya estaba desde sesión anterior)
+- Migración formal creada: `20260601000000_add_monthly_fee`
+- Build script actualizado: `prisma migrate deploy && prisma generate && tsc` — la migración se aplica automáticamente en cada deploy de Railway
+
+#### PWA
+- Fix: removidos `cacheOnFrontEndNav` y `aggressiveFrontEndNavCaching` de `next.config.ts` — eliminaba crash `_async_to_generator is not defined` en el service worker
+
+### Problemas encontrados
+- Credenciales locales de Neon (`.env`) desactualizadas — `prisma db push` local fallaba con P1000. Solución: migración formal vía SQL + `prisma migrate deploy` en el build de Railway
+- `prisma.config.ts` usa dotenvx que interfería con Prisma CLI. Solución: el build de Railway tiene el DATABASE_URL como env var de Railway, no necesita dotenv
+
+### Próximos pasos
+- Configurar Railway Cron Jobs en el dashboard de Railway:
+  - `POST /cron/generate-payments` — día 1 de cada mes (cron: `0 8 1 * *`)
+  - `POST /cron/mark-overdue` — todos los días (cron: `0 9 * * *`)
+  - Agregar env var `CRON_SECRET` en Railway
+- Verificar que la migración de `monthlyFee` se aplique correctamente en el próximo deploy
+- Plan 3 — Asistencia: módulo pendiente de implementar

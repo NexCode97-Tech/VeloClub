@@ -760,7 +760,7 @@ export default function FinanzasPage() {
               {generatingMonth ? 'Generando...' : `Generar cobros — ${MONTH_NAMES[filterMonth - 1]} ${filterYear}`}
             </motion.button>
 
-          </div>{/* fin columna izquierda */}
+          </div>
 
           {/* ── Columna derecha: filtros + búsqueda + lista ── */}
           <div className="flex flex-col gap-3">
@@ -853,8 +853,8 @@ export default function FinanzasPage() {
               </motion.div>
             )}
 
-          </div>{/* fin columna derecha */}
-          </div>{/* fin grid desktop */}
+          </div>
+          </div>
         )}
 
         {/* ── FLUJO DE CAJA ─────────────────────────────────────────────────── */}

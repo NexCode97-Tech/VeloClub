@@ -20,10 +20,10 @@ interface BottomCircleMenuProps {
   onClose: () => void;
 }
 
-// Abanico hacia arriba — de -155° a -25° (arco superior)
+// Abanico hacia arriba — ángulos más verticales para evitar clipping en los bordes
 function pointOnArc(i: number, n: number, r: number) {
-  const startDeg = n <= 1 ? -90 : -155;
-  const endDeg   = n <= 1 ? -90 : -25;
+  const startDeg = n <= 1 ? -90 : -148;
+  const endDeg   = n <= 1 ? -90 : -32;
   const deg = n <= 1 ? -90 : startDeg + (endDeg - startDeg) * (i / (n - 1));
   const theta = deg * (Math.PI / 180);
   return {
@@ -32,8 +32,8 @@ function pointOnArc(i: number, n: number, r: number) {
   };
 }
 
-// Radio amplio para que los módulos estén bien separados
-const RADIUS = 138;
+// Radio ajustado: ítems bien separados y bien arriba del bar
+const RADIUS = 114;
 
 export function BottomCircleMenu({ items, pathname, isOpen, onToggle, onClose }: BottomCircleMenuProps) {
   const router = useRouter();
@@ -97,7 +97,7 @@ export function BottomCircleMenu({ items, pathname, isOpen, onToggle, onClose }:
                 className="absolute flex flex-col items-center cursor-pointer"
                 style={{ willChange: 'transform', zIndex: 42 }}
               >
-                {/* Burbuja del ícono — 56px */}
+                {/* Burbuja del ícono — 56px, color sólido con ícono blanco */}
                 <motion.div
                   whileHover={reducedMotion ? {} : { scale: 1.1, y: -2 }}
                   whileTap={reducedMotion ? {} : { scale: 0.94 }}
@@ -107,13 +107,12 @@ export function BottomCircleMenu({ items, pathname, isOpen, onToggle, onClose }:
                     width: 56,
                     height: 56,
                     borderRadius: '50%',
-                    background: `${item.color}1C`,
-                    border: `1.5px solid ${item.color}38`,
-                    boxShadow: `0 6px 20px ${item.color}28, 0 2px 6px rgba(0,0,0,0.06)`,
+                    background: item.color,
+                    boxShadow: `0 6px 24px ${item.color}70, 0 2px 8px rgba(0,0,0,0.12)`,
                   }}
                 >
                   <Icon
-                    style={{ color: item.color, width: 22, height: 22 }}
+                    style={{ color: '#FFFFFF', width: 22, height: 22 }}
                     strokeWidth={2.2}
                   />
                 </motion.div>
@@ -126,10 +125,10 @@ export function BottomCircleMenu({ items, pathname, isOpen, onToggle, onClose }:
                   className="mt-1.5 whitespace-nowrap font-bold"
                   style={{
                     fontSize: 10,
-                    color: '#1A1028',
+                    color: '#FFFFFF',
                     fontFamily: 'var(--font-space-grotesk)',
                     letterSpacing: '-0.01em',
-                    textShadow: '0 1px 6px rgba(255,255,255,0.9)',
+                    textShadow: '0 1px 6px rgba(0,0,0,0.40)',
                   }}
                 >
                   {item.label}

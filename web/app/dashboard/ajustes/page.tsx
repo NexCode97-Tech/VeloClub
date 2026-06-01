@@ -2,8 +2,9 @@
 
 import { useAuth } from '@clerk/nextjs';
 import { useEffect, useRef, useState, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { apiFetch } from '@/lib/api-client';
-import { CheckCircle2, Camera, Building2, ChevronDown, X, Crop, Settings } from 'lucide-react';
+import { CheckCircle2, Camera, Building2, ChevronDown, X, Crop, ChevronRight, HelpCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -108,6 +109,7 @@ function SearchableSelect({
 
 export default function AjustesPage() {
   const { getToken } = useAuth();
+  const router = useRouter();
   const fileRef = useRef<HTMLInputElement>(null);
 
   const [club, setClub]             = useState<Club | null>(null);
@@ -417,104 +419,24 @@ export default function AjustesPage() {
 
       </div>
 
-      {/* ── Sección de Ayuda ─────────────────────────────────────────────── */}
-      <AyudaSection />
-    </div>
-  );
-}
-
-// ─── Sección de ayuda inline ──────────────────────────────────────────────────
-
-const HELP_ACCENT = '#4361EE';
-
-const HELP_GUIDES = [
-  {
-    id: 'miembros', color: '#7C3AED', title: 'Miembros',
-    subtitle: 'Registro y gestión de deportistas y staff.',
-    steps: [
-      { n: 1, t: 'Crear un miembro', d: 'Toca "+ Nuevo". Completa nombre, correo, teléfono y sede. El correo es el que usará para ingresar.' },
-      { n: 2, t: 'Editar o ver info', d: 'Toca el ícono de ojo para ver el perfil completo, o el lápiz para editar datos.' },
-      { n: 3, t: 'Importar desde Excel', d: 'Usa el botón "Importar", descarga la plantilla, llénala y súbela. No cambies los nombres de columnas.' },
-    ],
-  },
-  {
-    id: 'finanzas', color: '#FFB703', title: 'Finanzas',
-    subtitle: 'Control de mensualidades y flujo de caja.',
-    steps: [
-      { n: 1, t: 'Configurar tarifa', d: 'En Mensualidades toca el ícono ⚙ de cada deportista. Ingresa la tarifa mensual y el día de cobro.' },
-      { n: 2, t: 'Cobrar mensualidad', d: 'Toca "Cobrar" para generar el cobro como pendiente. Luego usa WhatsApp para notificar y toca "Pagado" cuando recibas el pago.' },
-      { n: 3, t: 'Generar cobros del mes', d: 'El botón "Generar cobros" crea automáticamente los cobros PENDING para todos los deportistas configurados.' },
-      { n: 4, t: 'Flujo de caja', d: 'En la pestaña "Flujo de Caja" registra ingresos y gastos manuales. Los pagos de mensualidades se agregan automáticamente.' },
-    ],
-  },
-  {
-    id: 'asistencia', color: '#06D6A0', title: 'Asistencia',
-    subtitle: 'Registro diario por fecha y sede.',
-    steps: [
-      { n: 1, t: 'Seleccionar fecha y sede', d: 'Elige el día y la sede. La lista de deportistas se filtra automáticamente.' },
-      { n: 2, t: 'Marcar estados', d: 'Para cada deportista toca: P (Presente), A (Ausente), E (Excusa médica) o T (Tarde).' },
-      { n: 3, t: 'Guardar', d: 'Toca "Guardar asistencia". Puedes editar cualquier día anterior volviendo a esa fecha.' },
-    ],
-  },
-  {
-    id: 'ajustes-club', color: '#8E87A8', title: 'Ajustes del club',
-    subtitle: 'Configuración general.',
-    steps: [
-      { n: 1, t: 'Editar información', d: 'Cambia el nombre, ciudad y departamento del club desde esta misma pantalla.' },
-      { n: 2, t: 'Logo del club', d: 'Toca el área del logo para subir o cambiar la imagen. Se recorta automáticamente en formato cuadrado.' },
-      { n: 3, t: 'Días sin asistencia', d: 'Marca los días de la semana en que el club no entrena. Esos días no aparecerán en el módulo de Asistencia.' },
-    ],
-  },
-];
-
-function HelpCard({ guide }: { guide: typeof HELP_GUIDES[0] }) {
-  const [open, setOpen] = useState(false);
-  return (
-    <div className="bg-white rounded-2xl overflow-hidden" style={{ border: '1px solid rgba(120,80,200,0.10)' }}>
-      <button className="w-full flex items-center gap-3 px-4 py-4 text-left" onClick={() => setOpen(o => !o)}>
-        <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: `${guide.color}18` }}>
-          <span className="text-[13px] font-extrabold" style={{ color: guide.color }}>{guide.title[0]}</span>
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-[13px] font-bold text-foreground">{guide.title}</p>
-          <p className="text-[11px] text-muted-foreground">{guide.subtitle}</p>
-        </div>
-        <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${open ? 'rotate-180' : ''}`} />
-      </button>
-      {open && (
-        <div className="px-4 pb-5 border-t border-border space-y-4 pt-4">
-          {guide.steps.map(s => (
-            <div key={s.n} className="flex gap-3">
-              <div className="w-6 h-6 rounded-full flex items-center justify-center text-white text-[11px] font-bold shrink-0 mt-0.5" style={{ background: guide.color }}>
-                {s.n}
-              </div>
-              <div>
-                <p className="text-[12px] font-bold text-foreground">{s.t}</p>
-                <p className="text-[11px] text-muted-foreground leading-relaxed mt-0.5">{s.d}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
-function AyudaSection() {
-  return (
-    <div className="mt-8">
-      <div className="flex items-center gap-2 mb-4">
-        <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: `${HELP_ACCENT}18` }}>
-          <span className="text-[13px]">?</span>
-        </div>
-        <div>
-          <p className="text-[15px] font-bold text-foreground" style={{ fontFamily: 'var(--font-space-grotesk)' }}>Centro de ayuda</p>
-          <p className="text-[11px] text-muted-foreground">Guía rápida de cada módulo</p>
-        </div>
-      </div>
-      <div className="space-y-2 pb-28">
-        {HELP_GUIDES.map(g => <HelpCard key={g.id} guide={g} />)}
+      {/* ── Acceso a Centro de ayuda ──────────────────────────────────────── */}
+      <div className="px-4 pb-28 mt-2">
+        <button
+          onClick={() => router.push('/dashboard/ajustes/ayuda')}
+          className="w-full flex items-center gap-3 bg-white rounded-2xl px-4 py-4 text-left transition-colors hover:bg-secondary/40 active:bg-secondary/60"
+          style={{ border: '1px solid rgba(120,80,200,0.10)' }}
+        >
+          <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(67,97,238,0.10)' }}>
+            <HelpCircle className="w-4 h-4" style={{ color: '#4361EE' }} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-[13px] font-bold text-foreground">Centro de ayuda</p>
+            <p className="text-[11px] text-muted-foreground">Guía rápida de cada módulo</p>
+          </div>
+          <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
+        </button>
       </div>
     </div>
   );
 }
+

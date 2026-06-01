@@ -659,10 +659,11 @@ export default function FinanzasPage() {
 
         {/* ── MENSUALIDADES ─────────────────────────────────────────────────── */}
         {tab === 'mensualidades' && (
-          <div className="flex flex-col gap-4 md:flex-row md:gap-6 md:items-start">
+          {/* ── Fila superior: tarjeta + filtros ── */}
+          <div className="flex flex-col gap-3 md:flex-row md:gap-4 md:items-stretch">
 
-          {/* ── Columna izquierda: tarjeta + generar ── */}
-          <div className="flex flex-col gap-4 md:w-80 md:shrink-0">
+          {/* Tarjeta bancaria */}
+          <div className="md:w-72 md:shrink-0">
 
             {/* Tarjeta débito bancaria */}
             <div
@@ -747,26 +748,11 @@ export default function FinanzasPage() {
               </div>
             </div>
 
-            {/* Botón generar cobros del mes */}
-            <motion.button
-              whileTap={reducedMotion ? {} : { scale: 0.98 }}
-              transition={{ duration: 0.12, ease: EASE_OUT }}
-              onClick={handleGenerateMonth}
-              disabled={generatingMonth}
-              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-[13px] font-bold cursor-pointer transition-opacity disabled:opacity-60"
-              style={{ background: 'rgba(67,97,238,0.08)', color: '#4361EE', border: '1.5px dashed rgba(67,97,238,0.25)' }}
-            >
-              <Zap className="w-4 h-4" />
-              {generatingMonth ? 'Generando...' : `Generar cobros — ${MONTH_NAMES[filterMonth - 1]} ${filterYear}`}
-            </motion.button>
-
           </div>
 
-          {/* ── Columna derecha: filtros + búsqueda + lista ── */}
-          <div className="flex flex-col gap-3 flex-1 min-w-0">
-
-            {/* Filtros de estado */}
-            <div className="grid grid-cols-3 gap-2">
+          {/* Filtros de estado — columna derecha en desktop, fila en mobile */}
+          <div className="flex flex-col gap-2 flex-1 min-w-0 md:justify-between">
+            <div className="grid grid-cols-3 gap-2 md:grid-cols-1 md:gap-3">
               {([
                 { key: 'PAID',    label: 'Pagados',   value: countPaid,    color: '#06D6A0', bg: 'rgba(6,214,160,0.10)' },
                 { key: 'PENDING', label: 'Pendiente', value: countPending, color: '#FFB703', bg: 'rgba(255,183,3,0.10)'  },
@@ -779,7 +765,7 @@ export default function FinanzasPage() {
                     whileTap={reducedMotion ? {} : { scale: 0.96 }}
                     transition={{ duration: 0.12, ease: EASE_OUT }}
                     onClick={() => setStatusFilter(active ? 'ALL' : key)}
-                    className="rounded-xl px-3 py-2.5 flex flex-col items-center gap-0.5 border-2 transition-all cursor-pointer"
+                    className="rounded-xl px-3 py-2.5 md:py-4 flex flex-col items-center gap-0.5 border-2 transition-all cursor-pointer flex-1"
                     style={{
                       background: active ? bg : '#fff',
                       borderColor: active ? color : 'transparent',
@@ -793,16 +779,34 @@ export default function FinanzasPage() {
               })}
             </div>
 
-            {/* Búsqueda de deportistas */}
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <input
-                className="w-full pl-9 pr-3 h-10 rounded-xl border border-border bg-white text-[13px] focus:outline-none focus:ring-2 focus:ring-purple-200"
-                placeholder="Buscar deportista..."
-                value={searchStudent}
-                onChange={e => setSearchStudent(e.target.value)}
-              />
-            </div>
+          </div>
+          </div>
+
+          {/* ── Botón generar + búsqueda + lista (ancho completo) ── */}
+
+          {/* Botón generar cobros */}
+          <motion.button
+            whileTap={reducedMotion ? {} : { scale: 0.98 }}
+            transition={{ duration: 0.12, ease: EASE_OUT }}
+            onClick={handleGenerateMonth}
+            disabled={generatingMonth}
+            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-[13px] font-bold cursor-pointer transition-opacity disabled:opacity-60"
+            style={{ background: 'rgba(67,97,238,0.08)', color: '#4361EE', border: '1.5px dashed rgba(67,97,238,0.25)' }}
+          >
+            <Zap className="w-4 h-4" />
+            {generatingMonth ? 'Generando...' : `Generar cobros — ${MONTH_NAMES[filterMonth - 1]} ${filterYear}`}
+          </motion.button>
+
+          {/* Búsqueda de deportistas */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <input
+              className="w-full pl-9 pr-3 h-10 rounded-xl border border-border bg-white text-[13px] focus:outline-none focus:ring-2 focus:ring-purple-200"
+              placeholder="Buscar deportista..."
+              value={searchStudent}
+              onChange={e => setSearchStudent(e.target.value)}
+            />
+          </div>
 
             {/* Lista deportistas */}
             {loadingPay && !paymentsData ? (
@@ -852,9 +856,6 @@ export default function FinanzasPage() {
                 ))}
               </motion.div>
             )}
-
-          </div>
-          </div>
         )}
 
         {/* ── FLUJO DE CAJA ─────────────────────────────────────────────────── */}

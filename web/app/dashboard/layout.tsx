@@ -7,6 +7,7 @@ import { UserButton, useAuth, useSession } from '@clerk/nextjs';
 import { useEffect, useState } from 'react';
 import { apiFetch } from '@/lib/api-client';
 import LoadingScreen from '@/components/ui/loading-screen';
+import { BottomCircleMenu } from '@/components/ui/bottom-circle-menu';
 import {
   LayoutDashboard,
   Users,
@@ -16,32 +17,50 @@ import {
   BarChart2,
   MapPin,
   CreditCard,
-  MoreHorizontal,
   CircleDollarSign,
   HelpCircle,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
+// "Más" va en el índice 2 (centro del bottom bar) para ADMIN y COACH
+// El href '/dashboard/mas' es el centinela — no navega, activa el CircleMenu
 const ROLE_TABS: Record<string, { href: string; label: string; icon: React.ElementType }[]> = {
   ADMIN: [
-    { href: '/dashboard',             label: 'Inicio',        icon: LayoutDashboard },
-    { href: '/dashboard/miembros',    label: 'Miembros',      icon: Users },
-    { href: '/dashboard/asistencia',  label: 'Asistencia',    icon: CalendarCheck },
-    { href: '/dashboard/finanzas',    label: 'Finanzas',      icon: CircleDollarSign },
-    { href: '/dashboard/mas',         label: 'Más',           icon: MoreHorizontal },
+    { href: '/dashboard',             label: 'Inicio',      icon: LayoutDashboard },
+    { href: '/dashboard/miembros',    label: 'Miembros',    icon: Users },
+    { href: '/dashboard/mas',         label: 'Más',         icon: LayoutDashboard }, // reemplazado por CircleMenu
+    { href: '/dashboard/asistencia',  label: 'Asistencia',  icon: CalendarCheck },
+    { href: '/dashboard/finanzas',    label: 'Finanzas',    icon: CircleDollarSign },
   ],
   COACH: [
-    { href: '/dashboard',             label: 'Inicio',        icon: LayoutDashboard },
-    { href: '/dashboard/miembros',    label: 'Miembros',      icon: Users },
-    { href: '/dashboard/asistencia',  label: 'Asistencia',    icon: CalendarCheck },
-    { href: '/dashboard/logros',      label: 'Resultados',    icon: Trophy },
-    { href: '/dashboard/mas',         label: 'Más',           icon: MoreHorizontal },
+    { href: '/dashboard',             label: 'Inicio',      icon: LayoutDashboard },
+    { href: '/dashboard/miembros',    label: 'Miembros',    icon: Users },
+    { href: '/dashboard/mas',         label: 'Más',         icon: LayoutDashboard }, // reemplazado por CircleMenu
+    { href: '/dashboard/asistencia',  label: 'Asistencia',  icon: CalendarCheck },
+    { href: '/dashboard/logros',      label: 'Resultados',  icon: Trophy },
   ],
   STUDENT: [
-    { href: '/dashboard',             label: 'Inicio',        icon: LayoutDashboard },
-    { href: '/dashboard/logros',      label: 'Resultados',    icon: Trophy },
-    { href: '/dashboard/calendario',  label: 'Calendario',    icon: CalendarDays },
-    { href: '/dashboard/pagos',       label: 'Mis Pagos',     icon: CreditCard },
+    { href: '/dashboard',             label: 'Inicio',      icon: LayoutDashboard },
+    { href: '/dashboard/logros',      label: 'Resultados',  icon: Trophy },
+    { href: '/dashboard/calendario',  label: 'Calendario',  icon: CalendarDays },
+    { href: '/dashboard/pagos',       label: 'Mis Pagos',   icon: CreditCard },
+  ],
+};
+
+// Ítems del CircleMenu por rol
+const ROLE_MAS_ITEMS: Record<string, { label: string; icon: React.ElementType; href: string; color: string }[]> = {
+  ADMIN: [
+    { label: 'Resultados', icon: Trophy,           href: '/dashboard/logros',     color: '#F59E0B' },
+    { label: 'Calendario', icon: CalendarDays,     href: '/dashboard/calendario', color: '#EF476F' },
+    { label: 'Sedes',      icon: MapPin,           href: '/dashboard/sedes',      color: '#06D6A0' },
+    { label: 'Reportes',   icon: BarChart2,        href: '/dashboard/reportes',   color: '#4361EE' },
+    { label: 'Ayuda',      icon: HelpCircle,       href: '/dashboard/ayuda',      color: '#8E87A8' },
+  ],
+  COACH: [
+    { label: 'Resultados', icon: Trophy,           href: '/dashboard/logros',     color: '#F59E0B' },
+    { label: 'Calendario', icon: CalendarDays,     href: '/dashboard/calendario', color: '#EF476F' },
+    { label: 'Sedes',      icon: MapPin,           href: '/dashboard/sedes',      color: '#06D6A0' },
+    { label: 'Ayuda',      icon: HelpCircle,       href: '/dashboard/ayuda',      color: '#8E87A8' },
   ],
 };
 
@@ -167,8 +186,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const isOnExtra  = !tabHrefs.has(pathname) && pathname !== '/dashboard' && pathname.startsWith('/dashboard/');
 
   function isTabActive(href: string) {
+    if (href === '/dashboard/mas') return false; // el CircleMenu maneja su propio estado
     if (href === '/dashboard') return pathname === '/dashboard';
-    if (href === '/dashboard/mas') return pathname === '/dashboard/mas' || isOnExtra;
     return pathname === href || pathname.startsWith(href + '/');
   }
 
@@ -293,6 +312,27 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 )}
 
                 {tabItems.map(({ href, label, icon: Icon }) => {
+                  // Slot del CircleMenu (centro)
+                  if (href === '/dashboard/mas') {
+                    const masItems = ROLE_MAS_ITEMS[role ?? 'ADMIN'] ?? [];
+                    return (
+                      <div
+                        key="mas-circle"
+                        className="flex-1 flex flex-col items-center relative z-[41]"
+                        style={{ marginTop: -14 }}
+                      >
+                        <BottomCircleMenu items={masItems} pathname={pathname} />
+                        <span
+                          className="text-[9px] tracking-wide leading-none mt-1"
+                          style={{ color: '#8E87A8', fontWeight: 500 }}
+                        >
+                          Más
+                        </span>
+                      </div>
+                    );
+                  }
+
+                  // Tab normal
                   const active = isTabActive(href);
                   return (
                     <Link

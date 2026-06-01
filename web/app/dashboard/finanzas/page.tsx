@@ -664,7 +664,7 @@ export default function FinanzasPage() {
           <div className="flex flex-col gap-3 md:flex-row md:gap-4 md:items-stretch">
 
           {/* Tarjeta bancaria */}
-          <div className="md:w-72 md:shrink-0">
+          <div className="md:w-80 md:shrink-0">
 
             {/* Tarjeta débito bancaria */}
             <div
@@ -751,9 +751,9 @@ export default function FinanzasPage() {
 
           </div>
 
-          {/* Filtros de estado — columna derecha en desktop, fila en mobile */}
-          <div className="flex flex-col gap-2 flex-1 min-w-0 md:justify-between">
-            <div className="grid grid-cols-3 gap-2 md:grid-cols-1 md:gap-3">
+          {/* Filtros de estado — columna derecha */}
+          <div className="flex-1 min-w-0">
+            <div className="grid grid-cols-3 gap-2 md:gap-3 md:h-full">
               {([
                 { key: 'PAID',    label: 'Pagados',   value: countPaid,    color: '#06D6A0', bg: 'rgba(6,214,160,0.10)' },
                 { key: 'PENDING', label: 'Pendiente', value: countPending, color: '#FFB703', bg: 'rgba(255,183,3,0.10)'  },
@@ -766,15 +766,15 @@ export default function FinanzasPage() {
                     whileTap={reducedMotion ? {} : { scale: 0.96 }}
                     transition={{ duration: 0.12, ease: EASE_OUT }}
                     onClick={() => setStatusFilter(active ? 'ALL' : key)}
-                    className="rounded-xl px-3 py-2.5 md:py-4 flex flex-col items-center gap-0.5 border-2 transition-all cursor-pointer flex-1"
+                    className="rounded-xl px-3 py-2.5 flex flex-col items-center justify-center gap-1 border-2 transition-all cursor-pointer"
                     style={{
                       background: active ? bg : '#fff',
                       borderColor: active ? color : 'transparent',
                       boxShadow: active ? `0 0 0 1px ${color}22` : '0 1px 3px rgba(0,0,0,0.06)',
                     }}
                   >
-                    <p className="text-[18px] font-extrabold leading-none" style={{ fontFamily: 'var(--font-space-grotesk)', color }}>{value}</p>
-                    <p className="text-[9px] font-semibold" style={{ color: active ? color : '#8E87A8' }}>{label}</p>
+                    <p className="text-[22px] font-extrabold leading-none" style={{ fontFamily: 'var(--font-space-grotesk)', color }}>{value}</p>
+                    <p className="text-[10px] font-semibold" style={{ color: active ? color : '#8E87A8' }}>{label}</p>
                   </motion.button>
                 );
               })}

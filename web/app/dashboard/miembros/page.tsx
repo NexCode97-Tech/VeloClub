@@ -83,22 +83,6 @@ export default function MiembrosPage() {
   const [importing, setImporting]       = useState(false);
   const [importErrors, setImportErrors] = useState<string[]>([]);
 
-  // Steps definition
-  const steps = useMemo(() => {
-    const s = [
-      { id: 'identity', label: 'Identidad' },
-      { id: 'contact',  label: 'Contacto' },
-    ];
-    if (form.role === 'STUDENT') {
-      s.push({ id: 'guardian', label: 'Acudiente' });
-      s.push({ id: 'sport',    label: 'Deportiva' });
-    }
-    if (locations.length > 0 && form.role !== 'ADMIN') {
-      s.push({ id: 'locations', label: 'Sedes' });
-    }
-    return s;
-  }, [form.role, locations.length]);
-
   // ── Data con caché TanStack Query ───────────────────────────────────────────
   const { data: membersData, isLoading: loadingMembers } = useQuery({
     queryKey: QK.members(),
@@ -117,6 +101,22 @@ export default function MiembrosPage() {
 
   const members   = membersData?.members   ?? [];
   const locations = locsData?.locations    ?? [];
+
+  // Steps definition (después de declarar locations)
+  const steps = useMemo(() => {
+    const s = [
+      { id: 'identity', label: 'Identidad' },
+      { id: 'contact',  label: 'Contacto' },
+    ];
+    if (form.role === 'STUDENT') {
+      s.push({ id: 'guardian', label: 'Acudiente' });
+      s.push({ id: 'sport',    label: 'Deportiva' });
+    }
+    if (locations.length > 0 && form.role !== 'ADMIN') {
+      s.push({ id: 'locations', label: 'Sedes' });
+    }
+    return s;
+  }, [form.role, locations.length]);
   const loading   = loadingMembers || loadingLocs;
 
   // Cargar nombre del club (sin bloquear)

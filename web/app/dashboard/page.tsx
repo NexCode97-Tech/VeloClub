@@ -110,52 +110,33 @@ export default function DashboardPage() {
     const month = now.getMonth() + 1;
     const year = now.getFullYear();
 
-    const weekdayRes = await apiFetch<{ counts: number[] }>('/attendance/weekday-stats', { token }).catch(() => null);
-    const weekdayCounts = weekdayRes?.counts ?? EMPTY_WEEKDAY;
+    const [weekdayRes, attRes, membersRes, paymentsRes, trainingRes, notifRes] = await Promise.allSettled([
+      apiFetch<{ counts: number[] }>('/attendance/weekday-stats', { token }),
+      apiFetch<{ records: { status: string }[] }>(`/attendance?date=${todayISO()}`, { token }),
+      apiFetch<{ members: unknown[] }>('/members', { token }),
+      apiFetch<{ payments: { status: string; amount: number }[] }>(`/payments?year=${year}&month=${month}`, { token }),
+      apiFetch<{ sessions: unknown[] }>(`/training?month=${month}&year=${year}`, { token }),
+      apiFetch<{ notifications: typeof notifs }>('/payments/notifications', { token }),
+    ]);
 
-    if (role === 'ADMIN') {
-      const notifRes = await apiFetch<{ notifications: typeof notifs }>('/payments/notifications', { token }).catch(() => null);
-      if (notifRes) setNotifs(notifRes.notifications);
-    }
+    const weekdayCounts = weekdayRes.status === 'fulfilled' ? weekdayRes.value.counts : EMPTY_WEEKDAY;
+    const presentCount  = attRes.status === 'fulfilled' ? attRes.value.records.filter(r => r.status === 'PRESENT').length : '—';
+    const memberCount   = membersRes.status === 'fulfilled' ? membersRes.value.members.length : '—';
+    const totalMensualidades = paymentsRes.status === 'fulfilled'
+      ? paymentsRes.value.payments.filter(p => p.status === 'PAID').reduce((s, p) => s + p.amount, 0)
+      : '—';
+    const entrenamientosMes = trainingRes.status === 'fulfilled' ? trainingRes.value.sessions.length : '—';
 
-    if (role === 'ADMIN' || role === 'COACH') {
-      const [attRes, membersRes] = await Promise.allSettled([
-        apiFetch<{ records: { status: string }[] }>(`/attendance?date=${todayISO()}`, { token }),
-        apiFetch<{ members: unknown[] }>('/members', { token }),
-      ]);
+    if (role === 'ADMIN' && notifRes.status === 'fulfilled') setNotifs(notifRes.value.notifications);
 
-      const presentCount = attRes.status === 'fulfilled'
-        ? attRes.value.records.filter(r => r.status === 'PRESENT').length
-        : '—';
-
-      const memberCount = membersRes.status === 'fulfilled'
-        ? membersRes.value.members.length
-        : '—';
-
-      if (role === 'ADMIN') {
-        const paymentsRes = await apiFetch<{ payments: { status: string; amount: number }[] }>(
-          `/payments?year=${year}&month=${month}`, { token }
-        ).catch(() => null);
-
-        const totalMensualidades = paymentsRes
-          ? paymentsRes.payments.filter(p => p.status === 'PAID').reduce((s, p) => s + p.amount, 0)
-          : '—';
-
-        setStats(s => ({ ...s, asistenciaHoy: presentCount, totalMensualidades, totalMiembros: memberCount, weekdayCounts }));
-      } else {
-        const trainingRes = await apiFetch<{ sessions: unknown[] }>(
-          `/training?month=${month}&year=${year}`, { token }
-        ).catch(() => null);
-
-        setStats(s => ({
-          ...s,
-          asistenciaHoy: presentCount,
-          totalMiembros: memberCount,
-          entrenamientosMes: trainingRes ? trainingRes.sessions.length : '—',
-          weekdayCounts,
-        }));
-      }
-    }
+    setStats(s => ({
+      ...s,
+      weekdayCounts,
+      asistenciaHoy: presentCount,
+      totalMiembros: memberCount,
+      totalMensualidades,
+      entrenamientosMes,
+    }));
   }, [session]);
 
   function handleRefresh() {
@@ -167,91 +148,102 @@ export default function DashboardPage() {
     if (!isLoaded) return;
     if (!isSignedIn) { router.push('/sign-in'); return; }
 
-    // Resetear datos al cambiar de sesión activa (multi-cuenta)
     setMe(null);
     setLogros([]);
     setLoading(true);
 
     (async () => {
       try {
-        const token = await session?.getToken({ skipCache: true });
-        const res = await apiFetch<MeResponse>('/me', { token });
+        // Un solo token para todas las llamadas
+        const token = await session?.getToken();
+        const now = new Date();
+        const month = now.getMonth() + 1;
+        const year  = now.getFullYear();
+
+        // /me + todas las llamadas de datos en paralelo
+        const [
+          meRes, weekdayRes, attRes, membersRes,
+          paymentsRes, trainingRes, notifRes, compRes, memberMeRes,
+        ] = await Promise.allSettled([
+          apiFetch<MeResponse>('/me', { token }),
+          apiFetch<{ counts: number[] }>('/attendance/weekday-stats', { token }),
+          apiFetch<{ records: { status: string }[] }>(`/attendance?date=${todayISO()}`, { token }),
+          apiFetch<{ members: unknown[] }>('/members', { token }),
+          apiFetch<{ payments: { status: string; amount: number }[] }>(`/payments?year=${year}&month=${month}`, { token }),
+          apiFetch<{ sessions: { id: string; title: string; date: string; location?: { name: string } | null }[] }>(`/training?month=${month}&year=${year}`, { token }),
+          apiFetch<{ notifications: typeof notifs }>('/payments/notifications', { token }),
+          apiFetch<{
+            competitions: {
+              id: string; name: string; date: string; place?: string | null;
+              events: { results: { member: { id: string }; position?: number | null; category?: string | null; observations?: string | null }[] }[];
+            }[];
+          }>('/competitions', { token }),
+          apiFetch<{ member: { id: string } }>('/members/me', { token }),
+        ]);
+
+        if (meRes.status === 'rejected') return;
+        const res = meRes.value;
         if (res.status === 'superadmin')       { router.push('/superadmin');       return; }
         if (res.status === 'no_access')        { router.push('/no-access');        return; }
         if (res.status === 'inactive')         { router.push('/inactivo');         return; }
         if (res.status === 'complete_profile') { router.push('/completar-perfil'); return; }
         setMe(res);
-        await fetchStats(res.user?.role ?? 'ADMIN');
 
-        // Logros recientes — solo STUDENT
-        if (res.user?.role === 'STUDENT') {
+        const role = res.user?.role ?? 'ADMIN';
+        const weekdayCounts   = weekdayRes.status === 'fulfilled'  ? weekdayRes.value.counts   : EMPTY_WEEKDAY;
+        const presentCount    = attRes.status === 'fulfilled'      ? attRes.value.records.filter(r => r.status === 'PRESENT').length : '—';
+        const memberCount     = membersRes.status === 'fulfilled'  ? membersRes.value.members.length : '—';
+        const totalMensualidades = paymentsRes.status === 'fulfilled'
+          ? paymentsRes.value.payments.filter(p => p.status === 'PAID').reduce((s, p) => s + p.amount, 0)
+          : '—';
+        const entrenamientosMes = trainingRes.status === 'fulfilled' ? trainingRes.value.sessions.length : '—';
+
+        if (role === 'ADMIN' && notifRes.status === 'fulfilled') setNotifs(notifRes.value.notifications);
+
+        setStats({
+          weekdayCounts,
+          asistenciaHoy: presentCount,
+          totalMiembros: memberCount,
+          totalMensualidades,
+          entrenamientosMes,
+        });
+
+        // Logros recientes — STUDENT
+        if (role === 'STUDENT') {
           setLogrosLoading(true);
           try {
-            const token2 = await session?.getToken();
-            const [meRes, compRes] = await Promise.allSettled([
-              apiFetch<{ member: { id: string } }>('/members/me', { token: token2 }),
-              apiFetch<{
-                competitions: {
-                  id: string; name: string; date: string;
-                  events: { results: { member: { id: string }; position?: number | null; category?: string | null; observations?: string | null }[] }[];
-                }[];
-              }>('/competitions', { token: token2 }),
-            ]);
-
-            const memberId = meRes.status === 'fulfilled' ? meRes.value.member.id : null;
+            const memberId = memberMeRes.status === 'fulfilled' ? memberMeRes.value.member.id : null;
             const comps    = compRes.status === 'fulfilled' ? compRes.value.competitions : [];
-
             if (memberId) {
               const resultados: LogroReciente[] = [];
               for (const c of comps) {
                 for (const ev of c.events) {
                   for (const r of ev.results) {
                     if (r.member.id === memberId) {
-                      resultados.push({
-                        id:           `${c.id}-${memberId}`,
-                        tipo:         'COMPETENCIA',
-                        titulo:       c.name,
-                        fecha:        c.date,
-                        position:     r.position,
-                        categoria:    r.category,
-                        observaciones: r.observations,
-                      });
+                      resultados.push({ id: `${c.id}-${memberId}`, tipo: 'COMPETENCIA', titulo: c.name, fecha: c.date, position: r.position, categoria: r.category, observaciones: r.observations });
                     }
                   }
                 }
               }
-              // Ordenar por fecha desc, mostrar los 5 más recientes
               resultados.sort((a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime());
               setLogros(resultados.slice(0, 5));
             }
-          } catch { /* silencioso */ }
-          finally { setLogrosLoading(false); }
+          } finally { setLogrosLoading(false); }
         }
 
-        // Próximos eventos — competencias y entrenamientos futuros (todos los roles)
-        try {
-          const token3 = await session?.getToken();
-          const now2 = new Date();
-          const month2 = now2.getMonth() + 1;
-          const year2 = now2.getFullYear();
-          const [compRes2, trainRes2] = await Promise.allSettled([
-            apiFetch<{ competitions: { id: string; name: string; date: string; place?: string | null }[] }>('/competitions', { token: token3 }),
-            apiFetch<{ sessions: { id: string; title: string; date: string; location?: { name: string } | null }[] }>(`/training?month=${month2}&year=${year2}`, { token: token3 }),
-          ]);
-          const comps2 = compRes2.status === 'fulfilled' ? compRes2.value.competitions : [];
-          const trains2 = trainRes2.status === 'fulfilled' ? trainRes2.value.sessions : [];
-          const futuros: { id: string; titulo: string; tipo: 'COMPETITION' | 'TRAINING'; fecha: Date; lugar?: string | null }[] = [
-            ...comps2.map(c => ({ id: c.id, titulo: c.name, tipo: 'COMPETITION' as const, fecha: new Date(c.date), lugar: c.place })),
-            ...trains2.map(s => ({ id: s.id, titulo: s.title, tipo: 'TRAINING' as const, fecha: new Date(s.date), lugar: s.location?.name ?? null })),
-          ]
-            .filter(e => e.fecha >= now2)
-            .sort((a, b) => a.fecha.getTime() - b.fecha.getTime())
-            .slice(0, 3);
-          setProximosEventos(futuros);
-        } catch { /* silencioso */ }
+        // Próximos eventos (todos los roles)
+        const comps2  = compRes.status === 'fulfilled' ? compRes.value.competitions : [];
+        const trains2 = trainingRes.status === 'fulfilled' ? trainingRes.value.sessions : [];
+        const futuros = [
+          ...comps2.map(c  => ({ id: c.id,  titulo: c.name, tipo: 'COMPETITION' as const, fecha: new Date(c.date), lugar: c.place ?? null })),
+          ...trains2.map(s => ({ id: s.id,  titulo: s.title,           tipo: 'TRAINING'     as const, fecha: new Date(s.date), lugar: s.location?.name ?? null })),
+        ]
+          .filter(e => e.fecha >= now)
+          .sort((a, b) => a.fecha.getTime() - b.fecha.getTime())
+          .slice(0, 3);
+        setProximosEventos(futuros);
 
-      } catch (err) {
-      } finally {
+      } catch { /* silencioso */ } finally {
         setLoading(false);
       }
     })();

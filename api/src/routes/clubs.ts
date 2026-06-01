@@ -29,7 +29,11 @@ router.get('/settings', requireAuth, async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'No autenticado' });
   const club = await prisma.club.findUnique({
     where: { id: req.user.clubId ?? '' },
-    select: { id: true, name: true, city: true, department: true, logoUrl: true, noAttendanceDays: true },
+    select: {
+      id: true, name: true, city: true, department: true,
+      logoUrl: true, noAttendanceDays: true, createdAt: true,
+      suscripcion: { select: { tipoPlan: true, createdAt: true } },
+    },
   });
   if (!club) return res.status(404).json({ error: 'Club no encontrado' });
   res.json({ club });

@@ -9,7 +9,7 @@ import { QK } from '@/hooks/useVeloQuery';
 import {
   CreditCard, Plus, Trash2, CheckCircle2, Clock, AlertCircle,
   TrendingUp, TrendingDown, Wallet, Download, MessageCircle, Check,
-  PhoneOff, Settings, Zap, ChevronUp, Pencil,
+  PhoneOff, Settings, Zap, ChevronUp, Pencil, Search,
 } from 'lucide-react';
 import { downloadInvoicePDF } from '@/lib/pdf';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -327,6 +327,8 @@ export default function FinanzasPage() {
 
   const [tab, setTab]             = useState<'mensualidades' | 'flujo'>('mensualidades');
   const [clubName, setClubName]   = useState('VeloClub');
+  const [clubPlan, setClubPlan]   = useState<{ tipoPlan: string; createdAt: string } | null>(null);
+  const [clubCreatedAt, setClubCreatedAt] = useState<string | null>(null);
   const [filterMonth, setFilterMonth] = useState(now.getMonth() + 1);
   const [filterYear, setFilterYear]   = useState(now.getFullYear());
   const [sentWa, setSentWa]       = useState<Set<string>>(new Set());
@@ -334,6 +336,7 @@ export default function FinanzasPage() {
   // UI state
   const [generatingMonth, setGeneratingMonth] = useState(false);
   const [statusFilter, setStatusFilter] = useState<'ALL'|'PAID'|'PENDING'|'NONE'>('ALL');
+  const [searchStudent, setSearchStudent] = useState('');
   const [generatingPay, setGeneratingPay]     = useState<string | null>(null);
   const [deletingPay, setDeletingPay]         = useState<string | null>(null);
   const [markingPaid, setMarkingPaid]         = useState<string | null>(null);
@@ -375,8 +378,12 @@ export default function FinanzasPage() {
 
   useEffect(() => {
     getToken().then(token =>
-      apiFetch<{ club: { name: string } }>('/clubs/settings', { token })
-        .then(r => setClubName(r.club.name)).catch(() => {})
+      apiFetch<{ club: { name: string; createdAt: string; suscripcion: { tipoPlan: string; createdAt: string } | null } }>('/clubs/settings', { token })
+        .then(r => {
+          setClubName(r.club.name);
+          setClubCreatedAt(r.club.createdAt);
+          setClubPlan(r.club.suscripcion);
+        }).catch(() => {})
     );
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -417,12 +424,16 @@ export default function FinanzasPage() {
 
   // ── Lista filtrada por estado ─────────────────────────────────────────────────
   const filteredRows = useMemo(() => {
-    if (statusFilter === 'ALL') return studentRows;
-    if (statusFilter === 'PAID')    return studentRows.filter(r => r.payment?.status === 'PAID');
-    if (statusFilter === 'PENDING') return studentRows.filter(r => r.payment && r.payment.status !== 'PAID');
-    if (statusFilter === 'NONE')    return studentRows.filter(r => !r.payment);
-    return studentRows;
-  }, [studentRows, statusFilter]);
+    let rows = studentRows;
+    if (statusFilter === 'PAID')    rows = rows.filter(r => r.payment?.status === 'PAID');
+    else if (statusFilter === 'PENDING') rows = rows.filter(r => r.payment && r.payment.status !== 'PAID');
+    else if (statusFilter === 'NONE')    rows = rows.filter(r => !r.payment);
+    if (searchStudent.trim()) {
+      const q = searchStudent.toLowerCase();
+      rows = rows.filter(r => r.member.fullName.toLowerCase().includes(q));
+    }
+    return rows;
+  }, [studentRows, statusFilter, searchStudent]);
 
   // ── Resumen ──────────────────────────────────────────────────────────────────
   const totalPaid    = payments.filter(p => p.status === 'PAID').reduce((s, p) => s + p.amount, 0);
@@ -697,20 +708,37 @@ export default function FinanzasPage() {
                   )}
                 </div>
 
-                {/* Fila inferior: mes/año + logo Visa estilo */}
+                {/* Fila inferior: plan + logo VC */}
                 <div className="flex items-end justify-between">
                   <div>
-                    <p className="text-[8px] opacity-50 uppercase tracking-widest mb-0.5">Mes de corte</p>
-                    <p className="text-[13px] font-bold opacity-90" style={{ fontFamily: 'var(--font-space-grotesk)', letterSpacing: '0.1em' }}>
-                      {String(filterMonth).padStart(2,'0')} / {filterYear}
-                    </p>
+                    {clubPlan ? (() => {
+                      const inicio = new Date(clubPlan.createdAt);
+                      const meses = clubPlan.tipoPlan === 'MENSUAL' ? 1 : clubPlan.tipoPlan === 'TRIMESTRAL' ? 3 : 12;
+                      const vence = new Date(inicio);
+                      vence.setMonth(vence.getMonth() + meses);
+                      const planLabel = clubPlan.tipoPlan === 'MENSUAL' ? 'Mensual' : clubPlan.tipoPlan === 'TRIMESTRAL' ? 'Trimestral' : 'Anual';
+                      const venceStr = vence.toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' });
+                      return (
+                        <>
+                          <p className="text-[8px] opacity-50 uppercase tracking-widest mb-0.5">Plan {planLabel}</p>
+                          <p className="text-[12px] font-bold opacity-90" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
+                            Vence {venceStr}
+                          </p>
+                        </>
+                      );
+                    })() : (
+                      <>
+                        <p className="text-[8px] opacity-50 uppercase tracking-widest mb-0.5">Plan</p>
+                        <p className="text-[12px] font-bold opacity-60">Sin plan asignado</p>
+                      </>
+                    )}
                   </div>
                   {/* Logo VeloClub */}
                   <img
                     src="/icon-desktop-192.png"
                     alt="VeloClub"
-                    className="w-10 h-10 rounded-xl object-contain"
-                    style={{ filter: 'brightness(0) invert(1)', opacity: 0.85 }}
+                    className="w-10 h-10 object-contain"
+                    style={{ filter: 'brightness(0) invert(1)', opacity: 0.9 }}
                   />
                 </div>
               </div>
@@ -756,6 +784,17 @@ export default function FinanzasPage() {
               <Zap className="w-4 h-4" />
               {generatingMonth ? 'Generando...' : `Generar cobros — ${MONTH_NAMES[filterMonth - 1]} ${filterYear}`}
             </motion.button>
+
+            {/* Búsqueda de deportistas */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <input
+                className="w-full pl-9 pr-3 h-10 rounded-xl border border-border bg-white text-[13px] focus:outline-none focus:ring-2 focus:ring-purple-200"
+                placeholder="Buscar deportista..."
+                value={searchStudent}
+                onChange={e => setSearchStudent(e.target.value)}
+              />
+            </div>
 
             {/* Lista deportistas */}
             {loadingPay && !paymentsData ? (

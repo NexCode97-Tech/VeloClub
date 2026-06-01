@@ -214,15 +214,16 @@ function StudentRow({
           </div>
         </div>
 
-        {/* Fila inferior: chip de estado + botones de acción */}
-        <div className="flex items-center gap-2 mt-2 ml-12">
-          {/* Chip de estado — en su propia fila, nunca se parte */}
+        {/* Fila 2: fecha de cobro */}
+        {configured && m.paymentDueDay && (
+          <p className="text-[10px] font-semibold text-muted-foreground mt-1.5 ml-12">
+            Cobro el día {m.paymentDueDay} de cada mes
+          </p>
+        )}
+
+        {/* Fila 3: chip de estado + botón Cobrar/Pagado */}
+        <div className="flex items-center gap-2 mt-1.5 ml-12">
           <div className="flex-1 min-w-0">
-            {configured && m.paymentDueDay && (
-              <p className="text-[9px] font-semibold text-muted-foreground mb-1">
-                Cobro el día {m.paymentDueDay} de cada mes
-              </p>
-            )}
             {payment && sc && StatusIcon ? (
               <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-full whitespace-nowrap" style={{ background: sc.bg, color: sc.text }}>
                 <StatusIcon className="w-2.5 h-2.5 shrink-0" />

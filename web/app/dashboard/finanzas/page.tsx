@@ -659,16 +659,19 @@ export default function FinanzasPage() {
 
         {/* ── MENSUALIDADES ─────────────────────────────────────────────────── */}
         {tab === 'mensualidades' && (
-          <>
+          <div className="md:grid md:grid-cols-[360px,1fr] md:gap-6 md:items-start flex flex-col gap-4">
+
+          {/* ── Columna izquierda: tarjeta + generar ── */}
+          <div className="flex flex-col gap-4">
+
             {/* Tarjeta débito bancaria */}
             <div
-              className="relative overflow-hidden text-white select-none mx-auto w-full"
+              className="relative overflow-hidden text-white select-none w-full"
               style={{
                 borderRadius: 20,
                 background: 'linear-gradient(135deg, #2B2D8E 0%, #4361EE 45%, #7209B7 100%)',
                 boxShadow: '0 8px 32px rgba(67,97,238,0.35), 0 2px 8px rgba(0,0,0,0.18)',
                 aspectRatio: '1.586 / 1',
-                maxWidth: 420,
               }}
             >
               {/* Círculos decorativos de fondo */}
@@ -744,7 +747,25 @@ export default function FinanzasPage() {
               </div>
             </div>
 
-            {/* Filtros de estado — fila debajo de la tarjeta morada */}
+            {/* Botón generar cobros del mes */}
+            <motion.button
+              whileTap={reducedMotion ? {} : { scale: 0.98 }}
+              transition={{ duration: 0.12, ease: EASE_OUT }}
+              onClick={handleGenerateMonth}
+              disabled={generatingMonth}
+              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-[13px] font-bold cursor-pointer transition-opacity disabled:opacity-60"
+              style={{ background: 'rgba(67,97,238,0.08)', color: '#4361EE', border: '1.5px dashed rgba(67,97,238,0.25)' }}
+            >
+              <Zap className="w-4 h-4" />
+              {generatingMonth ? 'Generando...' : `Generar cobros — ${MONTH_NAMES[filterMonth - 1]} ${filterYear}`}
+            </motion.button>
+
+          </div>{/* fin columna izquierda */}
+
+          {/* ── Columna derecha: filtros + búsqueda + lista ── */}
+          <div className="flex flex-col gap-3">
+
+            {/* Filtros de estado */}
             <div className="grid grid-cols-3 gap-2">
               {([
                 { key: 'PAID',    label: 'Pagados',   value: countPaid,    color: '#06D6A0', bg: 'rgba(6,214,160,0.10)' },
@@ -771,19 +792,6 @@ export default function FinanzasPage() {
                 );
               })}
             </div>
-
-            {/* Botón generar cobros del mes */}
-            <motion.button
-              whileTap={reducedMotion ? {} : { scale: 0.98 }}
-              transition={{ duration: 0.12, ease: EASE_OUT }}
-              onClick={handleGenerateMonth}
-              disabled={generatingMonth}
-              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-[13px] font-bold cursor-pointer transition-opacity disabled:opacity-60"
-              style={{ background: 'rgba(67,97,238,0.08)', color: '#4361EE', border: '1.5px dashed rgba(67,97,238,0.25)' }}
-            >
-              <Zap className="w-4 h-4" />
-              {generatingMonth ? 'Generando...' : `Generar cobros — ${MONTH_NAMES[filterMonth - 1]} ${filterYear}`}
-            </motion.button>
 
             {/* Búsqueda de deportistas */}
             <div className="relative">
@@ -844,7 +852,9 @@ export default function FinanzasPage() {
                 ))}
               </motion.div>
             )}
-          </>
+
+          </div>{/* fin columna derecha */}
+          </div>{/* fin grid desktop */}
         )}
 
         {/* ── FLUJO DE CAJA ─────────────────────────────────────────────────── */}

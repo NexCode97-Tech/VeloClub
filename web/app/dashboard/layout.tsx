@@ -301,14 +301,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <div
               style={{
                 position: 'absolute',
-                width: 74,
-                height: 74,
+                width: 76,
+                height: 76,
                 borderRadius: '50%',
                 background: '#FFFFFF',
+                boxShadow: '0 -2px 8px rgba(124,58,237,0.10)',
                 left: '50%',
                 transform: 'translateX(-50%)',
-                top: -4,
-                zIndex: 0,
+                top: -8,
+                zIndex: 2,
                 pointerEvents: 'none',
               }}
             />
@@ -326,8 +327,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   WebkitBackdropFilter: 'blur(20px)',
                   borderRadius: 40,
                   padding: '6px 0',
-                  border: '1px solid rgba(124,58,237,0.14)',
-                  boxShadow: '0 8px 32px rgba(124,58,237,0.13), 0 2px 8px rgba(0,0,0,0.06)',
+                  boxShadow: '0 8px 32px rgba(124,58,237,0.13), 0 2px 8px rgba(0,0,0,0.06), inset 0 0 0 1px rgba(124,58,237,0.14)',
                   pointerEvents: 'auto',
                   position: 'relative',
                   zIndex: 1,

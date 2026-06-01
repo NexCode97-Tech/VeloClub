@@ -36,6 +36,48 @@ async function createCashEntry(clubId: string, paymentId: string, amount: number
   });
 }
 
+// POST /payments/generate-month — genera pagos PENDING del mes para todos los miembros configurados
+router.post('/generate-month', requireAuth, async (req, res) => {
+  if (!req.user) return res.status(401).json({ error: 'No autenticado' });
+  if (req.user.role !== 'ADMIN') return res.status(403).json({ error: 'Sin permisos' });
+
+  const parsed = z.object({
+    month: z.number().min(1).max(12),
+    year:  z.number().min(2020).max(2100),
+  }).safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: parsed.error.issues });
+
+  const { month, year } = parsed.data;
+  const clubId = req.user.clubId ?? '';
+
+  const members = await prisma.member.findMany({
+    where: {
+      clubId,
+      monthlyFee:    { not: null },
+      paymentDueDay: { not: null },
+    },
+    select: {
+      id: true, fullName: true, monthlyFee: true, paymentDueDay: true,
+      payments: { where: { month, year }, select: { id: true } },
+    },
+  });
+
+  let created = 0;
+  let skipped = 0;
+
+  for (const m of members) {
+    if (m.payments.length > 0) { skipped++; continue; }
+    const dueDate = new Date(year, month - 1, m.paymentDueDay!);
+    await prisma.payment.create({
+      data: { clubId, memberId: m.id, amount: m.monthlyFee!, month, year, status: 'PENDING', dueDate },
+    });
+    created++;
+  }
+
+  if (created > 0) emitToClub(clubId, 'payments');
+  res.json({ ok: true, created, skipped });
+});
+
 // GET /payments/notifications — pagos PENDING próximos a vencer o vencidos
 router.get('/notifications', requireAuth, async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'No autenticado' });

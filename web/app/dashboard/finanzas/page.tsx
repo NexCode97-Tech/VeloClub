@@ -9,7 +9,7 @@ import { QK } from '@/hooks/useVeloQuery';
 import {
   CreditCard, Plus, Trash2, CheckCircle2, Clock, AlertCircle,
   TrendingUp, TrendingDown, Wallet, Download, MessageCircle, Check,
-  PhoneOff, Users, Settings,
+  PhoneOff, Settings, Zap, ChevronUp,
 } from 'lucide-react';
 import { downloadInvoicePDF } from '@/lib/pdf';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -30,7 +30,6 @@ const MONTH_NAMES = [
   'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre',
 ];
 
-// ── Pagos types ───────────────────────────────────────────────────────────────
 const STATUS_LABELS: Record<string, string> = {
   PAID: 'Pagado', PENDING: 'Pendiente', OVERDUE: 'Vencido', REFUNDED: 'Reembolsado',
 };
@@ -40,27 +39,22 @@ const STATUS_COLORS: Record<string, { text: string; bg: string; icon: React.Elem
   OVERDUE:  { text: '#EF476F', bg: 'rgba(239,71,111,0.12)',  icon: AlertCircle },
   REFUNDED: { text: '#8E87A8', bg: 'rgba(142,135,168,0.12)', icon: CreditCard },
 };
-const PAY_TABS = ['Todos', 'Pagados', 'Pendientes', 'Vencidos'] as const;
-const PAY_FILTER: Record<string, string | null> = {
-  Todos: null, Pagados: 'PAID', Pendientes: 'PENDING', Vencidos: 'OVERDUE',
-};
 
-// ── Animation variants ────────────────────────────────────────────────────────
 const listVariants: Variants = {
   hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { staggerChildren: 0.06, delayChildren: 0.05 } },
+  visible: { opacity: 1, transition: { staggerChildren: 0.05, delayChildren: 0.02 } },
 };
 const rowVariants: Variants = {
-  hidden: { opacity: 0, y: 10 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.24, ease: [0.23, 1, 0.32, 1] as [number, number, number, number] } },
+  hidden: { opacity: 0, y: 8 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.22, ease: [0.23, 1, 0.32, 1] as [number,number,number,number] } },
 };
+const EASE_OUT: [number,number,number,number] = [0.23, 1, 0.32, 1];
 
-// ── WhatsApp helpers ──────────────────────────────────────────────────────────
-function buildWhatsAppUrl(phone: string, memberName: string, amount: number, month: number, year: number, clubName: string): string {
+function buildWhatsAppUrl(phone: string, memberName: string, amount: number, month: number, year: number, clubName: string) {
   const clean = phone.replace(/\D/g, '');
   const normalized = clean.startsWith('57') ? clean : `57${clean}`;
   const text = encodeURIComponent(
-    `Hola, soy del ${clubName}. Le recordamos que la mensualidad de ${memberName} correspondiente a ${MONTH_NAMES[month - 1]} ${year} por ${fmt.format(amount)} está pendiente de pago. Por favor comuníquese con nosotros para coordinar. ¡Gracias!`
+    `Hola, soy del ${clubName}. Le recordamos que la mensualidad de ${memberName} de ${MONTH_NAMES[month - 1]} ${year} por ${fmt.format(amount)} está pendiente. Por favor comuníquese con nosotros. ¡Gracias!`
   );
   return `https://wa.me/${normalized}?text=${text}`;
 }
@@ -69,52 +63,276 @@ function getInitials(name: string) {
   return name.split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase();
 }
 
-interface PayMember { id: string; fullName: string; email?: string; phone?: string }
-interface Payment {
-  id: string; memberId: string; amount: number;
-  month: number; year: number; status: string;
-  paidAt?: string; notes?: string; member: PayMember;
-}
 interface Member {
   id: string; fullName: string; role: string;
   phone?: string; emergencyPhone?: string;
   monthlyFee?: number | null; paymentDueDay?: number | null;
 }
-
-// ── CashEntry types ───────────────────────────────────────────────────────────
+interface Payment {
+  id: string; memberId: string; amount: number;
+  month: number; year: number; status: string;
+  paidAt?: string; notes?: string;
+  member: { id: string; fullName: string; email?: string; phone?: string };
+}
 interface CashEntry {
   id: string; type: 'INCOME' | 'EXPENSE'; amount: number;
   description: string; date: string; paymentId?: string | null;
-  payment?: { member?: { fullName: string } } | null;
 }
 
 const now = new Date();
 
+// ─── Componente de fila con inline config ─────────────────────────────────────
+interface StudentRowProps {
+  member: Member;
+  payment: Payment | null;
+  clubName: string;
+  filterMonth: number;
+  filterYear: number;
+  reducedMotion: boolean | null;
+  sentWa: Set<string>;
+  onSentWa: (key: string) => void;
+  onMarkPaid: (id: string) => void;
+  onGenerate: (memberId: string, amount: number) => void;
+  onDeletePay: (id: string) => void;
+  generating: boolean;
+  deleting: boolean;
+  onConfigSave: (memberId: string, monthlyFee: number, paymentDueDay: number) => void;
+  configSaving: boolean;
+}
+
+function StudentRow({
+  member: m, payment, clubName, filterMonth, filterYear,
+  reducedMotion, sentWa, onSentWa, onMarkPaid, onGenerate, onDeletePay,
+  generating, deleting, onConfigSave, configSaving,
+}: StudentRowProps) {
+  const configured = !!(m.monthlyFee && m.paymentDueDay);
+  const [configOpen, setConfigOpen] = useState(false);
+  const [feeInput, setFeeInput] = useState('');
+  const [dayInput, setDayInput] = useState('');
+
+  const sc = payment ? (STATUS_COLORS[payment.status] ?? STATUS_COLORS.PENDING) : null;
+  const StatusIcon = sc?.icon;
+  const isPendingOrOverdue = payment && payment.status !== 'PAID' && payment.status !== 'REFUNDED';
+  const contactPhone = m.emergencyPhone || m.phone;
+  const waKey = `${m.id}-${filterMonth}-${filterYear}`;
+  const wasSent = sentWa.has(waKey);
+  const avatarColor = sc ? sc.text : '#8E87A8';
+
+  function openConfig() {
+    setFeeInput(m.monthlyFee ? String(m.monthlyFee) : '');
+    setDayInput(m.paymentDueDay ? String(m.paymentDueDay) : '');
+    setConfigOpen(v => !v);
+  }
+
+  function handleSaveConfig() {
+    const fee = parseFloat(feeInput.replace(/\./g, '').replace(',', '.'));
+    const day = parseInt(dayInput);
+    if (!fee || !day || day < 1 || day > 31) return;
+    onConfigSave(m.id, fee, day);
+    setConfigOpen(false);
+  }
+
+  return (
+    <motion.div variants={reducedMotion ? undefined : rowVariants} layout>
+      {/* Fila principal */}
+      <div className="bg-white border border-border rounded-xl px-4 py-3 flex items-center gap-3">
+        {/* Avatar */}
+        <div
+          className="w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-[11px] shrink-0"
+          style={{ background: avatarColor }}
+        >
+          {getInitials(m.fullName)}
+        </div>
+
+        {/* Info */}
+        <div className="flex-1 min-w-0">
+          <p className="text-[13px] font-bold text-foreground truncate">{m.fullName}</p>
+          <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+            {payment && sc && StatusIcon ? (
+              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full flex items-center gap-1" style={{ background: sc.bg, color: sc.text }}>
+                <StatusIcon className="w-2.5 h-2.5" />
+                {STATUS_LABELS[payment.status]} · {fmt.format(payment.amount)}
+              </span>
+            ) : configured ? (
+              <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(142,135,168,0.10)', color: '#8E87A8' }}>
+                Sin cobro · {fmt.format(m.monthlyFee!)}
+              </span>
+            ) : (
+              <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(142,135,168,0.08)', color: '#8E87A8' }}>
+                Sin configurar
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Acciones */}
+        <div className="flex items-center gap-1.5 shrink-0">
+          {/* Marcar pagado */}
+          {isPendingOrOverdue && (
+            <button
+              onClick={() => onMarkPaid(payment!.id)}
+              className="px-2 py-1 rounded-lg text-[10px] font-bold cursor-pointer"
+              style={{ background: 'rgba(6,214,160,0.12)', color: '#06D6A0' }}
+            >
+              Cobrar
+            </button>
+          )}
+
+          {/* Generar pago PENDING */}
+          {configured && !payment && (
+            <button
+              onClick={() => onGenerate(m.id, m.monthlyFee!)}
+              disabled={generating}
+              className="px-2 py-1 rounded-lg text-[10px] font-bold cursor-pointer"
+              style={{ background: 'rgba(67,97,238,0.10)', color: '#4361EE', opacity: generating ? 0.5 : 1 }}
+            >
+              {generating ? '...' : '+ Cobro'}
+            </button>
+          )}
+
+          {/* WhatsApp */}
+          {isPendingOrOverdue && (
+            <motion.button
+              onClick={() => contactPhone && (window.open(buildWhatsAppUrl(contactPhone, m.fullName, payment!.amount, filterMonth, filterYear, clubName), '_blank'), onSentWa(waKey))}
+              disabled={!contactPhone}
+              whileHover={contactPhone && !reducedMotion ? { scale: 1.08 } : {}}
+              whileTap={contactPhone && !reducedMotion ? { scale: 0.95 } : {}}
+              transition={{ duration: 0.12, ease: EASE_OUT }}
+              className="w-7 h-7 rounded-lg flex items-center justify-center cursor-pointer"
+              title={contactPhone ? 'Recordar por WhatsApp' : 'Sin número de contacto'}
+              style={{
+                background: !contactPhone ? 'rgba(142,135,168,0.10)' : wasSent ? 'rgba(6,214,160,0.15)' : 'rgba(37,211,102,0.12)',
+                cursor: contactPhone ? 'pointer' : 'not-allowed',
+              }}
+            >
+              <AnimatePresence mode="wait">
+                {wasSent
+                  ? <motion.span key="ok" initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }} transition={{ duration: 0.15 }}><Check className="w-3.5 h-3.5" style={{ color: '#06D6A0' }} /></motion.span>
+                  : contactPhone
+                  ? <motion.span key="wa" initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }} transition={{ duration: 0.15 }}><MessageCircle className="w-3.5 h-3.5" style={{ color: '#25D366' }} /></motion.span>
+                  : <motion.span key="no"><PhoneOff className="w-3.5 h-3.5" style={{ color: '#8E87A8' }} /></motion.span>
+                }
+              </AnimatePresence>
+            </motion.button>
+          )}
+
+          {/* Descargar factura */}
+          {payment && (
+            <button
+              onClick={() => downloadInvoicePDF({ ...payment, memberName: m.fullName }, clubName)}
+              className="w-7 h-7 rounded-lg bg-secondary flex items-center justify-center text-muted-foreground cursor-pointer"
+              title="Descargar factura"
+            >
+              <Download className="w-3.5 h-3.5" />
+            </button>
+          )}
+
+          {/* Eliminar pago */}
+          {payment && (
+            <button
+              onClick={() => onDeletePay(payment.id)}
+              disabled={deleting}
+              className="w-7 h-7 rounded-lg bg-red-50 flex items-center justify-center text-red-400 cursor-pointer"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
+          )}
+
+          {/* Configurar tarifa */}
+          <button
+            onClick={openConfig}
+            className="w-7 h-7 rounded-lg flex items-center justify-center cursor-pointer"
+            title="Configurar tarifa"
+            style={{ background: configOpen ? 'rgba(124,58,237,0.12)' : 'rgba(142,135,168,0.08)' }}
+          >
+            {configOpen
+              ? <ChevronUp className="w-3.5 h-3.5" style={{ color: '#7C3AED' }} />
+              : <Settings className="w-3.5 h-3.5" style={{ color: '#8E87A8' }} />
+            }
+          </button>
+        </div>
+      </div>
+
+      {/* Panel inline de configuración */}
+      <AnimatePresence>
+        {configOpen && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.22, ease: EASE_OUT }}
+            className="overflow-hidden"
+          >
+            <div
+              className="mx-1 mb-1 px-4 py-3 rounded-b-xl flex items-end gap-3 flex-wrap"
+              style={{ background: 'rgba(124,58,237,0.04)', border: '1px solid rgba(124,58,237,0.10)', borderTop: 'none' }}
+            >
+              <div className="flex-1 min-w-[120px]">
+                <label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground block mb-1">Tarifa mensual</label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[12px] font-bold" style={{ color: '#7C3AED' }}>$</span>
+                  <input
+                    className="w-full pl-6 pr-3 h-9 rounded-lg border border-border text-[13px] bg-white focus:outline-none focus:ring-2 focus:ring-purple-300"
+                    placeholder="0"
+                    value={feeInput ? Number(feeInput).toLocaleString('es-CO') : ''}
+                    onChange={e => setFeeInput(e.target.value.replace(/\./g, '').replace(/\D/g, ''))}
+                  />
+                </div>
+              </div>
+              <div className="w-24">
+                <label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground block mb-1">Día de cobro</label>
+                <input
+                  type="number" min={1} max={31}
+                  className="w-full px-3 h-9 rounded-lg border border-border text-[13px] bg-white focus:outline-none focus:ring-2 focus:ring-purple-300"
+                  placeholder="ej. 5"
+                  value={dayInput}
+                  onChange={e => setDayInput(e.target.value)}
+                />
+              </div>
+              <button
+                onClick={handleSaveConfig}
+                disabled={configSaving || !feeInput || !dayInput}
+                className="h-9 px-4 rounded-lg text-[12px] font-bold text-white cursor-pointer disabled:opacity-50"
+                style={{ background: 'linear-gradient(135deg,#7C3AED,#4361EE)' }}
+              >
+                {configSaving ? '...' : 'Guardar'}
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
+  );
+}
+
+// ─── Página principal ─────────────────────────────────────────────────────────
 export default function FinanzasPage() {
   const { getToken } = useAuth();
   const reducedMotion = useReducedMotion();
   const qc = useQueryClient();
-  const [tab, setTab]             = useState<'pagos' | 'estado' | 'flujo'>('pagos');
+
+  const [tab, setTab]             = useState<'mensualidades' | 'flujo'>('mensualidades');
   const [clubName, setClubName]   = useState('VeloClub');
   const [filterMonth, setFilterMonth] = useState(now.getMonth() + 1);
   const [filterYear, setFilterYear]   = useState(now.getFullYear());
   const [sentWa, setSentWa]       = useState<Set<string>>(new Set());
-  const [generatingPay, setGeneratingPay] = useState<string | null>(null);
 
   // UI state
-  const [payTab, setPayTab]         = useState<typeof PAY_TABS[number]>('Todos');
-  const [payOpen, setPayOpen]       = useState(false);
-  const [payForm, setPayForm]       = useState({
+  const [generatingMonth, setGeneratingMonth] = useState(false);
+  const [generatingPay, setGeneratingPay]     = useState<string | null>(null);
+  const [deletingPay, setDeletingPay]         = useState<string | null>(null);
+  const [configSaving, setConfigSaving]       = useState<string | null>(null);
+  const [payOpen, setPayOpen]                 = useState(false);
+  const [payForm, setPayForm]                 = useState({
     memberId: '', amount: '', month: String(now.getMonth() + 1),
     year: String(now.getFullYear()), status: 'PAID', notes: '',
   });
   const [savingPay, setSavingPay]   = useState(false);
   const [payError, setPayError]     = useState<string | null>(null);
-  const [deletingPay, setDeletingPay] = useState<string | null>(null);
-  const [flowOpen, setFlowOpen]       = useState(false);
-  const [flowForm, setFlowForm]       = useState({ type: 'INCOME', amount: '', description: '', date: '' });
-  const [savingFlow, setSavingFlow]   = useState(false);
-  const [flowError, setFlowError]     = useState<string | null>(null);
+  const [flowOpen, setFlowOpen]     = useState(false);
+  const [flowForm, setFlowForm]     = useState({ type: 'INCOME', amount: '', description: '', date: '' });
+  const [savingFlow, setSavingFlow] = useState(false);
+  const [flowError, setFlowError]   = useState<string | null>(null);
   const [deletingFlow, setDeletingFlow] = useState<string | null>(null);
 
   // ── Datos con caché ──────────────────────────────────────────────────────────
@@ -131,11 +349,10 @@ export default function FinanzasPage() {
     queryFn: async () => { const token = await getToken(); return apiFetch<{ entries: CashEntry[] }>(`/cashflow?month=${filterMonth}&year=${filterYear}`, { token }); },
   });
 
-  const members  = membersData?.members  ?? [];
-  const payments = paymentsData?.payments ?? [];
-  const entries  = cashflowData?.entries  ?? [];
+  const allMembers = membersData?.members  ?? [];
+  const payments   = paymentsData?.payments ?? [];
+  const entries    = cashflowData?.entries  ?? [];
 
-  // Nombre del club (sin bloquear)
   useEffect(() => {
     getToken().then(token =>
       apiFetch<{ club: { name: string } }>('/clubs/settings', { token })
@@ -144,68 +361,64 @@ export default function FinanzasPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // SSE invalida caché → TanStack Query refetch en background sin spinner
   useClubStream((ev) => {
     if (ev === 'payments') qc.invalidateQueries({ queryKey: ['payments'] });
     if (ev === 'cashflow') qc.invalidateQueries({ queryKey: ['cashflow'] });
     if (ev === 'members')  qc.invalidateQueries({ queryKey: QK.members() });
   });
 
-  // ── Estado de deportistas (computed) ─────────────────────────────────────────
-  const studentStatus = useMemo(() => {
-    const students = members.filter(m => m.role === 'STUDENT');
+  // ── Vista unificada de deportistas ───────────────────────────────────────────
+  const studentRows = useMemo(() => {
+    const students = allMembers.filter(m => m.role === 'STUDENT');
     return students.map(m => {
-      const pay = payments.find(p => p.memberId === m.id);
+      // Busca el pago más relevante del mes (OVERDUE > PENDING > PAID > primero)
+      const monthPayments = payments.filter(p => p.memberId === m.id);
+      const pay = monthPayments.find(p => p.status === 'OVERDUE')
+               ?? monthPayments.find(p => p.status === 'PENDING')
+               ?? monthPayments[0]
+               ?? null;
       const configured = !!(m.monthlyFee && m.paymentDueDay);
-      return { member: m, payment: pay ?? null, configured };
+      return { member: m, payment: pay, configured };
     }).sort((a, b) => {
-      // Ordenar: OVERDUE → PENDING → sin pago → PAID → sin configurar
-      const order: Record<string, number> = { OVERDUE: 0, PENDING: 1, NONE: 2, PAID: 3, UNCONFIGURED: 4 };
-      const keyA = !a.configured ? 'UNCONFIGURED' : !a.payment ? 'NONE' : a.payment.status;
-      const keyB = !b.configured ? 'UNCONFIGURED' : !b.payment ? 'NONE' : b.payment.status;
+      const order: Record<string, number> = { OVERDUE: 0, PENDING: 1, NONE_CFG: 2, NONE: 3, PAID: 4 };
+      const keyA = !a.payment
+        ? (a.configured ? 'NONE_CFG' : 'NONE')
+        : a.payment.status;
+      const keyB = !b.payment
+        ? (b.configured ? 'NONE_CFG' : 'NONE')
+        : b.payment.status;
       return (order[keyA] ?? 5) - (order[keyB] ?? 5);
     });
-  }, [members, payments]);
+  }, [allMembers, payments]);
 
-  // Pagos helpers
-  const filteredPay = payments.filter(p => {
-    const f = PAY_FILTER[payTab];
-    return f === null || p.status === f;
-  });
-  const totalPaid    = payments.filter(p => p.status === 'PAID').reduce((s, p) => s + p.amount, 0);
-  const totalPending = payments.filter(p => p.status !== 'PAID').reduce((s, p) => s + p.amount, 0);
-
-  async function handleSavePay() {
-    if (!payForm.memberId || !payForm.amount) return;
-    setSavingPay(true); setPayError(null);
-    try {
-      const token = await getToken();
-      const created = await apiFetch<{ payment: Payment }>('/payments', {
-        method: 'POST', token,
-        body: JSON.stringify({
-          memberId: payForm.memberId, amount: parseFloat(payForm.amount),
-          month: parseInt(payForm.month), year: parseInt(payForm.year),
-          status: payForm.status, notes: payForm.notes || undefined,
-        }),
-      });
-      setPayOpen(false);
-      invalidatePay(); invalidateFlow();
-      const memberName = members.find(m => m.id === payForm.memberId)?.fullName ?? '';
-      if (created.payment.status === 'PAID') {
-        downloadInvoicePDF({ ...created.payment, memberName }, clubName);
-      }
-    } catch (e) { setPayError(e instanceof Error ? e.message : 'Error'); }
-    finally { setSavingPay(false); }
-  }
-
-  function handleWhatsApp(phone: string, memberName: string, amount: number, payId?: string) {
-    const url = buildWhatsAppUrl(phone, memberName, amount, filterMonth, filterYear, clubName);
-    window.open(url, '_blank');
-    if (payId) setSentWa(prev => new Set(prev).add(payId));
-  }
-
+  // ── Invalidadores ────────────────────────────────────────────────────────────
   const invalidatePay  = () => qc.invalidateQueries({ queryKey: QK.payments(filterMonth, filterYear) });
   const invalidateFlow = () => qc.invalidateQueries({ queryKey: QK.cashflow(filterMonth, filterYear) });
+
+  // ── Resumen ──────────────────────────────────────────────────────────────────
+  const totalPaid    = payments.filter(p => p.status === 'PAID').reduce((s, p) => s + p.amount, 0);
+  const totalPending = payments.filter(p => p.status !== 'PAID').reduce((s, p) => s + p.amount, 0);
+  const countPaid    = studentRows.filter(r => r.payment?.status === 'PAID').length;
+  const countPending = studentRows.filter(r => r.payment && r.payment.status !== 'PAID').length;
+  const countNone    = studentRows.filter(r => !r.payment && r.configured).length;
+
+  // ── Acciones de mensualidades ────────────────────────────────────────────────
+  async function handleGenerateMonth() {
+    setGeneratingMonth(true);
+    try {
+      const token = await getToken();
+      const res = await apiFetch<{ created: number; skipped: number }>('/payments/generate-month', {
+        method: 'POST', token,
+        body: JSON.stringify({ month: filterMonth, year: filterYear }),
+      });
+      invalidatePay();
+      if (res.created === 0) alert(`Todos los cobros del mes ya estaban generados (${res.skipped} omitidos).`);
+    } catch (e) {
+      alert(e instanceof Error ? e.message : 'Error al generar cobros');
+    } finally {
+      setGeneratingMonth(false);
+    }
+  }
 
   async function handleMarkPaid(id: string) {
     const token = await getToken();
@@ -214,7 +427,7 @@ export default function FinanzasPage() {
   }
 
   async function handleDeletePay(id: string) {
-    if (!confirm('¿Eliminar este pago?')) return;
+    if (!confirm('¿Eliminar este cobro?')) return;
     setDeletingPay(id);
     try {
       const token = await getToken();
@@ -236,7 +449,42 @@ export default function FinanzasPage() {
     finally { setGeneratingPay(null); }
   }
 
-  // Flujo helpers
+  async function handleConfigSave(memberId: string, monthlyFee: number, paymentDueDay: number) {
+    setConfigSaving(memberId);
+    try {
+      const token = await getToken();
+      await apiFetch(`/members/${memberId}`, {
+        method: 'PUT', token,
+        body: JSON.stringify({ monthlyFee, paymentDueDay }),
+      });
+      qc.invalidateQueries({ queryKey: QK.members() });
+    } finally { setConfigSaving(null); }
+  }
+
+  async function handleSavePay() {
+    if (!payForm.memberId || !payForm.amount) return;
+    setSavingPay(true); setPayError(null);
+    try {
+      const token = await getToken();
+      const created = await apiFetch<{ payment: Payment }>('/payments', {
+        method: 'POST', token,
+        body: JSON.stringify({
+          memberId: payForm.memberId, amount: parseFloat(payForm.amount),
+          month: parseInt(payForm.month), year: parseInt(payForm.year),
+          status: payForm.status, notes: payForm.notes || undefined,
+        }),
+      });
+      setPayOpen(false);
+      invalidatePay(); invalidateFlow();
+      const memberName = allMembers.find(m => m.id === payForm.memberId)?.fullName ?? '';
+      if (created.payment.status === 'PAID') {
+        downloadInvoicePDF({ ...created.payment, memberName }, clubName);
+      }
+    } catch (e) { setPayError(e instanceof Error ? e.message : 'Error'); }
+    finally { setSavingPay(false); }
+  }
+
+  // ── Flujo de caja ────────────────────────────────────────────────────────────
   const totalIncome  = entries.filter(e => e.type === 'INCOME').reduce((s, e) => s + e.amount, 0);
   const totalExpense = entries.filter(e => e.type === 'EXPENSE').reduce((s, e) => s + e.amount, 0);
   const balance      = totalIncome - totalExpense;
@@ -248,10 +496,7 @@ export default function FinanzasPage() {
       const token = await getToken();
       await apiFetch('/cashflow', {
         method: 'POST', token,
-        body: JSON.stringify({
-          type: flowForm.type, amount: parseFloat(flowForm.amount),
-          description: flowForm.description, date: flowForm.date || undefined,
-        }),
+        body: JSON.stringify({ type: flowForm.type, amount: parseFloat(flowForm.amount), description: flowForm.description, date: flowForm.date || undefined }),
       });
       setFlowOpen(false);
       setFlowForm({ type: 'INCOME', amount: '', description: '', date: '' });
@@ -270,26 +515,25 @@ export default function FinanzasPage() {
     } finally { setDeletingFlow(null); }
   }
 
+  // ── Render ────────────────────────────────────────────────────────────────────
   return (
     <div className="min-h-full bg-background">
-      {/* Encabezado */}
+      {/* Header */}
       <div className="px-5 py-3 bg-background border-b border-border flex items-center justify-between">
         <h1 className="text-[17px] font-bold text-foreground" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
           Finanzas
         </h1>
-        {tab !== 'estado' && (
-          <button
-            onClick={() => tab === 'pagos'
-              ? (setPayForm({ memberId: '', amount: '', month: String(filterMonth), year: String(filterYear), status: 'PAID', notes: '' }), setPayError(null), setPayOpen(true))
-              : (setFlowForm({ type: 'INCOME', amount: '', description: '', date: '' }), setFlowError(null), setFlowOpen(true))
-            }
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold text-white cursor-pointer"
-            style={{ background: '#4361EE' }}
-          >
-            <Plus className="w-4 h-4" />
-            <span className="hidden sm:inline">{tab === 'pagos' ? 'Registrar' : 'Agregar'}</span>
-          </button>
-        )}
+        <button
+          onClick={() => tab === 'mensualidades'
+            ? (setPayForm({ memberId: '', amount: '', month: String(filterMonth), year: String(filterYear), status: 'PAID', notes: '' }), setPayError(null), setPayOpen(true))
+            : (setFlowForm({ type: 'INCOME', amount: '', description: '', date: '' }), setFlowError(null), setFlowOpen(true))
+          }
+          className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold text-white cursor-pointer"
+          style={{ background: '#4361EE' }}
+        >
+          <Plus className="w-4 h-4" />
+          <span className="hidden sm:inline">{tab === 'mensualidades' ? 'Registrar cobro' : 'Agregar'}</span>
+        </button>
       </div>
 
       <div className="px-4 pt-4 flex flex-col gap-4">
@@ -297,14 +541,13 @@ export default function FinanzasPage() {
         {/* Tabs */}
         <div className="flex gap-1 bg-secondary rounded-xl p-1">
           {([
-            { key: 'pagos',  label: 'Mensualidades' },
-            { key: 'estado', label: 'Estado' },
-            { key: 'flujo',  label: 'Flujo de Caja' },
+            { key: 'mensualidades', label: 'Mensualidades' },
+            { key: 'flujo',        label: 'Flujo de Caja' },
           ] as const).map(({ key, label }) => (
             <button
               key={key}
               onClick={() => setTab(key)}
-              className="flex-1 py-2 rounded-lg text-[11px] font-semibold transition-all cursor-pointer"
+              className="flex-1 py-2 rounded-lg text-[12px] font-semibold transition-all cursor-pointer"
               style={tab === key
                 ? { background: '#fff', color: '#1A1028', boxShadow: '0 1px 4px rgba(0,0,0,0.08)' }
                 : { color: '#8E87A8' }
@@ -328,9 +571,7 @@ export default function FinanzasPage() {
             </SelectContent>
           </Select>
           <Select value={String(filterYear)} onValueChange={v => setFilterYear(parseInt(v ?? ''))}>
-            <SelectTrigger className="w-24 bg-white">
-              <SelectValue />
-            </SelectTrigger>
+            <SelectTrigger className="w-24 bg-white"><SelectValue /></SelectTrigger>
             <SelectContent>
               {[2024, 2025, 2026, 2027].map(y => (
                 <SelectItem key={y} value={String(y)}>{y}</SelectItem>
@@ -339,313 +580,103 @@ export default function FinanzasPage() {
           </Select>
         </div>
 
-        {/* ── PAGOS TAB ─────────────────────────────────────────────────────── */}
-        {tab === 'pagos' && (
+        {/* ── MENSUALIDADES ─────────────────────────────────────────────────── */}
+        {tab === 'mensualidades' && (
           <>
-            <div className="rounded-2xl p-4 text-white" style={{ background: 'linear-gradient(135deg,#4361EE,#7209B7)' }}>
-              <p className="text-[10px] font-semibold tracking-widest opacity-80 uppercase mb-1">
-                Cobrado — {MONTH_NAMES[filterMonth - 1]} {filterYear}
-              </p>
-              <p className="text-4xl font-extrabold mb-3" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
-                {fmt.format(totalPaid)}
-              </p>
-              <div className="flex gap-6">
-                <div>
-                  <p className="text-[10px] opacity-70 uppercase tracking-wide">Total pagado</p>
-                  <p className="text-base font-bold" style={{ fontFamily: 'var(--font-space-grotesk)' }}>{fmt.format(totalPaid)}</p>
-                </div>
-                <div>
-                  <p className="text-[10px] opacity-70 uppercase tracking-wide">Pendiente</p>
-                  <p className="text-base font-bold" style={{ fontFamily: 'var(--font-space-grotesk)', color: '#FFB703' }}>{fmt.format(totalPending)}</p>
-                </div>
+            {/* Resumen + botón generar */}
+            <div className="flex gap-2 items-stretch">
+              {/* Tarjeta cobrado */}
+              <div className="flex-1 rounded-2xl p-3 text-white" style={{ background: 'linear-gradient(135deg,#4361EE,#7209B7)' }}>
+                <p className="text-[9px] font-semibold tracking-widest opacity-80 uppercase mb-0.5">Cobrado</p>
+                <p className="text-[22px] font-extrabold leading-none" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
+                  {fmt.format(totalPaid)}
+                </p>
+                {totalPending > 0 && (
+                  <p className="text-[10px] mt-1 opacity-80">
+                    <span style={{ color: '#FFB703' }}>{fmt.format(totalPending)}</span> pendiente
+                  </p>
+                )}
               </div>
-            </div>
 
-            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
-              {PAY_TABS.map(t => (
-                <button key={t} onClick={() => setPayTab(t)}
-                  className="shrink-0 px-4 py-1.5 rounded-full text-[12px] font-semibold border cursor-pointer"
-                  style={payTab === t
-                    ? { background: '#4361EE', color: '#fff', borderColor: '#4361EE' }
-                    : { background: '#fff', color: '#1A1028', borderColor: 'rgba(120,80,200,0.10)' }
-                  }
-                >{t}</button>
-              ))}
-            </div>
-
-            {loadingPay ? (
-              <div className="space-y-2">
-                {[1,2,3].map(i => (
-                  <div key={i} className="bg-white border border-border rounded-xl px-4 py-3 flex items-center gap-3 animate-pulse">
-                    <div className="flex-1 space-y-2">
-                      <div className="h-3 w-32 bg-secondary rounded-full" />
-                      <div className="h-3 w-20 bg-secondary rounded-full" />
-                    </div>
-                    <div className="h-7 w-16 bg-secondary rounded-lg" />
+              {/* Mini stats */}
+              <div className="flex flex-col gap-1.5 shrink-0">
+                {[
+                  { label: 'Pagados',   value: countPaid,    color: '#06D6A0' },
+                  { label: 'Pendiente', value: countPending, color: '#FFB703' },
+                  { label: 'Sin cobro', value: countNone,    color: '#8E87A8' },
+                ].map(({ label, value, color }) => (
+                  <div key={label} className="bg-white border border-border rounded-xl px-3 py-1.5 flex items-center gap-2">
+                    <p className="text-[16px] font-extrabold" style={{ fontFamily: 'var(--font-space-grotesk)', color }}>{value}</p>
+                    <p className="text-[9px] text-muted-foreground">{label}</p>
                   </div>
                 ))}
               </div>
-            ) : filteredPay.length === 0 ? (
-              <motion.div
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.24, ease: [0.23, 1, 0.32, 1] }}
-                className="bg-white border border-border rounded-xl px-4 py-10 text-center"
-              >
-                <CreditCard className="w-10 h-10 mx-auto mb-3 text-muted-foreground/30" />
-                <p className="text-[13px] font-semibold text-muted-foreground">Sin pagos registrados</p>
-              </motion.div>
-            ) : (
-              <motion.div
-                className="space-y-2 pb-4"
-                variants={reducedMotion ? undefined : listVariants}
-                initial={reducedMotion ? undefined : 'hidden'}
-                animate={reducedMotion ? undefined : 'visible'}
-              >
-                {filteredPay.map(p => {
-                  const sc = STATUS_COLORS[p.status] ?? STATUS_COLORS.PENDING;
-                  const StatusIcon = sc.icon;
-                  const hasPhone = !!p.member.phone;
-                  const wasSent  = sentWa.has(p.id);
-                  const isPending = p.status !== 'PAID';
-
-                  return (
-                    <motion.div
-                      key={p.id}
-                      variants={reducedMotion ? undefined : rowVariants}
-                      className="bg-white border border-border rounded-xl px-4 py-3 flex items-center gap-3"
-                    >
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-0.5">
-                          <p className="text-[13px] font-bold text-foreground truncate">{p.member.fullName}</p>
-                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full shrink-0 flex items-center gap-1" style={{ background: sc.bg, color: sc.text }}>
-                            <StatusIcon className="w-2.5 h-2.5" />{STATUS_LABELS[p.status]}
-                          </span>
-                        </div>
-                        <p className="text-[12px] font-semibold text-foreground">{fmt.format(p.amount)}</p>
-                        <p className="text-[10px] text-muted-foreground">{MONTH_NAMES[p.month - 1]} {p.year}</p>
-                        {p.notes && <p className="text-[10px] text-muted-foreground mt-0.5">{p.notes}</p>}
-                      </div>
-
-                      <div className="flex flex-col gap-1.5 shrink-0 items-end">
-                        {isPending && (
-                          <motion.button
-                            onClick={() => handleMarkPaid(p.id)}
-                            whileHover={{ scale: reducedMotion ? 1 : 1.02 }}
-                            whileTap={{ scale: reducedMotion ? 1 : 0.97 }}
-                            transition={{ duration: 0.12, ease: [0.23, 1, 0.32, 1] }}
-                            className="px-2.5 py-1 rounded-lg text-[10px] font-bold cursor-pointer"
-                            style={{ background: 'rgba(6,214,160,0.12)', color: '#06D6A0' }}
-                          >
-                            Marcar pagado
-                          </motion.button>
-                        )}
-
-                        <div className="flex gap-1.5 items-center">
-                          {isPending && (
-                            <motion.button
-                              onClick={() => p.member.phone && handleWhatsApp(p.member.phone, p.member.fullName, p.amount, p.id)}
-                              whileHover={hasPhone && !reducedMotion ? { scale: 1.08, y: -1 } : {}}
-                              whileTap={hasPhone && !reducedMotion ? { scale: 0.97 } : {}}
-                              transition={{ duration: 0.12, ease: [0.23, 1, 0.32, 1] }}
-                              disabled={!hasPhone}
-                              title={hasPhone ? `Recordar a ${p.member.fullName}` : 'Sin número'}
-                              className="relative w-7 h-7 rounded-lg flex items-center justify-center cursor-pointer"
-                              style={{
-                                background: hasPhone ? (wasSent ? 'rgba(6,214,160,0.15)' : 'rgba(37,211,102,0.12)') : 'rgba(142,135,168,0.10)',
-                                cursor: hasPhone ? 'pointer' : 'not-allowed',
-                              }}
-                            >
-                              <AnimatePresence mode="wait">
-                                {wasSent ? (
-                                  <motion.span key="sent" initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.5, opacity: 0 }} transition={{ duration: 0.18, ease: [0.23, 1, 0.32, 1] }}>
-                                    <Check className="w-3.5 h-3.5" style={{ color: '#06D6A0' }} />
-                                  </motion.span>
-                                ) : hasPhone ? (
-                                  <motion.span key="wa" initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.5, opacity: 0 }} transition={{ duration: 0.18, ease: [0.23, 1, 0.32, 1] }}>
-                                    <MessageCircle className="w-3.5 h-3.5" style={{ color: '#25D366' }} />
-                                  </motion.span>
-                                ) : (
-                                  <motion.span key="no-phone">
-                                    <PhoneOff className="w-3.5 h-3.5" style={{ color: '#8E87A8' }} />
-                                  </motion.span>
-                                )}
-                              </AnimatePresence>
-                            </motion.button>
-                          )}
-
-                          <motion.button
-                            onClick={() => downloadInvoicePDF({ ...p, memberName: p.member.fullName }, clubName)}
-                            whileHover={{ scale: reducedMotion ? 1 : 1.08, y: reducedMotion ? 0 : -1 }}
-                            whileTap={{ scale: reducedMotion ? 1 : 0.97 }}
-                            transition={{ duration: 0.12, ease: [0.23, 1, 0.32, 1] }}
-                            className="w-7 h-7 rounded-lg bg-secondary flex items-center justify-center text-muted-foreground cursor-pointer"
-                            title="Descargar factura"
-                          >
-                            <Download className="w-3.5 h-3.5" />
-                          </motion.button>
-
-                          <motion.button
-                            onClick={() => handleDeletePay(p.id)}
-                            disabled={deletingPay === p.id}
-                            whileHover={{ scale: reducedMotion ? 1 : 1.08, y: reducedMotion ? 0 : -1 }}
-                            whileTap={{ scale: reducedMotion ? 1 : 0.97 }}
-                            transition={{ duration: 0.12, ease: [0.23, 1, 0.32, 1] }}
-                            className="w-7 h-7 rounded-lg bg-red-50 flex items-center justify-center text-red-400 cursor-pointer"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </motion.button>
-                        </div>
-                      </div>
-                    </motion.div>
-                  );
-                })}
-              </motion.div>
-            )}
-          </>
-        )}
-
-        {/* ── ESTADO TAB ────────────────────────────────────────────────────── */}
-        {tab === 'estado' && (
-          <>
-            {/* Mini resumen */}
-            <div className="grid grid-cols-3 gap-2">
-              {[
-                { label: 'Pagados',    value: studentStatus.filter(s => s.payment?.status === 'PAID').length,    color: '#06D6A0' },
-                { label: 'Pendientes', value: studentStatus.filter(s => s.payment && s.payment.status !== 'PAID').length, color: '#FFB703' },
-                { label: 'Sin pago',   value: studentStatus.filter(s => !s.payment && s.configured).length,     color: '#8E87A8' },
-              ].map(({ label, value, color }) => (
-                <div key={label} className="bg-white border border-border rounded-xl p-3 text-center">
-                  <p className="text-2xl font-extrabold" style={{ fontFamily: 'var(--font-space-grotesk)', color }}>{value}</p>
-                  <p className="text-[9px] text-muted-foreground mt-0.5">{label}</p>
-                </div>
-              ))}
             </div>
 
-            {studentStatus.length === 0 ? (
+            {/* Botón generar cobros del mes */}
+            <motion.button
+              whileTap={reducedMotion ? {} : { scale: 0.98 }}
+              transition={{ duration: 0.12, ease: EASE_OUT }}
+              onClick={handleGenerateMonth}
+              disabled={generatingMonth}
+              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-[13px] font-bold cursor-pointer transition-opacity disabled:opacity-60"
+              style={{ background: 'rgba(67,97,238,0.08)', color: '#4361EE', border: '1.5px dashed rgba(67,97,238,0.25)' }}
+            >
+              <Zap className="w-4 h-4" />
+              {generatingMonth ? 'Generando...' : `Generar cobros — ${MONTH_NAMES[filterMonth - 1]} ${filterYear}`}
+            </motion.button>
+
+            {/* Lista deportistas */}
+            {loadingPay && !paymentsData ? (
+              <div className="space-y-2">
+                {[1,2,3,4].map(i => (
+                  <div key={i} className="bg-white border border-border rounded-xl px-4 py-3 flex items-center gap-3 animate-pulse">
+                    <div className="w-9 h-9 rounded-full bg-secondary shrink-0" />
+                    <div className="flex-1 space-y-2">
+                      <div className="h-3 w-32 bg-secondary rounded-full" />
+                      <div className="h-2.5 w-20 bg-secondary rounded-full" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : studentRows.length === 0 ? (
               <div className="bg-white border border-border rounded-xl px-4 py-10 text-center">
-                <Users className="w-10 h-10 mx-auto mb-3 text-muted-foreground/30" />
+                <CreditCard className="w-10 h-10 mx-auto mb-3 text-muted-foreground/30" />
                 <p className="text-[13px] font-semibold text-muted-foreground">No hay deportistas registrados</p>
               </div>
             ) : (
               <motion.div
-                className="space-y-2 pb-4"
+                className="space-y-1.5 pb-28"
                 variants={reducedMotion ? undefined : listVariants}
                 initial={reducedMotion ? undefined : 'hidden'}
                 animate={reducedMotion ? undefined : 'visible'}
               >
-                {studentStatus.map(({ member: m, payment, configured }) => {
-                  const sc = payment ? (STATUS_COLORS[payment.status] ?? STATUS_COLORS.PENDING) : null;
-                  const StatusIcon = sc?.icon;
-                  const hasPendingOrOverdue = payment && payment.status !== 'PAID';
-                  const contactPhone = m.emergencyPhone || m.phone;
-                  const waKey = `estado-${m.id}`;
-                  const wasSent = sentWa.has(waKey);
-
-                  return (
-                    <motion.div
-                      key={m.id}
-                      variants={reducedMotion ? undefined : rowVariants}
-                      className="bg-white border border-border rounded-xl px-4 py-3 flex items-center gap-3"
-                    >
-                      {/* Avatar */}
-                      <div
-                        className="w-9 h-9 rounded-full flex items-center justify-center shrink-0 text-white font-bold text-[12px]"
-                        style={{ background: sc ? sc.text : '#8E87A8' }}
-                      >
-                        {getInitials(m.fullName)}
-                      </div>
-
-                      {/* Info */}
-                      <div className="flex-1 min-w-0">
-                        <p className="text-[13px] font-bold text-foreground truncate">{m.fullName}</p>
-                        <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                          {payment && sc && StatusIcon ? (
-                            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full flex items-center gap-1" style={{ background: sc.bg, color: sc.text }}>
-                              <StatusIcon className="w-2.5 h-2.5" />
-                              {STATUS_LABELS[payment.status]} — {fmt.format(payment.amount)}
-                            </span>
-                          ) : configured ? (
-                            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(142,135,168,0.10)', color: '#8E87A8' }}>
-                              Sin pago este mes
-                            </span>
-                          ) : (
-                            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full flex items-center gap-1" style={{ background: 'rgba(142,135,168,0.08)', color: '#8E87A8' }}>
-                              <Settings className="w-2.5 h-2.5" />Sin configurar
-                            </span>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Acciones */}
-                      <div className="flex flex-col gap-1.5 shrink-0 items-end">
-                        {/* Marcar pagado directamente */}
-                        {hasPendingOrOverdue && (
-                          <button
-                            onClick={() => handleMarkPaid(payment!.id)}
-                            className="px-2.5 py-1 rounded-lg text-[10px] font-bold cursor-pointer"
-                            style={{ background: 'rgba(6,214,160,0.12)', color: '#06D6A0' }}
-                          >
-                            Marcar pagado
-                          </button>
-                        )}
-
-                        <div className="flex gap-1.5 items-center">
-                          {/* Generar pago PENDING si está configurado y no tiene pago este mes */}
-                          {configured && !payment && (
-                            <button
-                              onClick={() => handleGeneratePending(m.id, m.monthlyFee!)}
-                              disabled={generatingPay === m.id}
-                              className="px-2.5 py-1 rounded-lg text-[10px] font-bold cursor-pointer"
-                              style={{ background: 'rgba(67,97,238,0.10)', color: '#4361EE' }}
-                            >
-                              {generatingPay === m.id ? '...' : 'Generar'}
-                            </button>
-                          )}
-
-                          {/* WhatsApp al acudiente — solo si hay pago pendiente/vencido */}
-                          {hasPendingOrOverdue && (
-                            <motion.button
-                              onClick={() => contactPhone && handleWhatsApp(contactPhone, m.fullName, payment!.amount, waKey)}
-                              disabled={!contactPhone}
-                              whileHover={contactPhone && !reducedMotion ? { scale: 1.08, y: -1 } : {}}
-                              whileTap={contactPhone && !reducedMotion ? { scale: 0.97 } : {}}
-                              transition={{ duration: 0.12, ease: [0.23, 1, 0.32, 1] }}
-                              title={contactPhone ? 'Recordar por WhatsApp' : 'Sin número de contacto'}
-                              className="w-7 h-7 rounded-lg flex items-center justify-center cursor-pointer"
-                              style={{
-                                background: !contactPhone ? 'rgba(142,135,168,0.10)' : wasSent ? 'rgba(6,214,160,0.15)' : 'rgba(37,211,102,0.12)',
-                                cursor: contactPhone ? 'pointer' : 'not-allowed',
-                              }}
-                            >
-                              <AnimatePresence mode="wait">
-                                {wasSent ? (
-                                  <motion.span key="sent" initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.5, opacity: 0 }} transition={{ duration: 0.18 }}>
-                                    <Check className="w-3.5 h-3.5" style={{ color: '#06D6A0' }} />
-                                  </motion.span>
-                                ) : contactPhone ? (
-                                  <motion.span key="wa" initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.5, opacity: 0 }} transition={{ duration: 0.18 }}>
-                                    <MessageCircle className="w-3.5 h-3.5" style={{ color: '#25D366' }} />
-                                  </motion.span>
-                                ) : (
-                                  <motion.span key="none">
-                                    <PhoneOff className="w-3.5 h-3.5" style={{ color: '#8E87A8' }} />
-                                  </motion.span>
-                                )}
-                              </AnimatePresence>
-                            </motion.button>
-                          )}
-                        </div>
-                      </div>
-                    </motion.div>
-                  );
-                })}
+                {studentRows.map(({ member: m, payment, configured }) => (
+                  <StudentRow
+                    key={m.id}
+                    member={m}
+                    payment={payment}
+                    clubName={clubName}
+                    filterMonth={filterMonth}
+                    filterYear={filterYear}
+                    reducedMotion={reducedMotion}
+                    sentWa={sentWa}
+                    onSentWa={key => setSentWa(prev => new Set(prev).add(key))}
+                    onMarkPaid={handleMarkPaid}
+                    onGenerate={handleGeneratePending}
+                    onDeletePay={handleDeletePay}
+                    generating={generatingPay === m.id}
+                    deleting={deletingPay === payment?.id}
+                    onConfigSave={handleConfigSave}
+                    configSaving={configSaving === m.id}
+                  />
+                ))}
               </motion.div>
             )}
           </>
         )}
 
-        {/* ── FLUJO DE CAJA TAB ─────────────────────────────────────────────── */}
+        {/* ── FLUJO DE CAJA ─────────────────────────────────────────────────── */}
         {tab === 'flujo' && (
           <>
             <div className="grid grid-cols-3 gap-2">
@@ -664,28 +695,28 @@ export default function FinanzasPage() {
               ))}
             </div>
 
-            {loadingFlow ? (
-              <div className="flex justify-center py-10"><div className="w-6 h-6 rounded-full border-2 border-primary border-t-transparent animate-spin" /></div>
+            {loadingFlow && !cashflowData ? (
+              <div className="flex justify-center py-10">
+                <div className="w-6 h-6 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+              </div>
             ) : entries.length === 0 ? (
               <div className="bg-white border border-border rounded-xl px-4 py-10 text-center">
                 <Wallet className="w-10 h-10 mx-auto mb-3 text-muted-foreground/30" />
                 <p className="text-[13px] font-semibold text-muted-foreground">Sin movimientos este mes</p>
-                <p className="text-[11px] text-muted-foreground mt-1">Los pagos registrados aparecen aquí automáticamente</p>
+                <p className="text-[11px] text-muted-foreground mt-1">Los cobros marcados como pagados aparecen aquí automáticamente</p>
               </div>
             ) : (
-              <div className="space-y-2 pb-4">
+              <div className="space-y-2 pb-28">
                 {entries.map(e => {
                   const isIncome = e.type === 'INCOME';
                   const isAuto   = !!e.paymentId;
                   const dateStr  = new Date(e.date).toLocaleDateString('es-CO', { day: 'numeric', month: 'short' });
                   return (
                     <div key={e.id} className="bg-white border border-border rounded-xl px-4 py-3 flex items-center gap-3">
-                      <div
-                        className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
-                        style={{ background: isIncome ? 'rgba(6,214,160,0.12)' : 'rgba(239,71,111,0.12)' }}
-                      >
+                      <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+                        style={{ background: isIncome ? 'rgba(6,214,160,0.12)' : 'rgba(239,71,111,0.12)' }}>
                         {isIncome
-                          ? <TrendingUp className="w-4 h-4" style={{ color: '#06D6A0' }} />
+                          ? <TrendingUp  className="w-4 h-4" style={{ color: '#06D6A0' }} />
                           : <TrendingDown className="w-4 h-4" style={{ color: '#EF476F' }} />
                         }
                       </div>
@@ -718,28 +749,28 @@ export default function FinanzasPage() {
         )}
       </div>
 
-      {/* Modal registrar pago */}
+      {/* Modal registrar cobro manual */}
       <Dialog open={payOpen} onOpenChange={setPayOpen}>
         <DialogContent className="max-w-sm">
-          <DialogHeader><DialogTitle>Registrar pago</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>Registrar cobro</DialogTitle></DialogHeader>
           <div className="space-y-4 mt-2">
             <div className="space-y-2">
               <Label>Deportista *</Label>
               <Select value={payForm.memberId} onValueChange={v => setPayForm(f => ({ ...f, memberId: v ?? '' }))}>
-                <SelectTrigger><SelectValue placeholder="Seleccionar miembro" /></SelectTrigger>
-                <SelectContent>{members.filter(m => m.role === 'STUDENT').map(m => <SelectItem key={m.id} value={m.id}>{m.fullName}</SelectItem>)}</SelectContent>
+                <SelectTrigger><SelectValue placeholder="Seleccionar deportista" /></SelectTrigger>
+                <SelectContent>
+                  {allMembers.filter(m => m.role === 'STUDENT').map(m => (
+                    <SelectItem key={m.id} value={m.id}>{m.fullName}</SelectItem>
+                  ))}
+                </SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
               <Label>Monto (COP) *</Label>
               <Input
-                type="text"
-                inputMode="numeric"
+                type="text" inputMode="numeric"
                 value={payForm.amount ? Number(payForm.amount).toLocaleString('es-CO') : ''}
-                onChange={e => {
-                  const raw = e.target.value.replace(/\./g, '').replace(/\D/g, '');
-                  setPayForm(f => ({ ...f, amount: raw }));
-                }}
+                onChange={e => setPayForm(f => ({ ...f, amount: e.target.value.replace(/\./g, '').replace(/\D/g, '') }))}
                 placeholder="ej. 150.000"
               />
             </div>
@@ -762,7 +793,7 @@ export default function FinanzasPage() {
             <div className="space-y-2">
               <Label>Estado</Label>
               <Select value={payForm.status} onValueChange={v => setPayForm(f => ({ ...f, status: v ?? 'PAID' }))}>
-                <SelectTrigger><span className="text-sm">{STATUS_LABELS[payForm.status]}</span></SelectTrigger>
+                <SelectTrigger><span className="text-sm">{payForm.status === 'PAID' ? 'Pagado' : payForm.status === 'PENDING' ? 'Pendiente' : 'Vencido'}</span></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="PAID">Pagado</SelectItem>
                   <SelectItem value="PENDING">Pendiente</SelectItem>
@@ -776,13 +807,13 @@ export default function FinanzasPage() {
             </div>
             {payError && <p className="text-sm text-red-600">{payError}</p>}
             <Button onClick={handleSavePay} disabled={savingPay || !payForm.memberId || !payForm.amount} className="w-full">
-              {savingPay ? 'Guardando...' : 'Registrar pago'}
+              {savingPay ? 'Guardando...' : 'Registrar cobro'}
             </Button>
           </div>
         </DialogContent>
       </Dialog>
 
-      {/* Modal agregar entrada manual */}
+      {/* Modal agregar movimiento manual */}
       <Dialog open={flowOpen} onOpenChange={setFlowOpen}>
         <DialogContent className="max-w-sm">
           <DialogHeader><DialogTitle>Agregar movimiento</DialogTitle></DialogHeader>
@@ -810,13 +841,9 @@ export default function FinanzasPage() {
             <div className="space-y-2">
               <Label>Monto (COP) *</Label>
               <Input
-                type="text"
-                inputMode="numeric"
+                type="text" inputMode="numeric"
                 value={flowForm.amount ? Number(flowForm.amount).toLocaleString('es-CO') : ''}
-                onChange={e => {
-                  const raw = e.target.value.replace(/\./g, '').replace(/\D/g, '');
-                  setFlowForm(f => ({ ...f, amount: raw }));
-                }}
+                onChange={e => setFlowForm(f => ({ ...f, amount: e.target.value.replace(/\./g, '').replace(/\D/g, '') }))}
                 placeholder="ej. 80.000"
               />
             </div>

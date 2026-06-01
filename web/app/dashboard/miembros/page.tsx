@@ -53,8 +53,6 @@ const emptyForm = {
   category: '', tipo: '',
   guardianName: '', guardianPhone: '',
   eps: '', role: 'STUDENT', locationIds: [] as string[],
-  paymentDueDay: '' as string,
-  monthlyFee: '' as string,
 };
 
 // ── Animations ─────────────────────────────────────────────────────────────────
@@ -149,8 +147,6 @@ export default function MiembrosPage() {
       guardianPhone: m.emergencyPhone ?? '',
       eps: m.eps ?? '', role: m.role,
       locationIds: m.locations.map(l => l.location.id),
-      paymentDueDay: m.paymentDueDay != null ? String(m.paymentDueDay) : '',
-      monthlyFee: m.monthlyFee != null ? String(m.monthlyFee) : '',
     });
     setStep(0); setError(null); setOpen(true);
   }
@@ -175,8 +171,6 @@ export default function MiembrosPage() {
         eps: form.eps || undefined,
         role: form.role,
         locationIds: form.locationIds,
-        paymentDueDay: form.paymentDueDay ? parseInt(form.paymentDueDay) : null,
-        monthlyFee: form.monthlyFee ? parseFloat(form.monthlyFee) : null,
       });
       if (editing) {
         const roleChanged = editing.role !== form.role;
@@ -250,8 +244,6 @@ export default function MiembrosPage() {
 
   // ── Step content renderer ────────────────────────────────────────────────────
   const currentStep = steps[step]?.id;
-
-  const fmt = new Intl.NumberFormat('es-CO');
 
   // ── Render ───────────────────────────────────────────────────────────────────
   return (
@@ -685,40 +677,6 @@ export default function MiembrosPage() {
                           </SelectContent>
                         </Select>
                       </div>
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest block mb-2">Tarifa mensual</label>
-                          <div className="relative">
-                            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[13px] font-bold" style={{ color: '#7C3AED' }}>$</span>
-                            <Input
-                              placeholder="0"
-                              className="pl-7 h-12 rounded-xl"
-                              value={form.monthlyFee ? Number(form.monthlyFee).toLocaleString('es-CO') : ''}
-                              onChange={e => {
-                                const raw = e.target.value.replace(/\./g, '').replace(/\D/g, '');
-                                setForm(f => ({ ...f, monthlyFee: raw }));
-                              }}
-                            />
-                          </div>
-                        </div>
-                        <div>
-                          <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest block mb-2">Día de pago</label>
-                          <Input
-                            type="number" min={1} max={31}
-                            placeholder="ej. 5"
-                            className="h-12 rounded-xl"
-                            value={form.paymentDueDay}
-                            onChange={e => {
-                              const v = e.target.value;
-                              const n = parseInt(v);
-                              if (v === '' || (n >= 1 && n <= 31)) setForm(f => ({ ...f, paymentDueDay: v }));
-                            }}
-                          />
-                        </div>
-                      </div>
-                      <p className="text-[11px] text-muted-foreground">
-                        El cobro mensual se generará automáticamente el día 1 de cada mes
-                      </p>
                     </div>
                   )}
 

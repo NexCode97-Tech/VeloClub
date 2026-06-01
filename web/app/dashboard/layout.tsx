@@ -298,38 +298,21 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
           {/* Bump circular — abraza el botón + por arriba */}
           {role !== 'STUDENT' && (
-            <>
-              {/* Bump circular — sin borde propio para integrarse con el bar */}
-              <div
-                style={{
-                  position: 'absolute',
-                  width: 74,
-                  height: 74,
-                  borderRadius: '50%',
-                  background: '#FFFFFF',
-                  left: '50%',
-                  transform: 'translateX(-50%)',
-                  top: -4,
-                  zIndex: 0,
-                  pointerEvents: 'none',
-                }}
-              />
-              {/* Puente blanco — cubre el borde superior del bar en el centro
-                  para que bump y bar se vean como una sola superficie continua */}
-              <div
-                style={{
-                  position: 'absolute',
-                  width: 76,
-                  height: 4,
-                  background: '#FFFFFF',
-                  left: '50%',
-                  transform: 'translateX(-50%)',
-                  top: 10,
-                  zIndex: 2,
-                  pointerEvents: 'none',
-                }}
-              />
-            </>
+            <div
+              style={{
+                position: 'absolute',
+                width: 74,
+                height: 74,
+                borderRadius: '50%',
+                background: '#FFFFFF',
+                border: '1px solid rgba(124,58,237,0.14)',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                top: -4,
+                zIndex: 0,
+                pointerEvents: 'none',
+              }}
+            />
           )}
 
           {(() => {

@@ -58,6 +58,32 @@ router.post('/', requireAuth, async (req, res) => {
   res.status(201).json({ entry });
 });
 
+// PATCH /cashflow/:id  (only manual entries)
+router.patch('/:id', requireAuth, async (req, res) => {
+  if (!req.user) return res.status(401).json({ error: 'No autenticado' });
+  const id = String(req.params.id);
+
+  const entry = await prisma.cashEntry.findFirst({ where: { id, clubId: req.user.clubId ?? '' } });
+  if (!entry) return res.status(404).json({ error: 'Entrada no encontrada' });
+  if (entry.paymentId) return res.status(400).json({ error: 'No se puede editar una entrada automática.' });
+
+  const parsed = entrySchema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: parsed.error.issues });
+
+  const updated = await prisma.cashEntry.update({
+    where: { id },
+    data: {
+      type:        parsed.data.type,
+      amount:      parsed.data.amount,
+      description: parsed.data.description,
+      date:        parsed.data.date ? new Date(parsed.data.date) : undefined,
+    },
+  });
+
+  emitToClub(req.user.clubId ?? '', 'cashflow');
+  res.json({ entry: updated });
+});
+
 // DELETE /cashflow/:id  (only manual entries — paymentId must be null)
 router.delete('/:id', requireAuth, async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'No autenticado' });

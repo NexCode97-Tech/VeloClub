@@ -659,6 +659,7 @@ export default function FinanzasPage() {
 
         {/* ── MENSUALIDADES ─────────────────────────────────────────────────── */}
         {tab === 'mensualidades' && (
+          <>
           {/* ── Fila superior: tarjeta + filtros ── */}
           <div className="flex flex-col gap-3 md:flex-row md:gap-4 md:items-stretch">
 
@@ -856,6 +857,7 @@ export default function FinanzasPage() {
                 ))}
               </motion.div>
             )}
+          </>
         )}
 
         {/* ── FLUJO DE CAJA ─────────────────────────────────────────────────── */}

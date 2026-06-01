@@ -734,12 +734,26 @@ export default function FinanzasPage() {
                     )}
                   </div>
                   {/* Logo VeloClub */}
-                  <img
-                    src="/icon-desktop-192.png"
-                    alt="VeloClub"
-                    className="w-10 h-10 object-contain"
-                    style={{ filter: 'brightness(0) invert(1)', opacity: 0.9 }}
-                  />
+                  <div className="flex items-baseline gap-0" style={{ opacity: 0.9 }}>
+                    <span style={{
+                      fontFamily: 'var(--font-space-grotesk)',
+                      fontSize: 26,
+                      fontWeight: 900,
+                      background: 'linear-gradient(160deg, #A78BFA, #fff)',
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                      letterSpacing: '-1px',
+                      lineHeight: 1,
+                    }}>V</span>
+                    <span style={{
+                      fontFamily: 'var(--font-space-grotesk)',
+                      fontSize: 26,
+                      fontWeight: 900,
+                      color: 'rgba(255,255,255,0.95)',
+                      letterSpacing: '-1px',
+                      lineHeight: 1,
+                    }}>C</span>
+                  </div>
                 </div>
               </div>
             </div>

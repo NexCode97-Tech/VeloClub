@@ -276,7 +276,27 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </main>
 
         {/* ── Mobile bottom tab bar — glassmorphism, círculo degradado ── */}
-        <nav className="md:hidden fixed bottom-0 left-0 right-0 z-30" style={{ padding: '10px 16px 20px', pointerEvents: 'none' }}>
+        <nav className="md:hidden fixed bottom-0 left-0 right-0 z-30" style={{ padding: '10px 16px 20px', pointerEvents: 'none', position: 'relative' }}>
+
+          {/* Bump circular — abraza el botón + por arriba */}
+          {role !== 'STUDENT' && (
+            <div
+              style={{
+                position: 'absolute',
+                width: 74,
+                height: 74,
+                borderRadius: '50%',
+                background: 'rgba(255,255,255,0.97)',
+                border: '1px solid rgba(124,58,237,0.14)',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                top: -4,
+                zIndex: 0,
+                pointerEvents: 'none',
+              }}
+            />
+          )}
+
           {(() => {
             const isStudent = role === 'STUDENT';
             const totalSlots = isStudent ? tabItems.length + 1 : tabItems.length;
@@ -284,7 +304,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <div
                 className="relative flex w-full"
                 style={{
-                  background: 'rgba(255,255,255,0.82)',
+                  background: 'rgba(255,255,255,0.97)',
                   backdropFilter: 'blur(20px)',
                   WebkitBackdropFilter: 'blur(20px)',
                   borderRadius: 40,
@@ -292,6 +312,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   border: '1px solid rgba(124,58,237,0.14)',
                   boxShadow: '0 8px 32px rgba(124,58,237,0.13), 0 2px 8px rgba(0,0,0,0.06)',
                   pointerEvents: 'auto',
+                  position: 'relative',
+                  zIndex: 1,
                 }}
               >
                 {/* Círculo deslizante — mismo tamaño que el avatar del UserButton */}

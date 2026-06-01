@@ -651,12 +651,13 @@ export default function FinanzasPage() {
           <>
             {/* Tarjeta débito bancaria */}
             <div
-              className="relative overflow-hidden text-white select-none"
+              className="relative overflow-hidden text-white select-none mx-auto w-full"
               style={{
                 borderRadius: 20,
                 background: 'linear-gradient(135deg, #2B2D8E 0%, #4361EE 45%, #7209B7 100%)',
                 boxShadow: '0 8px 32px rgba(67,97,238,0.35), 0 2px 8px rgba(0,0,0,0.18)',
-                aspectRatio: '1.586 / 1', // ratio estándar tarjeta bancaria
+                aspectRatio: '1.586 / 1',
+                maxWidth: 420,
               }}
             >
               {/* Círculos decorativos de fondo */}

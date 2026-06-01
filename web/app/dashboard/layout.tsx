@@ -293,68 +293,50 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           )}
         </AnimatePresence>
 
-        {/* ── Mobile bottom tab bar — SVG shape con notch convexo ── */}
-        <nav className="md:hidden fixed bottom-0 left-0 right-0 z-30" style={{ padding: '0 16px 20px', pointerEvents: 'none' }}>
-
+        {/* ── Mobile bottom tab bar ── */}
+        <nav
+          className="md:hidden fixed bottom-0 left-0 right-0 z-30"
+          style={{ padding: '0 16px 20px', pointerEvents: 'none' }}
+        >
           {(() => {
             const isStudent = role === 'STUDENT';
             const totalSlots = isStudent ? tabItems.length + 1 : tabItems.length;
             const hasNotch = role !== 'STUDENT';
-            // Dimensiones del bar
-            const BAR_H = 58;
-            const NOTCH_R = 34; // radio del arco convexo
-            const NOTCH_DEPTH = 18; // cuánto sube el arco sobre el bar
-            const PILL_R = 29; // radio de las esquinas pill
-            const SVG_H = BAR_H + NOTCH_DEPTH + 2; // +2 para la sombra
             return (
-              <div
-                className="relative flex w-full"
-                style={{
-                  height: SVG_H,
-                  pointerEvents: 'auto',
-                  paddingTop: hasNotch ? NOTCH_DEPTH + 8 : 8,
-                }}
-              >
-                {/* SVG fondo — pill con notch convexo integrado, una sola forma */}
-                <svg
-                  viewBox={`0 0 400 ${SVG_H}`}
-                  preserveAspectRatio="none"
-                  className="absolute inset-0 w-full h-full"
-                  style={{ pointerEvents: 'none', filter: 'drop-shadow(0 -2px 8px rgba(124,58,237,0.10)) drop-shadow(0 4px 16px rgba(124,58,237,0.08))' }}
+              /* Wrapper con drop-shadow — la sombra sigue la silueta visual de bar + bump */
+              <div style={{
+                filter: 'drop-shadow(0 -2px 6px rgba(124,58,237,0.08)) drop-shadow(0 4px 12px rgba(124,58,237,0.10))',
+                pointerEvents: 'auto',
+              }}>
+                {/* Bar — pill blanco, overflow visible para que el bump salga por arriba */}
+                <div
+                  className="relative flex w-full"
+                  style={{
+                    background: '#FFFFFF',
+                    borderRadius: 40,
+                    padding: '6px 0',
+                    overflow: 'visible',
+                  }}
                 >
-                  <path
-                    d={hasNotch
-                      ? `M${PILL_R},${NOTCH_DEPTH + 2}
-                         L${200 - NOTCH_R - 8},${NOTCH_DEPTH + 2}
-                         C${200 - NOTCH_R + 4},${NOTCH_DEPTH + 2} ${200 - NOTCH_R + 10},${NOTCH_DEPTH - 2} ${200 - NOTCH_R + 16},${NOTCH_DEPTH - 8}
-                         A${NOTCH_R},${NOTCH_R} 0 0,1 ${200 + NOTCH_R - 16},${NOTCH_DEPTH - 8}
-                         C${200 + NOTCH_R - 10},${NOTCH_DEPTH - 2} ${200 + NOTCH_R - 4},${NOTCH_DEPTH + 2} ${200 + NOTCH_R + 8},${NOTCH_DEPTH + 2}
-                         L${400 - PILL_R},${NOTCH_DEPTH + 2}
-                         Q400,${NOTCH_DEPTH + 2} 400,${NOTCH_DEPTH + 2 + PILL_R}
-                         L400,${SVG_H - PILL_R}
-                         Q400,${SVG_H} ${400 - PILL_R},${SVG_H}
-                         L${PILL_R},${SVG_H}
-                         Q0,${SVG_H} 0,${SVG_H - PILL_R}
-                         L0,${NOTCH_DEPTH + 2 + PILL_R}
-                         Q0,${NOTCH_DEPTH + 2} ${PILL_R},${NOTCH_DEPTH + 2}
-                         Z`
-                      : `M${PILL_R},2
-                         L${400 - PILL_R},2
-                         Q400,2 400,${2 + PILL_R}
-                         L400,${SVG_H - PILL_R}
-                         Q400,${SVG_H} ${400 - PILL_R},${SVG_H}
-                         L${PILL_R},${SVG_H}
-                         Q0,${SVG_H} 0,${SVG_H - PILL_R}
-                         L0,${2 + PILL_R}
-                         Q0,2 ${PILL_R},2
-                         Z`
-                    }
-                    fill="#FFFFFF"
-                    stroke="rgba(124,58,237,0.14)"
-                    strokeWidth="1"
-                  />
-                </svg>
-                  {/* Círculo deslizante — mismo tamaño que el avatar del UserButton */}
+                  {/* Bump — hijo del bar, misma superficie blanca, sin borde */}
+                  {hasNotch && (
+                    <div
+                      style={{
+                        position: 'absolute',
+                        width: 76,
+                        height: 76,
+                        borderRadius: '50%',
+                        background: '#FFFFFF',
+                        left: '50%',
+                        transform: 'translateX(-50%)',
+                        top: -18,
+                        zIndex: 0,
+                        pointerEvents: 'none',
+                      }}
+                    />
+                  )}
+
+                  {/* Círculo deslizante */}
                   {activeTabIndex >= 0 && (
                     <div
                       className="absolute pointer-events-none"
@@ -367,88 +349,87 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                         top: 6,
                         transition: 'left 0.35s cubic-bezier(0.34,1.2,0.64,1)',
                         boxShadow: '0 4px 20px rgba(124,58,237,0.40)',
+                        zIndex: 1,
                       }}
                     />
                   )}
 
-                {tabItems.map(({ href, label, icon: Icon }) => {
-                  // Slot del CircleMenu (centro)
-                  if (href === '/dashboard/mas') {
-                    const masItems = ROLE_MAS_ITEMS[role ?? 'ADMIN'] ?? [];
-                    return (
-                      <div
-                        key="mas-circle"
-                        className="flex-1 flex flex-col items-center relative z-[41]"
-                        style={{ marginTop: -28 }}
-                      >
-                        <BottomCircleMenu
-                          items={masItems}
-                          pathname={pathname}
-                          isOpen={masMenuOpen}
-                          onToggle={() => setMasMenuOpen(v => !v)}
-                          onClose={() => setMasMenuOpen(false)}
-                        />
-                        <span
-                          className="text-[9px] tracking-wide leading-none mt-1"
-                          style={{ color: '#8E87A8', fontWeight: 500 }}
+                  {tabItems.map(({ href, label, icon: Icon }) => {
+                    if (href === '/dashboard/mas') {
+                      const masItems = ROLE_MAS_ITEMS[role ?? 'ADMIN'] ?? [];
+                      return (
+                        <div
+                          key="mas-circle"
+                          className="flex-1 flex flex-col items-center relative z-[41]"
+                          style={{ marginTop: -16 }}
                         >
-                          Más
-                        </span>
-                      </div>
-                    );
-                  }
+                          <BottomCircleMenu
+                            items={masItems}
+                            pathname={pathname}
+                            isOpen={masMenuOpen}
+                            onToggle={() => setMasMenuOpen(v => !v)}
+                            onClose={() => setMasMenuOpen(false)}
+                          />
+                          <span
+                            className="text-[9px] tracking-wide leading-none mt-1"
+                            style={{ color: '#8E87A8', fontWeight: 500 }}
+                          >
+                            Más
+                          </span>
+                        </div>
+                      );
+                    }
 
-                  // Tab normal
-                  const active = isTabActive(href);
-                  return (
-                    <Link
-                      key={href}
-                      href={href}
+                    const active = isTabActive(href);
+                    return (
+                      <Link
+                        key={href}
+                        href={href}
+                        className="flex-1 flex flex-col items-center relative z-10"
+                        style={{ gap: 4, paddingBottom: 2 }}
+                      >
+                        <div className="flex items-center justify-center" style={{ width: 44, height: 44 }}>
+                          <Icon
+                            className="w-[26px] h-[26px]"
+                            strokeWidth={active ? 2.2 : 1.7}
+                            style={{ color: active ? '#fff' : '#8E87A8', transition: 'color 0.2s' }}
+                          />
+                        </div>
+                        <span
+                          className="text-[9px] tracking-wide leading-none"
+                          style={{
+                            color: active ? accentColor : '#8E87A8',
+                            fontWeight: active ? 700 : 500,
+                            transition: 'color 0.2s',
+                          }}
+                        >
+                          {label}
+                        </span>
+                      </Link>
+                    );
+                  })}
+
+                  {isStudent && (
+                    <div
                       className="flex-1 flex flex-col items-center relative z-10"
                       style={{ gap: 4, paddingBottom: 2 }}
                     >
                       <div className="flex items-center justify-center" style={{ width: 44, height: 44 }}>
-                        <Icon
-                          className="w-[26px] h-[26px]"
-                          strokeWidth={active ? 2.2 : 1.7}
-                          style={{ color: active ? '#fff' : '#8E87A8', transition: 'color 0.2s' }}
+                        <UserButton
+                          appearance={{
+                            elements: {
+                              avatarBox: { width: 38, height: 38, borderRadius: '50%' },
+                              userButtonPopoverCard: { borderRadius: 16 },
+                            },
+                          }}
                         />
                       </div>
-                      <span
-                        className="text-[9px] tracking-wide leading-none"
-                        style={{
-                          color: active ? accentColor : '#8E87A8',
-                          fontWeight: active ? 700 : 500,
-                          transition: 'color 0.2s',
-                        }}
-                      >
-                        {label}
+                      <span className="text-[9px] tracking-wide leading-none" style={{ color: '#8E87A8', fontWeight: 500 }}>
+                        Perfil
                       </span>
-                    </Link>
-                  );
-                })}
-
-                {/* Tab Perfil para STUDENT: Clerk UserButton — mismo tamaño 44px */}
-                {isStudent && (
-                  <div
-                    className="flex-1 flex flex-col items-center relative z-10"
-                    style={{ gap: 4, paddingBottom: 2 }}
-                  >
-                    <div className="flex items-center justify-center" style={{ width: 44, height: 44 }}>
-                      <UserButton
-                        appearance={{
-                          elements: {
-                            avatarBox: { width: 38, height: 38, borderRadius: '50%' },
-                            userButtonPopoverCard: { borderRadius: 16 },
-                          },
-                        }}
-                      />
                     </div>
-                    <span className="text-[9px] tracking-wide leading-none" style={{ color: '#8E87A8', fontWeight: 500 }}>
-                      Perfil
-                    </span>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
             );
           })()}

@@ -1,7 +1,7 @@
 'use client';
 
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
-import { useState, useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { Plus, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
@@ -15,6 +15,9 @@ export interface CircleMenuItem {
 interface BottomCircleMenuProps {
   items: CircleMenuItem[];
   pathname: string;
+  isOpen: boolean;
+  onToggle: () => void;
+  onClose: () => void;
 }
 
 // Abanico hacia arriba — de -155° a -25° (arco superior)
@@ -32,36 +35,22 @@ function pointOnArc(i: number, n: number, r: number) {
 // Radio amplio para que los módulos estén bien separados
 const RADIUS = 138;
 
-export function BottomCircleMenu({ items, pathname }: BottomCircleMenuProps) {
-  const [isOpen, setIsOpen] = useState(false);
+export function BottomCircleMenu({ items, pathname, isOpen, onToggle, onClose }: BottomCircleMenuProps) {
   const router = useRouter();
   const reducedMotion = useReducedMotion();
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
 
   // Cierra automáticamente al navegar
-  useEffect(() => { setIsOpen(false); }, [pathname]);
+  useEffect(() => { onCloseRef.current(); }, [pathname]);
 
   function handleItemClick(href: string) {
-    setIsOpen(false);
+    onClose();
     router.push(href);
   }
 
   return (
     <>
-      {/* Overlay invisible — solo cierra al tocar fuera, sin oscurecer */}
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            key="overlay"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.15 }}
-            className="fixed inset-0"
-            style={{ zIndex: 36 }}
-            onClick={() => setIsOpen(false)}
-          />
-        )}
-      </AnimatePresence>
 
       {/* Contenedor del botón + ítems */}
       <div
@@ -154,7 +143,7 @@ export function BottomCircleMenu({ items, pathname }: BottomCircleMenuProps) {
         <motion.button
           whileTap={reducedMotion ? {} : { scale: 0.94 }}
           transition={{ duration: 0.12, ease: [0.23, 1, 0.32, 1] as [number, number, number, number] }}
-          onClick={() => setIsOpen(v => !v)}
+          onClick={onToggle}
           aria-label={isOpen ? 'Cerrar menú' : 'Abrir menú'}
           className="relative flex items-center justify-center rounded-full cursor-pointer"
           style={{

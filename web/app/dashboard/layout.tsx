@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { UserButton, useAuth, useSession } from '@clerk/nextjs';
 import { useEffect, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { apiFetch } from '@/lib/api-client';
 import LoadingScreen from '@/components/ui/loading-screen';
 import { BottomCircleMenu } from '@/components/ui/bottom-circle-menu';
@@ -109,6 +110,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const { session } = useSession();
   const [role, setRole] = useState<string | null>(null);
   const [checking, setChecking] = useState(true);
+  const [masMenuOpen, setMasMenuOpen] = useState(false);
 
   useEffect(() => {
     if (!isLoaded) return;
@@ -275,6 +277,22 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           {children}
         </main>
 
+        {/* ── Overlay oscuro cuando el megamenú "Más" está abierto ── */}
+        <AnimatePresence>
+          {masMenuOpen && (
+            <motion.div
+              key="mas-overlay"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.22, ease: [0.23, 1, 0.32, 1] }}
+              className="md:hidden fixed inset-0"
+              style={{ background: 'rgba(15,10,30,0.48)', zIndex: 29, backdropFilter: 'blur(2px)', WebkitBackdropFilter: 'blur(2px)' }}
+              onClick={() => setMasMenuOpen(false)}
+            />
+          )}
+        </AnimatePresence>
+
         {/* ── Mobile bottom tab bar — glassmorphism, círculo degradado ── */}
         <nav className="md:hidden fixed bottom-0 left-0 right-0 z-30" style={{ padding: '10px 16px 20px', pointerEvents: 'none', position: 'relative' }}>
 
@@ -286,7 +304,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 width: 74,
                 height: 74,
                 borderRadius: '50%',
-                background: 'rgba(255,255,255,0.97)',
+                background: '#FFFFFF',
                 border: '1px solid rgba(124,58,237,0.14)',
                 left: '50%',
                 transform: 'translateX(-50%)',
@@ -304,7 +322,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <div
                 className="relative flex w-full"
                 style={{
-                  background: 'rgba(255,255,255,0.97)',
+                  background: '#FFFFFF',
                   backdropFilter: 'blur(20px)',
                   WebkitBackdropFilter: 'blur(20px)',
                   borderRadius: 40,
@@ -343,7 +361,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                         className="flex-1 flex flex-col items-center relative z-[41]"
                         style={{ marginTop: -14 }}
                       >
-                        <BottomCircleMenu items={masItems} pathname={pathname} />
+                        <BottomCircleMenu
+                          items={masItems}
+                          pathname={pathname}
+                          isOpen={masMenuOpen}
+                          onToggle={() => setMasMenuOpen(v => !v)}
+                          onClose={() => setMasMenuOpen(false)}
+                        />
                         <span
                           className="text-[9px] tracking-wide leading-none mt-1"
                           style={{ color: '#8E87A8', fontWeight: 500 }}

@@ -447,29 +447,31 @@ export default function MiembrosPage() {
         )}
       </AnimatePresence>
 
-      {/* Sheet */}
+      {/* Modal centrado */}
       <AnimatePresence>
         {open && (
           <motion.div
             key="sheet"
-            className="fixed bottom-0 left-0 right-0 z-50 bg-white flex flex-col"
-            style={{
-              borderRadius: '28px 28px 0 0',
-              maxHeight: '94dvh',
-              boxShadow: '0 -8px 40px rgba(124,58,237,0.14)',
-            }}
-            initial={reducedMotion ? { opacity: 0 } : { y: '100%' }}
-            animate={reducedMotion ? { opacity: 1 } : { y: 0 }}
-            exit={reducedMotion ? { opacity: 0 } : { y: '100%' }}
-            transition={{ duration: 0.46, ease: EASE_IOS }}
+            className="fixed inset-0 z-50 flex items-center justify-center px-4"
+            style={{ pointerEvents: 'none' }}
           >
-            {/* Handle */}
-            <div className="flex justify-center pt-3 pb-1 shrink-0">
-              <div className="w-9 h-1 rounded-full" style={{ background: 'rgba(124,58,237,0.15)' }} />
-            </div>
+            <motion.div
+              className="bg-white flex flex-col w-full"
+              style={{
+                maxWidth: 480,
+                borderRadius: 28,
+                maxHeight: '92dvh',
+                boxShadow: '0 24px 64px rgba(124,58,237,0.18), 0 4px 16px rgba(0,0,0,0.08)',
+                pointerEvents: 'auto',
+              }}
+              initial={reducedMotion ? { opacity: 0 } : { opacity: 0, scale: 0.95, y: -12 }}
+              animate={reducedMotion ? { opacity: 1 } : { opacity: 1, scale: 1, y: 0 }}
+              exit={reducedMotion ? { opacity: 0 } : { opacity: 0, scale: 0.95, y: -12 }}
+              transition={{ duration: 0.26, ease: EASE_OUT }}
+            >
 
             {/* Header */}
-            <div className="px-6 pt-2 pb-3 flex items-start justify-between shrink-0">
+            <div className="px-6 pt-5 pb-3 flex items-start justify-between shrink-0">
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: '#7C3AED' }}>
                   {editing ? 'Editar miembro' : 'Nuevo miembro'}
@@ -796,6 +798,7 @@ export default function MiembrosPage() {
                 ) : editing ? 'Guardar cambios' : 'Crear miembro'}
               </motion.button>
             </div>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>

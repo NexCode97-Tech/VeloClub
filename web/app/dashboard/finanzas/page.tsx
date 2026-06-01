@@ -659,10 +659,10 @@ export default function FinanzasPage() {
 
         {/* ── MENSUALIDADES ─────────────────────────────────────────────────── */}
         {tab === 'mensualidades' && (
-          <div className="md:grid md:grid-cols-[360px,1fr] md:gap-6 md:items-start flex flex-col gap-4">
+          <div className="flex flex-col gap-4 md:flex-row md:gap-6 md:items-start">
 
           {/* ── Columna izquierda: tarjeta + generar ── */}
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-4 md:w-80 md:shrink-0">
 
             {/* Tarjeta débito bancaria */}
             <div
@@ -763,7 +763,7 @@ export default function FinanzasPage() {
           </div>
 
           {/* ── Columna derecha: filtros + búsqueda + lista ── */}
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-3 flex-1 min-w-0">
 
             {/* Filtros de estado */}
             <div className="grid grid-cols-3 gap-2">

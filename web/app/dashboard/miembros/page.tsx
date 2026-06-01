@@ -18,7 +18,8 @@ import {
 } from '@/components/ui/dialog';
 import {
   Plus, Pencil, Trash2, Users, Search, Download,
-  FileSpreadsheet, Upload, X, ChevronRight,
+  FileSpreadsheet, Upload, X, ChevronRight, Eye,
+  Phone, Mail, Calendar, MapPin, Shield, Heart,
 } from 'lucide-react';
 import { downloadMembersPDF } from '@/lib/pdf';
 import { downloadMembersTemplate, parseMembersExcel } from '@/lib/excel';
@@ -68,6 +69,9 @@ export default function MiembrosPage() {
   const [search, setSearch]     = useState('');
   const [roleFilter, setRoleFilter] = useState<'ALL'|'STUDENT'|'COACH'|'ADMIN'>('ALL');
   const [clubName, setClubName] = useState('VeloClub');
+
+  // View detail state
+  const [viewMember, setViewMember] = useState<Member | null>(null);
 
   // Panel state
   const [open, setOpen]         = useState(false);
@@ -372,6 +376,9 @@ export default function MiembrosPage() {
                       )}
                     </div>
                     <div className="flex flex-col gap-1">
+                      <button onClick={() => setViewMember(m)} className="w-7 h-7 rounded-lg bg-secondary flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors">
+                        <Eye className="w-3.5 h-3.5" />
+                      </button>
                       <button onClick={() => openEdit(m)} className="w-7 h-7 rounded-lg bg-secondary flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors">
                         <Pencil className="w-3.5 h-3.5" />
                       </button>
@@ -421,6 +428,7 @@ export default function MiembrosPage() {
                         <td className="px-4 py-3 text-muted-foreground">{m.tipo ?? '—'}</td>
                         <td className="px-4 py-3">
                           <div className="flex gap-1 justify-end">
+                            <Button size="sm" variant="ghost" onClick={() => setViewMember(m)}><Eye className="w-4 h-4" /></Button>
                             <Button size="sm" variant="ghost" onClick={() => openEdit(m)}><Pencil className="w-4 h-4" /></Button>
                             <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive" onClick={() => handleDelete(m.id)}><Trash2 className="w-4 h-4" /></Button>
                           </div>
@@ -774,6 +782,192 @@ export default function MiembrosPage() {
             </div>
             </motion.div>
           </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Modal Ver Deportista ───────────────────────────────────────────── */}
+      <AnimatePresence>
+        {viewMember && (
+          <>
+            <motion.div
+              key="view-backdrop"
+              className="fixed inset-0 z-40"
+              style={{ background: 'rgba(15,10,30,0.52)', backdropFilter: 'blur(3px)', WebkitBackdropFilter: 'blur(3px)' }}
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              onClick={() => setViewMember(null)}
+            />
+            <motion.div
+              key="view-modal"
+              className="fixed inset-0 z-50 flex items-center justify-center px-4"
+              style={{ pointerEvents: 'none' }}
+            >
+              <motion.div
+                className="bg-white flex flex-col w-full overflow-hidden"
+                style={{
+                  maxWidth: 440,
+                  borderRadius: 28,
+                  maxHeight: '88dvh',
+                  boxShadow: '0 24px 64px rgba(124,58,237,0.18), 0 4px 16px rgba(0,0,0,0.08)',
+                  pointerEvents: 'auto',
+                }}
+                initial={reducedMotion ? { opacity: 0 } : { opacity: 0, scale: 0.95, y: -12 }}
+                animate={reducedMotion ? { opacity: 1 } : { opacity: 1, scale: 1, y: 0 }}
+                exit={reducedMotion ? { opacity: 0 } : { opacity: 0, scale: 0.95, y: -12 }}
+                transition={{ duration: 0.26, ease: EASE_OUT }}
+              >
+                {/* Hero del deportista */}
+                <div className="relative px-6 pt-6 pb-5" style={{ background: ROLE_GRADIENT[viewMember.role] ?? ROLE_GRADIENT.STUDENT }}>
+                  <button
+                    onClick={() => setViewMember(null)}
+                    className="absolute top-4 right-4 w-8 h-8 rounded-full flex items-center justify-center"
+                    style={{ background: 'rgba(255,255,255,0.2)' }}
+                  >
+                    <X className="w-4 h-4 text-white" />
+                  </button>
+                  <div className="flex items-center gap-4">
+                    <div className="w-16 h-16 rounded-2xl flex items-center justify-center text-xl font-extrabold text-white shrink-0"
+                      style={{ background: 'rgba(255,255,255,0.2)' }}>
+                      {initials(viewMember.fullName)}
+                    </div>
+                    <div>
+                      <p className="text-white/70 text-[11px] font-semibold uppercase tracking-widest mb-0.5">
+                        {ROLES[viewMember.role]}
+                      </p>
+                      <h2 className="text-white font-extrabold text-[18px] leading-tight" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
+                        {viewMember.fullName}
+                      </h2>
+                      {viewMember.category && (
+                        <p className="text-white/80 text-[12px] mt-0.5">{viewMember.category}{viewMember.tipo ? ` · ${viewMember.tipo}` : ''}</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Info scrollable */}
+                <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
+
+                  {/* Contacto */}
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-3">Contacto</p>
+                    <div className="space-y-2.5">
+                      {viewMember.phone && (
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(124,58,237,0.08)' }}>
+                            <Phone className="w-3.5 h-3.5" style={{ color: '#7C3AED' }} />
+                          </div>
+                          <div>
+                            <p className="text-[10px] text-muted-foreground">Teléfono</p>
+                            <p className="text-[13px] font-semibold text-foreground">{viewMember.phone}</p>
+                          </div>
+                        </div>
+                      )}
+                      {viewMember.email && (
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(124,58,237,0.08)' }}>
+                            <Mail className="w-3.5 h-3.5" style={{ color: '#7C3AED' }} />
+                          </div>
+                          <div>
+                            <p className="text-[10px] text-muted-foreground">Correo</p>
+                            <p className="text-[13px] font-semibold text-foreground">{viewMember.email}</p>
+                          </div>
+                        </div>
+                      )}
+                      {viewMember.birthDate && (
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(124,58,237,0.08)' }}>
+                            <Calendar className="w-3.5 h-3.5" style={{ color: '#7C3AED' }} />
+                          </div>
+                          <div>
+                            <p className="text-[10px] text-muted-foreground">Nacimiento</p>
+                            <p className="text-[13px] font-semibold text-foreground">
+                              {new Date(viewMember.birthDate).toLocaleDateString('es-CO', { day: 'numeric', month: 'long', year: 'numeric' })}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Acudiente */}
+                  {(viewMember.emergencyContact || viewMember.emergencyPhone) && (
+                    <div>
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-3">Acudiente</p>
+                      <div className="space-y-2.5">
+                        {viewMember.emergencyContact && (
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(67,97,238,0.08)' }}>
+                              <Shield className="w-3.5 h-3.5" style={{ color: '#4361EE' }} />
+                            </div>
+                            <div>
+                              <p className="text-[10px] text-muted-foreground">Nombre</p>
+                              <p className="text-[13px] font-semibold text-foreground">{viewMember.emergencyContact}</p>
+                            </div>
+                          </div>
+                        )}
+                        {viewMember.emergencyPhone && (
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(67,97,238,0.08)' }}>
+                              <Phone className="w-3.5 h-3.5" style={{ color: '#4361EE' }} />
+                            </div>
+                            <div>
+                              <p className="text-[10px] text-muted-foreground">Teléfono</p>
+                              <p className="text-[13px] font-semibold text-foreground">{viewMember.emergencyPhone}</p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Salud */}
+                  {viewMember.eps && (
+                    <div>
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-3">Salud</p>
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(6,214,160,0.08)' }}>
+                          <Heart className="w-3.5 h-3.5" style={{ color: '#06D6A0' }} />
+                        </div>
+                        <div>
+                          <p className="text-[10px] text-muted-foreground">EPS</p>
+                          <p className="text-[13px] font-semibold text-foreground">{viewMember.eps}</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Sedes */}
+                  {viewMember.locations.length > 0 && (
+                    <div>
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-3">Sedes</p>
+                      <div className="flex flex-wrap gap-2">
+                        {viewMember.locations.map(l => (
+                          <div key={l.location.id} className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl" style={{ background: 'rgba(124,58,237,0.08)' }}>
+                            <MapPin className="w-3 h-3 shrink-0" style={{ color: '#7C3AED' }} />
+                            <span className="text-[12px] font-semibold" style={{ color: '#7C3AED' }}>{l.location.name}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Acción editar */}
+                <div className="px-6 py-4 border-t border-border shrink-0">
+                  <motion.button
+                    whileTap={reducedMotion ? {} : { scale: 0.97 }}
+                    transition={{ duration: 0.12, ease: EASE_OUT }}
+                    onClick={() => { setViewMember(null); openEdit(viewMember); }}
+                    className="w-full py-3.5 rounded-2xl font-bold text-[14px] text-white flex items-center justify-center gap-2"
+                    style={{ background: 'linear-gradient(135deg, #7C3AED, #4361EE)' }}
+                  >
+                    <Pencil className="w-4 h-4" />
+                    Editar información
+                  </motion.button>
+                </div>
+              </motion.div>
+            </motion.div>
+          </>
         )}
       </AnimatePresence>
 

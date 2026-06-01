@@ -96,7 +96,7 @@ interface StudentRowProps {
   onDeletePay: (id: string) => void;
   generating: boolean;
   deleting: boolean;
-  onConfigSave: (memberId: string, monthlyFee: number, paymentDueDay: number) => void;
+  onConfigSave: (memberId: string, fullName: string, monthlyFee: number, paymentDueDay: number) => void;
   configSaving: boolean;
 }
 
@@ -128,7 +128,7 @@ function StudentRow({
     const fee = parseFloat(feeInput.replace(/\./g, '').replace(',', '.'));
     const day = parseInt(dayInput);
     if (!fee || !day || day < 1 || day > 31) return;
-    onConfigSave(m.id, fee, day);
+    onConfigSave(m.id, m.fullName, fee, day);
     setConfigOpen(false);
   }
 
@@ -449,15 +449,17 @@ export default function FinanzasPage() {
     finally { setGeneratingPay(null); }
   }
 
-  async function handleConfigSave(memberId: string, monthlyFee: number, paymentDueDay: number) {
+  async function handleConfigSave(memberId: string, fullName: string, monthlyFee: number, paymentDueDay: number) {
     setConfigSaving(memberId);
     try {
       const token = await getToken();
       await apiFetch(`/members/${memberId}`, {
         method: 'PUT', token,
-        body: JSON.stringify({ monthlyFee, paymentDueDay }),
+        body: JSON.stringify({ fullName, monthlyFee, paymentDueDay }),
       });
       qc.invalidateQueries({ queryKey: QK.members() });
+    } catch (e) {
+      console.error('Error al guardar config:', e);
     } finally { setConfigSaving(null); }
   }
 

@@ -33,7 +33,7 @@ function pointOnArc(i: number, n: number, r: number) {
 }
 
 // Radio mayor: más separación entre ítems y más altura sobre el bar
-const RADIUS = 134;
+const RADIUS = 155;
 
 export function BottomCircleMenu({ items, pathname, isOpen, onToggle, onClose }: BottomCircleMenuProps) {
   const router = useRouter();

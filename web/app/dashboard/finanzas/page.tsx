@@ -918,6 +918,28 @@ export default function FinanzasPage() {
                           )}
                         </div>
                       </div>
+                      {!isAuto && (
+                        <div className="flex items-center gap-1 shrink-0">
+                          <button
+                            onClick={() => openEditFlow(e)}
+                            className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors hover:bg-secondary"
+                            title="Editar"
+                          >
+                            <Pencil className="w-3.5 h-3.5 text-muted-foreground" />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteFlow(e.id)}
+                            disabled={deletingFlow === e.id}
+                            className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors hover:bg-red-50"
+                            title="Eliminar"
+                          >
+                            {deletingFlow === e.id
+                              ? <div className="w-3.5 h-3.5 rounded-full border-2 border-red-400 border-t-transparent animate-spin" />
+                              : <Trash2 className="w-3.5 h-3.5 text-red-400" />
+                            }
+                          </button>
+                        </div>
+                      )}
                     </div>
                   );
                 })}

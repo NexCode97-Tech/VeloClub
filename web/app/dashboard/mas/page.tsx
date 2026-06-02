@@ -13,13 +13,13 @@ const ITEMS_BY_ROLE: Record<string, { label: string; icon: React.ElementType; co
     { label: 'Calendario', icon: CalendarDays,      color: '#EF476F', href: '/dashboard/calendario' },
     { label: 'Sedes',      icon: MapPin,            color: '#06D6A0', href: '/dashboard/sedes' },
     { label: 'Reportes',   icon: BarChart2,         color: '#4361EE', href: '/dashboard/reportes' },
-    { label: 'Ayuda',      icon: HelpCircle,        color: '#8E87A8', href: '/dashboard/ayuda' },
+    { label: 'Ayuda',      icon: HelpCircle,        color: '#8E87A8', href: '/dashboard/ajustes/ayuda' },
   ],
   COACH: [
     { label: 'Resultados', icon: Trophy,        color: '#F59E0B', href: '/dashboard/logros' },
     { label: 'Calendario', icon: CalendarDays,  color: '#EF476F', href: '/dashboard/calendario' },
     { label: 'Sedes',      icon: MapPin,        color: '#06D6A0', href: '/dashboard/sedes' },
-    { label: 'Ayuda',      icon: HelpCircle,    color: '#8E87A8', href: '/dashboard/ayuda' },
+    { label: 'Ayuda',      icon: HelpCircle,    color: '#8E87A8', href: '/dashboard/ajustes/ayuda' },
   ],
   STUDENT: [],
 };

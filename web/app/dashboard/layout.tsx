@@ -157,7 +157,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           if (!allowed) { router.replace('/dashboard'); return; }
         }
         if (userRole === 'COACH') {
-          const COACH_BLOCKED = ['/dashboard/finanzas', '/dashboard/reportes', '/dashboard/pagos', '/dashboard/flujo-caja'];
+          const COACH_BLOCKED = ['/dashboard/finanzas', '/dashboard/reportes', '/dashboard/pagos'];
           const blocked = COACH_BLOCKED.some(r => pathname === r || pathname.startsWith(r + '/'));
           if (blocked) { router.replace('/dashboard'); return; }
         }

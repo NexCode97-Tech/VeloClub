@@ -1,10 +1,17 @@
 import { Router, Request } from 'express';
 import { z } from 'zod';
 import { Prisma } from '@prisma/client';
+import { v2 as cloudinary } from 'cloudinary';
 import { requireAuth } from '../auth/middleware';
 import { prisma } from '../db/client';
 import { emitToClub } from '../lib/sse';
 import { addToAllowlist, removeFromAllowlist, revokeClerkAccess, revokeClerkSessions } from '../lib/clerk-allowlist';
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME?.trim(),
+  api_key:    process.env.CLOUDINARY_API_KEY?.trim(),
+  api_secret: process.env.CLOUDINARY_API_SECRET?.trim(),
+});
 
 const router = Router();
 
@@ -54,7 +61,7 @@ router.get('/me', requireAuth, async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'No autenticado' });
   const member = await prisma.member.findFirst({
     where: { clerkId: req.auth?.clerkId, clubId: req.user.clubId ?? '' },
-    select: { id: true, fullName: true, role: true },
+    select: { id: true, fullName: true, role: true, pictureUrl: true },
   });
   if (!member) return res.status(404).json({ error: 'Miembro no encontrado' });
   res.json({ member });
@@ -212,6 +219,41 @@ router.post('/:id/upload', requireAuth, async (req, res) => {
     data: fieldMap[field],
   });
   res.json({ member });
+});
+
+// POST /members/me/picture — deportista sube su propia foto de perfil
+router.post('/me/picture', requireAuth, async (req, res) => {
+  if (!req.auth) return res.status(401).json({ error: 'No autenticado' });
+
+  const member = await prisma.member.findFirst({
+    where: { clerkId: req.auth.clerkId },
+  });
+  if (!member) return res.status(404).json({ error: 'Miembro no encontrado' });
+
+  const { base64 } = req.body as { base64: string };
+  if (!base64) return res.status(400).json({ error: 'base64 requerido' });
+
+  try {
+    // Eliminar foto anterior si existe
+    if (member.picturePublicId) {
+      await cloudinary.uploader.destroy(member.picturePublicId).catch(() => {});
+    }
+
+    const result = await cloudinary.uploader.upload(base64, {
+      folder: 'veloclub/members',
+      transformation: [{ width: 400, height: 400, crop: 'fill', gravity: 'face' }],
+    });
+
+    const updated = await prisma.member.update({
+      where: { id: member.id },
+      data: { pictureUrl: result.secure_url, picturePublicId: result.public_id },
+    });
+
+    res.json({ pictureUrl: updated.pictureUrl });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : 'Error al subir imagen';
+    res.status(500).json({ error: msg });
+  }
 });
 
 export default router;

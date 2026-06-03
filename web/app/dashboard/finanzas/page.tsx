@@ -138,200 +138,190 @@ function StudentRow({
     setConfigOpen(false);
   }
 
+  // ── Chip de estado ──────────────────────────────────────────────────────────
+  const statusChip = payment && sc && StatusIcon ? (
+    <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-full whitespace-nowrap" style={{ background: sc.bg, color: sc.text }}>
+      <StatusIcon className="w-2.5 h-2.5 shrink-0" />
+      {STATUS_LABELS[payment.status]} · {fmt.format(payment.amount)}
+    </span>
+  ) : configured ? (
+    <span className="inline-block text-[10px] font-semibold px-2 py-1 rounded-full whitespace-nowrap" style={{ background: 'rgba(142,135,168,0.10)', color: '#8E87A8' }}>
+      Sin cobro · {fmt.format(m.monthlyFee!)}
+    </span>
+  ) : (
+    <span className="inline-block text-[10px] font-semibold px-2 py-1 rounded-full" style={{ background: 'rgba(142,135,168,0.08)', color: '#8E87A8' }}>
+      Sin configurar
+    </span>
+  );
+
+  // ── Botón de acción principal ────────────────────────────────────────────────
+  const mainAction = payment?.status === 'PAID' ? (
+    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-bold shrink-0" style={{ background: 'rgba(6,214,160,0.12)', color: '#06D6A0' }}>
+      <Check className="w-3 h-3" /> Pagado
+    </span>
+  ) : isPendingOrOverdue ? (
+    <button onClick={() => !marking && onMarkPaid(payment!.id)} disabled={marking}
+      className="px-2.5 py-1 rounded-lg text-[10px] font-bold cursor-pointer disabled:opacity-50 shrink-0"
+      style={{ background: 'rgba(67,97,238,0.12)', color: '#4361EE' }}>
+      {marking ? '...' : 'Pagado'}
+    </button>
+  ) : configured && !payment ? (
+    <button onClick={() => !generating && onGenerate(m.id, m.monthlyFee!)} disabled={generating}
+      className="px-2.5 py-1 rounded-lg text-[10px] font-bold cursor-pointer disabled:opacity-50 shrink-0"
+      style={{ background: 'rgba(6,214,160,0.12)', color: '#06D6A0' }}>
+      {generating ? '...' : 'Cobrar'}
+    </button>
+  ) : null;
+
+  // ── Botones icono ────────────────────────────────────────────────────────────
+  const iconButtons = (
+    <div className="flex items-center gap-1">
+      {isPendingOrOverdue && (
+        <motion.button
+          onClick={() => contactPhone && (window.open(buildWhatsAppUrl(contactPhone, m.fullName, payment!.amount, filterMonth, filterYear, clubName), '_blank'), onSentWa(waKey))}
+          disabled={!contactPhone}
+          whileTap={contactPhone && !reducedMotion ? { scale: 0.95 } : {}}
+          transition={{ duration: 0.12, ease: EASE_OUT }}
+          className="w-7 h-7 rounded-lg flex items-center justify-center"
+          title={contactPhone ? 'Recordar por WhatsApp' : 'Sin número de contacto'}
+          style={{ background: !contactPhone ? 'rgba(142,135,168,0.10)' : wasSent ? 'rgba(6,214,160,0.15)' : 'rgba(37,211,102,0.12)', cursor: contactPhone ? 'pointer' : 'not-allowed' }}
+        >
+          <AnimatePresence mode="wait">
+            {wasSent
+              ? <motion.span key="ok" initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }} transition={{ duration: 0.15 }}><Check className="w-3.5 h-3.5" style={{ color: '#06D6A0' }} /></motion.span>
+              : contactPhone
+              ? <motion.span key="wa" initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }} transition={{ duration: 0.15 }}><MessageCircle className="w-3.5 h-3.5" style={{ color: '#25D366' }} /></motion.span>
+              : <motion.span key="no"><PhoneOff className="w-3.5 h-3.5" style={{ color: '#8E87A8' }} /></motion.span>
+            }
+          </AnimatePresence>
+        </motion.button>
+      )}
+      {payment && (
+        <button onClick={() => downloadInvoicePDF({ ...payment, memberName: m.fullName }, clubName)}
+          className="w-7 h-7 rounded-lg bg-secondary flex items-center justify-center text-muted-foreground cursor-pointer" title="Descargar factura">
+          <Download className="w-3.5 h-3.5" />
+        </button>
+      )}
+      {payment && (
+        <button onClick={() => onOpenReceipt(payment)}
+          title={payment.receiptUrl ? 'Ver comprobante' : 'Subir comprobante'}
+          className="w-7 h-7 rounded-lg flex items-center justify-center cursor-pointer transition-colors"
+          style={{ background: payment.receiptUrl ? 'rgba(6,214,160,0.12)' : 'rgba(120,80,200,0.08)' }}>
+          <Receipt className="w-3.5 h-3.5" style={{ color: payment.receiptUrl ? '#06D6A0' : '#8E87A8' }} />
+        </button>
+      )}
+      {payment && (
+        <button onClick={() => onDeletePay(payment.id)} disabled={deleting}
+          className="w-7 h-7 rounded-lg bg-red-50 flex items-center justify-center text-red-400 cursor-pointer disabled:opacity-50">
+          <Trash2 className="w-3.5 h-3.5" />
+        </button>
+      )}
+      <button onClick={openConfig}
+        className="w-7 h-7 rounded-lg flex items-center justify-center cursor-pointer" title="Configurar tarifa"
+        style={{ background: configOpen ? 'rgba(124,58,237,0.12)' : 'rgba(142,135,168,0.08)' }}>
+        {configOpen
+          ? <ChevronUp className="w-3.5 h-3.5" style={{ color: '#7C3AED' }} />
+          : <Settings className="w-3.5 h-3.5" style={{ color: '#8E87A8' }} />
+        }
+      </button>
+    </div>
+  );
+
+  // ── Panel de configuración (compartido) ──────────────────────────────────────
+  const configPanel = (
+    <AnimatePresence>
+      {configOpen && (
+        <motion.div
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: 'auto' }}
+          exit={{ opacity: 0, height: 0 }}
+          transition={{ duration: 0.22, ease: EASE_OUT }}
+          className="overflow-hidden"
+        >
+          <div className="px-4 py-3 flex items-end gap-3 flex-wrap"
+            style={{ background: 'rgba(124,58,237,0.04)', borderTop: '1px solid rgba(124,58,237,0.10)' }}>
+            <div className="flex-1 min-w-[120px]">
+              <label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground block mb-1">Tarifa mensual</label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[12px] font-bold" style={{ color: '#7C3AED' }}>$</span>
+                <input className="w-full pl-6 pr-3 h-9 rounded-lg border border-border text-[13px] bg-white focus:outline-none focus:ring-2 focus:ring-purple-300"
+                  placeholder="0"
+                  value={feeInput ? Number(feeInput).toLocaleString('es-CO') : ''}
+                  onChange={e => setFeeInput(e.target.value.replace(/\./g, '').replace(/\D/g, ''))} />
+              </div>
+            </div>
+            <div className="w-24">
+              <label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground block mb-1">Día de cobro</label>
+              <input type="number" min={1} max={31}
+                className="w-full px-3 h-9 rounded-lg border border-border text-[13px] bg-white focus:outline-none focus:ring-2 focus:ring-purple-300"
+                placeholder="ej. 5" value={dayInput} onChange={e => setDayInput(e.target.value)} />
+            </div>
+            <button onClick={handleSaveConfig} disabled={configSaving || !feeInput || !dayInput}
+              className="h-9 px-4 rounded-lg text-[12px] font-bold text-white cursor-pointer disabled:opacity-50"
+              style={{ background: 'linear-gradient(135deg,#7C3AED,#4361EE)' }}>
+              {configSaving ? '...' : 'Guardar'}
+            </button>
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+
   return (
     <motion.div variants={reducedMotion ? undefined : rowVariants} layout>
-      {/* Fila principal — dos filas internas para evitar que el chip se parta */}
-      <div className="bg-white border border-border rounded-xl px-4 py-3">
-        {/* Fila superior: avatar + [nombre + fecha] + botones icono */}
+
+      {/* ── MOBILE — lista compacta ── */}
+      <div className="md:hidden bg-white border border-border rounded-xl px-4 py-3">
         <div className="flex items-start gap-3">
-          {/* Avatar */}
-          <div
-            className="w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-[11px] shrink-0 mt-0.5"
-            style={{ background: avatarColor }}
-          >
+          <div className="w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-[11px] shrink-0 mt-0.5"
+            style={{ background: avatarColor }}>
             {getInitials(m.fullName)}
           </div>
-
-          {/* Nombre + fecha de cobro en la misma columna */}
           <div className="flex-1 min-w-0">
             <p className="text-[13px] font-bold text-foreground truncate">{m.fullName}</p>
             {configured && m.paymentDueDay && (
-              <p className="text-[10px] font-semibold text-muted-foreground mt-0.5">
-                Cobro el día {m.paymentDueDay} de cada mes
-              </p>
+              <p className="text-[10px] font-semibold text-muted-foreground mt-0.5">Cobro el día {m.paymentDueDay} de cada mes</p>
             )}
           </div>
-
-          {/* Botones icono */}
-          <div className="flex items-center gap-1 shrink-0">
-            {/* WhatsApp */}
-            {isPendingOrOverdue && (
-              <motion.button
-                onClick={() => contactPhone && (window.open(buildWhatsAppUrl(contactPhone, m.fullName, payment!.amount, filterMonth, filterYear, clubName), '_blank'), onSentWa(waKey))}
-                disabled={!contactPhone}
-                whileTap={contactPhone && !reducedMotion ? { scale: 0.95 } : {}}
-                transition={{ duration: 0.12, ease: EASE_OUT }}
-                className="w-7 h-7 rounded-lg flex items-center justify-center"
-                title={contactPhone ? 'Recordar por WhatsApp' : 'Sin número de contacto'}
-                style={{
-                  background: !contactPhone ? 'rgba(142,135,168,0.10)' : wasSent ? 'rgba(6,214,160,0.15)' : 'rgba(37,211,102,0.12)',
-                  cursor: contactPhone ? 'pointer' : 'not-allowed',
-                }}
-              >
-                <AnimatePresence mode="wait">
-                  {wasSent
-                    ? <motion.span key="ok" initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }} transition={{ duration: 0.15 }}><Check className="w-3.5 h-3.5" style={{ color: '#06D6A0' }} /></motion.span>
-                    : contactPhone
-                    ? <motion.span key="wa" initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }} transition={{ duration: 0.15 }}><MessageCircle className="w-3.5 h-3.5" style={{ color: '#25D366' }} /></motion.span>
-                    : <motion.span key="no"><PhoneOff className="w-3.5 h-3.5" style={{ color: '#8E87A8' }} /></motion.span>
-                  }
-                </AnimatePresence>
-              </motion.button>
-            )}
-
-            {/* Descargar factura */}
-            {payment && (
-              <button
-                onClick={() => downloadInvoicePDF({ ...payment, memberName: m.fullName }, clubName)}
-                className="w-7 h-7 rounded-lg bg-secondary flex items-center justify-center text-muted-foreground cursor-pointer"
-                title="Descargar factura"
-              >
-                <Download className="w-3.5 h-3.5" />
-              </button>
-            )}
-
-            {/* Comprobante de pago */}
-            {payment && (
-              <button
-                onClick={() => onOpenReceipt(payment)}
-                title={payment.receiptUrl ? 'Ver comprobante' : 'Subir comprobante'}
-                className="w-7 h-7 rounded-lg flex items-center justify-center cursor-pointer transition-colors"
-                style={{ background: payment.receiptUrl ? 'rgba(6,214,160,0.12)' : 'rgba(120,80,200,0.08)' }}
-              >
-                <Receipt className="w-3.5 h-3.5" style={{ color: payment.receiptUrl ? '#06D6A0' : '#8E87A8' }} />
-              </button>
-            )}
-
-            {/* Eliminar pago */}
-            {payment && (
-              <button
-                onClick={() => onDeletePay(payment.id)}
-                disabled={deleting}
-                className="w-7 h-7 rounded-lg bg-red-50 flex items-center justify-center text-red-400 cursor-pointer disabled:opacity-50"
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-              </button>
-            )}
-
-            {/* Configurar tarifa */}
-            <button
-              onClick={openConfig}
-              className="w-7 h-7 rounded-lg flex items-center justify-center cursor-pointer"
-              title="Configurar tarifa"
-              style={{ background: configOpen ? 'rgba(124,58,237,0.12)' : 'rgba(142,135,168,0.08)' }}
-            >
-              {configOpen
-                ? <ChevronUp className="w-3.5 h-3.5" style={{ color: '#7C3AED' }} />
-                : <Settings className="w-3.5 h-3.5" style={{ color: '#8E87A8' }} />
-              }
-            </button>
-          </div>
+          {iconButtons}
         </div>
-
-        {/* Fila 3: chip de estado + botón Cobrar/Pagado */}
         <div className="flex items-center gap-2 mt-2 ml-12">
-          <div className="flex-1 min-w-0">
-            {payment && sc && StatusIcon ? (
-              <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-full whitespace-nowrap" style={{ background: sc.bg, color: sc.text }}>
-                <StatusIcon className="w-2.5 h-2.5 shrink-0" />
-                {STATUS_LABELS[payment.status]} · {fmt.format(payment.amount)}
-              </span>
-            ) : configured ? (
-              <span className="inline-block text-[10px] font-semibold px-2 py-1 rounded-full whitespace-nowrap" style={{ background: 'rgba(142,135,168,0.10)', color: '#8E87A8' }}>
-                Sin cobro · {fmt.format(m.monthlyFee!)}
-              </span>
-            ) : (
-              <span className="inline-block text-[10px] font-semibold px-2 py-1 rounded-full" style={{ background: 'rgba(142,135,168,0.08)', color: '#8E87A8' }}>
-                Sin configurar
-              </span>
-            )}
-          </div>
-
-          {/* Flujo: Sin pago → Cobrar (crea PENDING) → Pagado (marca PAID) */}
-          {payment?.status === 'PAID' ? (
-            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-bold shrink-0" style={{ background: 'rgba(6,214,160,0.12)', color: '#06D6A0' }}>
-              <Check className="w-3 h-3" /> Pagado
-            </span>
-          ) : isPendingOrOverdue ? (
-            <button
-              onClick={() => !marking && onMarkPaid(payment!.id)}
-              disabled={marking}
-              className="px-2.5 py-1 rounded-lg text-[10px] font-bold cursor-pointer disabled:opacity-50 shrink-0"
-              style={{ background: 'rgba(67,97,238,0.12)', color: '#4361EE' }}
-            >
-              {marking ? '...' : 'Pagado'}
-            </button>
-          ) : configured && !payment ? (
-            <button
-              onClick={() => !generating && onGenerate(m.id, m.monthlyFee!)}
-              disabled={generating}
-              className="px-2.5 py-1 rounded-lg text-[10px] font-bold cursor-pointer disabled:opacity-50 shrink-0"
-              style={{ background: 'rgba(6,214,160,0.12)', color: '#06D6A0' }}
-            >
-              {generating ? '...' : 'Cobrar'}
-            </button>
-          ) : null}
+          <div className="flex-1 min-w-0">{statusChip}</div>
+          {mainAction}
         </div>
+        {configPanel}
       </div>
 
-      {/* Panel inline de configuración */}
-      <AnimatePresence>
-        {configOpen && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.22, ease: EASE_OUT }}
-            className="overflow-hidden"
-          >
-            <div
-              className="mx-1 mb-1 px-4 py-3 rounded-b-xl flex items-end gap-3 flex-wrap"
-              style={{ background: 'rgba(124,58,237,0.04)', border: '1px solid rgba(124,58,237,0.10)', borderTop: 'none' }}
-            >
-              <div className="flex-1 min-w-[120px]">
-                <label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground block mb-1">Tarifa mensual</label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[12px] font-bold" style={{ color: '#7C3AED' }}>$</span>
-                  <input
-                    className="w-full pl-6 pr-3 h-9 rounded-lg border border-border text-[13px] bg-white focus:outline-none focus:ring-2 focus:ring-purple-300"
-                    placeholder="0"
-                    value={feeInput ? Number(feeInput).toLocaleString('es-CO') : ''}
-                    onChange={e => setFeeInput(e.target.value.replace(/\./g, '').replace(/\D/g, ''))}
-                  />
-                </div>
-              </div>
-              <div className="w-24">
-                <label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground block mb-1">Día de cobro</label>
-                <input
-                  type="number" min={1} max={31}
-                  className="w-full px-3 h-9 rounded-lg border border-border text-[13px] bg-white focus:outline-none focus:ring-2 focus:ring-purple-300"
-                  placeholder="ej. 5"
-                  value={dayInput}
-                  onChange={e => setDayInput(e.target.value)}
-                />
-              </div>
-              <button
-                onClick={handleSaveConfig}
-                disabled={configSaving || !feeInput || !dayInput}
-                className="h-9 px-4 rounded-lg text-[12px] font-bold text-white cursor-pointer disabled:opacity-50"
-                style={{ background: 'linear-gradient(135deg,#7C3AED,#4361EE)' }}
-              >
-                {configSaving ? '...' : 'Guardar'}
-              </button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* ── DESKTOP — tarjeta ── */}
+      <div className="hidden md:block bg-white rounded-2xl overflow-hidden"
+        style={{ border: '1px solid rgba(120,80,200,0.09)', boxShadow: '0 2px 12px rgba(124,58,237,0.05)' }}>
+        {/* Cabecera con color del estado */}
+        <div className="px-5 pt-4 pb-3 flex items-center gap-3"
+          style={{ borderBottom: '1px solid rgba(120,80,200,0.07)' }}>
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold text-[12px] shrink-0"
+            style={{ background: sc ? sc.text : '#8E87A8', boxShadow: `0 3px 10px ${sc ? sc.text : '#8E87A8'}40` }}>
+            {getInitials(m.fullName)}
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-[14px] font-bold truncate" style={{ color: '#1A1028' }}>{m.fullName}</p>
+            {configured && m.paymentDueDay && (
+              <p className="text-[11px] font-medium" style={{ color: '#8E87A8' }}>Cobro el día {m.paymentDueDay} de cada mes</p>
+            )}
+          </div>
+        </div>
+        {/* Estado + monto */}
+        <div className="px-5 py-3 flex items-center justify-between gap-3"
+          style={{ borderBottom: '1px solid rgba(120,80,200,0.06)' }}>
+          <div>{statusChip}</div>
+          {mainAction}
+        </div>
+        {/* Acciones */}
+        <div className="px-4 py-3 flex items-center justify-between">
+          {iconButtons}
+        </div>
+        {configPanel}
+      </div>
+
     </motion.div>
   );
 }
@@ -891,7 +881,7 @@ export default function FinanzasPage() {
               </div>
             ) : (
               <motion.div
-                className="space-y-1.5 pb-28"
+                className="space-y-1.5 pb-28 md:grid md:grid-cols-2 md:gap-4 md:space-y-0 md:pb-8"
                 variants={reducedMotion ? undefined : listVariants}
                 initial={reducedMotion ? undefined : 'hidden'}
                 animate={reducedMotion ? undefined : 'visible'}

@@ -576,6 +576,17 @@ export default function MiembrosPage() {
                     {/* ── Acciones ── */}
                     <div className="px-4 pb-4 pt-1 flex gap-2">
                       <motion.button
+                        onClick={() => setViewMember(m)}
+                        whileHover={reducedMotion ? {} : { scale: 1.02 }}
+                        whileTap={reducedMotion ? {} : { scale: 0.97 }}
+                        transition={{ duration: 0.12, ease: EASE_OUT }}
+                        className="w-10 h-10 rounded-xl flex items-center justify-center cursor-pointer shrink-0"
+                        style={{ background: 'rgba(124,58,237,0.08)' }}
+                        aria-label="Ver deportista"
+                      >
+                        <Eye className="w-4 h-4" style={{ color: '#7C3AED' }} />
+                      </motion.button>
+                      <motion.button
                         onClick={() => openEdit(m)}
                         whileHover={reducedMotion ? {} : { scale: 1.02 }}
                         whileTap={reducedMotion ? {} : { scale: 0.97 }}
@@ -1036,8 +1047,8 @@ export default function MiembrosPage() {
         )}
       </AnimatePresence>
 
-      {/* ── Modal Ver Deportista (solo mobile) ────────────────────────────── */}
-      <div className="md:hidden">
+      {/* ── Modal Ver Deportista ────────────────────────────────────────── */}
+      <div>
       <AnimatePresence>
         {viewMember && (
           <>

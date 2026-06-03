@@ -106,7 +106,7 @@ const ROLE_NAV: Record<string, typeof ADMIN_NAV> = {
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { isLoaded, isSignedIn, userId, sessionId } = useAuth();
+  const { isLoaded, isSignedIn, userId } = useAuth();
   const { session } = useSession();
   const [role, setRole] = useState<string | null>(null);
   const [checking, setChecking] = useState(true);
@@ -123,7 +123,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
     (async () => {
       try {
-        const token = await session?.getToken({ skipCache: true });
+        const token = await session?.getToken();
         if (stale) return;
 
         let res: { status: string; user?: { role: string } } | null = null;
@@ -178,7 +178,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
     // Cleanup: marcar como stale para que la async no aplique resultados viejos
     return () => { stale = true; };
-  }, [isLoaded, isSignedIn, userId, sessionId]);
+  }, [isLoaded, isSignedIn, userId]);
 
   if (checking) return <LoadingScreen />;
 

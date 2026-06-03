@@ -223,7 +223,7 @@ export default function LogrosPage() {
               const dateStr = new Date(c.date).toLocaleDateString('es-CO', { day: 'numeric', month: 'short', year: 'numeric' });
               const podium = visibleResults.filter(r => r.position && r.position <= 3).sort((a, b) => (a.position ?? 99) - (b.position ?? 99)).slice(0, 3);
               return (
-                <div key={c.id} className="bg-white border border-border rounded-xl overflow-hidden">
+                <motion.div variants={cardVariant} key={c.id} className="bg-white border border-border rounded-xl overflow-hidden">
                   <Link href={`/dashboard/logros/${c.id}`} className="block px-4 py-3 hover:bg-secondary/30 transition-colors">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(67,97,238,0.10)' }}>
@@ -259,14 +259,14 @@ export default function LogrosPage() {
                       </button>
                     </div>
                   )}
-                </div>
+                </motion.div>
               );
             })
           )
         ) : (
           /* ── Entrenamientos ── */
           visibleSessions.length === 0 ? (
-            <div className="bg-white border border-border rounded-xl px-4 py-12 text-center">
+            <motion.div variants={cardVariant} className="bg-white border border-border rounded-xl px-4 py-12 text-center">
               <Dumbbell className="w-10 h-10 mx-auto mb-3 text-muted-foreground/30" />
               <p className="text-[13px] font-semibold text-muted-foreground">Sin entrenamientos registrados</p>
               {canManage && (
@@ -275,12 +275,12 @@ export default function LogrosPage() {
                   Registrar primer entrenamiento
                 </button>
               )}
-            </div>
+            </motion.div>
           ) : (
             visibleSessions.map(s => {
               const dateStr = new Date(s.date).toLocaleDateString('es-CO', { day: 'numeric', month: 'short', year: 'numeric' });
               return (
-                <div key={s.id} className="bg-white border border-border rounded-xl overflow-hidden">
+                <motion.div variants={cardVariant} key={s.id} className="bg-white border border-border rounded-xl overflow-hidden">
                   <Link href={`/dashboard/logros/entrenamiento/${s.id}`} className="block px-4 py-3 hover:bg-secondary/30 transition-colors">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(6,214,160,0.10)' }}>
@@ -313,7 +313,7 @@ export default function LogrosPage() {
                       </button>
                     </div>
                   )}
-                </div>
+                </motion.div>
               );
             })
           )

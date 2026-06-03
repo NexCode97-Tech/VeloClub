@@ -178,7 +178,7 @@ export default function ReportesPage() {
       <motion.div variants={stagger} initial="hidden" animate="show" className="flex flex-col gap-4 px-4 py-4">
 
         {/* KPIs */}
-        <div className="grid grid-cols-2 gap-3">
+        <motion.div variants={cardVariant} className="grid grid-cols-2 gap-3">
           {kpis.map((k) => {
             const Icon = k.icon;
             return (
@@ -197,10 +197,10 @@ export default function ReportesPage() {
               </div>
             );
           })}
-        </div>
+        </motion.div>
 
         {/* Gráfica asistencia mensual */}
-        <div className="bg-white border border-border rounded-xl p-4">
+        <motion.div variants={cardVariant} className="bg-white border border-border rounded-xl p-4">
           <div className="flex items-center justify-between mb-4">
             <p className="text-[14px] font-bold text-foreground" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
               Asistencia últimos 6 meses
@@ -233,10 +233,10 @@ export default function ReportesPage() {
               </BarChart>
             </ResponsiveContainer>
           )}
-        </div>
+        </motion.div>
 
         {/* Distribución de pagos */}
-        <div className="bg-white border border-border rounded-xl p-4">
+        <motion.div variants={cardVariant} className="bg-white border border-border rounded-xl p-4">
           <p className="text-[14px] font-bold text-foreground mb-4" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
             Estado de pagos — {MONTH_NAMES_FULL[new Date().getMonth()]}
           </p>
@@ -289,7 +289,7 @@ export default function ReportesPage() {
               </div>
             </>
           )}
-        </div>
+        </motion.div>
 
       </motion.div>
     </div>

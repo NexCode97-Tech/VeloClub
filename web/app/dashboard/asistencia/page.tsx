@@ -212,14 +212,14 @@ export default function AsistenciaPage() {
             ) : (
               <>
                 {/* Resumen */}
-                <div className="grid grid-cols-4 gap-2">
+                <motion.div variants={cardVariant} className="grid grid-cols-4 gap-2">
                   {counts.map(({ s, n }) => (
                     <div key={s} className="bg-white border border-border rounded-xl py-2 text-center">
                       <div className="text-base font-extrabold leading-none mb-0.5" style={{ color: STATUS_COLOR[s], fontFamily: 'var(--font-space-grotesk)' }}>{n}</div>
                       <div className="text-[9px] text-muted-foreground">{STATUS_NAME[s]}</div>
                     </div>
                   ))}
-                </div>
+                </motion.div>
 
                 {canManage && (
                   <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
@@ -231,7 +231,7 @@ export default function AsistenciaPage() {
                   {members.map(m => {
                     const s = att[m.id] ?? 'ABSENT';
                     return (
-                      <div key={m.id} className="bg-white border border-border rounded-xl px-3 py-2.5 flex items-center gap-3">
+                      <motion.div variants={cardVariant} key={m.id} className="bg-white border border-border rounded-xl px-3 py-2.5 flex items-center gap-3">
                         <div
                           className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0"
                           style={{ background: avatarBg(m.role) }}
@@ -261,7 +261,7 @@ export default function AsistenciaPage() {
                             {STATUS_LABEL[s]}
                           </div>
                         )}
-                      </div>
+                      </motion.div>
                     );
                   })}
                 </div>

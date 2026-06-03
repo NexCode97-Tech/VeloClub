@@ -13,6 +13,7 @@ export default function ConfiguracionPage() {
     <motion.div variants={stagger} initial="hidden" animate="show" style={{ background: '#F7F7FB', minHeight: '100%', padding: '16px 16px 80px' }}>
 
       {/* Mi cuenta — UserProfile embebido */}
+      <motion.div variants={cardVariant}>
       <p className="text-[11px] font-semibold uppercase mb-3 m-0" style={{ color: '#8E87A8', letterSpacing: '0.8px' }}>
         Mi cuenta
       </p>
@@ -28,8 +29,10 @@ export default function ConfiguracionPage() {
           }}
         />
       </div>
+      </motion.div>
 
       {/* Sistema */}
+      <motion.div variants={cardVariant}>
       <p className="text-[11px] font-semibold uppercase mb-2 m-0" style={{ color: '#8E87A8', letterSpacing: '0.8px' }}>
         Sistema
       </p>
@@ -43,8 +46,10 @@ export default function ConfiguracionPage() {
           <span className="text-[12px] font-semibold" style={{ color: '#1A1028' }}>{item.value}</span>
         </div>
       ))}
+      </motion.div>
 
       {/* Cerrar sesión */}
+      <motion.div variants={cardVariant}>
       <button
         onClick={() => signOut(() => router.push('/sign-in'))}
         className="w-full mt-3 py-3 rounded-xl text-[13px] font-bold"
@@ -52,6 +57,7 @@ export default function ConfiguracionPage() {
       >
         Cerrar sesión
       </button>
+      </motion.div>
     </motion.div>
   );
 }

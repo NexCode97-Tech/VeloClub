@@ -298,11 +298,11 @@ export default function MiembrosPage() {
 
       {/* ── Filters ───────────────────────────────────────────────────────── */}
       <motion.div variants={pageStagger} initial="hidden" animate="show" className="px-4 pt-4 space-y-3">
-        <div className="relative">
+        <motion.div variants={pageCard} className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input className="pl-9 bg-white border-border rounded-xl" placeholder="Buscar miembro..." value={search} onChange={e => setSearch(e.target.value)} />
-        </div>
-        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+        </motion.div>
+        <motion.div variants={pageCard} className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
           {([['ALL','Todos'],['STUDENT','Deportistas'],['COACH','Entrenadores'],['ADMIN','Admins']] as const).map(([val, label]) => (
             <button
               key={val}
@@ -314,7 +314,7 @@ export default function MiembrosPage() {
               }
             >{label}</button>
           ))}
-        </div>
+        </motion.div>
 
         {/* ── List ──────────────────────────────────────────────────────── */}
         {loading ? (

@@ -117,17 +117,17 @@ export default function SedesPage() {
             <div className="w-6 h-6 rounded-full border-2 border-primary border-t-transparent animate-spin" />
           </div>
         ) : locations.length === 0 ? (
-          <div className="bg-card border border-border rounded-xl p-10 text-center">
+          <motion.div variants={cardVariant} className="bg-card border border-border rounded-xl p-10 text-center">
             <MapPin className="w-10 h-10 text-muted-foreground/30 mx-auto mb-3" />
             <p className="text-sm text-muted-foreground">No hay sedes registradas aun.</p>
             <button onClick={openNew} className="mt-4 px-4 py-2 rounded-xl text-sm font-semibold border border-border text-muted-foreground hover:bg-secondary transition-colors">
               Agregar primera sede
             </button>
-          </div>
+          </motion.div>
         ) : (
           <div className="space-y-3">
             {locations.map(loc => (
-              <div key={loc.id} className="bg-card border border-border rounded-xl px-4 py-4 flex items-center justify-between">
+              <motion.div variants={cardVariant} key={loc.id} className="bg-card border border-border rounded-xl px-4 py-4 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'rgba(6,214,160,0.12)' }}>
                     <MapPin className="w-5 h-5" style={{ color: '#06D6A0' }} />
@@ -145,7 +145,7 @@ export default function SedesPage() {
                     <Trash2 className="w-4 h-4" />
                   </Button>
                 </div>
-              </div>
+              </motion.div>
             ))}
           </div>
         )}

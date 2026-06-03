@@ -207,15 +207,15 @@ export default function PagosPage() {
         <motion.div variants={stagger} initial="hidden" animate="show" className="px-4 pt-4 pb-8 flex flex-col gap-4">
 
           {loading ? (
-            <div className="flex flex-col gap-3">
+            <motion.div variants={cardVariant} className="flex flex-col gap-3">
               <div className="h-32 rounded-2xl bg-white border border-border animate-pulse" />
               <div className="h-16 rounded-xl bg-white border border-border animate-pulse" />
               <div className="h-16 rounded-xl bg-white border border-border animate-pulse" />
-            </div>
+            </motion.div>
           ) : (
             <>
               {/* Tarjeta estado actual */}
-              <div
+              <motion.div variants={cardVariant}
                 className="rounded-2xl p-5 text-white"
                 style={{
                   background: hasOverdue
@@ -256,10 +256,10 @@ export default function PagosPage() {
                     <p className="text-[11px] opacity-75">No tienes pagos pendientes</p>
                   </>
                 )}
-              </div>
+              </motion.div>
 
               {/* Resumen rápido */}
-              <div className="grid grid-cols-2 gap-3">
+              <motion.div variants={cardVariant} className="grid grid-cols-2 gap-3">
                 <div className="bg-white border border-border rounded-2xl p-4 flex flex-col gap-1">
                   <div className="flex items-center gap-1.5 mb-1">
                     <TrendingUp className="w-3.5 h-3.5" style={{ color: '#06D6A0' }} />
@@ -280,7 +280,7 @@ export default function PagosPage() {
                   </p>
                   <p className="text-[10px] text-muted-foreground">registros totales</p>
                 </div>
-              </div>
+              </motion.div>
 
               {/* Pendientes / vencidos primero */}
               {pending.length > 0 && (
@@ -293,7 +293,7 @@ export default function PagosPage() {
                       const sc = STATUS_COLORS[p.status] ?? STATUS_COLORS.PENDING;
                       const StatusIcon = sc.icon;
                       return (
-                        <div
+                        <motion.div variants={cardVariant}
                           key={p.id}
                           className="bg-white border rounded-xl px-4 py-3.5 flex items-center gap-3"
                           style={{ borderColor: sc.text + '33' }}
@@ -323,7 +323,7 @@ export default function PagosPage() {
                               {STATUS_LABELS[p.status]}
                             </span>
                           </div>
-                        </div>
+                        </motion.div>
                       );
                     })}
                   </div>
@@ -338,7 +338,7 @@ export default function PagosPage() {
                   </p>
                   <div className="space-y-2">
                     {[...paid].reverse().map(p => (
-                      <div key={p.id} className="bg-white border border-border rounded-xl px-4 py-3.5 flex items-center gap-3">
+                      <motion.div variants={cardVariant} key={p.id} className="bg-white border border-border rounded-xl px-4 py-3.5 flex items-center gap-3">
                         <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(6,214,160,0.10)' }}>
                           <CheckCircle2 className="w-5 h-5" style={{ color: '#06D6A0' }} />
                         </div>
@@ -355,7 +355,7 @@ export default function PagosPage() {
                         <p className="text-[14px] font-extrabold text-foreground shrink-0" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
                           {fmt.format(p.amount)}
                         </p>
-                      </div>
+                      </motion.div>
                     ))}
                   </div>
                 </div>

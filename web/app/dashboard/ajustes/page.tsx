@@ -258,7 +258,7 @@ export default function AjustesPage() {
       <motion.div variants={stagger} initial="hidden" animate="show" className="px-4 pt-4 space-y-4 max-w-lg pb-8">
 
         {/* Logo */}
-        <div className="bg-white border border-border rounded-xl p-4">
+        <motion.div variants={cardVariant} className="bg-white border border-border rounded-xl p-4">
           <p className="text-[13px] font-bold text-foreground mb-3">Logo del club</p>
           <div className="flex items-center gap-4">
             <div className="relative">
@@ -301,7 +301,7 @@ export default function AjustesPage() {
               <p className="text-[10px] mt-0.5" style={{ color: '#7C3AED' }}>Se recomienda PNG sin fondo para un mejor diseño visual</p>
             </div>
           </div>
-        </div>
+        </motion.div>
 
         {/* Modal recorte de logo */}
         {cropSrc && (
@@ -356,7 +356,7 @@ export default function AjustesPage() {
         )}
 
         {/* Información */}
-        <div className="bg-white border border-border rounded-xl p-4 space-y-3">
+        <motion.div variants={cardVariant} className="bg-white border border-border rounded-xl p-4 space-y-3">
           <p className="text-[13px] font-bold text-foreground">Información del club</p>
           <div className="space-y-2">
             <Label>Nombre del club</Label>
@@ -376,10 +376,10 @@ export default function AjustesPage() {
             placeholder={department ? 'Seleccionar ciudad' : 'Primero elige un departamento'}
             onChange={v => { setCity(v); setSaved(false); }}
           />
-        </div>
+        </motion.div>
 
         {/* Días sin entrenamiento */}
-        <div className="bg-white border border-border rounded-xl p-4 space-y-3">
+        <motion.div variants={cardVariant} className="bg-white border border-border rounded-xl p-4 space-y-3">
           <div>
             <p className="text-[13px] font-bold text-foreground">Días sin entrenamiento</p>
             <p className="text-[11px] text-muted-foreground mt-0.5">La asistencia no se registrará estos días</p>
@@ -409,7 +409,7 @@ export default function AjustesPage() {
           {noAttDays.length === 0 && (
             <p className="text-[11px] text-muted-foreground text-center">Ningún día bloqueado</p>
           )}
-        </div>
+        </motion.div>
 
         <Button onClick={handleSave} disabled={saving || !name.trim()} className="w-full"
           style={saved ? { background: '#06D6A0' } : {}}>

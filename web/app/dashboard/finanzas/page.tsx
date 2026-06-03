@@ -677,7 +677,7 @@ export default function FinanzasPage() {
       <motion.div variants={pageStagger} initial="hidden" animate="show" className="px-4 pt-4 flex flex-col gap-4">
 
         {/* Tabs */}
-        <div className="flex gap-1 bg-secondary rounded-xl p-1">
+        <motion.div variants={pageCard} className="flex gap-1 bg-secondary rounded-xl p-1">
           {([
             { key: 'mensualidades', label: 'Mensualidades' },
             { key: 'flujo',        label: 'Flujo de Caja' },
@@ -694,10 +694,10 @@ export default function FinanzasPage() {
               {label}
             </button>
           ))}
-        </div>
+        </motion.div>
 
         {/* Filtro mes/año */}
-        <div className="flex gap-2 items-center">
+        <motion.div variants={pageCard} className="flex gap-2 items-center">
           <Select value={String(filterMonth)} onValueChange={v => { setFilterMonth(parseInt(v ?? '')); setStatusFilter('ALL'); }}>
             <SelectTrigger className="w-36 bg-white">
               <span className="text-sm">{MONTH_NAMES[filterMonth - 1]}</span>
@@ -716,13 +716,13 @@ export default function FinanzasPage() {
               ))}
             </SelectContent>
           </Select>
-        </div>
+        </motion.div>
 
         {/* ── MENSUALIDADES ─────────────────────────────────────────────────── */}
         {tab === 'mensualidades' && (
           <>
           {/* ── Fila superior: tarjeta + filtros ── */}
-          <div className="flex flex-col gap-3 md:flex-row md:gap-4 md:items-stretch">
+          <motion.div variants={pageCard} className="flex flex-col gap-3 md:flex-row md:gap-4 md:items-stretch">
 
           {/* Tarjeta bancaria */}
           <div className="md:w-96 md:shrink-0">
@@ -842,7 +842,7 @@ export default function FinanzasPage() {
             </div>
 
           </div>
-          </div>
+          </motion.div>
 
           {/* ── Botón generar + búsqueda + lista (ancho completo) ── */}
 

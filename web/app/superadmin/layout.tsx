@@ -3,8 +3,6 @@
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth, useSession, UserButton } from '@clerk/nextjs';
 import { useEffect, useState, useCallback } from 'react';
-
-const effectCount = { current: 0 };
 import { apiFetch, ApiError } from '@/lib/api-client';
 import LoadingScreen from '@/components/ui/loading-screen';
 import Link from 'next/link';
@@ -72,30 +70,20 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
   const { isLoaded, isSignedIn, userId, sessionId } = useAuth();
   const { session } = useSession();
 
-  const [checking, setChecking]       = useState(true);
+  // Si Clerk ya está listo al montar (viene de redirect del dashboard), no mostrar loading
+  const alreadyReady = isLoaded && isSignedIn;
+  const [checking, setChecking]       = useState(!alreadyReady);
   const [spin, setSpin]               = useState(false);
   const [panelOpen, setPanelOpen]     = useState(false);
   const [notifs, setNotifs]           = useState<Notif[]>([]);
   const [notifsLoading, setNotifsLoading] = useState(false);
 
-  // ── Eruda devtools (solo superadmin, solo una vez) ────────────────────────
-  useEffect(() => {
-    const script = document.createElement('script');
-    script.src = 'https://cdn.jsdelivr.net/npm/eruda';
-    script.onload = () => { (window as { eruda?: { init: () => void } }).eruda?.init(); };
-    document.body.appendChild(script);
-    return () => { document.body.removeChild(script); };
-  }, []);
-
   // Auth check — stale flag evita condición de carrera al cambiar sesión activa
   useEffect(() => {
-    console.log(`[AUTH] #${effectCount.current++} isLoaded=${isLoaded} isSignedIn=${isSignedIn} userId=${userId?.slice(-6) ?? 'null'} sessionId=${sessionId?.slice(-6) ?? 'null'}`);
-
     if (!isLoaded) return;
     if (!isSignedIn) { router.push('/sign-in'); return; }
 
     let stale = false;
-    setChecking(true);
 
     (async () => {
       try {

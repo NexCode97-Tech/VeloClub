@@ -67,6 +67,17 @@ if (superadminEmails.includes(email.toLowerCase())) {
       });
     }
 
+    // Sincronizar foto de Clerk/Google al Member vinculado (si tiene clerkId y foto)
+    if (picture) {
+      const linkedMember = await prisma.member.findFirst({ where: { clerkId } });
+      if (linkedMember && linkedMember.pictureUrl !== picture) {
+        await prisma.member.update({
+          where: { id: linkedMember.id },
+          data: { pictureUrl: picture },
+        });
+      }
+    }
+
     // Check club active
     if (user.club && !user.club.active) {
       return res.json({ status: 'inactive' });
@@ -126,10 +137,14 @@ if (superadminEmails.includes(email.toLowerCase())) {
     include: { club: true },
   });
 
-  // Link member to clerkId
+  // Link member to clerkId y sincronizar foto de Clerk/Google
   await prisma.member.update({
     where: { id: member.id },
-    data: { clerkId, inviteStatus: 'ACCEPTED' },
+    data: {
+      clerkId,
+      inviteStatus: 'ACCEPTED',
+      ...(picture ? { pictureUrl: picture } : {}),
+    },
   });
 
   return res.json({ status: 'complete_profile', user: newUser });

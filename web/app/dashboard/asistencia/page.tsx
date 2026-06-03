@@ -309,7 +309,6 @@ export default function AsistenciaPage() {
                             name={m.fullName}
                             photoUrl={m.pictureUrl}
                             gradient={avatarBg(m.role)}
-                            size={48}
                           />
                           <p className="text-[11px] font-bold text-center mt-2 leading-tight line-clamp-2 w-full px-1"
                             style={{ color: '#1A1028' }}>

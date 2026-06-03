@@ -478,8 +478,6 @@ export default function MiembrosPage() {
                           name={m.fullName}
                           photoUrl={m.pictureUrl}
                           gradient={ROLE_GRADIENT[m.role] ?? ROLE_GRADIENT.STUDENT}
-                          size={48}
-                          className="rounded-xl"
                         />
                         <div className="min-w-0 flex-1">
                           <h3
@@ -670,7 +668,6 @@ export default function MiembrosPage() {
                     name={m.fullName}
                     photoUrl={m.pictureUrl}
                     gradient={ROLE_GRADIENT[m.role] ?? ROLE_GRADIENT.STUDENT}
-                    size={40}
                   />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5 mb-0.5">

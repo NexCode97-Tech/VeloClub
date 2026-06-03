@@ -273,8 +273,8 @@ function StudentRow({
         {/* Cabecera */}
         <div className="px-4 pt-4 pb-3 flex items-center gap-3 relative"
           style={{ borderBottom: '1px solid rgba(120,80,200,0.07)' }}>
-          <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold text-[12px] shrink-0"
-            style={{ background: sc ? sc.text : '#8E87A8', boxShadow: `0 3px 10px ${sc ? sc.text : '#8E87A8'}40` }}>
+          <div className="flex items-center justify-center text-white font-bold text-[15px] shrink-0"
+            style={{ width: 48, height: 48, borderRadius: 12, background: sc ? sc.text : '#8E87A8', boxShadow: `0 3px 10px ${sc ? sc.text : '#8E87A8'}40` }}>
             {getInitials(m.fullName)}
           </div>
           <div className="flex-1 min-w-0 pr-7">

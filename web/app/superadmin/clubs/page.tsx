@@ -48,7 +48,6 @@ interface Club {
 
 // ── Paleta de roles ───────────────────────────────────────────────────────────
 const ROLE_COLOR  = { ADMIN: '#FFB703', COACH: '#06D6A0' } as const;
-const ROLE_BG     = { ADMIN: 'rgba(255,183,3,0.12)', COACH: 'rgba(6,214,160,0.12)' } as const;
 const ROLE_LABEL  = { ADMIN: 'Admin', COACH: 'Entrenador' } as const;
 
 // ── Input base ────────────────────────────────────────────────────────────────

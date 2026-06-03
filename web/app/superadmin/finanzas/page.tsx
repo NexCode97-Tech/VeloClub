@@ -280,10 +280,6 @@ export default function FinanzasPage() {
   }
 
   // ── Métricas globales ──────────────────────────────────────────────────────
-  const allPagos       = clubs.flatMap(c => c.suscripcion?.pagos ?? []);
-  const totalMeta      = clubs.reduce((a, c) => a + (c.suscripcion ? planMeta(c.suscripcion.planMonto, c.suscripcion.tipoPlan) : 0), 0);
-  const totalRecaudado = allPagos.filter(p => p.estado === 'PAID').reduce((a, p) => a + p.monto, 0);
-  const totalPendiente = allPagos.filter(p => p.estado !== 'PAID').reduce((a, p) => a + p.monto, 0);
   if (loading) return (
     <div className="flex items-center justify-center h-40" style={{ background: '#F7F7FB' }}>
       <div className="w-6 h-6 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: '#7C3AED', borderTopColor: 'transparent' }} />

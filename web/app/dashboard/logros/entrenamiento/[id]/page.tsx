@@ -4,6 +4,7 @@ import { useAuth } from '@clerk/nextjs';
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { apiFetch } from '@/lib/api-client';
+import { parseLocalDate } from '@/lib/utils';
 import { ArrowLeft, Plus, Trash2, Dumbbell, Clock, Ruler, Hash } from 'lucide-react';
 import Link from 'next/link';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -99,7 +100,7 @@ export default function TrainingDetailPage() {
   );
   if (!session) return null;
 
-  const dateStr = new Date(session.date).toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  const dateStr = parseLocalDate(session.date).toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
   return (
     <div className="min-h-full bg-background">

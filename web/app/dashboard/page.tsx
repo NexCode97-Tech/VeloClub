@@ -5,6 +5,7 @@ import { useClubStream } from '@/hooks/useClubStream';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { apiFetch } from '@/lib/api-client';
+import { parseLocalDate } from '@/lib/utils';
 import Link from 'next/link';
 import {
   Users, CalendarCheck, CreditCard,
@@ -239,8 +240,8 @@ export default function DashboardPage() {
         const comps2  = compRes.status === 'fulfilled' ? compRes.value.competitions : [];
         const trains2 = trainingRes.status === 'fulfilled' ? trainingRes.value.sessions : [];
         const futuros = [
-          ...comps2.map(c  => ({ id: c.id,  titulo: c.name, tipo: 'COMPETITION' as const, fecha: new Date(c.date), lugar: c.place ?? null })),
-          ...trains2.map(s => ({ id: s.id,  titulo: s.title,           tipo: 'TRAINING'     as const, fecha: new Date(s.date), lugar: s.location?.name ?? null })),
+          ...comps2.map(c  => ({ id: c.id,  titulo: c.name, tipo: 'COMPETITION' as const, fecha: parseLocalDate(c.date), lugar: c.place ?? null })),
+          ...trains2.map(s => ({ id: s.id,  titulo: s.title,           tipo: 'TRAINING'     as const, fecha: parseLocalDate(s.date), lugar: s.location?.name ?? null })),
         ]
           .filter(e => e.fecha >= now)
           .sort((a, b) => a.fecha.getTime() - b.fecha.getTime())

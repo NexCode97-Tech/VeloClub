@@ -5,6 +5,7 @@ import { useClubStream } from '@/hooks/useClubStream';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState, useMemo } from 'react';
 import { apiFetch } from '@/lib/api-client';
+import { parseLocalDate } from '@/lib/utils';
 import { QK } from '@/hooks/useVeloQuery';
 import {
   CreditCard, Plus, Trash2, CheckCircle2, Clock, AlertCircle,
@@ -956,7 +957,7 @@ export default function FinanzasPage() {
                 {entries.map(e => {
                   const isIncome = e.type === 'INCOME';
                   const isAuto   = !!e.paymentId;
-                  const dateStr  = new Date(e.date).toLocaleDateString('es-CO', { day: 'numeric', month: 'short' });
+                  const dateStr  = parseLocalDate(e.date).toLocaleDateString('es-CO', { day: 'numeric', month: 'short' });
                   return (
                     <div key={e.id} className="bg-white border border-border rounded-xl px-4 py-3 flex items-center gap-3">
                       <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"

@@ -7,6 +7,7 @@ import { useEffect, useState, useMemo } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { stagger as pageStagger, cardVariant as pageCard } from '@/lib/page-animations';
 import { apiFetch } from '@/lib/api-client';
+import { parseLocalDate } from '@/lib/utils';
 import { QK } from '@/hooks/useVeloQuery';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -883,7 +884,7 @@ export default function MiembrosPage() {
                           <div>
                             <p className="text-[10px] text-muted-foreground">Nacimiento</p>
                             <p className="text-[13px] font-semibold text-foreground">
-                              {new Date(viewMember.birthDate).toLocaleDateString('es-CO', { day: 'numeric', month: 'long', year: 'numeric' })}
+                              {parseLocalDate(viewMember.birthDate).toLocaleDateString('es-CO', { day: 'numeric', month: 'long', year: 'numeric' })}
                             </p>
                           </div>
                         </div>

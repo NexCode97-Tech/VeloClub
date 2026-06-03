@@ -4,6 +4,7 @@ import { useAuth } from '@clerk/nextjs';
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { apiFetch } from '@/lib/api-client';
+import { parseLocalDate } from '@/lib/utils';
 import { ChevronLeft, Plus, Trash2, Trophy, Users, MapPin, CalendarDays } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -158,7 +159,7 @@ export default function CompetitionDetailPage() {
     );
   }
 
-  const dateStr = new Date(competition.date).toLocaleDateString('es-CO', {
+  const dateStr = parseLocalDate(competition.date).toLocaleDateString('es-CO', {
     weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
   });
 

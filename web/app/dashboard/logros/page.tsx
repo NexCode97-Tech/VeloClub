@@ -5,6 +5,7 @@ import { stagger, cardVariant } from '@/lib/page-animations';
 import { useAuth } from '@clerk/nextjs';
 import { useEffect, useState } from 'react';
 import { apiFetch } from '@/lib/api-client';
+import { parseLocalDate } from '@/lib/utils';
 import Link from 'next/link';
 import {
   Trophy, Plus, Trash2, MapPin, CalendarDays, ChevronRight,
@@ -220,7 +221,7 @@ export default function LogrosPage() {
                 ? allResults.filter(r => r.member.id === myMemberId)
                 : allResults;
               const resultCount = visibleResults.length;
-              const dateStr = new Date(c.date).toLocaleDateString('es-CO', { day: 'numeric', month: 'short', year: 'numeric' });
+              const dateStr = parseLocalDate(c.date).toLocaleDateString('es-CO', { day: 'numeric', month: 'short', year: 'numeric' });
               const podium = visibleResults.filter(r => r.position && r.position <= 3).sort((a, b) => (a.position ?? 99) - (b.position ?? 99)).slice(0, 3);
               return (
                 <motion.div variants={cardVariant} key={c.id} className="bg-white border border-border rounded-xl overflow-hidden">
@@ -278,7 +279,7 @@ export default function LogrosPage() {
             </motion.div>
           ) : (
             visibleSessions.map(s => {
-              const dateStr = new Date(s.date).toLocaleDateString('es-CO', { day: 'numeric', month: 'short', year: 'numeric' });
+              const dateStr = parseLocalDate(s.date).toLocaleDateString('es-CO', { day: 'numeric', month: 'short', year: 'numeric' });
               return (
                 <motion.div variants={cardVariant} key={s.id} className="bg-white border border-border rounded-xl overflow-hidden">
                   <Link href={`/dashboard/logros/entrenamiento/${s.id}`} className="block px-4 py-3 hover:bg-secondary/30 transition-colors">

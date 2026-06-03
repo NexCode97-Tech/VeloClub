@@ -6,6 +6,7 @@ import { useAuth } from '@clerk/nextjs';
 import { useClubStream } from '@/hooks/useClubStream';
 import { useEffect, useState } from 'react';
 import { apiFetch } from '@/lib/api-client';
+import { parseLocalDate } from '@/lib/utils';
 import { ChevronLeft, ChevronRight, CalendarDays, Trophy, Dumbbell, MapPin } from 'lucide-react';
 
 const MONTH_NAMES = [
@@ -68,7 +69,7 @@ export default function CalendarioPage() {
           id:    c.id,
           title: c.name,
           type:  'COMPETITION' as EventType,
-          date:  new Date(c.date),
+          date:  parseLocalDate(c.date),
           place: c.place,
         }))
         .filter(c => c.date.getFullYear() === year && c.date.getMonth() === month);
@@ -77,7 +78,7 @@ export default function CalendarioPage() {
         id:       s.id,
         title:    s.title,
         type:     'TRAINING' as EventType,
-        date:     new Date(s.date),
+        date:     parseLocalDate(s.date),
         location: s.location?.name ?? null,
       }));
 

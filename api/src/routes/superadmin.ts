@@ -33,6 +33,7 @@ router.get('/clubs', requireAuth, requireSuperadmin, async (_req, res) => {
     include: {
       _count: { select: { members: true } },
       users: { where: { role: 'ADMIN' }, select: { email: true, name: true } },
+      suscripcion: { select: { tipoPlan: true, planMonto: true } },
     },
     orderBy: { createdAt: 'desc' },
   });

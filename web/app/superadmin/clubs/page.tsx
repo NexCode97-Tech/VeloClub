@@ -43,6 +43,7 @@ interface Club {
   deporte?: string | null;
   _count: { members: number };
   users: { email: string; name: string }[];
+  suscripcion?: { tipoPlan: string; planMonto: number } | null;
 }
 
 // ── Paleta de roles ───────────────────────────────────────────────────────────
@@ -431,8 +432,44 @@ export default function ClubsPage() {
                           })()}
                         </div>
                         <p style={{ margin: 0, fontSize: 11, color: '#8E87A8' }}>
-                          {club._count.members} miembros{club.deporte ? ` · ${club.deporte}` : ''}{club.users[0] ? ` · ${club.users[0].name}` : ''}
+                          {club._count.members} miembro{club._count.members !== 1 ? 's' : ''}{club.deporte ? ` · ${club.deporte}` : ''}{club.users[0] ? ` · ${club.users[0].name}` : ''}
                         </p>
+                        {/* Fecha de creación + plan */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}>
+                          <span style={{ fontSize: 10, color: '#C4BFD8' }}>
+                            Creado {new Date(club.createdAt).toLocaleDateString('es-CO', { day: 'numeric', month: 'short', year: 'numeric' })}
+                          </span>
+                          <span style={{ fontSize: 10, color: '#C4BFD8' }}>·</span>
+                          {(() => {
+                            const now = new Date();
+                            // Plan asignado (tiene suscripcion)
+                            if (club.suscripcion) {
+                              const planLabel: Record<string, string> = { MENSUAL: 'Mensual', TRIMESTRAL: 'Trimestral', ANUAL: 'Anual' };
+                              return (
+                                <span style={{ fontSize: 10, fontWeight: 700, color: '#7C3AED', background: 'rgba(124,58,237,0.09)', borderRadius: 6, padding: '1px 7px' }}>
+                                  Plan {planLabel[club.suscripcion.tipoPlan] ?? club.suscripcion.tipoPlan}
+                                </span>
+                              );
+                            }
+                            // En período de prueba
+                            if (club.trialEndsAt) {
+                              const ends = new Date(club.trialEndsAt);
+                              const expired = ends < now;
+                              const daysLeft = expired ? 0 : Math.ceil((ends.getTime() - now.getTime()) / 86_400_000);
+                              return (
+                                <span style={{ fontSize: 10, fontWeight: 700, color: expired ? '#EF476F' : '#B88A00', background: expired ? 'rgba(239,71,111,0.09)' : 'rgba(255,183,3,0.12)', borderRadius: 6, padding: '1px 7px' }}>
+                                  {expired ? 'Prueba vencida' : `Prueba · ${daysLeft}d restantes`}
+                                </span>
+                              );
+                            }
+                            // Sin plan asignado
+                            return (
+                              <span style={{ fontSize: 10, fontWeight: 700, color: '#8E87A8', background: 'rgba(142,135,168,0.10)', borderRadius: 6, padding: '1px 7px' }}>
+                                Sin plan
+                              </span>
+                            );
+                          })()}
+                        </div>
                       </div>
                     </div>
                     {/* Editar */}

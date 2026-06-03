@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiFetch } from '@/lib/api-client';
 import { motion, AnimatePresence, type Variants } from 'framer-motion';
-import { Trash2, ChevronDown, Check } from 'lucide-react';
+import { Trash2, ChevronDown, Check, MessageCircle } from 'lucide-react';
 
 // ── Easing ────────────────────────────────────────────────────────────────────
 const EASE    = [0.23, 1, 0.32, 1]  as [number,number,number,number];
@@ -206,6 +206,34 @@ function RoleToggle({ value, onChange }: { value: 'ADMIN' | 'COACH'; onChange: (
       })}
     </div>
   );
+}
+
+// ── WhatsApp recordatorio ─────────────────────────────────────────────────────
+const WA_NUMBER = '573153171225';
+
+function getWhatsAppUrl(club: Club): string {
+  const now   = new Date();
+  const admin = club.users[0]?.name ?? 'Administrador';
+  let msg = '';
+
+  if (club.trialEndsAt) {
+    const ends    = new Date(club.trialEndsAt);
+    const expired = ends < now;
+    const daysLeft = expired ? 0 : Math.ceil((ends.getTime() - now.getTime()) / 86_400_000);
+    if (expired) {
+      msg = `Hola ${admin} 👋, te escribimos de *NexCode97*.\n\nEl período de prueba gratuita del club *${club.name}* ha vencido.\n\nPara seguir disfrutando de VeloClub, activa tu plan escribiéndonos. ¡Estamos listos para ayudarte! 🚀`;
+    } else {
+      msg = `Hola ${admin} 👋, te escribimos de *NexCode97*.\n\nTe recordamos que el período de prueba gratuita del club *${club.name}* vence en *${daysLeft} día${daysLeft !== 1 ? 's' : ''}*.\n\nActiva tu plan antes de que expire para no perder el acceso. ¡Contáctanos! 🙌`;
+    }
+  } else if (club.suscripcion) {
+    const planLabel: Record<string, string> = { MENSUAL: 'Mensual', TRIMESTRAL: 'Trimestral', ANUAL: 'Anual' };
+    const tipo = planLabel[club.suscripcion.tipoPlan] ?? club.suscripcion.tipoPlan;
+    msg = `Hola ${admin} 👋, te escribimos de *NexCode97*.\n\nTe recordamos que el Plan *${tipo}* del club *${club.name}* está próximo a vencer.\n\nRenueva tu suscripción para mantener el acceso sin interrupciones. ¡Gracias por confiar en VeloClub! 💜`;
+  } else {
+    msg = `Hola ${admin} 👋, te escribimos de *NexCode97*.\n\nEl club *${club.name}* aún no tiene un plan activo en VeloClub.\n\n¿Te gustaría activar tu suscripción? Cuéntanos y te ayudamos. 🚀`;
+  }
+
+  return `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`;
 }
 
 // ── Componente principal ───────────────────────────────────────────────────────
@@ -527,15 +555,22 @@ export default function ClubsPage() {
                           <span style={{ flexShrink: 0, fontSize: 9, fontWeight: 700, padding: '2px 7px', borderRadius: 99, background: club.active ? 'rgba(6,214,160,0.12)' : 'rgba(239,71,111,0.12)', color: club.active ? '#06D6A0' : '#EF476F' }}>
                             {club.active ? 'Activo' : 'Inactivo'}
                           </span>
-                          {(() => {
-                            if (!club.trialEndsAt) return null;
+                          {/* Badge de estado de plan (trial / sin plan) junto al estado activo */}
+                          {!club.suscripcion && (() => {
                             const now = new Date();
-                            const ends = new Date(club.trialEndsAt);
-                            const expired = ends < now;
-                            const daysLeft = expired ? 0 : Math.ceil((ends.getTime() - now.getTime()) / 86_400_000);
+                            if (club.trialEndsAt) {
+                              const ends = new Date(club.trialEndsAt);
+                              const expired = ends < now;
+                              const daysLeft = expired ? 0 : Math.ceil((ends.getTime() - now.getTime()) / 86_400_000);
+                              return (
+                                <span style={{ flexShrink: 0, fontSize: 9, fontWeight: 700, padding: '2px 7px', borderRadius: 99, background: expired ? 'rgba(239,71,111,0.12)' : 'rgba(255,183,3,0.14)', color: expired ? '#EF476F' : '#B88A00' }}>
+                                  {expired ? 'Prueba vencida' : `Prueba · ${daysLeft}d`}
+                                </span>
+                              );
+                            }
                             return (
-                              <span style={{ flexShrink: 0, fontSize: 9, fontWeight: 700, padding: '2px 7px', borderRadius: 99, background: expired ? 'rgba(239,71,111,0.12)' : 'rgba(255,183,3,0.14)', color: expired ? '#EF476F' : '#B88A00' }}>
-                                {expired ? 'TRIAL EXPIRADO' : `TRIAL · ${daysLeft}d`}
+                              <span style={{ flexShrink: 0, fontSize: 9, fontWeight: 700, padding: '2px 7px', borderRadius: 99, background: 'rgba(142,135,168,0.12)', color: '#8E87A8' }}>
+                                Sin plan
                               </span>
                             );
                           })()}
@@ -543,42 +578,14 @@ export default function ClubsPage() {
                         <p style={{ margin: 0, fontSize: 11, color: '#8E87A8' }}>
                           {club._count.members} miembro{club._count.members !== 1 ? 's' : ''}{club.deporte ? ` · ${club.deporte}` : ''}{club.users[0] ? ` · ${club.users[0].name}` : ''}
                         </p>
-                        {/* Fecha de creación + plan */}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}>
-                          <span style={{ fontSize: 10, color: '#C4BFD8' }}>
-                            Creado {new Date(club.createdAt).toLocaleDateString('es-CO', { day: 'numeric', month: 'short', year: 'numeric' })}
-                          </span>
-                          <span style={{ fontSize: 10, color: '#C4BFD8' }}>·</span>
-                          {(() => {
-                            const now = new Date();
-                            // Plan asignado (tiene suscripcion)
-                            if (club.suscripcion) {
-                              const planLabel: Record<string, string> = { MENSUAL: 'Mensual', TRIMESTRAL: 'Trimestral', ANUAL: 'Anual' };
-                              return (
-                                <span style={{ fontSize: 10, fontWeight: 700, color: '#7C3AED', background: 'rgba(124,58,237,0.09)', borderRadius: 6, padding: '1px 7px' }}>
-                                  Plan {planLabel[club.suscripcion.tipoPlan] ?? club.suscripcion.tipoPlan}
-                                </span>
-                              );
-                            }
-                            // En período de prueba
-                            if (club.trialEndsAt) {
-                              const ends = new Date(club.trialEndsAt);
-                              const expired = ends < now;
-                              const daysLeft = expired ? 0 : Math.ceil((ends.getTime() - now.getTime()) / 86_400_000);
-                              return (
-                                <span style={{ fontSize: 10, fontWeight: 700, color: expired ? '#EF476F' : '#B88A00', background: expired ? 'rgba(239,71,111,0.09)' : 'rgba(255,183,3,0.12)', borderRadius: 6, padding: '1px 7px' }}>
-                                  {expired ? 'Prueba vencida' : `Prueba · ${daysLeft}d restantes`}
-                                </span>
-                              );
-                            }
-                            // Sin plan asignado
-                            return (
-                              <span style={{ fontSize: 10, fontWeight: 700, color: '#8E87A8', background: 'rgba(142,135,168,0.10)', borderRadius: 6, padding: '1px 7px' }}>
-                                Sin plan
-                              </span>
-                            );
+                        {/* Fecha de creación */}
+                        <p style={{ margin: '3px 0 0', fontSize: 10, color: '#C4BFD8' }}>
+                          Creado {new Date(club.createdAt).toLocaleDateString('es-CO', { day: 'numeric', month: 'short', year: 'numeric' })}
+                          {club.suscripcion && (() => {
+                            const planLabel: Record<string, string> = { MENSUAL: 'Mensual', TRIMESTRAL: 'Trimestral', ANUAL: 'Anual' };
+                            return ` · Plan ${planLabel[club.suscripcion!.tipoPlan] ?? club.suscripcion!.tipoPlan}`;
                           })()}
-                        </div>
+                        </p>
                       </div>
                     </div>
                     {/* Editar */}
@@ -623,6 +630,16 @@ export default function ClubsPage() {
                   >
                     {club.active ? 'Desactivar' : 'Activar'}
                   </motion.button>
+                  {/* WhatsApp recordatorio */}
+                  <motion.a
+                    href={getWhatsAppUrl(club)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    whileTap={{ scale: 0.88 }} transition={{ duration: 0.12, ease: EASE }}
+                    style={{ width: 36, borderRadius: 10, border: '1px solid rgba(37,211,102,0.30)', background: 'rgba(37,211,102,0.08)', color: '#25D366', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none' }}
+                  >
+                    <MessageCircle size={14} />
+                  </motion.a>
                   <motion.button
                     onClick={() => handleDelete(club.id)}
                     whileTap={{ scale: 0.88 }} transition={{ duration: 0.12, ease: EASE }}

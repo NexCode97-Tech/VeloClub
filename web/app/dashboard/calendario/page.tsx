@@ -254,7 +254,7 @@ export default function CalendarioPage() {
           </div>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }
 

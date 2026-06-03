@@ -394,45 +394,119 @@ export default function MiembrosPage() {
             </div>
 
             {/* Desktop table */}
-            <div className="hidden md:block bg-white rounded-xl border border-border overflow-hidden mb-4">
+            <div className="hidden md:block bg-white rounded-2xl border border-border overflow-hidden mb-4 shadow-sm">
               <table className="w-full text-sm">
-                <thead className="bg-secondary border-b border-border">
-                  <tr>
-                    {['Nombre','Email','Rol','Sedes','Categoría','Tipo',''].map(h => (
-                      <th key={h} className="text-left px-4 py-3 font-semibold text-muted-foreground text-xs uppercase tracking-wide">{h}</th>
+                <thead>
+                  <tr style={{ background: '#F7F7FB', borderBottom: '1px solid rgba(120,80,200,0.08)' }}>
+                    {['Miembro','Email','Rol','Sedes','Categoría / Nivel',''].map(h => (
+                      <th key={h} className="text-left px-5 py-3 font-semibold text-[11px] uppercase tracking-widest" style={{ color: '#8E87A8' }}>{h}</th>
                     ))}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-border">
-                  {filtered.map(m => {
+                <tbody>
+                  {filtered.map((m, idx) => {
                     const rc = ROLE_COLORS[m.role] ?? ROLE_COLORS.STUDENT;
                     return (
-                      <tr key={m.id} className="hover:bg-secondary/50 transition-colors">
-                        <td className="px-4 py-3">
-                          <div className="flex items-center gap-2">
-                            <div className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold text-white shrink-0" style={{ background: ROLE_GRADIENT[m.role] ?? ROLE_GRADIENT.STUDENT }}>
+                      <tr
+                        key={m.id}
+                        className="group transition-colors cursor-pointer"
+                        style={{ borderBottom: idx < filtered.length - 1 ? '1px solid rgba(120,80,200,0.06)' : 'none' }}
+                        onMouseEnter={e => (e.currentTarget.style.background = '#F7F7FB')}
+                        onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                        onClick={() => setViewMember(m)}
+                      >
+                        {/* Miembro */}
+                        <td className="px-5 py-3.5">
+                          <div className="flex items-center gap-3">
+                            <div
+                              className="w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-bold text-white shrink-0"
+                              style={{ background: ROLE_GRADIENT[m.role] ?? ROLE_GRADIENT.STUDENT }}
+                            >
                               {initials(m.fullName)}
                             </div>
-                            <span className="font-semibold text-foreground">{m.fullName}</span>
+                            <div>
+                              <p className="font-semibold text-[13px]" style={{ color: '#1A1028' }}>{m.fullName}</p>
+                              {m.phone && <p className="text-[11px]" style={{ color: '#8E87A8' }}>{m.phone}</p>}
+                            </div>
                           </div>
                         </td>
-                        <td className="px-4 py-3 text-muted-foreground">{m.email ?? '—'}</td>
-                        <td className="px-4 py-3">
-                          <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ color: rc.text, background: rc.bg }}>{ROLES[m.role]}</span>
+
+                        {/* Email */}
+                        <td className="px-5 py-3.5 max-w-[200px]">
+                          <p className="text-[12px] truncate lowercase" style={{ color: '#8E87A8' }}>{m.email ?? '—'}</p>
                         </td>
-                        <td className="px-4 py-3">
+
+                        {/* Rol */}
+                        <td className="px-5 py-3.5">
+                          <span
+                            className="text-[11px] font-bold px-2.5 py-1 rounded-full"
+                            style={{ color: rc.text, background: rc.bg }}
+                          >
+                            {ROLES[m.role]}
+                          </span>
+                        </td>
+
+                        {/* Sedes */}
+                        <td className="px-5 py-3.5">
                           {m.role === 'ADMIN' || m.locations.length === 0
-                            ? <span className="text-muted-foreground">—</span>
-                            : m.locations.map(l => <Badge key={l.location.id} variant="secondary" className="text-xs mr-1">{l.location.name}</Badge>)
+                            ? <span className="text-[12px]" style={{ color: '#C4BFD8' }}>—</span>
+                            : <div className="flex flex-wrap gap-1">
+                                {m.locations.map(l => (
+                                  <span
+                                    key={l.location.id}
+                                    className="text-[11px] font-semibold px-2 py-0.5 rounded-full"
+                                    style={{ background: 'rgba(67,97,238,0.08)', color: '#4361EE' }}
+                                  >
+                                    {l.location.name}
+                                  </span>
+                                ))}
+                              </div>
                           }
                         </td>
-                        <td className="px-4 py-3 text-muted-foreground">{m.category ?? '—'}</td>
-                        <td className="px-4 py-3 text-muted-foreground">{m.tipo ?? '—'}</td>
-                        <td className="px-4 py-3">
-                          <div className="flex gap-1 justify-end">
-                            <Button size="sm" variant="ghost" onClick={() => setViewMember(m)}><Eye className="w-4 h-4" /></Button>
-                            <Button size="sm" variant="ghost" onClick={() => openEdit(m)}><Pencil className="w-4 h-4" /></Button>
-                            <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive" onClick={() => handleDelete(m.id)}><Trash2 className="w-4 h-4" /></Button>
+
+                        {/* Categoría / Nivel */}
+                        <td className="px-5 py-3.5">
+                          {m.category || m.tipo
+                            ? <div className="flex items-center gap-1.5 flex-wrap">
+                                {m.category && (
+                                  <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full" style={{ background: 'rgba(124,58,237,0.08)', color: '#7C3AED' }}>
+                                    {m.category}
+                                  </span>
+                                )}
+                                {m.tipo && (
+                                  <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full" style={{ background: 'rgba(142,135,168,0.10)', color: '#8E87A8' }}>
+                                    {m.tipo}
+                                  </span>
+                                )}
+                              </div>
+                            : <span className="text-[12px]" style={{ color: '#C4BFD8' }}>—</span>
+                          }
+                        </td>
+
+                        {/* Acciones */}
+                        <td className="px-5 py-3.5">
+                          <div className="flex gap-1 justify-end opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button
+                              onClick={e => { e.stopPropagation(); setViewMember(m); }}
+                              className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors"
+                              style={{ background: 'rgba(120,80,200,0.08)', color: '#7C3AED' }}
+                            >
+                              <Eye className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              onClick={e => { e.stopPropagation(); openEdit(m); }}
+                              className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors"
+                              style={{ background: 'rgba(67,97,238,0.08)', color: '#4361EE' }}
+                            >
+                              <Pencil className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              onClick={e => { e.stopPropagation(); handleDelete(m.id); }}
+                              className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors"
+                              style={{ background: 'rgba(239,71,111,0.08)', color: '#EF476F' }}
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
                           </div>
                         </td>
                       </tr>

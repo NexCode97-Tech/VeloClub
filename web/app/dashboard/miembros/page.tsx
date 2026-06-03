@@ -402,202 +402,310 @@ export default function MiembrosPage() {
           </motion.div>
         </motion.div>
 
-        {/* ── Desktop Table ── */}
-        <div className="px-8 pb-8 flex-1">
-          {loading ? (
-            /* Skeleton */
-            <div className="bg-white rounded-2xl overflow-hidden" style={{ border: '1px solid rgba(120,80,200,0.08)', boxShadow: '0 2px 16px rgba(124,58,237,0.04)' }}>
-              {[...Array(6)].map((_, i) => (
-                <div key={i} className="flex items-center gap-4 px-6 py-4 animate-pulse" style={{ borderBottom: i < 5 ? '1px solid rgba(120,80,200,0.05)' : 'none' }}>
-                  <div className="w-9 h-9 rounded-full shrink-0" style={{ background: 'rgba(120,80,200,0.08)' }} />
-                  <div className="flex-1 space-y-2">
-                    <div className="h-3 w-40 rounded-full" style={{ background: 'rgba(120,80,200,0.08)' }} />
-                    <div className="h-2.5 w-28 rounded-full" style={{ background: 'rgba(120,80,200,0.05)' }} />
+        {/* ── Lista + Panel lateral ── */}
+        <div className="px-8 pb-8 flex gap-4 flex-1 min-h-0">
+
+          {/* ── Lista compacta ── */}
+          <div className="flex-1 min-w-0 flex flex-col">
+            {loading ? (
+              <div className="bg-white rounded-2xl overflow-hidden" style={{ border: '1px solid rgba(120,80,200,0.08)' }}>
+                {[...Array(8)].map((_, i) => (
+                  <div key={i} className="flex items-center gap-3 px-4 py-3 animate-pulse" style={{ borderBottom: i < 7 ? '1px solid rgba(120,80,200,0.05)' : 'none' }}>
+                    <div className="w-8 h-8 rounded-full shrink-0" style={{ background: 'rgba(120,80,200,0.08)' }} />
+                    <div className="flex-1 space-y-1.5">
+                      <div className="h-3 w-36 rounded-full" style={{ background: 'rgba(120,80,200,0.08)' }} />
+                      <div className="h-2.5 w-24 rounded-full" style={{ background: 'rgba(120,80,200,0.05)' }} />
+                    </div>
+                    <div className="h-5 w-16 rounded-full" style={{ background: 'rgba(120,80,200,0.06)' }} />
                   </div>
-                  <div className="h-6 w-20 rounded-full" style={{ background: 'rgba(120,80,200,0.06)' }} />
-                  <div className="h-5 w-24 rounded-full" style={{ background: 'rgba(120,80,200,0.05)' }} />
-                  <div className="h-5 w-28 rounded-full" style={{ background: 'rgba(120,80,200,0.04)' }} />
-                </div>
-              ))}
-            </div>
-          ) : filtered.length === 0 ? (
-            /* Empty state */
-            <motion.div
-              initial={{ opacity: 0, scale: 0.97 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.28, ease: EASE_OUT }}
-              className="flex flex-col items-center justify-center py-24 bg-white rounded-2xl"
-              style={{ border: '1px solid rgba(120,80,200,0.08)', boxShadow: '0 2px 16px rgba(124,58,237,0.04)' }}
-            >
-              <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-5" style={{ background: 'rgba(124,58,237,0.08)' }}>
-                <Users className="w-8 h-8" style={{ color: '#7C3AED' }} />
-              </div>
-              <p className="text-[17px] font-bold mb-1" style={{ color: '#1A1028', fontFamily: 'var(--font-space-grotesk)' }}>
-                {search ? 'Sin resultados' : 'Sin miembros aún'}
-              </p>
-              <p className="text-[13px] mb-6" style={{ color: '#8E87A8' }}>
-                {search ? `No hay miembros que coincidan con "${search}"` : 'Agrega el primer miembro del club para comenzar'}
-              </p>
-              {!search && (
-                <motion.button onClick={openNew}
-                  whileHover={reducedMotion ? {} : { scale: 1.02 }}
-                  whileTap={reducedMotion ? {} : { scale: 0.97 }}
-                  transition={{ duration: 0.12 }}
-                  className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-[13px] font-bold text-white cursor-pointer"
-                  style={{ background: 'linear-gradient(135deg,#7C3AED,#4361EE)', boxShadow: '0 4px 16px rgba(124,58,237,0.28)' }}>
-                  <Plus className="w-4 h-4" /> Agregar primer miembro
-                </motion.button>
-              )}
-            </motion.div>
-          ) : (
-            /* Table */
-            <div className="bg-white rounded-2xl overflow-hidden" style={{ border: '1px solid rgba(120,80,200,0.08)', boxShadow: '0 2px 16px rgba(124,58,237,0.04)' }}>
-              {/* Head */}
-              <div className="grid px-6 py-3" style={{
-                gridTemplateColumns: '2fr 2fr 1fr 1.5fr 1.5fr 100px',
-                background: '#F7F7FB',
-                borderBottom: '1px solid rgba(120,80,200,0.07)',
-              }}>
-                {['Miembro', 'Email', 'Rol', 'Sedes', 'Categoría / Nivel', ''].map(h => (
-                  <span key={h} className="text-[10px] font-bold uppercase tracking-widest" style={{ color: '#8E87A8' }}>{h}</span>
                 ))}
               </div>
-
-              {/* Rows */}
+            ) : filtered.length === 0 ? (
               <motion.div
-                variants={{ hidden: {}, show: { transition: { staggerChildren: 0.04, delayChildren: 0.05 } } }}
-                initial="hidden" animate="show"
+                initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.28, ease: EASE_OUT }}
+                className="flex flex-col items-center justify-center py-24 bg-white rounded-2xl flex-1"
+                style={{ border: '1px solid rgba(120,80,200,0.08)' }}
               >
-                {filtered.map((m, idx) => {
-                  const rc = ROLE_COLORS[m.role] ?? ROLE_COLORS.STUDENT;
-                  return (
-                    <motion.div
-                      key={m.id}
-                      variants={{ hidden: { opacity: 0, y: 8 }, show: { opacity: 1, y: 0, transition: { duration: 0.22, ease: EASE_OUT } } }}
-                      onClick={() => setViewMember(m)}
-                      className="grid px-6 py-3.5 items-center group cursor-pointer transition-colors duration-150"
-                      style={{
-                        gridTemplateColumns: '2fr 2fr 1fr 1.5fr 1.5fr 100px',
-                        borderBottom: idx < filtered.length - 1 ? '1px solid rgba(120,80,200,0.05)' : 'none',
-                      }}
-                      onMouseEnter={e => (e.currentTarget.style.background = '#F7F7FB')}
-                      onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
-                    >
-                      {/* Miembro */}
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div
-                          className="w-9 h-9 rounded-full flex items-center justify-center text-[11px] font-bold text-white shrink-0"
-                          style={{ background: ROLE_GRADIENT[m.role] ?? ROLE_GRADIENT.STUDENT }}
-                        >
-                          {initials(m.fullName)}
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-[13px] font-bold truncate" style={{ color: '#1A1028' }}>{m.fullName}</p>
-                          {m.phone && <p className="text-[11px] truncate" style={{ color: '#8E87A8' }}>{m.phone}</p>}
-                        </div>
-                      </div>
-
-                      {/* Email */}
-                      <div className="min-w-0 pr-4">
-                        <p className="text-[12px] truncate lowercase" style={{ color: '#8E87A8' }}>{m.email ?? '—'}</p>
-                      </div>
-
-                      {/* Rol */}
-                      <div>
-                        <span className="inline-flex text-[11px] font-bold px-2.5 py-1 rounded-full" style={{ color: rc.text, background: rc.bg }}>
-                          {ROLES[m.role]}
-                        </span>
-                      </div>
-
-                      {/* Sedes */}
-                      <div className="flex flex-wrap gap-1 pr-2">
-                        {m.locations.length === 0
-                          ? <span className="text-[12px]" style={{ color: '#C4BFD8' }}>—</span>
-                          : m.locations.slice(0, 2).map(l => (
-                              <span key={l.location.id} className="text-[11px] font-semibold px-2 py-0.5 rounded-full"
-                                style={{ background: 'rgba(67,97,238,0.08)', color: '#4361EE' }}>
-                                {l.location.name}
-                              </span>
-                            ))
-                        }
-                        {m.locations.length > 2 && (
-                          <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full" style={{ background: 'rgba(142,135,168,0.10)', color: '#8E87A8' }}>
-                            +{m.locations.length - 2}
-                          </span>
-                        )}
-                      </div>
-
-                      {/* Categoría / Nivel */}
-                      <div className="flex flex-wrap gap-1 pr-2">
-                        {m.category || m.tipo ? (
-                          <>
-                            {m.category && (
-                              <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full" style={{ background: 'rgba(124,58,237,0.07)', color: '#7C3AED' }}>
-                                {m.category}
-                              </span>
-                            )}
-                            {m.tipo && (
-                              <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full" style={{ background: 'rgba(142,135,168,0.09)', color: '#8E87A8' }}>
-                                {m.tipo}
-                              </span>
-                            )}
-                          </>
-                        ) : (
-                          <span className="text-[12px]" style={{ color: '#C4BFD8' }}>—</span>
-                        )}
-                      </div>
-
-                      {/* Acciones */}
-                      <div className="flex items-center gap-1 justify-end opacity-0 group-hover:opacity-100 transition-opacity duration-150">
-                        <motion.button
-                          onClick={e => { e.stopPropagation(); setViewMember(m); }}
-                          whileTap={reducedMotion ? {} : { scale: 0.9 }}
-                          transition={{ duration: 0.1 }}
-                          className="w-7 h-7 rounded-lg flex items-center justify-center cursor-pointer"
-                          style={{ background: 'rgba(124,58,237,0.08)', color: '#7C3AED' }}
-                          aria-label="Ver perfil"
-                        >
-                          <Eye className="w-3.5 h-3.5" />
-                        </motion.button>
-                        <motion.button
-                          onClick={e => { e.stopPropagation(); openEdit(m); }}
-                          whileTap={reducedMotion ? {} : { scale: 0.9 }}
-                          transition={{ duration: 0.1 }}
-                          className="w-7 h-7 rounded-lg flex items-center justify-center cursor-pointer"
-                          style={{ background: 'rgba(67,97,238,0.08)', color: '#4361EE' }}
-                          aria-label="Editar"
-                        >
-                          <Pencil className="w-3.5 h-3.5" />
-                        </motion.button>
-                        <motion.button
-                          onClick={e => { e.stopPropagation(); handleDelete(m.id); }}
-                          whileTap={reducedMotion ? {} : { scale: 0.9 }}
-                          transition={{ duration: 0.1 }}
-                          className="w-7 h-7 rounded-lg flex items-center justify-center cursor-pointer"
-                          style={{ background: 'rgba(239,71,111,0.08)', color: '#EF476F' }}
-                          aria-label="Eliminar"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </motion.button>
-                      </div>
-                    </motion.div>
-                  );
-                })}
-              </motion.div>
-
-              {/* Footer count */}
-              <div className="px-6 py-3 flex items-center justify-between" style={{ borderTop: '1px solid rgba(120,80,200,0.06)', background: '#F7F7FB' }}>
-                <p className="text-[11px] font-semibold" style={{ color: '#8E87A8' }}>
-                  Mostrando <span style={{ color: '#1A1028' }}>{filtered.length}</span> de <span style={{ color: '#1A1028' }}>{members.length}</span> miembros
+                <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4" style={{ background: 'rgba(124,58,237,0.08)' }}>
+                  <Users className="w-7 h-7" style={{ color: '#7C3AED' }} />
+                </div>
+                <p className="text-[16px] font-bold mb-1" style={{ color: '#1A1028', fontFamily: 'var(--font-space-grotesk)' }}>
+                  {search ? 'Sin resultados' : 'Sin miembros aún'}
                 </p>
-                {search && (
-                  <button onClick={() => setSearch('')} className="text-[11px] font-semibold flex items-center gap-1 cursor-pointer" style={{ color: '#7C3AED' }}>
-                    <X className="w-3 h-3" /> Limpiar búsqueda
-                  </button>
+                <p className="text-[13px] mb-5" style={{ color: '#8E87A8' }}>
+                  {search ? `Sin coincidencias para "${search}"` : 'Agrega el primer miembro del club'}
+                </p>
+                {!search && (
+                  <motion.button onClick={openNew}
+                    whileTap={reducedMotion ? {} : { scale: 0.97 }} transition={{ duration: 0.12 }}
+                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-[13px] font-bold text-white cursor-pointer"
+                    style={{ background: 'linear-gradient(135deg,#7C3AED,#4361EE)' }}>
+                    <Plus className="w-4 h-4" /> Agregar miembro
+                  </motion.button>
                 )}
+              </motion.div>
+            ) : (
+              <div className="bg-white rounded-2xl overflow-hidden flex flex-col" style={{ border: '1px solid rgba(120,80,200,0.08)', boxShadow: '0 2px 16px rgba(124,58,237,0.04)' }}>
+                {/* Header columnas */}
+                <div className="grid px-4 py-2.5" style={{
+                  gridTemplateColumns: '1fr 120px 100px',
+                  background: '#F7F7FB',
+                  borderBottom: '1px solid rgba(120,80,200,0.07)',
+                }}>
+                  {['Miembro', 'Rol', 'Nivel'].map(h => (
+                    <span key={h} className="text-[10px] font-bold uppercase tracking-widest" style={{ color: '#8E87A8' }}>{h}</span>
+                  ))}
+                </div>
+
+                {/* Filas */}
+                <div className="overflow-y-auto flex-1">
+                  <motion.div
+                    variants={{ hidden: {}, show: { transition: { staggerChildren: 0.03, delayChildren: 0.04 } } }}
+                    initial="hidden" animate="show"
+                  >
+                    {filtered.map((m, idx) => {
+                      const rc = ROLE_COLORS[m.role] ?? ROLE_COLORS.STUDENT;
+                      const isSelected = viewMember?.id === m.id;
+                      return (
+                        <motion.div
+                          key={m.id}
+                          variants={{ hidden: { opacity: 0, x: -8 }, show: { opacity: 1, x: 0, transition: { duration: 0.22, ease: EASE_OUT } } }}
+                          onClick={() => setViewMember(isSelected ? null : m)}
+                          className="grid px-4 py-3 items-center cursor-pointer transition-all duration-150 relative"
+                          style={{
+                            gridTemplateColumns: '1fr 120px 100px',
+                            borderBottom: idx < filtered.length - 1 ? '1px solid rgba(120,80,200,0.05)' : 'none',
+                            background: isSelected ? 'rgba(124,58,237,0.06)' : 'transparent',
+                          }}
+                          onMouseEnter={e => { if (!isSelected) e.currentTarget.style.background = '#F7F7FB'; }}
+                          onMouseLeave={e => { if (!isSelected) e.currentTarget.style.background = 'transparent'; }}
+                        >
+                          {/* Borde izquierdo activo */}
+                          {isSelected && (
+                            <div className="absolute left-0 top-0 bottom-0 w-0.5 rounded-r-full" style={{ background: '#7C3AED' }} />
+                          )}
+
+                          {/* Miembro */}
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold text-white shrink-0"
+                              style={{ background: ROLE_GRADIENT[m.role] ?? ROLE_GRADIENT.STUDENT }}>
+                              {initials(m.fullName)}
+                            </div>
+                            <div className="min-w-0">
+                              <p className="text-[13px] font-bold truncate" style={{ color: isSelected ? '#7C3AED' : '#1A1028' }}>{m.fullName}</p>
+                              <p className="text-[11px] truncate lowercase" style={{ color: '#8E87A8' }}>
+                                {m.email ?? m.phone ?? '—'}
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Rol */}
+                          <div>
+                            <span className="inline-flex text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ color: rc.text, background: rc.bg }}>
+                              {ROLES[m.role]}
+                            </span>
+                          </div>
+
+                          {/* Nivel */}
+                          <div>
+                            {m.tipo
+                              ? <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full" style={{ background: 'rgba(142,135,168,0.09)', color: '#8E87A8' }}>{m.tipo}</span>
+                              : <span className="text-[12px]" style={{ color: '#C4BFD8' }}>—</span>
+                            }
+                          </div>
+                        </motion.div>
+                      );
+                    })}
+                  </motion.div>
+                </div>
+
+                {/* Footer */}
+                <div className="px-4 py-2.5 flex items-center justify-between" style={{ borderTop: '1px solid rgba(120,80,200,0.06)', background: '#F7F7FB' }}>
+                  <p className="text-[11px] font-semibold" style={{ color: '#8E87A8' }}>
+                    <span style={{ color: '#1A1028' }}>{filtered.length}</span> de <span style={{ color: '#1A1028' }}>{members.length}</span> miembros
+                  </p>
+                  {search && (
+                    <button onClick={() => setSearch('')} className="text-[11px] font-semibold flex items-center gap-1 cursor-pointer" style={{ color: '#7C3AED' }}>
+                      <X className="w-3 h-3" /> Limpiar
+                    </button>
+                  )}
+                </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
+
+          {/* ── Panel lateral de detalle ── */}
+          <AnimatePresence>
+            {viewMember && (
+              <motion.div
+                key="side-panel"
+                initial={reducedMotion ? { opacity: 0 } : { opacity: 0, x: 24 }}
+                animate={reducedMotion ? { opacity: 1 } : { opacity: 1, x: 0 }}
+                exit={reducedMotion ? { opacity: 0 } : { opacity: 0, x: 24 }}
+                transition={{ duration: 0.28, ease: EASE_IOS }}
+                className="flex flex-col bg-white rounded-2xl overflow-hidden shrink-0"
+                style={{
+                  width: 340,
+                  border: '1px solid rgba(120,80,200,0.10)',
+                  boxShadow: '0 8px 32px rgba(124,58,237,0.10)',
+                }}
+              >
+                {/* Hero */}
+                <div className="relative px-5 pt-5 pb-4 shrink-0" style={{ background: ROLE_GRADIENT[viewMember.role] ?? ROLE_GRADIENT.STUDENT }}>
+                  <button onClick={() => setViewMember(null)}
+                    className="absolute top-3 right-3 w-7 h-7 rounded-full flex items-center justify-center cursor-pointer"
+                    style={{ background: 'rgba(255,255,255,0.2)' }}>
+                    <X className="w-3.5 h-3.5 text-white" />
+                  </button>
+                  <div className="flex items-center gap-3">
+                    <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-lg font-extrabold text-white shrink-0"
+                      style={{ background: 'rgba(255,255,255,0.2)' }}>
+                      {initials(viewMember.fullName)}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-white/70 text-[10px] font-bold uppercase tracking-widest mb-0.5">{ROLES[viewMember.role]}</p>
+                      <h2 className="text-white font-extrabold text-[16px] leading-tight truncate" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
+                        {viewMember.fullName}
+                      </h2>
+                      {viewMember.category && (
+                        <p className="text-white/75 text-[11px] mt-0.5">{viewMember.category}{viewMember.tipo ? ` · ${viewMember.tipo}` : ''}</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Info scrollable */}
+                <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
+                  {/* Contacto */}
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-widest mb-2.5" style={{ color: '#8E87A8' }}>Contacto</p>
+                    <div className="space-y-2">
+                      {viewMember.phone && (
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'rgba(124,58,237,0.08)' }}>
+                            <Phone className="w-3 h-3" style={{ color: '#7C3AED' }} />
+                          </div>
+                          <div>
+                            <p className="text-[10px]" style={{ color: '#8E87A8' }}>Teléfono</p>
+                            <p className="text-[12px] font-semibold" style={{ color: '#1A1028' }}>{viewMember.phone}</p>
+                          </div>
+                        </div>
+                      )}
+                      {viewMember.email && (
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'rgba(124,58,237,0.08)' }}>
+                            <Mail className="w-3 h-3" style={{ color: '#7C3AED' }} />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-[10px]" style={{ color: '#8E87A8' }}>Correo</p>
+                            <p className="text-[12px] font-semibold truncate lowercase" style={{ color: '#1A1028' }}>{viewMember.email}</p>
+                          </div>
+                        </div>
+                      )}
+                      {viewMember.birthDate && (
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'rgba(124,58,237,0.08)' }}>
+                            <Calendar className="w-3 h-3" style={{ color: '#7C3AED' }} />
+                          </div>
+                          <div>
+                            <p className="text-[10px]" style={{ color: '#8E87A8' }}>Nacimiento</p>
+                            <p className="text-[12px] font-semibold" style={{ color: '#1A1028' }}>
+                              {parseLocalDate(viewMember.birthDate).toLocaleDateString('es-CO', { day: 'numeric', month: 'long', year: 'numeric' })}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Acudiente */}
+                  {(viewMember.emergencyContact || viewMember.emergencyPhone) && (
+                    <div>
+                      <p className="text-[10px] font-bold uppercase tracking-widest mb-2.5" style={{ color: '#8E87A8' }}>Acudiente</p>
+                      <div className="space-y-2">
+                        {viewMember.emergencyContact && (
+                          <div className="flex items-center gap-2.5">
+                            <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'rgba(67,97,238,0.08)' }}>
+                              <Shield className="w-3 h-3" style={{ color: '#4361EE' }} />
+                            </div>
+                            <div>
+                              <p className="text-[10px]" style={{ color: '#8E87A8' }}>Nombre</p>
+                              <p className="text-[12px] font-semibold" style={{ color: '#1A1028' }}>{viewMember.emergencyContact}</p>
+                            </div>
+                          </div>
+                        )}
+                        {viewMember.emergencyPhone && (
+                          <div className="flex items-center gap-2.5">
+                            <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'rgba(67,97,238,0.08)' }}>
+                              <Phone className="w-3 h-3" style={{ color: '#4361EE' }} />
+                            </div>
+                            <div>
+                              <p className="text-[10px]" style={{ color: '#8E87A8' }}>Teléfono</p>
+                              <p className="text-[12px] font-semibold" style={{ color: '#1A1028' }}>{viewMember.emergencyPhone}</p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Salud */}
+                  {viewMember.eps && (
+                    <div>
+                      <p className="text-[10px] font-bold uppercase tracking-widest mb-2.5" style={{ color: '#8E87A8' }}>Salud</p>
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'rgba(6,214,160,0.08)' }}>
+                          <Heart className="w-3 h-3" style={{ color: '#06D6A0' }} />
+                        </div>
+                        <div>
+                          <p className="text-[10px]" style={{ color: '#8E87A8' }}>EPS</p>
+                          <p className="text-[12px] font-semibold" style={{ color: '#1A1028' }}>{viewMember.eps}</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Sedes */}
+                  {viewMember.locations.length > 0 && (
+                    <div>
+                      <p className="text-[10px] font-bold uppercase tracking-widest mb-2.5" style={{ color: '#8E87A8' }}>Sedes</p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {viewMember.locations.map(l => (
+                          <div key={l.location.id} className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg" style={{ background: 'rgba(124,58,237,0.08)' }}>
+                            <MapPin className="w-3 h-3 shrink-0" style={{ color: '#7C3AED' }} />
+                            <span className="text-[11px] font-semibold" style={{ color: '#7C3AED' }}>{l.location.name}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Acciones */}
+                <div className="px-5 py-4 shrink-0 flex gap-2" style={{ borderTop: '1px solid rgba(120,80,200,0.08)' }}>
+                  <motion.button
+                    whileTap={reducedMotion ? {} : { scale: 0.97 }} transition={{ duration: 0.12, ease: EASE_OUT }}
+                    onClick={() => { setViewMember(null); openEdit(viewMember); }}
+                    className="flex-1 py-2.5 rounded-xl font-bold text-[13px] text-white flex items-center justify-center gap-2 cursor-pointer"
+                    style={{ background: 'linear-gradient(135deg,#7C3AED,#4361EE)' }}
+                  >
+                    <Pencil className="w-3.5 h-3.5" /> Editar
+                  </motion.button>
+                  <motion.button
+                    whileTap={reducedMotion ? {} : { scale: 0.97 }} transition={{ duration: 0.12, ease: EASE_OUT }}
+                    onClick={() => { handleDelete(viewMember.id); setViewMember(null); }}
+                    className="w-10 h-10 rounded-xl flex items-center justify-center cursor-pointer shrink-0"
+                    style={{ background: 'rgba(239,71,111,0.08)', color: '#EF476F' }}
+                    aria-label="Eliminar miembro"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </motion.button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
         </div>
       </div>
 
@@ -1030,7 +1138,8 @@ export default function MiembrosPage() {
         )}
       </AnimatePresence>
 
-      {/* ── Modal Ver Deportista ───────────────────────────────────────────── */}
+      {/* ── Modal Ver Deportista (solo mobile) ────────────────────────────── */}
+      <div className="md:hidden">
       <AnimatePresence>
         {viewMember && (
           <>
@@ -1215,6 +1324,7 @@ export default function MiembrosPage() {
           </>
         )}
       </AnimatePresence>
+      </div>
 
       {/* ── Modal importar Excel ────────────────────────────────────────────── */}
       <Dialog open={importOpen} onOpenChange={v => { if (!importing) { setImportOpen(v); setImportErrors([]); } }}>

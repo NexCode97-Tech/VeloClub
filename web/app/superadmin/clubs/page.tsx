@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiFetch } from '@/lib/api-client';
 import { motion, AnimatePresence, type Variants } from 'framer-motion';
-import { Trash2, ChevronDown, Check, MessageCircle } from 'lucide-react';
+import { Trash2, ChevronDown, Check, MessageCircle, CreditCard } from 'lucide-react';
 
 // ── Easing ────────────────────────────────────────────────────────────────────
 const EASE    = [0.23, 1, 0.32, 1]  as [number,number,number,number];
@@ -555,9 +555,23 @@ export default function ClubsPage() {
                           <span style={{ flexShrink: 0, fontSize: 9, fontWeight: 700, padding: '2px 7px', borderRadius: 99, background: club.active ? 'rgba(6,214,160,0.12)' : 'rgba(239,71,111,0.12)', color: club.active ? '#06D6A0' : '#EF476F' }}>
                             {club.active ? 'Activo' : 'Inactivo'}
                           </span>
-                          {/* Badge de estado de plan (trial / sin plan) junto al estado activo */}
-                          {!club.suscripcion && (() => {
+                          {/* Badge de plan / trial */}
+                          {(() => {
                             const now = new Date();
+                            if (club.suscripcion) {
+                              const planLabel: Record<string, string> = { MENSUAL: 'Mensual', TRIMESTRAL: 'Trimestral', ANUAL: 'Anual' };
+                              const planColor: Record<string, { color: string; bg: string }> = {
+                                MENSUAL:    { color: '#7C3AED', bg: 'rgba(124,58,237,0.12)' },
+                                TRIMESTRAL: { color: '#4361EE', bg: 'rgba(67,97,238,0.12)'  },
+                                ANUAL:      { color: '#06D6A0', bg: 'rgba(6,214,160,0.12)'  },
+                              };
+                              const pc = planColor[club.suscripcion.tipoPlan] ?? planColor.MENSUAL;
+                              return (
+                                <span style={{ flexShrink: 0, fontSize: 9, fontWeight: 700, padding: '2px 7px', borderRadius: 99, background: pc.bg, color: pc.color }}>
+                                  {planLabel[club.suscripcion.tipoPlan] ?? club.suscripcion.tipoPlan}
+                                </span>
+                              );
+                            }
                             if (club.trialEndsAt) {
                               const ends = new Date(club.trialEndsAt);
                               const expired = ends < now;
@@ -622,6 +636,15 @@ export default function ClubsPage() {
                     style={{ flex: 1, padding: '8px 0', borderRadius: 10, border: `1px solid ${membersClubId === club.id ? 'rgba(124,58,237,0.40)' : 'rgba(124,58,237,0.18)'}`, background: membersClubId === club.id ? 'rgba(124,58,237,0.10)' : 'transparent', color: '#7C3AED', fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'Plus Jakarta Sans, sans-serif', transition: 'all 0.15s' }}
                   >
                     {membersClubId === club.id ? 'Cerrar' : 'Miembros'}
+                  </motion.button>
+                  {/* Gestionar plan → va a Finanzas */}
+                  <motion.button
+                    onClick={() => router.push('/superadmin/finanzas')}
+                    whileTap={{ scale: 0.96 }} transition={{ duration: 0.12, ease: EASE }}
+                    title="Gestionar plan"
+                    style={{ width: 36, borderRadius: 10, border: `1px solid ${club.suscripcion ? 'rgba(124,58,237,0.28)' : 'rgba(142,135,168,0.20)'}`, background: club.suscripcion ? 'rgba(124,58,237,0.07)' : 'rgba(142,135,168,0.07)', color: club.suscripcion ? '#7C3AED' : '#8E87A8', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                  >
+                    <CreditCard size={14} />
                   </motion.button>
                   <motion.button
                     onClick={() => handleToggle(club.id)}

@@ -212,11 +212,25 @@ export default function AsistenciaPage() {
             ) : (
               <>
                 {/* Resumen */}
-                <motion.div variants={cardVariant} className="grid grid-cols-4 gap-2">
+                <motion.div variants={cardVariant} className="grid grid-cols-4 gap-2 md:gap-3">
                   {counts.map(({ s, n }) => (
-                    <div key={s} className="bg-white border border-border rounded-xl py-2 text-center">
-                      <div className="text-base font-extrabold leading-none mb-0.5" style={{ color: STATUS_COLOR[s], fontFamily: 'var(--font-space-grotesk)' }}>{n}</div>
-                      <div className="text-[9px] text-muted-foreground">{STATUS_NAME[s]}</div>
+                    <div
+                      key={s}
+                      className="bg-white border border-border rounded-xl text-center flex flex-col items-center justify-center py-3 md:py-5 md:rounded-2xl"
+                      style={{ boxShadow: '0 1px 6px rgba(0,0,0,0.04)' }}
+                    >
+                      <div
+                        className="text-xl md:text-[36px] font-extrabold leading-none mb-1"
+                        style={{ color: STATUS_COLOR[s], fontFamily: 'var(--font-space-grotesk)' }}
+                      >
+                        {n}
+                      </div>
+                      <div className="text-[10px] md:text-[13px] font-semibold text-muted-foreground md:mt-0.5">
+                        {s === 'PRESENT' ? 'Presentes'
+                          : s === 'LATE' ? 'Tardanzas'
+                          : s === 'ABSENT' ? 'Ausentes'
+                          : 'Med. Excusa'}
+                      </div>
                     </div>
                   ))}
                 </motion.div>

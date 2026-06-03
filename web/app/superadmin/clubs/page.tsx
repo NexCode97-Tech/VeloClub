@@ -101,7 +101,7 @@ export default function ClubsPage() {
   const [saving,  setSaving]  = useState(false);
 
   const [editId,   setEditId]   = useState<string | null>(null);
-  const [editName, setEditName] = useState('');
+  const [editForm, setEditForm] = useState({ clubName: '', adminName: '', adminEmail: '', deporte: '' });
 
   const [membersClubId,   setMembersClubId]   = useState<string | null>(null);
   const [members,         setMembers]         = useState<Member[]>([]);
@@ -141,9 +141,17 @@ export default function ClubsPage() {
   }
 
   async function handleEdit(id: string) {
-    if (!editName.trim()) return;
+    if (!editForm.clubName.trim()) return;
     const token = await getToken();
-    await apiFetch(`/superadmin/clubs/${id}`, { method: 'PATCH', token, body: JSON.stringify({ name: editName }) });
+    await apiFetch(`/superadmin/clubs/${id}`, {
+      method: 'PATCH', token,
+      body: JSON.stringify({
+        name:       editForm.clubName,
+        deporte:    editForm.deporte || null,
+        adminName:  editForm.adminName || undefined,
+        adminEmail: editForm.adminEmail || undefined,
+      }),
+    });
     setEditId(null);
     await load();
   }
@@ -335,26 +343,64 @@ export default function ClubsPage() {
                 variants={cardVariant}
                 style={{ background: '#fff', border: '1px solid rgba(120,80,200,0.10)', borderRadius: 20, padding: '14px 14px 12px', marginBottom: 10 }}
               >
-                {/* Editar nombre inline */}
+                {/* Formulario de edición completo */}
                 {editId === club.id ? (
                   <motion.div
                     initial={{ opacity: 0, y: 4 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.18, ease: EASE }}
-                    style={{ display: 'flex', gap: 8, marginBottom: 12 }}
+                    transition={{ duration: 0.22, ease: EASE }}
+                    style={{ marginBottom: 12 }}
                   >
-                    <input value={editName} onChange={e => setEditName(e.target.value)}
-                      style={{ ...inp, flex: 1 }} autoFocus />
-                    <motion.button onClick={() => handleEdit(club.id)}
-                      whileTap={{ scale: 0.94 }} transition={{ duration: 0.12 }}
-                      style={{ padding: '0 14px', height: 42, borderRadius: 10, background: '#7C3AED', border: 'none', color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
-                      Guardar
-                    </motion.button>
-                    <motion.button onClick={() => setEditId(null)}
-                      whileTap={{ scale: 0.94 }} transition={{ duration: 0.12 }}
-                      style={{ width: 42, height: 42, borderRadius: 10, border: '1.5px solid rgba(120,80,200,0.15)', background: 'transparent', color: '#8E87A8', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                    </motion.button>
+                    <p style={{ margin: '0 0 12px', fontSize: 12, fontWeight: 700, color: '#7C3AED', fontFamily: 'Space Grotesk, sans-serif' }}>
+                      Editar club
+                    </p>
+                    {[
+                      { label: 'Nombre del club',  key: 'clubName',   type: 'text',  placeholder: 'Ej: Club Patinaje Norte' },
+                      { label: 'Nombre del admin', key: 'adminName',  type: 'text',  placeholder: 'Nombre completo' },
+                      { label: 'Email del admin',  key: 'adminEmail', type: 'email', placeholder: 'admin@ejemplo.com' },
+                    ].map(({ label, key, type, placeholder }) => (
+                      <div key={key} style={{ marginBottom: 8 }}>
+                        <p style={{ margin: '0 0 3px', fontSize: 9, fontWeight: 600, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                          {label}
+                        </p>
+                        <input
+                          type={type}
+                          placeholder={placeholder}
+                          value={(editForm as Record<string, string>)[key]}
+                          onChange={e => setEditForm(f => ({ ...f, [key]: e.target.value }))}
+                          style={inp}
+                          autoFocus={key === 'clubName'}
+                        />
+                      </div>
+                    ))}
+                    <div style={{ marginBottom: 12 }}>
+                      <p style={{ margin: '0 0 3px', fontSize: 9, fontWeight: 600, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                        Deporte principal
+                      </p>
+                      <select
+                        value={editForm.deporte}
+                        onChange={e => setEditForm(f => ({ ...f, deporte: e.target.value }))}
+                        style={{ ...inp, color: editForm.deporte ? '#1A1028' : '#8E87A8' }}
+                      >
+                        <option value="">Sin especificar</option>
+                        {['Patinaje','Ciclismo','Fútbol','Natación','Atletismo','Baloncesto','Voleibol','Tenis','Natación artística','Otro'].map(d => (
+                          <option key={d} value={d}>{d}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <motion.button onClick={() => setEditId(null)}
+                        whileTap={{ scale: 0.97 }} transition={{ duration: 0.12 }}
+                        style={{ flex: 1, padding: '10px 0', borderRadius: 12, border: '1.5px solid rgba(120,80,200,0.15)', background: 'transparent', color: '#8E87A8', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
+                        Cancelar
+                      </motion.button>
+                      <motion.button onClick={() => handleEdit(club.id)}
+                        disabled={!editForm.clubName.trim()}
+                        whileTap={{ scale: 0.97 }} transition={{ duration: 0.12 }}
+                        style={{ flex: 2, padding: '10px 0', borderRadius: 12, border: 'none', background: '#7C3AED', color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'Plus Jakarta Sans, sans-serif', boxShadow: '0 3px 14px rgba(124,58,237,0.28)', opacity: !editForm.clubName.trim() ? 0.6 : 1 }}>
+                        Guardar cambios
+                      </motion.button>
+                    </div>
                   </motion.div>
                 ) : (
                   <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 10 }}>
@@ -391,7 +437,19 @@ export default function ClubsPage() {
                     </div>
                     {/* Editar */}
                     <motion.button
-                      onClick={() => { setEditId(club.id); setEditName(club.name); }}
+                      onClick={async () => {
+                        // Cargar el admin actual para pre-popular el formulario
+                        const token = await getToken();
+                        const res = await apiFetch<{ members: Member[] }>(`/superadmin/clubs/${club.id}/miembros`, { token });
+                        const admin = res.members.find(m => m.role === 'ADMIN');
+                        setEditForm({
+                          clubName:   club.name,
+                          adminName:  admin?.fullName ?? '',
+                          adminEmail: admin?.email ?? '',
+                          deporte:    club.deporte ?? '',
+                        });
+                        setEditId(club.id);
+                      }}
                       whileTap={{ scale: 0.88 }} transition={{ duration: 0.12, ease: EASE }}
                       style={{ width: 32, height: 32, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(124,58,237,0.07)', border: '1px solid rgba(124,58,237,0.12)', color: '#7C3AED', cursor: 'pointer', flexShrink: 0, marginLeft: 8 }}
                     >

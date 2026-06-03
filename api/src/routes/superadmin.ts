@@ -91,12 +91,51 @@ router.patch('/clubs/:id/toggle', requireAuth, requireSuperadmin, async (req, re
   res.json({ club: updated });
 });
 
-// PATCH /superadmin/clubs/:id — editar nombre del club
+// PATCH /superadmin/clubs/:id — editar info del club
+const editClubSchema = z.object({
+  name:       z.string().min(2).max(100).optional(),
+  deporte:    z.string().optional().nullable(),
+  adminName:  z.string().min(2).max(100).optional(),
+  adminEmail: z.string().email().optional(),
+});
+
 router.patch('/clubs/:id', requireAuth, requireSuperadmin, async (req, res) => {
   const id = String(req.params.id);
-  const { name } = req.body;
-  if (!name || String(name).trim().length < 2) return res.status(400).json({ error: 'Nombre inválido' });
-  const club = await prisma.club.update({ where: { id }, data: { name: String(name).trim() } });
+  const parsed = editClubSchema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: parsed.error.issues });
+
+  const { name, deporte, adminName, adminEmail } = parsed.data;
+
+  // Actualizar el club
+  const clubData: Record<string, unknown> = {};
+  if (name)           clubData.name    = name.trim();
+  if (deporte !== undefined) clubData.deporte = deporte || null;
+
+  const club = await prisma.club.update({ where: { id }, data: clubData });
+
+  // Actualizar al admin del club si se enviaron datos
+  if (adminName || adminEmail) {
+    const adminMember = await prisma.member.findFirst({
+      where: { clubId: id, role: 'ADMIN' },
+      orderBy: { createdAt: 'asc' },
+    });
+    if (adminMember) {
+      const memberData: Record<string, unknown> = {};
+      if (adminName)  memberData.fullName = adminName.trim();
+      if (adminEmail && adminEmail !== adminMember.email) {
+        // Quitar email viejo del allowlist y agregar el nuevo
+        if (adminMember.email) {
+          try { await removeFromAllowlist(adminMember.email); } catch { /* ignorar */ }
+        }
+        await addToAllowlist(adminEmail);
+        memberData.email = adminEmail;
+      }
+      if (Object.keys(memberData).length > 0) {
+        await prisma.member.update({ where: { id: adminMember.id }, data: memberData });
+      }
+    }
+  }
+
   res.json({ club });
 });
 

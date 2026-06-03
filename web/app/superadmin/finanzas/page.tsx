@@ -32,7 +32,7 @@ type EstadoPago = 'PAID' | 'PENDING' | 'OVERDUE';
 
 interface Pago { id: string; concepto: string; monto: number; fecha: string | null; estado: EstadoPago; receiptUrl?: string | null; receiptPublicId?: string | null; }
 interface Suscripcion { id: string; planMonto: number; tipoPlan: TipoPlan; año: number; pagos: Pago[]; }
-interface ClubConSuscripcion { id: string; name: string; active: boolean; logoUrl?: string | null; suscripcion: Suscripcion | null; }
+interface ClubConSuscripcion { id: string; name: string; active: boolean; logoUrl?: string | null; createdAt: string; trialEndsAt?: string | null; suscripcion: Suscripcion | null; }
 
 // ── Constantes ────────────────────────────────────────────────────────────────
 const PLAN_OPTIONS: { value: TipoPlan; label: string; sub: string; multiplier: number }[] = [
@@ -84,6 +84,21 @@ const expandY: Variants = {
   show:   { opacity: 1, height: 'auto', overflow: 'hidden', transition: { duration: 0.28, ease: EASE } },
   exit:   { opacity: 0, height: 0, overflow: 'hidden', transition: { duration: 0.20, ease: EASE_IN } },
 };
+
+// ── Trial helpers ─────────────────────────────────────────────────────────────
+function trialInfo(createdAt: string, trialEndsAt?: string | null): { daysLeft: number; pct: number; label: string; color: string; bg: string } | null {
+  // Si tiene trialEndsAt usa esa fecha, si no asume 15 días desde creación
+  const end = trialEndsAt ? new Date(trialEndsAt) : (() => { const d = new Date(createdAt); d.setDate(d.getDate() + 15); return d; })();
+  const now = new Date();
+  const totalMs = end.getTime() - new Date(createdAt).getTime();
+  const remainingMs = end.getTime() - now.getTime();
+  const daysLeft = Math.max(0, Math.ceil(remainingMs / 86_400_000));
+  const pct = totalMs > 0 ? Math.max(0, Math.min(100, Math.round(remainingMs / totalMs * 100))) : 0;
+  if (daysLeft === 0) return { daysLeft: 0, pct: 0, label: 'Prueba vencida', color: '#EF476F', bg: 'rgba(239,71,111,0.10)' };
+  if (daysLeft <= 3)  return { daysLeft, pct, label: `Prueba · ${daysLeft}d`, color: '#EF476F', bg: 'rgba(239,71,111,0.10)' };
+  if (daysLeft <= 7)  return { daysLeft, pct, label: `Prueba · ${daysLeft}d`, color: '#FFB703', bg: 'rgba(255,183,3,0.10)' };
+  return { daysLeft, pct, label: `Prueba · ${daysLeft}d`, color: '#4361EE', bg: 'rgba(67,97,238,0.10)' };
+}
 
 // ── Segmented control plan ────────────────────────────────────────────────────
 function PlanSelector({ value, onChange }: { value: TipoPlan; onChange: (v: TipoPlan) => void }) {
@@ -350,6 +365,7 @@ export default function FinanzasPage() {
             const pct     = meta > 0 ? Math.min(100, Math.round(rec / meta * 100)) : 0;
             const pctColor = pct >= 100 ? '#06D6A0' : pct > 50 ? '#FFB703' : '#EF476F';
             const pb       = PLAN_BADGE[tipo];
+            const trial    = !sus ? trialInfo(c.createdAt, c.trialEndsAt) : null;
 
             return (
               <motion.div key={c.id} variants={fadeUp}
@@ -359,12 +375,16 @@ export default function FinanzasPage() {
                 {/* ── Cabecera con gradiente según plan ── */}
                 <div style={{
                   padding: '14px 14px 12px',
-                  background: sus ? `linear-gradient(135deg, ${pb.bg} 0%, rgba(255,255,255,0) 60%)` : 'rgba(142,135,168,0.05)',
+                  background: sus
+                    ? `linear-gradient(135deg, ${pb.bg} 0%, rgba(255,255,255,0) 60%)`
+                    : trial
+                      ? `linear-gradient(135deg, ${trial.bg} 0%, rgba(255,255,255,0) 60%)`
+                      : 'rgba(142,135,168,0.05)',
                   borderBottom: '1px solid rgba(120,80,200,0.07)',
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                     {/* Avatar */}
-                    <div style={{ width: 48, height: 48, borderRadius: 12, background: sus ? pb.bg : 'rgba(142,135,168,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 800, color: sus ? pb.color : '#8E87A8', fontFamily: 'Space Grotesk, sans-serif', flexShrink: 0, overflow: 'hidden' }}>
+                    <div style={{ width: 48, height: 48, borderRadius: 12, background: sus ? pb.bg : trial ? trial.bg : 'rgba(142,135,168,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 800, color: sus ? pb.color : trial ? trial.color : '#8E87A8', fontFamily: 'Space Grotesk, sans-serif', flexShrink: 0, overflow: 'hidden' }}>
                       {c.logoUrl
                         ? <img src={c.logoUrl} alt={c.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                         : c.name.charAt(0).toUpperCase()
@@ -380,6 +400,11 @@ export default function FinanzasPage() {
                         {sus && (
                           <span style={{ flexShrink: 0, fontSize: 9, fontWeight: 700, padding: '2px 8px', borderRadius: 99, background: pb.bg, color: pb.color }}>
                             {pb.label}
+                          </span>
+                        )}
+                        {!sus && trial && (
+                          <span style={{ flexShrink: 0, fontSize: 9, fontWeight: 700, padding: '2px 8px', borderRadius: 99, background: trial.bg, color: trial.color }}>
+                            {trial.label}
                           </span>
                         )}
                       </div>
@@ -418,22 +443,42 @@ export default function FinanzasPage() {
                       )}
                     </div>
 
-                    {/* % recaudado */}
+                    {/* % recaudado (plan activo) */}
                     {sus && (
                       <div style={{ textAlign: 'center', flexShrink: 0 }}>
                         <p style={{ margin: 0, fontSize: 24, fontWeight: 800, color: pctColor, fontFamily: 'Space Grotesk, sans-serif', lineHeight: 1 }}>{pct}%</p>
                         <p style={{ margin: '2px 0 0', fontSize: 9, color: '#8E87A8', whiteSpace: 'nowrap' }}>{fmt.format(rec)}</p>
                       </div>
                     )}
+
+                    {/* Días restantes de prueba */}
+                    {!sus && trial && (
+                      <div style={{ textAlign: 'center', flexShrink: 0 }}>
+                        <p style={{ margin: 0, fontSize: 24, fontWeight: 800, color: trial.color, fontFamily: 'Space Grotesk, sans-serif', lineHeight: 1 }}>{trial.daysLeft}</p>
+                        <p style={{ margin: '2px 0 0', fontSize: 9, color: '#8E87A8', whiteSpace: 'nowrap' }}>días</p>
+                      </div>
+                    )}
                   </div>
 
-                  {/* Barra de progreso */}
+                  {/* Barra de progreso — plan pagado */}
                   {sus && (
                     <div style={{ marginTop: 12, height: 6, borderRadius: 99, background: 'rgba(120,80,200,0.08)', overflow: 'hidden' }}>
                       <motion.div
                         style={{ height: '100%', borderRadius: 99, background: `linear-gradient(90deg, ${pctColor}, ${pct >= 100 ? '#7C3AED' : pct > 50 ? '#FB8500' : '#F72585'})` }}
                         initial={{ width: 0 }}
                         animate={{ width: `${pct}%` }}
+                        transition={{ duration: 0.8, ease: EASE, delay: 0.2 }}
+                      />
+                    </div>
+                  )}
+
+                  {/* Barra de prueba */}
+                  {!sus && trial && (
+                    <div style={{ marginTop: 12, height: 6, borderRadius: 99, background: 'rgba(120,80,200,0.08)', overflow: 'hidden' }}>
+                      <motion.div
+                        style={{ height: '100%', borderRadius: 99, background: `linear-gradient(90deg, ${trial.color}, ${trial.daysLeft <= 3 ? '#F72585' : trial.daysLeft <= 7 ? '#FB8500' : '#4361EE'})` }}
+                        initial={{ width: 0 }}
+                        animate={{ width: `${trial.pct}%` }}
                         transition={{ duration: 0.8, ease: EASE, delay: 0.2 }}
                       />
                     </div>
@@ -496,6 +541,7 @@ export default function FinanzasPage() {
                                   transition={{ duration: 0.15 }}
                                   style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderLeft: `3px solid ${st.color}`, background: `${st.color}07` }}
                                 >
+                                  {/* Concepto + fecha */}
                                   <div style={{ flex: 1, minWidth: 0 }}>
                                     <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: '#1A1028', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.concepto}</p>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 2 }}>
@@ -505,27 +551,32 @@ export default function FinanzasPage() {
                                       </span>
                                     </div>
                                   </div>
-                                  <div style={{ flexShrink: 0, textAlign: 'right' }}>
-                                    <p style={{ margin: 0, fontSize: 14, fontWeight: 800, color: st.color, fontFamily: 'Space Grotesk, sans-serif', lineHeight: 1 }}>{fmt.format(p.monto)}</p>
-                                    <span style={{ display: 'inline-block', marginTop: 3, fontSize: 9, fontWeight: 700, padding: '2px 7px', borderRadius: 99, background: st.bg, color: st.color }}>
-                                      {st.label}
-                                    </span>
-                                  </div>
-                                  <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
-                                    <motion.button onClick={() => { setReceiptModal(p); setReceiptFile(null); setReceiptError(null); }}
-                                      whileTap={{ scale: 0.88 }} transition={{ duration: 0.12 }}
-                                      title={p.receiptUrl ? 'Ver comprobante' : 'Subir comprobante'}
-                                      style={{ width: 30, height: 30, borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', background: p.receiptUrl ? 'rgba(6,214,160,0.10)' : 'rgba(120,80,200,0.07)', border: `1px solid ${p.receiptUrl ? 'rgba(6,214,160,0.28)' : 'rgba(120,80,200,0.15)'}`, color: p.receiptUrl ? '#06D6A0' : '#8E87A8', cursor: 'pointer' }}>
-                                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
-                                    </motion.button>
-                                    <motion.button onClick={() => startEditPago(p)} whileTap={{ scale: 0.88 }} transition={{ duration: 0.12 }}
-                                      style={{ width: 30, height: 30, borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(124,58,237,0.08)', border: '1px solid rgba(124,58,237,0.15)', color: '#7C3AED', cursor: 'pointer' }}>
-                                      <Pencil size={12} />
-                                    </motion.button>
-                                    <motion.button onClick={() => deletePago(p.id)} whileTap={{ scale: 0.88 }} transition={{ duration: 0.12 }}
-                                      style={{ width: 30, height: 30, borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(239,71,111,0.08)', border: '1px solid rgba(239,71,111,0.18)', color: '#EF476F', cursor: 'pointer' }}>
-                                      <Trash2 size={12} />
-                                    </motion.button>
+
+                                  {/* Monto + estado arriba, iconos abajo */}
+                                  <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
+                                    <div style={{ textAlign: 'right' }}>
+                                      <p style={{ margin: 0, fontSize: 14, fontWeight: 800, color: st.color, fontFamily: 'Space Grotesk, sans-serif', lineHeight: 1 }}>{fmt.format(p.monto)}</p>
+                                      <span style={{ display: 'inline-block', marginTop: 3, fontSize: 9, fontWeight: 700, padding: '2px 7px', borderRadius: 99, background: st.bg, color: st.color }}>
+                                        {st.label}
+                                      </span>
+                                    </div>
+                                    {/* Iconos debajo del monto */}
+                                    <div style={{ display: 'flex', gap: 4 }}>
+                                      <motion.button onClick={() => { setReceiptModal(p); setReceiptFile(null); setReceiptError(null); }}
+                                        whileTap={{ scale: 0.88 }} transition={{ duration: 0.12 }}
+                                        title={p.receiptUrl ? 'Ver comprobante' : 'Subir comprobante'}
+                                        style={{ width: 28, height: 28, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', background: p.receiptUrl ? 'rgba(6,214,160,0.10)' : 'rgba(120,80,200,0.07)', border: `1px solid ${p.receiptUrl ? 'rgba(6,214,160,0.28)' : 'rgba(120,80,200,0.15)'}`, color: p.receiptUrl ? '#06D6A0' : '#8E87A8', cursor: 'pointer' }}>
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+                                      </motion.button>
+                                      <motion.button onClick={() => startEditPago(p)} whileTap={{ scale: 0.88 }} transition={{ duration: 0.12 }}
+                                        style={{ width: 28, height: 28, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(124,58,237,0.08)', border: '1px solid rgba(124,58,237,0.15)', color: '#7C3AED', cursor: 'pointer' }}>
+                                        <Pencil size={11} />
+                                      </motion.button>
+                                      <motion.button onClick={() => deletePago(p.id)} whileTap={{ scale: 0.88 }} transition={{ duration: 0.12 }}
+                                        style={{ width: 28, height: 28, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(239,71,111,0.08)', border: '1px solid rgba(239,71,111,0.18)', color: '#EF476F', cursor: 'pointer' }}>
+                                        <Trash2 size={11} />
+                                      </motion.button>
+                                    </div>
                                   </div>
                                 </motion.div>
                               )}

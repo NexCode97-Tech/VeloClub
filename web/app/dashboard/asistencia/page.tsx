@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import { apiFetch } from '@/lib/api-client';
 import { QK } from '@/hooks/useVeloQuery';
 import { Users, MapPin, CheckCircle2 } from 'lucide-react';
+import { MemberAvatar } from '@/components/ui/member-avatar';
 import { motion } from 'framer-motion';
 import { stagger, cardVariant } from '@/lib/page-animations';
 import {
@@ -18,6 +19,7 @@ interface Member {
   category?: string;
   tipo?: string;
   role: string;
+  pictureUrl?: string | null;
   locations: { location: { id: string; name: string } }[];
 }
 interface Location { id: string; name: string }
@@ -27,7 +29,7 @@ type Status = 'PRESENT' | 'LATE' | 'ABSENT' | 'MEDICAL_EXCUSE';
 const CYCLE: Status[] = ['PRESENT', 'LATE', 'ABSENT', 'MEDICAL_EXCUSE'];
 const STATUS_LABEL: Record<Status, string> = { PRESENT: 'P', LATE: 'T', ABSENT: 'A', MEDICAL_EXCUSE: 'M' };
 const STATUS_COLOR: Record<Status, string> = { PRESENT: '#06D6A0', LATE: '#FFB703', ABSENT: '#EF476F', MEDICAL_EXCUSE: '#8B8FA8' };
-const STATUS_NAME: Record<Status, string>  = { PRESENT: 'Pres.', LATE: 'Tarde', ABSENT: 'Aus.', MEDICAL_EXCUSE: 'Med.' };
+const STATUS_NAME: Record<Status, string>  = { PRESENT: 'Presente', LATE: 'Tarde', ABSENT: 'Ausente', MEDICAL_EXCUSE: 'Excusa Médica' };
 const ROLE_BG: Record<string, string> = {
   COACH: 'linear-gradient(135deg,#06D6A0,#0CB68D)',
   ADMIN: 'linear-gradient(135deg,#FFB703,#FB8500)',
@@ -42,7 +44,6 @@ function todayISO() {
 function todayLabel() {
   return new Date().toLocaleDateString('es-CO', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
 }
-function initials(name: string) { return name.split(' ').slice(0,2).map(w=>w[0]).join(''); }
 function avatarBg(role: string) { return ROLE_BG[role] ?? 'linear-gradient(135deg,#7C3AED,#A855F7)'; }
 
 export default function AsistenciaPage() {
@@ -227,9 +228,9 @@ export default function AsistenciaPage() {
                       </div>
                       <div className="text-[10px] md:text-[13px] font-semibold text-muted-foreground md:mt-0.5">
                         {s === 'PRESENT' ? 'Presentes'
-                          : s === 'LATE' ? 'Tardanzas'
+                          : s === 'LATE' ? 'Tarde'
                           : s === 'ABSENT' ? 'Ausentes'
-                          : 'Med. Excusa'}
+                          : 'Excusa Médica'}
                       </div>
                     </div>
                   ))}
@@ -246,12 +247,12 @@ export default function AsistenciaPage() {
                     const s = att[m.id] ?? 'ABSENT';
                     return (
                       <motion.div variants={cardVariant} key={m.id} className="bg-white border border-border rounded-xl px-3 py-2.5 flex items-center gap-3">
-                        <div
-                          className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0"
-                          style={{ background: avatarBg(m.role) }}
-                        >
-                          {initials(m.fullName)}
-                        </div>
+                        <MemberAvatar
+                          name={m.fullName}
+                          photoUrl={m.pictureUrl}
+                          gradient={avatarBg(m.role)}
+                          size={36}
+                        />
                         <div className="flex-1 min-w-0">
                           <p className="text-[13px] font-bold text-foreground">{m.fullName}</p>
                           <div className="flex gap-2 mt-0.5">

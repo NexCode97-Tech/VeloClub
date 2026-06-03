@@ -23,6 +23,7 @@ import {
   FileSpreadsheet, Upload, X, ChevronRight, Eye,
   Phone, Mail, Calendar, MapPin, Shield, Heart,
 } from 'lucide-react';
+import { MemberAvatar } from '@/components/ui/member-avatar';
 import { downloadMembersPDF } from '@/lib/pdf';
 import { downloadMembersTemplate, parseMembersExcel } from '@/lib/excel';
 
@@ -33,6 +34,7 @@ interface Member {
   birthDate?: string; category?: string; tipo?: string;
   emergencyContact?: string; emergencyPhone?: string; eps?: string;
   paymentDueDay?: number | null; monthlyFee?: number | null;
+  pictureUrl?: string | null;
   role: string;
   locations: { location: Location }[];
 }
@@ -472,12 +474,13 @@ export default function MiembrosPage() {
                       }} />
                       <div className="relative flex items-center gap-3">
                         {/* Avatar */}
-                        <div
-                          className="w-12 h-12 rounded-xl flex items-center justify-center text-[14px] font-extrabold text-white shrink-0"
-                          style={{ background: 'rgba(255,255,255,0.22)', backdropFilter: 'blur(4px)' }}
-                        >
-                          {initials(m.fullName)}
-                        </div>
+                        <MemberAvatar
+                          name={m.fullName}
+                          photoUrl={m.pictureUrl}
+                          gradient={ROLE_GRADIENT[m.role] ?? ROLE_GRADIENT.STUDENT}
+                          size={48}
+                          className="rounded-xl"
+                        />
                         <div className="min-w-0 flex-1">
                           <h3
                             className="text-white font-extrabold text-[15px] leading-snug truncate"
@@ -652,10 +655,12 @@ export default function MiembrosPage() {
                   initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.2, ease: EASE_OUT }}
                   className="bg-white border border-border rounded-xl px-3 py-3 flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0"
-                    style={{ background: ROLE_GRADIENT[m.role] ?? ROLE_GRADIENT.STUDENT }}>
-                    {initials(m.fullName)}
-                  </div>
+                  <MemberAvatar
+                    name={m.fullName}
+                    photoUrl={m.pictureUrl}
+                    gradient={ROLE_GRADIENT[m.role] ?? ROLE_GRADIENT.STUDENT}
+                    size={40}
+                  />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5 mb-0.5">
                       <p className="text-[13px] font-bold text-foreground truncate">{m.fullName}</p>

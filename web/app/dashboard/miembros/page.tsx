@@ -28,7 +28,7 @@ import { downloadMembersTemplate, parseMembersExcel } from '@/lib/excel';
 interface Location { id: string; name: string }
 interface Member {
   id: string; fullName: string; email?: string; phone?: string;
-  birthDate?: string; category?: string; tipo?: string; deporte?: string;
+  birthDate?: string; category?: string; tipo?: string;
   emergencyContact?: string; emergencyPhone?: string; eps?: string;
   paymentDueDay?: number | null; monthlyFee?: number | null;
   role: string;
@@ -51,7 +51,7 @@ const ROLE_GRADIENT: Record<string, string> = {
 // ── Empty form ─────────────────────────────────────────────────────────────────
 const emptyForm = {
   fullName: '', email: '', phone: '', birthDate: '',
-  category: '', tipo: '', deporte: '',
+  category: '', tipo: '',
   guardianName: '', guardianPhone: '',
   eps: '', role: 'STUDENT', locationIds: [] as string[],
 };
@@ -146,7 +146,7 @@ export default function MiembrosPage() {
     setForm({
       fullName: m.fullName, email: m.email ?? '', phone: m.phone ?? '',
       birthDate: m.birthDate ? m.birthDate.split('T')[0] : '',
-      category: m.category ?? '', tipo: m.tipo ?? '', deporte: m.deporte ?? '',
+      category: m.category ?? '', tipo: m.tipo ?? '',
       guardianName: m.emergencyContact ?? '',
       guardianPhone: m.emergencyPhone ?? '',
       eps: m.eps ?? '', role: m.role,
@@ -170,7 +170,6 @@ export default function MiembrosPage() {
         birthDate: form.birthDate || undefined,
         category: form.category || undefined,
         tipo: form.tipo || undefined,
-        deporte: form.deporte || undefined,
         emergencyContact: form.guardianName || undefined,
         emergencyPhone: form.guardianPhone || undefined,
         eps: form.eps || undefined,
@@ -606,24 +605,6 @@ export default function MiembrosPage() {
                         </div>
                       </div>
 
-                      <div>
-                        <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest block mb-2">
-                          Deporte
-                        </label>
-                        <Select value={form.deporte} onValueChange={v => setForm(f => ({ ...f, deporte: v ?? '' }))}>
-                          <SelectTrigger className="h-12 rounded-xl">
-                            <span className="text-sm">{form.deporte || 'Seleccionar deporte'}</span>
-                          </SelectTrigger>
-                          <SelectContent>
-                            {[
-                              'Patinaje','Ciclismo','Fútbol','Natación','Atletismo',
-                              'Baloncesto','Voleibol','Tenis','Natación artística','Otro',
-                            ].map(d => (
-                              <SelectItem key={d} value={d}>{d}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
                     </div>
                   )}
 

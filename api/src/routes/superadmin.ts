@@ -25,6 +25,7 @@ const createClubSchema = z.object({
   clubName:   z.string().min(2).max(100),
   adminEmail: z.string().email(),
   adminName:  z.string().min(2).max(100),
+  deporte:    z.string().optional(),
 });
 
 router.get('/clubs', requireAuth, requireSuperadmin, async (_req, res) => {
@@ -42,7 +43,7 @@ router.post('/clubs', requireAuth, requireSuperadmin, async (req, res) => {
   const parsed = createClubSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.issues });
 
-  const { clubName, adminEmail, adminName } = parsed.data;
+  const { clubName, adminEmail, adminName, deporte } = parsed.data;
 
   const existing = await prisma.member.findFirst({ where: { email: adminEmail } });
   if (existing) return res.status(400).json({ error: 'Este email ya está registrado en otro club' });
@@ -54,6 +55,7 @@ router.post('/clubs', requireAuth, requireSuperadmin, async (req, res) => {
     data: {
       name: clubName,
       trialEndsAt,
+      deporte: deporte || undefined,
       members: {
         create: { fullName: adminName, email: adminEmail, role: 'ADMIN', inviteStatus: 'PENDING' },
       },

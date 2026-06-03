@@ -40,6 +40,7 @@ interface Club {
   active: boolean;
   createdAt: string;
   trialEndsAt?: string | null;
+  deporte?: string | null;
   _count: { members: number };
   users: { email: string; name: string }[];
 }
@@ -96,7 +97,7 @@ export default function ClubsPage() {
   const [error,   setError]   = useState<string | null>(null);
 
   const [showNew, setShowNew] = useState(false);
-  const [newForm, setNewForm] = useState({ clubName: '', adminEmail: '', adminName: '' });
+  const [newForm, setNewForm] = useState({ clubName: '', adminEmail: '', adminName: '', deporte: '' });
   const [saving,  setSaving]  = useState(false);
 
   const [editId,   setEditId]   = useState<string | null>(null);
@@ -133,7 +134,7 @@ export default function ClubsPage() {
       const token = await getToken();
       await apiFetch('/superadmin/clubs', { method: 'POST', token, body: JSON.stringify(newForm) });
       setShowNew(false);
-      setNewForm({ clubName: '', adminEmail: '', adminName: '' });
+      setNewForm({ clubName: '', adminEmail: '', adminName: '', deporte: '' });
       await load();
     } catch (e) { setError(e instanceof Error ? e.message : 'Error'); }
     finally { setSaving(false); }
@@ -266,9 +267,24 @@ export default function ClubsPage() {
                   />
                 </div>
               ))}
+              <div style={{ marginBottom: 10 }}>
+                <p style={{ margin: '0 0 4px', fontSize: 9, fontWeight: 600, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                  Deporte principal
+                </p>
+                <select
+                  value={newForm.deporte}
+                  onChange={e => setNewForm(f => ({ ...f, deporte: e.target.value }))}
+                  style={{ ...inp, color: newForm.deporte ? '#1A1028' : '#8E87A8' }}
+                >
+                  <option value="">Seleccionar deporte</option>
+                  {['Patinaje','Ciclismo','Fútbol','Natación','Atletismo','Baloncesto','Voleibol','Tenis','Natación artística','Otro'].map(d => (
+                    <option key={d} value={d}>{d}</option>
+                  ))}
+                </select>
+              </div>
               <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
                 <motion.button
-                  onClick={() => { setShowNew(false); setNewForm({ clubName: '', adminEmail: '', adminName: '' }); }}
+                  onClick={() => { setShowNew(false); setNewForm({ clubName: '', adminEmail: '', adminName: '', deporte: '' }); }}
                   whileTap={{ scale: 0.97 }}
                   transition={{ duration: 0.12 }}
                   style={{ flex: 1, padding: '11px 0', borderRadius: 12, border: '1.5px solid rgba(120,80,200,0.15)', background: 'transparent', color: '#8E87A8', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'Plus Jakarta Sans, sans-serif' }}
@@ -369,7 +385,7 @@ export default function ClubsPage() {
                           })()}
                         </div>
                         <p style={{ margin: 0, fontSize: 11, color: '#8E87A8' }}>
-                          {club._count.members} miembros{club.users[0] ? ` · Admin: ${club.users[0].name}` : ''}
+                          {club._count.members} miembros{club.deporte ? ` · ${club.deporte}` : ''}{club.users[0] ? ` · ${club.users[0].name}` : ''}
                         </p>
                       </div>
                     </div>

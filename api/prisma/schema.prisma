@@ -18,6 +18,7 @@ model Club {
   logoPublicId      String?
   active            Boolean         @default(true)
   trialEndsAt       DateTime?
+  deporte           String?
   noAttendanceDays  Int[]
   createdAt         DateTime        @default(now())
   updatedAt         DateTime        @updatedAt
@@ -91,7 +92,6 @@ model Member {
   eps               String?
   category          String?
   tipo              String?
-  deporte           String?
   paymentDueDay     Int?
   monthlyFee        Float?
   locations         MemberLocation[]

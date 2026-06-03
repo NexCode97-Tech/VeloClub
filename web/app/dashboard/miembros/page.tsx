@@ -682,7 +682,7 @@ export default function MiembrosPage() {
                             <span className="text-sm">{form.tipo || 'Seleccionar nivel'}</span>
                           </SelectTrigger>
                           <SelectContent>
-                            {['Escuela','Novatos','Intermedio','Avanzados','Federados'].map(t => (
+                            {['Escuela','Novatos','Intermedio','Avanzados','Federados','Adultos'].map(t => (
                               <SelectItem key={t} value={t}>{t}</SelectItem>
                             ))}
                           </SelectContent>

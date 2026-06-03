@@ -537,7 +537,9 @@ export default function PagosPage() {
             <div className="space-y-2">
               <Label>Deportista *</Label>
               <Select value={form.memberId} onValueChange={v => setForm(f => ({ ...f, memberId: v ?? '' }))}>
-                <SelectTrigger><SelectValue placeholder="Seleccionar miembro" /></SelectTrigger>
+                <SelectTrigger>
+                  <span className="text-sm">{form.memberId ? members.find(m => m.id === form.memberId)?.fullName ?? 'Seleccionar miembro' : 'Seleccionar miembro'}</span>
+                </SelectTrigger>
                 <SelectContent>
                   {members.map(m => (
                     <SelectItem key={m.id} value={m.id}>{m.fullName}</SelectItem>

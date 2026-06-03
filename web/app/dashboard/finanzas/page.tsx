@@ -1019,7 +1019,9 @@ export default function FinanzasPage() {
             <div className="space-y-2">
               <Label>Deportista *</Label>
               <Select value={payForm.memberId} onValueChange={v => setPayForm(f => ({ ...f, memberId: v ?? '' }))}>
-                <SelectTrigger><SelectValue placeholder="Seleccionar deportista" /></SelectTrigger>
+                <SelectTrigger>
+                  <span className="text-sm">{payForm.memberId ? allMembers.find(m => m.id === payForm.memberId)?.fullName ?? 'Seleccionar deportista' : 'Seleccionar deportista'}</span>
+                </SelectTrigger>
                 <SelectContent>
                   {allMembers.filter(m => m.role === 'STUDENT').map(m => (
                     <SelectItem key={m.id} value={m.id}>{m.fullName}</SelectItem>

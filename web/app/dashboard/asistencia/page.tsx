@@ -166,8 +166,17 @@ export default function AsistenciaPage() {
 
       <motion.div variants={stagger} initial="hidden" animate="show" className="px-4 pt-4 space-y-3">
         {loading ? (
-          <div className="flex justify-center py-10">
-            <div className="w-6 h-6 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+          <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 sm:gap-3">
+            {[...Array(12)].map((_, i) => (
+              <div key={i} className="bg-white rounded-2xl overflow-hidden animate-pulse" style={{ border: '1px solid rgba(120,80,200,0.08)' }}>
+                <div className="flex flex-col items-center pt-4 pb-2 px-2">
+                  <div className="w-12 h-12 rounded-full bg-secondary" />
+                  <div className="h-2.5 w-16 bg-secondary rounded-full mt-2" />
+                  <div className="h-2 w-12 bg-secondary rounded-full mt-1.5" />
+                </div>
+                <div className="h-8 bg-secondary/60 mt-2" />
+              </div>
+            ))}
           </div>
         ) : isBlocked ? (
           <div className="bg-white border border-border rounded-xl px-4 py-12 text-center">
@@ -242,38 +251,68 @@ export default function AsistenciaPage() {
                   </p>
                 )}
 
-                <div className="space-y-2 pb-4">
+                {/* Grid de tarjetas compactas */}
+                <div className="grid grid-cols-3 gap-2 pb-24 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 sm:gap-3">
                   {members.map(m => {
                     const s = att[m.id] ?? 'ABSENT';
+                    const color = STATUS_COLOR[s];
+                    const label = STATUS_LABEL[s];
+                    const statusName = STATUS_NAME[s];
                     return (
-                      <motion.div variants={cardVariant} key={m.id} className="bg-white border border-border rounded-xl px-3 py-2.5 flex items-center gap-3">
-                        <MemberAvatar
-                          name={m.fullName}
-                          photoUrl={m.pictureUrl}
-                          gradient={avatarBg(m.role)}
-                          size={36}
-                        />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-[13px] font-bold text-foreground">{m.fullName}</p>
-                          <div className="flex gap-2 mt-0.5">
-                            {m.category && <p className="text-[10px] font-semibold" style={{ color: '#4361EE' }}>{m.category}</p>}
-                            {m.tipo && <p className="text-[10px] text-muted-foreground">{m.tipo}</p>}
-                          </div>
+                      <motion.div
+                        variants={cardVariant}
+                        key={m.id}
+                        className="bg-white rounded-2xl overflow-hidden flex flex-col"
+                        style={{
+                          border: `1.5px solid ${color}30`,
+                          boxShadow: `0 2px 10px ${color}18`,
+                        }}
+                      >
+                        {/* Avatar + nombre */}
+                        <div className="flex flex-col items-center pt-4 pb-2 px-2">
+                          <MemberAvatar
+                            name={m.fullName}
+                            photoUrl={m.pictureUrl}
+                            gradient={avatarBg(m.role)}
+                            size={48}
+                          />
+                          <p className="text-[11px] font-bold text-center mt-2 leading-tight line-clamp-2 w-full px-1"
+                            style={{ color: '#1A1028' }}>
+                            {m.fullName}
+                          </p>
+                          {(m.category || m.tipo) && (
+                            <p className="text-[9px] font-semibold text-center mt-0.5 truncate w-full px-1"
+                              style={{ color: '#8E87A8' }}>
+                              {m.category ?? m.tipo}
+                            </p>
+                          )}
                         </div>
+
+                        {/* Botón de estado — ocupa todo el ancho */}
                         {canManage ? (
                           <button
                             onClick={() => toggle(m.id)}
-                            className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all active:scale-90"
-                            style={{ background: `${STATUS_COLOR[s]}22`, color: STATUS_COLOR[s], border: `1.5px solid ${STATUS_COLOR[s]}` }}
+                            className="mt-auto w-full py-2 text-[11px] font-extrabold tracking-wide transition-all active:scale-95 flex items-center justify-center gap-1"
+                            style={{
+                              background: `${color}18`,
+                              color,
+                              borderTop: `1.5px solid ${color}30`,
+                            }}
                           >
-                            {STATUS_LABEL[s]}
+                            <span className="text-[13px]">{label}</span>
+                            <span className="text-[9px] opacity-75">· {statusName}</span>
                           </button>
                         ) : (
                           <div
-                            className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold"
-                            style={{ background: `${STATUS_COLOR[s]}22`, color: STATUS_COLOR[s], border: `1.5px solid ${STATUS_COLOR[s]}` }}
+                            className="mt-auto w-full py-2 text-[11px] font-extrabold tracking-wide flex items-center justify-center gap-1"
+                            style={{
+                              background: `${color}18`,
+                              color,
+                              borderTop: `1.5px solid ${color}30`,
+                            }}
                           >
-                            {STATUS_LABEL[s]}
+                            <span className="text-[13px]">{label}</span>
+                            <span className="text-[9px] opacity-75">· {statusName}</span>
                           </div>
                         )}
                       </motion.div>

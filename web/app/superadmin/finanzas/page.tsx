@@ -330,7 +330,7 @@ export default function FinanzasPage() {
                 <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 10 }}>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
-                      <div style={{ width: 28, height: 28, borderRadius: 8, background: 'rgba(124,58,237,0.10)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800, color: '#7C3AED', fontFamily: 'Space Grotesk, sans-serif', flexShrink: 0, overflow: 'hidden' }}>
+                      <div style={{ width: 48, height: 48, borderRadius: 12, background: 'rgba(124,58,237,0.10)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 800, color: '#7C3AED', fontFamily: 'Space Grotesk, sans-serif', flexShrink: 0, overflow: 'hidden' }}>
                         {c.logoUrl
                           ? <img src={c.logoUrl} alt={c.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                           : c.name.charAt(0).toUpperCase()

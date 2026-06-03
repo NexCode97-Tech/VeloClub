@@ -294,10 +294,10 @@ function StudentRow({
         </div>
 
         {/* Estado + acción */}
-        <div className="px-3 py-2.5 flex flex-col gap-1.5 md:flex-row md:items-center md:justify-between md:gap-2"
+        <div className="px-4 py-2.5 flex items-center justify-between gap-2"
           style={{ borderBottom: '1px solid rgba(120,80,200,0.06)' }}>
-          <div className="min-w-0">{statusChip}</div>
-          {mainAction && <div className="self-start md:self-auto">{mainAction}</div>}
+          <div className="flex-1 min-w-0">{statusChip}</div>
+          {mainAction}
         </div>
 
         {/* Botones icono */}
@@ -846,7 +846,7 @@ export default function FinanzasPage() {
 
             {/* Lista deportistas */}
             {loadingPay && !paymentsData ? (
-              <div className="grid grid-cols-2 gap-2 sm:gap-3 md:grid-cols-3 md:gap-4">
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-3 md:grid-cols-3 md:gap-4">
                 {[1,2,3,4,5,6].map(i => (
                   <div key={i} className="bg-white rounded-2xl overflow-hidden animate-pulse" style={{ border: '1px solid rgba(120,80,200,0.08)' }}>
                     <div className="px-4 pt-4 pb-3 flex items-center gap-3" style={{ borderBottom: '1px solid rgba(120,80,200,0.06)' }}>
@@ -868,7 +868,7 @@ export default function FinanzasPage() {
               </div>
             ) : (
               <motion.div
-                className="grid grid-cols-2 gap-2 pb-28 sm:gap-3 md:grid-cols-3 md:gap-4 md:pb-8"
+                className="grid grid-cols-1 gap-2 pb-28 sm:grid-cols-2 sm:gap-3 md:grid-cols-3 md:gap-4 md:pb-8"
                 variants={reducedMotion ? undefined : listVariants}
                 initial={reducedMotion ? undefined : 'hidden'}
                 animate={reducedMotion ? undefined : 'visible'}

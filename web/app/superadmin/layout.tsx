@@ -2,7 +2,9 @@
 
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth, useSession, UserButton } from '@clerk/nextjs';
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback } from 'react';
+
+const effectCount = { current: 0 };
 import { apiFetch, ApiError } from '@/lib/api-client';
 import LoadingScreen from '@/components/ui/loading-screen';
 import Link from 'next/link';
@@ -76,17 +78,18 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
   const [notifs, setNotifs]           = useState<Notif[]>([]);
   const [notifsLoading, setNotifsLoading] = useState(false);
 
-  // ── Debug ──────────────────────────────────────────────────────────────────
-  const [debugOpen, setDebugOpen]     = useState(false);
-  const [debugLogs, setDebugLogs]     = useState<string[]>([]);
-  const effectCount                   = useRef(0);
+  // ── Eruda devtools (solo superadmin, solo una vez) ────────────────────────
+  useEffect(() => {
+    const script = document.createElement('script');
+    script.src = 'https://cdn.jsdelivr.net/npm/eruda';
+    script.onload = () => { (window as any).eruda?.init(); };
+    document.body.appendChild(script);
+    return () => { document.body.removeChild(script); };
+  }, []);
 
   // Auth check — stale flag evita condición de carrera al cambiar sesión activa
   useEffect(() => {
-    effectCount.current += 1;
-    const run = effectCount.current;
-    const ts = new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', second: '2-digit', fractionalSecondDigits: 3 });
-    setDebugLogs(prev => [...prev, `[${ts}] #${run} isLoaded=${isLoaded} isSignedIn=${isSignedIn} userId=${userId?.slice(-6) ?? 'null'} sessionId=${sessionId?.slice(-6) ?? 'null'}`]);
+    console.log(`[AUTH] #${effectCount.current++} isLoaded=${isLoaded} isSignedIn=${isSignedIn} userId=${userId?.slice(-6) ?? 'null'} sessionId=${sessionId?.slice(-6) ?? 'null'}`);
 
     if (!isLoaded) return;
     if (!isSignedIn) { router.push('/sign-in'); return; }
@@ -323,31 +326,6 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
         {children}
       </main>
 
-      {/* ── Debug flotante ──────────────────────────────────────────────────── */}
-      <div style={{ position: 'fixed', bottom: 100, left: 16, zIndex: 9999 }}>
-        <button
-          onClick={() => setDebugOpen(v => !v)}
-          style={{ width: 44, height: 44, borderRadius: '50%', background: '#1A1028', border: '2px solid #7C3AED', color: '#fff', fontSize: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 16px rgba(0,0,0,0.4)', cursor: 'pointer' }}
-        >
-          🐛
-        </button>
-        {debugOpen && (
-          <div style={{ position: 'absolute', bottom: 52, left: 0, width: 320, background: '#0F0A1E', border: '1px solid #7C3AED', borderRadius: 12, padding: 12, boxShadow: '0 8px 32px rgba(0,0,0,0.6)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-              <span style={{ color: '#7C3AED', fontSize: 11, fontWeight: 700, fontFamily: 'monospace' }}>AUTH EFFECT LOGS</span>
-              <button onClick={() => setDebugLogs([])} style={{ background: 'none', border: 'none', color: '#EF476F', fontSize: 10, cursor: 'pointer', fontFamily: 'monospace' }}>CLEAR</button>
-            </div>
-            <div style={{ maxHeight: 200, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 4 }}>
-              {debugLogs.length === 0
-                ? <span style={{ color: '#8E87A8', fontSize: 10, fontFamily: 'monospace' }}>Sin logs aún</span>
-                : debugLogs.map((log, i) => (
-                  <span key={i} style={{ color: '#06D6A0', fontSize: 10, fontFamily: 'monospace', lineHeight: 1.5, wordBreak: 'break-all' }}>{log}</span>
-                ))
-              }
-            </div>
-          </div>
-        )}
-      </div>
 
       {/* Bottom Tab Nav — glassmorphism, ancho completo */}
       <div className="shrink-0 flex justify-center" style={{ padding: '10px 16px 20px', background: 'transparent' }}>

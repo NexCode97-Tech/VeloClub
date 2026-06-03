@@ -82,7 +82,7 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
   useEffect(() => {
     const script = document.createElement('script');
     script.src = 'https://cdn.jsdelivr.net/npm/eruda';
-    script.onload = () => { (window as any).eruda?.init(); };
+    script.onload = () => { (window as { eruda?: { init: () => void } }).eruda?.init(); };
     document.body.appendChild(script);
     return () => { document.body.removeChild(script); };
   }, []);

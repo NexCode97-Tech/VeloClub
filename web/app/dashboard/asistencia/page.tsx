@@ -297,8 +297,7 @@ export default function AsistenciaPage() {
                               borderTop: `1.5px solid ${color}30`,
                             }}
                           >
-                            <span className="text-[13px]">{label}</span>
-                            <span className="text-[9px] opacity-75">· {statusName}</span>
+                            <span className="text-[11px]">{statusName}</span>
                           </button>
                         ) : (
                           <div
@@ -309,8 +308,7 @@ export default function AsistenciaPage() {
                               borderTop: `1.5px solid ${color}30`,
                             }}
                           >
-                            <span className="text-[13px]">{label}</span>
-                            <span className="text-[9px] opacity-75">· {statusName}</span>
+                            <span className="text-[11px]">{statusName}</span>
                           </div>
                         )}
                       </motion.div>

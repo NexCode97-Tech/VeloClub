@@ -6,7 +6,8 @@ import { useRouter } from 'next/navigation';
 import { apiFetch } from '@/lib/api-client';
 import Link from 'next/link';
 import { Users, Building2, CircleDollarSign, ChevronRight, ArrowUpRight } from 'lucide-react';
-import { motion, type Variants, useReducedMotion, AnimatePresence } from 'framer-motion';
+import { motion, type Variants, useReducedMotion } from 'framer-motion';
+import { stagger, cardVariant } from '@/lib/page-animations';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 
 // ── Formateo ──────────────────────────────────────────────────────────────────
@@ -25,23 +26,10 @@ function todayLabel() {
   return `${day.charAt(0).toUpperCase() + day.slice(1)}, ${rest}`;
 }
 
-// ── Easing (emilkowal-animations: ease-out-default) ───────────────────────────
-const EASE    = [0.23, 1, 0.32, 1]  as [number,number,number,number];
-const EASE_IN = [0.55, 0, 1, 0.45] as [number,number,number,number];
+// ── Easing ────────────────────────────────────────────────────────────────────
+const EASE = [0.23, 1, 0.32, 1] as [number,number,number,number];
 
-// ── Variantes ─────────────────────────────────────────────────────────────────
-const fadeUp: Variants = {
-  hidden: { opacity: 0, y: 20 },
-  show:   { opacity: 1, y: 0,  transition: { duration: 0.30, ease: EASE } },
-};
-const stagger: Variants = {
-  hidden: {},
-  show:   { transition: { staggerChildren: 0.07, delayChildren: 0.05 } },
-};
-const cardVariant: Variants = {
-  hidden: { opacity: 0, y: 14, scale: 0.97 },
-  show:   { opacity: 1, y: 0,  scale: 1, transition: { duration: 0.28, ease: EASE } },
-};
+// ── barVariant (exclusivo del mini chart) ─────────────────────────────────────
 const barVariant: Variants = {
   hidden: { scaleY: 0, opacity: 0 },
   show:   { scaleY: 1, opacity: 1, transition: { duration: 0.40, ease: EASE } },
@@ -191,12 +179,7 @@ export default function SuperadminDashboard() {
     <div style={{ background: '#F7F7FB', minHeight: '100%' }}>
 
       {/* ── Header ─────────────────────────────────────────────────────────── */}
-      <motion.div
-        initial={{ opacity: 0, y: -8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.26, ease: EASE }}
-        style={{ padding: '20px 20px 14px' }}
-      >
+      <div style={{ padding: '20px 20px 14px' }}>
         <p style={{ margin: '0 0 2px', fontSize: 11, fontWeight: 600, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
           {todayLabel()}
         </p>
@@ -208,39 +191,30 @@ export default function SuperadminDashboard() {
             SUPERADMIN
           </span>
         </div>
-      </motion.div>
+      </div>
 
-      <div style={{ padding: '0 16px 100px' }}>
-
+      <motion.div
+        variants={stagger}
+        initial="hidden"
+        animate="show"
+        style={{ padding: '0 16px 100px' }}
+      >
         {/* ── Hero card — RECAUDADO ESTE MES ─────────────────────────────── */}
         <motion.div
-          variants={fadeUp}
-          initial="hidden"
-          animate="show"
+          variants={cardVariant}
           style={{ background: '#fff', borderRadius: 24, padding: '20px 20px 18px', marginBottom: 10, border: '1px solid rgba(120,80,200,0.10)', boxShadow: '0 2px 20px rgba(124,58,237,0.06)', position: 'relative', overflow: 'hidden' }}
         >
-          {/* Label + botón */}
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 10 }}>
             <p style={{ margin: 0, fontSize: 10, fontWeight: 700, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.10em' }}>
               Recaudado · Este mes
             </p>
-            <motion.div
-              whileTap={{ scale: shouldReduceMotion ? 1 : 0.88 }}
-              transition={{ duration: 0.12, ease: EASE }}
-            >
+            <motion.div whileTap={{ scale: shouldReduceMotion ? 1 : 0.88 }} transition={{ duration: 0.12, ease: EASE }}>
               <Link href="/superadmin/finanzas" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', width: 34, height: 34, borderRadius: '50%', background: '#7C3AED', boxShadow: '0 4px 14px rgba(124,58,237,0.38)' }}>
                 <ArrowUpRight size={16} color="#fff" strokeWidth={2.5} />
               </Link>
             </motion.div>
           </div>
-
-          {/* Número grande */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.36, ease: EASE, delay: 0.10 }}
-            style={{ display: 'flex', alignItems: 'baseline', gap: 2, marginBottom: 6 }}
-          >
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 2, marginBottom: 6 }}>
             <span style={{ fontSize: 48, fontWeight: 800, color: '#1A1028', fontFamily: 'Space Grotesk, sans-serif', lineHeight: 1 }}>
               {heroFmt.main}
             </span>
@@ -249,83 +223,43 @@ export default function SuperadminDashboard() {
                 {heroFmt.suffix}
               </span>
             )}
-          </motion.div>
-
-          {/* Indicador de cambio */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.26, delay: 0.20 }}
-            style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 16 }}
-          >
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 16 }}>
             <span style={{ fontSize: 12, fontWeight: 700, color: isPositive ? '#06D6A0' : '#EF476F' }}>
               {isPositive ? '+' : ''}{pctCambio}%
             </span>
             <span style={{ fontSize: 11, color: '#8E87A8' }}>vs mes anterior</span>
-          </motion.div>
-
-          {/* Mini bar chart */}
+          </div>
           {monthlyBars.length > 0 && <MiniBarChart data={monthlyBars} />}
         </motion.div>
 
         {/* ── Dos cards pequeñas ──────────────────────────────────────────── */}
         <motion.div
-          variants={stagger}
-          initial="hidden"
-          animate="show"
+          variants={cardVariant}
           style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 20 }}
         >
-          {/* Clubs activos */}
-          <motion.div
-            variants={cardVariant}
-            style={{ background: '#fff', borderRadius: 20, padding: '16px 14px', border: '1px solid rgba(120,80,200,0.10)', boxShadow: '0 2px 12px rgba(124,58,237,0.05)' }}
-          >
-            <p style={{ margin: '0 0 10px', fontSize: 9, fontWeight: 700, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.10em' }}>
-              Clubs activos
-            </p>
-            <motion.p
-              initial={{ opacity: 0, scale: 0.85 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.32, ease: EASE, delay: 0.18 }}
-              style={{ margin: '0 0 4px', fontSize: 44, fontWeight: 800, color: '#1A1028', fontFamily: 'Space Grotesk, sans-serif', lineHeight: 1 }}
-            >
+          <div style={{ background: '#fff', borderRadius: 20, padding: '16px 14px', border: '1px solid rgba(120,80,200,0.10)', boxShadow: '0 2px 12px rgba(124,58,237,0.05)' }}>
+            <p style={{ margin: '0 0 10px', fontSize: 9, fontWeight: 700, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.10em' }}>Clubs activos</p>
+            <p style={{ margin: '0 0 4px', fontSize: 44, fontWeight: 800, color: '#1A1028', fontFamily: 'Space Grotesk, sans-serif', lineHeight: 1 }}>
               {String(activos).padStart(2, '0')}
-            </motion.p>
-            <p style={{ margin: 0, fontSize: 11, color: '#8E87A8' }}>de {total} totales</p>
-          </motion.div>
-
-          {/* En prueba */}
-          <motion.div
-            variants={cardVariant}
-            style={{ background: '#fff', borderRadius: 20, padding: '16px 14px', border: '1px solid rgba(120,80,200,0.10)', boxShadow: '0 2px 12px rgba(124,58,237,0.05)' }}
-          >
-            <p style={{ margin: '0 0 10px', fontSize: 9, fontWeight: 700, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.10em' }}>
-              En prueba
             </p>
-            <motion.p
-              initial={{ opacity: 0, scale: 0.85 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.32, ease: EASE, delay: 0.24 }}
-              style={{ margin: '0 0 4px', fontSize: 44, fontWeight: 800, color: '#1A1028', fontFamily: 'Space Grotesk, sans-serif', lineHeight: 1 }}
-            >
+            <p style={{ margin: 0, fontSize: 11, color: '#8E87A8' }}>de {total} totales</p>
+          </div>
+          <div style={{ background: '#fff', borderRadius: 20, padding: '16px 14px', border: '1px solid rgba(120,80,200,0.10)', boxShadow: '0 2px 12px rgba(124,58,237,0.05)' }}>
+            <p style={{ margin: '0 0 10px', fontSize: 9, fontWeight: 700, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.10em' }}>En prueba</p>
+            <p style={{ margin: '0 0 4px', fontSize: 44, fontWeight: 800, color: '#1A1028', fontFamily: 'Space Grotesk, sans-serif', lineHeight: 1 }}>
               {String(enPrueba).padStart(2, '0')}
-            </motion.p>
-            {enPrueba > 0 ? (
-              <p style={{ margin: 0, fontSize: 11, fontWeight: 700, color: '#B88A00' }}>
-                Trial {maxTrialDays}d
-              </p>
-            ) : (
-              <p style={{ margin: 0, fontSize: 11, color: '#8E87A8' }}>sin trials activos</p>
-            )}
-          </motion.div>
+            </p>
+            {enPrueba > 0
+              ? <p style={{ margin: 0, fontSize: 11, fontWeight: 700, color: '#B88A00' }}>Trial {maxTrialDays}d</p>
+              : <p style={{ margin: 0, fontSize: 11, color: '#8E87A8' }}>sin trials activos</p>
+            }
+          </div>
         </motion.div>
 
         {/* ── Stats secundarias ────────────────────────────────────────────── */}
         <motion.div
-          variants={stagger}
-          initial="hidden"
-          whileInView="show"
-          viewport={{ once: true, margin: '-30px' }}
+          variants={cardVariant}
           style={{ background: '#fff', borderRadius: 20, border: '1px solid rgba(120,80,200,0.10)', overflow: 'hidden', marginBottom: 20 }}
         >
           {[
@@ -333,138 +267,106 @@ export default function SuperadminDashboard() {
             { label: 'Total miembros',  value: String(totalMiembros), color: '#7C3AED', sub: 'en todos los clubs' },
             { label: 'Total clubs',     value: String(total),         color: '#FFB703', sub: `${activos} activos` },
           ].map((s, i) => (
-            <motion.div
-              key={s.label}
-              variants={{ hidden: { opacity: 0, x: -10 }, show: { opacity: 1, x: 0, transition: { duration: 0.24, ease: EASE } } }}
-              style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', borderBottom: i < 2 ? '1px solid rgba(120,80,200,0.07)' : 'none' }}
-            >
+            <div key={s.label} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', borderBottom: i < 2 ? '1px solid rgba(120,80,200,0.07)' : 'none' }}>
               <div>
                 <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: '#1A1028' }}>{s.label}</p>
                 <p style={{ margin: '1px 0 0', fontSize: 10, color: '#8E87A8' }}>{s.sub}</p>
               </div>
-              <p style={{ margin: 0, fontSize: 22, fontWeight: 800, color: s.color, fontFamily: 'Space Grotesk, sans-serif', lineHeight: 1 }}>
-                {s.value}
-              </p>
-            </motion.div>
+              <p style={{ margin: 0, fontSize: 22, fontWeight: 800, color: s.color, fontFamily: 'Space Grotesk, sans-serif', lineHeight: 1 }}>{s.value}</p>
+            </div>
           ))}
         </motion.div>
 
         {/* ── Gráfica de ingresos por mes ──────────────────────────────────── */}
-        <AnimatePresence>
-          {hasIncomeData && (
-            <motion.div
-              key="income-chart"
-              variants={fadeUp}
-              initial="hidden"
-              whileInView="show"
-              exit={{ opacity: 0 }}
-              viewport={{ once: true, margin: '-40px' }}
-              style={{ background: '#fff', border: '1px solid rgba(120,80,200,0.10)', borderRadius: 20, overflow: 'hidden', marginBottom: 20 }}
-            >
-              <div style={{ padding: '16px 16px 0' }}>
-                <p style={{ margin: '0 0 1px', fontSize: 13, fontWeight: 700, color: '#1A1028', fontFamily: 'Space Grotesk, sans-serif' }}>
-                  Ingresos por mes
-                </p>
-                <p style={{ margin: '0 0 12px', fontSize: 10, color: '#8E87A8' }}>{currentYear}</p>
-              </div>
-              <ResponsiveContainer width="100%" height={150}>
-                <AreaChart data={monthlyIncome} margin={{ top: 4, right: 16, left: -10, bottom: 0 }}>
-                  <defs>
-                    <linearGradient id="incomeGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%"  stopColor="#7C3AED" stopOpacity={0.18} />
-                      <stop offset="95%" stopColor="#7C3AED" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="4 4" stroke="rgba(0,0,0,0.04)" vertical={false} />
-                  <XAxis dataKey="name" tick={{ fontSize: 10, fill: '#8E87A8', fontWeight: 600 }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fontSize: 9, fill: '#8E87A8' }} axisLine={false} tickLine={false}
-                    tickFormatter={v => v >= 1_000_000 ? `${(v/1_000_000).toFixed(0)}M` : v >= 1_000 ? `${(v/1_000).toFixed(0)}K` : `${v}`} />
-                  <Tooltip
-                    contentStyle={{ borderRadius: 12, border: '1px solid rgba(120,80,200,0.15)', fontSize: 12, padding: '8px 14px', boxShadow: '0 6px 20px rgba(0,0,0,0.08)' }}
-                    formatter={(v) => [fmt.format(Number(v ?? 0)), 'Recaudado']}
-                    labelStyle={{ fontWeight: 700, color: '#1A1028' }}
-                  />
-                  <Area type="monotone" dataKey="total" stroke="#7C3AED" strokeWidth={2.4}
-                    fill="url(#incomeGrad)" dot={false}
-                    activeDot={{ r: 5, fill: '#7C3AED', stroke: '#fff', strokeWidth: 2 }} />
-                </AreaChart>
-              </ResponsiveContainer>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {hasIncomeData && (
+          <motion.div
+            variants={cardVariant}
+            style={{ background: '#fff', border: '1px solid rgba(120,80,200,0.10)', borderRadius: 20, overflow: 'hidden', marginBottom: 20 }}
+          >
+            <div style={{ padding: '16px 16px 0' }}>
+              <p style={{ margin: '0 0 1px', fontSize: 13, fontWeight: 700, color: '#1A1028', fontFamily: 'Space Grotesk, sans-serif' }}>Ingresos por mes</p>
+              <p style={{ margin: '0 0 12px', fontSize: 10, color: '#8E87A8' }}>{currentYear}</p>
+            </div>
+            <ResponsiveContainer width="100%" height={150}>
+              <AreaChart data={monthlyIncome} margin={{ top: 4, right: 16, left: -10, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="incomeGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%"  stopColor="#7C3AED" stopOpacity={0.18} />
+                    <stop offset="95%" stopColor="#7C3AED" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="4 4" stroke="rgba(0,0,0,0.04)" vertical={false} />
+                <XAxis dataKey="name" tick={{ fontSize: 10, fill: '#8E87A8', fontWeight: 600 }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 9, fill: '#8E87A8' }} axisLine={false} tickLine={false}
+                  tickFormatter={v => v >= 1_000_000 ? `${(v/1_000_000).toFixed(0)}M` : v >= 1_000 ? `${(v/1_000).toFixed(0)}K` : `${v}`} />
+                <Tooltip
+                  contentStyle={{ borderRadius: 12, border: '1px solid rgba(120,80,200,0.15)', fontSize: 12, padding: '8px 14px', boxShadow: '0 6px 20px rgba(0,0,0,0.08)' }}
+                  formatter={(v) => [fmt.format(Number(v ?? 0)), 'Recaudado']}
+                  labelStyle={{ fontWeight: 700, color: '#1A1028' }}
+                />
+                <Area type="monotone" dataKey="total" stroke="#7C3AED" strokeWidth={2.4}
+                  fill="url(#incomeGrad)" dot={false}
+                  activeDot={{ r: 5, fill: '#7C3AED', stroke: '#fff', strokeWidth: 2 }} />
+              </AreaChart>
+            </ResponsiveContainer>
+          </motion.div>
+        )}
 
         {/* ── Lista rápida de clubs ────────────────────────────────────────── */}
-        <motion.section
-          variants={fadeUp}
-          initial="hidden"
-          whileInView="show"
-          viewport={{ once: true, margin: '-20px' }}
-        >
+        <motion.div variants={cardVariant}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
             <p style={{ margin: 0, fontSize: 10, fontWeight: 700, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
               Clubs registrados
             </p>
-            <motion.div whileTap={{ scale: 0.95 }} style={{ display: 'inline-block' }}>
-              <Link href="/superadmin/clubs" style={{ fontSize: 11, fontWeight: 700, color: '#7C3AED', textDecoration: 'none' }}>
-                Gestionar →
-              </Link>
-            </motion.div>
+            <Link href="/superadmin/clubs" style={{ fontSize: 11, fontWeight: 700, color: '#7C3AED', textDecoration: 'none' }}>
+              Gestionar →
+            </Link>
           </div>
-
           {clubs.length === 0 ? (
             <div style={{ background: '#fff', border: '1px solid rgba(120,80,200,0.10)', borderRadius: 20, padding: '32px 16px', textAlign: 'center' }}>
               <Building2 size={28} style={{ color: 'rgba(142,135,168,0.30)', margin: '0 auto 8px', display: 'block' }} />
               <p style={{ margin: 0, fontSize: 12, color: '#8E87A8' }}>No hay clubs registrados aún</p>
             </div>
           ) : (
-            <motion.div variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true, margin: '-20px' }}
-              style={{ display: 'flex', flexDirection: 'column', gap: 8 }}
-            >
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {clubs.map(club => {
                 const recaudado = (club.suscripcion?.pagos ?? []).filter(p => p.estado === 'PAID').reduce((a, p) => a + p.monto, 0);
                 return (
-                  <motion.div
-                    key={club.id}
-                    variants={cardVariant}
-                    whileTap={{ scale: shouldReduceMotion ? 1 : 0.98 }}
-                    transition={{ duration: 0.12, ease: EASE }}
-                  >
-                    <Link href="/superadmin/clubs" style={{ textDecoration: 'none' }}>
-                      <div style={{ background: '#fff', border: '1px solid rgba(120,80,200,0.10)', borderRadius: 16, display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', cursor: 'pointer' }}>
-                        <div style={{ width: 38, height: 38, borderRadius: 12, background: 'rgba(124,58,237,0.10)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 800, color: '#7C3AED', fontFamily: 'Space Grotesk, sans-serif', flexShrink: 0 }}>
-                          {club.name.charAt(0).toUpperCase()}
-                        </div>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
-                            <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: '#1A1028', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                              {club.name}
-                            </p>
-                            <span style={{ flexShrink: 0, fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 99, background: club.active ? 'rgba(6,214,160,0.12)' : 'rgba(239,71,111,0.12)', color: club.active ? '#06D6A0' : '#EF476F' }}>
-                              {club.active ? 'Activo' : 'Inactivo'}
-                            </span>
-                          </div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                            <span style={{ fontSize: 11, color: '#8E87A8', display: 'flex', alignItems: 'center', gap: 4 }}>
-                              <Users size={11} /> {club._count?.members ?? 0}
-                            </span>
-                            {recaudado > 0 && (
-                              <span style={{ fontSize: 11, color: '#8E87A8', display: 'flex', alignItems: 'center', gap: 4 }}>
-                                <CircleDollarSign size={11} /> {fmt.format(recaudado)}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                        <ChevronRight size={15} style={{ color: 'rgba(142,135,168,0.35)', flexShrink: 0 }} />
+                  <Link key={club.id} href="/superadmin/clubs" style={{ textDecoration: 'none' }}>
+                    <div style={{ background: '#fff', border: '1px solid rgba(120,80,200,0.10)', borderRadius: 16, display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', cursor: 'pointer' }}>
+                      <div style={{ width: 38, height: 38, borderRadius: 12, background: 'rgba(124,58,237,0.10)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 800, color: '#7C3AED', fontFamily: 'Space Grotesk, sans-serif', flexShrink: 0 }}>
+                        {club.name.charAt(0).toUpperCase()}
                       </div>
-                    </Link>
-                  </motion.div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+                          <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: '#1A1028', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {club.name}
+                          </p>
+                          <span style={{ flexShrink: 0, fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 99, background: club.active ? 'rgba(6,214,160,0.12)' : 'rgba(239,71,111,0.12)', color: club.active ? '#06D6A0' : '#EF476F' }}>
+                            {club.active ? 'Activo' : 'Inactivo'}
+                          </span>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                          <span style={{ fontSize: 11, color: '#8E87A8', display: 'flex', alignItems: 'center', gap: 4 }}>
+                            <Users size={11} /> {club._count?.members ?? 0}
+                          </span>
+                          {recaudado > 0 && (
+                            <span style={{ fontSize: 11, color: '#8E87A8', display: 'flex', alignItems: 'center', gap: 4 }}>
+                              <CircleDollarSign size={11} /> {fmt.format(recaudado)}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <ChevronRight size={15} style={{ color: 'rgba(142,135,168,0.35)', flexShrink: 0 }} />
+                    </div>
+                  </Link>
                 );
               })}
-            </motion.div>
+            </div>
           )}
-        </motion.section>
+        </motion.div>
 
-      </div>
+      </motion.div>
     </div>
   );
 }

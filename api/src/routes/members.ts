@@ -63,7 +63,7 @@ router.get('/me', requireAuth, async (req, res) => {
     where: { clerkId: req.auth?.clerkId, clubId: req.user.clubId ?? '' },
     select: { id: true, fullName: true, role: true, pictureUrl: true },
   });
-  if (!member) return res.status(404).json({ error: 'Miembro no encontrado' });
+  if (!member) return res.json({ member: null });
   res.json({ member });
 });
 

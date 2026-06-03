@@ -1,11 +1,11 @@
 'use client';
 
 import { useAuth } from '@clerk/nextjs';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiFetch } from '@/lib/api-client';
 import { motion, AnimatePresence, type Variants } from 'framer-motion';
-import { Trash2 } from 'lucide-react';
+import { Trash2, ChevronDown, Check } from 'lucide-react';
 
 // ── Easing ────────────────────────────────────────────────────────────────────
 const EASE    = [0.23, 1, 0.32, 1]  as [number,number,number,number];
@@ -58,6 +58,126 @@ const inp: React.CSSProperties = {
   background: '#fff', color: '#1A1028', fontSize: 13, outline: 'none',
   boxSizing: 'border-box', fontFamily: 'Plus Jakarta Sans, sans-serif',
 };
+
+// ── Deportes ──────────────────────────────────────────────────────────────────
+const DEPORTES = ['Patinaje','Ciclismo','Fútbol','Natación','Atletismo','Baloncesto','Voleibol','Tenis','Natación artística','Otro'];
+
+// ── SportSelect — reemplaza native <select> de deporte ───────────────────────
+function SportSelect({ value, onChange, placeholder = 'Seleccionar deporte' }: {
+  value: string;
+  onChange: (v: string) => void;
+  placeholder?: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  // Cerrar al hacer click fuera
+  useEffect(() => {
+    function handler(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    if (open) document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [open]);
+
+  return (
+    <div ref={ref} style={{ position: 'relative' }}>
+      {/* Trigger */}
+      <motion.button
+        type="button"
+        onClick={() => setOpen(v => !v)}
+        whileTap={{ scale: 0.98 }}
+        transition={{ duration: 0.10, ease: EASE }}
+        style={{
+          width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '10px 12px', borderRadius: 10, cursor: 'pointer', boxSizing: 'border-box',
+          border: open ? '1.5px solid rgba(124,58,237,0.45)' : '1.5px solid rgba(120,80,200,0.18)',
+          background: '#fff', fontFamily: 'Plus Jakarta Sans, sans-serif',
+          boxShadow: open ? '0 0 0 3px rgba(124,58,237,0.08)' : 'none',
+          transition: 'border-color 0.15s, box-shadow 0.15s',
+        }}
+      >
+        <span style={{ fontSize: 13, color: value ? '#1A1028' : '#8E87A8', fontWeight: value ? 600 : 400 }}>
+          {value || placeholder}
+        </span>
+        <motion.span
+          animate={{ rotate: open ? 180 : 0 }}
+          transition={{ duration: 0.18, ease: EASE }}
+          style={{ display: 'flex', color: '#7C3AED' }}
+        >
+          <ChevronDown size={15} strokeWidth={2.5} />
+        </motion.span>
+      </motion.button>
+
+      {/* Dropdown */}
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, y: -6, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -4, scale: 0.97 }}
+            transition={{ duration: 0.18, ease: EASE }}
+            style={{
+              position: 'absolute', top: 'calc(100% + 6px)', left: 0, right: 0,
+              background: '#fff', borderRadius: 14, zIndex: 50,
+              border: '1.5px solid rgba(124,58,237,0.15)',
+              boxShadow: '0 8px 32px rgba(80,40,180,0.13), 0 2px 8px rgba(0,0,0,0.06)',
+              overflow: 'hidden',
+            }}
+          >
+            {/* Opción vacía */}
+            <motion.button
+              type="button"
+              onClick={() => { onChange(''); setOpen(false); }}
+              whileHover={{ background: 'rgba(124,58,237,0.05)' }}
+              whileTap={{ scale: 0.98 }}
+              transition={{ duration: 0.10 }}
+              style={{
+                width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                padding: '10px 14px', border: 'none', cursor: 'pointer',
+                background: !value ? 'rgba(124,58,237,0.07)' : 'transparent',
+                borderBottom: '1px solid rgba(120,80,200,0.07)',
+                fontFamily: 'Plus Jakarta Sans, sans-serif',
+              }}
+            >
+              <span style={{ fontSize: 12, color: !value ? '#7C3AED' : '#8E87A8', fontWeight: !value ? 700 : 400 }}>
+                Sin especificar
+              </span>
+              {!value && <Check size={13} strokeWidth={2.5} color="#7C3AED" />}
+            </motion.button>
+
+            {/* Opciones */}
+            {DEPORTES.map((d, i) => {
+              const selected = value === d;
+              return (
+                <motion.button
+                  key={d}
+                  type="button"
+                  onClick={() => { onChange(d); setOpen(false); }}
+                  whileHover={{ background: 'rgba(124,58,237,0.05)' }}
+                  whileTap={{ scale: 0.98 }}
+                  transition={{ duration: 0.10 }}
+                  style={{
+                    width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    padding: '10px 14px', border: 'none', cursor: 'pointer',
+                    background: selected ? 'rgba(124,58,237,0.07)' : 'transparent',
+                    borderTop: i > 0 ? '1px solid rgba(120,80,200,0.06)' : 'none',
+                    fontFamily: 'Plus Jakarta Sans, sans-serif',
+                  }}
+                >
+                  <span style={{ fontSize: 12, color: selected ? '#7C3AED' : '#1A1028', fontWeight: selected ? 700 : 500 }}>
+                    {d}
+                  </span>
+                  {selected && <Check size={13} strokeWidth={2.5} color="#7C3AED" />}
+                </motion.button>
+              );
+            })}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
 
 // ── RoleToggle — reemplaza native <select> ────────────────────────────────────
 function RoleToggle({ value, onChange }: { value: 'ADMIN' | 'COACH'; onChange: (v: 'ADMIN' | 'COACH') => void }) {
@@ -280,16 +400,10 @@ export default function ClubsPage() {
                 <p style={{ margin: '0 0 4px', fontSize: 9, fontWeight: 600, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                   Deporte principal
                 </p>
-                <select
+                <SportSelect
                   value={newForm.deporte}
-                  onChange={e => setNewForm(f => ({ ...f, deporte: e.target.value }))}
-                  style={{ ...inp, color: newForm.deporte ? '#1A1028' : '#8E87A8' }}
-                >
-                  <option value="">Seleccionar deporte</option>
-                  {['Patinaje','Ciclismo','Fútbol','Natación','Atletismo','Baloncesto','Voleibol','Tenis','Natación artística','Otro'].map(d => (
-                    <option key={d} value={d}>{d}</option>
-                  ))}
-                </select>
+                  onChange={v => setNewForm(f => ({ ...f, deporte: v }))}
+                />
               </div>
               <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
                 <motion.button
@@ -378,16 +492,11 @@ export default function ClubsPage() {
                       <p style={{ margin: '0 0 3px', fontSize: 9, fontWeight: 600, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                         Deporte principal
                       </p>
-                      <select
+                      <SportSelect
                         value={editForm.deporte}
-                        onChange={e => setEditForm(f => ({ ...f, deporte: e.target.value }))}
-                        style={{ ...inp, color: editForm.deporte ? '#1A1028' : '#8E87A8' }}
-                      >
-                        <option value="">Sin especificar</option>
-                        {['Patinaje','Ciclismo','Fútbol','Natación','Atletismo','Baloncesto','Voleibol','Tenis','Natación artística','Otro'].map(d => (
-                          <option key={d} value={d}>{d}</option>
-                        ))}
-                      </select>
+                        onChange={v => setEditForm(f => ({ ...f, deporte: v }))}
+                        placeholder="Sin especificar"
+                      />
                     </div>
                     <div style={{ display: 'flex', gap: 8 }}>
                       <motion.button onClick={() => setEditId(null)}

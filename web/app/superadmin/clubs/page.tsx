@@ -220,16 +220,16 @@ function getWhatsAppUrl(club: Club): string {
     const expired  = ends < now;
     const daysLeft = expired ? 0 : Math.ceil((ends.getTime() - now.getTime()) / 86_400_000);
     if (expired) {
-      msg = `Hola ${admin} 👋, te escribimos de *NexCode97*.\n\nEl período de prueba gratuita del club *${club.name}* ha vencido.\n\nPara seguir disfrutando de VeloClub, activa tu plan escribiéndonos. ¡Estamos listos para ayudarte! 🚀`;
+      msg = `Hola ${admin} 👋, te escribimos de *VeloClub*.\n\nEl período de prueba gratuita del club *${club.name}* ha vencido.\n\nPara seguir disfrutando de VeloClub, activa tu plan escribiéndonos. ¡Estamos listos para ayudarte! 🚀`;
     } else {
-      msg = `Hola ${admin} 👋, te escribimos de *NexCode97*.\n\nTe recordamos que el período de prueba gratuita del club *${club.name}* vence en *${daysLeft} día${daysLeft !== 1 ? 's' : ''}*.\n\nActiva tu plan antes de que expire para no perder el acceso. ¡Contáctanos! 🙌`;
+      msg = `Hola ${admin} 👋, te escribimos de *VeloClub*.\n\nTe recordamos que el período de prueba gratuita del club *${club.name}* vence en *${daysLeft} día${daysLeft !== 1 ? 's' : ''}*.\n\nActiva tu plan antes de que expire para no perder el acceso. ¡Contáctanos! 🙌`;
     }
   } else if (club.suscripcion) {
     const planLabel: Record<string, string> = { MENSUAL: 'Mensual', TRIMESTRAL: 'Trimestral', ANUAL: 'Anual' };
     const tipo = planLabel[club.suscripcion.tipoPlan] ?? club.suscripcion.tipoPlan;
-    msg = `Hola ${admin} 👋, te escribimos de *NexCode97*.\n\nTe recordamos que el Plan *${tipo}* del club *${club.name}* está próximo a vencer.\n\nRenueva tu suscripción para mantener el acceso sin interrupciones. ¡Gracias por confiar en VeloClub! 💜`;
+    msg = `Hola ${admin} 👋, te escribimos de *VeloClub*.\n\nTe recordamos que el Plan *${tipo}* del club *${club.name}* está próximo a vencer.\n\nRenueva tu suscripción para mantener el acceso sin interrupciones. ¡Gracias por confiar en VeloClub! 💜`;
   } else {
-    msg = `Hola ${admin} 👋, te escribimos de *NexCode97*.\n\nEl club *${club.name}* aún no tiene un plan activo en VeloClub.\n\n¿Te gustaría activar tu suscripción? Cuéntanos y te ayudamos. 🚀`;
+    msg = `Hola ${admin} 👋, te escribimos de *VeloClub*.\n\nEl club *${club.name}* aún no tiene un plan activo en VeloClub.\n\n¿Te gustaría activar tu suscripción? Cuéntanos y te ayudamos. 🚀`;
   }
 
   // Sin número destino → WhatsApp abre el selector de contactos con el mensaje listo

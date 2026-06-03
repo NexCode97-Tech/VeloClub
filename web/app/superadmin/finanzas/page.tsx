@@ -31,7 +31,7 @@ type EstadoPago = 'PAID' | 'PENDING' | 'OVERDUE';
 
 interface Pago { id: string; concepto: string; monto: number; fecha: string | null; estado: EstadoPago; receiptUrl?: string | null; receiptPublicId?: string | null; }
 interface Suscripcion { id: string; planMonto: number; tipoPlan: TipoPlan; año: number; pagos: Pago[]; }
-interface ClubConSuscripcion { id: string; name: string; active: boolean; suscripcion: Suscripcion | null; }
+interface ClubConSuscripcion { id: string; name: string; active: boolean; logoUrl?: string | null; suscripcion: Suscripcion | null; }
 
 // ── Constantes ────────────────────────────────────────────────────────────────
 const PLAN_OPTIONS: { value: TipoPlan; label: string; sub: string; multiplier: number }[] = [
@@ -329,8 +329,11 @@ export default function FinanzasPage() {
                 <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 10 }}>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
-                      <div style={{ width: 28, height: 28, borderRadius: 8, background: 'rgba(124,58,237,0.10)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800, color: '#7C3AED', fontFamily: 'Space Grotesk, sans-serif', flexShrink: 0 }}>
-                        {c.name.charAt(0).toUpperCase()}
+                      <div style={{ width: 28, height: 28, borderRadius: 8, background: 'rgba(124,58,237,0.10)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800, color: '#7C3AED', fontFamily: 'Space Grotesk, sans-serif', flexShrink: 0, overflow: 'hidden' }}>
+                        {c.logoUrl
+                          ? <img src={c.logoUrl} alt={c.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          : c.name.charAt(0).toUpperCase()
+                        }
                       </div>
                       <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: '#1A1028', fontFamily: 'Space Grotesk, sans-serif', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         {c.name}

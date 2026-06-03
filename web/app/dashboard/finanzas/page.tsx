@@ -266,6 +266,7 @@ function StudentRow({
       whileHover={reducedMotion ? {} : { y: -3, boxShadow: '0 12px 40px rgba(124,58,237,0.14)', transition: { duration: 0.22, ease: EASE_OUT } }}
       whileTap={reducedMotion ? {} : { scale: 0.97, transition: { duration: 0.1 } }}
       layout
+      style={{ borderRadius: 16 }}
     >
       <div className="bg-white rounded-2xl overflow-hidden"
         style={{ border: '1px solid rgba(120,80,200,0.09)', boxShadow: '0 2px 12px rgba(124,58,237,0.05)' }}>

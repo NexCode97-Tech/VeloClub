@@ -250,7 +250,7 @@ export default function ClubsPage() {
   const [saving,  setSaving]  = useState(false);
 
   const [editId,   setEditId]   = useState<string | null>(null);
-  const [editForm, setEditForm] = useState({ clubName: '', adminName: '', adminEmail: '', deporte: '' });
+  const [editForm, setEditForm] = useState({ clubName: '', adminName: '', adminEmail: '', deporte: '', trialDays: '' });
 
   const [membersClubId,   setMembersClubId]   = useState<string | null>(null);
   const [members,         setMembers]         = useState<Member[]>([]);
@@ -292,6 +292,7 @@ export default function ClubsPage() {
   async function handleEdit(id: string) {
     if (!editForm.clubName.trim()) return;
     const token = await getToken();
+    const trialDays = editForm.trialDays !== '' ? parseInt(editForm.trialDays) : undefined;
     await apiFetch(`/superadmin/clubs/${id}`, {
       method: 'PATCH', token,
       body: JSON.stringify({
@@ -299,9 +300,19 @@ export default function ClubsPage() {
         deporte:    editForm.deporte || null,
         adminName:  editForm.adminName || undefined,
         adminEmail: editForm.adminEmail || undefined,
+        ...(trialDays !== undefined ? { trialDays } : {}),
       }),
     });
     setEditId(null);
+    await load();
+  }
+
+  async function handleSetTrial(id: string, days: number) {
+    const token = await getToken();
+    await apiFetch(`/superadmin/clubs/${id}`, {
+      method: 'PATCH', token,
+      body: JSON.stringify({ trialDays: days }),
+    });
     await load();
   }
 
@@ -526,6 +537,53 @@ export default function ClubsPage() {
                         placeholder="Sin especificar"
                       />
                     </div>
+                    {/* Período de prueba */}
+                    <div style={{ marginBottom: 12, padding: '10px 12px', borderRadius: 12, background: 'rgba(255,183,3,0.07)', border: '1px solid rgba(255,183,3,0.20)' }}>
+                      <p style={{ margin: '0 0 6px', fontSize: 9, fontWeight: 700, color: '#B88A00', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                        Período de prueba
+                      </p>
+                      {/* Estado actual */}
+                      {(() => {
+                        const now = new Date();
+                        if (!club.trialEndsAt) return (
+                          <p style={{ margin: '0 0 8px', fontSize: 11, color: '#8E87A8' }}>Sin período de prueba asignado</p>
+                        );
+                        const ends = new Date(club.trialEndsAt);
+                        const expired = ends < now;
+                        const daysLeft = expired ? 0 : Math.ceil((ends.getTime() - now.getTime()) / 86_400_000);
+                        return (
+                          <p style={{ margin: '0 0 8px', fontSize: 11, color: expired ? '#EF476F' : '#B88A00', fontWeight: 600 }}>
+                            {expired ? `Vencido el ${ends.toLocaleDateString('es-CO', { day: 'numeric', month: 'short' })}` : `${daysLeft} días restantes (vence ${ends.toLocaleDateString('es-CO', { day: 'numeric', month: 'short' })})`}
+                          </p>
+                        );
+                      })()}
+                      {/* Acciones rápidas */}
+                      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                        {[15, 30, 60].map(d => (
+                          <motion.button key={d}
+                            onClick={() => setEditForm(f => ({ ...f, trialDays: String(d) }))}
+                            whileTap={{ scale: 0.95 }} transition={{ duration: 0.1 }}
+                            style={{ padding: '4px 10px', borderRadius: 99, fontSize: 10, fontWeight: 700, cursor: 'pointer', border: editForm.trialDays === String(d) ? 'none' : '1px solid rgba(255,183,3,0.30)', background: editForm.trialDays === String(d) ? '#FFB703' : 'transparent', color: editForm.trialDays === String(d) ? '#fff' : '#B88A00', fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
+                            +{d} días
+                          </motion.button>
+                        ))}
+                        <motion.button
+                          onClick={() => setEditForm(f => ({ ...f, trialDays: '0' }))}
+                          whileTap={{ scale: 0.95 }} transition={{ duration: 0.1 }}
+                          style={{ padding: '4px 10px', borderRadius: 99, fontSize: 10, fontWeight: 700, cursor: 'pointer', border: editForm.trialDays === '0' ? 'none' : '1px solid rgba(239,71,111,0.25)', background: editForm.trialDays === '0' ? '#EF476F' : 'transparent', color: editForm.trialDays === '0' ? '#fff' : '#EF476F', fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
+                          Limpiar trial
+                        </motion.button>
+                      </div>
+                      {editForm.trialDays && editForm.trialDays !== '' && (
+                        <p style={{ margin: '6px 0 0', fontSize: 10, color: '#8E87A8' }}>
+                          {editForm.trialDays === '0'
+                            ? 'Se eliminará el período de prueba al guardar'
+                            : `Se asignarán ${editForm.trialDays} días desde hoy al guardar`
+                          }
+                        </p>
+                      )}
+                    </div>
+
                     <div style={{ display: 'flex', gap: 8 }}>
                       <motion.button onClick={() => setEditId(null)}
                         whileTap={{ scale: 0.97 }} transition={{ duration: 0.12 }}
@@ -617,6 +675,7 @@ export default function ClubsPage() {
                           adminName:  admin?.fullName ?? '',
                           adminEmail: admin?.email ?? '',
                           deporte:    club.deporte ?? '',
+                          trialDays:  '',
                         });
                         setEditId(club.id);
                       }}

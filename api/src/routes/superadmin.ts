@@ -105,6 +105,8 @@ const editClubSchema = z.object({
   deporte:    z.string().optional().nullable(),
   adminName:  z.string().min(2).max(100).optional(),
   adminEmail: z.string().email().optional(),
+  // trialDays: número de días desde hoy. 0 = limpiar trial. null = sin cambios.
+  trialDays:  z.number().int().min(0).max(365).optional().nullable(),
 });
 
 router.patch('/clubs/:id', requireAuth, requireSuperadmin, async (req, res) => {
@@ -112,12 +114,21 @@ router.patch('/clubs/:id', requireAuth, requireSuperadmin, async (req, res) => {
   const parsed = editClubSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.issues });
 
-  const { name, deporte, adminName, adminEmail } = parsed.data;
+  const { name, deporte, adminName, adminEmail, trialDays } = parsed.data;
 
   // Actualizar el club
   const clubData: Record<string, unknown> = {};
   if (name)           clubData.name    = name.trim();
   if (deporte !== undefined) clubData.deporte = deporte || null;
+  if (trialDays !== undefined && trialDays !== null) {
+    if (trialDays === 0) {
+      clubData.trialEndsAt = null; // limpiar trial
+    } else {
+      const t = new Date();
+      t.setDate(t.getDate() + trialDays);
+      clubData.trialEndsAt = t;
+    }
+  }
 
   const club = await prisma.club.update({ where: { id }, data: clubData });
 

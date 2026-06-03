@@ -3,7 +3,7 @@
 import { useAuth } from '@clerk/nextjs';
 import { useEffect, useState } from 'react';
 import { apiFetch } from '@/lib/api-client';
-import { Pencil, Trash2, X, Check, TrendingUp, CalendarClock, CircleDollarSign, Paperclip, Eye, Upload, RotateCcw } from 'lucide-react';
+import { Pencil, Trash2, X, Check, TrendingUp, CalendarClock, CircleDollarSign, Eye, Upload, RotateCcw } from 'lucide-react';
 import { motion, AnimatePresence, type Variants } from 'framer-motion';
 
 // ── Formateo ──────────────────────────────────────────────────────────────────
@@ -483,7 +483,7 @@ export default function FinanzasPage() {
                                       whileTap={{ scale: 0.90 }} transition={{ duration: 0.12 }}
                                       title={p.receiptUrl ? 'Ver comprobante' : 'Subir comprobante'}
                                       style={{ width: 30, height: 30, borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', background: p.receiptUrl ? 'rgba(6,214,160,0.10)' : 'rgba(120,80,200,0.07)', border: `1px solid ${p.receiptUrl ? 'rgba(6,214,160,0.28)' : 'rgba(120,80,200,0.15)'}`, color: p.receiptUrl ? '#06D6A0' : '#8E87A8', cursor: 'pointer' }}>
-                                      <Paperclip size={12} />
+                                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
                                     </motion.button>
                                     <motion.button onClick={() => startEditPago(p)} whileTap={{ scale: 0.90 }} transition={{ duration: 0.12 }}
                                       style={{ width: 30, height: 30, borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(124,58,237,0.08)', border: '1px solid rgba(124,58,237,0.15)', color: '#7C3AED', cursor: 'pointer' }}>
@@ -628,7 +628,7 @@ export default function FinanzasPage() {
               {/* Sin comprobante */}
               {!receiptModal.receiptUrl && !receiptFile && (
                 <div style={{ borderRadius: 14, border: '2px dashed rgba(124,58,237,0.20)', padding: '28px 16px', textAlign: 'center', marginBottom: 12, background: 'rgba(124,58,237,0.03)' }}>
-                  <Paperclip size={22} color="rgba(124,58,237,0.35)" style={{ marginBottom: 8 }} />
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(124,58,237,0.35)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginBottom: 8 }}><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
                   <p style={{ margin: 0, fontSize: 12, color: '#8E87A8', fontWeight: 500 }}>Sin comprobante adjunto</p>
                   <p style={{ margin: '2px 0 0', fontSize: 11, color: '#C4BFD8' }}>Sube una imagen del recibo de pago</p>
                 </div>

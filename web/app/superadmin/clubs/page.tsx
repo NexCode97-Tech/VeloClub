@@ -39,6 +39,7 @@ interface Club {
   name: string;
   active: boolean;
   createdAt: string;
+  trialEndsAt?: string | null;
   _count: { members: number };
   users: { email: string; name: string }[];
 }
@@ -354,6 +355,18 @@ export default function ClubsPage() {
                           <span style={{ flexShrink: 0, fontSize: 9, fontWeight: 700, padding: '2px 7px', borderRadius: 99, background: club.active ? 'rgba(6,214,160,0.12)' : 'rgba(239,71,111,0.12)', color: club.active ? '#06D6A0' : '#EF476F' }}>
                             {club.active ? 'Activo' : 'Inactivo'}
                           </span>
+                          {(() => {
+                            if (!club.trialEndsAt) return null;
+                            const now = new Date();
+                            const ends = new Date(club.trialEndsAt);
+                            const expired = ends < now;
+                            const daysLeft = expired ? 0 : Math.ceil((ends.getTime() - now.getTime()) / 86_400_000);
+                            return (
+                              <span style={{ flexShrink: 0, fontSize: 9, fontWeight: 700, padding: '2px 7px', borderRadius: 99, background: expired ? 'rgba(239,71,111,0.12)' : 'rgba(255,183,3,0.14)', color: expired ? '#EF476F' : '#B88A00' }}>
+                                {expired ? 'TRIAL EXPIRADO' : `TRIAL · ${daysLeft}d`}
+                              </span>
+                            );
+                          })()}
                         </div>
                         <p style={{ margin: 0, fontSize: 11, color: '#8E87A8' }}>
                           {club._count.members} miembros{club.users[0] ? ` · Admin: ${club.users[0].name}` : ''}

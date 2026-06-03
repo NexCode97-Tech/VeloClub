@@ -17,6 +17,7 @@ model Club {
   logoUrl           String?
   logoPublicId      String?
   active            Boolean         @default(true)
+  trialEndsAt       DateTime?
   noAttendanceDays  Int[]
   createdAt         DateTime        @default(now())
   updatedAt         DateTime        @updatedAt

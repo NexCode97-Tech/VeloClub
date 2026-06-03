@@ -16,8 +16,9 @@ import {
 } from 'recharts';
 
 interface MeResponse {
-  status: 'ok' | 'superadmin' | 'complete_profile' | 'no_access' | 'inactive';
+  status: 'ok' | 'superadmin' | 'complete_profile' | 'no_access' | 'inactive' | 'trial_expired';
   user?: { name: string; role: string; club?: { name: string; logoUrl?: string } };
+  trial?: { daysLeft: number; endsAt: string } | null;
 }
 
 const roleLabels: Record<string, string> = {
@@ -73,6 +74,7 @@ export default function DashboardPage() {
   const { session } = useSession();
   const router = useRouter();
   const [me, setMe]           = useState<MeResponse | null>(null);
+  const [trial, setTrial]     = useState<{ daysLeft: number; endsAt: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [spinning, setSpinning]   = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
@@ -186,8 +188,10 @@ export default function DashboardPage() {
         if (res.status === 'superadmin')       { router.push('/superadmin');       return; }
         if (res.status === 'no_access')        { router.push('/no-access');        return; }
         if (res.status === 'inactive')         { router.push('/inactivo');         return; }
+        if (res.status === 'trial_expired')    { router.push('/trial-expirado');   return; }
         if (res.status === 'complete_profile') { router.push('/completar-perfil'); return; }
         setMe(res);
+        setTrial(res.trial ?? null);
 
         const role = res.user?.role ?? 'ADMIN';
         const weekdayCounts   = weekdayRes.status === 'fulfilled'  ? weekdayRes.value.counts   : EMPTY_WEEKDAY;
@@ -430,6 +434,36 @@ export default function DashboardPage() {
           ))}
         </div>
       </div>
+
+      {/* ── Banner período de prueba ───────────────────────────────────────── */}
+      {trial !== null && (
+        <div
+          className="mx-4 mt-3 rounded-2xl px-4 py-3 flex items-center gap-3"
+          style={{
+            background: trial.daysLeft <= 3 ? 'rgba(239,71,111,0.08)' : 'rgba(255,183,3,0.09)',
+            border: `1px solid ${trial.daysLeft <= 3 ? 'rgba(239,71,111,0.20)' : 'rgba(255,183,3,0.25)'}`,
+          }}
+        >
+          <div
+            className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 text-[14px]"
+            style={{ background: trial.daysLeft <= 3 ? 'rgba(239,71,111,0.12)' : 'rgba(255,183,3,0.15)' }}
+          >
+            {trial.daysLeft <= 3 ? '⚠️' : '🧪'}
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-[12px] font-bold" style={{ color: trial.daysLeft <= 3 ? '#EF476F' : '#B88A00' }}>
+              {trial.daysLeft === 0
+                ? 'Tu período de prueba vence hoy'
+                : `Período de prueba · ${trial.daysLeft} día${trial.daysLeft !== 1 ? 's' : ''} restante${trial.daysLeft !== 1 ? 's' : ''}`}
+            </p>
+            {trial.daysLeft <= 3 && (
+              <p className="text-[11px] mt-0.5" style={{ color: '#EF476F', opacity: 0.8 }}>
+                Contacta a NexCode97 para activar tu plan
+              </p>
+            )}
+          </div>
+        </div>
+      )}
 
       <div className="px-5 py-4 space-y-5">
 

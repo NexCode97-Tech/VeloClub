@@ -47,9 +47,13 @@ router.post('/clubs', requireAuth, requireSuperadmin, async (req, res) => {
   const existing = await prisma.member.findFirst({ where: { email: adminEmail } });
   if (existing) return res.status(400).json({ error: 'Este email ya está registrado en otro club' });
 
+  const trialEndsAt = new Date();
+  trialEndsAt.setDate(trialEndsAt.getDate() + 15);
+
   const club = await prisma.club.create({
     data: {
       name: clubName,
+      trialEndsAt,
       members: {
         create: { fullName: adminName, email: adminEmail, role: 'ADMIN', inviteStatus: 'PENDING' },
       },
@@ -68,7 +72,15 @@ router.patch('/clubs/:id/toggle', requireAuth, requireSuperadmin, async (req, re
   const club = await prisma.club.findUnique({ where: { id } });
   if (!club) return res.status(404).json({ error: 'Club no encontrado' });
 
-  const updated = await prisma.club.update({ where: { id }, data: { active: !club.active } });
+  const reactivating = !club.active; // false → true
+  const updated = await prisma.club.update({
+    where: { id },
+    data: {
+      active: !club.active,
+      // Al reactivar, limpia el trial para que el club quede como pagado
+      ...(reactivating ? { trialEndsAt: null } : {}),
+    },
+  });
 
   if (!updated.active) {
     await crearNotificacion('CLUB_DESACTIVADO', 'Club desactivado', `${club.name} fue desactivado.`);

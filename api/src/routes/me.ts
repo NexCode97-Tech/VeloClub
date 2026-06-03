@@ -72,11 +72,24 @@ if (superadminEmails.includes(email.toLowerCase())) {
       return res.json({ status: 'inactive' });
     }
 
+    // Check trial
+    const now = new Date();
+    const trialEndsAt = user.club?.trialEndsAt ?? null;
+    if (trialEndsAt && trialEndsAt < now) {
+      return res.json({ status: 'trial_expired' });
+    }
+    const trialDaysLeft = trialEndsAt
+      ? Math.max(0, Math.ceil((trialEndsAt.getTime() - now.getTime()) / 86_400_000))
+      : null;
+    const trial = trialDaysLeft !== null
+      ? { daysLeft: trialDaysLeft, endsAt: trialEndsAt!.toISOString() }
+      : null;
+
     if (!user.profileComplete) {
       return res.json({ status: 'complete_profile', user });
     }
 
-    return res.json({ status: 'ok', user });
+    return res.json({ status: 'ok', user, trial });
   }
 
   // New user — check if email was pre-registered as a Member (case-insensitive)
@@ -91,6 +104,12 @@ if (superadminEmails.includes(email.toLowerCase())) {
 
   if (!member.club.active) {
     return res.json({ status: 'inactive' });
+  }
+
+  // Check trial para nuevo usuario
+  const nowNew = new Date();
+  if (member.club.trialEndsAt && member.club.trialEndsAt < nowNew) {
+    return res.json({ status: 'trial_expired' });
   }
 
   // Create user record linked to this member's club

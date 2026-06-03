@@ -284,12 +284,6 @@ export default function AsistenciaPage() {
                             style={{ color: '#1A1028' }}>
                             {m.fullName}
                           </p>
-                          {(m.category || m.tipo) && (
-                            <p className="text-[9px] font-semibold text-center mt-0.5 truncate w-full px-1"
-                              style={{ color: '#8E87A8' }}>
-                              {m.category ?? m.tipo}
-                            </p>
-                          )}
                         </div>
 
                         {/* Botón de estado — ocupa todo el ancho */}

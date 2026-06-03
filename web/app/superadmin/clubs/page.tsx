@@ -209,16 +209,15 @@ function RoleToggle({ value, onChange }: { value: 'ADMIN' | 'COACH'; onChange: (
 }
 
 // ── WhatsApp recordatorio ─────────────────────────────────────────────────────
-const WA_NUMBER = '573153171225';
-
+// Abre WhatsApp con el mensaje listo — el superadmin elige el contacto destino
 function getWhatsAppUrl(club: Club): string {
-  const now   = new Date();
+  const now  = new Date();
   const admin = club.users[0]?.name ?? 'Administrador';
   let msg = '';
 
   if (club.trialEndsAt) {
-    const ends    = new Date(club.trialEndsAt);
-    const expired = ends < now;
+    const ends     = new Date(club.trialEndsAt);
+    const expired  = ends < now;
     const daysLeft = expired ? 0 : Math.ceil((ends.getTime() - now.getTime()) / 86_400_000);
     if (expired) {
       msg = `Hola ${admin} 👋, te escribimos de *NexCode97*.\n\nEl período de prueba gratuita del club *${club.name}* ha vencido.\n\nPara seguir disfrutando de VeloClub, activa tu plan escribiéndonos. ¡Estamos listos para ayudarte! 🚀`;
@@ -233,7 +232,8 @@ function getWhatsAppUrl(club: Club): string {
     msg = `Hola ${admin} 👋, te escribimos de *NexCode97*.\n\nEl club *${club.name}* aún no tiene un plan activo en VeloClub.\n\n¿Te gustaría activar tu suscripción? Cuéntanos y te ayudamos. 🚀`;
   }
 
-  return `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`;
+  // Sin número destino → WhatsApp abre el selector de contactos con el mensaje listo
+  return `https://wa.me/?text=${encodeURIComponent(msg)}`;
 }
 
 // ── Componente principal ───────────────────────────────────────────────────────

@@ -290,6 +290,6 @@ function EventCard({ event }: { event: CalEvent }) {
           </div>
         )}
       </div>
-    </motion.div>
+    </div>
   );
 }

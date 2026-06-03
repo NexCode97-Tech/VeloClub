@@ -294,10 +294,10 @@ function StudentRow({
         </div>
 
         {/* Estado + acción */}
-        <div className="px-4 py-2.5 flex items-center justify-between gap-2"
+        <div className="px-3 py-2.5 flex flex-col gap-1.5 md:flex-row md:items-center md:justify-between md:gap-2"
           style={{ borderBottom: '1px solid rgba(120,80,200,0.06)' }}>
-          <div className="flex-1 min-w-0">{statusChip}</div>
-          {mainAction}
+          <div className="min-w-0">{statusChip}</div>
+          {mainAction && <div className="self-start md:self-auto">{mainAction}</div>}
         </div>
 
         {/* Botones icono */}

@@ -6,8 +6,9 @@ import { useEffect, useState } from 'react';
 import { apiFetch } from '@/lib/api-client';
 import { QK } from '@/hooks/useVeloQuery';
 import { Users, MapPin, CheckCircle2 } from 'lucide-react';
+const EASE_OUT: [number,number,number,number] = [0.23, 1, 0.32, 1];
 import { MemberAvatar } from '@/components/ui/member-avatar';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import { stagger, cardVariant } from '@/lib/page-animations';
 import {
   Select, SelectContent, SelectItem, SelectTrigger,
@@ -48,6 +49,7 @@ function avatarBg(role: string) { return ROLE_BG[role] ?? 'linear-gradient(135de
 
 export default function AsistenciaPage() {
   const { getToken } = useAuth();
+  const reducedMotion = useReducedMotion();
   const [selectedLoc, setSelectedLoc] = useState<string>('');
   const [att, setAtt]                 = useState<Record<string, Status>>({});
   const [saving, setSaving]           = useState(false);
@@ -262,7 +264,9 @@ export default function AsistenciaPage() {
                       <motion.div
                         variants={cardVariant}
                         key={m.id}
-                        className="bg-white rounded-2xl overflow-hidden flex flex-col"
+                        whileHover={reducedMotion ? {} : { y: -3, boxShadow: `0 12px 32px ${color}28`, transition: { duration: 0.22, ease: EASE_OUT } }}
+                        whileTap={reducedMotion ? {} : { scale: 0.97, transition: { duration: 0.1 } }}
+                        className="bg-white rounded-2xl overflow-hidden flex flex-col cursor-pointer"
                         style={{
                           border: `1.5px solid ${color}30`,
                           boxShadow: `0 2px 10px ${color}18`,

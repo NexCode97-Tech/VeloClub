@@ -304,6 +304,8 @@ model SuscripcionPago {
   monto           Float
   fecha           DateTime?
   estado          PaymentStatus   @default(PENDING)
+  receiptUrl      String?
+  receiptPublicId String?
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
 

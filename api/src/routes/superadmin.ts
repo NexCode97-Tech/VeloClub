@@ -3,6 +3,13 @@ import { z } from 'zod';
 import { requireAuth } from '../auth/middleware';
 import { prisma } from '../db/client';
 import { addToAllowlist, removeFromAllowlist } from '../lib/clerk-allowlist';
+import { v2 as cloudinary } from 'cloudinary';
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key:    process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
 const router = Router();
 
@@ -326,6 +333,54 @@ router.delete('/suscripciones/pagos/:pagoId', requireAuth, requireSuperadmin, as
   const pagoId = String(req.params.pagoId);
   await prisma.suscripcionPago.delete({ where: { id: pagoId } });
   res.json({ ok: true });
+});
+
+// ─── Comprobantes de SuscripcionPago ─────────────────────────────────────────
+
+// POST /superadmin/suscripciones/pagos/:pagoId/receipt
+router.post('/suscripciones/pagos/:pagoId/receipt', requireAuth, requireSuperadmin, async (req, res) => {
+  const pagoId = String(req.params.pagoId);
+  const { base64, fileName } = req.body as { base64: string; fileName?: string };
+  if (!base64) return res.status(400).json({ error: 'base64 requerido' });
+
+  const pago = await prisma.suscripcionPago.findUnique({ where: { id: pagoId } });
+  if (!pago) return res.status(404).json({ error: 'Pago no encontrado' });
+
+  // Destruir comprobante anterior si existe
+  if (pago.receiptPublicId) {
+    try { await cloudinary.uploader.destroy(pago.receiptPublicId, { resource_type: 'image' }); } catch { /* ignorar */ }
+  }
+
+  const uploaded = await cloudinary.uploader.upload(base64, {
+    folder: 'veloclub/comprobantes-suscripcion',
+    public_id: `pago_${pagoId}_${Date.now()}`,
+    resource_type: 'image',
+  });
+
+  const updated = await prisma.suscripcionPago.update({
+    where: { id: pagoId },
+    data: { receiptUrl: uploaded.secure_url, receiptPublicId: uploaded.public_id },
+  });
+
+  res.json({ pago: updated });
+});
+
+// DELETE /superadmin/suscripciones/pagos/:pagoId/receipt
+router.delete('/suscripciones/pagos/:pagoId/receipt', requireAuth, requireSuperadmin, async (req, res) => {
+  const pagoId = String(req.params.pagoId);
+  const pago = await prisma.suscripcionPago.findUnique({ where: { id: pagoId } });
+  if (!pago) return res.status(404).json({ error: 'Pago no encontrado' });
+
+  if (pago.receiptPublicId) {
+    try { await cloudinary.uploader.destroy(pago.receiptPublicId, { resource_type: 'image' }); } catch { /* ignorar */ }
+  }
+
+  const updated = await prisma.suscripcionPago.update({
+    where: { id: pagoId },
+    data: { receiptUrl: null, receiptPublicId: null },
+  });
+
+  res.json({ pago: updated });
 });
 
 // ─── Notificaciones ───────────────────────────────────────────────────────────

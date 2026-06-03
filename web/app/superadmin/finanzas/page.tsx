@@ -3,7 +3,7 @@
 import { useAuth } from '@clerk/nextjs';
 import { useEffect, useState } from 'react';
 import { apiFetch } from '@/lib/api-client';
-import { Pencil, Trash2, X, Check, TrendingUp, CalendarClock, RefreshCw, CircleDollarSign } from 'lucide-react';
+import { Pencil, Trash2, X, Check, TrendingUp, CalendarClock, CircleDollarSign, Paperclip, Eye, Upload, RotateCcw } from 'lucide-react';
 import { motion, AnimatePresence, type Variants } from 'framer-motion';
 
 // ── Formateo ──────────────────────────────────────────────────────────────────
@@ -29,7 +29,7 @@ function MoneyInput({ value, onChange, placeholder, style }: {
 type TipoPlan = 'MENSUAL' | 'TRIMESTRAL' | 'ANUAL';
 type EstadoPago = 'PAID' | 'PENDING' | 'OVERDUE';
 
-interface Pago { id: string; concepto: string; monto: number; fecha: string | null; estado: EstadoPago; }
+interface Pago { id: string; concepto: string; monto: number; fecha: string | null; estado: EstadoPago; receiptUrl?: string | null; receiptPublicId?: string | null; }
 interface Suscripcion { id: string; planMonto: number; tipoPlan: TipoPlan; año: number; pagos: Pago[]; }
 interface ClubConSuscripcion { id: string; name: string; active: boolean; suscripcion: Suscripcion | null; }
 
@@ -164,6 +164,13 @@ export default function FinanzasPage() {
   const [editTipoPlan,  setEditTipoPlan]  = useState<TipoPlan>('MENSUAL');
   const [savingPlan,    setSavingPlan]    = useState(false);
 
+  // Comprobante
+  const [receiptModal,    setReceiptModal]    = useState<Pago | null>(null);
+  const [receiptFile,     setReceiptFile]     = useState<string | null>(null);
+  const [uploadingReceipt, setUploadingReceipt] = useState(false);
+  const [deletingReceipt,  setDeletingReceipt]  = useState(false);
+  const [receiptError,    setReceiptError]    = useState<string | null>(null);
+
   async function load() {
     try {
       const token = await getToken();
@@ -230,6 +237,46 @@ export default function FinanzasPage() {
       await load();
     } catch (e) { console.error(e); }
     finally { setSavingPlan(false); }
+  }
+
+  // ── Comprobante ───────────────────────────────────────────────────────────
+  function handleReceiptFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => setReceiptFile(ev.target?.result as string);
+    reader.readAsDataURL(file);
+  }
+
+  async function handleUploadReceipt() {
+    if (!receiptModal || !receiptFile) return;
+    setUploadingReceipt(true); setReceiptError(null);
+    try {
+      const token = await getToken();
+      const updated = await apiFetch<{ pago: Pago }>(
+        `/superadmin/suscripciones/pagos/${receiptModal.id}/receipt`,
+        { method: 'POST', token, body: JSON.stringify({ base64: receiptFile }) }
+      );
+      setReceiptModal(updated.pago);
+      setReceiptFile(null);
+      await load();
+    } catch (e) { setReceiptError(e instanceof Error ? e.message : 'Error al subir'); }
+    finally { setUploadingReceipt(false); }
+  }
+
+  async function handleDeleteReceipt() {
+    if (!receiptModal) return;
+    setDeletingReceipt(true); setReceiptError(null);
+    try {
+      const token = await getToken();
+      const updated = await apiFetch<{ pago: Pago }>(
+        `/superadmin/suscripciones/pagos/${receiptModal.id}/receipt`,
+        { method: 'DELETE', token }
+      );
+      setReceiptModal(updated.pago);
+      await load();
+    } catch (e) { setReceiptError(e instanceof Error ? e.message : 'Error al eliminar'); }
+    finally { setDeletingReceipt(false); }
   }
 
   // ── Métricas globales ──────────────────────────────────────────────────────
@@ -434,6 +481,14 @@ export default function FinanzasPage() {
                                     </span>
                                   </div>
                                   <div style={{ display: 'flex', gap: 5, flexShrink: 0 }}>
+                                    {/* Comprobante */}
+                                    <motion.button
+                                      onClick={() => { setReceiptModal(p); setReceiptFile(null); setReceiptError(null); }}
+                                      whileTap={{ scale: 0.90 }} transition={{ duration: 0.12 }}
+                                      title={p.receiptUrl ? 'Ver comprobante' : 'Subir comprobante'}
+                                      style={{ width: 30, height: 30, borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', background: p.receiptUrl ? 'rgba(6,214,160,0.10)' : 'rgba(120,80,200,0.07)', border: `1px solid ${p.receiptUrl ? 'rgba(6,214,160,0.28)' : 'rgba(120,80,200,0.15)'}`, color: p.receiptUrl ? '#06D6A0' : '#8E87A8', cursor: 'pointer' }}>
+                                      <Paperclip size={12} />
+                                    </motion.button>
                                     <motion.button onClick={() => startEditPago(p)} whileTap={{ scale: 0.90 }} transition={{ duration: 0.12 }}
                                       style={{ width: 30, height: 30, borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(124,58,237,0.08)', border: '1px solid rgba(124,58,237,0.15)', color: '#7C3AED', cursor: 'pointer' }}>
                                       <Pencil size={12} />
@@ -526,6 +581,117 @@ export default function FinanzasPage() {
         </motion.div>
 
       </div>
+
+      {/* ── Modal comprobante ───────────────────────────────────────────── */}
+      <AnimatePresence>
+        {receiptModal && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              onClick={() => { setReceiptModal(null); setReceiptFile(null); setReceiptError(null); }}
+              style={{ position: 'fixed', inset: 0, background: 'rgba(26,16,40,0.55)', zIndex: 100, backdropFilter: 'blur(4px)' }}
+            />
+            {/* Sheet */}
+            <motion.div
+              initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 30 }}
+              transition={{ duration: 0.28, ease: EASE }}
+              style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 101, background: '#fff', borderRadius: '20px 20px 0 0', padding: '20px 16px 40px', boxShadow: '0 -8px 40px rgba(80,40,180,0.16)' }}
+            >
+              {/* Handle */}
+              <div style={{ width: 36, height: 4, borderRadius: 99, background: 'rgba(120,80,200,0.18)', margin: '0 auto 16px' }} />
+
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+                <div>
+                  <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: '#1A1028', fontFamily: 'Space Grotesk, sans-serif' }}>
+                    Comprobante de pago
+                  </p>
+                  <p style={{ margin: '2px 0 0', fontSize: 11, color: '#8E87A8' }}>{receiptModal.concepto}</p>
+                </div>
+                <motion.button
+                  onClick={() => { setReceiptModal(null); setReceiptFile(null); setReceiptError(null); }}
+                  whileTap={{ scale: 0.90 }}
+                  style={{ width: 32, height: 32, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(120,80,200,0.08)', border: '1px solid rgba(120,80,200,0.15)', color: '#8E87A8', cursor: 'pointer' }}
+                >
+                  <X size={14} />
+                </motion.button>
+              </div>
+
+              {/* Preview */}
+              {(receiptFile || receiptModal.receiptUrl) && (
+                <div style={{ borderRadius: 14, overflow: 'hidden', border: '1.5px solid rgba(124,58,237,0.15)', marginBottom: 12, maxHeight: 220, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#F7F5FF' }}>
+                  <img
+                    src={receiptFile ?? receiptModal.receiptUrl!}
+                    alt="Comprobante"
+                    style={{ width: '100%', maxHeight: 220, objectFit: 'contain' }}
+                  />
+                </div>
+              )}
+
+              {/* Sin comprobante */}
+              {!receiptModal.receiptUrl && !receiptFile && (
+                <div style={{ borderRadius: 14, border: '2px dashed rgba(124,58,237,0.20)', padding: '28px 16px', textAlign: 'center', marginBottom: 12, background: 'rgba(124,58,237,0.03)' }}>
+                  <Paperclip size={22} color="rgba(124,58,237,0.35)" style={{ marginBottom: 8 }} />
+                  <p style={{ margin: 0, fontSize: 12, color: '#8E87A8', fontWeight: 500 }}>Sin comprobante adjunto</p>
+                  <p style={{ margin: '2px 0 0', fontSize: 11, color: '#C4BFD8' }}>Sube una imagen del recibo de pago</p>
+                </div>
+              )}
+
+              {receiptError && (
+                <p style={{ margin: '0 0 10px', fontSize: 11, color: '#EF476F', textAlign: 'center' }}>{receiptError}</p>
+              )}
+
+              {/* Acciones */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {/* Seleccionar / Reemplazar archivo */}
+                <label style={{ display: 'block', cursor: 'pointer' }}>
+                  <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handleReceiptFileChange} />
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px 0', borderRadius: 12, border: '1.5px solid rgba(124,58,237,0.25)', background: 'rgba(124,58,237,0.05)', color: '#7C3AED', fontSize: 12, fontWeight: 700, fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
+                    {receiptModal.receiptUrl ? <RotateCcw size={14} /> : <Upload size={14} />}
+                    {receiptModal.receiptUrl ? 'Reemplazar comprobante' : 'Seleccionar imagen'}
+                  </div>
+                </label>
+
+                {/* Subir */}
+                {receiptFile && (
+                  <motion.button
+                    onClick={handleUploadReceipt} disabled={uploadingReceipt}
+                    whileTap={{ scale: 0.97 }}
+                    style={{ width: '100%', padding: '12px 0', borderRadius: 12, border: 'none', background: uploadingReceipt ? '#A855F7' : '#7C3AED', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'Plus Jakarta Sans, sans-serif', boxShadow: '0 3px 14px rgba(124,58,237,0.30)' }}
+                  >
+                    {uploadingReceipt ? 'Subiendo...' : 'Confirmar y guardar'}
+                  </motion.button>
+                )}
+
+                {/* Ver a tamaño completo */}
+                {receiptModal.receiptUrl && !receiptFile && (
+                  <motion.button
+                    onClick={() => window.open(receiptModal.receiptUrl!, '_blank')}
+                    whileTap={{ scale: 0.97 }}
+                    style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '11px 0', borderRadius: 12, border: '1.5px solid rgba(6,214,160,0.30)', background: 'rgba(6,214,160,0.07)', color: '#06D6A0', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'Plus Jakarta Sans, sans-serif' }}
+                  >
+                    <Eye size={14} />
+                    Ver comprobante completo
+                  </motion.button>
+                )}
+
+                {/* Eliminar */}
+                {receiptModal.receiptUrl && !receiptFile && (
+                  <motion.button
+                    onClick={handleDeleteReceipt} disabled={deletingReceipt}
+                    whileTap={{ scale: 0.97 }}
+                    style={{ width: '100%', padding: '11px 0', borderRadius: 12, border: '1.5px solid rgba(239,71,111,0.22)', background: 'rgba(239,71,111,0.06)', color: '#EF476F', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'Plus Jakarta Sans, sans-serif' }}
+                  >
+                    {deletingReceipt ? 'Eliminando...' : 'Eliminar comprobante'}
+                  </motion.button>
+                )}
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
     </div>
   );
 }

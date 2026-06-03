@@ -576,6 +576,16 @@ export default function MiembrosPage() {
                     {/* ── Acciones ── */}
                     <div className="px-4 pb-4 pt-1 flex gap-2">
                       <motion.button
+                        onClick={() => openEdit(m)}
+                        whileHover={reducedMotion ? {} : { scale: 1.02 }}
+                        whileTap={reducedMotion ? {} : { scale: 0.97 }}
+                        transition={{ duration: 0.12, ease: EASE_OUT }}
+                        className="flex-1 py-2.5 rounded-xl text-[12px] font-bold text-white flex items-center justify-center gap-1.5 cursor-pointer"
+                        style={{ background: 'linear-gradient(135deg,#7C3AED,#4361EE)', boxShadow: '0 3px 12px rgba(124,58,237,0.22)' }}
+                      >
+                        <Pencil className="w-3.5 h-3.5" /> Editar
+                      </motion.button>
+                      <motion.button
                         onClick={() => setViewMember(m)}
                         whileHover={reducedMotion ? {} : { scale: 1.02 }}
                         whileTap={reducedMotion ? {} : { scale: 0.97 }}
@@ -585,16 +595,6 @@ export default function MiembrosPage() {
                         aria-label="Ver deportista"
                       >
                         <Eye className="w-4 h-4" style={{ color: '#7C3AED' }} />
-                      </motion.button>
-                      <motion.button
-                        onClick={() => openEdit(m)}
-                        whileHover={reducedMotion ? {} : { scale: 1.02 }}
-                        whileTap={reducedMotion ? {} : { scale: 0.97 }}
-                        transition={{ duration: 0.12, ease: EASE_OUT }}
-                        className="flex-1 py-2.5 rounded-xl text-[12px] font-bold text-white flex items-center justify-center gap-1.5 cursor-pointer"
-                        style={{ background: 'linear-gradient(135deg,#7C3AED,#4361EE)', boxShadow: '0 3px 12px rgba(124,58,237,0.22)' }}
-                      >
-                        <Pencil className="w-3.5 h-3.5" /> Editar
                       </motion.button>
                       <motion.button
                         onClick={() => handleDelete(m.id)}

@@ -251,73 +251,375 @@ export default function MiembrosPage() {
   // ── Step content renderer ────────────────────────────────────────────────────
   const currentStep = steps[step]?.id;
 
+  // ── Stats desktop ────────────────────────────────────────────────────────────
+  const statsDesktop = [
+    { label: 'Total', value: members.length, color: '#7C3AED', bg: 'rgba(124,58,237,0.08)' },
+    { label: 'Deportistas', value: members.filter(m => m.role === 'STUDENT').length, color: '#4361EE', bg: 'rgba(67,97,238,0.08)' },
+    { label: 'Entrenadores', value: members.filter(m => m.role === 'COACH').length, color: '#06D6A0', bg: 'rgba(6,214,160,0.10)' },
+    { label: 'Admins', value: members.filter(m => m.role === 'ADMIN').length, color: '#FFB703', bg: 'rgba(255,183,3,0.10)' },
+  ];
+
   // ── Render ───────────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-full bg-background">
+    <div className="min-h-full" style={{ background: '#F7F7FB' }}>
 
-      {/* ── Header ────────────────────────────────────────────────────────── */}
-      <div className="px-5 pt-5 pb-4 bg-card border-b border-border flex items-center justify-between">
+      {/* ══════════════════════════════════════════════════════════════════
+          HEADER MOBILE
+      ══════════════════════════════════════════════════════════════════ */}
+      <div className="md:hidden px-5 pt-5 pb-4 bg-card border-b border-border flex items-center justify-between">
         <div>
-          <h1 className="text-[18px] font-bold text-foreground" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
-            Miembros
-          </h1>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            {members.length} miembro{members.length !== 1 ? 's' : ''} registrado{members.length !== 1 ? 's' : ''}
-          </p>
+          <h1 className="text-[18px] font-bold text-foreground" style={{ fontFamily: 'var(--font-space-grotesk)' }}>Miembros</h1>
+          <p className="text-xs text-muted-foreground mt-0.5">{members.length} miembro{members.length !== 1 ? 's' : ''}</p>
         </div>
         <div className="flex items-center gap-2">
-          <button
-            onClick={() => downloadMembersPDF(members, clubName)}
-            disabled={members.length === 0}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold border border-border text-muted-foreground hover:bg-secondary active:scale-95 transition-all disabled:opacity-40"
-          >
+          <button onClick={() => downloadMembersPDF(members, clubName)} disabled={members.length === 0}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold border border-border text-muted-foreground hover:bg-secondary active:scale-95 transition-all disabled:opacity-40">
             <Download className="w-4 h-4" /><span className="hidden sm:inline">PDF</span>
           </button>
-          <button
-            onClick={() => setImportOpen(true)}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold border border-border text-muted-foreground hover:bg-secondary active:scale-95 transition-all"
-          >
+          <button onClick={() => setImportOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold border border-border text-muted-foreground hover:bg-secondary active:scale-95 transition-all">
             <Upload className="w-4 h-4" /><span className="hidden sm:inline">Importar</span>
           </button>
-          <button
-            onClick={() => downloadMembersTemplate(locations)}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold border border-border text-muted-foreground hover:bg-secondary active:scale-95 transition-all"
-          >
+          <button onClick={() => downloadMembersTemplate(locations)}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold border border-border text-muted-foreground hover:bg-secondary active:scale-95 transition-all">
             <FileSpreadsheet className="w-4 h-4" /><span className="hidden sm:inline">Plantilla</span>
           </button>
-          <motion.button
-            onClick={openNew}
-            whileTap={reducedMotion ? {} : { scale: 0.97 }}
+          <motion.button onClick={openNew} whileTap={reducedMotion ? {} : { scale: 0.97 }}
             transition={{ duration: 0.12, ease: EASE_OUT }}
             className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold text-white"
-            style={{ background: '#7C3AED' }}
-          >
+            style={{ background: '#7C3AED' }}>
             <Plus className="w-4 h-4" /><span className="hidden sm:inline">Nuevo</span>
           </motion.button>
         </div>
       </div>
 
-      {/* ── Filters ───────────────────────────────────────────────────────── */}
-      <motion.div variants={pageStagger} initial="hidden" animate="show" className="px-4 pt-4 space-y-3">
+      {/* ══════════════════════════════════════════════════════════════════
+          DESKTOP LAYOUT
+      ══════════════════════════════════════════════════════════════════ */}
+      <div className="hidden md:flex flex-col h-full">
+
+        {/* ── Desktop Header ── */}
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.28, ease: EASE_OUT }}
+          className="px-8 pt-8 pb-0"
+        >
+          <div className="flex items-start justify-between mb-6">
+            <div>
+              <h1 className="text-[28px] font-extrabold tracking-tight" style={{ color: '#1A1028', fontFamily: 'var(--font-space-grotesk)', lineHeight: 1.1 }}>
+                Miembros
+              </h1>
+              <p className="text-[13px] mt-1" style={{ color: '#8E87A8' }}>
+                Gestiona deportistas, entrenadores y administradores del club
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <button onClick={() => downloadMembersTemplate(locations)}
+                className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-[13px] font-semibold transition-all hover:bg-white cursor-pointer"
+                style={{ color: '#8E87A8', border: '1px solid rgba(120,80,200,0.12)' }}>
+                <FileSpreadsheet className="w-4 h-4" /> Plantilla
+              </button>
+              <button onClick={() => setImportOpen(true)}
+                className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-[13px] font-semibold transition-all hover:bg-white cursor-pointer"
+                style={{ color: '#8E87A8', border: '1px solid rgba(120,80,200,0.12)' }}>
+                <Upload className="w-4 h-4" /> Importar
+              </button>
+              <button onClick={() => downloadMembersPDF(members, clubName)} disabled={members.length === 0}
+                className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-[13px] font-semibold transition-all hover:bg-white cursor-pointer disabled:opacity-40"
+                style={{ color: '#8E87A8', border: '1px solid rgba(120,80,200,0.12)' }}>
+                <Download className="w-4 h-4" /> PDF
+              </button>
+              <motion.button onClick={openNew}
+                whileHover={reducedMotion ? {} : { scale: 1.02 }}
+                whileTap={reducedMotion ? {} : { scale: 0.97 }}
+                transition={{ duration: 0.14, ease: EASE_OUT }}
+                className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-[13px] font-bold text-white cursor-pointer"
+                style={{ background: 'linear-gradient(135deg,#7C3AED,#4361EE)', boxShadow: '0 4px 16px rgba(124,58,237,0.30)' }}>
+                <Plus className="w-4 h-4" /> Nuevo miembro
+              </motion.button>
+            </div>
+          </div>
+
+          {/* ── Stats strip ── */}
+          <motion.div
+            variants={{ hidden: {}, show: { transition: { staggerChildren: 0.07 } } }}
+            initial="hidden" animate="show"
+            className="grid grid-cols-4 gap-3 mb-6"
+          >
+            {statsDesktop.map(s => (
+              <motion.div
+                key={s.label}
+                variants={{ hidden: { opacity: 0, y: 10, scale: 0.97 }, show: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.22, ease: EASE_OUT } } }}
+                className="rounded-2xl px-5 py-4 flex items-center gap-4"
+                style={{ background: '#fff', border: '1px solid rgba(120,80,200,0.08)', boxShadow: '0 2px 12px rgba(124,58,237,0.04)' }}
+              >
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: s.bg }}>
+                  <Users className="w-5 h-5" style={{ color: s.color }} />
+                </div>
+                <div>
+                  <p className="text-[24px] font-extrabold leading-none" style={{ color: '#1A1028', fontFamily: 'var(--font-space-grotesk)' }}>{s.value}</p>
+                  <p className="text-[11px] font-semibold mt-0.5" style={{ color: '#8E87A8' }}>{s.label}</p>
+                </div>
+              </motion.div>
+            ))}
+          </motion.div>
+
+          {/* ── Search + Filters ── */}
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.24, ease: EASE_OUT, delay: 0.12 }}
+            className="flex items-center gap-3 mb-4"
+          >
+            <div className="relative flex-1 max-w-sm">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: '#8E87A8' }} />
+              <input
+                className="w-full pl-10 pr-4 py-2.5 rounded-xl text-[13px] outline-none transition-all"
+                style={{ background: '#fff', border: '1px solid rgba(120,80,200,0.12)', color: '#1A1028' }}
+                placeholder="Buscar por nombre o email..."
+                value={search} onChange={e => setSearch(e.target.value)}
+              />
+            </div>
+            <div className="flex items-center gap-1.5 p-1 rounded-xl" style={{ background: '#fff', border: '1px solid rgba(120,80,200,0.08)' }}>
+              {([['ALL','Todos'],['STUDENT','Deportistas'],['COACH','Entrenadores'],['ADMIN','Admins']] as const).map(([val, label]) => (
+                <motion.button
+                  key={val}
+                  onClick={() => setRoleFilter(val)}
+                  whileTap={reducedMotion ? {} : { scale: 0.96 }}
+                  transition={{ duration: 0.1 }}
+                  className="px-3.5 py-1.5 rounded-lg text-[12px] font-semibold transition-all cursor-pointer"
+                  style={roleFilter === val
+                    ? { background: '#7C3AED', color: '#fff', boxShadow: '0 2px 8px rgba(124,58,237,0.25)' }
+                    : { color: '#8E87A8' }
+                  }
+                >{label}</motion.button>
+              ))}
+            </div>
+            <p className="text-[12px] font-semibold ml-auto" style={{ color: '#8E87A8' }}>
+              {filtered.length} resultado{filtered.length !== 1 ? 's' : ''}
+            </p>
+          </motion.div>
+        </motion.div>
+
+        {/* ── Desktop Table ── */}
+        <div className="px-8 pb-8 flex-1">
+          {loading ? (
+            /* Skeleton */
+            <div className="bg-white rounded-2xl overflow-hidden" style={{ border: '1px solid rgba(120,80,200,0.08)', boxShadow: '0 2px 16px rgba(124,58,237,0.04)' }}>
+              {[...Array(6)].map((_, i) => (
+                <div key={i} className="flex items-center gap-4 px-6 py-4 animate-pulse" style={{ borderBottom: i < 5 ? '1px solid rgba(120,80,200,0.05)' : 'none' }}>
+                  <div className="w-9 h-9 rounded-full shrink-0" style={{ background: 'rgba(120,80,200,0.08)' }} />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-3 w-40 rounded-full" style={{ background: 'rgba(120,80,200,0.08)' }} />
+                    <div className="h-2.5 w-28 rounded-full" style={{ background: 'rgba(120,80,200,0.05)' }} />
+                  </div>
+                  <div className="h-6 w-20 rounded-full" style={{ background: 'rgba(120,80,200,0.06)' }} />
+                  <div className="h-5 w-24 rounded-full" style={{ background: 'rgba(120,80,200,0.05)' }} />
+                  <div className="h-5 w-28 rounded-full" style={{ background: 'rgba(120,80,200,0.04)' }} />
+                </div>
+              ))}
+            </div>
+          ) : filtered.length === 0 ? (
+            /* Empty state */
+            <motion.div
+              initial={{ opacity: 0, scale: 0.97 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.28, ease: EASE_OUT }}
+              className="flex flex-col items-center justify-center py-24 bg-white rounded-2xl"
+              style={{ border: '1px solid rgba(120,80,200,0.08)', boxShadow: '0 2px 16px rgba(124,58,237,0.04)' }}
+            >
+              <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-5" style={{ background: 'rgba(124,58,237,0.08)' }}>
+                <Users className="w-8 h-8" style={{ color: '#7C3AED' }} />
+              </div>
+              <p className="text-[17px] font-bold mb-1" style={{ color: '#1A1028', fontFamily: 'var(--font-space-grotesk)' }}>
+                {search ? 'Sin resultados' : 'Sin miembros aún'}
+              </p>
+              <p className="text-[13px] mb-6" style={{ color: '#8E87A8' }}>
+                {search ? `No hay miembros que coincidan con "${search}"` : 'Agrega el primer miembro del club para comenzar'}
+              </p>
+              {!search && (
+                <motion.button onClick={openNew}
+                  whileHover={reducedMotion ? {} : { scale: 1.02 }}
+                  whileTap={reducedMotion ? {} : { scale: 0.97 }}
+                  transition={{ duration: 0.12 }}
+                  className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-[13px] font-bold text-white cursor-pointer"
+                  style={{ background: 'linear-gradient(135deg,#7C3AED,#4361EE)', boxShadow: '0 4px 16px rgba(124,58,237,0.28)' }}>
+                  <Plus className="w-4 h-4" /> Agregar primer miembro
+                </motion.button>
+              )}
+            </motion.div>
+          ) : (
+            /* Table */
+            <div className="bg-white rounded-2xl overflow-hidden" style={{ border: '1px solid rgba(120,80,200,0.08)', boxShadow: '0 2px 16px rgba(124,58,237,0.04)' }}>
+              {/* Head */}
+              <div className="grid px-6 py-3" style={{
+                gridTemplateColumns: '2fr 2fr 1fr 1.5fr 1.5fr 100px',
+                background: '#F7F7FB',
+                borderBottom: '1px solid rgba(120,80,200,0.07)',
+              }}>
+                {['Miembro', 'Email', 'Rol', 'Sedes', 'Categoría / Nivel', ''].map(h => (
+                  <span key={h} className="text-[10px] font-bold uppercase tracking-widest" style={{ color: '#8E87A8' }}>{h}</span>
+                ))}
+              </div>
+
+              {/* Rows */}
+              <motion.div
+                variants={{ hidden: {}, show: { transition: { staggerChildren: 0.04, delayChildren: 0.05 } } }}
+                initial="hidden" animate="show"
+              >
+                {filtered.map((m, idx) => {
+                  const rc = ROLE_COLORS[m.role] ?? ROLE_COLORS.STUDENT;
+                  return (
+                    <motion.div
+                      key={m.id}
+                      variants={{ hidden: { opacity: 0, y: 8 }, show: { opacity: 1, y: 0, transition: { duration: 0.22, ease: EASE_OUT } } }}
+                      onClick={() => setViewMember(m)}
+                      className="grid px-6 py-3.5 items-center group cursor-pointer transition-colors duration-150"
+                      style={{
+                        gridTemplateColumns: '2fr 2fr 1fr 1.5fr 1.5fr 100px',
+                        borderBottom: idx < filtered.length - 1 ? '1px solid rgba(120,80,200,0.05)' : 'none',
+                      }}
+                      onMouseEnter={e => (e.currentTarget.style.background = '#F7F7FB')}
+                      onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                    >
+                      {/* Miembro */}
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div
+                          className="w-9 h-9 rounded-full flex items-center justify-center text-[11px] font-bold text-white shrink-0"
+                          style={{ background: ROLE_GRADIENT[m.role] ?? ROLE_GRADIENT.STUDENT }}
+                        >
+                          {initials(m.fullName)}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-[13px] font-bold truncate" style={{ color: '#1A1028' }}>{m.fullName}</p>
+                          {m.phone && <p className="text-[11px] truncate" style={{ color: '#8E87A8' }}>{m.phone}</p>}
+                        </div>
+                      </div>
+
+                      {/* Email */}
+                      <div className="min-w-0 pr-4">
+                        <p className="text-[12px] truncate lowercase" style={{ color: '#8E87A8' }}>{m.email ?? '—'}</p>
+                      </div>
+
+                      {/* Rol */}
+                      <div>
+                        <span className="inline-flex text-[11px] font-bold px-2.5 py-1 rounded-full" style={{ color: rc.text, background: rc.bg }}>
+                          {ROLES[m.role]}
+                        </span>
+                      </div>
+
+                      {/* Sedes */}
+                      <div className="flex flex-wrap gap-1 pr-2">
+                        {m.locations.length === 0
+                          ? <span className="text-[12px]" style={{ color: '#C4BFD8' }}>—</span>
+                          : m.locations.slice(0, 2).map(l => (
+                              <span key={l.location.id} className="text-[11px] font-semibold px-2 py-0.5 rounded-full"
+                                style={{ background: 'rgba(67,97,238,0.08)', color: '#4361EE' }}>
+                                {l.location.name}
+                              </span>
+                            ))
+                        }
+                        {m.locations.length > 2 && (
+                          <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full" style={{ background: 'rgba(142,135,168,0.10)', color: '#8E87A8' }}>
+                            +{m.locations.length - 2}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Categoría / Nivel */}
+                      <div className="flex flex-wrap gap-1 pr-2">
+                        {m.category || m.tipo ? (
+                          <>
+                            {m.category && (
+                              <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full" style={{ background: 'rgba(124,58,237,0.07)', color: '#7C3AED' }}>
+                                {m.category}
+                              </span>
+                            )}
+                            {m.tipo && (
+                              <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full" style={{ background: 'rgba(142,135,168,0.09)', color: '#8E87A8' }}>
+                                {m.tipo}
+                              </span>
+                            )}
+                          </>
+                        ) : (
+                          <span className="text-[12px]" style={{ color: '#C4BFD8' }}>—</span>
+                        )}
+                      </div>
+
+                      {/* Acciones */}
+                      <div className="flex items-center gap-1 justify-end opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+                        <motion.button
+                          onClick={e => { e.stopPropagation(); setViewMember(m); }}
+                          whileTap={reducedMotion ? {} : { scale: 0.9 }}
+                          transition={{ duration: 0.1 }}
+                          className="w-7 h-7 rounded-lg flex items-center justify-center cursor-pointer"
+                          style={{ background: 'rgba(124,58,237,0.08)', color: '#7C3AED' }}
+                          aria-label="Ver perfil"
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                        </motion.button>
+                        <motion.button
+                          onClick={e => { e.stopPropagation(); openEdit(m); }}
+                          whileTap={reducedMotion ? {} : { scale: 0.9 }}
+                          transition={{ duration: 0.1 }}
+                          className="w-7 h-7 rounded-lg flex items-center justify-center cursor-pointer"
+                          style={{ background: 'rgba(67,97,238,0.08)', color: '#4361EE' }}
+                          aria-label="Editar"
+                        >
+                          <Pencil className="w-3.5 h-3.5" />
+                        </motion.button>
+                        <motion.button
+                          onClick={e => { e.stopPropagation(); handleDelete(m.id); }}
+                          whileTap={reducedMotion ? {} : { scale: 0.9 }}
+                          transition={{ duration: 0.1 }}
+                          className="w-7 h-7 rounded-lg flex items-center justify-center cursor-pointer"
+                          style={{ background: 'rgba(239,71,111,0.08)', color: '#EF476F' }}
+                          aria-label="Eliminar"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </motion.button>
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </motion.div>
+
+              {/* Footer count */}
+              <div className="px-6 py-3 flex items-center justify-between" style={{ borderTop: '1px solid rgba(120,80,200,0.06)', background: '#F7F7FB' }}>
+                <p className="text-[11px] font-semibold" style={{ color: '#8E87A8' }}>
+                  Mostrando <span style={{ color: '#1A1028' }}>{filtered.length}</span> de <span style={{ color: '#1A1028' }}>{members.length}</span> miembros
+                </p>
+                {search && (
+                  <button onClick={() => setSearch('')} className="text-[11px] font-semibold flex items-center gap-1 cursor-pointer" style={{ color: '#7C3AED' }}>
+                    <X className="w-3 h-3" /> Limpiar búsqueda
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* ══════════════════════════════════════════════════════════════════
+          MOBILE LAYOUT
+      ══════════════════════════════════════════════════════════════════ */}
+      <motion.div variants={pageStagger} initial="hidden" animate="show" className="md:hidden px-4 pt-4 space-y-3">
         <motion.div variants={pageCard} className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input className="pl-9 bg-white border-border rounded-xl" placeholder="Buscar miembro..." value={search} onChange={e => setSearch(e.target.value)} />
         </motion.div>
         <motion.div variants={pageCard} className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
           {([['ALL','Todos'],['STUDENT','Deportistas'],['COACH','Entrenadores'],['ADMIN','Admins']] as const).map(([val, label]) => (
-            <button
-              key={val}
-              onClick={() => setRoleFilter(val)}
+            <button key={val} onClick={() => setRoleFilter(val)}
               className="shrink-0 px-3 py-1.5 rounded-full text-[11px] font-semibold border transition-colors"
               style={roleFilter === val
                 ? { background: '#7C3AED', color: '#fff', borderColor: '#7C3AED' }
                 : { background: '#fff', color: '#8E87A8', borderColor: 'rgba(120,80,200,0.10)' }
-              }
-            >{label}</button>
+              }>{label}</button>
           ))}
         </motion.div>
 
-        {/* ── List ──────────────────────────────────────────────────────── */}
         {loading ? (
           <div className="space-y-2 pt-2">
             {[1,2,3].map(i => (
@@ -341,181 +643,47 @@ export default function MiembrosPage() {
             )}
           </div>
         ) : (
-          <>
-            {/* Mobile cards */}
-            <div className="md:hidden space-y-2 pb-28">
-              {filtered.map(m => {
-                const rc = ROLE_COLORS[m.role] ?? ROLE_COLORS.STUDENT;
-                return (
-                  <motion.div
-                    key={m.id}
-                    layout
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.2, ease: EASE_OUT }}
-                    className="bg-white border border-border rounded-xl px-3 py-3 flex items-center gap-3"
-                  >
-                    <div
-                      className="w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0"
-                      style={{ background: ROLE_GRADIENT[m.role] ?? ROLE_GRADIENT.STUDENT }}
-                    >
-                      {initials(m.fullName)}
+          <div className="space-y-2 pb-28">
+            {filtered.map(m => {
+              const rc = ROLE_COLORS[m.role] ?? ROLE_COLORS.STUDENT;
+              return (
+                <motion.div key={m.id} layout
+                  initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.2, ease: EASE_OUT }}
+                  className="bg-white border border-border rounded-xl px-3 py-3 flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0"
+                    style={{ background: ROLE_GRADIENT[m.role] ?? ROLE_GRADIENT.STUDENT }}>
+                    {initials(m.fullName)}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5 mb-0.5">
+                      <p className="text-[13px] font-bold text-foreground truncate">{m.fullName}</p>
+                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full shrink-0" style={{ color: rc.text, background: rc.bg }}>{ROLES[m.role]}</span>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-1.5 mb-0.5">
-                        <p className="text-[13px] font-bold text-foreground truncate">{m.fullName}</p>
-                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full shrink-0" style={{ color: rc.text, background: rc.bg }}>
-                          {ROLES[m.role]}
-                        </span>
+                    <p className="text-[11px] text-muted-foreground truncate lowercase">{m.email ?? '—'}</p>
+                    {m.role === 'STUDENT' && (
+                      <div className="flex gap-2 mt-0.5 flex-wrap">
+                        {m.category && <span className="text-[10px] font-semibold" style={{ color: '#7C3AED' }}>{m.category}</span>}
+                        {m.tipo && <span className="text-[10px] text-muted-foreground">{m.tipo}</span>}
+                        {m.paymentDueDay && <span className="text-[10px] text-muted-foreground">Día {m.paymentDueDay}</span>}
                       </div>
-                      <p className="text-[11px] text-muted-foreground truncate">{m.email ?? '—'}</p>
-                      {m.role === 'STUDENT' && (
-                        <div className="flex gap-2 mt-0.5 flex-wrap">
-                          {m.category && <span className="text-[10px] font-semibold" style={{ color: '#7C3AED' }}>{m.category}</span>}
-                          {m.tipo && <span className="text-[10px] text-muted-foreground">{m.tipo}</span>}
-                          {m.paymentDueDay && <span className="text-[10px] text-muted-foreground">Día {m.paymentDueDay}</span>}
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex flex-col gap-1">
-                      <button onClick={() => setViewMember(m)} className="w-7 h-7 rounded-lg bg-secondary flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors">
-                        <Eye className="w-3.5 h-3.5" />
-                      </button>
-                      <button onClick={() => openEdit(m)} className="w-7 h-7 rounded-lg bg-secondary flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors">
-                        <Pencil className="w-3.5 h-3.5" />
-                      </button>
-                      <button onClick={() => handleDelete(m.id)} className="w-7 h-7 rounded-lg bg-red-50 flex items-center justify-center text-red-400 hover:text-red-600 transition-colors">
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </motion.div>
-                );
-              })}
-            </div>
-
-            {/* Desktop table */}
-            <div className="hidden md:block bg-white rounded-2xl border border-border overflow-hidden mb-4 shadow-sm">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr style={{ background: '#F7F7FB', borderBottom: '1px solid rgba(120,80,200,0.08)' }}>
-                    {['Miembro','Email','Rol','Sedes','Categoría / Nivel',''].map(h => (
-                      <th key={h} className="text-left px-5 py-3 font-semibold text-[11px] uppercase tracking-widest" style={{ color: '#8E87A8' }}>{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {filtered.map((m, idx) => {
-                    const rc = ROLE_COLORS[m.role] ?? ROLE_COLORS.STUDENT;
-                    return (
-                      <tr
-                        key={m.id}
-                        className="group transition-colors cursor-pointer"
-                        style={{ borderBottom: idx < filtered.length - 1 ? '1px solid rgba(120,80,200,0.06)' : 'none' }}
-                        onMouseEnter={e => (e.currentTarget.style.background = '#F7F7FB')}
-                        onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
-                        onClick={() => setViewMember(m)}
-                      >
-                        {/* Miembro */}
-                        <td className="px-5 py-3.5">
-                          <div className="flex items-center gap-3">
-                            <div
-                              className="w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-bold text-white shrink-0"
-                              style={{ background: ROLE_GRADIENT[m.role] ?? ROLE_GRADIENT.STUDENT }}
-                            >
-                              {initials(m.fullName)}
-                            </div>
-                            <div>
-                              <p className="font-semibold text-[13px]" style={{ color: '#1A1028' }}>{m.fullName}</p>
-                              {m.phone && <p className="text-[11px]" style={{ color: '#8E87A8' }}>{m.phone}</p>}
-                            </div>
-                          </div>
-                        </td>
-
-                        {/* Email */}
-                        <td className="px-5 py-3.5 max-w-[200px]">
-                          <p className="text-[12px] truncate lowercase" style={{ color: '#8E87A8' }}>{m.email ?? '—'}</p>
-                        </td>
-
-                        {/* Rol */}
-                        <td className="px-5 py-3.5">
-                          <span
-                            className="text-[11px] font-bold px-2.5 py-1 rounded-full"
-                            style={{ color: rc.text, background: rc.bg }}
-                          >
-                            {ROLES[m.role]}
-                          </span>
-                        </td>
-
-                        {/* Sedes */}
-                        <td className="px-5 py-3.5">
-                          {m.role === 'ADMIN' || m.locations.length === 0
-                            ? <span className="text-[12px]" style={{ color: '#C4BFD8' }}>—</span>
-                            : <div className="flex flex-wrap gap-1">
-                                {m.locations.map(l => (
-                                  <span
-                                    key={l.location.id}
-                                    className="text-[11px] font-semibold px-2 py-0.5 rounded-full"
-                                    style={{ background: 'rgba(67,97,238,0.08)', color: '#4361EE' }}
-                                  >
-                                    {l.location.name}
-                                  </span>
-                                ))}
-                              </div>
-                          }
-                        </td>
-
-                        {/* Categoría / Nivel */}
-                        <td className="px-5 py-3.5">
-                          {m.category || m.tipo
-                            ? <div className="flex items-center gap-1.5 flex-wrap">
-                                {m.category && (
-                                  <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full" style={{ background: 'rgba(124,58,237,0.08)', color: '#7C3AED' }}>
-                                    {m.category}
-                                  </span>
-                                )}
-                                {m.tipo && (
-                                  <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full" style={{ background: 'rgba(142,135,168,0.10)', color: '#8E87A8' }}>
-                                    {m.tipo}
-                                  </span>
-                                )}
-                              </div>
-                            : <span className="text-[12px]" style={{ color: '#C4BFD8' }}>—</span>
-                          }
-                        </td>
-
-                        {/* Acciones */}
-                        <td className="px-5 py-3.5">
-                          <div className="flex gap-1 justify-end opacity-0 group-hover:opacity-100 transition-opacity">
-                            <button
-                              onClick={e => { e.stopPropagation(); setViewMember(m); }}
-                              className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors"
-                              style={{ background: 'rgba(120,80,200,0.08)', color: '#7C3AED' }}
-                            >
-                              <Eye className="w-3.5 h-3.5" />
-                            </button>
-                            <button
-                              onClick={e => { e.stopPropagation(); openEdit(m); }}
-                              className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors"
-                              style={{ background: 'rgba(67,97,238,0.08)', color: '#4361EE' }}
-                            >
-                              <Pencil className="w-3.5 h-3.5" />
-                            </button>
-                            <button
-                              onClick={e => { e.stopPropagation(); handleDelete(m.id); }}
-                              className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors"
-                              style={{ background: 'rgba(239,71,111,0.08)', color: '#EF476F' }}
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </>
+                    )}
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <button onClick={() => setViewMember(m)} className="w-7 h-7 rounded-lg bg-secondary flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors">
+                      <Eye className="w-3.5 h-3.5" />
+                    </button>
+                    <button onClick={() => openEdit(m)} className="w-7 h-7 rounded-lg bg-secondary flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors">
+                      <Pencil className="w-3.5 h-3.5" />
+                    </button>
+                    <button onClick={() => handleDelete(m.id)} className="w-7 h-7 rounded-lg bg-red-50 flex items-center justify-center text-red-400 hover:text-red-600 transition-colors">
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
         )}
       </motion.div>
 

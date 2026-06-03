@@ -7,13 +7,13 @@ export const EASE_IN  = [0.55, 0, 1, 0.45] as [number, number, number, number];
 // Contenedor que escalonea sus hijos
 export const stagger: Variants = {
   hidden: {},
-  show:   { transition: { staggerChildren: 0.09, delayChildren: 0.06 } },
+  show:   { transition: { staggerChildren: 0.12, delayChildren: 0.08 } },
 };
 
 // Cada card / ítem individual
 export const cardVariant: Variants = {
-  hidden: { opacity: 0, y: 16, scale: 0.97 },
-  show:   { opacity: 1, y: 0,  scale: 1, transition: { duration: 0.38, ease: EASE } },
+  hidden: { opacity: 0, y: 20, scale: 0.96 },
+  show:   { opacity: 1, y: 0,  scale: 1, transition: { duration: 0.52, ease: EASE } },
 };
 
 // Para formularios / paneles que expanden verticalmente

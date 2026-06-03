@@ -101,12 +101,13 @@ interface StudentRowProps {
   marking: boolean;
   onConfigSave: (memberId: string, fullName: string, monthlyFee: number, paymentDueDay: number) => void;
   configSaving: boolean;
+  onOpenReceipt: (payment: Payment) => void;
 }
 
 function StudentRow({
   member: m, payment, clubName, filterMonth, filterYear,
   reducedMotion, sentWa, onSentWa, onMarkPaid, onGenerate, onDeletePay,
-  generating, deleting, marking, onConfigSave, configSaving,
+  generating, deleting, marking, onConfigSave, configSaving, onOpenReceipt,
 }: StudentRowProps) {
   const configured = !!(m.monthlyFee && m.paymentDueDay);
   const [configOpen, setConfigOpen] = useState(false);
@@ -200,7 +201,7 @@ function StudentRow({
             {/* Comprobante de pago */}
             {payment && (
               <button
-                onClick={() => { setReceiptModal(payment); setReceiptFile(null); setReceiptError(null); }}
+                onClick={() => onOpenReceipt(payment)}
                 title={payment.receiptUrl ? 'Ver comprobante' : 'Subir comprobante'}
                 className="w-7 h-7 rounded-lg flex items-center justify-center cursor-pointer transition-colors"
                 style={{ background: payment.receiptUrl ? 'rgba(6,214,160,0.12)' : 'rgba(120,80,200,0.08)' }}
@@ -912,6 +913,7 @@ export default function FinanzasPage() {
                     marking={markingPaid === payment?.id}
                     onConfigSave={handleConfigSave}
                     configSaving={configSaving === m.id}
+                    onOpenReceipt={p => { setReceiptModal(p); setReceiptFile(null); setReceiptError(null); }}
                   />
                 ))}
               </motion.div>

@@ -7,12 +7,16 @@ export function cn(...inputs: ClassValue[]) {
 
 /**
  * Parsea una fecha sin perder el día por timezone.
- * new Date('2026-06-05') → UTC → Colombia (UTC-5) = 2026-06-04 ❌
- * parseLocalDate('2026-06-05') → local midnight = 2026-06-05 ✅
+ *
+ * Casos:
+ *  "2026-06-05"               → new Date("2026-06-05") = UTC midnight → Colombia = día anterior ❌
+ *  "2026-06-05T00:00:00.000Z" → Prisma datetime → Colombia = día anterior ❌
+ *
+ * Solución: extraer YYYY-MM-DD y forzar hora local midnight ✅
  */
 export function parseLocalDate(dateStr: string): Date {
-  if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
-    return new Date(dateStr + 'T00:00:00');
-  }
+  // Extrae solo la parte YYYY-MM-DD y la parsea como hora local
+  const match = dateStr.match(/^(\d{4}-\d{2}-\d{2})/);
+  if (match) return new Date(match[1] + 'T00:00:00');
   return new Date(dateStr);
 }

@@ -156,19 +156,20 @@ function StudentRow({
 
   // ── Botón de acción principal ────────────────────────────────────────────────
   const mainAction = payment?.status === 'PAID' ? (
-    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-bold shrink-0" style={{ background: 'rgba(6,214,160,0.12)', color: '#06D6A0' }}>
+    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-bold shrink-0"
+      style={{ background: 'rgba(6,214,160,0.15)', color: '#06D6A0' }}>
       <Check className="w-3 h-3" /> Pagado
     </span>
   ) : isPendingOrOverdue ? (
     <button onClick={() => !marking && onMarkPaid(payment!.id)} disabled={marking}
       className="px-2.5 py-1 rounded-lg text-[10px] font-bold cursor-pointer disabled:opacity-50 shrink-0"
-      style={{ background: 'rgba(67,97,238,0.12)', color: '#4361EE' }}>
+      style={{ background: 'rgba(6,214,160,0.15)', color: '#06D6A0' }}>
       {marking ? '...' : 'Pagado'}
     </button>
   ) : configured && !payment ? (
     <button onClick={() => !generating && onGenerate(m.id, m.monthlyFee!)} disabled={generating}
       className="px-2.5 py-1 rounded-lg text-[10px] font-bold cursor-pointer disabled:opacity-50 shrink-0"
-      style={{ background: 'rgba(6,214,160,0.12)', color: '#06D6A0' }}>
+      style={{ background: 'rgba(67,97,238,0.15)', color: '#4361EE' }}>
       {generating ? '...' : 'Cobrar'}
     </button>
   ) : null;
@@ -269,59 +270,36 @@ function StudentRow({
 
   return (
     <motion.div variants={reducedMotion ? undefined : rowVariants} layout>
-
-      {/* ── MOBILE — lista compacta ── */}
-      <div className="md:hidden bg-white border border-border rounded-xl px-4 py-3">
-        <div className="flex items-start gap-3">
-          <div className="w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-[11px] shrink-0 mt-0.5"
-            style={{ background: avatarColor }}>
-            {getInitials(m.fullName)}
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-[13px] font-bold text-foreground truncate">{m.fullName}</p>
-            {configured && m.paymentDueDay && (
-              <p className="text-[10px] font-semibold text-muted-foreground mt-0.5">Cobro el día {m.paymentDueDay} de cada mes</p>
-            )}
-          </div>
-          {iconButtons}
-        </div>
-        <div className="flex items-center gap-2 mt-2 ml-12">
-          <div className="flex-1 min-w-0">{statusChip}</div>
-          {mainAction}
-        </div>
-        {configPanel}
-      </div>
-
-      {/* ── DESKTOP — tarjeta ── */}
-      <div className="hidden md:block bg-white rounded-2xl overflow-hidden"
+      <div className="bg-white rounded-2xl overflow-hidden"
         style={{ border: '1px solid rgba(120,80,200,0.09)', boxShadow: '0 2px 12px rgba(124,58,237,0.05)' }}>
-        {/* Cabecera con color del estado */}
-        <div className="px-5 pt-4 pb-3 flex items-center gap-3"
+
+        {/* Cabecera */}
+        <div className="px-4 pt-4 pb-3 flex items-center gap-3"
           style={{ borderBottom: '1px solid rgba(120,80,200,0.07)' }}>
           <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold text-[12px] shrink-0"
             style={{ background: sc ? sc.text : '#8E87A8', boxShadow: `0 3px 10px ${sc ? sc.text : '#8E87A8'}40` }}>
             {getInitials(m.fullName)}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-[14px] font-bold truncate" style={{ color: '#1A1028' }}>{m.fullName}</p>
+            <p className="text-[13px] font-bold truncate" style={{ color: '#1A1028' }}>{m.fullName}</p>
             {configured && m.paymentDueDay && (
-              <p className="text-[11px] font-medium" style={{ color: '#8E87A8' }}>Cobro el día {m.paymentDueDay} de cada mes</p>
+              <p className="text-[10px] font-medium" style={{ color: '#8E87A8' }}>Cobro el día {m.paymentDueDay}</p>
             )}
           </div>
         </div>
-        {/* Estado + monto */}
-        <div className="px-5 py-3 flex items-center justify-between gap-3"
+
+        {/* Estado + acción */}
+        <div className="px-4 py-2.5 flex items-center justify-between gap-2"
           style={{ borderBottom: '1px solid rgba(120,80,200,0.06)' }}>
-          <div>{statusChip}</div>
+          <div className="flex-1 min-w-0">{statusChip}</div>
           {mainAction}
         </div>
-        {/* Acciones */}
-        <div className="px-4 py-3 flex items-center justify-between">
-          {iconButtons}
-        </div>
+
+        {/* Botones icono */}
+        <div className="px-3 py-2.5">{iconButtons}</div>
+
         {configPanel}
       </div>
-
     </motion.div>
   );
 }
@@ -863,14 +841,18 @@ export default function FinanzasPage() {
 
             {/* Lista deportistas */}
             {loadingPay && !paymentsData ? (
-              <div className="space-y-2">
-                {[1,2,3,4].map(i => (
-                  <div key={i} className="bg-white border border-border rounded-xl px-4 py-3 flex items-center gap-3 animate-pulse">
-                    <div className="w-9 h-9 rounded-full bg-secondary shrink-0" />
-                    <div className="flex-1 space-y-2">
-                      <div className="h-3 w-32 bg-secondary rounded-full" />
-                      <div className="h-2.5 w-20 bg-secondary rounded-full" />
+              <div className="grid grid-cols-2 gap-2 sm:gap-3 md:grid-cols-3 md:gap-4">
+                {[1,2,3,4,5,6].map(i => (
+                  <div key={i} className="bg-white rounded-2xl overflow-hidden animate-pulse" style={{ border: '1px solid rgba(120,80,200,0.08)' }}>
+                    <div className="px-4 pt-4 pb-3 flex items-center gap-3" style={{ borderBottom: '1px solid rgba(120,80,200,0.06)' }}>
+                      <div className="w-10 h-10 rounded-xl bg-secondary shrink-0" />
+                      <div className="flex-1 space-y-1.5">
+                        <div className="h-3 w-24 bg-secondary rounded-full" />
+                        <div className="h-2 w-16 bg-secondary rounded-full" />
+                      </div>
                     </div>
+                    <div className="px-4 py-2.5"><div className="h-5 w-28 bg-secondary rounded-full" /></div>
+                    <div className="px-3 py-2.5"><div className="h-5 w-20 bg-secondary rounded-full" /></div>
                   </div>
                 ))}
               </div>
@@ -881,7 +863,7 @@ export default function FinanzasPage() {
               </div>
             ) : (
               <motion.div
-                className="space-y-1.5 pb-28 md:grid md:grid-cols-2 md:gap-4 md:space-y-0 md:pb-8"
+                className="grid grid-cols-2 gap-2 pb-28 sm:gap-3 md:grid-cols-3 md:gap-4 md:pb-8"
                 variants={reducedMotion ? undefined : listVariants}
                 initial={reducedMotion ? undefined : 'hidden'}
                 animate={reducedMotion ? undefined : 'visible'}

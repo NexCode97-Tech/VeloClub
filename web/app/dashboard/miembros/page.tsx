@@ -544,9 +544,10 @@ export default function MiembrosPage() {
                 animate={reducedMotion ? { opacity: 1 } : { opacity: 1, x: 0 }}
                 exit={reducedMotion ? { opacity: 0 } : { opacity: 0, x: 24 }}
                 transition={{ duration: 0.28, ease: EASE_IOS }}
-                className="flex flex-col bg-white rounded-2xl overflow-hidden shrink-0"
+                className="flex flex-col bg-white rounded-2xl overflow-hidden shrink-0 self-start"
                 style={{
                   width: 340,
+                  maxHeight: 'min(560px, calc(100vh - 220px))',
                   border: '1px solid rgba(120,80,200,0.10)',
                   boxShadow: '0 8px 32px rgba(124,58,237,0.10)',
                 }}

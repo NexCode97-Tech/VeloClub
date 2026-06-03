@@ -1240,7 +1240,7 @@ export default function FinanzasPage() {
                   <button
                     onClick={handleDeleteReceipt}
                     disabled={deletingReceipt || uploadingReceipt}
-                    className="flex-1 py-2.5 rounded-xl border border-red-200 text-[12px] font-semibold text-red-500 hover:bg-red-50 transition-colors disabled:opacity-50"
+                    className="flex-1 h-11 rounded-xl border border-red-200 text-[12px] font-semibold text-red-500 hover:bg-red-50 transition-colors disabled:opacity-50"
                   >
                     {deletingReceipt ? 'Eliminando...' : 'Eliminar'}
                   </button>
@@ -1248,7 +1248,7 @@ export default function FinanzasPage() {
                 <Button
                   onClick={handleUploadReceipt}
                   disabled={!receiptFile || uploadingReceipt}
-                  className="flex-1"
+                  className="flex-1 h-11 rounded-xl text-[12px]"
                 >
                   {uploadingReceipt ? 'Subiendo...' : 'Subir comprobante'}
                 </Button>

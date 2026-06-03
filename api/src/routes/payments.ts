@@ -3,6 +3,13 @@ import { z } from 'zod';
 import { requireAuth } from '../auth/middleware';
 import { prisma } from '../db/client';
 import { emitToClub } from '../lib/sse';
+import { v2 as cloudinary } from 'cloudinary';
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME?.trim(),
+  api_key:    process.env.CLOUDINARY_API_KEY?.trim(),
+  api_secret: process.env.CLOUDINARY_API_SECRET?.trim(),
+});
 
 const router = Router();
 
@@ -229,6 +236,69 @@ router.delete('/:id', requireAuth, async (req, res) => {
   await prisma.cashEntry.deleteMany({ where: { paymentId: id } });
   await prisma.payment.delete({ where: { id } });
   emitToClub(req.user.clubId ?? '', 'payments');
+  res.json({ ok: true });
+});
+
+// POST /payments/:id/receipt — subir comprobante de pago
+router.post('/:id/receipt', requireAuth, async (req, res) => {
+  if (!req.user) return res.status(401).json({ error: 'No autenticado' });
+  if (req.user.role !== 'ADMIN') return res.status(403).json({ error: 'Sin permisos' });
+
+  const id = String(req.params.id);
+  const { base64 } = req.body as { base64: string };
+  if (!base64) return res.status(400).json({ error: 'base64 requerido' });
+
+  const clubId = req.user.clubId ?? '';
+  const existing = await prisma.payment.findFirst({ where: { id, clubId } });
+  if (!existing) return res.status(404).json({ error: 'Pago no encontrado' });
+
+  try {
+    // Eliminar comprobante anterior si existe
+    if (existing.receiptPublicId) {
+      await cloudinary.uploader.destroy(existing.receiptPublicId).catch(() => {});
+    }
+
+    const result = await cloudinary.uploader.upload(base64, {
+      folder:    'veloclub/receipts',
+      public_id: `receipt_${id}`,
+      overwrite: true,
+    });
+
+    const payment = await prisma.payment.update({
+      where: { id },
+      data:  { receiptUrl: result.secure_url, receiptPublicId: result.public_id },
+      select: { id: true, receiptUrl: true },
+    });
+
+    emitToClub(clubId, 'payments');
+    res.json({ payment });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : JSON.stringify(err);
+    console.error('[receipt upload]', msg);
+    res.status(500).json({ error: msg });
+  }
+});
+
+// DELETE /payments/:id/receipt — eliminar comprobante
+router.delete('/:id/receipt', requireAuth, async (req, res) => {
+  if (!req.user) return res.status(401).json({ error: 'No autenticado' });
+  if (req.user.role !== 'ADMIN') return res.status(403).json({ error: 'Sin permisos' });
+
+  const id = String(req.params.id);
+  const clubId = req.user.clubId ?? '';
+  const existing = await prisma.payment.findFirst({ where: { id, clubId } });
+  if (!existing) return res.status(404).json({ error: 'Pago no encontrado' });
+
+  if (existing.receiptPublicId) {
+    await cloudinary.uploader.destroy(existing.receiptPublicId).catch(() => {});
+  }
+
+  await prisma.payment.update({
+    where: { id },
+    data:  { receiptUrl: null, receiptPublicId: null },
+  });
+
+  emitToClub(clubId, 'payments');
   res.json({ ok: true });
 });
 

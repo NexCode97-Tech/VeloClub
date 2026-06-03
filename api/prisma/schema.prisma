@@ -150,9 +150,11 @@ model Payment {
   dueDate   DateTime?
   paidAt    DateTime?
   status    PaymentStatus @default(PENDING)
-  notes     String?
-  cashEntry CashEntry?
-  createdAt DateTime      @default(now())
+  notes           String?
+  receiptUrl      String?
+  receiptPublicId String?
+  cashEntry       CashEntry?
+  createdAt       DateTime      @default(now())
   updatedAt DateTime      @updatedAt
 
   @@index([clubId])

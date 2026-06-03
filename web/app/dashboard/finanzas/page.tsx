@@ -9,7 +9,7 @@ import { QK } from '@/hooks/useVeloQuery';
 import {
   CreditCard, Plus, Trash2, CheckCircle2, Clock, AlertCircle,
   TrendingUp, TrendingDown, Wallet, Download, MessageCircle, Check,
-  PhoneOff, Settings, Zap, ChevronUp, Pencil, Search,
+  PhoneOff, Settings, Zap, ChevronUp, Pencil, Search, Receipt, ExternalLink,
 } from 'lucide-react';
 import { downloadInvoicePDF } from '@/lib/pdf';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -72,6 +72,8 @@ interface Payment {
   id: string; memberId: string; amount: number;
   month: number; year: number; status: string;
   paidAt?: string; notes?: string;
+  receiptUrl?: string | null;
+  receiptPublicId?: string | null;
   member: { id: string; fullName: string; email?: string; phone?: string };
 }
 interface CashEntry {
@@ -192,6 +194,18 @@ function StudentRow({
                 title="Descargar factura"
               >
                 <Download className="w-3.5 h-3.5" />
+              </button>
+            )}
+
+            {/* Comprobante de pago */}
+            {payment && (
+              <button
+                onClick={() => { setReceiptModal(payment); setReceiptFile(null); setReceiptError(null); }}
+                title={payment.receiptUrl ? 'Ver comprobante' : 'Subir comprobante'}
+                className="w-7 h-7 rounded-lg flex items-center justify-center cursor-pointer transition-colors"
+                style={{ background: payment.receiptUrl ? 'rgba(6,214,160,0.12)' : 'rgba(120,80,200,0.08)' }}
+              >
+                <Receipt className="w-3.5 h-3.5" style={{ color: payment.receiptUrl ? '#06D6A0' : '#8E87A8' }} />
               </button>
             )}
 
@@ -357,6 +371,13 @@ export default function FinanzasPage() {
   const [editFlowForm, setEditFlowForm] = useState({ type: 'INCOME', amount: '', description: '', date: '' });
   const [savingEditFlow, setSavingEditFlow] = useState(false);
   const [editFlowError, setEditFlowError] = useState<string | null>(null);
+
+  // ── Comprobantes de pago ──────────────────────────────────────────────────────
+  const [receiptModal, setReceiptModal]         = useState<Payment | null>(null);
+  const [receiptFile, setReceiptFile]           = useState<string | null>(null); // base64 preview
+  const [uploadingReceipt, setUploadingReceipt] = useState(false);
+  const [deletingReceipt, setDeletingReceipt]   = useState(false);
+  const [receiptError, setReceiptError]         = useState<string | null>(null);
 
   // ── Datos con caché ──────────────────────────────────────────────────────────
   const { data: membersData } = useQuery({
@@ -590,6 +611,44 @@ export default function FinanzasPage() {
       await apiFetch(`/cashflow/${id}`, { method: 'DELETE', token });
       invalidateFlow();
     } finally { setDeletingFlow(null); }
+  }
+
+  // ── Comprobantes ─────────────────────────────────────────────────────────────
+  function handleReceiptFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 3 * 1024 * 1024) { setReceiptError('La imagen no puede superar 3MB'); return; }
+    setReceiptError(null);
+    const reader = new FileReader();
+    reader.onload = ev => setReceiptFile(ev.target?.result as string);
+    reader.readAsDataURL(file);
+  }
+
+  async function handleUploadReceipt() {
+    if (!receiptModal || !receiptFile) return;
+    setUploadingReceipt(true); setReceiptError(null);
+    try {
+      const token = await getToken();
+      await apiFetch(`/payments/${receiptModal.id}/receipt`, {
+        method: 'POST', token,
+        body: JSON.stringify({ base64: receiptFile }),
+      });
+      setReceiptModal(null); setReceiptFile(null);
+      invalidatePay();
+    } catch (e) { setReceiptError(e instanceof Error ? e.message : 'Error al subir'); }
+    finally { setUploadingReceipt(false); }
+  }
+
+  async function handleDeleteReceipt() {
+    if (!receiptModal) return;
+    setDeletingReceipt(true); setReceiptError(null);
+    try {
+      const token = await getToken();
+      await apiFetch(`/payments/${receiptModal.id}/receipt`, { method: 'DELETE', token });
+      setReceiptModal(null); setReceiptFile(null);
+      invalidatePay();
+    } catch (e) { setReceiptError(e instanceof Error ? e.message : 'Error al eliminar'); }
+    finally { setDeletingReceipt(false); }
   }
 
   // ── Render ────────────────────────────────────────────────────────────────────
@@ -1100,6 +1159,100 @@ export default function FinanzasPage() {
               {savingEditFlow ? 'Guardando...' : 'Guardar cambios'}
             </Button>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Modal comprobante de pago ───────────────────────────────────────── */}
+      <Dialog open={!!receiptModal} onOpenChange={v => { if (!v) { setReceiptModal(null); setReceiptFile(null); setReceiptError(null); } }}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Comprobante de pago</DialogTitle>
+          </DialogHeader>
+          {receiptModal && (
+            <div className="space-y-4 mt-1">
+              {/* Info del pago */}
+              <div className="flex items-center gap-3 bg-secondary/50 rounded-xl px-3 py-2.5">
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'rgba(124,58,237,0.10)' }}>
+                  <Receipt className="w-4 h-4" style={{ color: '#7C3AED' }} />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[13px] font-semibold text-foreground truncate">{receiptModal.member?.fullName ?? '—'}</p>
+                  <p className="text-[11px] text-muted-foreground">{MONTH_NAMES[(receiptModal.month ?? 1) - 1]} {receiptModal.year} · {fmt.format(receiptModal.amount)}</p>
+                </div>
+              </div>
+
+              {/* Comprobante existente */}
+              {receiptModal.receiptUrl && !receiptFile && (
+                <div className="space-y-2">
+                  <p className="text-[12px] font-semibold text-foreground">Comprobante actual</p>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={receiptModal.receiptUrl}
+                    alt="Comprobante"
+                    className="w-full rounded-xl border border-border object-contain max-h-48 cursor-pointer"
+                    onClick={() => window.open(receiptModal.receiptUrl!, '_blank')}
+                  />
+                  <button
+                    onClick={() => window.open(receiptModal.receiptUrl!, '_blank')}
+                    className="flex items-center gap-1.5 text-[11px] font-semibold"
+                    style={{ color: '#4361EE' }}
+                  >
+                    <ExternalLink className="w-3 h-3" /> Ver en tamaño completo
+                  </button>
+                </div>
+              )}
+
+              {/* Preview del nuevo archivo */}
+              {receiptFile && (
+                <div className="space-y-1.5">
+                  <p className="text-[12px] font-semibold text-foreground">Nueva imagen</p>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={receiptFile} alt="Preview" className="w-full rounded-xl border border-border object-contain max-h-48" />
+                  <button onClick={() => setReceiptFile(null)} className="text-[11px] text-muted-foreground hover:text-foreground">
+                    Quitar selección
+                  </button>
+                </div>
+              )}
+
+              {/* Seleccionar archivo */}
+              <div>
+                <label className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-dashed border-border cursor-pointer hover:bg-secondary/50 transition-colors">
+                  <Receipt className="w-4 h-4 text-muted-foreground" />
+                  <span className="text-[12px] font-semibold text-muted-foreground">
+                    {receiptFile ? 'Cambiar imagen' : receiptModal.receiptUrl ? 'Reemplazar comprobante' : 'Seleccionar imagen'}
+                  </span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleReceiptFileChange}
+                  />
+                </label>
+                <p className="text-[10px] text-muted-foreground mt-1 pl-1">JPG, PNG · máx. 3MB</p>
+              </div>
+
+              {receiptError && <p className="text-[12px] text-red-500">{receiptError}</p>}
+
+              <div className="flex gap-2">
+                {receiptModal.receiptUrl && (
+                  <button
+                    onClick={handleDeleteReceipt}
+                    disabled={deletingReceipt || uploadingReceipt}
+                    className="flex-1 py-2.5 rounded-xl border border-red-200 text-[12px] font-semibold text-red-500 hover:bg-red-50 transition-colors disabled:opacity-50"
+                  >
+                    {deletingReceipt ? 'Eliminando...' : 'Eliminar'}
+                  </button>
+                )}
+                <Button
+                  onClick={handleUploadReceipt}
+                  disabled={!receiptFile || uploadingReceipt}
+                  className="flex-1"
+                >
+                  {uploadingReceipt ? 'Subiendo...' : 'Subir comprobante'}
+                </Button>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>

@@ -144,6 +144,11 @@ export default function AsistenciaPage() {
   const counts = CYCLE.map(s => ({ s, n: Object.values(att).filter(v => v === s).length }));
   const canManage = role === 'ADMIN' || role === 'COACH';
 
+  // Categorías únicas presentes en la lista
+  const [catFilter, setCatFilter] = useState<string>('TODOS');
+  const categories = ['TODOS', ...Array.from(new Set(members.map(m => m.category).filter(Boolean) as string[])).sort()];
+  const visibleMembers = catFilter === 'TODOS' ? members : members.filter(m => m.category === catFilter);
+
   return (
     <div className="min-h-full bg-background">
       <div className="px-5 py-3 bg-background border-b border-border flex items-center justify-between">
@@ -247,6 +252,32 @@ export default function AsistenciaPage() {
                   ))}
                 </motion.div>
 
+                {/* Filtro por categoría */}
+                {categories.length > 1 && (
+                  <motion.div variants={cardVariant} className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
+                    {categories.map(cat => (
+                      <motion.button
+                        key={cat}
+                        onClick={() => setCatFilter(cat)}
+                        whileTap={reducedMotion ? {} : { scale: 0.95 }}
+                        transition={{ duration: 0.1 }}
+                        className="shrink-0 px-3 py-1.5 rounded-full text-[11px] font-bold transition-all cursor-pointer"
+                        style={catFilter === cat
+                          ? { background: '#7C3AED', color: '#fff', boxShadow: '0 2px 8px rgba(124,58,237,0.30)' }
+                          : { background: '#fff', color: '#8E87A8', border: '1px solid rgba(120,80,200,0.15)' }
+                        }
+                      >
+                        {cat === 'TODOS' ? 'Todos' : cat}
+                        {cat !== 'TODOS' && (
+                          <span className="ml-1.5 text-[9px] opacity-70">
+                            {members.filter(m => m.category === cat).length}
+                          </span>
+                        )}
+                      </motion.button>
+                    ))}
+                  </motion.div>
+                )}
+
                 {canManage && (
                   <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
                     Toca el indicador para cambiar
@@ -255,7 +286,7 @@ export default function AsistenciaPage() {
 
                 {/* Grid de tarjetas compactas */}
                 <div className="grid grid-cols-3 gap-2 pb-24 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 sm:gap-3">
-                  {members.map(m => {
+                  {visibleMembers.map(m => {
                     const s = att[m.id] ?? 'ABSENT';
                     const color = STATUS_COLOR[s];
                     const label = STATUS_LABEL[s];

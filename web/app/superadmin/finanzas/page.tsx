@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { apiFetch } from '@/lib/api-client';
 import { Pencil, Trash2, X, Check, TrendingUp, CalendarClock, CircleDollarSign, Eye, Upload, RotateCcw } from 'lucide-react';
 import { motion, AnimatePresence, type Variants } from 'framer-motion';
+import { stagger as pageStagger, cardVariant as pageCard } from '@/lib/page-animations';
 
 // ── Formateo ──────────────────────────────────────────────────────────────────
 const fmt = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 });
@@ -310,7 +311,7 @@ export default function FinanzasPage() {
           </motion.div>
         )}
 
-        <motion.div variants={stagger} initial="hidden" animate="show">
+        <motion.div variants={pageStagger} initial="hidden" animate="show">
           {clubs.map(c => {
             const sus      = c.suscripcion;
             const pagos    = sus?.pagos ?? [];
@@ -322,7 +323,7 @@ export default function FinanzasPage() {
             const colorPct = pctClub >= 100 ? '#06D6A0' : pctClub > 50 ? '#FFB703' : '#EF476F';
 
             return (
-              <motion.div key={c.id} variants={fadeUp}
+              <motion.div key={c.id} variants={pageCard}
                 style={{ background: '#fff', border: '1px solid rgba(120,80,200,0.10)', borderRadius: 20, padding: '14px 14px 12px', marginBottom: 12 }}>
 
                 {/* Cabecera: nombre + progreso */}

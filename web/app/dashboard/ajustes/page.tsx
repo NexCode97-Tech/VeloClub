@@ -5,6 +5,8 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiFetch } from '@/lib/api-client';
 import { CheckCircle2, Camera, Building2, ChevronDown, X, Crop, ChevronRight, HelpCircle } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { stagger, cardVariant } from '@/lib/page-animations';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -253,7 +255,7 @@ export default function AjustesPage() {
         </h1>
       </div>
 
-      <div className="px-4 pt-4 space-y-4 max-w-lg pb-8">
+      <motion.div variants={stagger} initial="hidden" animate="show" className="px-4 pt-4 space-y-4 max-w-lg pb-8">
 
         {/* Logo */}
         <div className="bg-white border border-border rounded-xl p-4">
@@ -417,7 +419,7 @@ export default function AjustesPage() {
           }
         </Button>
 
-      </div>
+      </motion.div>
 
       {/* ── Acceso a Centro de ayuda ──────────────────────────────────────── */}
       <div className="px-4 pb-28 mt-2">

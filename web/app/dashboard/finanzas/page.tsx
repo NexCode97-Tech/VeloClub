@@ -20,6 +20,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import { motion, AnimatePresence, useReducedMotion, type Variants } from 'framer-motion';
+import { stagger as pageStagger, cardVariant as pageCard } from '@/lib/page-animations';
 
 const fmt = new Intl.NumberFormat('es-CO', {
   style: 'currency', currency: 'COP', maximumFractionDigits: 0,
@@ -673,7 +674,7 @@ export default function FinanzasPage() {
         </button>
       </div>
 
-      <div className="px-4 pt-4 flex flex-col gap-4">
+      <motion.div variants={pageStagger} initial="hidden" animate="show" className="px-4 pt-4 flex flex-col gap-4">
 
         {/* Tabs */}
         <div className="flex gap-1 bg-secondary rounded-xl p-1">
@@ -1008,7 +1009,7 @@ export default function FinanzasPage() {
             )}
           </>
         )}
-      </div>
+      </motion.div>
 
       {/* Modal registrar cobro manual */}
       <Dialog open={payOpen} onOpenChange={setPayOpen}>

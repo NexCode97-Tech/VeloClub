@@ -5,6 +5,7 @@ import { useClubStream } from '@/hooks/useClubStream';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState, useMemo } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
+import { stagger as pageStagger, cardVariant as pageCard } from '@/lib/page-animations';
 import { apiFetch } from '@/lib/api-client';
 import { QK } from '@/hooks/useVeloQuery';
 import { Input } from '@/components/ui/input';
@@ -296,7 +297,7 @@ export default function MiembrosPage() {
       </div>
 
       {/* ── Filters ───────────────────────────────────────────────────────── */}
-      <div className="px-4 pt-4 space-y-3">
+      <motion.div variants={pageStagger} initial="hidden" animate="show" className="px-4 pt-4 space-y-3">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input className="pl-9 bg-white border-border rounded-xl" placeholder="Buscar miembro..." value={search} onChange={e => setSearch(e.target.value)} />
@@ -441,7 +442,7 @@ export default function MiembrosPage() {
             </div>
           </>
         )}
-      </div>
+      </motion.div>
 
       {/* ═══════════════════════════════════════════════════════════════════
           NUEVO PANEL — bottom sheet multi-paso

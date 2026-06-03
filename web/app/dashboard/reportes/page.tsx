@@ -1,4 +1,6 @@
 'use client';
+import { motion } from 'framer-motion';
+import { stagger, cardVariant } from '@/lib/page-animations';
 
 import { useAuth, useSession } from '@clerk/nextjs';
 import { useClubStream } from '@/hooks/useClubStream';
@@ -173,7 +175,7 @@ export default function ReportesPage() {
         <p className="text-[11px] text-muted-foreground mt-0.5">{MONTH_NAMES_FULL[new Date().getMonth()]} {new Date().getFullYear()}</p>
       </div>
 
-      <div className="flex flex-col gap-4 px-4 py-4">
+      <motion.div variants={stagger} initial="hidden" animate="show" className="flex flex-col gap-4 px-4 py-4">
 
         {/* KPIs */}
         <div className="grid grid-cols-2 gap-3">
@@ -289,7 +291,7 @@ export default function ReportesPage() {
           )}
         </div>
 
-      </div>
+      </motion.div>
     </div>
   );
 }

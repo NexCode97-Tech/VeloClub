@@ -1,4 +1,6 @@
 'use client';
+import { motion } from 'framer-motion';
+import { stagger, cardVariant } from '@/lib/page-animations';
 
 import { useAuth } from '@clerk/nextjs';
 import { useEffect, useState } from 'react';
@@ -178,7 +180,7 @@ export default function LogrosPage() {
         )}
       </div>
 
-      <div className="px-4 pt-4 flex flex-col gap-3 pb-4">
+      <motion.div variants={stagger} initial="hidden" animate="show" className="px-4 pt-4 flex flex-col gap-3 pb-4">
         {/* Tabs */}
         <div className="flex gap-1 bg-secondary rounded-xl p-1">
           {(['comp', 'train'] as const).map(t => (
@@ -316,7 +318,7 @@ export default function LogrosPage() {
             })
           )
         )}
-      </div>
+      </motion.div>
 
       {/* Modal nueva competencia */}
       <Dialog open={compOpen} onOpenChange={setCompOpen}>

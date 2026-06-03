@@ -6,6 +6,8 @@ import { useEffect, useState } from 'react';
 import { apiFetch } from '@/lib/api-client';
 import { QK } from '@/hooks/useVeloQuery';
 import { Users, MapPin, CheckCircle2 } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { stagger, cardVariant } from '@/lib/page-animations';
 import {
   Select, SelectContent, SelectItem, SelectTrigger,
 } from '@/components/ui/select';
@@ -161,7 +163,7 @@ export default function AsistenciaPage() {
         )}
       </div>
 
-      <div className="px-4 pt-4 space-y-3">
+      <motion.div variants={stagger} initial="hidden" animate="show" className="px-4 pt-4 space-y-3">
         {loading ? (
           <div className="flex justify-center py-10">
             <div className="w-6 h-6 rounded-full border-2 border-primary border-t-transparent animate-spin" />
@@ -267,7 +269,7 @@ export default function AsistenciaPage() {
             )}
           </>
         )}
-      </div>
+      </motion.div>
     </div>
   );
 }

@@ -2,13 +2,15 @@
 
 import { UserProfile, useClerk } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
+import { motion } from 'framer-motion';
+import { stagger, cardVariant } from '@/lib/page-animations';
 
 export default function ConfiguracionPage() {
   const { signOut } = useClerk();
   const router = useRouter();
 
   return (
-    <div style={{ background: '#F7F7FB', minHeight: '100%', padding: '16px 16px 80px' }}>
+    <motion.div variants={stagger} initial="hidden" animate="show" style={{ background: '#F7F7FB', minHeight: '100%', padding: '16px 16px 80px' }}>
 
       {/* Mi cuenta — UserProfile embebido */}
       <p className="text-[11px] font-semibold uppercase mb-3 m-0" style={{ color: '#8E87A8', letterSpacing: '0.8px' }}>
@@ -50,6 +52,6 @@ export default function ConfiguracionPage() {
       >
         Cerrar sesión
       </button>
-    </div>
+    </motion.div>
   );
 }

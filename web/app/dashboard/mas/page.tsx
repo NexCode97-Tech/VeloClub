@@ -1,4 +1,6 @@
 'use client';
+import { motion } from 'framer-motion';
+import { stagger, cardVariant } from '@/lib/page-animations';
 
 import { useAuth } from '@clerk/nextjs';
 import { UserButton, useUser } from '@clerk/nextjs';
@@ -48,7 +50,7 @@ export default function MasPage() {
   };
 
   return (
-    <div className="min-h-full bg-background px-4 py-4">
+    <motion.div variants={stagger} initial="hidden" animate="show" className="min-h-full bg-background px-4 py-4">
       <h1 className="text-lg font-bold text-foreground mb-4" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
         Más opciones
       </h1>
@@ -117,6 +119,6 @@ export default function MasPage() {
           ))}
         </div>
       )}
-    </div>
+    </motion.div>
   );
 }

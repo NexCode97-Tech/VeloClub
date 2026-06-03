@@ -1,4 +1,6 @@
 'use client';
+import { motion } from 'framer-motion';
+import { stagger, cardVariant } from '@/lib/page-animations';
 
 import { useAuth } from '@clerk/nextjs';
 import { useClubStream } from '@/hooks/useClubStream';
@@ -113,7 +115,7 @@ export default function CalendarioPage() {
   const selectedEvents = eventsOnDay(selectedDay);
 
   return (
-    <div className="min-h-full bg-background px-4 py-5">
+    <motion.div variants={stagger} initial="hidden" animate="show" className="min-h-full bg-background px-4 py-5">
       {/* Header */}
       <div className="mb-5">
         <h1 className="text-2xl font-bold text-foreground" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
@@ -288,6 +290,6 @@ function EventCard({ event }: { event: CalEvent }) {
           </div>
         )}
       </div>
-    </div>
+    </motion.div>
   );
 }

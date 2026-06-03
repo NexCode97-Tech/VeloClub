@@ -4,6 +4,8 @@ import { useAuth } from '@clerk/nextjs';
 import { useEffect, useState } from 'react';
 import { apiFetch } from '@/lib/api-client';
 import { CreditCard, Plus, Trash2, CheckCircle2, Clock, AlertCircle, CalendarDays, TrendingUp } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { stagger, cardVariant } from '@/lib/page-animations';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -202,7 +204,7 @@ export default function PagosPage() {
           </h1>
         </div>
 
-        <div className="px-4 pt-4 pb-8 flex flex-col gap-4">
+        <motion.div variants={stagger} initial="hidden" animate="show" className="px-4 pt-4 pb-8 flex flex-col gap-4">
 
           {loading ? (
             <div className="flex flex-col gap-3">
@@ -368,7 +370,7 @@ export default function PagosPage() {
               )}
             </>
           )}
-        </div>
+        </motion.div>
       </div>
     );
   }
@@ -393,7 +395,7 @@ export default function PagosPage() {
         )}
       </div>
 
-      <div className="px-4 pt-4 flex flex-col gap-4">
+      <motion.div variants={stagger} initial="hidden" animate="show" className="px-4 pt-4 flex flex-col gap-4">
 
         {/* Filtro mes/año */}
         <div className="flex gap-2 items-center">
@@ -522,7 +524,7 @@ export default function PagosPage() {
             })}
           </div>
         )}
-      </div>
+      </motion.div>
 
       {/* Modal registrar pago — solo ADMIN/COACH */}
       {canManage && <Dialog open={open} onOpenChange={setOpen}>

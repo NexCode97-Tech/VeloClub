@@ -217,14 +217,6 @@ function StudentRow({
           <Trash2 className="w-3.5 h-3.5" />
         </button>
       )}
-      <button onClick={openConfig}
-        className="w-7 h-7 rounded-lg flex items-center justify-center cursor-pointer" title="Configurar tarifa"
-        style={{ background: configOpen ? 'rgba(124,58,237,0.12)' : 'rgba(142,135,168,0.08)' }}>
-        {configOpen
-          ? <ChevronUp className="w-3.5 h-3.5" style={{ color: '#7C3AED' }} />
-          : <Settings className="w-3.5 h-3.5" style={{ color: '#8E87A8' }} />
-        }
-      </button>
     </div>
   );
 
@@ -279,18 +271,28 @@ function StudentRow({
         style={{ border: '1px solid rgba(120,80,200,0.09)', boxShadow: '0 2px 12px rgba(124,58,237,0.05)' }}>
 
         {/* Cabecera */}
-        <div className="px-4 pt-4 pb-3 flex items-center gap-3"
+        <div className="px-4 pt-4 pb-3 flex items-center gap-3 relative"
           style={{ borderBottom: '1px solid rgba(120,80,200,0.07)' }}>
           <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold text-[12px] shrink-0"
             style={{ background: sc ? sc.text : '#8E87A8', boxShadow: `0 3px 10px ${sc ? sc.text : '#8E87A8'}40` }}>
             {getInitials(m.fullName)}
           </div>
-          <div className="flex-1 min-w-0">
+          <div className="flex-1 min-w-0 pr-7">
             <p className="text-[13px] font-bold truncate" style={{ color: '#1A1028' }}>{m.fullName}</p>
             {configured && m.paymentDueDay && (
               <p className="text-[10px] font-medium" style={{ color: '#8E87A8' }}>Cobro el día {m.paymentDueDay}</p>
             )}
           </div>
+          {/* Engranaje — siempre esquina superior derecha */}
+          <button onClick={openConfig}
+            className="absolute top-3 right-3 w-7 h-7 rounded-lg flex items-center justify-center cursor-pointer"
+            title="Configurar tarifa"
+            style={{ background: configOpen ? 'rgba(124,58,237,0.12)' : 'rgba(142,135,168,0.08)' }}>
+            {configOpen
+              ? <ChevronUp className="w-3.5 h-3.5" style={{ color: '#7C3AED' }} />
+              : <Settings className="w-3.5 h-3.5" style={{ color: '#8E87A8' }} />
+            }
+          </button>
         </div>
 
         {/* Estado + acción */}
@@ -300,8 +302,8 @@ function StudentRow({
           {mainAction}
         </div>
 
-        {/* Botones icono */}
-        <div className="px-3 py-2.5">{iconButtons}</div>
+        {/* Botones icono — solo si hay pago */}
+        {payment && <div className="px-3 py-2.5">{iconButtons}</div>}
 
         {configPanel}
       </div>

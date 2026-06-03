@@ -90,6 +90,7 @@ model Member {
   eps               String?
   category          String?
   tipo              String?
+  deporte           String?
   paymentDueDay     Int?
   monthlyFee        Float?
   locations         MemberLocation[]

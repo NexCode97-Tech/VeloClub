@@ -242,10 +242,12 @@ router.get('/suscripciones', requireAuth, requireSuperadmin, async (_req, res) =
       id: true, name: true, active: true, createdAt: true, logoUrl: true, trialEndsAt: true,
       _count: { select: { members: true } },
       suscripcion: { include: { pagos: { orderBy: { createdAt: 'asc' } } } },
+      members: { where: { role: 'ADMIN' }, select: { phone: true }, take: 1 },
     },
     orderBy: { createdAt: 'desc' },
   });
-  res.json({ clubs });
+  const mapped = clubs.map(({ members, ...rest }) => ({ ...rest, adminPhone: members[0]?.phone ?? null }));
+  res.json({ clubs: mapped });
 });
 
 const suscripcionSchema = z.object({

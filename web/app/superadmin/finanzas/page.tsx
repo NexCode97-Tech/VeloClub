@@ -3,7 +3,7 @@
 import { useAuth } from '@clerk/nextjs';
 import { useEffect, useState } from 'react';
 import { apiFetch } from '@/lib/api-client';
-import { Pencil, Trash2, X, Check, TrendingUp, CalendarClock, CircleDollarSign, Eye, Upload, RotateCcw } from 'lucide-react';
+import { Pencil, Trash2, X, Check, TrendingUp, CalendarClock, CircleDollarSign, Eye, Upload, RotateCcw, MessageCircle } from 'lucide-react';
 import { motion, AnimatePresence, type Variants } from 'framer-motion';
 import { stagger as pageStagger, cardVariant as pageCard } from '@/lib/page-animations';
 
@@ -32,7 +32,7 @@ type EstadoPago = 'PAID' | 'PENDING' | 'OVERDUE';
 
 interface Pago { id: string; concepto: string; monto: number; fecha: string | null; estado: EstadoPago; receiptUrl?: string | null; receiptPublicId?: string | null; }
 interface Suscripcion { id: string; planMonto: number; tipoPlan: TipoPlan; año: number; pagos: Pago[]; }
-interface ClubConSuscripcion { id: string; name: string; active: boolean; logoUrl?: string | null; createdAt: string; trialEndsAt?: string | null; suscripcion: Suscripcion | null; }
+interface ClubConSuscripcion { id: string; name: string; active: boolean; logoUrl?: string | null; createdAt: string; trialEndsAt?: string | null; adminPhone?: string | null; suscripcion: Suscripcion | null; }
 
 // ── Constantes ────────────────────────────────────────────────────────────────
 const PLAN_OPTIONS: { value: TipoPlan; label: string; sub: string; multiplier: number }[] = [
@@ -86,18 +86,20 @@ const expandY: Variants = {
 };
 
 // ── Trial helpers ─────────────────────────────────────────────────────────────
-function trialInfo(createdAt: string, trialEndsAt?: string | null): { daysLeft: number; pct: number; label: string; color: string; bg: string } | null {
-  // Si tiene trialEndsAt usa esa fecha, si no asume 15 días desde creación
-  const end = trialEndsAt ? new Date(trialEndsAt) : (() => { const d = new Date(createdAt); d.setDate(d.getDate() + 15); return d; })();
+function trialInfo(createdAt: string, trialEndsAt?: string | null): { daysLeft: number; pct: number; label: string; color: string; bg: string; urgent: boolean } | null {
+  const end = trialEndsAt
+    ? new Date(trialEndsAt)
+    : (() => { const d = new Date(createdAt); d.setDate(d.getDate() + 15); return d; })();
   const now = new Date();
   const totalMs = end.getTime() - new Date(createdAt).getTime();
   const remainingMs = end.getTime() - now.getTime();
   const daysLeft = Math.max(0, Math.ceil(remainingMs / 86_400_000));
   const pct = totalMs > 0 ? Math.max(0, Math.min(100, Math.round(remainingMs / totalMs * 100))) : 0;
-  if (daysLeft === 0) return { daysLeft: 0, pct: 0, label: 'Prueba vencida', color: '#EF476F', bg: 'rgba(239,71,111,0.10)' };
-  if (daysLeft <= 3)  return { daysLeft, pct, label: `Prueba · ${daysLeft}d`, color: '#EF476F', bg: 'rgba(239,71,111,0.10)' };
-  if (daysLeft <= 7)  return { daysLeft, pct, label: `Prueba · ${daysLeft}d`, color: '#FFB703', bg: 'rgba(255,183,3,0.10)' };
-  return { daysLeft, pct, label: `Prueba · ${daysLeft}d`, color: '#4361EE', bg: 'rgba(67,97,238,0.10)' };
+  const urgent = daysLeft <= 3;
+  if (daysLeft === 0) return { daysLeft: 0, pct: 0, label: 'Prueba vencida', color: '#EF476F', bg: 'rgba(239,71,111,0.10)', urgent: true };
+  if (daysLeft <= 3)  return { daysLeft, pct, label: `Prueba · ${daysLeft}d`, color: '#EF476F', bg: 'rgba(239,71,111,0.10)', urgent };
+  if (daysLeft <= 7)  return { daysLeft, pct, label: `Prueba · ${daysLeft}d`, color: '#FFB703', bg: 'rgba(255,183,3,0.10)', urgent };
+  return { daysLeft, pct, label: `Prueba · ${daysLeft}d`, color: '#4361EE', bg: 'rgba(67,97,238,0.10)', urgent };
 }
 
 // ── Segmented control plan ────────────────────────────────────────────────────
@@ -167,9 +169,10 @@ export default function FinanzasPage() {
   const [clubs, setClubs] = useState<ClubConSuscripcion[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const [abonoOpen,   setAbonoOpen]   = useState<string | null>(null);
-  const [abonoForm,   setAbonoForm]   = useState({ concepto: '', monto: '', fecha: '', estado: 'PAID' });
-  const [saving,      setSaving]      = useState(false);
+  const [abonoOpen,    setAbonoOpen]    = useState<string | null>(null);
+  const [abonoForm,    setAbonoForm]    = useState({ concepto: '', monto: '', fecha: '' });
+  const [saving,       setSaving]       = useState(false);
+  const [saveSuccess,  setSaveSuccess]  = useState(false);
 
   const [editPagoId,   setEditPagoId]   = useState<string | null>(null);
   const [editPagoForm, setEditPagoForm] = useState({ concepto: '', monto: '', fecha: '', estado: 'PAID' });
@@ -197,17 +200,30 @@ export default function FinanzasPage() {
   }
   useEffect(() => { load(); }, []);
 
+  // Auto-estado: fecha futura → PENDING, resto → PAID
+  function autoEstado(fecha: string): EstadoPago {
+    if (!fecha) return 'PAID';
+    const d = new Date(fecha); d.setHours(0,0,0,0);
+    const hoy = new Date(); hoy.setHours(0,0,0,0);
+    return d > hoy ? 'PENDING' : 'PAID';
+  }
+
   async function registrarAbono(clubId: string) {
     if (!abonoForm.concepto || !abonoForm.monto) return;
     setSaving(true);
     try {
       const token = await getToken();
+      const estado = autoEstado(abonoForm.fecha);
       await apiFetch(`/superadmin/suscripciones/${clubId}/pagos`, {
         method: 'POST', token,
-        body: JSON.stringify({ concepto: abonoForm.concepto, monto: parseMiles(abonoForm.monto), fecha: abonoForm.fecha || undefined, estado: abonoForm.estado }),
+        body: JSON.stringify({ concepto: abonoForm.concepto, monto: parseMiles(abonoForm.monto), fecha: abonoForm.fecha || undefined, estado }),
       });
-      setAbonoOpen(null);
-      setAbonoForm({ concepto: '', monto: '', fecha: '', estado: 'PAID' });
+      setSaveSuccess(true);
+      setTimeout(() => {
+        setSaveSuccess(false);
+        setAbonoOpen(null);
+        setAbonoForm({ concepto: '', monto: '', fecha: '' });
+      }, 1200);
       await load();
     } catch (e) { console.error(e); }
     finally { setSaving(false); }
@@ -303,7 +319,8 @@ export default function FinanzasPage() {
   const totalPendiente = clubs.reduce((a, c) => {
     return a + (c.suscripcion?.pagos ?? []).filter(p => p.estado !== 'PAID').reduce((s, p) => s + p.monto, 0);
   }, 0);
-  const clubsConPlan = clubs.filter(c => c.suscripcion).length;
+  const clubsConPlan  = clubs.filter(c => c.suscripcion).length;
+  const clubsEnPrueba = clubs.filter(c => !c.suscripcion && trialInfo(c.createdAt, c.trialEndsAt) !== null).length;
 
   if (loading) return (
     <div style={{ background: '#F7F7FB', minHeight: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', height: 200 }}>
@@ -322,8 +339,8 @@ export default function FinanzasPage() {
         >
           {[
             { label: 'Recaudado', value: fmt.format(totalRecaudado), color: '#06D6A0', bg: 'rgba(6,214,160,0.10)', icon: <TrendingUp size={16} color="#06D6A0" /> },
-            { label: 'Pendiente', value: fmt.format(totalPendiente), color: '#FFB703', bg: 'rgba(255,183,3,0.10)', icon: <CalendarClock size={16} color="#FFB703" /> },
             { label: 'Con plan',  value: String(clubsConPlan),       color: '#7C3AED', bg: 'rgba(124,58,237,0.10)', icon: <CircleDollarSign size={16} color="#7C3AED" /> },
+            { label: 'En prueba', value: String(clubsEnPrueba),      color: '#FFB703', bg: 'rgba(255,183,3,0.10)', icon: <CalendarClock size={16} color="#FFB703" /> },
           ].map(s => (
             <motion.div key={s.label} variants={fadeUp}
               style={{ background: '#fff', border: '1px solid rgba(120,80,200,0.09)', borderRadius: 16, padding: '12px 10px', textAlign: 'center', boxShadow: '0 2px 10px rgba(124,58,237,0.05)' }}>
@@ -474,14 +491,39 @@ export default function FinanzasPage() {
 
                   {/* Barra de prueba */}
                   {!sus && trial && (
-                    <div style={{ marginTop: 12, height: 6, borderRadius: 99, background: 'rgba(120,80,200,0.08)', overflow: 'hidden' }}>
-                      <motion.div
-                        style={{ height: '100%', borderRadius: 99, background: `linear-gradient(90deg, ${trial.color}, ${trial.daysLeft <= 3 ? '#F72585' : trial.daysLeft <= 7 ? '#FB8500' : '#4361EE'})` }}
-                        initial={{ width: 0 }}
-                        animate={{ width: `${trial.pct}%` }}
-                        transition={{ duration: 0.8, ease: EASE, delay: 0.2 }}
-                      />
-                    </div>
+                    <>
+                      <div style={{ marginTop: 12, height: 6, borderRadius: 99, background: 'rgba(120,80,200,0.08)', overflow: 'hidden' }}>
+                        <motion.div
+                          style={{ height: '100%', borderRadius: 99, background: trial.urgent
+                            ? 'linear-gradient(90deg,#EF476F,#F72585)'
+                            : trial.daysLeft <= 7
+                              ? 'linear-gradient(90deg,#FFB703,#FB8500)'
+                              : 'linear-gradient(90deg,#4361EE,#7C3AED)' }}
+                          initial={{ width: 0 }}
+                          animate={{ width: `${trial.pct}%` }}
+                          transition={{ duration: 0.8, ease: EASE, delay: 0.2 }}
+                        />
+                      </div>
+                      {/* Botón WhatsApp cuando quedan ≤3 días */}
+                      <AnimatePresence>
+                        {trial.urgent && (
+                          <motion.a
+                            key="wa"
+                            href={`https://wa.me/${(c.adminPhone ?? '').replace(/\D/g,'')}?text=${encodeURIComponent(`Hola, le recordamos que el período de prueba de ${c.name} en VeloClub vence en ${trial.daysLeft === 0 ? 'HOY' : `${trial.daysLeft} día${trial.daysLeft === 1 ? '' : 's'}`}. Contáctenos para activar su plan y continuar disfrutando de todos los beneficios.`)}`}
+                            target="_blank" rel="noopener noreferrer"
+                            initial={{ opacity: 0, y: -6, height: 0 }}
+                            animate={{ opacity: 1, y: 0, height: 'auto' }}
+                            exit={{ opacity: 0, y: -4, height: 0 }}
+                            transition={{ duration: 0.24, ease: EASE }}
+                            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, marginTop: 10, padding: '9px 0', borderRadius: 12, background: 'rgba(37,211,102,0.10)', border: '1.5px solid rgba(37,211,102,0.30)', color: '#1BA147', textDecoration: 'none', fontSize: 12, fontWeight: 700, fontFamily: 'Plus Jakarta Sans, sans-serif', cursor: 'pointer' }}
+                            whileTap={{ scale: 0.97 }}
+                          >
+                            <MessageCircle size={13} />
+                            Enviar recordatorio WhatsApp
+                          </motion.a>
+                        )}
+                      </AnimatePresence>
+                    </>
                   )}
                 </div>
 
@@ -605,7 +647,7 @@ export default function FinanzasPage() {
                           <input type="text" placeholder="Ej: Cuota Mayo" value={abonoForm.concepto}
                             onChange={e => setAbonoForm(f => ({ ...f, concepto: e.target.value }))} style={inp} />
                         </div>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 10 }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 12 }}>
                           <div>
                             <p style={{ margin: '0 0 4px', fontSize: 9, fontWeight: 600, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Monto</p>
                             <div style={{ position: 'relative' }}>
@@ -614,24 +656,51 @@ export default function FinanzasPage() {
                             </div>
                           </div>
                           <div>
-                            <p style={{ margin: '0 0 4px', fontSize: 9, fontWeight: 600, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Fecha</p>
+                            <p style={{ margin: '0 0 4px', fontSize: 9, fontWeight: 600, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Fecha pago</p>
                             <input type="date" value={abonoForm.fecha} onChange={e => setAbonoForm(f => ({ ...f, fecha: e.target.value }))} style={inp} />
                           </div>
                         </div>
-                        <div style={{ marginBottom: 14 }}>
-                          <p style={{ margin: '0 0 6px', fontSize: 9, fontWeight: 600, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Estado</p>
-                          <EstadoSelector value={abonoForm.estado} onChange={v => setAbonoForm(f => ({ ...f, estado: v }))} />
-                        </div>
+                        {/* Preview estado automático */}
+                        {(() => {
+                          const est = autoEstado(abonoForm.fecha);
+                          const s = ESTADO[est];
+                          return (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 14, padding: '8px 10px', borderRadius: 10, background: s.bg, border: `1px solid ${s.border}` }}>
+                              <div style={{ width: 7, height: 7, borderRadius: '50%', background: s.color, flexShrink: 0 }} />
+                              <p style={{ margin: 0, fontSize: 11, fontWeight: 600, color: s.color, fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
+                                Estado automático: <strong>{s.label}</strong>
+                              </p>
+                            </div>
+                          );
+                        })()}
                         <div style={{ display: 'flex', gap: 8 }}>
-                          <motion.button onClick={() => { setAbonoOpen(null); setAbonoForm({ concepto: '', monto: '', fecha: '', estado: 'PAID' }); }}
+                          <motion.button onClick={() => { setAbonoOpen(null); setAbonoForm({ concepto: '', monto: '', fecha: '' }); }}
                             whileTap={{ scale: 0.97 }}
                             style={{ flex: 1, padding: '11px 0', borderRadius: 12, border: '1.5px solid rgba(120,80,200,0.15)', background: 'transparent', color: '#8E87A8', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
                             Cancelar
                           </motion.button>
-                          <motion.button onClick={() => registrarAbono(c.id)} disabled={saving}
-                            whileTap={{ scale: 0.97 }}
-                            style={{ flex: 2, padding: '11px 0', borderRadius: 12, border: 'none', background: 'linear-gradient(135deg,#7C3AED,#4361EE)', color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'Plus Jakarta Sans, sans-serif', boxShadow: '0 4px 14px rgba(124,58,237,0.32)', opacity: saving ? 0.7 : 1 }}>
-                            {saving ? 'Guardando...' : 'Registrar abono'}
+                          <motion.button
+                            onClick={() => registrarAbono(c.id)}
+                            disabled={saving || saveSuccess}
+                            whileTap={saveSuccess ? {} : { scale: 0.95 }}
+                            animate={saveSuccess ? { scale: [1, 1.06, 1], transition: { duration: 0.35 } } : {}}
+                            style={{ flex: 2, padding: '11px 0', borderRadius: 12, border: 'none', cursor: saving || saveSuccess ? 'default' : 'pointer', fontFamily: 'Plus Jakarta Sans, sans-serif', fontWeight: 700, fontSize: 12, color: '#fff', boxShadow: saveSuccess ? '0 4px 14px rgba(6,214,160,0.40)' : '0 4px 14px rgba(124,58,237,0.32)', background: saveSuccess ? '#06D6A0' : 'linear-gradient(135deg,#7C3AED,#4361EE)', transition: 'background 0.3s, box-shadow 0.3s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                            <AnimatePresence mode="wait" initial={false}>
+                              {saveSuccess ? (
+                                <motion.span key="ok" initial={{ opacity: 0, scale: 0.6 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.6 }} transition={{ duration: 0.2 }}
+                                  style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                                  <Check size={14} /> ¡Registrado!
+                                </motion.span>
+                              ) : saving ? (
+                                <motion.span key="saving" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }}>
+                                  Guardando...
+                                </motion.span>
+                              ) : (
+                                <motion.span key="idle" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }}>
+                                  Registrar abono
+                                </motion.span>
+                              )}
+                            </AnimatePresence>
                           </motion.button>
                         </div>
                       </motion.div>

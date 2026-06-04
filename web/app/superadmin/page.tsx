@@ -130,16 +130,25 @@ export default function SuperadminDashboard() {
     ? Math.round(((recaudadoEsteMes - recaudadoMesAnterior) / recaudadoMesAnterior) * 100)
     : recaudadoEsteMes > 0 ? 100 : 0;
 
-  // Clubs en prueba
+  // Clubs en prueba — usa trialEndsAt si existe, si no asume createdAt+15d
   const enPrueba = clubs.filter(c => {
-    if (!c.trialEndsAt) return false;
-    return new Date(c.trialEndsAt) >= now;
+    if (c.suscripcion) return false; // ya tiene plan pagado
+    const end = c.trialEndsAt
+      ? new Date(c.trialEndsAt)
+      : (() => { const d = new Date(c.createdAt); d.setDate(d.getDate() + 15); return d; })();
+    return end >= now;
   }).length;
 
-  // Días de trial restante (promedio o máx)
+  // Días de trial restante
   const trialDays = clubs
-    .filter(c => c.trialEndsAt && new Date(c.trialEndsAt) >= now)
-    .map(c => Math.ceil((new Date(c.trialEndsAt!).getTime() - now.getTime()) / 86_400_000));
+    .filter(c => !c.suscripcion)
+    .map(c => {
+      const end = c.trialEndsAt
+        ? new Date(c.trialEndsAt)
+        : (() => { const d = new Date(c.createdAt); d.setDate(d.getDate() + 15); return d; })();
+      return Math.max(0, Math.ceil((end.getTime() - now.getTime()) / 86_400_000));
+    })
+    .filter(d => d > 0);
   const maxTrialDays = trialDays.length > 0 ? Math.max(...trialDays) : 0;
 
   // Recaudado total y data para el chart histórico

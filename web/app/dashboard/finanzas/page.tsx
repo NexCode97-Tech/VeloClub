@@ -90,6 +90,7 @@ interface StudentRowProps {
   member: Member;
   payment: Payment | null;
   clubName: string;
+  clubLogoUrl?: string | null;
   filterMonth: number;
   filterYear: number;
   reducedMotion: boolean | null;
@@ -107,7 +108,7 @@ interface StudentRowProps {
 }
 
 function StudentRow({
-  member: m, payment, clubName, filterMonth, filterYear,
+  member: m, payment, clubName, clubLogoUrl, filterMonth, filterYear,
   reducedMotion, sentWa, onSentWa, onMarkPaid, onGenerate, onDeletePay,
   generating, deleting, marking, onConfigSave, configSaving, onOpenReceipt,
 }: StudentRowProps) {
@@ -198,7 +199,7 @@ function StudentRow({
         </motion.button>
       )}
       {payment && (
-        <button onClick={() => downloadInvoicePDF({ ...payment, memberName: m.fullName }, clubName)}
+        <button onClick={() => downloadInvoicePDF({ ...payment, memberName: m.fullName }, clubName, clubLogoUrl)}
           className="w-7 h-7 rounded-lg bg-secondary flex items-center justify-center text-muted-foreground cursor-pointer" title="Descargar factura">
           <Download className="w-3.5 h-3.5" />
         </button>
@@ -319,8 +320,9 @@ export default function FinanzasPage() {
   const qc = useQueryClient();
 
   const [tab, setTab]             = useState<'mensualidades' | 'flujo'>('mensualidades');
-  const [clubName, setClubName]   = useState('VeloClub');
-  const [clubPlan, setClubPlan]   = useState<{ tipoPlan: string; createdAt: string } | null>(null);
+  const [clubName, setClubName]     = useState('VeloClub');
+  const [clubLogoUrl, setClubLogoUrl] = useState<string | null>(null);
+  const [clubPlan, setClubPlan]     = useState<{ tipoPlan: string; createdAt: string } | null>(null);
   const [clubCreatedAt, setClubCreatedAt] = useState<string | null>(null);
   const [filterMonth, setFilterMonth] = useState(now.getMonth() + 1);
   const [filterYear, setFilterYear]   = useState(now.getFullYear());
@@ -378,9 +380,10 @@ export default function FinanzasPage() {
 
   useEffect(() => {
     getToken().then(token =>
-      apiFetch<{ club: { name: string; createdAt: string; suscripcion: { tipoPlan: string; createdAt: string } | null } }>('/clubs/settings', { token })
+      apiFetch<{ club: { name: string; logoUrl?: string | null; createdAt: string; suscripcion: { tipoPlan: string; createdAt: string } | null } }>('/clubs/settings', { token })
         .then(r => {
           setClubName(r.club.name);
+          setClubLogoUrl(r.club.logoUrl ?? null);
           setClubCreatedAt(r.club.createdAt);
           setClubPlan(r.club.suscripcion);
         }).catch(() => {})
@@ -524,7 +527,7 @@ export default function FinanzasPage() {
       invalidatePay(); invalidateFlow();
       const memberName = allMembers.find(m => m.id === payForm.memberId)?.fullName ?? '';
       if (created.payment.status === 'PAID') {
-        downloadInvoicePDF({ ...created.payment, memberName }, clubName);
+        downloadInvoicePDF({ ...created.payment, memberName }, clubName, clubLogoUrl);
       }
     } catch (e) { setPayError(e instanceof Error ? e.message : 'Error'); }
     finally { setSavingPay(false); }
@@ -882,6 +885,7 @@ export default function FinanzasPage() {
                     member={m}
                     payment={payment}
                     clubName={clubName}
+                    clubLogoUrl={clubLogoUrl}
                     filterMonth={filterMonth}
                     filterYear={filterYear}
                     reducedMotion={reducedMotion}

@@ -90,6 +90,8 @@ export default function MiembrosPage() {
   const [importOpen, setImportOpen]     = useState(false);
   const [importing, setImporting]       = useState(false);
   const [importErrors, setImportErrors] = useState<string[]>([]);
+  // Ref para evitar stale closure en onOpenChange (React no actualiza el closure a tiempo)
+  const importingRef = useRef(false);
 
   // ── Data con caché TanStack Query ───────────────────────────────────────────
   const { data: membersData, isLoading: loadingMembers } = useQuery({
@@ -215,9 +217,15 @@ export default function MiembrosPage() {
   }
 
   async function handleImport(file: File) {
+    importingRef.current = true;
     setImporting(true); setImportErrors([]);
     const { rows, errors } = await parseMembersExcel(file);
-    if (errors.length > 0) { setImportErrors(errors); setImporting(false); return; }
+    if (errors.length > 0) {
+      setImportErrors(errors);
+      setImporting(false);
+      importingRef.current = false;
+      return;
+    }
     const token = await getToken();
     const failed: string[] = [];
     for (const row of rows) {
@@ -232,6 +240,7 @@ export default function MiembrosPage() {
         await apiFetch('/members', { method: 'POST', token, body: JSON.stringify({ ...rest, locationIds }) });
       } catch (e) { failed.push(`${row.fullName}: ${e instanceof Error ? e.message : 'Error'}`); }
     }
+    importingRef.current = false;
     setImporting(false);
     if (failed.length > 0) setImportErrors(failed); else setImportOpen(false);
     qc.invalidateQueries({ queryKey: QK.members() });
@@ -1236,11 +1245,8 @@ export default function MiembrosPage() {
       <Dialog
         open={importOpen}
         onOpenChange={(v, details) => {
-          // base-ui usa kebab-case en los reasons
-          // 'focus-out' → el file picker del OS roba el foco del navegador
-          // 'outside-press' → click fuera del modal
-          // Ambos deben ignorarse para que el modal no se cierre al abrir el file picker
           const reason = (details as { reason?: string })?.reason;
+          console.log('[IMPORT MODAL] onOpenChange', { v, reason, importing });
           const blocked = ['focus-out', 'outside-press'];
           if (!importing && !blocked.includes(reason ?? '')) {
             setImportOpen(v); setImportErrors([]);

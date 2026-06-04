@@ -1,9 +1,10 @@
 'use client';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@clerk/nextjs';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { apiFetch } from '@/lib/api-client';
 import { parseLocalDate } from '@/lib/utils';
+import { useCompetitions, useTraining, useLocations } from '@/hooks/useVeloQuery';
 import Link from 'next/link';
 import {
   Trophy, Plus, Trash2, MapPin, CalendarDays, ChevronRight,
@@ -127,45 +128,42 @@ export default function LogrosPage() {
   const { getToken } = useAuth();
   const [tab, setTab]               = useState<'comp' | 'train'>('comp');
   const [role, setRole]             = useState('');
-  const [locations, setLocations]   = useState<Location[]>([]);
-  const [loading, setLoading]       = useState(true);
   const [myMemberId, setMyMemberId] = useState<string | null>(null);
 
-  const [competitions, setComps]    = useState<Competition[]>([]);
   const [compOpen, setCompOpen]     = useState(false);
   const [compForm, setCompForm]     = useState(emptyComp);
   const [savingComp, setSavingComp] = useState(false);
   const [compError, setCompError]   = useState<string | null>(null);
   const [deletingComp, setDeletingComp] = useState<string | null>(null);
 
-  const [sessions, setSessions]         = useState<TrainingSession[]>([]);
   const [sessionOpen, setSessionOpen]   = useState(false);
   const [sessionForm, setSessionForm]   = useState(emptySession);
   const [savingSession, setSavingSession] = useState(false);
   const [sessionError, setSessionError]   = useState<string | null>(null);
   const [deletingSession, setDeletingSession] = useState<string | null>(null);
 
-  async function loadAll() {
-    const token = await getToken();
-    const [meRes, compRes, trainRes, locsRes] = await Promise.all([
-      apiFetch<{ status: string; user?: { role: string } }>('/me', { token }),
-      apiFetch<{ competitions: Competition[] }>('/competitions', { token }),
-      apiFetch<{ sessions: TrainingSession[] }>('/training', { token }),
-      apiFetch<{ locations: Location[] }>('/locations', { token }),
-    ]);
-    const userRole = meRes.user?.role ?? '';
-    setRole(userRole);
-    if (userRole === 'STUDENT') {
-      const memberRes = await apiFetch<{ member: { id: string } }>('/members/me', { token }).catch(() => null);
-      setMyMemberId(memberRes?.member.id ?? null);
-    }
-    setComps(compRes.competitions);
-    setSessions(trainRes.sessions);
-    setLocations(locsRes.locations);
-    setLoading(false);
-  }
+  const { data: compData,  isLoading: loadingComps, refetch: refetchComps }  = useCompetitions();
+  const { data: trainData, isLoading: loadingTrain, refetch: refetchTrain }  = useTraining();
+  const { data: locsData,  isLoading: loadingLocs }                          = useLocations();
 
-  useEffect(() => { loadAll(); }, []);
+  const competitions = (compData?.competitions  ?? []) as Competition[];
+  const sessions     = (trainData?.sessions     ?? []) as TrainingSession[];
+  const locations    = (locsData?.locations     ?? []) as Location[];
+
+  const loading = loadingComps || loadingTrain || loadingLocs;
+
+  useEffect(() => {
+    getToken().then(async token => {
+      const meRes = await apiFetch<{ status: string; user?: { role: string } }>('/me', { token });
+      const userRole = meRes.user?.role ?? '';
+      setRole(userRole);
+      if (userRole === 'STUDENT') {
+        const memberRes = await apiFetch<{ member: { id: string } }>('/members/me', { token }).catch(() => null);
+        setMyMemberId(memberRes?.member.id ?? null);
+      }
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const canManage = role === 'ADMIN' || role === 'COACH';
   const isStudent = role === 'STUDENT';
@@ -187,7 +185,7 @@ export default function LogrosPage() {
         body: JSON.stringify({ ...compForm, place: compForm.place || undefined }),
       });
       setCompOpen(false); setCompForm(emptyComp);
-      await loadAll();
+      await refetchComps();
     } catch (e) { setCompError(e instanceof Error ? e.message : 'Error'); }
     finally { setSavingComp(false); }
   }
@@ -198,7 +196,7 @@ export default function LogrosPage() {
     try {
       const token = await getToken();
       await apiFetch(`/competitions/${id}`, { method: 'DELETE', token });
-      await loadAll();
+      await refetchComps();
     } finally { setDeletingComp(null); }
   }
 
@@ -217,7 +215,7 @@ export default function LogrosPage() {
         }),
       });
       setSessionOpen(false); setSessionForm(emptySession);
-      await loadAll();
+      await refetchTrain();
     } catch (e) { setSessionError(e instanceof Error ? e.message : 'Error'); }
     finally { setSavingSession(false); }
   }
@@ -228,16 +226,12 @@ export default function LogrosPage() {
     try {
       const token = await getToken();
       await apiFetch(`/training/${id}`, { method: 'DELETE', token });
-      await loadAll();
+      await refetchTrain();
     } finally { setDeletingSession(null); }
   }
 
   const totalCompResults  = visibleComps.reduce((s, c) => s + c.events.reduce((e, ev) => e + ev.results.length, 0), 0);
   const totalTrainResults = visibleSessions.reduce((s, ses) => s + ses.results.length, 0);
-
-  // ── Tab indicator ref ──────────────────────────────────────────────────────
-  const tabCompRef  = useRef<HTMLButtonElement>(null);
-  const tabTrainRef = useRef<HTMLButtonElement>(null);
 
   return (
     <div className="min-h-full bg-background">
@@ -303,7 +297,6 @@ export default function LogrosPage() {
           {(['comp', 'train'] as const).map(t => (
             <button
               key={t}
-              ref={t === 'comp' ? tabCompRef : tabTrainRef}
               onClick={() => setTab(t)}
               className="relative z-10 flex-1 py-2.5 rounded-xl text-[12px] font-bold transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
               style={{ color: tab === t ? '#1A1028' : '#8E87A8' }}

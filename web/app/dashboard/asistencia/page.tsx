@@ -1,7 +1,7 @@
 'use client';
 
 import { useAuth } from '@clerk/nextjs';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import { apiFetch } from '@/lib/api-client';
 import { QK } from '@/hooks/useVeloQuery';
@@ -185,12 +185,31 @@ export default function AsistenciaPage() {
   const [noAttDays, setNoAttDays]     = useState<number[]>([]);
 
   // Week streak state
-  const [weekSaved, setWeekSaved]       = useState<Set<string>>(new Set());
   const [animatingToday, setAnimating]  = useState(false);
 
   const todayDay = new Date().getDay();
   const isBlocked = noAttDays.includes(todayDay);
   const todayStr = todayISO();
+  const queryClient = useQueryClient();
+
+  // ── Week strip con caché ─────────────────────────────────────────────────────
+  const weekDates = getWeekDates();
+  const { data: weekSavedData } = useQuery({
+    queryKey: ['weekSaved', weekDates[0]],
+    queryFn: async () => {
+      const token = await getToken();
+      const results = await Promise.allSettled(
+        weekDates.map(d => apiFetch<{ records: AttRecord[] }>(`/attendance?date=${d}`, { token }))
+      );
+      const saved = new Set<string>();
+      results.forEach((r, i) => {
+        if (r.status === 'fulfilled' && r.value.records.length > 0) saved.add(weekDates[i]);
+      });
+      return saved;
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+  const weekSaved = weekSavedData ?? new Set<string>();
 
   // ── Datos con caché ──────────────────────────────────────────────────────────
   const { data: locsData, isLoading: loadingLocs } = useQuery({
@@ -222,22 +241,6 @@ export default function AsistenciaPage() {
       ]);
       setRole(meRes.user?.role ?? '');
       setNoAttDays(clubRes?.club.noAttendanceDays ?? []);
-    });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // Cargar qué días de la semana tienen asistencia guardada
-  useEffect(() => {
-    getToken().then(async token => {
-      const dates = getWeekDates();
-      const results = await Promise.allSettled(
-        dates.map(d => apiFetch<{ records: AttRecord[] }>(`/attendance?date=${d}`, { token }))
-      );
-      const saved = new Set<string>();
-      results.forEach((r, i) => {
-        if (r.status === 'fulfilled' && r.value.records.length > 0) saved.add(dates[i]);
-      });
-      setWeekSaved(saved);
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -279,7 +282,7 @@ export default function AsistenciaPage() {
       });
       setSaved(true);
       // Marcar hoy como guardado + lanzar animación
-      setWeekSaved(prev => new Set([...prev, todayStr]));
+      queryClient.setQueryData(['weekSaved', weekDates[0]], (old: Set<string> | undefined) => new Set([...(old ?? []), todayStr]));
       setAnimating(true);
       setTimeout(() => setAnimating(false), 800);
       setTimeout(() => setSaved(false), 3000);

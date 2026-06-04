@@ -257,7 +257,7 @@ export default function AsistenciaPage() {
                   <motion.div variants={cardVariant}>
                     {/* Dropdown — solo en móvil */}
                     <div className="sm:hidden">
-                      <Select value={catFilter} onValueChange={setCatFilter}>
+                      <Select value={catFilter} onValueChange={(v) => { if (v) setCatFilter(v); }}>
                         <SelectTrigger className="w-full h-9 text-[12px] font-bold rounded-xl" style={{ borderColor: 'rgba(124,58,237,0.25)', color: '#7C3AED' }}>
                           <span>
                             {catFilter === 'TODOS' ? 'Todos' : catFilter}

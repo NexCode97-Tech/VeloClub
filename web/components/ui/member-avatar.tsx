@@ -2,7 +2,7 @@
 
 /**
  * MemberAvatar — muestra la foto de perfil si existe, si no las iniciales.
- * Forma: cuadrado con puntas redondeadas (12px). Tamaño estándar: 48px.
+ * Forma: círculo perfecto. Tamaño estándar: 48px.
  */
 
 interface MemberAvatarProps {
@@ -19,7 +19,6 @@ function initials(name: string): string {
 }
 
 const DEFAULT_GRADIENT = 'linear-gradient(135deg,#7C3AED,#A855F7)';
-const BORDER_RADIUS = 12;
 
 export function MemberAvatar({
   name,
@@ -30,7 +29,7 @@ export function MemberAvatar({
   fallbackLabel,
 }: MemberAvatarProps) {
   const fontSize = Math.max(11, Math.round(size * 0.33));
-  const shared = { width: size, height: size, borderRadius: BORDER_RADIUS, flexShrink: 0 as const };
+  const shared = { width: size, height: size, borderRadius: size / 2, flexShrink: 0 as const };
 
   if (photoUrl) {
     return (

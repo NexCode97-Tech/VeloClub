@@ -1233,31 +1233,50 @@ export default function MiembrosPage() {
       </div>
 
       {/* ── Modal importar Excel ────────────────────────────────────────────── */}
-      <Dialog open={importOpen} onOpenChange={v => { if (!importing) { setImportOpen(v); setImportErrors([]); } }}>
+      <Dialog
+        open={importOpen}
+        onOpenChange={(v, details) => {
+          // Ignorar cierre por pérdida de foco (file picker del OS roba el foco)
+          // o por click fuera — el usuario debe usar el X del modal
+          const reason = (details as { reason?: string })?.reason;
+          if (!importing && reason !== 'focusOut' && reason !== 'outsidePress') {
+            setImportOpen(v); setImportErrors([]);
+          }
+        }}
+        disablePointerDismissal
+      >
         <DialogContent className="max-w-sm">
           <DialogHeader><DialogTitle>Importar desde Excel</DialogTitle></DialogHeader>
           <div className="space-y-4 mt-2">
             <p className="text-[12px] text-muted-foreground">
               Sube el archivo Excel con la plantilla completada. Los deportistas con el mismo correo no se duplicarán.
             </p>
-            <div
+            {/* Input real oculto — evita que el file picker del OS cierre el dialog */}
+            <label
               className="border-2 border-dashed border-border rounded-xl p-6 flex flex-col items-center gap-3 cursor-pointer hover:border-primary transition-colors"
-              onClick={() => {
-                const input = document.createElement('input');
-                input.type = 'file'; input.accept = '.xlsx,.xls';
-                input.onchange = e => {
-                  const file = (e.target as HTMLInputElement).files?.[0];
-                  if (file) handleImport(file);
-                };
-                input.click();
-              }}
+              htmlFor="import-file-input"
             >
               <FileSpreadsheet className="w-8 h-8 text-muted-foreground/40" />
               {importing
                 ? <p className="text-[12px] font-semibold text-primary">Importando...</p>
                 : <p className="text-[12px] font-semibold text-muted-foreground">Toca para seleccionar .xlsx</p>
               }
-            </div>
+            </label>
+            <input
+              id="import-file-input"
+              type="file"
+              accept=".xlsx,.xls"
+              className="sr-only"
+              disabled={importing}
+              onChange={e => {
+                const file = e.target.files?.[0];
+                if (file) {
+                  handleImport(file);
+                  // Limpiar el input para permitir seleccionar el mismo archivo de nuevo
+                  e.target.value = '';
+                }
+              }}
+            />
             {importErrors.length > 0 && (
               <div className="bg-red-50 rounded-xl p-3 space-y-1 max-h-40 overflow-y-auto">
                 {importErrors.map((e, i) => <p key={i} className="text-[11px] text-red-600">{e}</p>)}

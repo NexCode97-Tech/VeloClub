@@ -450,9 +450,9 @@ function PostComposer({
                 <div className="flex items-center gap-1">
                   {/* Botones de adjuntar */}
                   {[
-                    { icon: ImageIcon, label: 'Imagen', accept: 'image/*', color: '#06D6A0' },
-                    { icon: Video,     label: 'Video',  accept: 'video/*', color: '#4361EE' },
-                    { icon: Paperclip, label: 'Archivo',accept: '.pdf,.doc,.docx,.xls,.xlsx,.zip', color: '#FFB703' },
+                    { icon: ImageIcon, label: 'Imagen', accept: 'image/*', color: '#7C3AED' },
+                    { icon: Video,     label: 'Video',  accept: 'video/*', color: '#7C3AED' },
+                    { icon: Paperclip, label: 'Archivo',accept: '.pdf,.doc,.docx,.xls,.xlsx,.zip', color: '#7C3AED' },
                   ].map(btn => (
                     <motion.button key={btn.label} whileTap={{ scale: 0.9 }}
                       disabled={uploading}

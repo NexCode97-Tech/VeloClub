@@ -3,7 +3,7 @@
 import { useAuth, useUser } from '@clerk/nextjs';
 import { useClubStream } from '@/hooks/useClubStream';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { stagger as pageStagger, cardVariant as pageCard } from '@/lib/page-animations';
 import { apiFetch } from '@/lib/api-client';

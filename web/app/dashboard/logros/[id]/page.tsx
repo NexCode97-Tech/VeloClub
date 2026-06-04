@@ -17,7 +17,7 @@ import {
 interface Member { id: string; fullName: string }
 interface EventResult {
   id: string; position?: number; category?: string; observations?: string;
-  member: { id: string; fullName: string };
+  member: { id: string; fullName: string; pictureUrl?: string | null };
 }
 interface CompetitionEvent {
   id: string; name: string; results: EventResult[];
@@ -86,10 +86,13 @@ function PodiumVisual({ results }: { results: EventResult[] }) {
             {/* Avatar */}
             <div className="relative mb-2">
               <div
-                className="w-12 h-12 rounded-full flex items-center justify-center text-[14px] font-black text-white shadow-md"
+                className="w-12 h-12 rounded-full overflow-hidden flex items-center justify-center text-[14px] font-black text-white shadow-md"
                 style={{ background: `linear-gradient(135deg, ${m.bg}CC, ${m.bg})`, border: `2.5px solid ${m.bg}` }}
               >
-                {initials(name)}
+                {r.member.pictureUrl
+                  ? <img src={r.member.pictureUrl} alt={name} className="w-full h-full object-cover" />
+                  : initials(name)
+                }
               </div>
               {/* Corona SVG */}
               <div className="absolute -top-3 left-1/2 -translate-x-1/2">

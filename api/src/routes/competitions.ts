@@ -33,7 +33,7 @@ router.get('/', requireAuth, async (req, res) => {
     where: { clubId: req.user.clubId ?? '' },
     include: {
       events: {
-        include: { results: { include: { member: { select: { id: true, fullName: true } } } } },
+        include: { results: { include: { member: { select: { id: true, fullName: true, pictureUrl: true } } } } },
       },
     },
     orderBy: { date: 'desc' },
@@ -75,7 +75,7 @@ router.get('/:id', requireAuth, async (req, res) => {
         include: {
           results: {
             orderBy: { position: 'asc' },
-            include: { member: { select: { id: true, fullName: true } } },
+            include: { member: { select: { id: true, fullName: true, pictureUrl: true } } },
           },
         },
       },
@@ -170,7 +170,7 @@ router.post('/:id/events/:eventId/results', requireAuth, async (req, res) => {
         category:     parsed.data.category  ?? null,
         observations: parsed.data.observations ?? null,
       },
-      include: { member: { select: { id: true, fullName: true } } },
+      include: { member: { select: { id: true, fullName: true, pictureUrl: true } } },
     });
     emitToClub(req.user.clubId ?? '', 'competitions');
     res.status(201).json({ result });

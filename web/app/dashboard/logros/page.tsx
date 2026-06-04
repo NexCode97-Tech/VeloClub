@@ -16,7 +16,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
-interface EventResult  { id: string; position?: number; member: { id: string; fullName: string } }
+interface EventResult  { id: string; position?: number; member: { id: string; fullName: string; pictureUrl?: string | null } }
 interface CompEvent    { id: string; name: string; results: EventResult[] }
 interface Competition  { id: string; name: string; place?: string; date: string; events: CompEvent[] }
 

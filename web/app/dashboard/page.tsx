@@ -722,99 +722,95 @@ export default function DashboardPage() {
         className="px-4 py-4 space-y-4"
       >
 
-        {/* Próximo evento — widget compacto arriba del feed */}
-        {proximosEventos.length > 0 && (
-          <motion.div variants={cardVariant}>
-            <Link href="/dashboard/calendario" className="block">
-              <div
-                className="rounded-2xl px-4 py-3.5 flex items-center gap-3 active:scale-[0.98] transition-transform"
-                style={{
-                  background: proximosEventos[0].tipo === 'COMPETITION'
-                    ? 'linear-gradient(135deg,rgba(239,71,111,0.08) 0%,rgba(239,71,111,0.03) 100%)'
-                    : 'linear-gradient(135deg,rgba(67,97,238,0.08) 0%,rgba(67,97,238,0.03) 100%)',
-                  border: `1px solid ${proximosEventos[0].tipo === 'COMPETITION' ? 'rgba(239,71,111,0.18)' : 'rgba(67,97,238,0.18)'}`,
-                }}
-              >
+        {/* Tarjeta de dos columnas: Próximo evento + Cumpleaños */}
+        {(proximosEventos.length > 0 || cumpleaneros.length > 0) && (
+          <motion.div variants={cardVariant} className="grid grid-cols-2 gap-3">
+
+            {/* Col izquierda — Próximo evento */}
+            {proximosEventos.length > 0 ? (
+              <Link href="/dashboard/calendario" className="block active:scale-[0.97] transition-transform">
                 <div
-                  className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                  className="h-full rounded-2xl p-3.5 flex flex-col gap-2"
                   style={{
-                    background: proximosEventos[0].tipo === 'COMPETITION' ? 'rgba(239,71,111,0.15)' : 'rgba(67,97,238,0.15)',
+                    background: proximosEventos[0].tipo === 'COMPETITION'
+                      ? 'linear-gradient(135deg,rgba(239,71,111,0.09) 0%,rgba(239,71,111,0.03) 100%)'
+                      : 'linear-gradient(135deg,rgba(67,97,238,0.09) 0%,rgba(67,97,238,0.03) 100%)',
+                    border: `1px solid ${proximosEventos[0].tipo === 'COMPETITION' ? 'rgba(239,71,111,0.18)' : 'rgba(67,97,238,0.18)'}`,
                   }}
                 >
-                  {proximosEventos[0].tipo === 'COMPETITION'
-                    ? <Trophy className="w-5 h-5" style={{ color: '#EF476F' }} />
-                    : <Dumbbell className="w-5 h-5" style={{ color: '#4361EE' }} />
-                  }
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-[10px] font-bold uppercase tracking-widest mb-0.5"
-                    style={{ color: proximosEventos[0].tipo === 'COMPETITION' ? '#EF476F' : '#4361EE' }}>
-                    {proximosEventos.length > 1 ? `Próximos eventos (${proximosEventos.length})` : 'Próximo evento'}
-                  </p>
-                  <p className="text-[13px] font-bold text-foreground truncate">{proximosEventos[0].titulo}</p>
-                  {proximosEventos[0].lugar && (
-                    <p className="text-[11px] text-muted-foreground truncate">{proximosEventos[0].lugar}</p>
-                  )}
-                </div>
-                <div className="text-right shrink-0">
-                  <p className="text-[13px] font-extrabold"
+                  <div className="flex items-center justify-between">
+                    <div
+                      className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0"
+                      style={{
+                        background: proximosEventos[0].tipo === 'COMPETITION' ? 'rgba(239,71,111,0.15)' : 'rgba(67,97,238,0.15)',
+                      }}
+                    >
+                      {proximosEventos[0].tipo === 'COMPETITION'
+                        ? <Trophy className="w-4 h-4" style={{ color: '#EF476F' }} />
+                        : <Dumbbell className="w-4 h-4" style={{ color: '#4361EE' }} />
+                      }
+                    </div>
+                    <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/30" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[9px] font-bold uppercase tracking-widest mb-0.5 leading-none"
+                      style={{ color: proximosEventos[0].tipo === 'COMPETITION' ? '#EF476F' : '#4361EE' }}>
+                      Próximo evento
+                    </p>
+                    <p className="text-[12px] font-bold text-foreground leading-tight line-clamp-2">
+                      {proximosEventos[0].titulo}
+                    </p>
+                    {proximosEventos[0].lugar && (
+                      <p className="text-[10px] text-muted-foreground mt-0.5 truncate">{proximosEventos[0].lugar}</p>
+                    )}
+                  </div>
+                  <p className="text-[13px] font-extrabold mt-auto"
                     style={{ color: proximosEventos[0].tipo === 'COMPETITION' ? '#EF476F' : '#4361EE', fontFamily: 'var(--font-space-grotesk)' }}>
                     {proximosEventos[0].fecha.toLocaleDateString('es-CO', { day: 'numeric', month: 'short' })}
                   </p>
-                  <ChevronRight className="w-4 h-4 text-muted-foreground/40 ml-auto mt-0.5" />
                 </div>
-              </div>
-            </Link>
-          </motion.div>
-        )}
+              </Link>
+            ) : <div />}
 
-        {/* Widget cumpleañeros esta semana */}
-        <AnimatePresence>
-          {cumpleaneros.length > 0 && (
-            <motion.div
-              variants={cardVariant}
-              initial="hidden"
-              animate="show"
-              exit={{ opacity: 0, height: 0 }}
-            >
+            {/* Col derecha — Cumpleaños esta semana */}
+            {cumpleaneros.length > 0 ? (
               <div
-                className="rounded-2xl px-4 py-3.5"
+                className="h-full rounded-2xl p-3.5 flex flex-col gap-2"
                 style={{
                   background: 'linear-gradient(135deg,rgba(255,183,3,0.09) 0%,rgba(255,183,3,0.03) 100%)',
-                  border: '1px solid rgba(255,183,3,0.22)',
+                  border: '1px solid rgba(255,183,3,0.20)',
                 }}
               >
-                <div className="flex items-center gap-2 mb-3">
-                  <Cake className="w-4 h-4" style={{ color: '#FFB703' }} />
-                  <p className="text-[11px] font-bold uppercase tracking-widest" style={{ color: '#B88A00' }}>
-                    Cumpleaños esta semana
+                <div className="flex items-center gap-1.5">
+                  <Cake className="w-4 h-4 shrink-0" style={{ color: '#FFB703' }} />
+                  <p className="text-[9px] font-bold uppercase tracking-widest leading-none" style={{ color: '#B88A00' }}>
+                    Cumpleaños
                   </p>
                 </div>
-                <div className="flex flex-wrap gap-2">
-                  {cumpleaneros.map(m => {
+                <div className="flex flex-col gap-1.5 flex-1">
+                  {cumpleaneros.slice(0, 3).map(m => {
                     const today = isBirthdayToday(m.birthDate);
                     return (
-                      <div
-                        key={m.id}
-                        className="flex items-center gap-2 rounded-full px-3 py-1.5"
-                        style={{
-                          background: today ? 'rgba(255,183,3,0.18)' : 'rgba(255,183,3,0.09)',
-                          border: today ? '1px solid rgba(255,183,3,0.40)' : '1px solid rgba(255,183,3,0.15)',
-                        }}
-                      >
-                        <Avatar src={m.pictureUrl} name={m.fullName} size={24} />
-                        <span className="text-[12px] font-semibold" style={{ color: '#8A6300' }}>
-                          {m.fullName.split(' ')[0]}
-                          {today && <span className="ml-1">🎂</span>}
+                      <div key={m.id} className="flex items-center gap-1.5">
+                        <Avatar src={m.pictureUrl} name={m.fullName} size={22} />
+                        <span
+                          className="text-[11px] font-semibold truncate"
+                          style={{ color: today ? '#8A6300' : '#6B5000' }}
+                        >
+                          {m.fullName.split(' ')[0]}{today && ' 🎂'}
                         </span>
                       </div>
                     );
                   })}
+                  {cumpleaneros.length > 3 && (
+                    <p className="text-[10px] text-muted-foreground">+{cumpleaneros.length - 3} más</p>
+                  )}
                 </div>
               </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+            ) : <div />}
+
+          </motion.div>
+        )}
 
         {/* Separador de sección */}
         <motion.div variants={cardVariant} className="flex items-center gap-3">

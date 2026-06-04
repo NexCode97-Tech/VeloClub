@@ -254,27 +254,58 @@ export default function AsistenciaPage() {
 
                 {/* Filtro por categoría */}
                 {categories.length > 1 && (
-                  <motion.div variants={cardVariant} className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
-                    {categories.map(cat => (
-                      <motion.button
-                        key={cat}
-                        onClick={() => setCatFilter(cat)}
-                        whileTap={reducedMotion ? {} : { scale: 0.95 }}
-                        transition={{ duration: 0.1 }}
-                        className="shrink-0 px-3 py-1.5 rounded-full text-[11px] font-bold transition-all cursor-pointer"
-                        style={catFilter === cat
-                          ? { background: '#7C3AED', color: '#fff', boxShadow: '0 2px 8px rgba(124,58,237,0.30)' }
-                          : { background: '#fff', color: '#8E87A8', border: '1px solid rgba(120,80,200,0.15)' }
-                        }
-                      >
-                        {cat === 'TODOS' ? 'Todos' : cat}
-                        {cat !== 'TODOS' && (
-                          <span className="ml-1.5 text-[9px] opacity-70">
-                            {members.filter(m => m.category === cat).length}
+                  <motion.div variants={cardVariant}>
+                    {/* Dropdown — solo en móvil */}
+                    <div className="sm:hidden">
+                      <Select value={catFilter} onValueChange={setCatFilter}>
+                        <SelectTrigger className="w-full h-9 text-[12px] font-bold rounded-xl" style={{ borderColor: 'rgba(124,58,237,0.25)', color: '#7C3AED' }}>
+                          <span>
+                            {catFilter === 'TODOS' ? 'Todos' : catFilter}
+                            {catFilter !== 'TODOS' && (
+                              <span className="ml-1.5 text-[10px] opacity-60">
+                                {members.filter(m => m.category === catFilter).length}
+                              </span>
+                            )}
                           </span>
-                        )}
-                      </motion.button>
-                    ))}
+                        </SelectTrigger>
+                        <SelectContent>
+                          {categories.map(cat => (
+                            <SelectItem key={cat} value={cat} className="text-[12px] font-semibold">
+                              {cat === 'TODOS' ? 'Todos' : cat}
+                              {cat !== 'TODOS' && (
+                                <span className="ml-1.5 text-[10px] text-muted-foreground">
+                                  {members.filter(m => m.category === cat).length}
+                                </span>
+                              )}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Pills — solo en sm+ */}
+                    <div className="hidden sm:flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
+                      {categories.map(cat => (
+                        <motion.button
+                          key={cat}
+                          onClick={() => setCatFilter(cat)}
+                          whileTap={reducedMotion ? {} : { scale: 0.95 }}
+                          transition={{ duration: 0.1 }}
+                          className="shrink-0 px-3 py-1.5 rounded-full text-[11px] font-bold transition-all cursor-pointer"
+                          style={catFilter === cat
+                            ? { background: '#7C3AED', color: '#fff', boxShadow: '0 2px 8px rgba(124,58,237,0.30)' }
+                            : { background: '#fff', color: '#8E87A8', border: '1px solid rgba(120,80,200,0.15)' }
+                          }
+                        >
+                          {cat === 'TODOS' ? 'Todos' : cat}
+                          {cat !== 'TODOS' && (
+                            <span className="ml-1.5 text-[9px] opacity-70">
+                              {members.filter(m => m.category === cat).length}
+                            </span>
+                          )}
+                        </motion.button>
+                      ))}
+                    </div>
                   </motion.div>
                 )}
 

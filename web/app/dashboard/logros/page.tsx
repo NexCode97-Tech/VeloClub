@@ -407,96 +407,117 @@ function CompCard({ comp: c, isStudent, myMemberId, canManage, deleting, onDelet
   comp: Competition; isStudent: boolean; myMemberId: string | null;
   canManage: boolean; deleting: boolean; onDelete: (id: string) => void;
 }) {
-  const allResults    = c.events.flatMap(e => e.results);
+  const allResults     = c.events.flatMap(e => e.results);
   const visibleResults = isStudent && myMemberId ? allResults.filter(r => r.member.id === myMemberId) : allResults;
-  const resultCount   = visibleResults.length;
-  const dateStr       = parseLocalDate(c.date).toLocaleDateString('es-CO', { day: 'numeric', month: 'short', year: 'numeric' });
-  const podium        = visibleResults
+  const resultCount    = visibleResults.length;
+  const dateStr        = parseLocalDate(c.date).toLocaleDateString('es-CO', { day: 'numeric', month: 'short', year: 'numeric' });
+  const podium         = visibleResults
     .filter(r => r.position && r.position <= 3)
     .sort((a, b) => (a.position ?? 99) - (b.position ?? 99))
     .slice(0, 3);
-  const hasGold       = podium.some(r => r.position === 1);
+  const hasGold = podium.some(r => r.position === 1);
+
+  const MEDAL_STYLES: Record<number, { bg: string; ring: string; text: string; label: string }> = {
+    1: { bg: 'rgba(244,191,0,0.12)',  ring: '#F4BF00', text: '#A67C00', label: '1°' },
+    2: { bg: 'rgba(160,160,160,0.12)', ring: '#A0A0A0', text: '#606060', label: '2°' },
+    3: { bg: 'rgba(212,132,90,0.12)', ring: '#D4845A', text: '#8B4513', label: '3°' },
+  };
 
   return (
     <motion.div
       variants={itemVariant}
-      style={{ borderRadius: 16 }}
-      whileHover={{ y: -2, boxShadow: '0 8px 32px rgba(67,97,238,0.13)' }}
-      transition={{ type: 'spring', stiffness: 400, damping: 28 }}
-      className="bg-white border border-border overflow-hidden"
+      style={{ borderRadius: 20 }}
+      whileHover={{ y: -2, boxShadow: '0 10px 36px rgba(67,97,238,0.14)' }}
+      transition={{ type: 'spring' as const, stiffness: 400, damping: 28 }}
+      className="bg-white border border-border overflow-hidden w-full"
     >
-      {/* Color accent bar */}
-      <div className="h-1 w-full" style={{ background: hasGold ? 'linear-gradient(90deg,#F4BF00,#4361EE)' : 'linear-gradient(90deg,#4361EE,#7C3AED)' }} />
+      {/* Accent bar */}
+      <div className="h-1.5 w-full" style={{ background: hasGold ? 'linear-gradient(90deg,#F4BF00 0%,#4361EE 60%,#7C3AED 100%)' : 'linear-gradient(90deg,#4361EE,#7C3AED)' }} />
 
-      <Link href={`/dashboard/logros/${c.id}`} className="block px-4 py-3.5 cursor-pointer">
-        <div className="flex items-start gap-3">
-          {/* Icon */}
-          <div
-            className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0 mt-0.5"
-            style={{ background: 'linear-gradient(135deg,rgba(67,97,238,0.12),rgba(124,58,237,0.12))' }}
-          >
-            <Trophy className="w-5 h-5" style={{ color: '#4361EE' }} />
-          </div>
-
-          {/* Info */}
-          <div className="flex-1 min-w-0">
-            <p className="text-[14px] font-bold text-foreground truncate leading-tight">{c.name}</p>
-
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1">
-              {c.place && (
-                <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
-                  <MapPin className="w-3 h-3 shrink-0" />{c.place}
-                </span>
-              )}
-              <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
-                <CalendarDays className="w-3 h-3 shrink-0" />{dateStr}
-              </span>
-            </div>
-
-            {/* Chips */}
-            <div className="flex items-center gap-2 mt-2">
-              <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold" style={{ background: 'rgba(67,97,238,0.08)', color: '#4361EE' }}>
-                <Target className="w-3 h-3" />{c.events.length} prueba{c.events.length !== 1 ? 's' : ''}
-              </span>
-              <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold" style={{ background: 'rgba(6,214,160,0.08)', color: '#05A07B' }}>
-                <Users className="w-3 h-3" />{resultCount} resultado{resultCount !== 1 ? 's' : ''}
-              </span>
-            </div>
-          </div>
-
-          <ChevronRight className="w-4 h-4 text-muted-foreground/50 shrink-0 mt-1.5" />
+      {/* Header row: icono + info + delete */}
+      <div className="flex items-start gap-3 px-4 pt-4 pb-3">
+        {/* Icono */}
+        <div
+          className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0"
+          style={{ background: 'linear-gradient(135deg,rgba(67,97,238,0.13),rgba(124,58,237,0.13))' }}
+        >
+          <Trophy className="w-6 h-6" style={{ color: '#4361EE' }} />
         </div>
 
-        {/* Podio */}
-        {podium.length > 0 && (
-          <div className="flex items-center gap-2 mt-3 pt-3 border-t border-border/60">
-            <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Pódio</span>
-            <div className="flex items-center gap-1.5 flex-wrap">
-              {podium.map(r => (
-                <span key={r.id} className="flex items-center gap-1">
-                  <MedalIcon position={r.position ?? 0} />
-                  <span className="text-[11px] font-semibold text-foreground">{r.member.fullName.split(' ')[0]}</span>
-                </span>
-              ))}
-            </div>
+        {/* Info central */}
+        <div className="flex-1 min-w-0">
+          <p className="text-[15px] font-extrabold text-foreground leading-tight truncate" style={{ fontFamily: 'var(--font-space-grotesk)' }}>{c.name}</p>
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1">
+            {c.place && (
+              <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                <MapPin className="w-3 h-3 shrink-0" />{c.place}
+              </span>
+            )}
+            <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
+              <CalendarDays className="w-3 h-3 shrink-0" />{dateStr}
+            </span>
           </div>
-        )}
-      </Link>
+          {/* Chips */}
+          <div className="flex items-center gap-2 mt-2">
+            <span className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold" style={{ background: 'rgba(67,97,238,0.08)', color: '#4361EE' }}>
+              <Target className="w-3 h-3" />{c.events.length} prueba{c.events.length !== 1 ? 's' : ''}
+            </span>
+            <span className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold" style={{ background: 'rgba(6,214,160,0.09)', color: '#05A07B' }}>
+              <Users className="w-3 h-3" />{resultCount} resultado{resultCount !== 1 ? 's' : ''}
+            </span>
+          </div>
+        </div>
 
-      {canManage && (
-        <div className="px-4 pb-3 flex justify-end">
-          <motion.button
-            whileTap={{ scale: 0.9 }}
-            onClick={() => onDelete(c.id)}
-            disabled={deleting}
-            className="w-7 h-7 rounded-lg flex items-center justify-center cursor-pointer transition-colors"
-            style={{ background: 'rgba(239,71,111,0.08)', color: '#EF476F' }}
-          >
-            {deleting
-              ? <div className="w-3.5 h-3.5 rounded-full border border-red-400 border-t-transparent animate-spin" />
-              : <Trash2 className="w-3.5 h-3.5" />
-            }
-          </motion.button>
+        {/* Acciones: ver + eliminar */}
+        <div className="flex flex-col items-end gap-2 shrink-0">
+          <Link href={`/dashboard/logros/${c.id}`} className="w-8 h-8 rounded-full flex items-center justify-center cursor-pointer" style={{ background: 'rgba(67,97,238,0.08)', color: '#4361EE' }}>
+            <ChevronRight className="w-4 h-4" />
+          </Link>
+          {canManage && (
+            <motion.button
+              whileTap={{ scale: 0.88 }}
+              onClick={() => onDelete(c.id)}
+              disabled={deleting}
+              className="w-8 h-8 rounded-full flex items-center justify-center cursor-pointer"
+              style={{ background: 'rgba(239,71,111,0.08)', color: '#EF476F' }}
+            >
+              {deleting
+                ? <div className="w-3.5 h-3.5 rounded-full border border-red-400 border-t-transparent animate-spin" />
+                : <Trash2 className="w-3.5 h-3.5" />
+              }
+            </motion.button>
+          )}
+        </div>
+      </div>
+
+      {/* Pódio */}
+      {podium.length > 0 && (
+        <div className="mx-4 mb-4 rounded-2xl overflow-hidden" style={{ background: 'rgba(247,245,255,0.8)', border: '1px solid rgba(124,58,237,0.08)' }}>
+          <div className="flex items-center justify-between px-3 py-2 border-b" style={{ borderColor: 'rgba(124,58,237,0.08)' }}>
+            <span className="text-[10px] font-black uppercase tracking-widest" style={{ color: '#7C3AED' }}>Pódio</span>
+            <Trophy className="w-3 h-3" style={{ color: '#7C3AED', opacity: 0.5 }} />
+          </div>
+          <div className="flex divide-x" style={{ '--tw-divide-opacity': 1, borderColor: 'rgba(124,58,237,0.06)' } as React.CSSProperties}>
+            {podium.map(r => {
+              const pos = r.position ?? 0;
+              const m = MEDAL_STYLES[pos];
+              if (!m) return null;
+              return (
+                <div key={r.id} className="flex-1 flex flex-col items-center gap-1 py-3 px-2">
+                  <span
+                    className="w-7 h-7 rounded-full flex items-center justify-center text-[12px] font-black"
+                    style={{ background: m.bg, border: `1.5px solid ${m.ring}`, color: m.text }}
+                  >
+                    {pos}
+                  </span>
+                  <span className="text-[11px] font-bold text-foreground text-center leading-tight truncate w-full">
+                    {r.member.fullName.split(' ')[0]}
+                  </span>
+                  <span className="text-[9px] font-semibold" style={{ color: m.text }}>{m.label}</span>
+                </div>
+              );
+            })}
+          </div>
         </div>
       )}
     </motion.div>
@@ -514,70 +535,68 @@ function TrainCard({ session: s, isStudent, myMemberId, canManage, deleting, onD
   return (
     <motion.div
       variants={itemVariant}
-      style={{ borderRadius: 16 }}
-      whileHover={{ y: -2, boxShadow: '0 8px 32px rgba(6,214,160,0.13)' }}
-      transition={{ type: 'spring', stiffness: 400, damping: 28 }}
-      className="bg-white border border-border overflow-hidden"
+      style={{ borderRadius: 20 }}
+      whileHover={{ y: -2, boxShadow: '0 10px 36px rgba(6,214,160,0.13)' }}
+      transition={{ type: 'spring' as const, stiffness: 400, damping: 28 }}
+      className="bg-white border border-border overflow-hidden w-full"
     >
-      {/* Color accent bar */}
-      <div className="h-1 w-full" style={{ background: 'linear-gradient(90deg,#06D6A0,#4361EE)' }} />
+      {/* Accent bar */}
+      <div className="h-1.5 w-full" style={{ background: 'linear-gradient(90deg,#06D6A0,#4361EE)' }} />
 
-      <Link href={`/dashboard/logros/entrenamiento/${s.id}`} className="block px-4 py-3.5 cursor-pointer">
-        <div className="flex items-start gap-3">
-          {/* Icon */}
-          <div
-            className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0 mt-0.5"
-            style={{ background: 'linear-gradient(135deg,rgba(6,214,160,0.12),rgba(67,97,238,0.10))' }}
-          >
-            <Dumbbell className="w-5 h-5" style={{ color: '#06D6A0' }} />
-          </div>
+      {/* Header row */}
+      <div className="flex items-start gap-3 px-4 pt-4 pb-4">
+        {/* Icono */}
+        <div
+          className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0"
+          style={{ background: 'linear-gradient(135deg,rgba(6,214,160,0.13),rgba(67,97,238,0.10))' }}
+        >
+          <Dumbbell className="w-6 h-6" style={{ color: '#06D6A0' }} />
+        </div>
 
-          {/* Info */}
-          <div className="flex-1 min-w-0">
-            <p className="text-[14px] font-bold text-foreground truncate leading-tight">{s.title}</p>
-
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1">
-              {s.location && (
-                <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
-                  <MapPin className="w-3 h-3 shrink-0" />{s.location.name}
-                </span>
-              )}
+        {/* Info */}
+        <div className="flex-1 min-w-0">
+          <p className="text-[15px] font-extrabold text-foreground leading-tight truncate" style={{ fontFamily: 'var(--font-space-grotesk)' }}>{s.title}</p>
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1">
+            {s.location && (
               <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
-                <CalendarDays className="w-3 h-3 shrink-0" />{dateStr}
+                <MapPin className="w-3 h-3 shrink-0" />{s.location.name}
               </span>
-            </div>
-
-            {/* Chips */}
-            <div className="flex items-center gap-2 mt-2">
-              <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold" style={{ background: 'rgba(6,214,160,0.09)', color: '#05A07B' }}>
-                <Users className="w-3 h-3" />{rc} resultado{rc !== 1 ? 's' : ''}
-              </span>
-              {s.notes && (
-                <span className="text-[10px] text-muted-foreground truncate max-w-[150px]">{s.notes}</span>
-              )}
-            </div>
+            )}
+            <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
+              <CalendarDays className="w-3 h-3 shrink-0" />{dateStr}
+            </span>
           </div>
-
-          <ChevronRight className="w-4 h-4 text-muted-foreground/50 shrink-0 mt-1.5" />
+          <div className="flex items-center gap-2 mt-2">
+            <span className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold" style={{ background: 'rgba(6,214,160,0.09)', color: '#05A07B' }}>
+              <Users className="w-3 h-3" />{rc} resultado{rc !== 1 ? 's' : ''}
+            </span>
+            {s.notes && (
+              <span className="text-[10px] text-muted-foreground truncate max-w-[130px]">{s.notes}</span>
+            )}
+          </div>
         </div>
-      </Link>
 
-      {canManage && (
-        <div className="px-4 pb-3 flex justify-end">
-          <motion.button
-            whileTap={{ scale: 0.9 }}
-            onClick={() => onDelete(s.id)}
-            disabled={deleting}
-            className="w-7 h-7 rounded-lg flex items-center justify-center cursor-pointer transition-colors"
-            style={{ background: 'rgba(239,71,111,0.08)', color: '#EF476F' }}
-          >
-            {deleting
-              ? <div className="w-3.5 h-3.5 rounded-full border border-red-400 border-t-transparent animate-spin" />
-              : <Trash2 className="w-3.5 h-3.5" />
-            }
-          </motion.button>
+        {/* Acciones */}
+        <div className="flex flex-col items-end gap-2 shrink-0">
+          <Link href={`/dashboard/logros/entrenamiento/${s.id}`} className="w-8 h-8 rounded-full flex items-center justify-center cursor-pointer" style={{ background: 'rgba(6,214,160,0.10)', color: '#06D6A0' }}>
+            <ChevronRight className="w-4 h-4" />
+          </Link>
+          {canManage && (
+            <motion.button
+              whileTap={{ scale: 0.88 }}
+              onClick={() => onDelete(s.id)}
+              disabled={deleting}
+              className="w-8 h-8 rounded-full flex items-center justify-center cursor-pointer"
+              style={{ background: 'rgba(239,71,111,0.08)', color: '#EF476F' }}
+            >
+              {deleting
+                ? <div className="w-3.5 h-3.5 rounded-full border border-red-400 border-t-transparent animate-spin" />
+                : <Trash2 className="w-3.5 h-3.5" />
+              }
+            </motion.button>
+          )}
         </div>
-      )}
+      </div>
     </motion.div>
   );
 }

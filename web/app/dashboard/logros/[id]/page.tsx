@@ -27,7 +27,83 @@ interface Competition {
   events: CompetitionEvent[];
 }
 
-const MEDALS: Record<number, string> = { 1: '🥇', 2: '🥈', 3: '🥉' };
+const MEDAL_COLORS: Record<number, { bg: string; text: string; crown: string; colH: number }> = {
+  1: { bg: '#F4BF00', text: '#fff',    crown: '#F4BF00', colH: 90 },
+  2: { bg: '#D0D0D8', text: '#fff',    crown: '#A0A0B0', colH: 65 },
+  3: { bg: '#D4A574', text: '#fff',    crown: '#C07840', colH: 50 },
+};
+
+function initials(name: string) {
+  return name.split(' ').filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase();
+}
+
+// ── Pódio visual ──────────────────────────────────────────────────────────────
+function PodiumVisual({ results }: { results: EventResult[] }) {
+  const top3 = results
+    .filter(r => r.position && r.position <= 3)
+    .sort((a, b) => (a.position ?? 99) - (b.position ?? 99))
+    .slice(0, 3);
+
+  if (top3.length === 0) return null;
+
+  // Orden visual: 2° izquierda, 1° centro, 3° derecha
+  const order = [
+    top3.find(r => r.position === 2) ?? null,
+    top3.find(r => r.position === 1) ?? null,
+    top3.find(r => r.position === 3) ?? null,
+  ];
+
+  return (
+    <div className="flex items-end justify-center gap-2 px-6 pt-6 pb-0">
+      {order.map((r, i) => {
+        if (!r) {
+          // Placeholder vacío para mantener el layout cuando hay solo 1 o 2 en pódio
+          return <div key={i} className="flex-1" />;
+        }
+        const pos = r.position ?? 0;
+        const m   = MEDAL_COLORS[pos];
+        const name = r.member.fullName;
+        const short = name.split(' ').slice(0, 2).map((w, i) => i === 0 ? w : w.charAt(0) + '.').join(' ');
+
+        return (
+          <div key={r.id} className="flex-1 flex flex-col items-center">
+            {/* Avatar */}
+            <div className="relative mb-2">
+              <div
+                className="w-12 h-12 rounded-full flex items-center justify-center text-[14px] font-black text-white shadow-md"
+                style={{ background: `linear-gradient(135deg, ${m.bg}CC, ${m.bg})`, border: `2.5px solid ${m.bg}` }}
+              >
+                {initials(name)}
+              </div>
+              {/* Corona SVG */}
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                <svg width="18" height="14" viewBox="0 0 18 14" fill="none">
+                  <path d="M1 13L3.5 4L7 8L9 1L11 8L14.5 4L17 13H1Z" fill={m.crown} stroke="white" strokeWidth="1.2" strokeLinejoin="round"/>
+                </svg>
+              </div>
+            </div>
+
+            {/* Nombre */}
+            <p className="text-[10px] font-bold text-foreground text-center leading-tight mb-1 max-w-[72px] truncate">{short}</p>
+
+            {/* Score / observación */}
+            {r.observations && (
+              <p className="text-[10px] font-semibold text-muted-foreground text-center mb-2">{r.observations}</p>
+            )}
+
+            {/* Columna del pódio */}
+            <div
+              className="w-full rounded-t-xl flex items-start justify-center pt-2"
+              style={{ height: m.colH, background: m.bg, opacity: 0.85 }}
+            >
+              <span className="text-[22px] font-black text-white" style={{ lineHeight: 1 }}>{pos}</span>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
 
 export default function CompetitionDetailPage() {
   const { getToken } = useAuth();
@@ -256,15 +332,22 @@ export default function CompetitionDetailPage() {
                   <p className="text-[11px] text-muted-foreground">Sin resultados aún</p>
                 </div>
               ) : (
-                <div className="divide-y divide-border/50">
+                <>
+                  <PodiumVisual results={ev.results} />
+                  <div className="divide-y divide-border/50 mt-2">
                   {ev.results.map(r => (
                     <div key={r.id} className="flex items-center gap-3 px-4 py-2.5">
-                      <div className="w-8 text-center text-[15px]">
-                        {r.position && r.position <= 3
-                          ? MEDALS[r.position]
-                          : r.position
-                            ? <span className="text-[12px] font-bold text-muted-foreground">{r.position}°</span>
-                            : <span className="text-[12px] text-muted-foreground">—</span>
+                      <div className="w-8 text-center">
+                        {r.position && r.position <= 3 ? (
+                          <span
+                            className="inline-flex items-center justify-center w-6 h-6 rounded-full text-[11px] font-black text-white"
+                            style={{ background: MEDAL_COLORS[r.position]?.bg ?? '#8E87A8' }}
+                          >
+                            {r.position}
+                          </span>
+                        ) : r.position
+                          ? <span className="text-[12px] font-bold text-muted-foreground">{r.position}°</span>
+                          : <span className="text-[12px] text-muted-foreground">—</span>
                         }
                       </div>
                       <div className="flex-1 min-w-0">
@@ -285,7 +368,8 @@ export default function CompetitionDetailPage() {
                       )}
                     </div>
                   ))}
-                </div>
+                  </div>
+                </>
               )}
             </div>
           ))

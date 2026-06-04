@@ -179,7 +179,8 @@ export function parseMembersExcel(file: File): Promise<{ rows: MemberImportRow[]
     reader.onload = (e) => {
       const data = new Uint8Array(e.target?.result as ArrayBuffer);
       const wb = XLSX.read(data, { type: 'array' });
-      const ws = wb.Sheets[wb.SheetNames[0]];
+      // Leer siempre la hoja 'Deportistas' — si no existe, usar la primera
+      const ws = wb.Sheets['Deportistas'] ?? wb.Sheets[wb.SheetNames[0]];
       const raw = XLSX.utils.sheet_to_json<Record<string, unknown>>(ws, { defval: '', raw: false });
 
       const rows: MemberImportRow[] = [];

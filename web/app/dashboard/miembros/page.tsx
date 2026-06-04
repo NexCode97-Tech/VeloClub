@@ -220,7 +220,6 @@ export default function MiembrosPage() {
     importingRef.current = true;
     setImporting(true); setImportErrors([]);
     const { rows, errors } = await parseMembersExcel(file);
-    console.log('[IMPORT] parseMembersExcel result', { rows, errors });
     if (errors.length > 0) {
       setImportErrors(errors);
       setImporting(false);
@@ -1247,7 +1246,6 @@ export default function MiembrosPage() {
         open={importOpen}
         onOpenChange={(v, details) => {
           const reason = (details as { reason?: string })?.reason;
-          console.log('[IMPORT MODAL] onOpenChange', { v, reason, importing });
           const blocked = ['focus-out', 'outside-press'];
           if (!importing && !blocked.includes(reason ?? '')) {
             setImportOpen(v); setImportErrors([]);

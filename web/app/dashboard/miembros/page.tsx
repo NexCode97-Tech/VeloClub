@@ -1236,10 +1236,13 @@ export default function MiembrosPage() {
       <Dialog
         open={importOpen}
         onOpenChange={(v, details) => {
-          // Ignorar cierre por pérdida de foco (file picker del OS roba el foco)
-          // o por click fuera — el usuario debe usar el X del modal
+          // base-ui usa kebab-case en los reasons
+          // 'focus-out' → el file picker del OS roba el foco del navegador
+          // 'outside-press' → click fuera del modal
+          // Ambos deben ignorarse para que el modal no se cierre al abrir el file picker
           const reason = (details as { reason?: string })?.reason;
-          if (!importing && reason !== 'focusOut' && reason !== 'outsidePress') {
+          const blocked = ['focus-out', 'outside-press'];
+          if (!importing && !blocked.includes(reason ?? '')) {
             setImportOpen(v); setImportErrors([]);
           }
         }}

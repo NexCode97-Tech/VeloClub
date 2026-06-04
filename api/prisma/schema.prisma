@@ -32,6 +32,7 @@ model Club {
   calendarEvents    CalendarEvent[]
   attendances    Attendance[]
   suscripcion    ClubSuscripcion?
+  posts          Post[]
 }
 
 // ─── User (staff: ADMIN, COACH, SUPERADMIN) ──────────────────────────────────
@@ -310,6 +311,37 @@ model SuscripcionPago {
   updatedAt       DateTime        @updatedAt
 
   @@index([suscripcionId])
+}
+
+// ─── Post (feed comunitario) ─────────────────────────────────────────────────
+
+model Post {
+  id              String     @id @default(cuid())
+  clubId          String
+  club            Club       @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  authorName      String
+  authorRole      String
+  authorAvatar    String?
+  content         String
+  imageUrl        String?
+  imagePublicId   String?
+  likes           PostLike[]
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  @@index([clubId])
+  @@index([clubId, createdAt])
+}
+
+model PostLike {
+  id        String   @id @default(cuid())
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  userId    String
+  createdAt DateTime @default(now())
+
+  @@unique([postId, userId])
+  @@index([postId])
 }
 
 // ─── Notificacion (SA global) ─────────────────────────────────────────────────

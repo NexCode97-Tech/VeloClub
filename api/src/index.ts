@@ -16,6 +16,7 @@ import attendanceRouter from './routes/attendance';
 import trainingRouter from './routes/training';
 import streamRouter from './routes/stream';
 import cronRouter from './routes/cron';
+import postsRouter from './routes/posts';
 
 dotenv.config();
 
@@ -89,6 +90,7 @@ app.use('/attendance', attendanceRouter);
 app.use('/training', trainingRouter);
 app.use('/stream', strictLimiter, streamRouter);
 app.use('/cron', cronRouter);
+app.use('/posts', postsRouter);
 
 // ── Manejador global de errores ───────────────────────────────────────────────
 // Evita que stack traces o mensajes internos lleguen al cliente

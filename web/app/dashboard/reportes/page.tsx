@@ -14,6 +14,7 @@ import {
 
 const MONTH_NAMES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
 const MONTH_NAMES_FULL = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const DAY_LABELS = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
 
 const ACCENT = '#4361EE';
 const GREEN  = '#06D6A0';
@@ -40,12 +41,13 @@ export default function ReportesPage() {
       const year  = now.getFullYear();
       const todayISO = `${year}-${String(month).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
 
-      const [membersRes, attTodayRes, paymentsRes, compsRes, attMonthlyRes] = await Promise.allSettled([
+      const [membersRes, attTodayRes, paymentsRes, compsRes, attMonthlyRes, weekdayRes] = await Promise.allSettled([
         apiFetch<{ members: { id: string }[] }>('/members', { token }),
         apiFetch<{ records: { status: string }[] }>(`/attendance?date=${todayISO}`, { token }),
         apiFetch<{ payments: { status: string; amount: number; month: number; year: number }[] }>(`/payments?year=${year}`, { token }),
         apiFetch<{ competitions: { id: string; events: { results: { id: string }[] }[] }[] }>('/competitions', { token }),
         apiFetch<{ months: { month: number; year: number; presentes: number }[] }>('/attendance/monthly-stats', { token }),
+        apiFetch<{ counts: number[] }>('/attendance/weekday-stats', { token }),
       ]);
 
       if (membersRes.status === 'fulfilled') setTotalMembers(membersRes.value.members.length);
@@ -85,6 +87,9 @@ export default function ReportesPage() {
         setAsistenciaMes(attMonths[attMonths.length - 1]?.presentes ?? 0);
         setMonthlyAtt(attMonths);
       }
+      if (weekdayRes.status === 'fulfilled') {
+        setWeekdayCounts(weekdayRes.value.counts);
+      }
     } catch { /* silencioso */ } finally {
       setLoading(false);
     }
@@ -100,6 +105,7 @@ export default function ReportesPage() {
 
   // Gráficas
   const [monthlyAtt, setMonthlyAtt]           = useState<MonthlyAttendance[]>([]);
+  const [weekdayCounts, setWeekdayCounts]     = useState<number[]>([0,0,0,0,0,0,0]);
   const [paymentDist, setPaymentDist]         = useState<PaymentDist[]>([]);
 
   useEffect(() => { loadReportes(); }, [isSignedIn, session]);
@@ -233,6 +239,50 @@ export default function ReportesPage() {
               </BarChart>
             </ResponsiveContainer>
           )}
+        </motion.div>
+
+        {/* Gráfica asistencia por día de la semana */}
+        <motion.div variants={cardVariant} className="bg-white border border-border rounded-xl p-4">
+          <div className="flex items-center justify-between mb-1">
+            <p className="text-[14px] font-bold text-foreground" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
+              Asistencia por día
+            </p>
+            <p className="text-[10px] text-muted-foreground">Últimas 8 semanas</p>
+          </div>
+          {loading ? (
+            <div className="flex items-center justify-center h-[120px]">
+              <div className="w-5 h-5 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: ACCENT, borderTopColor: 'transparent' }} />
+            </div>
+          ) : weekdayCounts.every(c => c === 0) ? (
+            <div className="flex flex-col items-center py-6 gap-2">
+              <CalendarCheck className="w-8 h-8 text-muted-foreground/30" />
+              <p className="text-[12px] text-muted-foreground">Sin datos de asistencia</p>
+            </div>
+          ) : (() => {
+            const maxCount = Math.max(...weekdayCounts, 1);
+            const chartData = DAY_LABELS.map((day, i) => ({ day, presentes: weekdayCounts[i] }));
+            return (
+              <ResponsiveContainer width="100%" height={140}>
+                <BarChart data={chartData} barCategoryGap="20%" margin={{ top: 4, right: 4, left: -24, bottom: 0 }}>
+                  <XAxis dataKey="day" tick={{ fontSize: 11, fill: '#8E87A8', fontWeight: 600 }} axisLine={false} tickLine={false} />
+                  <YAxis allowDecimals={false} tick={{ fontSize: 10, fill: '#C4C2CF' }} axisLine={false} tickLine={false} />
+                  <Tooltip
+                    cursor={{ fill: 'rgba(67,97,238,0.06)' }}
+                    contentStyle={{ borderRadius: 10, border: '1px solid #E8E6F0', fontSize: 12, padding: '4px 10px' }}
+                    formatter={(v) => [Number(v ?? 0), 'Presentes']}
+                  />
+                  <Bar dataKey="presentes" radius={[6, 6, 0, 0]}>
+                    {chartData.map((entry, i) => (
+                      <Cell
+                        key={i}
+                        fill={entry.presentes === maxCount && entry.presentes > 0 ? ACCENT : `${ACCENT}55`}
+                      />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            );
+          })()}
         </motion.div>
 
         {/* Distribución de pagos */}

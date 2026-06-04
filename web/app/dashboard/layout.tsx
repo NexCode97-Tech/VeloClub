@@ -10,7 +10,7 @@ import { apiFetch } from '@/lib/api-client';
 import LoadingScreen from '@/components/ui/loading-screen';
 import { BottomCircleMenu } from '@/components/ui/bottom-circle-menu';
 import {
-  LayoutDashboard,
+  Home,
   Users,
   CalendarCheck,
   Trophy,
@@ -27,21 +27,21 @@ import { cn } from '@/lib/utils';
 // El href '/dashboard/mas' es el centinela — no navega, activa el CircleMenu
 const ROLE_TABS: Record<string, { href: string; label: string; icon: React.ElementType }[]> = {
   ADMIN: [
-    { href: '/dashboard',             label: 'Inicio',      icon: LayoutDashboard },
+    { href: '/dashboard',             label: 'Inicio',      icon: Home},
     { href: '/dashboard/miembros',    label: 'Miembros',    icon: Users },
-    { href: '/dashboard/mas',         label: 'Más',         icon: LayoutDashboard }, // reemplazado por CircleMenu
+    { href: '/dashboard/mas',         label: 'Más',         icon: Home}, // reemplazado por CircleMenu
     { href: '/dashboard/asistencia',  label: 'Asistencia',  icon: CalendarCheck },
     { href: '/dashboard/finanzas',    label: 'Finanzas',    icon: CircleDollarSign },
   ],
   COACH: [
-    { href: '/dashboard',             label: 'Inicio',      icon: LayoutDashboard },
+    { href: '/dashboard',             label: 'Inicio',      icon: Home},
     { href: '/dashboard/miembros',    label: 'Miembros',    icon: Users },
-    { href: '/dashboard/mas',         label: 'Más',         icon: LayoutDashboard }, // reemplazado por CircleMenu
+    { href: '/dashboard/mas',         label: 'Más',         icon: Home}, // reemplazado por CircleMenu
     { href: '/dashboard/asistencia',  label: 'Asistencia',  icon: CalendarCheck },
     { href: '/dashboard/logros',      label: 'Resultados',  icon: Trophy },
   ],
   STUDENT: [
-    { href: '/dashboard',             label: 'Inicio',      icon: LayoutDashboard },
+    { href: '/dashboard',             label: 'Inicio',      icon: Home},
     { href: '/dashboard/logros',      label: 'Resultados',  icon: Trophy },
     { href: '/dashboard/calendario',  label: 'Calendario',  icon: CalendarDays },
     { href: '/dashboard/pagos',       label: 'Mis Pagos',   icon: CreditCard },
@@ -66,7 +66,7 @@ const ROLE_MAS_ITEMS: Record<string, { label: string; icon: React.ElementType; h
 };
 
 const ADMIN_NAV = [
-  { href: '/dashboard',            label: 'Inicio',        icon: LayoutDashboard },
+  { href: '/dashboard',            label: 'Inicio',        icon: Home},
   { href: '/dashboard/miembros',   label: 'Miembros',      icon: Users },
   { href: '/dashboard/sedes',      label: 'Sedes',         icon: MapPin },
   { href: '/dashboard/asistencia', label: 'Asistencia',    icon: CalendarCheck },
@@ -78,7 +78,7 @@ const ADMIN_NAV = [
 ];
 
 const COACH_NAV = [
-  { href: '/dashboard',            label: 'Inicio',        icon: LayoutDashboard },
+  { href: '/dashboard',            label: 'Inicio',        icon: Home},
   { href: '/dashboard/miembros',   label: 'Miembros',      icon: Users },
   { href: '/dashboard/sedes',      label: 'Sedes',         icon: MapPin },
   { href: '/dashboard/asistencia', label: 'Asistencia',    icon: CalendarCheck },
@@ -88,7 +88,7 @@ const COACH_NAV = [
 ];
 
 const STUDENT_NAV = [
-  { href: '/dashboard',            label: 'Inicio',        icon: LayoutDashboard },
+  { href: '/dashboard',            label: 'Inicio',        icon: Home},
   { href: '/dashboard/logros',     label: 'Resultados',    icon: Trophy },
   { href: '/dashboard/calendario', label: 'Calendario',    icon: CalendarDays },
   { href: '/dashboard/pagos',      label: 'Mis Pagos',     icon: CreditCard },
@@ -106,7 +106,7 @@ const ROLE_NAV: Record<string, typeof ADMIN_NAV> = {
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { isLoaded, isSignedIn, userId } = useAuth();
+  const { isLoaded, isSignedIn, userId, sessionId } = useAuth();
   const { session } = useSession();
   const [role, setRole] = useState<string | null>(null);
   const [checking, setChecking] = useState(true);
@@ -123,7 +123,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
     (async () => {
       try {
-        const token = await session?.getToken();
+        const token = await session?.getToken({ skipCache: true });
         if (stale) return;
 
         let res: { status: string; user?: { role: string } } | null = null;
@@ -178,7 +178,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
     // Cleanup: marcar como stale para que la async no aplique resultados viejos
     return () => { stale = true; };
-  }, [isLoaded, isSignedIn, userId]);
+  }, [isLoaded, isSignedIn, userId, sessionId]);
 
   if (checking) return <LoadingScreen />;
 

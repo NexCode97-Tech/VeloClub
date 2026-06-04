@@ -539,7 +539,15 @@ function CompCard({ comp: c, isStudent, myMemberId, canManage, deleting, onDelet
               if (!m) return null;
               return (
                 <div key={r.id} className="flex-1 flex flex-col items-center gap-1 py-3 px-2">
-                  <Medal className="w-8 h-8" style={{ color: m.ring }} strokeWidth={1.5} />
+                  <div className="relative">
+                    <Medal className="w-9 h-9" style={{ color: m.ring }} strokeWidth={1.4} />
+                    <span
+                      className="absolute bottom-[6px] left-1/2 -translate-x-1/2 text-[9px] font-black leading-none"
+                      style={{ color: m.text }}
+                    >
+                      {pos}
+                    </span>
+                  </div>
                   <span className="text-[11px] font-bold text-foreground text-center leading-tight truncate w-full">
                     {r.member.fullName.split(' ')[0]}
                   </span>

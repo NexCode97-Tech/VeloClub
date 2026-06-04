@@ -107,7 +107,7 @@ export function downloadMembersPDF(members: MemberRow[], clubName: string) {
   doc.save(`miembros_${clubName.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0, 10)}.pdf`);
 }
 
-// ── Factura de mensualidad ────────────────────────────────────────────────────
+// ── Comprobante de pago ────────────────────────────────────────────────────
 const MONTH_NAMES = [
   'Enero','Febrero','Marzo','Abril','Mayo','Junio',
   'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre',
@@ -179,14 +179,14 @@ export async function downloadInvoicePDF(
   doc.setTextColor(220, 215, 255);
   doc.text('Sistema de gestión deportiva · VeloClub', nameX, 27);
 
-  // ── 4. Etiqueta FACTURA (derecha) ──────────────────────────────────────────
-  // Caja "FACTURA"
+  // ── 4. Etiqueta COMPROBANTE (derecha) ──────────────────────────────────────────
+  // Caja "COMPROBANTE"
   doc.setFillColor(255, 255, 255, 0.15);
   doc.roundedRect(148, 9, 48, 12, 2, 2, 'F');
   doc.setTextColor(...WHITE);
   doc.setFontSize(10);
   doc.setFont('helvetica', 'bold');
-  doc.text('FACTURA', 172, 17, { align: 'center' });
+  doc.text('COMPROBANTE', 172, 17, { align: 'center' });
 
   // Fecha
   doc.setFontSize(7.5);
@@ -205,7 +205,7 @@ export async function downloadInvoicePDF(
   doc.setTextColor(...DARK);
   doc.setFontSize(18);
   doc.setFont('helvetica', 'bold');
-  doc.text('Factura de mensualidad', 14, 60);
+  doc.text('Comprobante de pago', 14, 60);
 
   doc.setFontSize(9);
   doc.setFont('helvetica', 'normal');
@@ -326,5 +326,5 @@ export async function downloadInvoicePDF(
   gradientRect(doc, 0, 278, 210, 5);
 
   footer(doc);
-  doc.save(`mensualidad_${payment.memberName.replace(/\s+/g, '_')}_${MONTH_NAMES[payment.month - 1]}_${payment.year}.pdf`);
+  doc.save(`comprobante_${payment.memberName.replace(/\s+/g, '_')}_${MONTH_NAMES[payment.month - 1]}_${payment.year}.pdf`);
 }

@@ -302,7 +302,7 @@ export async function downloadInvoicePDF(
     doc.setTextColor(...GREEN);
     doc.setFontSize(16);
     doc.setFont('helvetica', 'bold');
-    doc.text('PAGADO', cx, cy + 8, { align: 'center', angle: DEG });
+    doc.text('PAGADO', cx, cy + 5, { align: 'center', angle: DEG });
   }
 
   // ── 8. Tarjeta MONTO TOTAL — debajo de la tabla ───────────────────────────

@@ -107,7 +107,7 @@ export function downloadMembersPDF(members: MemberRow[], clubName: string) {
   doc.save(`miembros_${clubName.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0, 10)}.pdf`);
 }
 
-// ── Comprobante de pago ────────────────────────────────────────────────────
+// ── Recibo de pago ────────────────────────────────────────────────────────
 const MONTH_NAMES = [
   'Enero','Febrero','Marzo','Abril','Mayo','Junio',
   'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre',
@@ -186,7 +186,7 @@ export async function downloadInvoicePDF(
   doc.setTextColor(...WHITE);
   doc.setFontSize(10);
   doc.setFont('helvetica', 'bold');
-  doc.text('COMPROBANTE', 172, 17, { align: 'center' });
+  doc.text('RECIBO', 172, 17, { align: 'center' });
 
   // Fecha
   doc.setFontSize(7.5);
@@ -205,7 +205,7 @@ export async function downloadInvoicePDF(
   doc.setTextColor(...DARK);
   doc.setFontSize(18);
   doc.setFont('helvetica', 'bold');
-  doc.text('Comprobante de pago', 14, 60);
+  doc.text('Recibo de pago', 14, 60);
 
   doc.setFontSize(9);
   doc.setFont('helvetica', 'normal');
@@ -326,5 +326,5 @@ export async function downloadInvoicePDF(
   gradientRect(doc, 0, 278, 210, 5);
 
   footer(doc);
-  doc.save(`comprobante_${payment.memberName.replace(/\s+/g, '_')}_${MONTH_NAMES[payment.month - 1]}_${payment.year}.pdf`);
+  doc.save(`recibo_${payment.memberName.replace(/\s+/g, '_')}_${MONTH_NAMES[payment.month - 1]}_${payment.year}.pdf`);
 }

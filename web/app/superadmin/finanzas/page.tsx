@@ -401,7 +401,7 @@ export default function FinanzasPage() {
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                     {/* Avatar */}
-                    <div style={{ width: 48, height: 48, borderRadius: 12, background: sus ? pb.bg : trial ? trial.bg : 'rgba(142,135,168,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 800, color: sus ? pb.color : trial ? trial.color : '#8E87A8', fontFamily: 'Space Grotesk, sans-serif', flexShrink: 0, overflow: 'hidden' }}>
+                    <div style={{ width: 48, height: 48, borderRadius: '50%', background: sus ? pb.bg : trial ? trial.bg : 'rgba(142,135,168,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 800, color: sus ? pb.color : trial ? trial.color : '#8E87A8', fontFamily: 'Space Grotesk, sans-serif', flexShrink: 0, overflow: 'hidden' }}>
                       {c.logoUrl
                         ? <img src={c.logoUrl} alt={c.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                         : c.name.charAt(0).toUpperCase()

@@ -7,7 +7,7 @@ import { parseLocalDate } from '@/lib/utils';
 import Link from 'next/link';
 import {
   Trophy, Plus, Trash2, MapPin, CalendarDays, ChevronRight,
-  Dumbbell, Users, Target,
+  Dumbbell, Users, Target, Medal,
 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -546,17 +546,7 @@ function CompCard({ comp: c, isStudent, myMemberId, canManage, deleting, onDelet
               if (!m) return null;
               return (
                 <div key={r.id} className="flex-1 flex flex-col items-center gap-1 py-3 px-2">
-                  {/* Medalla SVG */}
-                  <svg width="28" height="34" viewBox="0 0 28 34" fill="none">
-                    {/* Cinta izquierda */}
-                    <path d="M10 2 L6 12" stroke={m.ribbon} strokeWidth="3.5" strokeLinecap="round"/>
-                    {/* Cinta derecha */}
-                    <path d="M18 2 L22 12" stroke={m.ribbon} strokeWidth="3.5" strokeLinecap="round"/>
-                    {/* Círculo */}
-                    <circle cx="14" cy="22" r="10" fill={m.bg} stroke={m.ring} strokeWidth="2"/>
-                    {/* Número */}
-                    <text x="14" y="27" textAnchor="middle" fontSize="10" fontWeight="800" fill={m.text} fontFamily="sans-serif">{pos}</text>
-                  </svg>
+                  <Medal className="w-8 h-8" style={{ color: m.ring }} strokeWidth={1.5} />
                   <span className="text-[11px] font-bold text-foreground text-center leading-tight truncate w-full">
                     {r.member.fullName.split(' ')[0]}
                   </span>

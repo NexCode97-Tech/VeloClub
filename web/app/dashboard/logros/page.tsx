@@ -29,6 +29,46 @@ interface Location { id: string; name: string }
 const emptyComp    = { name: '', place: '', date: '' };
 const emptySession = { title: '', date: '', locationId: '', notes: '' };
 
+// Corrección ortográfica de ciudades/lugares (clave en MAYÚSCULAS)
+const PLACE_FIX: Record<string, string> = {
+  'BOGOTA': 'Bogotá', 'BOGOTÁ': 'Bogotá',
+  'MEDELLIN': 'Medellín', 'MEDELLÍN': 'Medellín',
+  'CALI': 'Cali',
+  'BARRANQUILLA': 'Barranquilla',
+  'BUCARAMANGA': 'Bucaramanga',
+  'CARTAGENA': 'Cartagena',
+  'MANIZALES': 'Manizales',
+  'PEREIRA': 'Pereira',
+  'CUCUTA': 'Cúcuta', 'CÚCUTA': 'Cúcuta',
+  'IBAGUE': 'Ibagué', 'IBAGUÉ': 'Ibagué',
+  'SANTA MARTA': 'Santa Marta',
+  'VILLAVICENCIO': 'Villavicencio',
+  'PASTO': 'Pasto',
+  'MONTERIA': 'Montería', 'MONTERÍA': 'Montería',
+  'NEIVA': 'Neiva',
+  'ARMENIA': 'Armenia',
+  'POPAYAN': 'Popayán', 'POPAYÁN': 'Popayán',
+  'TUNJA': 'Tunja',
+  'SINCELEJO': 'Sincelejo',
+  'VALLEDUPAR': 'Valledupar',
+  'RIOHACHA': 'Riohacha',
+  'QUIBDO': 'Quibdó', 'QUIBDÓ': 'Quibdó',
+  'FLORENCIA': 'Florencia',
+  'YOPAL': 'Yopal',
+  'MOCOA': 'Mocoa',
+  'MITU': 'Mitú', 'MITÚ': 'Mitú',
+  'INIRIDA': 'Inírida', 'INÍRIDA': 'Inírida',
+  'PUERTO CARRENO': 'Puerto Carreño', 'PUERTO CARREÑO': 'Puerto Carreño',
+  'SAN JOSE DEL GUAVIARE': 'San José del Guaviare',
+};
+
+function toPlace(str: string): string {
+  const upper = str.toUpperCase().trim();
+  if (PLACE_FIX[upper]) return PLACE_FIX[upper];
+  // Fallback: primera letra de cada palabra en mayúscula
+  return str.replace(/\w\S*/g, w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
+}
+
 // Medal SVG components (no emojis)
 function MedalIcon({ position }: { position: number }) {
   const colors: Record<number, { bg: string; ring: string; text: string }> = {
@@ -452,7 +492,7 @@ function CompCard({ comp: c, isStudent, myMemberId, canManage, deleting, onDelet
           <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1">
             {c.place && (
               <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
-                <MapPin className="w-3 h-3 shrink-0" />{c.place}
+                <MapPin className="w-3 h-3 shrink-0" />{toPlace(c.place)}
               </span>
             )}
             <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
@@ -561,7 +601,7 @@ function TrainCard({ session: s, isStudent, myMemberId, canManage, deleting, onD
           <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1">
             {s.location && (
               <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
-                <MapPin className="w-3 h-3 shrink-0" />{s.location.name}
+                <MapPin className="w-3 h-3 shrink-0" />{toPlace(s.location.name)}
               </span>
             )}
             <span className="flex items-center gap-1 text-[11px] text-muted-foreground">

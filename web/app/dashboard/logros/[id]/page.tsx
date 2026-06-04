@@ -27,6 +27,22 @@ interface Competition {
   events: CompetitionEvent[];
 }
 
+const PLACE_FIX: Record<string, string> = {
+  'BOGOTA':'Bogotá','BOGOTÁ':'Bogotá','MEDELLIN':'Medellín','MEDELLÍN':'Medellín',
+  'CALI':'Cali','BARRANQUILLA':'Barranquilla','BUCARAMANGA':'Bucaramanga',
+  'CARTAGENA':'Cartagena','MANIZALES':'Manizales','PEREIRA':'Pereira',
+  'CUCUTA':'Cúcuta','CÚCUTA':'Cúcuta','IBAGUE':'Ibagué','IBAGUÉ':'Ibagué',
+  'SANTA MARTA':'Santa Marta','VILLAVICENCIO':'Villavicencio','PASTO':'Pasto',
+  'MONTERIA':'Montería','MONTERÍA':'Montería','NEIVA':'Neiva','ARMENIA':'Armenia',
+  'POPAYAN':'Popayán','POPAYÁN':'Popayán','TUNJA':'Tunja','SINCELEJO':'Sincelejo',
+  'VALLEDUPAR':'Valledupar','RIOHACHA':'Riohacha','QUIBDO':'Quibdó','QUIBDÓ':'Quibdó',
+};
+function toPlace(str: string): string {
+  const up = str.toUpperCase().trim();
+  if (PLACE_FIX[up]) return PLACE_FIX[up];
+  return str.replace(/\w\S*/g, w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
+}
+
 const MEDAL_COLORS: Record<number, { bg: string; text: string; crown: string; colH: number }> = {
   1: { bg: '#F4BF00', text: '#fff',    crown: '#F4BF00', colH: 90 },
   2: { bg: '#D0D0D8', text: '#fff',    crown: '#A0A0B0', colH: 65 },
@@ -258,7 +274,7 @@ export default function CompetitionDetailPage() {
             <div className="flex flex-wrap gap-3 mt-1">
               {competition.place && (
                 <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
-                  <MapPin className="w-3 h-3" />{competition.place}
+                  <MapPin className="w-3 h-3" />{toPlace(competition.place)}
                 </span>
               )}
               <span className="flex items-center gap-1 text-[11px] text-muted-foreground">

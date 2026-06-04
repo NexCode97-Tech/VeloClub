@@ -51,9 +51,9 @@ function MedalIcon({ position }: { position: number }) {
 // Stat pill
 function StatPill({ value, label, color }: { value: number; label: string; color: string }) {
   return (
-    <div className="flex flex-col items-center gap-0.5 px-4 py-2 rounded-xl" style={{ background: `${color}12` }}>
-      <span className="text-[18px] font-black leading-none" style={{ color }}>{value}</span>
-      <span className="text-[10px] font-medium text-muted-foreground leading-none">{label}</span>
+    <div className="flex-1 flex flex-col items-center gap-1 py-3 rounded-2xl" style={{ background: `${color}12` }}>
+      <span className="text-[26px] font-black leading-none" style={{ color, fontFamily: 'var(--font-space-grotesk)' }}>{value}</span>
+      <span className="text-[11px] font-semibold text-muted-foreground leading-none">{label}</span>
     </div>
   );
 }
@@ -235,7 +235,7 @@ export default function LogrosPage() {
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="flex gap-2 mb-4"
+            className="flex gap-2 mb-4 w-full"
           >
             {tab === 'comp' ? (
               <>

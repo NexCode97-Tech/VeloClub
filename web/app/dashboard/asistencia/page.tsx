@@ -295,6 +295,12 @@ export default function AsistenciaPage() {
   const categories = ['TODOS', ...Array.from(new Set(members.map(m => m.category).filter(Boolean) as string[])).sort()];
   const visibleMembers = catFilter === 'TODOS' ? members : members.filter(m => m.category === catFilter);
 
+  // "MAYORES" → "Mayores"
+  function toLabel(cat: string) {
+    if (cat === 'TODOS') return 'Todos';
+    return cat.charAt(0).toUpperCase() + cat.slice(1).toLowerCase();
+  }
+
   return (
     <div className="min-h-full bg-background">
       {/* Header */}
@@ -423,7 +429,7 @@ export default function AsistenciaPage() {
                       <Select value={catFilter} onValueChange={(v) => { if (v) setCatFilter(v); }}>
                         <SelectTrigger className="w-full h-9 text-[12px] font-bold rounded-xl" style={{ borderColor: 'rgba(124,58,237,0.25)', color: '#7C3AED' }}>
                           <span>
-                            {catFilter === 'TODOS' ? 'Todos' : catFilter}
+                            {toLabel(catFilter)}
                             {catFilter !== 'TODOS' && (
                               <span className="ml-1.5 text-[10px] opacity-60">
                                 {members.filter(m => m.category === catFilter).length}
@@ -434,7 +440,7 @@ export default function AsistenciaPage() {
                         <SelectContent>
                           {categories.map(cat => (
                             <SelectItem key={cat} value={cat} className="text-[12px] font-semibold">
-                              {cat === 'TODOS' ? 'Todos' : cat}
+                              {toLabel(cat)}
                               {cat !== 'TODOS' && (
                                 <span className="ml-1.5 text-[10px] text-muted-foreground">
                                   {members.filter(m => m.category === cat).length}
@@ -460,7 +466,7 @@ export default function AsistenciaPage() {
                             : { background: '#fff', color: '#8E87A8', border: '1px solid rgba(120,80,200,0.15)' }
                           }
                         >
-                          {cat === 'TODOS' ? 'Todos' : cat}
+                          {toLabel(cat)}
                           {cat !== 'TODOS' && (
                             <span className="ml-1.5 text-[9px] opacity-70">
                               {members.filter(m => m.category === cat).length}

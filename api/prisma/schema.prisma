@@ -319,18 +319,20 @@ model Post {
   id              String     @id @default(cuid())
   clubId          String
   club            Club       @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  clubName        String     @default("")
   authorName      String
   authorRole      String
   authorAvatar    String?
   content         String
   imageUrl        String?
   imagePublicId   String?
+  scope           PostScope  @default(PRIVATE)
   likes           PostLike[]
   createdAt       DateTime   @default(now())
   updatedAt       DateTime   @updatedAt
 
   @@index([clubId])
-  @@index([clubId, createdAt])
+  @@index([scope, createdAt])
 }
 
 model PostLike {
@@ -413,4 +415,9 @@ enum TipoPlan {
   MENSUAL
   TRIMESTRAL
   ANUAL
+}
+
+enum PostScope {
+  PUBLIC
+  PRIVATE
 }

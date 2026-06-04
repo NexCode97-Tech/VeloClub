@@ -11,7 +11,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Bell, BellOff, Trophy, CalendarDays, Dumbbell,
   Plus, Heart, Trash2, Image as ImageIcon, X, Send,
-  ChevronRight, Cake,
+  ChevronRight, Cake, Globe, Lock,
 } from 'lucide-react';
 
 // ── Interfaces ────────────────────────────────────────────────────────────────
@@ -25,14 +25,19 @@ interface MeResponse {
 interface PostLike { userId: string }
 interface Post {
   id: string;
+  clubId: string;
+  clubName: string;
   authorName: string;
   authorRole: string;
   authorAvatar?: string | null;
   content: string;
   imageUrl?: string | null;
+  scope: 'PUBLIC' | 'PRIVATE';
   likes: PostLike[];
   createdAt: string;
 }
+
+type FeedScope = 'public' | 'private';
 
 interface ProximoEvento {
   id: string; titulo: string; tipo: 'COMPETITION' | 'TRAINING'; fecha: Date; lugar?: string | null;
@@ -159,7 +164,14 @@ function PostCard({
         <div className="flex items-center gap-3">
           <Avatar src={post.authorAvatar} name={post.authorName} size={40} role={post.authorRole} />
           <div>
-            <p className="text-[13px] font-bold text-foreground leading-tight">{post.authorName}</p>
+            <div className="flex items-center gap-1.5">
+              <p className="text-[13px] font-bold text-foreground leading-tight">{post.authorName}</p>
+              {post.scope === 'PUBLIC' && post.clubName && (
+                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(67,97,238,0.10)', color: '#4361EE' }}>
+                  {post.clubName}
+                </span>
+              )}
+            </div>
             <p className="text-[11px] text-muted-foreground">{timeAgo(post.createdAt)}</p>
           </div>
         </div>
@@ -385,6 +397,7 @@ export default function DashboardPage() {
   }[]>([]);
 
   // Feed
+  const [feedScope, setFeedScope]   = useState<FeedScope>('public');
   const [posts, setPosts]           = useState<Post[]>([]);
   const [postsLoading, setPostsLoading] = useState(false);
 
@@ -406,16 +419,21 @@ export default function DashboardPage() {
     return () => document.removeEventListener('mousedown', handleClick);
   }, []);
 
-  const fetchPosts = useCallback(async () => {
+  const fetchPosts = useCallback(async (scope: FeedScope = 'public') => {
     const token = await session?.getToken();
     setPostsLoading(true);
     try {
-      const res = await apiFetch<{ posts: Post[] }>('/posts', { token });
+      const res = await apiFetch<{ posts: Post[] }>(`/posts?scope=${scope}`, { token });
       setPosts(res.posts);
     } catch { /* silencioso */ } finally {
       setPostsLoading(false);
     }
   }, [session]);
+
+  // Recargar posts cuando cambia el tab
+  useEffect(() => {
+    if (session) fetchPosts(feedScope).catch(() => {});
+  }, [feedScope, session]);
 
   useEffect(() => {
     if (!isLoaded) return;
@@ -438,7 +456,7 @@ export default function DashboardPage() {
           apiFetch<{ competitions: { id: string; name: string; date: string; place?: string | null; events: unknown[] }[] }>('/competitions', { token }),
           apiFetch<{ sessions: { id: string; title: string; date: string; location?: { name: string } | null }[] }>(`/training?month=${month}&year=${year}`, { token }),
           apiFetch<{ members: { id: string; fullName: string; birthDate?: string | null; pictureUrl?: string | null }[] }>('/members', { token }),
-          apiFetch<{ posts: Post[] }>('/posts', { token }),
+          apiFetch<{ posts: Post[] }>('/posts?scope=public', { token }),
         ]);
 
         if (meRes.status === 'rejected') return;
@@ -496,7 +514,7 @@ export default function DashboardPage() {
   // SSE tiempo real
   useClubStream((ev) => {
     if (!me?.user?.role) return;
-    if (ev === 'posts') fetchPosts().catch(() => {});
+    if (ev === 'posts') fetchPosts(feedScope).catch(() => {});
     if (['members', 'payments'].includes(ev) && me.user.role === 'ADMIN') {
       // recargar notificaciones
       (async () => {
@@ -513,7 +531,11 @@ export default function DashboardPage() {
     const token = await session?.getToken();
     const res = await apiFetch<{ post: Post }>('/posts', {
       token, method: 'POST',
-      body: JSON.stringify({ content, ...(imageUrl ? { imageUrl } : {}) }),
+      body: JSON.stringify({
+        content,
+        scope: feedScope === 'public' ? 'PUBLIC' : 'PRIVATE',
+        ...(imageUrl ? { imageUrl } : {}),
+      }),
     });
     setPosts(prev => [res.post, ...prev]);
   }
@@ -812,11 +834,43 @@ export default function DashboardPage() {
           </motion.div>
         )}
 
-        {/* Separador de sección */}
-        <motion.div variants={cardVariant} className="flex items-center gap-3">
-          <div className="flex-1 h-px bg-border" />
-          <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest">Publicaciones</span>
-          <div className="flex-1 h-px bg-border" />
+        {/* ── Tabs Público / Privado ──────────────────────────────────────── */}
+        <motion.div variants={cardVariant}>
+          <div
+            className="flex rounded-2xl p-1 gap-1"
+            style={{ background: 'rgba(124,58,237,0.06)', border: '1px solid rgba(124,58,237,0.10)' }}
+          >
+            {([
+              { key: 'public'  as FeedScope, label: 'Público',  icon: Globe, desc: 'Todos los clubes' },
+              { key: 'private' as FeedScope, label: 'Mi Club',   icon: Lock,  desc: 'Solo interno' },
+            ] as const).map(tab => {
+              const active = feedScope === tab.key;
+              const Icon = tab.icon;
+              return (
+                <motion.button
+                  key={tab.key}
+                  onClick={() => setFeedScope(tab.key)}
+                  whileTap={{ scale: 0.97 }}
+                  transition={{ type: 'spring' as const, stiffness: 500, damping: 20 }}
+                  className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl transition-all"
+                  style={active
+                    ? { background: '#fff', boxShadow: '0 2px 10px rgba(124,58,237,0.15)' }
+                    : {}
+                  }
+                >
+                  <Icon className="w-3.5 h-3.5" style={{ color: active ? '#7C3AED' : '#8E87A8' }} />
+                  <div className="text-left">
+                    <p className="text-[12px] font-bold leading-none" style={{ color: active ? '#7C3AED' : '#8E87A8' }}>
+                      {tab.label}
+                    </p>
+                    <p className="text-[9px] leading-none mt-0.5" style={{ color: active ? '#9B72F0' : '#B0ABCA' }}>
+                      {tab.desc}
+                    </p>
+                  </div>
+                </motion.button>
+              );
+            })}
+          </div>
         </motion.div>
 
         {/* Composer — solo ADMIN y COACH */}
@@ -847,13 +901,19 @@ export default function DashboardPage() {
                 className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4"
                 style={{ background: 'linear-gradient(135deg,#7C3AED,#4361EE)' }}
               >
-                <Heart className="w-6 h-6 text-white" />
+                {feedScope === 'public' ? <Globe className="w-6 h-6 text-white" /> : <Lock className="w-6 h-6 text-white" />}
               </div>
-              <p className="text-[14px] font-bold text-foreground mb-1">El feed está vacío</p>
+              <p className="text-[14px] font-bold text-foreground mb-1">
+                {feedScope === 'public' ? 'El feed público está vacío' : 'No hay publicaciones internas aún'}
+              </p>
               <p className="text-[12px] text-muted-foreground leading-relaxed">
                 {canPost
-                  ? 'Sé el primero en publicar algo para el club. Comparte noticias, fotos o motivación.'
-                  : 'Aún no hay publicaciones del club. Vuelve pronto.'}
+                  ? feedScope === 'public'
+                    ? 'Sé el primero en publicar algo visible para todos los clubes.'
+                    : 'Comparte noticias o novedades exclusivas para tu club.'
+                  : feedScope === 'public'
+                    ? 'Aún no hay publicaciones públicas. Vuelve pronto.'
+                    : 'Tu club no ha publicado nada aún.'}
               </p>
             </div>
           </motion.div>

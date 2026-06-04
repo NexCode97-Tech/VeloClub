@@ -175,7 +175,7 @@ export default function FinanzasPage() {
   const [saveSuccess,  setSaveSuccess]  = useState(false);
 
   const [editPagoId,   setEditPagoId]   = useState<string | null>(null);
-  const [editPagoForm, setEditPagoForm] = useState({ concepto: '', monto: '', fecha: '', estado: 'PAID' });
+  const [editPagoForm, setEditPagoForm] = useState({ concepto: '', monto: '', fecha: '' });
   const [savingEdit,   setSavingEdit]   = useState(false);
 
   const [editPlanId,    setEditPlanId]    = useState<string | null>(null);
@@ -231,7 +231,7 @@ export default function FinanzasPage() {
 
   function startEditPago(p: Pago) {
     setEditPagoId(p.id);
-    setEditPagoForm({ concepto: p.concepto, monto: formatMiles(String(Math.round(p.monto))), fecha: p.fecha ? p.fecha.slice(0, 10) : '', estado: p.estado });
+    setEditPagoForm({ concepto: p.concepto, monto: formatMiles(String(Math.round(p.monto))), fecha: p.fecha ? p.fecha.slice(0, 10) : '' });
   }
 
   async function saveEditPago() {
@@ -241,7 +241,7 @@ export default function FinanzasPage() {
       const token = await getToken();
       await apiFetch(`/superadmin/suscripciones/pagos/${editPagoId}`, {
         method: 'PATCH', token,
-        body: JSON.stringify({ concepto: editPagoForm.concepto, monto: parseMiles(editPagoForm.monto), fecha: editPagoForm.fecha || undefined, estado: editPagoForm.estado }),
+        body: JSON.stringify({ concepto: editPagoForm.concepto, monto: parseMiles(editPagoForm.monto), fecha: editPagoForm.fecha || undefined, estado: autoEstado(editPagoForm.fecha) }),
       });
       setEditPagoId(null);
       await load();
@@ -557,14 +557,23 @@ export default function FinanzasPage() {
                                       </div>
                                     </div>
                                     <div>
-                                      <p style={{ margin: '0 0 4px', fontSize: 9, fontWeight: 600, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Fecha</p>
+                                      <p style={{ margin: '0 0 4px', fontSize: 9, fontWeight: 600, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Fecha pago</p>
                                       <input type="date" value={editPagoForm.fecha} onChange={e => setEditPagoForm(f => ({ ...f, fecha: e.target.value }))} style={inp} />
                                     </div>
                                   </div>
-                                  <div style={{ marginBottom: 12 }}>
-                                    <p style={{ margin: '0 0 6px', fontSize: 9, fontWeight: 600, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Estado</p>
-                                    <EstadoSelector value={editPagoForm.estado} onChange={v => setEditPagoForm(f => ({ ...f, estado: v }))} />
-                                  </div>
+                                  {/* Preview estado automático */}
+                                  {(() => {
+                                    const est = autoEstado(editPagoForm.fecha);
+                                    const s = ESTADO[est];
+                                    return (
+                                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 12, padding: '8px 10px', borderRadius: 10, background: s.bg, border: `1px solid ${s.border}` }}>
+                                        <div style={{ width: 7, height: 7, borderRadius: '50%', background: s.color, flexShrink: 0 }} />
+                                        <p style={{ margin: 0, fontSize: 11, fontWeight: 600, color: s.color, fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
+                                          Estado automático: <strong>{s.label}</strong>
+                                        </p>
+                                      </div>
+                                    );
+                                  })()}
                                   <div style={{ display: 'flex', gap: 8 }}>
                                     <motion.button onClick={() => setEditPagoId(null)} whileTap={{ scale: 0.97 }}
                                       style={{ flex: 1, padding: '10px 0', borderRadius: 12, border: '1.5px solid rgba(120,80,200,0.15)', background: 'transparent', color: '#8E87A8', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'Plus Jakarta Sans, sans-serif' }}>

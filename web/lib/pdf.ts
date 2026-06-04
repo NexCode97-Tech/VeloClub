@@ -292,40 +292,44 @@ export async function downloadInvoicePDF(
 
   // ── 8. Sello PAGADO ladeado (estilo sello real) ───────────────────────────
   if (isPaid) {
-    const cx = TABLE_X + TABLE_W - 38; // centro X del sello
-    const cy = TABLE_Y + 9 + rows.length * ROW_H + 20; // centro Y
-    const angle = -18; // grados de inclinación
+    const cx  = TABLE_X + TABLE_W - 38;
+    const cy  = TABLE_Y + 9 + rows.length * ROW_H + 20;
+    const DEG = 18; // inclinación en grados
+    const RAD = (DEG * Math.PI) / 180;
 
-    doc.saveGraphicsState();
+    // Función para rotar un punto (px,py) alrededor de (cx,cy)
+    function rotPt(px: number, py: number): [number, number] {
+      const dx = px - cx, dy = py - cy;
+      return [cx + dx * Math.cos(-RAD) - dy * Math.sin(-RAD),
+              cy + dx * Math.sin(-RAD) + dy * Math.cos(-RAD)];
+    }
 
-    // Transformación de rotación centrada en (cx, cy) — jsPDF usa radianes internamente
-    // Dibujamos en coordenadas locales y rotamos con la API de transformación
-    const rad = (angle * Math.PI) / 180;
-    const cos = Math.cos(rad);
-    const sin = Math.sin(rad);
+    // Dibuja un rectángulo rotado como 4 líneas
+    function rotRect(rx: number, ry: number, rw: number, rh: number) {
+      const corners: [number,number][] = [
+        rotPt(rx,      ry),
+        rotPt(rx + rw, ry),
+        rotPt(rx + rw, ry + rh),
+        rotPt(rx,      ry + rh),
+      ];
+      for (let i = 0; i < 4; i++) {
+        const [x1,y1] = corners[i];
+        const [x2,y2] = corners[(i + 1) % 4];
+        doc.line(x1, y1, x2, y2);
+      }
+    }
 
-    // jsPDF: setCurrentTransformationMatrix(a, b, c, d, e, f) en unidades internas
-    // 1 mm = 2.8346 puntos
-    const PT = 2.8346;
-    const tx = cx * PT;
-    const ty = (297 - cy) * PT; // jsPDF Y invertido en puntos
-
-    doc.setCurrentTransformationMatrix(cos, -sin, sin, cos, tx - cos * tx + sin * ty, ty + sin * tx - cos * ty);
-
-    // Borde doble del sello (sin relleno — fondo transparente)
     doc.setDrawColor(...GREEN);
     doc.setLineWidth(1.6);
-    doc.roundedRect(cx - 30, cy - 9, 60, 18, 3, 3, 'S');
+    rotRect(cx - 30, cy - 9, 60, 18);   // borde exterior
     doc.setLineWidth(0.5);
-    doc.roundedRect(cx - 27, cy - 6.5, 54, 13, 2, 2, 'S');
+    rotRect(cx - 27, cy - 6.5, 54, 13); // borde interior
 
-    // Texto del sello
+    // Texto inclinado usando angle (jsPDF: ángulo antihorario en grados)
     doc.setTextColor(...GREEN);
     doc.setFontSize(16);
     doc.setFont('helvetica', 'bold');
-    doc.text('PAGADO', cx, cy + 1.5, { align: 'center' });
-
-    doc.restoreGraphicsState();
+    doc.text('PAGADO', cx, cy + 2, { align: 'center', angle: DEG });
   }
 
   // ── 9. Franja inferior de acento ──────────────────────────────────────────

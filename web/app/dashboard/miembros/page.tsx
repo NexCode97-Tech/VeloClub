@@ -220,6 +220,7 @@ export default function MiembrosPage() {
     importingRef.current = true;
     setImporting(true); setImportErrors([]);
     const { rows, errors } = await parseMembersExcel(file);
+    console.log('[IMPORT] parseMembersExcel result', { rows, errors });
     if (errors.length > 0) {
       setImportErrors(errors);
       setImporting(false);

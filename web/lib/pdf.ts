@@ -212,8 +212,7 @@ export async function downloadInvoicePDF(
   doc.setTextColor(...MUTED);
   doc.text(`${MONTH_NAMES[payment.month - 1]} ${payment.year}`, 14, 66);
 
-  // ── 6. Tarjeta de MONTO destacado ─────────────────────────────────────────
-  // Caja con borde sutil
+  // ── 6. Tarjeta de MONTO destacado (sin badge de estado) ───────────────────
   doc.setFillColor(...WHITE);
   doc.setDrawColor(...PURPLE);
   doc.setLineWidth(0.3);
@@ -231,19 +230,6 @@ export async function downloadInvoicePDF(
   doc.setTextColor(...PURPLE);
   doc.text(fmt.format(payment.amount), 22, 95);
 
-  // Badge de estado (derecha)
-  const statusColor = isPaid ? GREEN
-    : payment.status === 'OVERDUE' ? [239, 71, 111] as [number,number,number]
-    : [255, 183, 3] as [number,number,number];
-  const statusLabel = STATUS_ES[payment.status] ?? payment.status;
-
-  doc.setFillColor(...statusColor);
-  doc.roundedRect(148, 80, 40, 14, 3, 3, 'F');
-  doc.setTextColor(...WHITE);
-  doc.setFontSize(9);
-  doc.setFont('helvetica', 'bold');
-  doc.text(statusLabel.toUpperCase(), 168, 89, { align: 'center' });
-
   // ── 7. Tabla de detalle ────────────────────────────────────────────────────
   const rows: [string, string][] = [
     ['DEPORTISTA',    payment.memberName],
@@ -255,66 +241,64 @@ export async function downloadInvoicePDF(
   ];
   if (payment.notes) rows.push(['NOTAS', payment.notes]);
 
-  let y = 114;
-  const rowH = 13;
+  const ROW_H    = 13;   // altura de cada fila
+  const TABLE_Y  = 110;  // inicio de la cabecera
+  const TABLE_X  = 14;
+  const TABLE_W  = 182;
 
-  // Cabecera sutil
-  doc.setFillColor(245, 243, 255);
-  doc.roundedRect(14, y - 6, 182, 8, 2, 2, 'F');
+  // ── Cabecera de sección ──
+  doc.setFillColor(237, 233, 254);
+  doc.roundedRect(TABLE_X, TABLE_Y, TABLE_W, 9, 2, 2, 'F');
   doc.setFontSize(7.5);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(...PURPLE);
-  doc.text('DETALLE DEL COBRO', 22, y - 0.5);
-  y += 6;
+  // Centrado vertical: baseline = top + height/2 + ~1.5 (aprox cap-height/2)
+  doc.text('DETALLE DEL COBRO', TABLE_X + 8, TABLE_Y + 6);
 
+  // Borde exterior de toda la tabla (cabecera + filas)
+  doc.setDrawColor(...PURPLE);
+  doc.setLineWidth(0.3);
+  doc.roundedRect(TABLE_X, TABLE_Y, TABLE_W, 9 + rows.length * ROW_H, 2, 2, 'S');
+
+  // ── Filas ──
   rows.forEach(([label, value], i) => {
-    // Alternating background
-    if (i % 2 === 0) {
-      doc.setFillColor(250, 249, 255);
-      doc.rect(14, y - 4, 182, rowH, 'F');
-    } else {
-      doc.setFillColor(...WHITE);
-      doc.rect(14, y - 4, 182, rowH, 'F');
+    const rowTop = TABLE_Y + 9 + i * ROW_H;
+    // Fondo alternado
+    doc.setFillColor(i % 2 === 0 ? 250 : 255, i % 2 === 0 ? 249 : 255, 255);
+    doc.rect(TABLE_X, rowTop, TABLE_W, ROW_H, 'F');
+
+    // Separador horizontal (no en la última fila)
+    if (i < rows.length - 1) {
+      doc.setDrawColor(225, 220, 245);
+      doc.setLineWidth(0.15);
+      doc.line(TABLE_X, rowTop + ROW_H, TABLE_X + TABLE_W, rowTop + ROW_H);
     }
 
-    // Línea divisoria suave
-    doc.setDrawColor(230, 225, 248);
-    doc.setLineWidth(0.15);
-    doc.line(14, y + rowH - 4, 196, y + rowH - 4);
+    // Texto centrado verticalmente: baseline = rowTop + ROW_H/2 + 1.5
+    const textY = rowTop + ROW_H / 2 + 1.5;
 
-    // Label
+    // Label (izquierda, gris, pequeño)
     doc.setFontSize(7.5);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(...MUTED);
-    doc.text(label, 22, y + 3);
+    doc.text(label, TABLE_X + 8, textY);
 
-    // Value
+    // Value (centro-derecha, oscuro)
     doc.setFontSize(9.5);
     doc.setFont('helvetica', label === 'DEPORTISTA' ? 'bold' : 'normal');
     doc.setTextColor(...DARK);
-    doc.text(value, 90, y + 3);
-
-    y += rowH;
+    doc.text(value, TABLE_X + 78, textY);
   });
 
-  // Borde exterior de la tabla
-  doc.setDrawColor(...PURPLE);
-  doc.setLineWidth(0.3);
-  doc.roundedRect(14, 120, 182, rows.length * rowH + 2, 3, 3, 'S');
-
-  // ── 8. Sello PAGADO (watermark diagonal) ──────────────────────────────────
+  // ── 8. Sello PAGADO debajo de la tabla ────────────────────────────────────
   if (isPaid) {
-    // Fondo del sello
-    doc.setFillColor(6, 214, 160, 0.06);
-    doc.roundedRect(128, 148, 62, 22, 4, 4, 'F');
-    doc.setDrawColor(...GREEN);
-    doc.setLineWidth(1.8);
-    doc.roundedRect(128, 148, 62, 22, 4, 4, 'S');
-
-    doc.setTextColor(...GREEN);
-    doc.setFontSize(20);
+    const selloY = TABLE_Y + 9 + rows.length * ROW_H + 10;
+    doc.setFillColor(6, 214, 160);
+    doc.roundedRect(TABLE_X + TABLE_W - 62, selloY, 62, 14, 3, 3, 'F');
+    doc.setTextColor(...WHITE);
+    doc.setFontSize(10);
     doc.setFont('helvetica', 'bold');
-    doc.text('PAGADO', 159, 162, { align: 'center', angle: 0 });
+    doc.text('PAGADO', TABLE_X + TABLE_W - 31, selloY + 9.5, { align: 'center' });
   }
 
   // ── 9. Franja inferior de acento ──────────────────────────────────────────

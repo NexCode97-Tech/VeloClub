@@ -446,7 +446,9 @@ function CompCard({ comp: c, isStudent, myMemberId, canManage, deleting, onDelet
 
         {/* Info central */}
         <div className="flex-1 min-w-0">
-          <p className="text-[15px] font-extrabold text-foreground leading-tight truncate" style={{ fontFamily: 'var(--font-space-grotesk)' }}>{c.name}</p>
+          <p className="text-[15px] font-extrabold text-foreground leading-tight truncate" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
+            {c.name.charAt(0).toUpperCase() + c.name.slice(1).toLowerCase()}
+          </p>
           <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1">
             {c.place && (
               <span className="flex items-center gap-1 text-[11px] text-muted-foreground">

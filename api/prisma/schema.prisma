@@ -328,6 +328,7 @@ model Post {
   imagePublicId   String?
   scope           PostScope  @default(PRIVATE)
   likes           PostLike[]
+  comments        PostComment[]
   createdAt       DateTime   @default(now())
   updatedAt       DateTime   @updatedAt
 
@@ -344,6 +345,20 @@ model PostLike {
 
   @@unique([postId, userId])
   @@index([postId])
+}
+
+model PostComment {
+  id          String   @id @default(cuid())
+  postId      String
+  post        Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  authorName  String
+  authorRole  String
+  authorAvatar String?
+  content     String
+  createdAt   DateTime @default(now())
+
+  @@index([postId])
+  @@index([postId, createdAt])
 }
 
 // ─── Notificacion (SA global) ─────────────────────────────────────────────────

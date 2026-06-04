@@ -11,7 +11,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Bell, BellOff, Trophy, CalendarDays, Dumbbell,
   Plus, Heart, Trash2, Image as ImageIcon, X, Send,
-  ChevronRight, Cake, Globe, Lock,
+  ChevronRight, Cake, Globe, Lock, MessageCircle,
+  Paperclip, Video, FileText,
 } from 'lucide-react';
 
 // ── Interfaces ────────────────────────────────────────────────────────────────
@@ -23,6 +24,14 @@ interface MeResponse {
 }
 
 interface PostLike { userId: string }
+interface PostComment {
+  id: string;
+  authorName: string;
+  authorRole: string;
+  authorAvatar?: string | null;
+  content: string;
+  createdAt: string;
+}
 interface Post {
   id: string;
   clubId: string;
@@ -34,6 +43,7 @@ interface Post {
   imageUrl?: string | null;
   scope: 'PUBLIC' | 'PRIVATE';
   likes: PostLike[];
+  comments: PostComment[];
   createdAt: string;
 }
 
@@ -130,24 +140,42 @@ function Avatar({ src, name, size = 36, role }: { src?: string | null; name: str
 // ── PostCard ──────────────────────────────────────────────────────────────────
 
 function PostCard({
-  post, currentUserId, canDelete, onLike, onDelete,
+  post, currentUserId, canDelete, onLike, onDelete, onComment, onDeleteComment,
 }: {
-  post: Post;
-  currentUserId: string;
-  canDelete: boolean;
+  post: Post; currentUserId: string; canDelete: boolean;
   onLike: (id: string) => void;
   onDelete: (id: string) => void;
+  onComment: (postId: string, content: string) => Promise<void>;
+  onDeleteComment: (postId: string, commentId: string) => void;
 }) {
   const liked     = post.likes.some(l => l.userId === currentUserId);
   const likeCount = post.likes.length;
-  const [confirmDel, setConfirmDel] = useState(false);
-  const [likeAnim, setLikeAnim]     = useState(false);
+  const [confirmDel, setConfirmDel]   = useState(false);
+  const [likeAnim, setLikeAnim]       = useState(false);
+  const [showComments, setShowComments] = useState(false);
+  const [commentText, setCommentText] = useState('');
+  const [sendingComment, setSendingComment] = useState(false);
+  const commentInputRef = useRef<HTMLInputElement>(null);
 
   function handleLike() {
     setLikeAnim(true);
     setTimeout(() => setLikeAnim(false), 500);
     onLike(post.id);
   }
+
+  async function handleComment() {
+    const text = commentText.trim();
+    if (!text) return;
+    setSendingComment(true);
+    try {
+      await onComment(post.id, text);
+      setCommentText('');
+    } finally { setSendingComment(false); }
+  }
+
+  // Detectar si media es video por extensión o URL
+  const isVideo = post.imageUrl && /\.(mp4|webm|mov|avi|mkv)(\?|$)/i.test(post.imageUrl);
+  const isFile  = post.imageUrl && !isVideo && /\.(pdf|doc|docx|xls|xlsx|ppt|pptx|zip|rar)(\?|$)/i.test(post.imageUrl);
 
   return (
     <motion.div
@@ -164,8 +192,8 @@ function PostCard({
         <div className="flex items-center gap-3">
           <Avatar src={post.authorAvatar} name={post.authorName} size={40} role={post.authorRole} />
           <div>
-            <div className="flex items-center gap-1.5">
-              <p className="text-[13px] font-bold text-foreground leading-tight">{post.authorName}</p>
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <p className="text-[13px] font-bold text-foreground leading-tight">{post.authorName || 'Usuario'}</p>
               {post.scope === 'PUBLIC' && post.clubName && (
                 <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(67,97,238,0.10)', color: '#4361EE' }}>
                   {post.clubName}
@@ -178,32 +206,17 @@ function PostCard({
         {canDelete && (
           <AnimatePresence mode="wait">
             {confirmDel ? (
-              <motion.div
-                key="confirm"
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                transition={{ duration: 0.15 }}
-                className="flex items-center gap-1.5"
-              >
-                <button
-                  onClick={() => onDelete(post.id)}
-                  className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-red-500 text-white active:scale-95 transition-transform"
-                >Eliminar</button>
-                <button
-                  onClick={() => setConfirmDel(false)}
-                  className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-secondary text-muted-foreground"
-                >Cancelar</button>
+              <motion.div key="confirm" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }} transition={{ duration: 0.15 }} className="flex items-center gap-1.5">
+                <button onClick={() => onDelete(post.id)}
+                  className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-red-500 text-white active:scale-95 transition-transform">Eliminar</button>
+                <button onClick={() => setConfirmDel(false)}
+                  className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-secondary text-muted-foreground">Cancelar</button>
               </motion.div>
             ) : (
-              <motion.button
-                key="trash"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
+              <motion.button key="trash" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                 onClick={() => setConfirmDel(true)}
-                className="w-8 h-8 rounded-full flex items-center justify-center text-muted-foreground/40 hover:bg-red-50 hover:text-red-400 active:scale-90 transition-all"
-              >
+                className="w-8 h-8 rounded-full flex items-center justify-center text-muted-foreground/40 hover:bg-red-50 hover:text-red-400 active:scale-90 transition-all">
                 <Trash2 className="w-[15px] h-[15px]" />
               </motion.button>
             )}
@@ -211,52 +224,121 @@ function PostCard({
         )}
       </div>
 
-      {/* Imagen */}
+      {/* Media */}
       {post.imageUrl && (
-        <div className="mx-4 mb-3 rounded-xl overflow-hidden" style={{ maxHeight: 280 }}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={post.imageUrl}
-            alt="Publicación"
-            className="w-full h-full object-cover"
-            style={{ maxHeight: 280 }}
-          />
+        <div className="mx-4 mb-3 rounded-xl overflow-hidden">
+          {isVideo ? (
+            <video src={post.imageUrl} controls className="w-full rounded-xl" style={{ maxHeight: 320 }} />
+          ) : isFile ? (
+            <a href={post.imageUrl} target="_blank" rel="noopener noreferrer"
+              className="flex items-center gap-3 px-4 py-3 rounded-xl border border-border hover:bg-secondary transition-colors">
+              <FileText className="w-5 h-5 shrink-0" style={{ color: '#4361EE' }} />
+              <span className="text-[13px] font-semibold text-foreground truncate">Ver archivo adjunto</span>
+            </a>
+          ) : (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={post.imageUrl} alt="Publicación" className="w-full object-cover" style={{ maxHeight: 320 }} />
+          )}
         </div>
       )}
 
       {/* Contenido */}
-      <p className="px-4 pb-3 text-[14px] text-foreground leading-relaxed whitespace-pre-wrap">
-        {post.content}
-      </p>
+      <p className="px-4 pb-3 text-[14px] text-foreground leading-relaxed whitespace-pre-wrap">{post.content}</p>
 
       {/* Acciones */}
-      <div className="flex items-center gap-2 px-4 pb-4 border-t border-border/60 pt-3">
-        <motion.button
-          onClick={handleLike}
-          whileTap={{ scale: 0.85 }}
+      <div className="flex items-center gap-1 px-4 pb-3 border-t border-border/60 pt-3">
+        {/* Like */}
+        <motion.button onClick={handleLike} whileTap={{ scale: 0.85 }}
           transition={{ type: 'spring' as const, stiffness: 500, damping: 15 }}
           className="flex items-center gap-1.5 rounded-full px-3 py-1.5 transition-colors"
-          style={{
-            background: liked ? 'rgba(239,71,111,0.10)' : 'transparent',
-          }}
-        >
-          <motion.div
-            animate={likeAnim ? { scale: [1, 1.5, 1] } : { scale: 1 }}
-            transition={{ duration: 0.4, ease: 'easeInOut' }}
-          >
-            <Heart
-              className="w-[18px] h-[18px] transition-colors"
-              fill={liked ? '#EF476F' : 'none'}
-              style={{ color: liked ? '#EF476F' : '#8E87A8' }}
-            />
+          style={{ background: liked ? 'rgba(239,71,111,0.10)' : 'transparent' }}>
+          <motion.div animate={likeAnim ? { scale: [1, 1.5, 1] } : { scale: 1 }} transition={{ duration: 0.4, ease: 'easeInOut' }}>
+            <Heart className="w-[18px] h-[18px] transition-colors" fill={liked ? '#EF476F' : 'none'}
+              style={{ color: liked ? '#EF476F' : '#8E87A8' }} />
           </motion.div>
-          {likeCount > 0 && (
-            <span className="text-[12px] font-semibold" style={{ color: liked ? '#EF476F' : '#8E87A8' }}>
-              {likeCount}
-            </span>
+          {likeCount > 0 && <span className="text-[12px] font-semibold" style={{ color: liked ? '#EF476F' : '#8E87A8' }}>{likeCount}</span>}
+        </motion.button>
+
+        {/* Comentar */}
+        <motion.button
+          onClick={() => { setShowComments(v => !v); setTimeout(() => commentInputRef.current?.focus(), 150); }}
+          whileTap={{ scale: 0.9 }}
+          className="flex items-center gap-1.5 rounded-full px-3 py-1.5 transition-colors"
+          style={{ background: showComments ? 'rgba(67,97,238,0.08)' : 'transparent' }}>
+          <MessageCircle className="w-[18px] h-[18px]" style={{ color: showComments ? '#4361EE' : '#8E87A8' }} />
+          {post.comments.length > 0 && (
+            <span className="text-[12px] font-semibold" style={{ color: showComments ? '#4361EE' : '#8E87A8' }}>{post.comments.length}</span>
           )}
         </motion.button>
       </div>
+
+      {/* Comentarios */}
+      <AnimatePresence>
+        {showComments && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.25, ease: [0.23, 1, 0.32, 1] }}
+            style={{ overflow: 'hidden' }}
+          >
+            <div className="px-4 pb-4 space-y-3 border-t border-border/40 pt-3"
+              style={{ background: 'rgba(124,58,237,0.02)' }}>
+
+              {/* Lista de comentarios */}
+              {post.comments.length > 0 && (
+                <div className="space-y-2.5">
+                  {post.comments.map(c => (
+                    <div key={c.id} className="flex items-start gap-2.5">
+                      <Avatar src={c.authorAvatar} name={c.authorName} size={28} role={c.authorRole} />
+                      <div className="flex-1 min-w-0">
+                        <div className="rounded-2xl rounded-tl-sm px-3 py-2"
+                          style={{ background: '#fff', border: '1px solid rgba(124,58,237,0.08)' }}>
+                          <p className="text-[11px] font-bold text-foreground mb-0.5">{c.authorName}</p>
+                          <p className="text-[13px] text-foreground leading-snug">{c.content}</p>
+                        </div>
+                        <p className="text-[10px] text-muted-foreground mt-0.5 pl-1">{timeAgo(c.createdAt)}</p>
+                      </div>
+                      {canDelete && (
+                        <button onClick={() => onDeleteComment(post.id, c.id)}
+                          className="w-6 h-6 rounded-full flex items-center justify-center text-muted-foreground/30 hover:text-red-400 hover:bg-red-50 transition-all mt-1 shrink-0">
+                          <X className="w-3 h-3" />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Input nuevo comentario */}
+              <div className="flex items-center gap-2">
+                <div className="flex-1 flex items-center gap-2 rounded-full px-3 py-2"
+                  style={{ background: '#fff', border: '1px solid rgba(124,58,237,0.12)' }}>
+                  <input
+                    ref={commentInputRef}
+                    value={commentText}
+                    onChange={e => setCommentText(e.target.value)}
+                    onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleComment(); } }}
+                    placeholder="Escribe un comentario..."
+                    className="flex-1 text-[13px] text-foreground placeholder:text-muted-foreground/50 outline-none bg-transparent"
+                  />
+                </div>
+                <motion.button
+                  onClick={handleComment}
+                  disabled={!commentText.trim() || sendingComment}
+                  whileTap={{ scale: 0.9 }}
+                  className="w-8 h-8 rounded-full flex items-center justify-center disabled:opacity-40 transition-opacity"
+                  style={{ background: 'linear-gradient(135deg,#7C3AED,#4361EE)' }}>
+                  {sendingComment
+                    ? <div className="w-3.5 h-3.5 border-2 border-white/50 border-t-white rounded-full animate-spin" />
+                    : <Send className="w-3.5 h-3.5 text-white" />
+                  }
+                </motion.button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }
@@ -264,41 +346,58 @@ function PostCard({
 // ── Composer (crear post) ─────────────────────────────────────────────────────
 
 function PostComposer({
-  userName, userRole, userAvatar, onSubmit, loading,
+  userName, userRole, userAvatar, onSubmit, loading, token,
 }: {
   userName: string; userRole: string; userAvatar?: string | null;
-  onSubmit: (content: string, imageUrl?: string) => Promise<void>;
-  loading: boolean;
+  onSubmit: (content: string, mediaUrl?: string, mediaPublicId?: string) => Promise<void>;
+  loading: boolean; token: string | null;
 }) {
-  const [open, setOpen]       = useState(false);
-  const [content, setContent] = useState('');
-  const [imgUrl, setImgUrl]   = useState('');
-  const [sending, setSending] = useState(false);
-  const textRef = useRef<HTMLTextAreaElement>(null);
+  const [open, setOpen]         = useState(false);
+  const [content, setContent]   = useState('');
+  const [media, setMedia]       = useState<{ url: string; publicId: string; type: string; name: string } | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [sending, setSending]   = useState(false);
+  const textRef    = useRef<HTMLTextAreaElement>(null);
+  const fileRef    = useRef<HTMLInputElement>(null);
+
+  async function handleFile(file: File) {
+    setUploading(true);
+    try {
+      const type = file.type.startsWith('video') ? 'video' : file.type.startsWith('image') ? 'image' : 'raw';
+      const reader = new FileReader();
+      const base64 = await new Promise<string>(res => {
+        reader.onload = e => res(e.target?.result as string);
+        reader.readAsDataURL(file);
+      });
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/posts/upload-media`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        body: JSON.stringify({ data: base64, type }),
+      });
+      const data = await res.json();
+      if (data.url) setMedia({ url: data.url, publicId: data.publicId, type: data.mediaType, name: file.name });
+    } catch { /* silencioso */ } finally { setUploading(false); }
+  }
 
   async function handleSubmit() {
     const text = content.trim();
     if (!text) return;
     setSending(true);
     try {
-      await onSubmit(text, imgUrl.trim() || undefined);
-      setContent('');
-      setImgUrl('');
-      setOpen(false);
+      await onSubmit(text, media?.url, media?.publicId);
+      setContent(''); setMedia(null); setOpen(false);
     } finally { setSending(false); }
   }
 
+  const mediaIsVideo = media?.type === 'video';
+  const mediaIsFile  = media && !['image', 'video'].includes(media.type);
+
   return (
-    <motion.div
-      variants={cardVariant}
-      className="bg-white border border-border rounded-2xl overflow-hidden"
-      style={{ boxShadow: '0 2px 12px rgba(124,58,237,0.06)' }}
-    >
-      {/* Trigger row */}
-      <button
-        onClick={() => { setOpen(o => !o); setTimeout(() => textRef.current?.focus(), 100); }}
-        className="w-full flex items-center gap-3 px-4 py-3.5 text-left"
-      >
+    <motion.div variants={cardVariant} className="bg-white border border-border rounded-2xl overflow-hidden"
+      style={{ boxShadow: '0 2px 12px rgba(124,58,237,0.06)' }}>
+      {/* Trigger */}
+      <button onClick={() => { setOpen(o => !o); setTimeout(() => textRef.current?.focus(), 100); }}
+        className="w-full flex items-center gap-3 px-4 py-3.5 text-left">
         <Avatar src={userAvatar} name={userName} size={38} role={userRole} />
         <div className="flex-1 rounded-full px-4 py-2 text-[13px] text-muted-foreground/60 font-medium"
           style={{ background: 'rgba(124,58,237,0.05)', border: '1px solid rgba(124,58,237,0.10)' }}>
@@ -310,63 +409,79 @@ function PostComposer({
         </div>
       </button>
 
-      {/* Expanded composer */}
       <AnimatePresence>
         {open && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.28, ease: [0.23, 1, 0.32, 1] }}
-            style={{ overflow: 'hidden' }}
-          >
+          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.28, ease: [0.23, 1, 0.32, 1] }}
+            style={{ overflow: 'hidden' }}>
             <div className="px-4 pb-4 space-y-3 border-t border-border/60 pt-3">
-              <textarea
-                ref={textRef}
-                value={content}
-                onChange={e => setContent(e.target.value)}
-                placeholder="Escribe algo para el club..."
-                rows={3}
+              <textarea ref={textRef} value={content} onChange={e => setContent(e.target.value)}
+                placeholder="Escribe algo para el club..." rows={3}
                 className="w-full rounded-xl px-4 py-3 text-[14px] text-foreground placeholder:text-muted-foreground/50 resize-none outline-none focus:ring-2 border border-border"
-                style={{ background: 'rgba(124,58,237,0.03)' }}
-              />
+                style={{ background: 'rgba(124,58,237,0.03)' }} />
 
-              {/* URL imagen opcional */}
-              <div className="flex items-center gap-2">
-                <ImageIcon className="w-4 h-4 text-muted-foreground/50 shrink-0" />
-                <input
-                  type="url"
-                  value={imgUrl}
-                  onChange={e => setImgUrl(e.target.value)}
-                  placeholder="URL de imagen (opcional)"
-                  className="flex-1 text-[12px] text-foreground outline-none border-b border-border pb-1 placeholder:text-muted-foreground/40 bg-transparent"
-                />
-                {imgUrl && (
-                  <button onClick={() => setImgUrl('')} className="text-muted-foreground/40 hover:text-muted-foreground">
+              {/* Preview de media */}
+              {media && (
+                <div className="relative rounded-xl overflow-hidden border border-border">
+                  {mediaIsVideo ? (
+                    <video src={media.url} controls className="w-full" style={{ maxHeight: 200 }} />
+                  ) : mediaIsFile ? (
+                    <div className="flex items-center gap-3 px-4 py-3 bg-secondary">
+                      <FileText className="w-5 h-5" style={{ color: '#4361EE' }} />
+                      <span className="text-[12px] font-semibold text-foreground truncate flex-1">{media.name}</span>
+                    </div>
+                  ) : (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={media.url} alt="preview" className="w-full object-cover" style={{ maxHeight: 200 }} />
+                  )}
+                  <button onClick={() => setMedia(null)}
+                    className="absolute top-2 right-2 w-6 h-6 rounded-full bg-black/60 flex items-center justify-center text-white">
                     <X className="w-3.5 h-3.5" />
                   </button>
-                )}
-              </div>
+                </div>
+              )}
 
-              {/* Acciones */}
+              {/* Adjuntar archivo */}
+              <input ref={fileRef} type="file" accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.zip"
+                className="sr-only"
+                onChange={e => { const f = e.target.files?.[0]; if (f) handleFile(f); e.target.value = ''; }} />
+
               <div className="flex items-center justify-between">
-                <button
-                  onClick={() => { setOpen(false); setContent(''); setImgUrl(''); }}
-                  className="text-[12px] font-semibold text-muted-foreground px-3 py-1.5 rounded-full hover:bg-secondary transition-colors"
-                >Cancelar</button>
-                <motion.button
-                  onClick={handleSubmit}
-                  disabled={!content.trim() || sending || loading}
-                  whileTap={{ scale: 0.95 }}
-                  transition={{ type: 'spring' as const, stiffness: 500, damping: 15 }}
-                  className="flex items-center gap-2 px-5 py-2 rounded-full text-[13px] font-bold text-white disabled:opacity-50 transition-opacity"
-                  style={{ background: 'linear-gradient(135deg,#7C3AED,#4361EE)' }}
-                >
-                  {sending
-                    ? <div className="w-3.5 h-3.5 border-2 border-white/50 border-t-white rounded-full animate-spin" />
-                    : <><Send className="w-3.5 h-3.5" /><span>Publicar</span></>
-                  }
-                </motion.button>
+                <div className="flex items-center gap-1">
+                  {/* Botones de adjuntar */}
+                  {[
+                    { icon: ImageIcon, label: 'Imagen', accept: 'image/*', color: '#06D6A0' },
+                    { icon: Video,     label: 'Video',  accept: 'video/*', color: '#4361EE' },
+                    { icon: Paperclip, label: 'Archivo',accept: '.pdf,.doc,.docx,.xls,.xlsx,.zip', color: '#FFB703' },
+                  ].map(btn => (
+                    <motion.button key={btn.label} whileTap={{ scale: 0.9 }}
+                      disabled={uploading}
+                      onClick={() => { if (fileRef.current) { fileRef.current.accept = btn.accept; fileRef.current.click(); } }}
+                      className="flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[11px] font-semibold transition-colors disabled:opacity-50"
+                      style={{ background: `${btn.color}12`, color: btn.color }}>
+                      {uploading
+                        ? <div className="w-3 h-3 rounded-full border border-t-transparent animate-spin" style={{ borderColor: btn.color, borderTopColor: 'transparent' }} />
+                        : <btn.icon className="w-3.5 h-3.5" />}
+                      <span className="hidden sm:inline">{btn.label}</span>
+                    </motion.button>
+                  ))}
+                </div>
+                <div className="flex items-center gap-2">
+                  <button onClick={() => { setOpen(false); setContent(''); setMedia(null); }}
+                    className="text-[12px] font-semibold text-muted-foreground px-3 py-1.5 rounded-full hover:bg-secondary transition-colors">
+                    Cancelar</button>
+                  <motion.button onClick={handleSubmit}
+                    disabled={!content.trim() || sending || loading || uploading}
+                    whileTap={{ scale: 0.95 }}
+                    transition={{ type: 'spring' as const, stiffness: 500, damping: 15 }}
+                    className="flex items-center gap-2 px-5 py-2 rounded-full text-[13px] font-bold text-white disabled:opacity-50 transition-opacity"
+                    style={{ background: 'linear-gradient(135deg,#7C3AED,#4361EE)' }}>
+                    {sending
+                      ? <div className="w-3.5 h-3.5 border-2 border-white/50 border-t-white rounded-full animate-spin" />
+                      : <><Send className="w-3.5 h-3.5" /><span>Publicar</span></>
+                    }
+                  </motion.button>
+                </div>
               </div>
             </div>
           </motion.div>
@@ -409,6 +524,7 @@ export default function DashboardPage() {
 
   // currentUserId (clerkId del usuario autenticado)
   const [currentUserId, setCurrentUserId] = useState('');
+  const [authToken, setAuthToken] = useState<string | null>(null);
 
   // Close notif panel when clicking outside
   useEffect(() => {
@@ -444,6 +560,7 @@ export default function DashboardPage() {
     (async () => {
       try {
         const token = await session?.getToken();
+        setAuthToken(token ?? null);
         const now   = new Date();
         const month = now.getMonth() + 1;
         const year  = now.getFullYear();
@@ -527,17 +644,37 @@ export default function DashboardPage() {
 
   // ── Handlers ──────────────────────────────────────────────────────────────
 
-  async function handleCreatePost(content: string, imageUrl?: string) {
+  async function handleCreatePost(content: string, mediaUrl?: string, mediaPublicId?: string) {
     const token = await session?.getToken();
     const res = await apiFetch<{ post: Post }>('/posts', {
       token, method: 'POST',
       body: JSON.stringify({
         content,
         scope: feedScope === 'public' ? 'PUBLIC' : 'PRIVATE',
-        ...(imageUrl ? { imageUrl } : {}),
+        ...(mediaUrl ? { mediaUrl, mediaPublicId } : {}),
       }),
     });
     setPosts(prev => [res.post, ...prev]);
+  }
+
+  async function handleComment(postId: string, content: string) {
+    const token = await session?.getToken();
+    const res = await apiFetch<{ comment: PostComment }>(`/posts/${postId}/comments`, {
+      token, method: 'POST',
+      body: JSON.stringify({ content }),
+    });
+    setPosts(prev => prev.map(p =>
+      p.id === postId ? { ...p, comments: [...p.comments, res.comment] } : p
+    ));
+  }
+
+  function handleDeleteComment(postId: string, commentId: string) {
+    session?.getToken().then(token => {
+      apiFetch(`/posts/${postId}/comments/${commentId}`, { token, method: 'DELETE' }).catch(() => {});
+    });
+    setPosts(prev => prev.map(p =>
+      p.id === postId ? { ...p, comments: p.comments.filter(c => c.id !== commentId) } : p
+    ));
   }
 
   async function handleLike(postId: string) {
@@ -881,6 +1018,7 @@ export default function DashboardPage() {
             userAvatar={undefined}
             onSubmit={handleCreatePost}
             loading={postsLoading}
+            token={authToken}
           />
         )}
 
@@ -927,6 +1065,8 @@ export default function DashboardPage() {
                 canDelete={canPost}
                 onLike={handleLike}
                 onDelete={handleDelete}
+                onComment={handleComment}
+                onDeleteComment={handleDeleteComment}
               />
             ))}
           </AnimatePresence>

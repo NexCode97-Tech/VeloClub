@@ -290,15 +290,42 @@ export async function downloadInvoicePDF(
     doc.text(value, TABLE_X + 78, textY);
   });
 
-  // ── 8. Sello PAGADO debajo de la tabla ────────────────────────────────────
+  // ── 8. Sello PAGADO ladeado (estilo sello real) ───────────────────────────
   if (isPaid) {
-    const selloY = TABLE_Y + 9 + rows.length * ROW_H + 10;
-    doc.setFillColor(6, 214, 160);
-    doc.roundedRect(TABLE_X + TABLE_W - 62, selloY, 62, 14, 3, 3, 'F');
-    doc.setTextColor(...WHITE);
-    doc.setFontSize(10);
+    const cx = TABLE_X + TABLE_W - 38; // centro X del sello
+    const cy = TABLE_Y + 9 + rows.length * ROW_H + 20; // centro Y
+    const angle = -18; // grados de inclinación
+
+    doc.saveGraphicsState();
+
+    // Transformación de rotación centrada en (cx, cy) — jsPDF usa radianes internamente
+    // Dibujamos en coordenadas locales y rotamos con la API de transformación
+    const rad = (angle * Math.PI) / 180;
+    const cos = Math.cos(rad);
+    const sin = Math.sin(rad);
+
+    // jsPDF: setCurrentTransformationMatrix(a, b, c, d, e, f) en unidades internas
+    // 1 mm = 2.8346 puntos
+    const PT = 2.8346;
+    const tx = cx * PT;
+    const ty = (297 - cy) * PT; // jsPDF Y invertido en puntos
+
+    doc.setCurrentTransformationMatrix(cos, -sin, sin, cos, tx - cos * tx + sin * ty, ty + sin * tx - cos * ty);
+
+    // Borde doble del sello (sin relleno — fondo transparente)
+    doc.setDrawColor(...GREEN);
+    doc.setLineWidth(1.6);
+    doc.roundedRect(cx - 30, cy - 9, 60, 18, 3, 3, 'S');
+    doc.setLineWidth(0.5);
+    doc.roundedRect(cx - 27, cy - 6.5, 54, 13, 2, 2, 'S');
+
+    // Texto del sello
+    doc.setTextColor(...GREEN);
+    doc.setFontSize(16);
     doc.setFont('helvetica', 'bold');
-    doc.text('PAGADO', TABLE_X + TABLE_W - 31, selloY + 9.5, { align: 'center' });
+    doc.text('PAGADO', cx, cy + 1.5, { align: 'center' });
+
+    doc.restoreGraphicsState();
   }
 
   // ── 9. Franja inferior de acento ──────────────────────────────────────────

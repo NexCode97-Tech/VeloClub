@@ -262,12 +262,12 @@ export default function MiembrosPage() {
   // ── Step content renderer ────────────────────────────────────────────────────
   const currentStep = steps[step]?.id;
 
-  // ── Stats desktop ────────────────────────────────────────────────────────────
-  const statsDesktop = [
-    { label: 'Total', value: members.length, color: '#7C3AED', bg: 'rgba(124,58,237,0.08)' },
-    { label: 'Deportistas', value: members.filter(m => m.role === 'STUDENT').length, color: '#4361EE', bg: 'rgba(67,97,238,0.08)' },
-    { label: 'Entrenadores', value: members.filter(m => m.role === 'COACH').length, color: '#06D6A0', bg: 'rgba(6,214,160,0.10)' },
-    { label: 'Admins', value: members.filter(m => m.role === 'ADMIN').length, color: '#FFB703', bg: 'rgba(255,183,3,0.10)' },
+  // ── Stats desktop (también actúan como filtros) ──────────────────────────────
+  const statsDesktop: { label: string; value: number; color: string; bg: string; filter: 'ALL'|'STUDENT'|'COACH'|'ADMIN' }[] = [
+    { label: 'Total',       value: members.length,                                    color: '#7C3AED', bg: 'rgba(124,58,237,0.08)', filter: 'ALL'     },
+    { label: 'Deportistas', value: members.filter(m => m.role === 'STUDENT').length,  color: '#4361EE', bg: 'rgba(67,97,238,0.08)',  filter: 'STUDENT' },
+    { label: 'Entrenadores',value: members.filter(m => m.role === 'COACH').length,    color: '#06D6A0', bg: 'rgba(6,214,160,0.10)',  filter: 'COACH'   },
+    { label: 'Admins',      value: members.filter(m => m.role === 'ADMIN').length,    color: '#FFB703', bg: 'rgba(255,183,3,0.10)',  filter: 'ADMIN'   },
   ];
 
   // ── Render ───────────────────────────────────────────────────────────────────
@@ -358,25 +358,34 @@ export default function MiembrosPage() {
             initial="hidden" animate="show"
             className="grid grid-cols-4 gap-3 mb-6"
           >
-            {statsDesktop.map(s => (
-              <motion.div
-                key={s.label}
-                variants={{ hidden: { opacity: 0, y: 10, scale: 0.97 }, show: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.22, ease: EASE_OUT } } }}
-                className="rounded-2xl px-5 py-4 flex items-center gap-4"
-                style={{ background: '#fff', border: '1px solid rgba(120,80,200,0.08)', boxShadow: '0 2px 12px rgba(124,58,237,0.04)' }}
-              >
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: s.bg }}>
-                  <Users className="w-5 h-5" style={{ color: s.color }} />
-                </div>
-                <div>
-                  <p className="text-[24px] font-extrabold leading-none" style={{ color: '#1A1028', fontFamily: 'var(--font-space-grotesk)' }}>{s.value}</p>
-                  <p className="text-[11px] font-semibold mt-0.5" style={{ color: '#8E87A8' }}>{s.label}</p>
-                </div>
-              </motion.div>
-            ))}
+            {statsDesktop.map(s => {
+              const active = roleFilter === s.filter;
+              return (
+                <motion.button
+                  key={s.label}
+                  variants={{ hidden: { opacity: 0, y: 10, scale: 0.97 }, show: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.22, ease: EASE_OUT } } }}
+                  whileTap={reducedMotion ? {} : { scale: 0.97 }}
+                  onClick={() => setRoleFilter(s.filter)}
+                  className="rounded-2xl px-5 py-4 flex items-center gap-4 text-left w-full cursor-pointer transition-all"
+                  style={{
+                    background: active ? s.bg : '#fff',
+                    border: active ? `1.5px solid ${s.color}40` : '1px solid rgba(120,80,200,0.08)',
+                    boxShadow: active ? `0 4px 16px ${s.color}20` : '0 2px 12px rgba(124,58,237,0.04)',
+                  }}
+                >
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: active ? `${s.color}22` : s.bg }}>
+                    <Users className="w-5 h-5" style={{ color: s.color }} />
+                  </div>
+                  <div>
+                    <p className="text-[24px] font-extrabold leading-none" style={{ color: active ? s.color : '#1A1028', fontFamily: 'var(--font-space-grotesk)' }}>{s.value}</p>
+                    <p className="text-[11px] font-semibold mt-0.5" style={{ color: active ? s.color : '#8E87A8' }}>{s.label}</p>
+                  </div>
+                </motion.button>
+              );
+            })}
           </motion.div>
 
-          {/* ── Search + Filters ── */}
+          {/* ── Search ── */}
           <motion.div
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
@@ -391,21 +400,6 @@ export default function MiembrosPage() {
                 placeholder="Buscar por nombre o email..."
                 value={search} onChange={e => setSearch(e.target.value)}
               />
-            </div>
-            <div className="flex items-center gap-1.5 p-1 rounded-xl" style={{ background: '#fff', border: '1px solid rgba(120,80,200,0.08)' }}>
-              {([['ALL','Todos'],['STUDENT','Deportistas'],['COACH','Entrenadores'],['ADMIN','Admins']] as const).map(([val, label]) => (
-                <motion.button
-                  key={val}
-                  onClick={() => setRoleFilter(val)}
-                  whileTap={reducedMotion ? {} : { scale: 0.96 }}
-                  transition={{ duration: 0.1 }}
-                  className="px-3.5 py-1.5 rounded-lg text-[12px] font-semibold transition-all cursor-pointer"
-                  style={roleFilter === val
-                    ? { background: '#7C3AED', color: '#fff', boxShadow: '0 2px 8px rgba(124,58,237,0.25)' }
-                    : { color: '#8E87A8' }
-                  }
-                >{label}</motion.button>
-              ))}
             </div>
             <p className="text-[12px] font-semibold ml-auto" style={{ color: '#8E87A8' }}>
               {filtered.length} resultado{filtered.length !== 1 ? 's' : ''}
@@ -631,15 +625,25 @@ export default function MiembrosPage() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input className="pl-9 bg-white border-border rounded-xl" placeholder="Buscar miembro..." value={search} onChange={e => setSearch(e.target.value)} />
         </motion.div>
-        <motion.div variants={pageCard} className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
-          {([['ALL','Todos'],['STUDENT','Deportistas'],['COACH','Entrenadores'],['ADMIN','Admins']] as const).map(([val, label]) => (
-            <button key={val} onClick={() => setRoleFilter(val)}
-              className="shrink-0 px-3 py-1.5 rounded-full text-[11px] font-semibold border transition-colors"
-              style={roleFilter === val
-                ? { background: '#7C3AED', color: '#fff', borderColor: '#7C3AED' }
-                : { background: '#fff', color: '#8E87A8', borderColor: 'rgba(120,80,200,0.10)' }
-              }>{label}</button>
-          ))}
+        {/* Stats móvil como filtros */}
+        <motion.div variants={pageCard} className="grid grid-cols-4 gap-2">
+          {statsDesktop.map(s => {
+            const active = roleFilter === s.filter;
+            return (
+              <button
+                key={s.label}
+                onClick={() => setRoleFilter(s.filter)}
+                className="rounded-xl px-2 py-2.5 flex flex-col items-center gap-1 transition-all"
+                style={{
+                  background: active ? s.bg : '#fff',
+                  border: active ? `1.5px solid ${s.color}40` : '1px solid rgba(120,80,200,0.08)',
+                }}
+              >
+                <p className="text-[18px] font-extrabold leading-none" style={{ color: active ? s.color : '#1A1028', fontFamily: 'var(--font-space-grotesk)' }}>{s.value}</p>
+                <p className="text-[9px] font-semibold text-center leading-tight" style={{ color: active ? s.color : '#8E87A8' }}>{s.label}</p>
+              </button>
+            );
+          })}
         </motion.div>
 
         {loading ? (

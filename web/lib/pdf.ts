@@ -212,25 +212,7 @@ export async function downloadInvoicePDF(
   doc.setTextColor(...MUTED);
   doc.text(`${MONTH_NAMES[payment.month - 1]} ${payment.year}`, 14, 66);
 
-  // ── 6. Tarjeta de MONTO destacado (sin badge de estado) ───────────────────
-  doc.setFillColor(...WHITE);
-  doc.setDrawColor(...PURPLE);
-  doc.setLineWidth(0.3);
-  doc.roundedRect(14, 74, 182, 28, 4, 4, 'FD');
-
-  // Etiqueta MONTO TOTAL
-  doc.setFontSize(7);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(...MUTED);
-  doc.text('MONTO TOTAL', 22, 83);
-
-  // Valor grande
-  doc.setFontSize(22);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(...PURPLE);
-  doc.text(fmt.format(payment.amount), 22, 95);
-
-  // ── 7. Tabla de detalle ────────────────────────────────────────────────────
+  // ── 6. Tabla de detalle PRIMERO ───────────────────────────────────────────
   const rows: [string, string][] = [
     ['DEPORTISTA',    payment.memberName],
     ['CONCEPTO',      `Mensualidad ${MONTH_NAMES[payment.month - 1]} ${payment.year}`],
@@ -241,64 +223,55 @@ export async function downloadInvoicePDF(
   ];
   if (payment.notes) rows.push(['NOTAS', payment.notes]);
 
-  const ROW_H    = 13;   // altura de cada fila
-  const TABLE_Y  = 110;  // inicio de la cabecera
-  const TABLE_X  = 14;
-  const TABLE_W  = 182;
+  const ROW_H   = 13;
+  const TABLE_X = 14;
+  const TABLE_W = 182;
+  const TABLE_Y = 74; // justo debajo del título
 
-  // ── Cabecera de sección ──
+  // Cabecera de sección
   doc.setFillColor(237, 233, 254);
   doc.roundedRect(TABLE_X, TABLE_Y, TABLE_W, 9, 2, 2, 'F');
   doc.setFontSize(7.5);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(...PURPLE);
-  // Centrado vertical: baseline = top + height/2 + ~1.5 (aprox cap-height/2)
   doc.text('DETALLE DEL COBRO', TABLE_X + 8, TABLE_Y + 6);
 
-  // Borde exterior de toda la tabla (cabecera + filas)
+  // Borde exterior (cabecera + filas)
   doc.setDrawColor(...PURPLE);
   doc.setLineWidth(0.3);
   doc.roundedRect(TABLE_X, TABLE_Y, TABLE_W, 9 + rows.length * ROW_H, 2, 2, 'S');
 
-  // ── Filas ──
+  // Filas
   rows.forEach(([label, value], i) => {
     const rowTop = TABLE_Y + 9 + i * ROW_H;
-    // Fondo alternado
     doc.setFillColor(i % 2 === 0 ? 250 : 255, i % 2 === 0 ? 249 : 255, 255);
     doc.rect(TABLE_X, rowTop, TABLE_W, ROW_H, 'F');
 
-    // Separador horizontal (no en la última fila)
     if (i < rows.length - 1) {
       doc.setDrawColor(225, 220, 245);
       doc.setLineWidth(0.15);
       doc.line(TABLE_X, rowTop + ROW_H, TABLE_X + TABLE_W, rowTop + ROW_H);
     }
 
-    // Texto centrado verticalmente: baseline = rowTop + ROW_H/2 + 1.5
     const textY = rowTop + ROW_H / 2 + 1.5;
-
-    // Label (izquierda, gris, pequeño)
     doc.setFontSize(7.5);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(...MUTED);
     doc.text(label, TABLE_X + 8, textY);
 
-    // Value (centro-derecha, oscuro)
     doc.setFontSize(9.5);
     doc.setFont('helvetica', label === 'DEPORTISTA' ? 'bold' : 'normal');
     doc.setTextColor(...DARK);
     doc.text(value, TABLE_X + 78, textY);
   });
 
-  // ── 8. Sello PAGADO — centrado sobre la tabla, inclinado ─────────────────
+  // ── 7. Sello PAGADO — centrado sobre la tabla ─────────────────────────────
   if (isPaid) {
-    // Centro del sello: mitad derecha de la tabla de detalle
     const cx  = TABLE_X + TABLE_W - 44;
-    const cy  = TABLE_Y + 9 + (rows.length * ROW_H) / 2; // centro vertical de la tabla
+    const cy  = TABLE_Y + 9 + (rows.length * ROW_H) / 2;
     const DEG = 18;
     const RAD = (DEG * Math.PI) / 180;
 
-    // Rota un punto (px,py) alrededor de (cx,cy) con -DEG grados
     function rotPt(px: number, py: number): [number, number] {
       const dx = px - cx, dy = py - cy;
       return [
@@ -306,14 +279,10 @@ export async function downloadInvoicePDF(
         cy + dx * Math.sin(-RAD) + dy * Math.cos(-RAD),
       ];
     }
-
-    // Dibuja un rectángulo rotado como 4 líneas
     function rotRect(rx: number, ry: number, rw: number, rh: number) {
       const corners: [number, number][] = [
-        rotPt(rx,      ry),
-        rotPt(rx + rw, ry),
-        rotPt(rx + rw, ry + rh),
-        rotPt(rx,      ry + rh),
+        rotPt(rx,      ry),      rotPt(rx + rw, ry),
+        rotPt(rx + rw, ry + rh), rotPt(rx,      ry + rh),
       ];
       for (let i = 0; i < 4; i++) {
         const [x1, y1] = corners[i];
@@ -322,22 +291,36 @@ export async function downloadInvoicePDF(
       }
     }
 
-    // Borde exterior + interior (doble contorno de sello)
     doc.setDrawColor(...GREEN);
     doc.setLineWidth(1.8);
-    rotRect(cx - 32, cy - 10, 64, 20);  // exterior
+    rotRect(cx - 32, cy - 10, 64, 20);
     doc.setLineWidth(0.6);
-    rotRect(cx - 28, cy - 7,  56, 14);  // interior
+    rotRect(cx - 28, cy - 7,  56, 14);
 
-    // Texto centrado en el sello:
-    // jsPDF angle rota antihorario desde la baseline del texto.
-    // Para que quede centrado dentro del rectángulo de 20mm alto,
-    // colocamos la baseline en cy + 3 (aprox mitad de cap-height de 16pt≈5.6mm)
+    // Offset +8: compensa el desplazamiento visual que genera angle en jsPDF
+    // (el anchor con angle positivo eleva visualmente el texto ~5mm)
     doc.setTextColor(...GREEN);
     doc.setFontSize(16);
     doc.setFont('helvetica', 'bold');
-    doc.text('PAGADO', cx, cy + 3, { align: 'center', angle: DEG });
+    doc.text('PAGADO', cx, cy + 8, { align: 'center', angle: DEG });
   }
+
+  // ── 8. Tarjeta MONTO TOTAL — debajo de la tabla ───────────────────────────
+  const montoY = TABLE_Y + 9 + rows.length * ROW_H + 8;
+  doc.setFillColor(...WHITE);
+  doc.setDrawColor(...PURPLE);
+  doc.setLineWidth(0.3);
+  doc.roundedRect(TABLE_X, montoY, TABLE_W, 28, 4, 4, 'FD');
+
+  doc.setFontSize(7);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(...MUTED);
+  doc.text('MONTO TOTAL', TABLE_X + 8, montoY + 9);
+
+  doc.setFontSize(22);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(...PURPLE);
+  doc.text(fmt.format(payment.amount), TABLE_X + 8, montoY + 21);
 
   // ── 9. Franja inferior de acento ──────────────────────────────────────────
   gradientRect(doc, 0, 278, 210, 5);

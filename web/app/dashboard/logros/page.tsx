@@ -1,23 +1,19 @@
 'use client';
-import { motion } from 'framer-motion';
-import { stagger, cardVariant } from '@/lib/page-animations';
-
+import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@clerk/nextjs';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { apiFetch } from '@/lib/api-client';
 import { parseLocalDate } from '@/lib/utils';
 import Link from 'next/link';
 import {
   Trophy, Plus, Trash2, MapPin, CalendarDays, ChevronRight,
-  Dumbbell,
+  Dumbbell, Users, Target,
 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import {
-  Select, SelectContent, SelectItem, SelectTrigger,
-} from '@/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 interface EventResult  { id: string; position?: number; member: { id: string; fullName: string } }
@@ -30,31 +26,83 @@ interface TrainingSession { id: string; title: string; date: string; notes?: str
 interface Location { id: string; name: string }
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
-const emptyComp     = { name: '', place: '', date: '' };
-const emptySession  = { title: '', date: '', locationId: '', notes: '' };
+const emptyComp    = { name: '', place: '', date: '' };
+const emptySession = { title: '', date: '', locationId: '', notes: '' };
+
+// Medal SVG components (no emojis)
+function MedalIcon({ position }: { position: number }) {
+  const colors: Record<number, { bg: string; ring: string; text: string }> = {
+    1: { bg: '#FFF7CC', ring: '#F4BF00', text: '#A67C00' },
+    2: { bg: '#F0F0F0', ring: '#A0A0A0', text: '#606060' },
+    3: { bg: '#FFF0E6', ring: '#D4845A', text: '#8B4513' },
+  };
+  const c = colors[position];
+  if (!c) return null;
+  return (
+    <span
+      className="inline-flex items-center justify-center w-5 h-5 rounded-full text-[9px] font-black"
+      style={{ background: c.bg, border: `1.5px solid ${c.ring}`, color: c.text }}
+    >
+      {position}
+    </span>
+  );
+}
+
+// Stat pill
+function StatPill({ value, label, color }: { value: number; label: string; color: string }) {
+  return (
+    <div className="flex flex-col items-center gap-0.5 px-4 py-2 rounded-xl" style={{ background: `${color}12` }}>
+      <span className="text-[18px] font-black leading-none" style={{ color }}>{value}</span>
+      <span className="text-[10px] font-medium text-muted-foreground leading-none">{label}</span>
+    </div>
+  );
+}
+
+// Skeleton card
+function SkeletonCard() {
+  return (
+    <div className="bg-white border border-border rounded-2xl p-4 animate-pulse">
+      <div className="flex gap-3">
+        <div className="w-12 h-12 rounded-xl bg-secondary shrink-0" />
+        <div className="flex-1 space-y-2">
+          <div className="h-3 bg-secondary rounded-full w-2/3" />
+          <div className="h-2 bg-secondary rounded-full w-1/2" />
+          <div className="h-2 bg-secondary rounded-full w-1/3" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const listVariants = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.06 } },
+};
+const itemVariant = {
+  hidden: { opacity: 0, y: 16 },
+  show:   { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 380, damping: 28 } },
+};
 
 export default function LogrosPage() {
   const { getToken } = useAuth();
-  const [tab, setTab]                 = useState<'comp' | 'train'>('comp');
-  const [role, setRole]               = useState('');
-  const [locations, setLocations]     = useState<Location[]>([]);
-  const [loading, setLoading]         = useState(true);
-  const [myMemberId, setMyMemberId]   = useState<string | null>(null);
+  const [tab, setTab]               = useState<'comp' | 'train'>('comp');
+  const [role, setRole]             = useState('');
+  const [locations, setLocations]   = useState<Location[]>([]);
+  const [loading, setLoading]       = useState(true);
+  const [myMemberId, setMyMemberId] = useState<string | null>(null);
 
-  // Competencias state
-  const [competitions, setComps]      = useState<Competition[]>([]);
-  const [compOpen, setCompOpen]       = useState(false);
-  const [compForm, setCompForm]       = useState(emptyComp);
-  const [savingComp, setSavingComp]   = useState(false);
-  const [compError, setCompError]     = useState<string | null>(null);
+  const [competitions, setComps]    = useState<Competition[]>([]);
+  const [compOpen, setCompOpen]     = useState(false);
+  const [compForm, setCompForm]     = useState(emptyComp);
+  const [savingComp, setSavingComp] = useState(false);
+  const [compError, setCompError]   = useState<string | null>(null);
   const [deletingComp, setDeletingComp] = useState<string | null>(null);
 
-  // Entrenamientos state
-  const [sessions, setSessions]             = useState<TrainingSession[]>([]);
-  const [sessionOpen, setSessionOpen]       = useState(false);
-  const [sessionForm, setSessionForm]       = useState(emptySession);
-  const [savingSession, setSavingSession]   = useState(false);
-  const [sessionError, setSessionError]     = useState<string | null>(null);
+  const [sessions, setSessions]         = useState<TrainingSession[]>([]);
+  const [sessionOpen, setSessionOpen]   = useState(false);
+  const [sessionForm, setSessionForm]   = useState(emptySession);
+  const [savingSession, setSavingSession] = useState(false);
+  const [sessionError, setSessionError]   = useState<string | null>(null);
   const [deletingSession, setDeletingSession] = useState<string | null>(null);
 
   async function loadAll() {
@@ -82,7 +130,6 @@ export default function LogrosPage() {
   const canManage = role === 'ADMIN' || role === 'COACH';
   const isStudent = role === 'STUDENT';
 
-  // Para STUDENT: solo competencias/entrenamientos donde tiene resultados
   const visibleComps = isStudent && myMemberId
     ? competitions.filter(c => c.events.some(e => e.results.some(r => r.member.id === myMemberId)))
     : competitions;
@@ -90,7 +137,6 @@ export default function LogrosPage() {
     ? sessions.filter(s => s.results.some(r => r.member.id === myMemberId))
     : sessions;
 
-  // ── Competencias handlers ───────────────────────────────────────────────────
   async function handleSaveComp() {
     if (!compForm.name.trim() || !compForm.date) return;
     setSavingComp(true); setCompError(null);
@@ -116,7 +162,6 @@ export default function LogrosPage() {
     } finally { setDeletingComp(null); }
   }
 
-  // ── Entrenamientos handlers ─────────────────────────────────────────────────
   async function handleSaveSession() {
     if (!sessionForm.title.trim() || !sessionForm.date) return;
     setSavingSession(true); setSessionError(null);
@@ -147,184 +192,147 @@ export default function LogrosPage() {
     } finally { setDeletingSession(null); }
   }
 
-  // ── Render ──────────────────────────────────────────────────────────────────
-  const totalCompResults = visibleComps.reduce((s, c) => s + c.events.reduce((e, ev) => e + ev.results.length, 0), 0);
+  const totalCompResults  = visibleComps.reduce((s, c) => s + c.events.reduce((e, ev) => e + ev.results.length, 0), 0);
   const totalTrainResults = visibleSessions.reduce((s, ses) => s + ses.results.length, 0);
+
+  // ── Tab indicator ref ──────────────────────────────────────────────────────
+  const tabCompRef  = useRef<HTMLButtonElement>(null);
+  const tabTrainRef = useRef<HTMLButtonElement>(null);
 
   return (
     <div className="min-h-full bg-background">
-      {/* Header */}
-      <div className="px-5 py-3 bg-background border-b border-border flex items-center justify-between">
-        <div>
-          <h1 className="text-[17px] font-bold text-foreground" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
-            Resultados
-          </h1>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            {tab === 'comp'
-              ? `${visibleComps.length} competencia${visibleComps.length !== 1 ? 's' : ''} · ${totalCompResults} resultado${totalCompResults !== 1 ? 's' : ''}`
-              : `${visibleSessions.length} entrenamiento${visibleSessions.length !== 1 ? 's' : ''} · ${totalTrainResults} resultado${totalTrainResults !== 1 ? 's' : ''}`
-            }
-          </p>
-        </div>
-        {canManage && (
-          <button
-            onClick={() => {
-              if (tab === 'comp') { setCompForm(emptyComp); setCompError(null); setCompOpen(true); }
-              else { setSessionForm(emptySession); setSessionError(null); setSessionOpen(true); }
-            }}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold text-white"
-            style={{ background: '#4361EE' }}
-          >
-            <Plus className="w-4 h-4" />
-            <span className="hidden sm:inline">{tab === 'comp' ? 'Competencia' : 'Entrenamiento'}</span>
-          </button>
-        )}
-      </div>
 
-      <motion.div variants={stagger} initial="hidden" animate="show" className="px-4 pt-4 flex flex-col gap-3 pb-4">
-        {/* Tabs */}
-        <div className="flex gap-1 bg-secondary rounded-xl p-1">
-          {(['comp', 'train'] as const).map(t => (
-            <button key={t} onClick={() => setTab(t)}
-              className="flex-1 py-2 rounded-lg text-[12px] font-semibold transition-all flex items-center justify-center gap-1.5"
-              style={tab === t
-                ? { background: '#fff', color: '#1A1028', boxShadow: '0 1px 4px rgba(0,0,0,0.08)' }
-                : { color: '#8E87A8' }
-              }
+      {/* ── Header ─────────────────────────────────────────────────────────── */}
+      <div className="px-4 pt-4 pb-3">
+        <div className="flex items-start justify-between gap-2 mb-4">
+          <div>
+            <h1 className="text-[20px] font-black text-foreground tracking-tight" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
+              Resultados
+            </h1>
+            <p className="text-[12px] text-muted-foreground mt-0.5">
+              Competencias y entrenamientos del club
+            </p>
+          </div>
+          {canManage && (
+            <motion.button
+              whileTap={{ scale: 0.93 }}
+              onClick={() => {
+                if (tab === 'comp') { setCompForm(emptyComp); setCompError(null); setCompOpen(true); }
+                else { setSessionForm(emptySession); setSessionError(null); setSessionOpen(true); }
+              }}
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[13px] font-bold text-white shadow-sm shrink-0 cursor-pointer"
+              style={{ background: tab === 'comp' ? '#4361EE' : '#06D6A0' }}
             >
-              {t === 'comp' ? <><Trophy className="w-3.5 h-3.5" />Competencias</> : <><Dumbbell className="w-3.5 h-3.5" />Entrenamientos</>}
+              <Plus className="w-4 h-4" />
+              <span className="hidden sm:inline">{tab === 'comp' ? 'Competencia' : 'Entrenamiento'}</span>
+            </motion.button>
+          )}
+        </div>
+
+        {/* Stats strip */}
+        {!loading && (
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="flex gap-2 mb-4"
+          >
+            {tab === 'comp' ? (
+              <>
+                <StatPill value={visibleComps.length} label="Competencias" color="#4361EE" />
+                <StatPill value={visibleComps.reduce((s, c) => s + c.events.length, 0)} label="Pruebas" color="#7C3AED" />
+                <StatPill value={totalCompResults} label="Resultados" color="#06D6A0" />
+              </>
+            ) : (
+              <>
+                <StatPill value={visibleSessions.length} label="Sesiones" color="#06D6A0" />
+                <StatPill value={totalTrainResults} label="Resultados" color="#4361EE" />
+              </>
+            )}
+          </motion.div>
+        )}
+
+        {/* Tabs */}
+        <div className="relative flex bg-secondary rounded-2xl p-1">
+          {/* Sliding indicator */}
+          <motion.div
+            className="absolute top-1 bottom-1 rounded-xl bg-white shadow-sm"
+            animate={{ left: tab === 'comp' ? '4px' : '50%', width: 'calc(50% - 4px)' }}
+            transition={{ type: 'spring', stiffness: 500, damping: 36 }}
+          />
+          {(['comp', 'train'] as const).map(t => (
+            <button
+              key={t}
+              ref={t === 'comp' ? tabCompRef : tabTrainRef}
+              onClick={() => setTab(t)}
+              className="relative z-10 flex-1 py-2.5 rounded-xl text-[12px] font-bold transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+              style={{ color: tab === t ? '#1A1028' : '#8E87A8' }}
+            >
+              {t === 'comp'
+                ? <><Trophy className="w-3.5 h-3.5" />Competencias</>
+                : <><Dumbbell className="w-3.5 h-3.5" />Entrenamientos</>
+              }
             </button>
           ))}
         </div>
+      </div>
 
-        {loading ? (
-          <div className="flex justify-center py-10">
-            <div className="w-6 h-6 rounded-full border-2 border-primary border-t-transparent animate-spin" />
-          </div>
-        ) : tab === 'comp' ? (
-          /* ── Competencias ── */
-          visibleComps.length === 0 ? (
-            <div className="bg-white border border-border rounded-xl px-4 py-12 text-center">
-              <Trophy className="w-10 h-10 mx-auto mb-3 text-muted-foreground/30" />
-              <p className="text-[13px] font-semibold text-muted-foreground">Sin competencias registradas</p>
-              {canManage && (
-                <button onClick={() => { setCompForm(emptyComp); setCompError(null); setCompOpen(true); }}
-                  className="mt-4 px-4 py-2 rounded-xl text-sm font-semibold border border-border text-muted-foreground hover:bg-secondary transition-colors">
-                  Agregar primera competencia
-                </button>
-              )}
-            </div>
-          ) : (
-            visibleComps.map(c => {
-              const allResults = c.events.flatMap(e => e.results);
-              const visibleResults = isStudent && myMemberId
-                ? allResults.filter(r => r.member.id === myMemberId)
-                : allResults;
-              const resultCount = visibleResults.length;
-              const dateStr = parseLocalDate(c.date).toLocaleDateString('es-CO', { day: 'numeric', month: 'short', year: 'numeric' });
-              const podium = visibleResults.filter(r => r.position && r.position <= 3).sort((a, b) => (a.position ?? 99) - (b.position ?? 99)).slice(0, 3);
-              return (
-                <motion.div variants={cardVariant} key={c.id} className="bg-white border border-border rounded-xl overflow-hidden">
-                  <Link href={`/dashboard/logros/${c.id}`} className="block px-4 py-3 hover:bg-secondary/30 transition-colors">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(67,97,238,0.10)' }}>
-                        <Trophy className="w-5 h-5" style={{ color: '#4361EE' }} />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-[13px] font-bold text-foreground truncate">{c.name}</p>
-                        <div className="flex items-center gap-3 mt-0.5">
-                          {c.place && <span className="flex items-center gap-1 text-[10px] text-muted-foreground"><MapPin className="w-3 h-3" />{c.place}</span>}
-                          <span className="flex items-center gap-1 text-[10px] text-muted-foreground"><CalendarDays className="w-3 h-3" />{dateStr}</span>
-                        </div>
-                        <div className="flex items-center gap-3 mt-1">
-                          <span className="text-[10px] text-muted-foreground">{c.events.length} prueba{c.events.length !== 1 ? 's' : ''}</span>
-                          <span className="text-[10px] text-muted-foreground">{resultCount} resultado{resultCount !== 1 ? 's' : ''}</span>
-                        </div>
-                      </div>
-                      <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
-                    </div>
-                    {podium.length > 0 && (
-                      <div className="flex gap-2 mt-2 pt-2 border-t border-border/50">
-                        {podium.map(r => {
-                          const medals: Record<number, string> = { 1: '🥇', 2: '🥈', 3: '🥉' };
-                          return <span key={r.id} className="text-[11px] text-muted-foreground">{medals[r.position ?? 0]} {r.member.fullName.split(' ')[0]}</span>;
-                        })}
-                      </div>
-                    )}
-                  </Link>
-                  {canManage && (
-                    <div className="px-4 pb-3 flex justify-end">
-                      <button onClick={() => handleDeleteComp(c.id)} disabled={deletingComp === c.id}
-                        className="w-7 h-7 rounded-lg bg-red-50 flex items-center justify-center text-red-400 hover:text-red-600">
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  )}
+      {/* ── Content ─────────────────────────────────────────────────────────── */}
+      <div className="px-4 pb-6">
+        <AnimatePresence mode="wait">
+          {loading ? (
+            <motion.div key="skeleton" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col gap-3">
+              {[1, 2, 3].map(i => <SkeletonCard key={i} />)}
+            </motion.div>
+          ) : tab === 'comp' ? (
+            <motion.div key="comp" initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 12 }} transition={{ duration: 0.2 }}>
+              {visibleComps.length === 0 ? (
+                <EmptyState
+                  icon={<Trophy className="w-10 h-10" style={{ color: '#4361EE' }} />}
+                  color="#4361EE"
+                  title="Sin competencias"
+                  desc="Registra la primera competencia del club para llevar un historial de resultados."
+                  cta={canManage ? 'Agregar competencia' : undefined}
+                  onCta={() => { setCompForm(emptyComp); setCompError(null); setCompOpen(true); }}
+                />
+              ) : (
+                <motion.div variants={listVariants} initial="hidden" animate="show" className="flex flex-col gap-3">
+                  {visibleComps.map(c => <CompCard key={c.id} comp={c} isStudent={isStudent} myMemberId={myMemberId} canManage={canManage} deleting={deletingComp === c.id} onDelete={handleDeleteComp} />)}
                 </motion.div>
-              );
-            })
-          )
-        ) : (
-          /* ── Entrenamientos ── */
-          visibleSessions.length === 0 ? (
-            <motion.div variants={cardVariant} className="bg-white border border-border rounded-xl px-4 py-12 text-center">
-              <Dumbbell className="w-10 h-10 mx-auto mb-3 text-muted-foreground/30" />
-              <p className="text-[13px] font-semibold text-muted-foreground">Sin entrenamientos registrados</p>
-              {canManage && (
-                <button onClick={() => { setSessionForm(emptySession); setSessionError(null); setSessionOpen(true); }}
-                  className="mt-4 px-4 py-2 rounded-xl text-sm font-semibold border border-border text-muted-foreground hover:bg-secondary transition-colors">
-                  Registrar primer entrenamiento
-                </button>
               )}
             </motion.div>
           ) : (
-            visibleSessions.map(s => {
-              const dateStr = parseLocalDate(s.date).toLocaleDateString('es-CO', { day: 'numeric', month: 'short', year: 'numeric' });
-              return (
-                <motion.div variants={cardVariant} key={s.id} className="bg-white border border-border rounded-xl overflow-hidden">
-                  <Link href={`/dashboard/logros/entrenamiento/${s.id}`} className="block px-4 py-3 hover:bg-secondary/30 transition-colors">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(6,214,160,0.10)' }}>
-                        <Dumbbell className="w-5 h-5" style={{ color: '#06D6A0' }} />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-[13px] font-bold text-foreground truncate">{s.title}</p>
-                        <div className="flex items-center gap-3 mt-0.5">
-                          {s.location && <span className="flex items-center gap-1 text-[10px] text-muted-foreground"><MapPin className="w-3 h-3" />{s.location.name}</span>}
-                          <span className="flex items-center gap-1 text-[10px] text-muted-foreground"><CalendarDays className="w-3 h-3" />{dateStr}</span>
-                        </div>
-                        <div className="flex items-center gap-3 mt-1">
-                          {(() => {
-                            const rc = isStudent && myMemberId
-                              ? s.results.filter(r => r.member.id === myMemberId).length
-                              : s.results.length;
-                            return <span className="text-[10px] text-muted-foreground">{rc} resultado{rc !== 1 ? 's' : ''}</span>;
-                          })()}
-                          {s.notes && <span className="text-[10px] text-muted-foreground truncate max-w-[120px]">{s.notes}</span>}
-                        </div>
-                      </div>
-                      <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
-                    </div>
-                  </Link>
-                  {canManage && (
-                    <div className="px-4 pb-3 flex justify-end">
-                      <button onClick={() => handleDeleteSession(s.id)} disabled={deletingSession === s.id}
-                        className="w-7 h-7 rounded-lg bg-red-50 flex items-center justify-center text-red-400 hover:text-red-600">
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  )}
+            <motion.div key="train" initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -12 }} transition={{ duration: 0.2 }}>
+              {visibleSessions.length === 0 ? (
+                <EmptyState
+                  icon={<Dumbbell className="w-10 h-10" style={{ color: '#06D6A0' }} />}
+                  color="#06D6A0"
+                  title="Sin entrenamientos"
+                  desc="Registra sesiones de entrenamiento para hacer seguimiento del rendimiento."
+                  cta={canManage ? 'Registrar entrenamiento' : undefined}
+                  onCta={() => { setSessionForm(emptySession); setSessionError(null); setSessionOpen(true); }}
+                />
+              ) : (
+                <motion.div variants={listVariants} initial="hidden" animate="show" className="flex flex-col gap-3">
+                  {visibleSessions.map(s => <TrainCard key={s.id} session={s} isStudent={isStudent} myMemberId={myMemberId} canManage={canManage} deleting={deletingSession === s.id} onDelete={handleDeleteSession} />)}
                 </motion.div>
-              );
-            })
-          )
-        )}
-      </motion.div>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
 
-      {/* Modal nueva competencia */}
+      {/* ── Modal nueva competencia ─────────────────────────────────────────── */}
       <Dialog open={compOpen} onOpenChange={setCompOpen}>
         <DialogContent className="max-w-sm">
-          <DialogHeader><DialogTitle>Nueva competencia</DialogTitle></DialogHeader>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <span className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'rgba(67,97,238,0.10)' }}>
+                <Trophy className="w-4 h-4" style={{ color: '#4361EE' }} />
+              </span>
+              Nueva competencia
+            </DialogTitle>
+          </DialogHeader>
           <div className="space-y-4 mt-2">
             <div className="space-y-2">
               <Label>Nombre *</Label>
@@ -346,10 +354,17 @@ export default function LogrosPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Modal nuevo entrenamiento */}
+      {/* ── Modal nuevo entrenamiento ───────────────────────────────────────── */}
       <Dialog open={sessionOpen} onOpenChange={setSessionOpen}>
         <DialogContent className="max-w-sm">
-          <DialogHeader><DialogTitle>Nuevo entrenamiento</DialogTitle></DialogHeader>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <span className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'rgba(6,214,160,0.10)' }}>
+                <Dumbbell className="w-4 h-4" style={{ color: '#06D6A0' }} />
+              </span>
+              Nuevo entrenamiento
+            </DialogTitle>
+          </DialogHeader>
           <div className="space-y-4 mt-2">
             <div className="space-y-2">
               <Label>Título *</Label>
@@ -384,5 +399,215 @@ export default function LogrosPage() {
         </DialogContent>
       </Dialog>
     </div>
+  );
+}
+
+// ── CompCard ───────────────────────────────────────────────────────────────────
+function CompCard({ comp: c, isStudent, myMemberId, canManage, deleting, onDelete }: {
+  comp: Competition; isStudent: boolean; myMemberId: string | null;
+  canManage: boolean; deleting: boolean; onDelete: (id: string) => void;
+}) {
+  const allResults    = c.events.flatMap(e => e.results);
+  const visibleResults = isStudent && myMemberId ? allResults.filter(r => r.member.id === myMemberId) : allResults;
+  const resultCount   = visibleResults.length;
+  const dateStr       = parseLocalDate(c.date).toLocaleDateString('es-CO', { day: 'numeric', month: 'short', year: 'numeric' });
+  const podium        = visibleResults
+    .filter(r => r.position && r.position <= 3)
+    .sort((a, b) => (a.position ?? 99) - (b.position ?? 99))
+    .slice(0, 3);
+  const hasGold       = podium.some(r => r.position === 1);
+
+  return (
+    <motion.div
+      variants={itemVariant}
+      style={{ borderRadius: 16 }}
+      whileHover={{ y: -2, boxShadow: '0 8px 32px rgba(67,97,238,0.13)' }}
+      transition={{ type: 'spring', stiffness: 400, damping: 28 }}
+      className="bg-white border border-border overflow-hidden"
+    >
+      {/* Color accent bar */}
+      <div className="h-1 w-full" style={{ background: hasGold ? 'linear-gradient(90deg,#F4BF00,#4361EE)' : 'linear-gradient(90deg,#4361EE,#7C3AED)' }} />
+
+      <Link href={`/dashboard/logros/${c.id}`} className="block px-4 py-3.5 cursor-pointer">
+        <div className="flex items-start gap-3">
+          {/* Icon */}
+          <div
+            className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0 mt-0.5"
+            style={{ background: 'linear-gradient(135deg,rgba(67,97,238,0.12),rgba(124,58,237,0.12))' }}
+          >
+            <Trophy className="w-5 h-5" style={{ color: '#4361EE' }} />
+          </div>
+
+          {/* Info */}
+          <div className="flex-1 min-w-0">
+            <p className="text-[14px] font-bold text-foreground truncate leading-tight">{c.name}</p>
+
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1">
+              {c.place && (
+                <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                  <MapPin className="w-3 h-3 shrink-0" />{c.place}
+                </span>
+              )}
+              <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                <CalendarDays className="w-3 h-3 shrink-0" />{dateStr}
+              </span>
+            </div>
+
+            {/* Chips */}
+            <div className="flex items-center gap-2 mt-2">
+              <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold" style={{ background: 'rgba(67,97,238,0.08)', color: '#4361EE' }}>
+                <Target className="w-3 h-3" />{c.events.length} prueba{c.events.length !== 1 ? 's' : ''}
+              </span>
+              <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold" style={{ background: 'rgba(6,214,160,0.08)', color: '#05A07B' }}>
+                <Users className="w-3 h-3" />{resultCount} resultado{resultCount !== 1 ? 's' : ''}
+              </span>
+            </div>
+          </div>
+
+          <ChevronRight className="w-4 h-4 text-muted-foreground/50 shrink-0 mt-1.5" />
+        </div>
+
+        {/* Podio */}
+        {podium.length > 0 && (
+          <div className="flex items-center gap-2 mt-3 pt-3 border-t border-border/60">
+            <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Pódio</span>
+            <div className="flex items-center gap-1.5 flex-wrap">
+              {podium.map(r => (
+                <span key={r.id} className="flex items-center gap-1">
+                  <MedalIcon position={r.position ?? 0} />
+                  <span className="text-[11px] font-semibold text-foreground">{r.member.fullName.split(' ')[0]}</span>
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+      </Link>
+
+      {canManage && (
+        <div className="px-4 pb-3 flex justify-end">
+          <motion.button
+            whileTap={{ scale: 0.9 }}
+            onClick={() => onDelete(c.id)}
+            disabled={deleting}
+            className="w-7 h-7 rounded-lg flex items-center justify-center cursor-pointer transition-colors"
+            style={{ background: 'rgba(239,71,111,0.08)', color: '#EF476F' }}
+          >
+            {deleting
+              ? <div className="w-3.5 h-3.5 rounded-full border border-red-400 border-t-transparent animate-spin" />
+              : <Trash2 className="w-3.5 h-3.5" />
+            }
+          </motion.button>
+        </div>
+      )}
+    </motion.div>
+  );
+}
+
+// ── TrainCard ──────────────────────────────────────────────────────────────────
+function TrainCard({ session: s, isStudent, myMemberId, canManage, deleting, onDelete }: {
+  session: TrainingSession; isStudent: boolean; myMemberId: string | null;
+  canManage: boolean; deleting: boolean; onDelete: (id: string) => void;
+}) {
+  const rc      = isStudent && myMemberId ? s.results.filter(r => r.member.id === myMemberId).length : s.results.length;
+  const dateStr = parseLocalDate(s.date).toLocaleDateString('es-CO', { day: 'numeric', month: 'short', year: 'numeric' });
+
+  return (
+    <motion.div
+      variants={itemVariant}
+      style={{ borderRadius: 16 }}
+      whileHover={{ y: -2, boxShadow: '0 8px 32px rgba(6,214,160,0.13)' }}
+      transition={{ type: 'spring', stiffness: 400, damping: 28 }}
+      className="bg-white border border-border overflow-hidden"
+    >
+      {/* Color accent bar */}
+      <div className="h-1 w-full" style={{ background: 'linear-gradient(90deg,#06D6A0,#4361EE)' }} />
+
+      <Link href={`/dashboard/logros/entrenamiento/${s.id}`} className="block px-4 py-3.5 cursor-pointer">
+        <div className="flex items-start gap-3">
+          {/* Icon */}
+          <div
+            className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0 mt-0.5"
+            style={{ background: 'linear-gradient(135deg,rgba(6,214,160,0.12),rgba(67,97,238,0.10))' }}
+          >
+            <Dumbbell className="w-5 h-5" style={{ color: '#06D6A0' }} />
+          </div>
+
+          {/* Info */}
+          <div className="flex-1 min-w-0">
+            <p className="text-[14px] font-bold text-foreground truncate leading-tight">{s.title}</p>
+
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1">
+              {s.location && (
+                <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                  <MapPin className="w-3 h-3 shrink-0" />{s.location.name}
+                </span>
+              )}
+              <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                <CalendarDays className="w-3 h-3 shrink-0" />{dateStr}
+              </span>
+            </div>
+
+            {/* Chips */}
+            <div className="flex items-center gap-2 mt-2">
+              <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold" style={{ background: 'rgba(6,214,160,0.09)', color: '#05A07B' }}>
+                <Users className="w-3 h-3" />{rc} resultado{rc !== 1 ? 's' : ''}
+              </span>
+              {s.notes && (
+                <span className="text-[10px] text-muted-foreground truncate max-w-[150px]">{s.notes}</span>
+              )}
+            </div>
+          </div>
+
+          <ChevronRight className="w-4 h-4 text-muted-foreground/50 shrink-0 mt-1.5" />
+        </div>
+      </Link>
+
+      {canManage && (
+        <div className="px-4 pb-3 flex justify-end">
+          <motion.button
+            whileTap={{ scale: 0.9 }}
+            onClick={() => onDelete(s.id)}
+            disabled={deleting}
+            className="w-7 h-7 rounded-lg flex items-center justify-center cursor-pointer transition-colors"
+            style={{ background: 'rgba(239,71,111,0.08)', color: '#EF476F' }}
+          >
+            {deleting
+              ? <div className="w-3.5 h-3.5 rounded-full border border-red-400 border-t-transparent animate-spin" />
+              : <Trash2 className="w-3.5 h-3.5" />
+            }
+          </motion.button>
+        </div>
+      )}
+    </motion.div>
+  );
+}
+
+// ── EmptyState ─────────────────────────────────────────────────────────────────
+function EmptyState({ icon, color, title, desc, cta, onCta }: {
+  icon: React.ReactNode; color: string; title: string; desc: string;
+  cta?: string; onCta?: () => void;
+}) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="flex flex-col items-center justify-center py-14 px-6 text-center bg-white border border-border rounded-2xl"
+    >
+      <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4" style={{ background: `${color}12` }}>
+        {icon}
+      </div>
+      <p className="text-[15px] font-bold text-foreground mb-1">{title}</p>
+      <p className="text-[12px] text-muted-foreground max-w-[240px] leading-relaxed">{desc}</p>
+      {cta && onCta && (
+        <motion.button
+          whileTap={{ scale: 0.95 }}
+          onClick={onCta}
+          className="mt-5 px-5 py-2.5 rounded-xl text-[13px] font-bold text-white shadow-sm cursor-pointer"
+          style={{ background: color }}
+        >
+          {cta}
+        </motion.button>
+      )}
+    </motion.div>
   );
 }

@@ -1086,7 +1086,7 @@ export default function MiembrosPage() {
                     <X className="w-4 h-4 text-white" />
                   </button>
                   <div className="flex items-center gap-4">
-                    <div className="w-16 h-16 rounded-2xl flex items-center justify-center text-xl font-extrabold text-white shrink-0"
+                    <div className="w-16 h-16 rounded-full flex items-center justify-center text-xl font-extrabold text-white shrink-0"
                       style={{ background: 'rgba(255,255,255,0.2)' }}>
                       {initials(viewMember.fullName)}
                     </div>

@@ -813,7 +813,7 @@ export default function ClubsPage() {
                             style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px', borderTop: i > 0 ? '1px solid rgba(120,80,200,0.07)' : 'none' }}
                           >
                             {/* Avatar */}
-                            <div style={{ width: 32, height: 32, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, color: '#fff', flexShrink: 0, background: m.role === 'ADMIN' ? 'linear-gradient(135deg,#FFB703,#FB8500)' : 'linear-gradient(135deg,#06D6A0,#0CB68D)' }}>
+                            <div style={{ width: 32, height: 32, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, color: '#fff', flexShrink: 0, background: m.role === 'ADMIN' ? 'linear-gradient(135deg,#FFB703,#FB8500)' : 'linear-gradient(135deg,#06D6A0,#0CB68D)' }}>
                               {m.fullName.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()}
                             </div>
                             <div style={{ flex: 1, minWidth: 0 }}>

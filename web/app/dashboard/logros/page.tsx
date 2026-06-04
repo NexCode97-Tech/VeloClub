@@ -457,10 +457,10 @@ function CompCard({ comp: c, isStudent, myMemberId, canManage, deleting, onDelet
     .slice(0, 3);
   const hasGold = podium.some(r => r.position === 1);
 
-  const MEDAL_STYLES: Record<number, { bg: string; ring: string; text: string; label: string }> = {
-    1: { bg: 'rgba(244,191,0,0.12)',  ring: '#F4BF00', text: '#A67C00', label: '1°' },
-    2: { bg: 'rgba(160,160,160,0.12)', ring: '#A0A0A0', text: '#606060', label: '2°' },
-    3: { bg: 'rgba(212,132,90,0.12)', ring: '#D4845A', text: '#8B4513', label: '3°' },
+  const MEDAL_STYLES: Record<number, { bg: string; ring: string; text: string; ribbon: string }> = {
+    1: { bg: 'rgba(244,191,0,0.12)',   ring: '#F4BF00', text: '#A67C00', ribbon: '#F4BF00' },
+    2: { bg: 'rgba(160,160,160,0.12)', ring: '#A0A0A0', text: '#606060', ribbon: '#B0B0B8' },
+    3: { bg: 'rgba(212,132,90,0.12)', ring: '#D4845A', text: '#8B4513', ribbon: '#D4845A' },
   };
 
   return (
@@ -546,16 +546,20 @@ function CompCard({ comp: c, isStudent, myMemberId, canManage, deleting, onDelet
               if (!m) return null;
               return (
                 <div key={r.id} className="flex-1 flex flex-col items-center gap-1 py-3 px-2">
-                  <span
-                    className="w-7 h-7 rounded-full flex items-center justify-center text-[12px] font-black"
-                    style={{ background: m.bg, border: `1.5px solid ${m.ring}`, color: m.text }}
-                  >
-                    {pos}
-                  </span>
+                  {/* Medalla SVG */}
+                  <svg width="28" height="34" viewBox="0 0 28 34" fill="none">
+                    {/* Cinta izquierda */}
+                    <path d="M10 2 L6 12" stroke={m.ribbon} strokeWidth="3.5" strokeLinecap="round"/>
+                    {/* Cinta derecha */}
+                    <path d="M18 2 L22 12" stroke={m.ribbon} strokeWidth="3.5" strokeLinecap="round"/>
+                    {/* Círculo */}
+                    <circle cx="14" cy="22" r="10" fill={m.bg} stroke={m.ring} strokeWidth="2"/>
+                    {/* Número */}
+                    <text x="14" y="27" textAnchor="middle" fontSize="10" fontWeight="800" fill={m.text} fontFamily="sans-serif">{pos}</text>
+                  </svg>
                   <span className="text-[11px] font-bold text-foreground text-center leading-tight truncate w-full">
                     {r.member.fullName.split(' ')[0]}
                   </span>
-                  <span className="text-[9px] font-semibold" style={{ color: m.text }}>{m.label}</span>
                 </div>
               );
             })}

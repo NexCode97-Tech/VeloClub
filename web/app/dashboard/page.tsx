@@ -185,22 +185,26 @@ function PostCard({
       transition={{ type: 'spring' as const, stiffness: 300, damping: 26 }}
       layout
       className="bg-white border border-border rounded-2xl overflow-hidden"
-      style={{ boxShadow: '0 2px 12px rgba(124,58,237,0.06)' }}
+      style={{ boxShadow: '0 1px 8px rgba(0,0,0,0.07)' }}
     >
       {/* Autor */}
-      <div className="flex items-center justify-between px-4 pt-4 pb-3">
+      <div className="flex items-center justify-between px-4 pt-4 pb-2">
         <div className="flex items-center gap-3">
-          <Avatar src={post.authorAvatar} name={post.authorName} size={40} role={post.authorRole} />
+          <Avatar src={post.authorAvatar} name={post.authorName} size={42} role={post.authorRole} />
           <div>
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <p className="text-[13px] font-bold text-foreground leading-tight">{post.authorName || 'Usuario'}</p>
+            <div className="flex items-center gap-2 flex-wrap">
+              <p className="text-[14px] font-bold text-foreground leading-tight">{post.authorName || 'Usuario'}</p>
+              <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full"
+                style={{ background: 'rgba(124,58,237,0.10)', color: '#7C3AED' }}>
+                {roleLabels[post.authorRole] ?? post.authorRole}
+              </span>
               {post.scope === 'PUBLIC' && post.clubName && (
-                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(67,97,238,0.10)', color: '#4361EE' }}>
+                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(67,97,238,0.10)', color: '#4361EE' }}>
                   {post.clubName}
                 </span>
               )}
             </div>
-            <p className="text-[11px] text-muted-foreground">{timeAgo(post.createdAt)}</p>
+            <p className="text-[12px] text-muted-foreground mt-0.5">{timeAgo(post.createdAt)}</p>
           </div>
         </div>
         {canDelete && (
@@ -214,61 +218,86 @@ function PostCard({
                   className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-secondary text-muted-foreground">Cancelar</button>
               </motion.div>
             ) : (
-              <motion.button key="trash" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              <motion.button key="dots" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                 onClick={() => setConfirmDel(true)}
-                className="w-8 h-8 rounded-full flex items-center justify-center text-muted-foreground/40 hover:bg-red-50 hover:text-red-400 active:scale-90 transition-all">
-                <Trash2 className="w-[15px] h-[15px]" />
+                className="w-8 h-8 rounded-full flex items-center justify-center text-muted-foreground/50 hover:bg-secondary active:scale-90 transition-all">
+                <span className="text-[18px] font-bold leading-none mb-1">···</span>
               </motion.button>
             )}
           </AnimatePresence>
         )}
       </div>
 
+      {/* Contenido */}
+      <p className="px-4 py-3 text-[14px] text-foreground leading-relaxed whitespace-pre-wrap">{post.content}</p>
+
       {/* Media */}
       {post.imageUrl && (
-        <div className="mx-4 mb-3 rounded-xl overflow-hidden">
+        <div className="mb-3 overflow-hidden">
           {isVideo ? (
-            <video src={post.imageUrl} controls className="w-full rounded-xl" style={{ maxHeight: 320 }} />
+            <video src={post.imageUrl} controls className="w-full" style={{ maxHeight: 360 }} />
           ) : isFile ? (
             <a href={post.imageUrl} target="_blank" rel="noopener noreferrer"
-              className="flex items-center gap-3 px-4 py-3 rounded-xl border border-border hover:bg-secondary transition-colors">
+              className="flex items-center gap-3 mx-4 px-4 py-3 rounded-xl border border-border hover:bg-secondary transition-colors">
               <FileText className="w-5 h-5 shrink-0" style={{ color: '#4361EE' }} />
               <span className="text-[13px] font-semibold text-foreground truncate">Ver archivo adjunto</span>
             </a>
           ) : (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={post.imageUrl} alt="Publicación" className="w-full object-cover" style={{ maxHeight: 320 }} />
+            <img src={post.imageUrl} alt="Publicación" className="w-full object-cover" style={{ maxHeight: 360 }} />
           )}
         </div>
       )}
 
-      {/* Contenido */}
-      <p className="px-4 pb-3 text-[14px] text-foreground leading-relaxed whitespace-pre-wrap">{post.content}</p>
+      {/* Contadores */}
+      {(likeCount > 0 || post.comments.length > 0) && (
+        <div className="flex items-center gap-3 px-4 pb-2">
+          {likeCount > 0 && (
+            <span className="text-[12px] text-muted-foreground">
+              {likeCount} Me gusta
+            </span>
+          )}
+          {post.comments.length > 0 && (
+            <span className="text-[12px] text-muted-foreground">
+              {post.comments.length} comentario{post.comments.length !== 1 ? 's' : ''}
+            </span>
+          )}
+        </div>
+      )}
 
       {/* Acciones */}
-      <div className="flex items-center gap-1 px-4 pb-3 border-t border-border/60 pt-3">
-        {/* Like */}
-        <motion.button onClick={handleLike} whileTap={{ scale: 0.85 }}
+      <div className="flex items-center border-t border-border/60">
+        {/* Me gusta */}
+        <motion.button onClick={handleLike} whileTap={{ scale: 0.95 }}
           transition={{ type: 'spring' as const, stiffness: 500, damping: 15 }}
-          className="flex items-center gap-1.5 rounded-full px-3 py-1.5 transition-colors"
-          style={{ background: liked ? 'rgba(239,71,111,0.10)' : 'transparent' }}>
-          <motion.div animate={likeAnim ? { scale: [1, 1.5, 1] } : { scale: 1 }} transition={{ duration: 0.4, ease: 'easeInOut' }}>
-            <Heart className="w-[18px] h-[18px] transition-colors" fill={liked ? '#EF476F' : 'none'}
+          className="flex-1 flex items-center justify-center gap-2 py-2.5 transition-colors hover:bg-secondary/60">
+          <motion.div animate={likeAnim ? { scale: [1, 1.4, 1] } : { scale: 1 }} transition={{ duration: 0.35, ease: 'easeInOut' }}>
+            <Heart className="w-[17px] h-[17px] transition-colors" fill={liked ? '#EF476F' : 'none'}
               style={{ color: liked ? '#EF476F' : '#8E87A8' }} />
           </motion.div>
-          {likeCount > 0 && <span className="text-[12px] font-semibold" style={{ color: liked ? '#EF476F' : '#8E87A8' }}>{likeCount}</span>}
+          <span className="text-[13px] font-semibold" style={{ color: liked ? '#EF476F' : '#8E87A8' }}>Me gusta</span>
         </motion.button>
+
+        <div className="w-px h-7 bg-border/60" />
 
         {/* Comentar */}
         <motion.button
           onClick={() => { setShowComments(v => !v); setTimeout(() => commentInputRef.current?.focus(), 150); }}
-          whileTap={{ scale: 0.9 }}
-          className="flex items-center gap-1.5 rounded-full px-3 py-1.5 transition-colors"
-          style={{ background: showComments ? 'rgba(67,97,238,0.08)' : 'transparent' }}>
-          <MessageCircle className="w-[18px] h-[18px]" style={{ color: showComments ? '#4361EE' : '#8E87A8' }} />
-          {post.comments.length > 0 && (
-            <span className="text-[12px] font-semibold" style={{ color: showComments ? '#4361EE' : '#8E87A8' }}>{post.comments.length}</span>
-          )}
+          whileTap={{ scale: 0.95 }}
+          className="flex-1 flex items-center justify-center gap-2 py-2.5 transition-colors hover:bg-secondary/60">
+          <MessageCircle className="w-[17px] h-[17px]" style={{ color: showComments ? '#4361EE' : '#8E87A8' }} />
+          <span className="text-[13px] font-semibold" style={{ color: showComments ? '#4361EE' : '#8E87A8' }}>Comentar</span>
+        </motion.button>
+
+        <div className="w-px h-7 bg-border/60" />
+
+        {/* Compartir */}
+        <motion.button
+          whileTap={{ scale: 0.95 }}
+          className="flex-1 flex items-center justify-center gap-2 py-2.5 transition-colors hover:bg-secondary/60"
+          onClick={() => { if (navigator.share) navigator.share({ text: post.content }); }}>
+          <ChevronRight className="w-[17px] h-[17px] rotate-[-45deg]" style={{ color: '#8E87A8' }} />
+          <span className="text-[13px] font-semibold text-muted-foreground">Compartir</span>
         </motion.button>
       </div>
 
@@ -394,99 +423,83 @@ function PostComposer({
 
   return (
     <motion.div variants={cardVariant} className="bg-white border border-border rounded-2xl overflow-hidden"
-      style={{ boxShadow: '0 2px 12px rgba(124,58,237,0.06)' }}>
-      {/* Trigger */}
-      <button onClick={() => { setOpen(o => !o); setTimeout(() => textRef.current?.focus(), 100); }}
-        className="w-full flex items-center gap-3 px-4 py-3.5 text-left">
-        <Avatar src={userAvatar} name={userName} size={38} role={userRole} />
-        <div className="flex-1 rounded-full px-4 py-2 text-[13px] text-muted-foreground/60 font-medium"
-          style={{ background: 'rgba(124,58,237,0.05)', border: '1px solid rgba(124,58,237,0.10)' }}>
-          ¿Qué quieres compartir con el club?
-        </div>
-        <div className="w-8 h-8 rounded-full flex items-center justify-center"
-          style={{ background: 'linear-gradient(135deg,#7C3AED,#4361EE)' }}>
-          <Plus className="w-4 h-4 text-white" />
-        </div>
-      </button>
+      style={{ boxShadow: '0 1px 8px rgba(0,0,0,0.07)' }}>
 
+      {/* Cabecera con avatar + textarea */}
+      <div className="flex items-start gap-3 px-4 pt-4 pb-3">
+        <Avatar src={userAvatar} name={userName} size={40} role={userRole} />
+        <textarea
+          ref={textRef}
+          value={content}
+          onChange={e => { setContent(e.target.value); if (!open) setOpen(true); }}
+          onFocus={() => setOpen(true)}
+          placeholder="Comparte algo con tu equipo..."
+          rows={open ? 3 : 1}
+          className="flex-1 text-[14px] text-foreground placeholder:text-muted-foreground/50 resize-none outline-none bg-transparent leading-relaxed"
+        />
+      </div>
+
+      {/* Preview de media */}
       <AnimatePresence>
-        {open && (
+        {media && (
           <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.28, ease: [0.23, 1, 0.32, 1] }}
-            style={{ overflow: 'hidden' }}>
-            <div className="px-4 pb-4 space-y-3 border-t border-border/60 pt-3">
-              <textarea ref={textRef} value={content} onChange={e => setContent(e.target.value)}
-                placeholder="Escribe algo para el club..." rows={3}
-                className="w-full rounded-xl px-4 py-3 text-[14px] text-foreground placeholder:text-muted-foreground/50 resize-none outline-none focus:ring-2 border border-border"
-                style={{ background: 'rgba(124,58,237,0.03)' }} />
-
-              {/* Preview de media */}
-              {media && (
-                <div className="relative rounded-xl overflow-hidden border border-border">
-                  {mediaIsVideo ? (
-                    <video src={media.url} controls className="w-full" style={{ maxHeight: 200 }} />
-                  ) : mediaIsFile ? (
-                    <div className="flex items-center gap-3 px-4 py-3 bg-secondary">
-                      <FileText className="w-5 h-5" style={{ color: '#4361EE' }} />
-                      <span className="text-[12px] font-semibold text-foreground truncate flex-1">{media.name}</span>
-                    </div>
-                  ) : (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={media.url} alt="preview" className="w-full object-cover" style={{ maxHeight: 200 }} />
-                  )}
-                  <button onClick={() => setMedia(null)}
-                    className="absolute top-2 right-2 w-6 h-6 rounded-full bg-black/60 flex items-center justify-center text-white">
-                    <X className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              )}
-
-              {/* Adjuntar archivo */}
-              <input ref={fileRef} type="file" accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.zip"
-                className="sr-only"
-                onChange={e => { const f = e.target.files?.[0]; if (f) handleFile(f); e.target.value = ''; }} />
-
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1">
-                  {/* Botones de adjuntar */}
-                  {[
-                    { icon: ImageIcon, label: 'Imagen', accept: 'image/*', color: '#7C3AED' },
-                    { icon: Video,     label: 'Video',  accept: 'video/*', color: '#7C3AED' },
-                    { icon: Paperclip, label: 'Archivo',accept: '.pdf,.doc,.docx,.xls,.xlsx,.zip', color: '#7C3AED' },
-                  ].map(btn => (
-                    <motion.button key={btn.label} whileTap={{ scale: 0.9 }}
-                      disabled={uploading}
-                      onClick={() => { if (fileRef.current) { fileRef.current.accept = btn.accept; fileRef.current.click(); } }}
-                      className="flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[11px] font-semibold transition-colors disabled:opacity-50"
-                      style={{ background: `${btn.color}12`, color: btn.color }}>
-                      {uploading
-                        ? <div className="w-3 h-3 rounded-full border border-t-transparent animate-spin" style={{ borderColor: btn.color, borderTopColor: 'transparent' }} />
-                        : <btn.icon className="w-3.5 h-3.5" />}
-                      <span className="hidden sm:inline">{btn.label}</span>
-                    </motion.button>
-                  ))}
-                </div>
-                <div className="flex items-center gap-2">
-                  <button onClick={() => { setOpen(false); setContent(''); setMedia(null); }}
-                    className="text-[12px] font-semibold text-muted-foreground px-3 py-1.5 rounded-full hover:bg-secondary transition-colors">
-                    Cancelar</button>
-                  <motion.button onClick={handleSubmit}
-                    disabled={!content.trim() || sending || loading || uploading}
-                    whileTap={{ scale: 0.95 }}
-                    transition={{ type: 'spring' as const, stiffness: 500, damping: 15 }}
-                    className="flex items-center gap-2 px-5 py-2 rounded-full text-[13px] font-bold text-white disabled:opacity-50 transition-opacity"
-                    style={{ background: 'linear-gradient(135deg,#7C3AED,#4361EE)' }}>
-                    {sending
-                      ? <div className="w-3.5 h-3.5 border-2 border-white/50 border-t-white rounded-full animate-spin" />
-                      : <><Send className="w-3.5 h-3.5" /><span>Publicar</span></>
-                    }
-                  </motion.button>
-                </div>
+            exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.22 }}
+            className="mx-4 mb-3 relative rounded-xl overflow-hidden border border-border">
+            {mediaIsVideo ? (
+              <video src={media.url} controls className="w-full" style={{ maxHeight: 200 }} />
+            ) : mediaIsFile ? (
+              <div className="flex items-center gap-3 px-4 py-3 bg-secondary">
+                <FileText className="w-5 h-5" style={{ color: '#4361EE' }} />
+                <span className="text-[12px] font-semibold text-foreground truncate flex-1">{media.name}</span>
               </div>
-            </div>
+            ) : (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={media.url} alt="preview" className="w-full object-cover" style={{ maxHeight: 200 }} />
+            )}
+            <button onClick={() => setMedia(null)}
+              className="absolute top-2 right-2 w-6 h-6 rounded-full bg-black/60 flex items-center justify-center text-white">
+              <X className="w-3.5 h-3.5" />
+            </button>
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Input file oculto */}
+      <input ref={fileRef} type="file" accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.zip"
+        className="sr-only"
+        onChange={e => { const f = e.target.files?.[0]; if (f) handleFile(f); e.target.value = ''; }} />
+
+      {/* Barra inferior: adjuntos + publicar */}
+      <div className="flex items-center justify-between px-4 pb-4 border-t border-border/60 pt-3">
+        <div className="flex items-center gap-1">
+          {[
+            { icon: ImageIcon, label: 'Foto',      accept: 'image/*' },
+            { icon: Video,     label: 'Video',     accept: 'video/*' },
+            { icon: Paperclip, label: 'Resultado', accept: '.pdf,.doc,.docx,.xls,.xlsx,.zip' },
+          ].map(btn => (
+            <motion.button key={btn.label} whileTap={{ scale: 0.9 }}
+              disabled={uploading}
+              onClick={() => { if (fileRef.current) { fileRef.current.accept = btn.accept; fileRef.current.click(); } }}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[13px] font-medium text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors disabled:opacity-50">
+              {uploading
+                ? <div className="w-3.5 h-3.5 rounded-full border border-t-transparent animate-spin border-muted-foreground" />
+                : <btn.icon className="w-4 h-4" />}
+              <span>{btn.label}</span>
+            </motion.button>
+          ))}
+        </div>
+        <motion.button onClick={handleSubmit}
+          disabled={!content.trim() || sending || loading || uploading}
+          whileTap={{ scale: 0.95 }}
+          transition={{ type: 'spring' as const, stiffness: 500, damping: 15 }}
+          className="px-5 py-2 rounded-full text-[13px] font-bold text-white disabled:opacity-50 transition-opacity"
+          style={{ background: '#7C3AED' }}>
+          {sending
+            ? <div className="w-3.5 h-3.5 border-2 border-white/50 border-t-white rounded-full animate-spin" />
+            : 'Publicar'
+          }
+        </motion.button>
+      </div>
     </motion.div>
   );
 }
@@ -874,11 +887,13 @@ export default function DashboardPage() {
       </AnimatePresence>
 
       {/* ── Contenido principal ───────────────────────────────────────────── */}
+      <div className="max-w-6xl mx-auto px-4 py-4 lg:flex lg:gap-6 lg:items-start">
+      {/* Columna principal (feed) */}
       <motion.div
         variants={feedVariants}
         initial="hidden"
         animate="show"
-        className="px-4 py-4 space-y-4"
+        className="flex-1 space-y-4 min-w-0"
       >
 
         {/* Tarjeta de dos columnas: Próximo evento + Cumpleaños */}
@@ -1073,6 +1088,78 @@ export default function DashboardPage() {
         )}
 
       </motion.div>
+
+      {/* ── Sidebar: Patrocinadores ─────────────────────────────────────── */}
+      <aside className="hidden lg:block w-72 xl:w-80 shrink-0 space-y-4">
+        <motion.div
+          initial={{ opacity: 0, x: 16 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.4, delay: 0.2, ease: [0.23, 1, 0.32, 1] }}
+        >
+          <h2 className="text-[15px] font-extrabold text-foreground mb-3" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
+            Próximos eventos
+          </h2>
+          {proximosEventos.length === 0 ? (
+            <div className="bg-white border border-border rounded-2xl px-4 py-6 text-center"
+              style={{ boxShadow: '0 1px 8px rgba(0,0,0,0.06)' }}>
+              <CalendarDays className="w-8 h-8 mx-auto mb-2 text-muted-foreground/30" />
+              <p className="text-[12px] font-semibold text-muted-foreground">Sin eventos próximos</p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {proximosEventos.slice(0, 3).map(ev => (
+                <Link key={ev.id} href="/dashboard/calendario"
+                  className="flex items-center gap-3 bg-white border border-border rounded-2xl px-4 py-3 hover:shadow-md transition-shadow"
+                  style={{ boxShadow: '0 1px 8px rgba(0,0,0,0.06)' }}>
+                  <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+                    style={{ background: ev.tipo === 'COMPETITION' ? 'rgba(239,71,111,0.10)' : 'rgba(67,97,238,0.10)' }}>
+                    {ev.tipo === 'COMPETITION'
+                      ? <Trophy className="w-4 h-4" style={{ color: '#EF476F' }} />
+                      : <Dumbbell className="w-4 h-4" style={{ color: '#4361EE' }} />}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[13px] font-bold text-foreground truncate">{ev.titulo}</p>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">
+                      {ev.fecha.toLocaleDateString('es-CO', { weekday: 'short', day: 'numeric', month: 'short' })}
+                    </p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+        </motion.div>
+
+        {/* Cumpleaños esta semana */}
+        {cumpleaneros.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, x: 16 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.4, delay: 0.3, ease: [0.23, 1, 0.32, 1] }}
+          >
+            <h2 className="text-[15px] font-extrabold text-foreground mb-3" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
+              Cumpleaños 🎂
+            </h2>
+            <div className="bg-white border border-border rounded-2xl px-4 py-3 space-y-2.5"
+              style={{ boxShadow: '0 1px 8px rgba(0,0,0,0.06)' }}>
+              {cumpleaneros.slice(0, 4).map(m => (
+                <div key={m.id} className="flex items-center gap-2.5">
+                  <Avatar src={m.pictureUrl} name={m.fullName} size={32} />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[13px] font-semibold text-foreground truncate">
+                      {m.fullName}{isBirthdayToday(m.birthDate) ? ' 🎂' : ''}
+                    </p>
+                    <p className="text-[11px] text-muted-foreground">
+                      {isBirthdayToday(m.birthDate) ? '¡Hoy!' : 'Esta semana'}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </aside>
+
+      </div>
     </div>
   );
 }

@@ -112,7 +112,7 @@ const ADS = [
     color: '#06D6A0',
   },
   {
-    image: 'https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?w=600&q=80',
+    image: 'https://images.unsplash.com/photo-1485965120184-e220f721d03e?w=600&q=80',
     label: 'Ciclismo',
     title: 'Trek & Specialized — Tienda Oficial',
     description: 'Las mejores marcas de ciclismo en un solo lugar',
@@ -120,7 +120,7 @@ const ADS = [
     color: '#EF476F',
   },
   {
-    image: 'https://images.unsplash.com/photo-1598300042247-d088f8ab3a91?w=600&q=80',
+    image: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=600&q=80',
     label: 'Hidratación',
     title: 'Hidratación Profesional Deportiva',
     description: 'Isotónicos y suplementos para el alto rendimiento',

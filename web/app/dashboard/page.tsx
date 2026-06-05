@@ -929,7 +929,7 @@ export default function DashboardPage() {
       </AnimatePresence>
 
       {/* ── Contenido principal ───────────────────────────────────────────── */}
-      <div className="max-w-2xl lg:max-w-3xl xl:max-w-4xl mx-auto px-4 py-4">
+      <div className="w-full px-6 py-4">
       <motion.div
         variants={feedVariants}
         initial="hidden"

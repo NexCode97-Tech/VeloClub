@@ -200,13 +200,13 @@ function SponsorBanner() {
             {/* Texto */}
             <div className="flex-1 px-3 py-3 flex flex-col justify-between min-w-0">
               <div>
-                <p className="text-[10px] font-bold mb-1" style={{ color: ad.color }}>
+                <p className="text-[10px] font-bold mb-1" style={{ color: '#7C3AED' }}>
                   ✦ {ad.label}
                 </p>
                 <p className="text-[12px] font-bold text-foreground leading-snug line-clamp-2">{ad.title}</p>
                 <p className="text-[11px] text-muted-foreground mt-1 leading-snug line-clamp-2">{ad.description}</p>
               </div>
-              <span className="text-[11px] font-bold mt-2 inline-flex items-center gap-0.5" style={{ color: ad.color }}>
+              <span className="text-[11px] font-bold mt-2 inline-flex items-center gap-0.5" style={{ color: '#7C3AED' }}>
                 Ver más <ChevronRight className="w-3 h-3" />
               </span>
             </div>

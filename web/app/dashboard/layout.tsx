@@ -20,6 +20,7 @@ import {
   CreditCard,
   CircleDollarSign,
   Settings,
+  UserCircle,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -51,17 +52,19 @@ const ROLE_TABS: Record<string, { href: string; label: string; icon: React.Eleme
 // Ítems del CircleMenu por rol
 const ROLE_MAS_ITEMS: Record<string, { label: string; icon: React.ElementType; href: string; color: string }[]> = {
   ADMIN: [
-    { label: 'Resultados', icon: Trophy,           href: '/dashboard/logros',     color: '#F59E0B' },
-    { label: 'Calendario', icon: CalendarDays,     href: '/dashboard/calendario', color: '#EF476F' },
-    { label: 'Sedes',      icon: MapPin,           href: '/dashboard/sedes',      color: '#06D6A0' },
-    { label: 'Reportes',   icon: BarChart2,        href: '/dashboard/reportes',   color: '#4361EE' },
-    { label: 'Ajustes',      icon: Settings,       href: '/dashboard/ajustes',      color: '#8E87A8' },
+    { label: 'Resultados', icon: Trophy,       href: '/dashboard/logros',     color: '#F59E0B' },
+    { label: 'Calendario', icon: CalendarDays, href: '/dashboard/calendario', color: '#EF476F' },
+    { label: 'Sedes',      icon: MapPin,       href: '/dashboard/sedes',      color: '#06D6A0' },
+    { label: 'Reportes',   icon: BarChart2,    href: '/dashboard/reportes',   color: '#4361EE' },
+    { label: 'Mi Perfil',  icon: UserCircle,   href: '/dashboard/perfil',     color: '#7C3AED' },
+    { label: 'Ajustes',    icon: Settings,     href: '/dashboard/ajustes',    color: '#8E87A8' },
   ],
   COACH: [
-    { label: 'Resultados', icon: Trophy,           href: '/dashboard/logros',     color: '#F59E0B' },
-    { label: 'Calendario', icon: CalendarDays,     href: '/dashboard/calendario', color: '#EF476F' },
-    { label: 'Sedes',      icon: MapPin,           href: '/dashboard/sedes',      color: '#06D6A0' },
-    { label: 'Ajustes',      icon: Settings,       href: '/dashboard/ajustes',      color: '#8E87A8' },
+    { label: 'Resultados', icon: Trophy,       href: '/dashboard/logros',     color: '#F59E0B' },
+    { label: 'Calendario', icon: CalendarDays, href: '/dashboard/calendario', color: '#EF476F' },
+    { label: 'Sedes',      icon: MapPin,       href: '/dashboard/sedes',      color: '#06D6A0' },
+    { label: 'Mi Perfil',  icon: UserCircle,   href: '/dashboard/perfil',     color: '#7C3AED' },
+    { label: 'Ajustes',    icon: Settings,     href: '/dashboard/ajustes',    color: '#8E87A8' },
   ],
 };
 
@@ -74,7 +77,8 @@ const ADMIN_NAV = [
   { href: '/dashboard/logros',     label: 'Resultados',    icon: Trophy },
   { href: '/dashboard/calendario', label: 'Calendario',    icon: CalendarDays },
   { href: '/dashboard/reportes',   label: 'Reportes',      icon: BarChart2 },
-  { href: '/dashboard/ajustes',      label: 'Ajustes',         icon: Settings },
+  { href: '/dashboard/perfil',     label: 'Mi Perfil',     icon: UserCircle },
+  { href: '/dashboard/ajustes',    label: 'Ajustes',       icon: Settings },
 ];
 
 const COACH_NAV = [
@@ -84,7 +88,8 @@ const COACH_NAV = [
   { href: '/dashboard/asistencia', label: 'Asistencia',    icon: CalendarCheck },
   { href: '/dashboard/logros',     label: 'Resultados',    icon: Trophy },
   { href: '/dashboard/calendario', label: 'Calendario',    icon: CalendarDays },
-  { href: '/dashboard/ajustes',      label: 'Ajustes',         icon: Settings },
+  { href: '/dashboard/perfil',     label: 'Mi Perfil',     icon: UserCircle },
+  { href: '/dashboard/ajustes',    label: 'Ajustes',       icon: Settings },
 ];
 
 const STUDENT_NAV = [
@@ -92,7 +97,8 @@ const STUDENT_NAV = [
   { href: '/dashboard/logros',     label: 'Resultados',    icon: Trophy },
   { href: '/dashboard/calendario', label: 'Calendario',    icon: CalendarDays },
   { href: '/dashboard/pagos',      label: 'Mis Pagos',     icon: CreditCard },
-  { href: '/dashboard/ajustes',      label: 'Ajustes',         icon: Settings },
+  { href: '/dashboard/perfil',     label: 'Mi Perfil',     icon: UserCircle },
+  { href: '/dashboard/ajustes',    label: 'Ajustes',       icon: Settings },
 ];
 
 const ROLE_NAV: Record<string, typeof ADMIN_NAV> = {
@@ -152,7 +158,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         setRole(userRole);
 
         if (userRole === 'STUDENT') {
-          const STUDENT_ALLOWED = ['/dashboard', '/dashboard/logros', '/dashboard/calendario', '/dashboard/pagos', '/dashboard/mas', '/dashboard/ajustes', '/dashboard/ajustes'];
+          const STUDENT_ALLOWED = ['/dashboard', '/dashboard/logros', '/dashboard/calendario', '/dashboard/pagos', '/dashboard/mas', '/dashboard/perfil', '/dashboard/ajustes'];
           const allowed = STUDENT_ALLOWED.some(r => pathname === r || pathname.startsWith(r + '/'));
           if (!allowed) { router.replace('/dashboard'); return; }
         }

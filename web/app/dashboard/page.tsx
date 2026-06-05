@@ -96,7 +96,7 @@ const ADS = [
     color: '#7C3AED',
   },
   {
-    image: 'https://images.unsplash.com/photo-1526676037777-05a232554f77?w=600&q=80',
+    image: 'https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=600&q=80',
     label: 'Academia',
     title: 'Academia de Alto Rendimiento',
     description: 'Entrena con los mejores coaches del país',

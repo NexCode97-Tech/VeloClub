@@ -464,7 +464,7 @@ export default function MiembrosPage() {
                   background: locFilter !== 'ALL' ? 'rgba(67,97,238,0.08)' : '#fff',
                   border: locFilter !== 'ALL' ? '1px solid rgba(67,97,238,0.30)' : '1px solid rgba(120,80,200,0.12)',
                   color: locFilter !== 'ALL' ? '#4361EE' : '#1A1028',
-                  width: 'auto', minWidth: 130,
+                  width: 'fit-content',
                 }}>
                 <MapPin className="w-3.5 h-3.5 shrink-0" style={{ color: locFilter !== 'ALL' ? '#4361EE' : '#8E87A8' }} />
                 <span>

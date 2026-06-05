@@ -77,7 +77,6 @@ export default function MiembrosPage() {
   const [sortOrder, setSortOrder]     = useState<'az'|'za'|'recent'|'oldest'>('recent');
   const [catFilter, setCatFilter]     = useState<string>('ALL');
   const [locFilter, setLocFilter]     = useState<string>('ALL');
-  const [sinSede, setSinSede]         = useState(false);
   const [clubName, setClubName] = useState('VeloClub');
 
   // View detail state
@@ -263,9 +262,9 @@ export default function MiembrosPage() {
       const matchSearch = !q || m.fullName.toLowerCase().includes(q) || m.email?.toLowerCase().includes(q);
       const matchRole   = roleFilter === 'ALL' || m.role === roleFilter;
       const matchCat    = catFilter  === 'ALL' || m.category === catFilter;
-      const matchLoc    = locFilter     === 'ALL' || m.locations.some(l => l.location.id === locFilter);
-      const matchSinSede = !sinSede || m.locations.length === 0;
-      return matchSearch && matchRole && matchCat && matchLoc && matchSinSede;
+      const matchLoc = locFilter === 'ALL'
+        || (locFilter === 'SIN_SEDE' ? m.locations.length === 0 : m.locations.some(l => l.location.id === locFilter));
+      return matchSearch && matchRole && matchCat && matchLoc;
     });
     list = [...list].sort((a, b) => {
       if (sortOrder === 'az')     return a.fullName.localeCompare(b.fullName);
@@ -275,7 +274,7 @@ export default function MiembrosPage() {
       return 0;
     });
     return list;
-  }, [members, search, roleFilter, catFilter, locFilter, sortOrder, sinSede]);
+  }, [members, search, roleFilter, catFilter, locFilter, sortOrder]);
 
   // ── Initials ─────────────────────────────────────────────────────────────────
   function initials(name: string) {
@@ -458,36 +457,32 @@ export default function MiembrosPage() {
               </Select>
             )}
 
-            {/* Sede — solo si hay más de una */}
-            {locations.length > 1 && (
-              <Select value={locFilter} onValueChange={v => { if (v) setLocFilter(v); }}>
-                <SelectTrigger className="h-[42px] px-3 rounded-xl text-[12px] font-semibold gap-1.5 cursor-pointer"
-                  style={{ background: locFilter !== 'ALL' ? 'rgba(67,97,238,0.08)' : '#fff', border: locFilter !== 'ALL' ? '1px solid rgba(67,97,238,0.30)' : '1px solid rgba(120,80,200,0.12)', color: locFilter !== 'ALL' ? '#4361EE' : '#1A1028', width: 'auto', minWidth: 130 }}>
-                  <MapPin className="w-3.5 h-3.5 shrink-0" style={{ color: locFilter !== 'ALL' ? '#4361EE' : '#8E87A8' }} />
-                  <span>{locFilter === 'ALL' ? 'Sede' : (locations.find(l => l.id === locFilter)?.name ?? 'Sede')}</span>
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="ALL">Todas las sedes</SelectItem>
-                  {locations.map(l => (
-                    <SelectItem key={l.id} value={l.id}>{l.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-
-            {/* Sin sede — toggle pill */}
-            <motion.button
-              onClick={() => setSinSede(s => !s)}
-              whileTap={{ scale: 0.95 }}
-              transition={{ duration: 0.1 }}
-              className="h-[42px] flex items-center gap-1.5 px-3 rounded-xl text-[12px] font-semibold cursor-pointer transition-all"
-              style={sinSede
-                ? { background: 'rgba(255,183,3,0.10)', border: '1px solid rgba(255,183,3,0.35)', color: '#B45309' }
-                : { background: '#fff', border: '1px solid rgba(120,80,200,0.12)', color: '#1A1028' }}
-            >
-              <MapPin className="w-3.5 h-3.5 shrink-0" style={{ color: sinSede ? '#B45309' : '#8E87A8' }} />
-              <span>Sin sede</span>
-            </motion.button>
+            {/* Sede — todas las sedes + sin sede */}
+            <Select value={locFilter} onValueChange={v => { if (v) setLocFilter(v); }}>
+              <SelectTrigger className="h-[42px] px-3 rounded-xl text-[12px] font-semibold gap-1.5 cursor-pointer"
+                style={{
+                  background: locFilter !== 'ALL' ? 'rgba(67,97,238,0.08)' : '#fff',
+                  border: locFilter !== 'ALL' ? '1px solid rgba(67,97,238,0.30)' : '1px solid rgba(120,80,200,0.12)',
+                  color: locFilter !== 'ALL' ? '#4361EE' : '#1A1028',
+                  width: 'auto', minWidth: 130,
+                }}>
+                <MapPin className="w-3.5 h-3.5 shrink-0" style={{ color: locFilter !== 'ALL' ? '#4361EE' : '#8E87A8' }} />
+                <span>
+                  {locFilter === 'ALL'
+                    ? 'Sede'
+                    : locFilter === 'SIN_SEDE'
+                      ? 'Sin sede'
+                      : (locations.find(l => l.id === locFilter)?.name ?? 'Sede')}
+                </span>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ALL">Todas las sedes</SelectItem>
+                {locations.map(l => (
+                  <SelectItem key={l.id} value={l.id}>{l.name}</SelectItem>
+                ))}
+                <SelectItem value="SIN_SEDE">Sin sede</SelectItem>
+              </SelectContent>
+            </Select>
 
             <p className="text-[12px] font-semibold ml-auto whitespace-nowrap" style={{ color: '#8E87A8' }}>
               {filtered.length} resultado{filtered.length !== 1 ? 's' : ''}

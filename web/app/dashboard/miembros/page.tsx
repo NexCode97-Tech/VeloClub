@@ -22,6 +22,7 @@ import {
   Plus, Pencil, Trash2, Users, Search, Download,
   FileSpreadsheet, Upload, X, ChevronRight, Eye,
   Phone, Mail, Calendar, MapPin, Shield, Heart,
+  ArrowUpDown, Tag, ChevronDown,
 } from 'lucide-react';
 import { MemberAvatar } from '@/components/ui/member-avatar';
 import { downloadMembersPDF } from '@/lib/pdf';
@@ -35,6 +36,7 @@ interface Member {
   emergencyContact?: string; emergencyPhone?: string; eps?: string;
   paymentDueDay?: number | null; monthlyFee?: number | null;
   pictureUrl?: string | null; docNumber?: string | null;
+  createdAt?: string;
   role: string;
   locations: { location: Location }[];
 }
@@ -70,8 +72,11 @@ export default function MiembrosPage() {
   const reducedMotion = useReducedMotion();
   const qc = useQueryClient();
 
-  const [search, setSearch]     = useState('');
+  const [search, setSearch]         = useState('');
   const [roleFilter, setRoleFilter] = useState<'ALL'|'STUDENT'|'COACH'|'ADMIN'>('ALL');
+  const [sortOrder, setSortOrder]   = useState<'az'|'za'|'recent'|'oldest'>('recent');
+  const [catFilter, setCatFilter]   = useState<string>('ALL');
+  const [locFilter, setLocFilter]   = useState<string>('ALL');
   const [clubName, setClubName] = useState('VeloClub');
 
   // View detail state
@@ -246,13 +251,29 @@ export default function MiembrosPage() {
     qc.invalidateQueries({ queryKey: QK.members() });
   }
 
-  // ── Filtered list ────────────────────────────────────────────────────────────
-  const filtered = members.filter(m => {
-    const q = search.toLowerCase();
-    const matchSearch = m.fullName.toLowerCase().includes(q) || m.email?.toLowerCase().includes(q);
-    const matchRole   = roleFilter === 'ALL' || m.role === roleFilter;
-    return matchSearch && matchRole;
-  });
+  // ── Filtered + sorted list ───────────────────────────────────────────────────
+  const allCategories = useMemo(() =>
+    Array.from(new Set(members.map(m => m.category).filter(Boolean) as string[])).sort()
+  , [members]);
+
+  const filtered = useMemo(() => {
+    const q = search.toLowerCase().trim();
+    let list = members.filter(m => {
+      const matchSearch = !q || m.fullName.toLowerCase().includes(q) || m.email?.toLowerCase().includes(q);
+      const matchRole   = roleFilter === 'ALL' || m.role === roleFilter;
+      const matchCat    = catFilter  === 'ALL' || m.category === catFilter;
+      const matchLoc    = locFilter  === 'ALL' || m.locations.some(l => l.location.id === locFilter);
+      return matchSearch && matchRole && matchCat && matchLoc;
+    });
+    list = [...list].sort((a, b) => {
+      if (sortOrder === 'az')     return a.fullName.localeCompare(b.fullName);
+      if (sortOrder === 'za')     return b.fullName.localeCompare(a.fullName);
+      if (sortOrder === 'recent') return new Date(b.createdAt ?? 0).getTime() - new Date(a.createdAt ?? 0).getTime();
+      if (sortOrder === 'oldest') return new Date(a.createdAt ?? 0).getTime() - new Date(b.createdAt ?? 0).getTime();
+      return 0;
+    });
+    return list;
+  }, [members, search, roleFilter, catFilter, locFilter, sortOrder]);
 
   // ── Initials ─────────────────────────────────────────────────────────────────
   function initials(name: string) {
@@ -385,14 +406,15 @@ export default function MiembrosPage() {
             })}
           </motion.div>
 
-          {/* ── Search ── */}
+          {/* ── Search + Filtros ── */}
           <motion.div
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.24, ease: EASE_OUT, delay: 0.12 }}
-            className="flex items-center gap-3 mb-4"
+            className="flex items-center gap-2 mb-4 flex-wrap"
           >
-            <div className="relative flex-1 max-w-sm">
+            {/* Barra de búsqueda */}
+            <div className="relative flex-1 min-w-[180px] max-w-sm">
               <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: '#8E87A8' }} />
               <input
                 className="w-full pl-10 pr-4 py-2.5 rounded-xl text-[13px] outline-none transition-all"
@@ -401,7 +423,57 @@ export default function MiembrosPage() {
                 value={search} onChange={e => setSearch(e.target.value)}
               />
             </div>
-            <p className="text-[12px] font-semibold ml-auto" style={{ color: '#8E87A8' }}>
+
+            {/* Ordenar */}
+            <Select value={sortOrder} onValueChange={v => setSortOrder(v as typeof sortOrder)}>
+              <SelectTrigger className="h-[42px] px-3 rounded-xl text-[12px] font-semibold gap-1.5 cursor-pointer"
+                style={{ background: '#fff', border: '1px solid rgba(120,80,200,0.12)', color: '#1A1028', width: 'auto', minWidth: 130 }}>
+                <ArrowUpDown className="w-3.5 h-3.5 shrink-0" style={{ color: '#8E87A8' }} />
+                <span>{{ az: 'A–Z', za: 'Z–A', recent: 'Reciente', oldest: 'Más antiguo' }[sortOrder]}</span>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="recent">Reciente</SelectItem>
+                <SelectItem value="oldest">Más antiguo</SelectItem>
+                <SelectItem value="az">A–Z</SelectItem>
+                <SelectItem value="za">Z–A</SelectItem>
+              </SelectContent>
+            </Select>
+
+            {/* Categoría — solo si existen */}
+            {allCategories.length > 0 && (
+              <Select value={catFilter} onValueChange={v => setCatFilter(v)}>
+                <SelectTrigger className="h-[42px] px-3 rounded-xl text-[12px] font-semibold gap-1.5 cursor-pointer"
+                  style={{ background: catFilter !== 'ALL' ? 'rgba(124,58,237,0.08)' : '#fff', border: catFilter !== 'ALL' ? '1px solid rgba(124,58,237,0.30)' : '1px solid rgba(120,80,200,0.12)', color: catFilter !== 'ALL' ? '#7C3AED' : '#1A1028', width: 'auto', minWidth: 130 }}>
+                  <Tag className="w-3.5 h-3.5 shrink-0" style={{ color: catFilter !== 'ALL' ? '#7C3AED' : '#8E87A8' }} />
+                  <span>{catFilter === 'ALL' ? 'Categoría' : catFilter.charAt(0).toUpperCase() + catFilter.slice(1).toLowerCase()}</span>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ALL">Todas las categorías</SelectItem>
+                  {allCategories.map(c => (
+                    <SelectItem key={c} value={c}>{c.charAt(0).toUpperCase() + c.slice(1).toLowerCase()}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+
+            {/* Sede — solo si hay más de una */}
+            {locations.length > 1 && (
+              <Select value={locFilter} onValueChange={v => setLocFilter(v)}>
+                <SelectTrigger className="h-[42px] px-3 rounded-xl text-[12px] font-semibold gap-1.5 cursor-pointer"
+                  style={{ background: locFilter !== 'ALL' ? 'rgba(67,97,238,0.08)' : '#fff', border: locFilter !== 'ALL' ? '1px solid rgba(67,97,238,0.30)' : '1px solid rgba(120,80,200,0.12)', color: locFilter !== 'ALL' ? '#4361EE' : '#1A1028', width: 'auto', minWidth: 130 }}>
+                  <MapPin className="w-3.5 h-3.5 shrink-0" style={{ color: locFilter !== 'ALL' ? '#4361EE' : '#8E87A8' }} />
+                  <span>{locFilter === 'ALL' ? 'Sede' : (locations.find(l => l.id === locFilter)?.name ?? 'Sede')}</span>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ALL">Todas las sedes</SelectItem>
+                  {locations.map(l => (
+                    <SelectItem key={l.id} value={l.id}>{l.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+
+            <p className="text-[12px] font-semibold ml-auto whitespace-nowrap" style={{ color: '#8E87A8' }}>
               {filtered.length} resultado{filtered.length !== 1 ? 's' : ''}
             </p>
           </motion.div>

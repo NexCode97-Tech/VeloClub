@@ -427,8 +427,8 @@ export default function MiembrosPage() {
 
             {/* Ordenar */}
             <Select value={sortOrder} onValueChange={v => { if (v) setSortOrder(v as typeof sortOrder); }}>
-              <SelectTrigger className="h-[42px] px-3 rounded-xl text-[12px] font-semibold gap-1.5 cursor-pointer"
-                style={{ background: '#fff', border: '1px solid rgba(120,80,200,0.12)', color: '#1A1028', width: 'auto', minWidth: 130 }}>
+              <SelectTrigger className="px-3 rounded-xl text-[12px] font-semibold gap-1.5 cursor-pointer"
+                style={{ height: 42, background: '#fff', border: '1px solid rgba(120,80,200,0.12)', color: '#1A1028', width: 'auto', minWidth: 130 }}>
                 <ArrowUpDown className="w-3.5 h-3.5 shrink-0" style={{ color: '#8E87A8' }} />
                 <span>{{ az: 'A–Z', za: 'Z–A', recent: 'Reciente', oldest: 'Más antiguo' }[sortOrder]}</span>
               </SelectTrigger>
@@ -443,8 +443,8 @@ export default function MiembrosPage() {
             {/* Categoría — solo si existen */}
             {allCategories.length > 0 && (
               <Select value={catFilter} onValueChange={v => { if (v) setCatFilter(v); }}>
-                <SelectTrigger className="h-[42px] px-3 rounded-xl text-[12px] font-semibold gap-1.5 cursor-pointer"
-                  style={{ background: catFilter !== 'ALL' ? 'rgba(124,58,237,0.08)' : '#fff', border: catFilter !== 'ALL' ? '1px solid rgba(124,58,237,0.30)' : '1px solid rgba(120,80,200,0.12)', color: catFilter !== 'ALL' ? '#7C3AED' : '#1A1028', width: 'auto', minWidth: 130 }}>
+                <SelectTrigger className="px-3 rounded-xl text-[12px] font-semibold gap-1.5 cursor-pointer"
+                  style={{ height: 42, background: catFilter !== 'ALL' ? 'rgba(124,58,237,0.08)' : '#fff', border: catFilter !== 'ALL' ? '1px solid rgba(124,58,237,0.30)' : '1px solid rgba(120,80,200,0.12)', color: catFilter !== 'ALL' ? '#7C3AED' : '#1A1028', width: 'auto', minWidth: 130 }}>
                   <Tag className="w-3.5 h-3.5 shrink-0" style={{ color: catFilter !== 'ALL' ? '#7C3AED' : '#8E87A8' }} />
                   <span>{catFilter === 'ALL' ? 'Categoría' : catFilter.charAt(0).toUpperCase() + catFilter.slice(1).toLowerCase()}</span>
                 </SelectTrigger>
@@ -459,8 +459,9 @@ export default function MiembrosPage() {
 
             {/* Sede — todas las sedes + sin sede */}
             <Select value={locFilter} onValueChange={v => { if (v) setLocFilter(v); }}>
-              <SelectTrigger className="h-[42px] px-3 rounded-xl text-[12px] font-semibold gap-1.5 cursor-pointer"
+              <SelectTrigger className="px-3 rounded-xl text-[12px] font-semibold gap-1.5 cursor-pointer"
                 style={{
+                  height: 42,
                   background: locFilter !== 'ALL' ? 'rgba(67,97,238,0.08)' : '#fff',
                   border: locFilter !== 'ALL' ? '1px solid rgba(67,97,238,0.30)' : '1px solid rgba(120,80,200,0.12)',
                   color: locFilter !== 'ALL' ? '#4361EE' : '#1A1028',

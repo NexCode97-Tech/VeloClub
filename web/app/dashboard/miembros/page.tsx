@@ -34,7 +34,7 @@ interface Member {
   birthDate?: string; category?: string; tipo?: string;
   emergencyContact?: string; emergencyPhone?: string; eps?: string;
   paymentDueDay?: number | null; monthlyFee?: number | null;
-  pictureUrl?: string | null;
+  pictureUrl?: string | null; docNumber?: string | null;
   role: string;
   locations: { location: Location }[];
 }
@@ -229,7 +229,16 @@ export default function MiembrosPage() {
           if (!found) { failed.push(`${row.fullName}: la sede "${locationName}" no existe`); continue; }
           locationIds = [found.id];
         }
-        await apiFetch('/members', { method: 'POST', token, body: JSON.stringify({ ...rest, locationIds }) });
+        // Buscar si el miembro ya existe por docNumber o email para evitar duplicados
+        const existing = members.find(m =>
+          (rest.docNumber && m.docNumber && m.docNumber.trim() === rest.docNumber.trim()) ||
+          (rest.email && m.email && m.email.toLowerCase().trim() === rest.email.toLowerCase().trim())
+        );
+        if (existing) {
+          await apiFetch(`/members/${existing.id}`, { method: 'PUT', token, body: JSON.stringify({ ...rest, locationIds }) });
+        } else {
+          await apiFetch('/members', { method: 'POST', token, body: JSON.stringify({ ...rest, locationIds }) });
+        }
       } catch (e) { failed.push(`${row.fullName}: ${e instanceof Error ? e.message : 'Error'}`); }
     }
     setImporting(false);

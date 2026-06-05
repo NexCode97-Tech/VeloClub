@@ -545,17 +545,16 @@ function PostComposer({
       </AnimatePresence>
 
       {/* Input file oculto */}
-      <input ref={fileRef} type="file" accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.zip"
+      <input ref={fileRef} type="file" accept="image/*,video/*"
         className="sr-only"
         onChange={e => { const f = e.target.files?.[0]; if (f) handleFile(f); e.target.value = ''; }} />
 
       {/* Barra inferior: adjuntos + publicar */}
-      <div className="flex items-center justify-between px-4 pb-4 border-t border-border/60 pt-3">
-        <div className="flex items-center gap-1">
+      <div className="flex items-center justify-between px-4 pb-4 border-t border-border/60 pt-3 gap-3">
+        <div className="flex items-center gap-1 min-w-0">
           {[
-            { icon: ImageIcon, label: 'Foto',      accept: 'image/*' },
-            { icon: Video,     label: 'Video',     accept: 'video/*' },
-            { icon: Paperclip, label: 'Resultado', accept: '.pdf,.doc,.docx,.xls,.xlsx,.zip' },
+            { icon: ImageIcon, label: 'Foto',  accept: 'image/*' },
+            { icon: Video,     label: 'Video', accept: 'video/*' },
           ].map(btn => (
             <motion.button key={btn.label} whileTap={{ scale: 0.9 }}
               disabled={uploading}
@@ -572,7 +571,7 @@ function PostComposer({
           disabled={!content.trim() || sending || loading || uploading}
           whileTap={{ scale: 0.95 }}
           transition={{ type: 'spring' as const, stiffness: 500, damping: 15 }}
-          className="px-5 py-2 rounded-full text-[13px] font-bold text-white disabled:opacity-50 transition-opacity"
+          className="shrink-0 px-5 py-2 rounded-full text-[13px] font-bold text-white disabled:opacity-50 transition-opacity"
           style={{ background: '#7C3AED' }}>
           {sending
             ? <div className="w-3.5 h-3.5 border-2 border-white/50 border-t-white rounded-full animate-spin" />

@@ -179,7 +179,7 @@ function SponsorBanner() {
           display: 'flex',
           gap: 12,
           width: 'max-content',
-          animation: 'scrollLeft 28s linear infinite',
+          animation: 'scrollLeft 45s linear infinite',
           animationPlayState: paused ? 'paused' : 'running',
         }}
       >
@@ -190,10 +190,10 @@ function SponsorBanner() {
             target="_blank"
             rel="noopener noreferrer"
             className="flex-shrink-0 bg-white border border-border rounded-2xl overflow-hidden flex items-stretch cursor-pointer hover:shadow-md transition-shadow"
-            style={{ width: 272, boxShadow: '0 1px 8px rgba(0,0,0,0.06)' }}
+            style={{ width: 300, boxShadow: '0 1px 8px rgba(0,0,0,0.06)' }}
           >
             {/* Imagen */}
-            <div className="shrink-0 overflow-hidden" style={{ width: 100 }}>
+            <div className="shrink-0 overflow-hidden" style={{ width: 110 }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={ad.image} alt={ad.title} className="w-full h-full object-cover" />
             </div>
@@ -929,7 +929,7 @@ export default function DashboardPage() {
       </AnimatePresence>
 
       {/* ── Contenido principal ───────────────────────────────────────────── */}
-      <div className="max-w-2xl mx-auto px-4 py-4">
+      <div className="max-w-2xl lg:max-w-3xl xl:max-w-4xl mx-auto px-4 py-4">
       <motion.div
         variants={feedVariants}
         initial="hidden"

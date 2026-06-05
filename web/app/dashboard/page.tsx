@@ -201,7 +201,7 @@ function SponsorBanner() {
             <div className="flex-1 px-3 py-3 flex flex-col justify-between min-w-0">
               <div>
                 <p className="text-[10px] font-bold mb-1" style={{ color: '#7C3AED' }}>
-                  ✦ {ad.label}
+                  {ad.label}
                 </p>
                 <p className="text-[12px] font-bold text-foreground leading-snug line-clamp-2">{ad.title}</p>
                 <p className="text-[11px] text-muted-foreground mt-1 leading-snug line-clamp-2">{ad.description}</p>

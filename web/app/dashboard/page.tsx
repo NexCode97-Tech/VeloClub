@@ -5,13 +5,12 @@ import { useClubStream } from '@/hooks/useClubStream';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { apiFetch } from '@/lib/api-client';
-import { parseLocalDate } from '@/lib/utils';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Bell, BellOff, Trophy, CalendarDays, Dumbbell,
-  Plus, Heart, Trash2, Image as ImageIcon, X, Send,
-  ChevronRight, Cake, Globe, Lock, MessageCircle,
+  Bell, BellOff,
+  Heart, Image as ImageIcon, X, Send,
+  ChevronRight, Globe, Lock, MessageCircle,
   Paperclip, Video, FileText,
 } from 'lucide-react';
 
@@ -49,14 +48,6 @@ interface Post {
 
 type FeedScope = 'public' | 'private';
 
-interface ProximoEvento {
-  id: string; titulo: string; tipo: 'COMPETITION' | 'TRAINING'; fecha: Date; lugar?: string | null;
-}
-
-interface Cumpleanero {
-  id: string; fullName: string; birthDate: string; pictureUrl?: string | null;
-}
-
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 const roleLabels: Record<string, string> = {
@@ -93,35 +84,48 @@ function getInitials(name: string) {
   return name.split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase();
 }
 
-function isBirthdayToday(birthDateStr: string): boolean {
-  const bd  = new Date(birthDateStr);
-  const now = new Date();
-  return bd.getMonth() === now.getMonth() && bd.getDate() === now.getDate();
-}
+// ── Ads (placeholder — reemplazar con datos reales desde API) ────────────────
 
-function isBirthdayThisWeek(birthDateStr: string): boolean {
-  const bd   = new Date(birthDateStr);
-  const now  = new Date();
-  const year = now.getFullYear();
-  const bdThisYear = new Date(year, bd.getMonth(), bd.getDate());
-  const diff = (bdThisYear.getTime() - now.getTime()) / 86_400_000;
-  return diff >= 0 && diff <= 6;
-}
-
-// ── Sponsors (placeholder — reemplazar con datos reales desde API) ────────────
-
-const SPONSORS = [
+const ADS = [
   {
-    image: 'https://images.unsplash.com/photo-1579952363873-27f3bade9f55?w=600&q=80',
-    title: 'Nueva Colección Deportiva',
-    description: 'Descubre la última colección de equipamiento deportivo',
+    image: 'https://images.unsplash.com/photo-1517649763962-0c623066013b?w=600&q=80',
+    label: 'Equipamiento',
+    title: 'Nueva Colección Deportiva 2025',
+    description: 'Ropa técnica de alto rendimiento para ciclistas',
     url: '#',
+    color: '#7C3AED',
   },
   {
     image: 'https://images.unsplash.com/photo-1526676037777-05a232554f77?w=600&q=80',
+    label: 'Academia',
     title: 'Academia de Alto Rendimiento',
-    description: 'Lleva tu rendimiento al siguiente nivel con nosotros',
+    description: 'Entrena con los mejores coaches del país',
     url: '#',
+    color: '#4361EE',
+  },
+  {
+    image: 'https://images.unsplash.com/photo-1571902943202-507ec2618e8f?w=600&q=80',
+    label: 'Nutrición',
+    title: 'Plan Nutricional para Deportistas',
+    description: 'Optimiza tu rendimiento con nutrición personalizada',
+    url: '#',
+    color: '#06D6A0',
+  },
+  {
+    image: 'https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?w=600&q=80',
+    label: 'Ciclismo',
+    title: 'Trek & Specialized — Tienda Oficial',
+    description: 'Las mejores marcas de ciclismo en un solo lugar',
+    url: '#',
+    color: '#EF476F',
+  },
+  {
+    image: 'https://images.unsplash.com/photo-1598300042247-d088f8ab3a91?w=600&q=80',
+    label: 'Hidratación',
+    title: 'Hidratación Profesional Deportiva',
+    description: 'Isotónicos y suplementos para el alto rendimiento',
+    url: '#',
+    color: '#FFB703',
   },
 ];
 
@@ -151,6 +155,65 @@ function Avatar({ src, name, size = 36, role }: { src?: string | null; name: str
     }}>
       <span style={{ fontSize: size * 0.35, fontWeight: 800, color: rc.text }}>{getInitials(name)}</span>
     </div>
+  );
+}
+
+// ── SponsorBanner ─────────────────────────────────────────────────────────────
+
+function SponsorBanner() {
+  const [paused, setPaused] = useState(false);
+  const items = [...ADS, ...ADS]; // duplicar para loop sin cortes
+
+  return (
+    <motion.div variants={cardVariant} className="overflow-hidden">
+      <style>{`
+        @keyframes scrollLeft {
+          from { transform: translateX(0); }
+          to   { transform: translateX(-50%); }
+        }
+      `}</style>
+      <div
+        onMouseEnter={() => setPaused(true)}
+        onMouseLeave={() => setPaused(false)}
+        style={{
+          display: 'flex',
+          gap: 12,
+          width: 'max-content',
+          animation: 'scrollLeft 28s linear infinite',
+          animationPlayState: paused ? 'paused' : 'running',
+        }}
+      >
+        {items.map((ad, i) => (
+          <a
+            key={i}
+            href={ad.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex-shrink-0 bg-white border border-border rounded-2xl overflow-hidden flex items-stretch cursor-pointer hover:shadow-md transition-shadow"
+            style={{ width: 272, boxShadow: '0 1px 8px rgba(0,0,0,0.06)' }}
+          >
+            {/* Imagen */}
+            <div className="shrink-0 overflow-hidden" style={{ width: 100 }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={ad.image} alt={ad.title} className="w-full h-full object-cover" />
+            </div>
+            {/* Texto */}
+            <div className="flex-1 px-3 py-3 flex flex-col justify-between min-w-0">
+              <div>
+                <p className="text-[10px] font-bold mb-1" style={{ color: ad.color }}>
+                  ✦ {ad.label}
+                </p>
+                <p className="text-[12px] font-bold text-foreground leading-snug line-clamp-2">{ad.title}</p>
+                <p className="text-[11px] text-muted-foreground mt-1 leading-snug line-clamp-2">{ad.description}</p>
+              </div>
+              <span className="text-[11px] font-bold mt-2 inline-flex items-center gap-0.5" style={{ color: ad.color }}>
+                Ver más <ChevronRight className="w-3 h-3" />
+              </span>
+            </div>
+          </a>
+        ))}
+      </div>
+    </motion.div>
   );
 }
 
@@ -546,12 +609,6 @@ export default function DashboardPage() {
   const [posts, setPosts]           = useState<Post[]>([]);
   const [postsLoading, setPostsLoading] = useState(false);
 
-  // Próximos eventos
-  const [proximosEventos, setProximosEventos] = useState<ProximoEvento[]>([]);
-
-  // Cumpleañeros
-  const [cumpleaneros, setCumpleaneros] = useState<Cumpleanero[]>([]);
-
   // currentUserId (clerkId del usuario autenticado)
   const [currentUserId, setCurrentUserId] = useState('');
   const [authToken, setAuthToken] = useState<string | null>(null);
@@ -591,18 +648,12 @@ export default function DashboardPage() {
       try {
         const token = await session?.getToken();
         setAuthToken(token ?? null);
-        const now   = new Date();
-        const month = now.getMonth() + 1;
-        const year  = now.getFullYear();
 
         const [
-          meRes, notifRes, compRes, trainingRes, membersRes, postsRes,
+          meRes, notifRes, postsRes,
         ] = await Promise.allSettled([
           apiFetch<MeResponse>('/me', { token }),
           apiFetch<{ notifications: typeof notifs }>('/payments/notifications', { token }),
-          apiFetch<{ competitions: { id: string; name: string; date: string; place?: string | null; events: unknown[] }[] }>('/competitions', { token }),
-          apiFetch<{ sessions: { id: string; title: string; date: string; location?: { name: string } | null }[] }>(`/training?month=${month}&year=${year}`, { token }),
-          apiFetch<{ members: { id: string; fullName: string; birthDate?: string | null; pictureUrl?: string | null }[] }>('/members', { token }),
           apiFetch<{ posts: Post[] }>('/posts?scope=public', { token }),
         ]);
 
@@ -625,32 +676,6 @@ export default function DashboardPage() {
 
         // Posts
         if (postsRes.status === 'fulfilled') setPosts(postsRes.value.posts);
-
-        // Próximos eventos
-        const comps  = compRes.status === 'fulfilled' ? compRes.value.competitions : [];
-        const trains = trainingRes.status === 'fulfilled' ? trainingRes.value.sessions : [];
-        const futuros: ProximoEvento[] = [
-          ...comps.map(c  => ({ id: c.id,  titulo: c.name,  tipo: 'COMPETITION' as const, fecha: parseLocalDate(c.date), lugar: c.place ?? null })),
-          ...trains.map(s => ({ id: s.id,  titulo: s.title, tipo: 'TRAINING'     as const, fecha: parseLocalDate(s.date), lugar: s.location?.name ?? null })),
-        ]
-          .filter(e => e.fecha >= now)
-          .sort((a, b) => a.fecha.getTime() - b.fecha.getTime())
-          .slice(0, 3);
-        setProximosEventos(futuros);
-
-        // Cumpleañeros esta semana
-        if (membersRes.status === 'fulfilled') {
-          const cumple = membersRes.value.members.filter(m =>
-            m.birthDate && isBirthdayThisWeek(m.birthDate)
-          ) as Cumpleanero[];
-          // Ordenar: hoy primero
-          cumple.sort((a, b) => {
-            const aToday = isBirthdayToday(a.birthDate) ? 0 : 1;
-            const bToday = isBirthdayToday(b.birthDate) ? 0 : 1;
-            return aToday - bToday;
-          });
-          setCumpleaneros(cumple);
-        }
 
       } catch { /* silencioso */ } finally {
         setLoading(false);
@@ -904,104 +929,16 @@ export default function DashboardPage() {
       </AnimatePresence>
 
       {/* ── Contenido principal ───────────────────────────────────────────── */}
-      <div className="max-w-6xl mx-auto px-4 py-4 lg:flex lg:gap-6 lg:items-start">
-      {/* Columna principal (feed) */}
+      <div className="max-w-2xl mx-auto px-4 py-4">
       <motion.div
         variants={feedVariants}
         initial="hidden"
         animate="show"
-        className="flex-1 space-y-4 min-w-0"
+        className="space-y-4"
       >
 
-        {/* Tarjeta de dos columnas: Próximo evento + Cumpleaños */}
-        {(proximosEventos.length > 0 || cumpleaneros.length > 0) && (
-          <motion.div variants={cardVariant} className="grid grid-cols-2 gap-3">
-
-            {/* Col izquierda — Próximo evento */}
-            {proximosEventos.length > 0 ? (
-              <Link href="/dashboard/calendario" className="block active:scale-[0.97] transition-transform">
-                <div
-                  className="h-full rounded-2xl p-3.5 flex flex-col gap-2"
-                  style={{
-                    background: proximosEventos[0].tipo === 'COMPETITION'
-                      ? 'linear-gradient(135deg,rgba(239,71,111,0.09) 0%,rgba(239,71,111,0.03) 100%)'
-                      : 'linear-gradient(135deg,rgba(67,97,238,0.09) 0%,rgba(67,97,238,0.03) 100%)',
-                    border: `1px solid ${proximosEventos[0].tipo === 'COMPETITION' ? 'rgba(239,71,111,0.18)' : 'rgba(67,97,238,0.18)'}`,
-                  }}
-                >
-                  <div className="flex items-center justify-between">
-                    <div
-                      className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0"
-                      style={{
-                        background: proximosEventos[0].tipo === 'COMPETITION' ? 'rgba(239,71,111,0.15)' : 'rgba(67,97,238,0.15)',
-                      }}
-                    >
-                      {proximosEventos[0].tipo === 'COMPETITION'
-                        ? <Trophy className="w-4 h-4" style={{ color: '#EF476F' }} />
-                        : <Dumbbell className="w-4 h-4" style={{ color: '#4361EE' }} />
-                      }
-                    </div>
-                    <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/30" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-[9px] font-bold uppercase tracking-widest mb-0.5 leading-none"
-                      style={{ color: proximosEventos[0].tipo === 'COMPETITION' ? '#EF476F' : '#4361EE' }}>
-                      Próximo evento
-                    </p>
-                    <p className="text-[12px] font-bold text-foreground leading-tight line-clamp-2">
-                      {proximosEventos[0].titulo}
-                    </p>
-                    {proximosEventos[0].lugar && (
-                      <p className="text-[10px] text-muted-foreground mt-0.5 truncate">{proximosEventos[0].lugar}</p>
-                    )}
-                  </div>
-                  <p className="text-[13px] font-extrabold mt-auto"
-                    style={{ color: proximosEventos[0].tipo === 'COMPETITION' ? '#EF476F' : '#4361EE', fontFamily: 'var(--font-space-grotesk)' }}>
-                    {proximosEventos[0].fecha.toLocaleDateString('es-CO', { day: 'numeric', month: 'short' })}
-                  </p>
-                </div>
-              </Link>
-            ) : <div />}
-
-            {/* Col derecha — Cumpleaños esta semana */}
-            {cumpleaneros.length > 0 ? (
-              <div
-                className="h-full rounded-2xl p-3.5 flex flex-col gap-2"
-                style={{
-                  background: 'linear-gradient(135deg,rgba(255,183,3,0.09) 0%,rgba(255,183,3,0.03) 100%)',
-                  border: '1px solid rgba(255,183,3,0.20)',
-                }}
-              >
-                <div className="flex items-center gap-1.5">
-                  <Cake className="w-4 h-4 shrink-0" style={{ color: '#FFB703' }} />
-                  <p className="text-[9px] font-bold uppercase tracking-widest leading-none" style={{ color: '#B88A00' }}>
-                    Cumpleaños
-                  </p>
-                </div>
-                <div className="flex flex-col gap-1.5 flex-1">
-                  {cumpleaneros.slice(0, 3).map(m => {
-                    const today = isBirthdayToday(m.birthDate);
-                    return (
-                      <div key={m.id} className="flex items-center gap-1.5">
-                        <Avatar src={m.pictureUrl} name={m.fullName} size={22} />
-                        <span
-                          className="text-[11px] font-semibold truncate"
-                          style={{ color: today ? '#8A6300' : '#6B5000' }}
-                        >
-                          {m.fullName.split(' ')[0]}{today && ' 🎂'}
-                        </span>
-                      </div>
-                    );
-                  })}
-                  {cumpleaneros.length > 3 && (
-                    <p className="text-[10px] text-muted-foreground">+{cumpleaneros.length - 3} más</p>
-                  )}
-                </div>
-              </div>
-            ) : <div />}
-
-          </motion.div>
-        )}
+        {/* ── Banner publicitario deslizante ──────────────────────────────── */}
+        <SponsorBanner />
 
         {/* ── Tabs Público / Privado ──────────────────────────────────────── */}
         <motion.div variants={cardVariant}>
@@ -1105,53 +1042,6 @@ export default function DashboardPage() {
         )}
 
       </motion.div>
-
-      {/* ── Sidebar: Patrocinadores ─────────────────────────────────────── */}
-      <aside className="hidden lg:block w-72 xl:w-80 shrink-0">
-        <motion.div
-          initial={{ opacity: 0, x: 16 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.4, delay: 0.2, ease: [0.23, 1, 0.32, 1] }}
-          className="space-y-3"
-        >
-          <h2 className="text-[15px] font-extrabold text-foreground" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
-            Patrocinadores
-          </h2>
-          {SPONSORS.map((sp, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.35, delay: 0.25 + i * 0.08, ease: [0.23, 1, 0.32, 1] }}
-              className="bg-white border border-border rounded-2xl overflow-hidden"
-              style={{ boxShadow: '0 1px 8px rgba(0,0,0,0.06)' }}
-            >
-              {/* Imagen */}
-              <div className="w-full h-40 overflow-hidden bg-secondary">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={sp.image} alt={sp.title} className="w-full h-full object-cover" />
-              </div>
-              {/* Contenido */}
-              <div className="px-4 py-3">
-                <p className="text-[11px] font-bold mb-1" style={{ color: '#7C3AED' }}>
-                  ✦ Patrocinado
-                </p>
-                <p className="text-[14px] font-bold text-foreground leading-snug mb-1">{sp.title}</p>
-                <p className="text-[12px] text-muted-foreground leading-relaxed mb-3">{sp.description}</p>
-                <a
-                  href={sp.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block w-full text-center py-2 rounded-xl text-[13px] font-bold text-foreground border border-border hover:bg-secondary transition-colors"
-                >
-                  Ver más
-                </a>
-              </div>
-            </motion.div>
-          ))}
-        </motion.div>
-      </aside>
-
       </div>
     </div>
   );

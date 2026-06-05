@@ -37,7 +37,6 @@ interface Member {
   paymentDueDay?: number | null; monthlyFee?: number | null;
   pictureUrl?: string | null; docNumber?: string | null;
   createdAt?: string;
-  inviteStatus?: 'PENDING' | 'ACCEPTED';
   role: string;
   locations: { location: Location }[];
 }
@@ -78,7 +77,6 @@ export default function MiembrosPage() {
   const [sortOrder, setSortOrder]     = useState<'az'|'za'|'recent'|'oldest'>('recent');
   const [catFilter, setCatFilter]     = useState<string>('ALL');
   const [locFilter, setLocFilter]     = useState<string>('ALL');
-  const [inviteFilter, setInviteFilter] = useState<'ALL'|'PENDING'|'ACCEPTED'>('ALL');
   const [sinSede, setSinSede]         = useState(false);
   const [clubName, setClubName] = useState('VeloClub');
 
@@ -266,9 +264,8 @@ export default function MiembrosPage() {
       const matchRole   = roleFilter === 'ALL' || m.role === roleFilter;
       const matchCat    = catFilter  === 'ALL' || m.category === catFilter;
       const matchLoc    = locFilter     === 'ALL' || m.locations.some(l => l.location.id === locFilter);
-      const matchInvite = inviteFilter  === 'ALL' || m.inviteStatus === inviteFilter;
       const matchSinSede = !sinSede || m.locations.length === 0;
-      return matchSearch && matchRole && matchCat && matchLoc && matchInvite && matchSinSede;
+      return matchSearch && matchRole && matchCat && matchLoc && matchSinSede;
     });
     list = [...list].sort((a, b) => {
       if (sortOrder === 'az')     return a.fullName.localeCompare(b.fullName);
@@ -278,7 +275,7 @@ export default function MiembrosPage() {
       return 0;
     });
     return list;
-  }, [members, search, roleFilter, catFilter, locFilter, sortOrder, inviteFilter, sinSede]);
+  }, [members, search, roleFilter, catFilter, locFilter, sortOrder, sinSede]);
 
   // ── Initials ─────────────────────────────────────────────────────────────────
   function initials(name: string) {
@@ -477,20 +474,6 @@ export default function MiembrosPage() {
                 </SelectContent>
               </Select>
             )}
-
-            {/* Invitación */}
-            <Select value={inviteFilter} onValueChange={v => { if (v) setInviteFilter(v as typeof inviteFilter); }}>
-              <SelectTrigger className="h-[42px] px-3 rounded-xl text-[12px] font-semibold gap-1.5 cursor-pointer"
-                style={{ background: inviteFilter !== 'ALL' ? 'rgba(239,71,111,0.08)' : '#fff', border: inviteFilter !== 'ALL' ? '1px solid rgba(239,71,111,0.30)' : '1px solid rgba(120,80,200,0.12)', color: inviteFilter !== 'ALL' ? '#EF476F' : '#1A1028', width: 'auto', minWidth: 130 }}>
-                <Shield className="w-3.5 h-3.5 shrink-0" style={{ color: inviteFilter !== 'ALL' ? '#EF476F' : '#8E87A8' }} />
-                <span>{{ ALL: 'Invitación', PENDING: 'Pendiente', ACCEPTED: 'Aceptada' }[inviteFilter]}</span>
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="ALL">Todas</SelectItem>
-                <SelectItem value="PENDING">Pendiente</SelectItem>
-                <SelectItem value="ACCEPTED">Aceptada</SelectItem>
-              </SelectContent>
-            </Select>
 
             {/* Sin sede — toggle pill */}
             <motion.button

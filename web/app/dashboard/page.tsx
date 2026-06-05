@@ -108,6 +108,23 @@ function isBirthdayThisWeek(birthDateStr: string): boolean {
   return diff >= 0 && diff <= 6;
 }
 
+// ── Sponsors (placeholder — reemplazar con datos reales desde API) ────────────
+
+const SPONSORS = [
+  {
+    image: 'https://images.unsplash.com/photo-1579952363873-27f3bade9f55?w=600&q=80',
+    title: 'Nueva Colección Deportiva',
+    description: 'Descubre la última colección de equipamiento deportivo',
+    url: '#',
+  },
+  {
+    image: 'https://images.unsplash.com/photo-1526676037777-05a232554f77?w=600&q=80',
+    title: 'Academia de Alto Rendimiento',
+    description: 'Lleva tu rendimiento al siguiente nivel con nosotros',
+    url: '#',
+  },
+];
+
 // ── Framer variants ───────────────────────────────────────────────────────────
 
 const feedVariants = {
@@ -1090,73 +1107,49 @@ export default function DashboardPage() {
       </motion.div>
 
       {/* ── Sidebar: Patrocinadores ─────────────────────────────────────── */}
-      <aside className="hidden lg:block w-72 xl:w-80 shrink-0 space-y-4">
+      <aside className="hidden lg:block w-72 xl:w-80 shrink-0">
         <motion.div
           initial={{ opacity: 0, x: 16 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.4, delay: 0.2, ease: [0.23, 1, 0.32, 1] }}
+          className="space-y-3"
         >
-          <h2 className="text-[15px] font-extrabold text-foreground mb-3" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
-            Próximos eventos
+          <h2 className="text-[15px] font-extrabold text-foreground" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
+            Patrocinadores
           </h2>
-          {proximosEventos.length === 0 ? (
-            <div className="bg-white border border-border rounded-2xl px-4 py-6 text-center"
-              style={{ boxShadow: '0 1px 8px rgba(0,0,0,0.06)' }}>
-              <CalendarDays className="w-8 h-8 mx-auto mb-2 text-muted-foreground/30" />
-              <p className="text-[12px] font-semibold text-muted-foreground">Sin eventos próximos</p>
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {proximosEventos.slice(0, 3).map(ev => (
-                <Link key={ev.id} href="/dashboard/calendario"
-                  className="flex items-center gap-3 bg-white border border-border rounded-2xl px-4 py-3 hover:shadow-md transition-shadow"
-                  style={{ boxShadow: '0 1px 8px rgba(0,0,0,0.06)' }}>
-                  <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
-                    style={{ background: ev.tipo === 'COMPETITION' ? 'rgba(239,71,111,0.10)' : 'rgba(67,97,238,0.10)' }}>
-                    {ev.tipo === 'COMPETITION'
-                      ? <Trophy className="w-4 h-4" style={{ color: '#EF476F' }} />
-                      : <Dumbbell className="w-4 h-4" style={{ color: '#4361EE' }} />}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[13px] font-bold text-foreground truncate">{ev.titulo}</p>
-                    <p className="text-[11px] text-muted-foreground mt-0.5">
-                      {ev.fecha.toLocaleDateString('es-CO', { weekday: 'short', day: 'numeric', month: 'short' })}
-                    </p>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          )}
+          {SPONSORS.map((sp, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.35, delay: 0.25 + i * 0.08, ease: [0.23, 1, 0.32, 1] }}
+              className="bg-white border border-border rounded-2xl overflow-hidden"
+              style={{ boxShadow: '0 1px 8px rgba(0,0,0,0.06)' }}
+            >
+              {/* Imagen */}
+              <div className="w-full h-40 overflow-hidden bg-secondary">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={sp.image} alt={sp.title} className="w-full h-full object-cover" />
+              </div>
+              {/* Contenido */}
+              <div className="px-4 py-3">
+                <p className="text-[11px] font-bold mb-1" style={{ color: '#7C3AED' }}>
+                  ✦ Patrocinado
+                </p>
+                <p className="text-[14px] font-bold text-foreground leading-snug mb-1">{sp.title}</p>
+                <p className="text-[12px] text-muted-foreground leading-relaxed mb-3">{sp.description}</p>
+                <a
+                  href={sp.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block w-full text-center py-2 rounded-xl text-[13px] font-bold text-foreground border border-border hover:bg-secondary transition-colors"
+                >
+                  Ver más
+                </a>
+              </div>
+            </motion.div>
+          ))}
         </motion.div>
-
-        {/* Cumpleaños esta semana */}
-        {cumpleaneros.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, x: 16 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.4, delay: 0.3, ease: [0.23, 1, 0.32, 1] }}
-          >
-            <h2 className="text-[15px] font-extrabold text-foreground mb-3" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
-              Cumpleaños 🎂
-            </h2>
-            <div className="bg-white border border-border rounded-2xl px-4 py-3 space-y-2.5"
-              style={{ boxShadow: '0 1px 8px rgba(0,0,0,0.06)' }}>
-              {cumpleaneros.slice(0, 4).map(m => (
-                <div key={m.id} className="flex items-center gap-2.5">
-                  <Avatar src={m.pictureUrl} name={m.fullName} size={32} />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[13px] font-semibold text-foreground truncate">
-                      {m.fullName}{isBirthdayToday(m.birthDate) ? ' 🎂' : ''}
-                    </p>
-                    <p className="text-[11px] text-muted-foreground">
-                      {isBirthdayToday(m.birthDate) ? '¡Hoy!' : 'Esta semana'}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </motion.div>
-        )}
       </aside>
 
       </div>

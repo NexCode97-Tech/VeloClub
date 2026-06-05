@@ -125,7 +125,7 @@ function SelectItem({
     <SelectPrimitive.Item
       data-slot="select-item"
       className={cn(
-        "relative flex w-full cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-[13px] font-medium outline-none select-none transition-colors",
+        "relative flex w-full cursor-pointer items-center gap-2 rounded-lg pl-3 pr-8 py-2 text-[13px] font-medium outline-none select-none transition-colors",
         "text-[#1A1028] hover:bg-[rgba(124,58,237,0.07)] hover:text-[#7C3AED]",
         "data-highlighted:bg-[rgba(124,58,237,0.07)] data-highlighted:text-[#7C3AED]",
         "data-selected:font-semibold data-selected:text-[#7C3AED]",

@@ -5,7 +5,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import { apiFetch } from '@/lib/api-client';
 import { QK } from '@/hooks/useVeloQuery';
-import { Users, MapPin, CheckCircle2 } from 'lucide-react';
+import { Users, MapPin, CheckCircle2, Search } from 'lucide-react';
 const EASE_OUT: [number,number,number,number] = [0.23, 1, 0.32, 1];
 import { MemberAvatar } from '@/components/ui/member-avatar';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
@@ -294,9 +294,12 @@ export default function AsistenciaPage() {
   const counts = CYCLE.map(s => ({ s, n: Object.values(att).filter(v => v === s).length }));
   const canManage = role === 'ADMIN' || role === 'COACH';
 
+  const [search, setSearch]       = useState('');
   const [catFilter, setCatFilter] = useState<string>('TODOS');
   const categories = ['TODOS', ...Array.from(new Set(members.map(m => m.category).filter(Boolean) as string[])).sort()];
-  const visibleMembers = catFilter === 'TODOS' ? members : members.filter(m => m.category === catFilter);
+  const visibleMembers = members
+    .filter(m => catFilter === 'TODOS' || m.category === catFilter)
+    .filter(m => !search.trim() || m.fullName.toLowerCase().includes(search.toLowerCase().trim()));
 
   // "MAYORES" → "Mayores"
   function toLabel(cat: string) {
@@ -422,6 +425,18 @@ export default function AsistenciaPage() {
                       </div>
                     </div>
                   ))}
+                </motion.div>
+
+                {/* Barra de búsqueda */}
+                <motion.div variants={cardVariant} className="relative">
+                  <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: '#8E87A8' }} />
+                  <input
+                    className="w-full pl-10 pr-4 py-2.5 rounded-xl text-[13px] outline-none transition-all"
+                    style={{ background: '#fff', border: '1px solid rgba(120,80,200,0.12)', color: '#1A1028' }}
+                    placeholder="Buscar por nombre..."
+                    value={search}
+                    onChange={e => setSearch(e.target.value)}
+                  />
                 </motion.div>
 
                 {/* Filtro por categoría */}

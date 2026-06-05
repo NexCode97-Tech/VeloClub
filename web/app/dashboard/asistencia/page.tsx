@@ -94,8 +94,8 @@ function WeekStrip({
         let opacity    = 1;
 
         if (isSaved) {
-          bgColor    = '#1A1028';
-          ringColor  = '#1A1028';
+          bgColor    = '#06D6A0';
+          ringColor  = '#06D6A0';
           checkColor = '#ffffff';
         } else if (isToday) {
           bgColor    = 'transparent';
@@ -112,7 +112,7 @@ function WeekStrip({
             <motion.div
               animate={isAnimating ? {
                 scale: [1, 0.82, 1.12, 1],
-                backgroundColor: ['transparent', '#1A1028', '#1A1028', '#1A1028'],
+                backgroundColor: ['transparent', '#06D6A0', '#06D6A0', '#06D6A0'],
               } : {
                 scale: 1,
                 backgroundColor: bgColor,

@@ -381,11 +381,11 @@ export default function PerfilPage() {
           {/* Nombre y rol */}
           <div className="mt-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
             <div>
-              <h1 className="text-[20px] font-extrabold text-foreground leading-tight"
-                style={{ fontFamily: 'var(--font-space-grotesk)' }}>
+              <h1 className="text-[24px] font-extrabold text-foreground leading-tight uppercase"
+                style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
                 {user?.name ?? 'Usuario'}
               </h1>
-              <span className="inline-block mt-1 text-[11px] font-bold px-2.5 py-0.5 rounded-full"
+              <span className="inline-block mt-1 text-[10px] font-bold px-2.5 py-0.5 rounded-full tracking-widest uppercase"
                 style={{ background: rc.bg, color: rc.text }}>
                 {roleLabels[role] ?? role}
               </span>
@@ -396,13 +396,14 @@ export default function PerfilPage() {
           <div className="flex items-center gap-6 mt-4">
             <div className="text-center">
               <p className="text-[18px] font-extrabold text-foreground leading-none"
-                style={{ fontFamily: 'var(--font-space-grotesk)' }}>{posts.length}</p>
-              <p className="text-[11px] text-muted-foreground mt-0.5">Publicaciones</p>
+                style={{ fontFamily: 'Space Grotesk, sans-serif' }}>{posts.length}</p>
+              <p style={{ fontSize: 11, fontWeight: 600, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.08em', marginTop: 2 }}>Publicaciones</p>
             </div>
             {user?.club?.name && (
               <div className="text-center">
-                <p className="text-[14px] font-bold text-foreground leading-none truncate max-w-[120px]">{user.club.name}</p>
-                <p className="text-[11px] text-muted-foreground mt-0.5">Club</p>
+                <p className="text-[14px] font-extrabold text-foreground leading-none truncate max-w-[120px]"
+                  style={{ fontFamily: 'Space Grotesk, sans-serif' }}>{user.club.name}</p>
+                <p style={{ fontSize: 11, fontWeight: 600, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.08em', marginTop: 2 }}>Club</p>
               </div>
             )}
           </div>
@@ -441,8 +442,8 @@ export default function PerfilPage() {
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className="flex-1 py-3.5 text-[13px] font-semibold relative transition-colors"
-              style={{ color: activeTab === tab ? '#7C3AED' : '#8E87A8' }}
+              className="flex-1 py-3.5 relative transition-colors"
+              style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: activeTab === tab ? '#7C3AED' : '#8E87A8' }}
             >
               {tab}
               {activeTab === tab && (
@@ -514,7 +515,7 @@ export default function PerfilPage() {
                   { label: 'Miembro desde', value: user?.createdAt ? formatJoinDate(user.createdAt) : undefined },
                 ].filter(r => r.value).map(row => (
                   <div key={row.label} className="flex items-center justify-between px-4 py-3">
-                    <span className="text-[13px] text-muted-foreground">{row.label}</span>
+                    <span style={{ fontSize: 11, fontWeight: 600, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{row.label}</span>
                     <span className="text-[13px] font-semibold text-foreground text-right max-w-[55%] truncate">{row.value}</span>
                   </div>
                 ))}

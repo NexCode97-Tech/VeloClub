@@ -34,8 +34,8 @@ const baseOrigin = (process.env.WEB_ORIGIN || 'http://localhost:3000').replace(/
 const allowedOrigins = [baseOrigin, baseOrigin.replace('https://', 'https://www.')].filter(Boolean);
 app.use(cors({ origin: allowedOrigins, credentials: true }));
 
-// Límite de body reducido — ningún endpoint necesita más de 100kb
-app.use(express.json({ limit: '100kb' }));
+// Límite ampliado para soportar upload de imágenes en base64
+app.use(express.json({ limit: '10mb' }));
 
 // Rate limiting global: 1000 req / 15min por IP
 const globalLimiter = rateLimit({

@@ -10,9 +10,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Bell, BellOff,
   Heart, Image as ImageIcon, X, Send,
-  ChevronRight, Globe, Lock, MessageCircle,
+  Globe, Lock, MessageCircle,
   Paperclip, Video, FileText,
 } from 'lucide-react';
+import { Slideshow } from '@/components/ui/slideshow';
 
 // ── Interfaces ────────────────────────────────────────────────────────────────
 
@@ -158,64 +159,6 @@ function Avatar({ src, name, size = 36, role }: { src?: string | null; name: str
   );
 }
 
-// ── SponsorBanner ─────────────────────────────────────────────────────────────
-
-function SponsorBanner() {
-  const [paused, setPaused] = useState(false);
-  const items = [...ADS, ...ADS]; // duplicar para loop sin cortes
-
-  return (
-    <motion.div variants={cardVariant} className="overflow-hidden">
-      <style>{`
-        @keyframes scrollLeft {
-          from { transform: translateX(0); }
-          to   { transform: translateX(-50%); }
-        }
-      `}</style>
-      <div
-        onMouseEnter={() => setPaused(true)}
-        onMouseLeave={() => setPaused(false)}
-        style={{
-          display: 'flex',
-          gap: 12,
-          width: 'max-content',
-          animation: 'scrollLeft 45s linear infinite',
-          animationPlayState: paused ? 'paused' : 'running',
-        }}
-      >
-        {items.map((ad, i) => (
-          <a
-            key={i}
-            href={ad.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex-shrink-0 bg-white border border-border rounded-2xl overflow-hidden flex items-stretch cursor-pointer hover:shadow-md transition-shadow"
-            style={{ width: 300, boxShadow: '0 1px 8px rgba(0,0,0,0.06)' }}
-          >
-            {/* Imagen */}
-            <div className="shrink-0 overflow-hidden" style={{ width: 110 }}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={ad.image} alt={ad.title} className="w-full h-full object-cover" />
-            </div>
-            {/* Texto */}
-            <div className="flex-1 px-3 py-3 flex flex-col justify-between min-w-0">
-              <div>
-                <p className="text-[10px] font-bold mb-1" style={{ color: '#7C3AED' }}>
-                  {ad.label}
-                </p>
-                <p className="text-[12px] font-bold text-foreground leading-snug line-clamp-2">{ad.title}</p>
-                <p className="text-[11px] text-muted-foreground mt-1 leading-snug line-clamp-2">{ad.description}</p>
-              </div>
-              <span className="text-[11px] font-bold mt-2 inline-flex items-center gap-0.5" style={{ color: '#7C3AED' }}>
-                Ver más <ChevronRight className="w-3 h-3" />
-              </span>
-            </div>
-          </a>
-        ))}
-      </div>
-    </motion.div>
-  );
-}
 
 // ── PostCard ──────────────────────────────────────────────────────────────────
 
@@ -799,10 +742,7 @@ export default function DashboardPage() {
                   )}
                 </div>
                 <div>
-                  <h1 className="text-[22px] font-extrabold text-foreground leading-tight" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
-                    ¡Hola, {firstName}! 👋
-                  </h1>
-                  <p className="text-[14px] font-semibold text-foreground/70 mt-0.5">{user?.club?.name ?? 'VeloClub'}</p>
+                  <p className="text-[18px] font-extrabold text-foreground leading-tight" style={{ fontFamily: 'var(--font-space-grotesk)' }}>{user?.club?.name ?? 'VeloClub'}</p>
                 </div>
               </div>
               <span
@@ -936,8 +876,12 @@ export default function DashboardPage() {
         className="space-y-4"
       >
 
-        {/* ── Banner publicitario deslizante ──────────────────────────────── */}
-        <SponsorBanner />
+        {/* ── Slideshow publicitario ──────────────────────────────────────── */}
+        <motion.div variants={cardVariant}>
+          <Slideshow
+            slides={ADS.map(ad => ({ img: ad.image, label: ad.label, title: ad.title, description: ad.description, url: ad.url }))}
+          />
+        </motion.div>
 
         {/* ── Tabs Público / Privado ──────────────────────────────────────── */}
         <motion.div variants={cardVariant}>

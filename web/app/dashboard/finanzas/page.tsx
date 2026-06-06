@@ -638,7 +638,7 @@ export default function FinanzasPage() {
     <div className="min-h-full bg-background">
       {/* Header */}
       <div className="px-5 py-3 bg-background border-b border-border flex items-center justify-between">
-        <h1 className="text-[17px] font-bold text-foreground" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
+        <h1 className="text-[22px] font-extrabold text-foreground uppercase" style={{ fontFamily: 'Space Grotesk, sans-serif', lineHeight: 1.1 }}>
           Finanzas
         </h1>
         <button

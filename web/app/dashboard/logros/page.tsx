@@ -240,7 +240,7 @@ export default function LogrosPage() {
       <div className="px-4 pt-4 pb-3">
         <div className="flex items-start justify-between gap-2 mb-4">
           <div>
-            <h1 className="text-[20px] font-black text-foreground tracking-tight" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
+            <h1 className="text-[22px] font-extrabold text-foreground uppercase" style={{ fontFamily: 'Space Grotesk, sans-serif', lineHeight: 1.1 }}>
               Resultados
             </h1>
             <p className="text-[12px] text-muted-foreground mt-0.5">

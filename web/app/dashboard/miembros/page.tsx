@@ -301,7 +301,7 @@ export default function MiembrosPage() {
       ══════════════════════════════════════════════════════════════════ */}
       <div className="md:hidden px-5 pt-5 pb-4 bg-card border-b border-border flex items-center justify-between">
         <div>
-          <h1 className="text-[18px] font-bold text-foreground" style={{ fontFamily: 'var(--font-space-grotesk)' }}>Miembros</h1>
+          <h1 className="text-[22px] font-extrabold text-foreground uppercase" style={{ fontFamily: 'Space Grotesk, sans-serif', lineHeight: 1.1 }}>Miembros</h1>
           <p className="text-xs text-muted-foreground mt-0.5">{members.length} miembro{members.length !== 1 ? 's' : ''}</p>
         </div>
         <div className="flex items-center gap-2">

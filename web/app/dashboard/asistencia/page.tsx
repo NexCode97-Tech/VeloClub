@@ -312,7 +312,7 @@ export default function AsistenciaPage() {
       {/* Header */}
       <div className="px-5 py-3 bg-background border-b border-border flex items-center justify-between">
         <div>
-          <h1 className="text-[17px] font-bold text-foreground" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
+          <h1 className="text-[22px] font-extrabold text-foreground uppercase" style={{ fontFamily: 'Space Grotesk, sans-serif', lineHeight: 1.1 }}>
             Asistencia
           </h1>
           <p className="text-xs text-muted-foreground mt-0.5 capitalize">{todayLabel()}</p>

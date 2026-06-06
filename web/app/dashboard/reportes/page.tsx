@@ -175,7 +175,7 @@ export default function ReportesPage() {
     <div className="min-h-full bg-background pb-8">
       {/* Header */}
       <div className="px-5 py-3 bg-background border-b border-border">
-        <h1 className="text-[17px] font-bold text-foreground" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
+        <h1 className="text-[22px] font-extrabold text-foreground uppercase" style={{ fontFamily: 'Space Grotesk, sans-serif', lineHeight: 1.1 }}>
           Reportes
         </h1>
         <p className="text-[11px] text-muted-foreground mt-0.5">{MONTH_NAMES_FULL[new Date().getMonth()]} {new Date().getFullYear()}</p>
@@ -208,7 +208,7 @@ export default function ReportesPage() {
         {/* Gráfica asistencia mensual */}
         <motion.div variants={cardVariant} className="bg-white border border-border rounded-xl p-4">
           <div className="flex items-center justify-between mb-4">
-            <p className="text-[14px] font-bold text-foreground" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
+            <p style={{ fontSize: 11, fontWeight: 600, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
               Asistencia últimos 6 meses
             </p>
           </div>
@@ -244,7 +244,7 @@ export default function ReportesPage() {
         {/* Gráfica asistencia por día de la semana */}
         <motion.div variants={cardVariant} className="bg-white border border-border rounded-xl p-4">
           <div className="flex items-center justify-between mb-1">
-            <p className="text-[14px] font-bold text-foreground" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
+            <p style={{ fontSize: 11, fontWeight: 600, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
               Asistencia por día
             </p>
             <p className="text-[10px] text-muted-foreground">Últimas 8 semanas</p>
@@ -287,7 +287,7 @@ export default function ReportesPage() {
 
         {/* Distribución de pagos */}
         <motion.div variants={cardVariant} className="bg-white border border-border rounded-xl p-4">
-          <p className="text-[14px] font-bold text-foreground mb-4" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
+          <p style={{ fontSize: 11, fontWeight: 600, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 16 }}>
             Estado de pagos — {MONTH_NAMES_FULL[new Date().getMonth()]}
           </p>
           {loading ? (

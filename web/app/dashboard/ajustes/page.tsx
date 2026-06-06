@@ -250,7 +250,7 @@ export default function AjustesPage() {
   return (
     <div className="min-h-full bg-background">
       <div className="px-5 py-3 bg-background border-b border-border">
-        <h1 className="text-[17px] font-bold text-foreground" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
+        <h1 className="text-[22px] font-extrabold text-foreground uppercase" style={{ fontFamily: 'Space Grotesk, sans-serif', lineHeight: 1.1 }}>
           Ajustes del club
         </h1>
       </div>
@@ -259,7 +259,7 @@ export default function AjustesPage() {
 
         {/* Logo */}
         <motion.div variants={cardVariant} className="bg-white border border-border rounded-xl p-4">
-          <p className="text-[13px] font-bold text-foreground mb-3">Logo del club</p>
+          <p style={{ fontSize: 11, fontWeight: 600, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>Logo del club</p>
           <div className="flex items-center gap-4">
             <div className="relative">
               <div className="relative w-20 h-20 rounded-2xl border border-border overflow-hidden flex items-center justify-center bg-secondary shrink-0">
@@ -357,7 +357,7 @@ export default function AjustesPage() {
 
         {/* Información */}
         <motion.div variants={cardVariant} className="bg-white border border-border rounded-xl p-4 space-y-3">
-          <p className="text-[13px] font-bold text-foreground">Información del club</p>
+          <p style={{ fontSize: 11, fontWeight: 600, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Información del club</p>
           <div className="space-y-2">
             <Label>Nombre del club</Label>
             <Input value={name} onChange={e => { setName(e.target.value); setSaved(false); }} placeholder="Nombre del club" />
@@ -381,7 +381,7 @@ export default function AjustesPage() {
         {/* Días sin entrenamiento */}
         <motion.div variants={cardVariant} className="bg-white border border-border rounded-xl p-4 space-y-3">
           <div>
-            <p className="text-[13px] font-bold text-foreground">Días sin entrenamiento</p>
+            <p style={{ fontSize: 11, fontWeight: 600, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Días sin entrenamiento</p>
             <p className="text-[11px] text-muted-foreground mt-0.5">La asistencia no se registrará estos días</p>
           </div>
           <div className="grid grid-cols-2 gap-2">

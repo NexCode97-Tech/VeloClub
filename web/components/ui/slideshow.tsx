@@ -43,7 +43,7 @@ export function Slideshow({ slides, autoPlayMs = 5000, className = '' }: Slidesh
 
   return (
     <div
-      className={`relative w-full overflow-hidden rounded-2xl ${className}`}
+      className={`relative w-full overflow-hidden ${className}`}
       style={{ aspectRatio: '16/9', minHeight: 190 }}
       onClick={handleInteraction}
     >

@@ -715,121 +715,6 @@ export default function DashboardPage() {
   return (
     <div className="min-h-full bg-background">
 
-      {/* ── Hero ──────────────────────────────────────────────────────────── */}
-      <motion.div
-        initial={{ opacity: 0, y: -8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
-        className="px-5 pt-5 pb-4 border-b border-border"
-        style={{ background: 'linear-gradient(135deg,#fff 0%,#F0EEF8 100%)' }}
-      >
-        <div className="flex items-start justify-between">
-          <div className="flex items-start gap-3">
-            <div>
-              <p className="text-xs text-muted-foreground mb-0.5">{todayLabel()}</p>
-              <div className="flex items-center gap-3">
-                {/* Logo del club */}
-                <div
-                  className="w-14 h-14 rounded-2xl border border-border bg-secondary overflow-hidden flex items-center justify-center shrink-0"
-                  style={{ boxShadow: '0 4px 12px rgba(67,97,238,0.15)' }}
-                >
-                  {user?.club?.logoUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={user.club.logoUrl} alt="Logo" className="w-full h-full" style={{ objectFit: 'cover' }} />
-                  ) : (
-                    <span className="text-[18px] font-extrabold text-primary" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
-                      {(user?.club?.name ?? 'V').charAt(0).toUpperCase()}
-                    </span>
-                  )}
-                </div>
-                <div>
-                  <p className="text-[18px] font-extrabold text-foreground leading-tight" style={{ fontFamily: 'var(--font-space-grotesk)' }}>{user?.club?.name ?? 'VeloClub'}</p>
-                </div>
-              </div>
-              <span
-                className="inline-block mt-2 text-[10px] font-bold px-2.5 py-0.5 rounded-full tracking-wider"
-                style={{ background: rc.bg, color: rc.text }}
-              >
-                {roleLabels[role] ?? role}
-              </span>
-            </div>
-          </div>
-
-          {/* Notificaciones — solo ADMIN */}
-          {role === 'ADMIN' && (
-            <div className="relative mt-1" ref={notifRef}>
-              <motion.button
-                whileTap={{ scale: 0.9 }}
-                onClick={() => setNotifOpen(o => !o)}
-                className={`w-9 h-9 rounded-full border border-border bg-white flex items-center justify-center relative transition-colors ${notifOpen ? 'bg-secondary' : ''}`}
-              >
-                <Bell className="w-[15px] h-[15px] text-muted-foreground" />
-                {notifs.length > 0 && (
-                  <motion.span
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ type: 'spring' as const, stiffness: 600, damping: 15 }}
-                    className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-red-500 text-white text-[9px] font-bold flex items-center justify-center"
-                  >
-                    {notifs.length > 9 ? '9+' : notifs.length}
-                  </motion.span>
-                )}
-              </motion.button>
-
-              <AnimatePresence>
-                {notifOpen && (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.95, y: -4 }}
-                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.95, y: -4 }}
-                    transition={{ duration: 0.18, ease: [0.23, 1, 0.32, 1] }}
-                    className="absolute right-0 top-11 w-72 bg-white border border-border rounded-2xl shadow-xl z-50 overflow-hidden"
-                    style={{ transformOrigin: 'top right' }}
-                  >
-                    <div className="px-4 py-3 border-b border-border flex items-center justify-between">
-                      <p className="text-[13px] font-bold text-foreground">Notificaciones</p>
-                      {notifs.length > 0 && (
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-50 text-red-500">
-                          {notifs.length} alerta{notifs.length !== 1 ? 's' : ''}
-                        </span>
-                      )}
-                    </div>
-                    {notifs.length === 0 ? (
-                      <div className="flex flex-col items-center py-8 px-4 text-center">
-                        <BellOff className="w-8 h-8 mb-2 text-muted-foreground/30" />
-                        <p className="text-[12px] font-semibold text-muted-foreground">Sin notificaciones</p>
-                        <p className="text-[11px] text-muted-foreground/60 mt-0.5">Todo está al día</p>
-                      </div>
-                    ) : (
-                      <div className="max-h-72 overflow-y-auto divide-y divide-border">
-                        {notifs.map((n, i) => (
-                          <Link
-                            key={i}
-                            href="/dashboard/finanzas"
-                            onClick={() => setNotifOpen(false)}
-                            className="flex items-start gap-3 px-4 py-3 hover:bg-secondary transition-colors"
-                          >
-                            <div className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${n.type === 'overdue' ? 'bg-red-500' : 'bg-amber-400'}`} />
-                            <div className="flex-1 min-w-0">
-                              <p className="text-[12px] font-semibold text-foreground truncate">{n.memberName}</p>
-                              <p className={`text-[11px] mt-0.5 ${n.type === 'overdue' ? 'text-red-500' : 'text-amber-500'}`}>
-                                {n.type === 'overdue'
-                                  ? `Vencido hace ${n.daysLate} día${n.daysLate !== 1 ? 's' : ''}`
-                                  : n.daysLeft === 0 ? 'Vence hoy'
-                                  : `Vence en ${n.daysLeft} día${n.daysLeft !== 1 ? 's' : ''}`}
-                              </p>
-                            </div>
-                          </Link>
-                        ))}
-                      </div>
-                    )}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-          )}
-        </div>
-      </motion.div>
 
       {/* ── Banner trial ─────────────────────────────────────────────────── */}
       <AnimatePresence>
@@ -868,6 +753,12 @@ export default function DashboardPage() {
         )}
       </AnimatePresence>
 
+      {/* ── Slideshow full width ─────────────────────────────────────────── */}
+      <Slideshow
+        slides={ADS.map(ad => ({ img: ad.image, label: ad.label, title: ad.title, description: ad.description, url: ad.url }))}
+        className="rounded-none"
+      />
+
       {/* ── Contenido principal ───────────────────────────────────────────── */}
       <div className="w-full px-6 py-4">
       <motion.div
@@ -876,13 +767,6 @@ export default function DashboardPage() {
         animate="show"
         className="space-y-4"
       >
-
-        {/* ── Slideshow publicitario ──────────────────────────────────────── */}
-        <motion.div variants={cardVariant}>
-          <Slideshow
-            slides={ADS.map(ad => ({ img: ad.image, label: ad.label, title: ad.title, description: ad.description, url: ad.url }))}
-          />
-        </motion.div>
 
         {/* ── Tabs Público / Privado ──────────────────────────────────────── */}
         <motion.div variants={cardVariant}>

@@ -12,6 +12,7 @@ import {
   Heart, Image as ImageIcon, X, Send,
   Globe, Lock, MessageCircle,
   Paperclip, Video, FileText,
+  ChevronRight,
 } from 'lucide-react';
 import { Slideshow } from '@/components/ui/slideshow';
 

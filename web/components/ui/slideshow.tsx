@@ -92,7 +92,7 @@ export function Slideshow({ slides, autoPlayMs = 5000, className = '' }: Slidesh
                 padding: '3px 10px',
               }}
             >
-              <span className="text-[10px] font-bold text-white/90 tracking-wider uppercase">
+              <span className="text-[10px] font-bold text-white/90 tracking-wide uppercase">
                 {slide.label}
               </span>
             </div>
@@ -102,22 +102,12 @@ export function Slideshow({ slides, autoPlayMs = 5000, className = '' }: Slidesh
           <div className="absolute bottom-0 left-0 right-0 px-4 pb-4 pt-8">
             <h2
               className="text-white font-bold leading-tight mb-1"
-              style={{
-                fontFamily: 'var(--font-space-grotesk)',
-                fontSize: 16,
-                textShadow: '0 1px 4px rgba(0,0,0,0.4)',
-              }}
+              style={{ fontSize: 16, textShadow: '0 1px 4px rgba(0,0,0,0.4)' }}
             >
               {slide.title}
             </h2>
             {slide.description && (
-              <p
-                className="text-white/70 leading-snug"
-                style={{
-                  fontFamily: 'var(--font-plus-jakarta)',
-                  fontSize: 12,
-                }}
-              >
+              <p className="text-white/70 leading-snug" style={{ fontSize: 12 }}>
                 {slide.description}
               </p>
             )}

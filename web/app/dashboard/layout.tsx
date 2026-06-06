@@ -271,14 +271,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       {/* ── Main content ────────────────────────────────────────────────── */}
       <div className="flex-1 flex flex-col overflow-hidden min-w-0">
 
-        {/* Mobile top bar — UserButton visible para ADMIN y COACH; STUDENT lo tiene en el tab de abajo */}
-        <header className="md:hidden flex items-center justify-between px-4 py-3 bg-card border-b border-border shrink-0">
-          <Image src="/logo-full.jpg" alt="VeloClub" width={90} height={28} className="object-contain" />
-          {role !== 'STUDENT' && (
-            <UserButton appearance={{ elements: { avatarBox: { width: 44, height: 44 } } }} />
-          )}
-        </header>
-
         <main className="flex-1 overflow-y-auto pb-28 md:pb-0">
           {children}
         </main>

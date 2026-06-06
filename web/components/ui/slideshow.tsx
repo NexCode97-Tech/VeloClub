@@ -107,7 +107,7 @@ export function Slideshow({ slides, autoPlayMs = 5000, className = '' }: Slidesh
               {slide.title}
             </h2>
             {slide.description && (
-              <p className="text-white/70 leading-snug" style={{ fontSize: 12 }}>
+              <p className="text-white/60 leading-relaxed line-clamp-2" style={{ fontSize: 11, fontWeight: 400 }}>
                 {slide.description}
               </p>
             )}

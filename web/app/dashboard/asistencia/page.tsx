@@ -496,11 +496,6 @@ export default function AsistenciaPage() {
                   </motion.div>
                 )}
 
-                {canManage && (
-                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
-                    Toca el indicador para cambiar
-                  </p>
-                )}
 
                 {/* Grid de tarjetas compactas */}
                 <div className="grid grid-cols-3 gap-2 pb-24 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 sm:gap-3">

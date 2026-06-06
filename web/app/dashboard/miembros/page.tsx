@@ -705,10 +705,6 @@ export default function MiembrosPage() {
           MOBILE LAYOUT
       ══════════════════════════════════════════════════════════════════ */}
       <motion.div variants={pageStagger} initial="hidden" animate="show" className="md:hidden px-4 pt-4 space-y-3">
-        <motion.div variants={pageCard} className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input className="pl-9 bg-white border-border rounded-xl" placeholder="Buscar miembro..." value={search} onChange={e => setSearch(e.target.value)} />
-        </motion.div>
         {/* Stats móvil como filtros */}
         <motion.div variants={pageCard} className="grid grid-cols-4 gap-2">
           {statsDesktop.map(s => {
@@ -728,6 +724,11 @@ export default function MiembrosPage() {
               </button>
             );
           })}
+        </motion.div>
+
+        <motion.div variants={pageCard} className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input className="pl-9 bg-white border-border rounded-xl" placeholder="Buscar miembro..." value={search} onChange={e => setSearch(e.target.value)} />
         </motion.div>
 
         {loading ? (

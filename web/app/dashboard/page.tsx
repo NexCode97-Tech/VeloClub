@@ -753,12 +753,6 @@ export default function DashboardPage() {
         )}
       </AnimatePresence>
 
-      {/* ── Slideshow full width ─────────────────────────────────────────── */}
-      <Slideshow
-        slides={ADS.map(ad => ({ img: ad.image, label: ad.label, title: ad.title, description: ad.description, url: ad.url }))}
-        className="rounded-none"
-      />
-
       {/* ── Contenido principal ───────────────────────────────────────────── */}
       <div className="w-full px-6 py-4">
       <motion.div
@@ -767,6 +761,12 @@ export default function DashboardPage() {
         animate="show"
         className="space-y-4"
       >
+        {/* ── Slideshow publicitario ──────────────────────────────────────── */}
+        <motion.div variants={cardVariant}>
+          <Slideshow
+            slides={ADS.map(ad => ({ img: ad.image, label: ad.label, title: ad.title, description: ad.description, url: ad.url }))}
+          />
+        </motion.div>
 
         {/* ── Tabs Público / Privado ──────────────────────────────────────── */}
         <motion.div variants={cardVariant}>

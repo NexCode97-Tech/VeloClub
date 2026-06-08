@@ -665,7 +665,7 @@ export default function FinanzasPage() {
           ))}
         </motion.div>
 
-        {/* Filtro mes/año */}
+        {/* Filtro mes/año + botón generar cobros */}
         <motion.div variants={pageCard} className="flex gap-2 items-center">
           <Select value={String(filterMonth)} onValueChange={v => { setFilterMonth(parseInt(v ?? '')); setStatusFilter('ALL'); }}>
             <SelectTrigger className="w-36 bg-white">
@@ -685,6 +685,19 @@ export default function FinanzasPage() {
               ))}
             </SelectContent>
           </Select>
+          {tab === 'mensualidades' && (
+            <motion.button
+              whileTap={reducedMotion ? {} : { scale: 0.96 }}
+              transition={{ duration: 0.12, ease: EASE_OUT }}
+              onClick={handleGenerateMonth}
+              disabled={generatingMonth}
+              className="flex items-center justify-center gap-1.5 px-3 h-9 rounded-xl text-[12px] font-bold cursor-pointer transition-opacity disabled:opacity-60 shrink-0"
+              style={{ background: 'rgba(67,97,238,0.08)', color: '#4361EE', border: '1.5px dashed rgba(67,97,238,0.25)' }}
+            >
+              <Zap className="w-3.5 h-3.5" />
+              {generatingMonth ? 'Generando...' : 'Generar cobros'}
+            </motion.button>
+          )}
         </motion.div>
 
         {/* ── MENSUALIDADES ─────────────────────────────────────────────────── */}
@@ -814,19 +827,6 @@ export default function FinanzasPage() {
           </motion.div>
 
           {/* ── Botón generar + búsqueda + lista (ancho completo) ── */}
-
-          {/* Botón generar cobros */}
-          <motion.button
-            whileTap={reducedMotion ? {} : { scale: 0.98 }}
-            transition={{ duration: 0.12, ease: EASE_OUT }}
-            onClick={handleGenerateMonth}
-            disabled={generatingMonth}
-            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-[13px] font-bold cursor-pointer transition-opacity disabled:opacity-60"
-            style={{ background: 'rgba(67,97,238,0.08)', color: '#4361EE', border: '1.5px dashed rgba(67,97,238,0.25)' }}
-          >
-            <Zap className="w-4 h-4" />
-            {generatingMonth ? 'Generando...' : `Generar cobros — ${MONTH_NAMES[filterMonth - 1]} ${filterYear}`}
-          </motion.button>
 
           {/* Búsqueda de deportistas */}
           <div className="relative">

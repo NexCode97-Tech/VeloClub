@@ -21,7 +21,7 @@ import { MemberAvatar } from '@/components/ui/member-avatar';
 
 interface MeResponse {
   status: 'ok' | 'superadmin' | 'complete_profile' | 'no_access' | 'inactive' | 'trial_expired';
-  user?: { name: string; role: string; club?: { name: string; logoUrl?: string } };
+  user?: { name: string; role: string; picture?: string | null; club?: { name: string; logoUrl?: string } };
   trial?: { daysLeft: number; endsAt: string } | null;
 }
 
@@ -819,7 +819,7 @@ export default function DashboardPage() {
           <PostComposer
             userName={user?.name ?? ''}
             userRole={role}
-            userAvatar={undefined}
+            userAvatar={user?.picture ?? null}
             onSubmit={handleCreatePost}
             loading={postsLoading}
             token={authToken}

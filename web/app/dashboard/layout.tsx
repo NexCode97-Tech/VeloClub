@@ -262,7 +262,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
       {/* ── Desktop sidebar ─────────────────────────────────────────────── */}
       <motion.aside
-        animate={{ width: collapsed ? 64 : 240 }}
+        animate={{ width: collapsed ? 64 : 210 }}
         transition={{ duration: 0.25, ease: [0.23, 1, 0.32, 1] }}
         className="hidden md:flex flex-col shrink-0 relative"
         style={{ background: '#fff', borderRight: '1px solid rgba(0,0,0,0.07)', overflow: 'visible' }}

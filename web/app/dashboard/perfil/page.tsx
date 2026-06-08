@@ -9,7 +9,7 @@ import Link from 'next/link';
 import { MemberAvatar } from '@/components/ui/member-avatar';
 import {
   Pencil, MapPin, CalendarDays, Globe, Lock,
-  Heart, MessageCircle, ChevronRight, Send, X, Camera, Users,
+  Heart, MessageCircle, ChevronRight, Send, X, Camera, Users, Trash2, ImagePlus,
 } from 'lucide-react';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -273,8 +273,10 @@ export default function PerfilPage() {
   const [loading, setLoading]     = useState(true);
   const [activeTab, setActiveTab] = useState<Tab>('Publicaciones');
   const [currentUserId, setCurrentUserId] = useState('');
-  const [coverUrl, setCoverUrl]   = useState<string | null>(null);
+  const [coverUrl, setCoverUrl]       = useState<string | null>(null);
   const [uploadingCover, setUploadingCover] = useState(false);
+  const [coverMenuOpen, setCoverMenuOpen]   = useState(false);
+  const [deletingCover, setDeletingCover]   = useState(false);
   const coverInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -397,31 +399,85 @@ export default function PerfilPage() {
           <div className="absolute inset-0"
             style={{ background: 'linear-gradient(to bottom, transparent 50%, rgba(0,0,0,0.22) 100%)' }} />
 
-          {/* Botones top-right */}
-          <div className="absolute top-3 right-3 flex items-center gap-2">
-            {/* Botón subir portada */}
+          {/* Botón portada — top-right */}
+          <div className="absolute top-3 right-3">
             <input ref={coverInputRef} type="file" accept="image/*" className="hidden" onChange={handleCoverChange} />
-            <motion.button
-              whileTap={{ scale: 0.95 }}
-              onClick={() => !uploadingCover && coverInputRef.current?.click()}
-              disabled={uploadingCover}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-[12px] font-bold text-white cursor-pointer disabled:opacity-60"
-              style={{ background: 'rgba(255,255,255,0.20)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.30)' }}
-            >
-              {uploadingCover
-                ? <div className="w-3.5 h-3.5 border-2 border-white/50 border-t-white rounded-full animate-spin" />
-                : <Camera className="w-3.5 h-3.5" />
-              }
-            </motion.button>
 
-            {/* Botón editar perfil */}
-            <Link href="/dashboard/ajustes">
-              <motion.div whileTap={{ scale: 0.95 }}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-[12px] font-bold text-white cursor-pointer"
-                style={{ background: 'rgba(255,255,255,0.20)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.30)' }}>
-                <Pencil className="w-3.5 h-3.5" />
-              </motion.div>
-            </Link>
+            {/* Sin foto → solo ícono cámara */}
+            {!coverUrl && (
+              <motion.button
+                whileTap={{ scale: 0.95 }}
+                onClick={() => !uploadingCover && coverInputRef.current?.click()}
+                disabled={uploadingCover}
+                className="flex items-center justify-center w-9 h-9 rounded-xl text-white cursor-pointer disabled:opacity-60"
+                style={{ background: 'rgba(255,255,255,0.20)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.30)' }}
+              >
+                {uploadingCover
+                  ? <div className="w-3.5 h-3.5 border-2 border-white/50 border-t-white rounded-full animate-spin" />
+                  : <Camera className="w-3.5 h-3.5" />
+                }
+              </motion.button>
+            )}
+
+            {/* Con foto → lápiz que abre dropdown */}
+            {coverUrl && (
+              <div className="relative">
+                <motion.button
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => !uploadingCover && !deletingCover && setCoverMenuOpen(v => !v)}
+                  disabled={uploadingCover || deletingCover}
+                  className="flex items-center justify-center w-9 h-9 rounded-xl text-white cursor-pointer disabled:opacity-60"
+                  style={{ background: 'rgba(255,255,255,0.20)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.30)' }}
+                >
+                  {(uploadingCover || deletingCover)
+                    ? <div className="w-3.5 h-3.5 border-2 border-white/50 border-t-white rounded-full animate-spin" />
+                    : <Pencil className="w-3.5 h-3.5" />
+                  }
+                </motion.button>
+
+                <AnimatePresence>
+                  {coverMenuOpen && (
+                    <>
+                      {/* Overlay para cerrar */}
+                      <div className="fixed inset-0 z-40" onClick={() => setCoverMenuOpen(false)} />
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.92, y: -4 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.92, y: -4 }}
+                        transition={{ duration: 0.15, ease: [0.23, 1, 0.32, 1] }}
+                        className="absolute right-0 top-11 z-50 min-w-[160px] rounded-xl overflow-hidden"
+                        style={{ background: 'white', boxShadow: '0 8px 24px rgba(0,0,0,0.14), 0 0 0 1px rgba(0,0,0,0.06)' }}
+                      >
+                        <button
+                          onClick={() => { setCoverMenuOpen(false); coverInputRef.current?.click(); }}
+                          className="flex items-center gap-2.5 w-full px-4 py-2.5 text-[13px] font-medium text-foreground hover:bg-muted/60 transition-colors cursor-pointer"
+                        >
+                          <ImagePlus className="w-4 h-4 text-muted-foreground" />
+                          Cambiar foto
+                        </button>
+                        <button
+                          onClick={async () => {
+                            setCoverMenuOpen(false);
+                            setDeletingCover(true);
+                            try {
+                              const token = await session?.getToken();
+                              await apiFetch('/me/cover', { method: 'DELETE', token });
+                              setCoverUrl(null);
+                            } catch (err) {
+                              alert('Error al eliminar la portada: ' + (err instanceof Error ? err.message : 'intenta de nuevo'));
+                            } finally { setDeletingCover(false); }
+                          }}
+                          className="flex items-center gap-2.5 w-full px-4 py-2.5 text-[13px] font-medium text-red-500 hover:bg-red-50 transition-colors cursor-pointer border-t border-border"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                          Eliminar
+                        </button>
+                      </motion.div>
+                    </>
+                  )}
+                </AnimatePresence>
+              </div>
+            )}
           </div>
         </div>
 

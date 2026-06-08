@@ -207,6 +207,28 @@ router.post('/cover', requireAuth, async (req, res) => {
   }
 });
 
+// DELETE /me/cover — eliminar foto de portada
+router.delete('/cover', requireAuth, async (req, res) => {
+  if (!req.user) return res.status(401).json({ error: 'No autenticado' });
+
+  try {
+    const current = await prisma.user.findUnique({ where: { id: req.user.id }, select: { coverPublicId: true } });
+    if (current?.coverPublicId) {
+      await cloudinary.uploader.destroy(current.coverPublicId).catch(() => {});
+    }
+
+    await prisma.user.update({
+      where: { id: req.user.id },
+      data: { coverUrl: null, coverPublicId: null },
+    });
+
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('cover delete error:', err instanceof Error ? err.message : err);
+    res.status(500).json({ error: 'Error al eliminar la portada' });
+  }
+});
+
 // PATCH /me/profile — complete profile on first login
 router.patch('/profile', requireAuth, async (req, res) => {
   if (!req.auth) return res.status(401).json({ error: 'No autenticado' });

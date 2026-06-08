@@ -190,6 +190,26 @@ router.post('/:id/comments', requireAuth, async (req, res) => {
   res.status(201).json({ comment });
 });
 
+// PATCH /posts/:id/comments/:commentId — editar contenido
+router.patch('/:id/comments/:commentId', requireAuth, async (req, res) => {
+  if (!req.user) return res.status(401).json({ error: 'No autenticado' });
+  if (!['ADMIN', 'COACH'].includes(req.user.role)) return res.status(403).json({ error: 'Sin permisos' });
+
+  const content = String(req.body?.content ?? '').trim();
+  if (!content) return res.status(400).json({ error: 'Contenido requerido' });
+
+  const comment = await prisma.postComment.findUnique({ where: { id: String(req.params.commentId) } });
+  if (!comment) return res.status(404).json({ error: 'Comentario no encontrado' });
+
+  const updated = await prisma.postComment.update({
+    where: { id: String(req.params.commentId) },
+    data: { content },
+    select: COMMENT_SELECT,
+  });
+  emitToClub(req.user.clubId ?? '', 'posts');
+  res.json({ comment: updated });
+});
+
 // DELETE /posts/:id/comments/:commentId
 router.delete('/:id/comments/:commentId', requireAuth, async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'No autenticado' });

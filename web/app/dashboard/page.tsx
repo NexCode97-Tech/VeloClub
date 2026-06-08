@@ -12,6 +12,7 @@ import {
   Heart, Image as ImageIcon, X, Send,
   Globe, Lock, MessageCircle,
   Paperclip, Video, FileText,
+  MoreHorizontal, Pencil, Trash2,
   ChevronRight,
 } from 'lucide-react';
 import { Slideshow } from '@/components/ui/slideshow';
@@ -167,13 +168,14 @@ function Avatar({ src, name, size = 36, role }: { src?: string | null; name: str
 // ── PostCard ──────────────────────────────────────────────────────────────────
 
 function PostCard({
-  post, currentUserId, canDelete, onLike, onDelete, onComment, onDeleteComment,
+  post, currentUserId, canDelete, onLike, onDelete, onComment, onDeleteComment, onEditComment,
 }: {
   post: Post; currentUserId: string; canDelete: boolean;
   onLike: (id: string) => void;
   onDelete: (id: string) => void;
   onComment: (postId: string, content: string) => Promise<void>;
   onDeleteComment: (postId: string, commentId: string) => void;
+  onEditComment: (postId: string, commentId: string, content: string) => Promise<void>;
 }) {
   const liked     = post.likes.some(l => l.userId === currentUserId);
   const likeCount = post.likes.length;
@@ -183,6 +185,21 @@ function PostCard({
   const [commentText, setCommentText] = useState('');
   const [sendingComment, setSendingComment] = useState(false);
   const commentInputRef = useRef<HTMLInputElement>(null);
+
+  // Menú ⋯ por comentario
+  const [commentMenu, setCommentMenu]       = useState<string | null>(null); // commentId con menú abierto
+  const [editingComment, setEditingComment] = useState<string | null>(null); // commentId en modo edición
+  const [editText, setEditText]             = useState('');
+  const [savingEdit, setSavingEdit]         = useState(false);
+
+  async function handleSaveEdit(commentId: string) {
+    if (!editText.trim()) return;
+    setSavingEdit(true);
+    try {
+      await onEditComment(post.id, commentId, editText.trim());
+      setEditingComment(null);
+    } finally { setSavingEdit(false); }
+  }
 
   function handleLike() {
     setLikeAnim(true);
@@ -348,18 +365,96 @@ function PostCard({
                     <div key={c.id} className="flex items-start gap-2.5">
                       <Avatar src={c.authorAvatar} name={c.authorName} size={28} role={c.authorRole} />
                       <div className="flex-1 min-w-0">
-                        <div className="rounded-2xl rounded-tl-sm px-3 py-2"
-                          style={{ background: '#fff', border: '1px solid rgba(124,58,237,0.08)' }}>
-                          <p className="text-[11px] font-bold text-foreground mb-0.5">{c.authorName}</p>
-                          <p className="text-[13px] text-foreground leading-snug">{c.content}</p>
-                        </div>
+                        {editingComment === c.id ? (
+                          /* ── Modo edición inline ── */
+                          <div className="rounded-2xl rounded-tl-sm px-3 py-2"
+                            style={{ background: '#fff', border: '1px solid rgba(124,58,237,0.18)' }}>
+                            <p className="text-[11px] font-bold text-foreground mb-1">{c.authorName}</p>
+                            <textarea
+                              value={editText}
+                              onChange={e => setEditText(e.target.value)}
+                              onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSaveEdit(c.id); } if (e.key === 'Escape') setEditingComment(null); }}
+                              className="w-full text-[13px] text-foreground leading-snug outline-none bg-transparent resize-none"
+                              rows={2}
+                              autoFocus
+                            />
+                            <div className="flex items-center gap-1.5 mt-1.5">
+                              <button onClick={() => handleSaveEdit(c.id)} disabled={savingEdit || !editText.trim()}
+                                className="text-[11px] font-bold px-2.5 py-0.5 rounded-full text-white disabled:opacity-40"
+                                style={{ background: '#7C3AED' }}>
+                                {savingEdit ? 'Guardando…' : 'Guardar'}
+                              </button>
+                              <button onClick={() => setEditingComment(null)}
+                                className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full text-muted-foreground"
+                                style={{ background: 'rgba(0,0,0,0.06)' }}>
+                                Cancelar
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="rounded-2xl rounded-tl-sm px-3 py-2"
+                            style={{ background: '#fff', border: '1px solid rgba(124,58,237,0.08)' }}>
+                            <p className="text-[11px] font-bold text-foreground mb-0.5">{c.authorName}</p>
+                            <p className="text-[13px] text-foreground leading-snug">{c.content}</p>
+                          </div>
+                        )}
                         <p className="text-[10px] text-muted-foreground mt-0.5 pl-1">{timeAgo(c.createdAt)}</p>
                       </div>
-                      {canDelete && (
-                        <button onClick={() => onDeleteComment(post.id, c.id)}
-                          className="w-6 h-6 rounded-full flex items-center justify-center text-muted-foreground/30 hover:text-red-400 hover:bg-red-50 transition-all mt-1 shrink-0">
-                          <X className="w-3 h-3" />
-                        </button>
+
+                      {/* ── Botón ⋯ con dropdown ── */}
+                      {canDelete && editingComment !== c.id && (
+                        <div className="relative mt-1 shrink-0">
+                          <button
+                            onClick={() => setCommentMenu(commentMenu === c.id ? null : c.id)}
+                            className="w-6 h-6 rounded-full flex items-center justify-center transition-all"
+                            style={{ color: '#C4C2CF' }}
+                          >
+                            <MoreHorizontal className="w-3.5 h-3.5" />
+                          </button>
+                          <AnimatePresence>
+                            {commentMenu === c.id && (
+                              <>
+                                {/* Overlay para cerrar */}
+                                <div className="fixed inset-0 z-40" onClick={() => setCommentMenu(null)} />
+                                <motion.div
+                                  initial={{ opacity: 0, scale: 0.92, y: -4 }}
+                                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                                  exit={{ opacity: 0, scale: 0.92, y: -4 }}
+                                  transition={{ duration: 0.15, ease: [0.23, 1, 0.32, 1] }}
+                                  className="absolute right-0 top-7 z-50 flex flex-col overflow-hidden"
+                                  style={{
+                                    background: '#fff',
+                                    border: '1px solid rgba(124,58,237,0.12)',
+                                    borderRadius: 12,
+                                    boxShadow: '0 8px 24px rgba(0,0,0,0.10)',
+                                    minWidth: 130,
+                                  }}
+                                >
+                                  <button
+                                    onClick={() => { setCommentMenu(null); setEditingComment(c.id); setEditText(c.content); }}
+                                    className="flex items-center gap-2 px-3.5 py-2.5 text-[12px] font-semibold text-foreground hover:bg-secondary/60 transition-colors text-left"
+                                  >
+                                    <Pencil className="w-3.5 h-3.5 text-muted-foreground" /> Editar
+                                  </button>
+                                  <div style={{ height: 1, background: 'rgba(124,58,237,0.07)' }} />
+                                  <button
+                                    onClick={() => { setCommentMenu(null); onDeleteComment(post.id, c.id); }}
+                                    className="flex items-center gap-2 px-3.5 py-2.5 text-[12px] font-semibold text-red-500 hover:bg-red-50 transition-colors text-left"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" /> Eliminar
+                                  </button>
+                                  <div style={{ height: 1, background: 'rgba(124,58,237,0.07)' }} />
+                                  <button
+                                    onClick={() => setCommentMenu(null)}
+                                    className="flex items-center gap-2 px-3.5 py-2.5 text-[12px] font-semibold text-muted-foreground hover:bg-secondary/60 transition-colors text-left"
+                                  >
+                                    <X className="w-3.5 h-3.5" /> Cancelar
+                                  </button>
+                                </motion.div>
+                              </>
+                            )}
+                          </AnimatePresence>
+                        </div>
                       )}
                     </div>
                   ))}
@@ -678,6 +773,19 @@ export default function DashboardPage() {
     ));
   }
 
+  async function handleEditComment(postId: string, commentId: string, content: string) {
+    const token = await session?.getToken();
+    const res = await apiFetch<{ comment: PostComment }>(`/posts/${postId}/comments/${commentId}`, {
+      token, method: 'PATCH',
+      body: JSON.stringify({ content }),
+    });
+    setPosts(prev => prev.map(p =>
+      p.id === postId
+        ? { ...p, comments: p.comments.map(c => c.id === commentId ? res.comment : c) }
+        : p
+    ));
+  }
+
   async function handleLike(postId: string) {
     const token = await session?.getToken();
     const res = await apiFetch<{ liked: boolean }>(`/posts/${postId}/like`, { token, method: 'POST' });
@@ -871,6 +979,7 @@ export default function DashboardPage() {
                 onDelete={handleDelete}
                 onComment={handleComment}
                 onDeleteComment={handleDeleteComment}
+                onEditComment={handleEditComment}
               />
             ))}
           </AnimatePresence>

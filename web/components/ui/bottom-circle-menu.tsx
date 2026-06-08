@@ -20,20 +20,8 @@ interface BottomCircleMenuProps {
   onClose: () => void;
 }
 
-// Abanico hacia arriba — abierto y bien elevado sobre el bar
-function pointOnArc(i: number, n: number, r: number) {
-  const startDeg = n <= 1 ? -90 : -152;
-  const endDeg   = n <= 1 ? -90 : -28;
-  const deg = n <= 1 ? -90 : startDeg + (endDeg - startDeg) * (i / (n - 1));
-  const theta = deg * (Math.PI / 180);
-  return {
-    x: r * Math.cos(theta),
-    y: r * Math.sin(theta),
-  };
-}
-
-// Radio ajustado: separación equilibrada entre ítems
-const RADIUS = 115;
+// Separación horizontal entre ítems (centro a centro)
+const ITEM_GAP = 72;
 
 export function BottomCircleMenu({ items, pathname, isOpen, onToggle, onClose }: BottomCircleMenuProps) {
   const router = useRouter();
@@ -49,87 +37,88 @@ export function BottomCircleMenu({ items, pathname, isOpen, onToggle, onClose }:
     router.push(href);
   }
 
+  // Altura fija sobre el centro del botón (ícono 56px + label ~20px + margen)
+  const ROW_Y = -100;
+
   return (
     <>
-
       {/* Contenedor del botón + ítems */}
       <div
         className="relative flex items-center justify-center"
         style={{ width: 56, height: 56, zIndex: 41 }}
       >
-        {/* Ítems del abanico */}
+        {/* Fila horizontal de ítems */}
         <AnimatePresence>
           {isOpen && items.map((item, i) => {
-            const { x, y } = pointOnArc(i, items.length, RADIUS);
             const Icon = item.icon;
+            // Centrar la fila: offset desde el centro del botón
+            const totalWidth = (items.length - 1) * ITEM_GAP;
+            const x = -totalWidth / 2 + i * ITEM_GAP;
+
             return (
               <motion.button
                 key={item.href}
                 initial={reducedMotion
                   ? { opacity: 0 }
-                  : { x: 0, y: 0, opacity: 0, scale: 0.5 }
+                  : { x, y: 0, opacity: 0, scale: 0.6 }
                 }
                 animate={reducedMotion
                   ? { opacity: 1 }
-                  : { x, y, opacity: 1, scale: 1 }
+                  : { x, y: ROW_Y, opacity: 1, scale: 1 }
                 }
                 exit={reducedMotion
                   ? { opacity: 0 }
                   : {
-                      x: 0, y: 0, opacity: 0, scale: 0.5,
+                      x, y: 0, opacity: 0, scale: 0.6,
                       transition: {
-                        delay: (items.length - 1 - i) * 0.045,
+                        delay: (items.length - 1 - i) * 0.04,
                         type: 'spring',
-                        stiffness: 300,
-                        damping: 24,
+                        stiffness: 320,
+                        damping: 26,
                       },
                     }
                 }
                 transition={reducedMotion
                   ? { duration: 0.15 }
                   : {
-                      delay: i * 0.045,
+                      delay: i * 0.04,
                       type: 'spring',
-                      stiffness: 300,
-                      damping: 24,
+                      stiffness: 320,
+                      damping: 26,
                     }
                 }
                 onClick={() => handleItemClick(item.href)}
                 className="absolute flex flex-col items-center cursor-pointer"
                 style={{ willChange: 'transform', zIndex: 42 }}
               >
-                {/* Burbuja del ícono — 56px, color sólido con ícono blanco */}
+                {/* Burbuja del ícono */}
                 <motion.div
-                  whileHover={reducedMotion ? {} : { scale: 1.1, y: -2 }}
-                  whileTap={reducedMotion ? {} : { scale: 0.94 }}
+                  whileHover={reducedMotion ? {} : { scale: 1.08, y: -2 }}
+                  whileTap={reducedMotion ? {} : { scale: 0.93 }}
                   transition={{ duration: 0.12, ease: [0.23, 1, 0.32, 1] as [number, number, number, number] }}
                   className="flex items-center justify-center"
                   style={{
-                    width: 56,
-                    height: 56,
+                    width: 52,
+                    height: 52,
                     borderRadius: '50%',
                     background: item.color,
-                    boxShadow: `0 6px 24px ${item.color}70, 0 2px 8px rgba(0,0,0,0.12)`,
+                    boxShadow: `0 6px 20px ${item.color}70, 0 2px 8px rgba(0,0,0,0.12)`,
                   }}
                 >
-                  <Icon
-                    style={{ color: '#FFFFFF', width: 22, height: 22 }}
-                    strokeWidth={2.2}
-                  />
+                  <Icon style={{ color: '#FFFFFF', width: 22, height: 22 }} strokeWidth={2.2} />
                 </motion.div>
 
-                {/* Etiqueta debajo del ícono */}
+                {/* Etiqueta */}
                 <motion.span
                   initial={reducedMotion ? {} : { opacity: 0, y: 4 }}
                   animate={reducedMotion ? {} : { opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.045 + 0.08, duration: 0.18, ease: [0.23, 1, 0.32, 1] as [number, number, number, number] }}
+                  transition={{ delay: i * 0.04 + 0.07, duration: 0.16, ease: [0.23, 1, 0.32, 1] as [number, number, number, number] }}
                   className="mt-1.5 whitespace-nowrap font-bold"
                   style={{
                     fontSize: 10,
                     color: '#FFFFFF',
-                    fontFamily: 'var(--font-space-grotesk)',
                     letterSpacing: '-0.01em',
-                    textShadow: '0 1px 6px rgba(0,0,0,0.40)',
+                    textShadow: '0 1px 6px rgba(0,0,0,0.45)',
                   }}
                 >
                   {item.label}
@@ -139,7 +128,7 @@ export function BottomCircleMenu({ items, pathname, isOpen, onToggle, onClose }:
           })}
         </AnimatePresence>
 
-        {/* Botón "+" elevado — 56px, centrado en el bump */}
+        {/* Botón central + / × */}
         <motion.button
           whileTap={reducedMotion ? {} : { scale: 0.94 }}
           transition={{ duration: 0.12, ease: [0.23, 1, 0.32, 1] as [number, number, number, number] }}

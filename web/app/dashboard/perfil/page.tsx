@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { apiFetch } from '@/lib/api-client';
+import { useClubStream } from '@/hooks/useClubStream';
 import Link from 'next/link';
 import { MemberAvatar } from '@/components/ui/member-avatar';
 import {
@@ -279,6 +280,18 @@ export default function PerfilPage() {
   const [deletingCover, setDeletingCover]   = useState(false);
   const coverInputRef = useRef<HTMLInputElement>(null);
 
+  // Referencia al nombre del usuario para filtrar posts (evita re-renders)
+  const myNameRef = useRef<string>('');
+
+  async function loadPosts() {
+    if (!isSignedIn) return;
+    try {
+      const token = await session?.getToken();
+      const postsRes = await apiFetch<{ posts: Post[] }>('/posts?scope=private', { token });
+      setPosts(postsRes.posts.filter(p => !myNameRef.current || p.authorName === myNameRef.current));
+    } catch { /* silencioso */ }
+  }
+
   useEffect(() => {
     if (!isLoaded) return;
     if (!isSignedIn) { router.push('/sign-in'); return; }
@@ -292,16 +305,20 @@ export default function PerfilPage() {
         if (meRes.status === 'fulfilled') {
           setMe(meRes.value);
           setCoverUrl(meRes.value.user?.coverUrl ?? null);
+          myNameRef.current = meRes.value.user?.name ?? '';
         }
         if (postsRes.status === 'fulfilled') {
-          // Filtrar solo posts del usuario actual
-          const myName = meRes.status === 'fulfilled' ? meRes.value.user?.name : '';
-          setPosts(postsRes.value.posts.filter(p => !myName || p.authorName === myName));
+          setPosts(postsRes.value.posts.filter(p => !myNameRef.current || p.authorName === myNameRef.current));
         }
         setCurrentUserId(userId ?? '');
       } catch { /* silencioso */ } finally { setLoading(false); }
     })();
   }, [isLoaded, isSignedIn, userId, session]);
+
+  // Sincronizar posts en tiempo real via SSE — reacciona a cambios del home
+  useClubStream((ev) => {
+    if (ev === 'posts') loadPosts();
+  });
 
   async function handleLike(postId: string) {
     const token = await session?.getToken();

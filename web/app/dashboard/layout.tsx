@@ -243,6 +243,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   // Cuando el sidebar está expandido, Ajustes está oculto — no mostrar su pill activo
   const activeSideIndex = sideNavItems.findIndex(t => {
     if (!collapsed && t.href === '/dashboard/ajustes') return false;
+    if (!collapsed && t.href === '/dashboard/perfil') return false;
     return isSideActive(t.href);
   });
 
@@ -326,8 +327,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           )}
           <div className="space-y-1 relative">
             {sideNavItems.map(({ href, label, icon: Icon }) => {
-              // Ajustes se oculta cuando el sidebar está expandido (ya aparece en el footer del usuario)
+              // Ajustes y Mi Perfil se ocultan cuando el sidebar está expandido (ya aparecen en el footer)
               if (href === '/dashboard/ajustes' && !collapsed) return null;
+              if (href === '/dashboard/perfil' && !collapsed) return null;
               const active = isSideActive(href);
               return (
                 <Link

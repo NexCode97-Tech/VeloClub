@@ -108,6 +108,30 @@ export default function ReportesPage() {
   const [weekdayCounts, setWeekdayCounts]     = useState<number[]>([0,0,0,0,0,0,0]);
   const [paymentDist, setPaymentDist]         = useState<PaymentDist[]>([]);
 
+  // Tab de asistencia
+  const [attTab, setAttTab]                   = useState<'mes' | 'dia' | 'rango'>('mes');
+  const [rangeFrom, setRangeFrom]             = useState<string>(() => {
+    const d = new Date(); d.setDate(d.getDate() - 29);
+    return d.toISOString().slice(0, 10);
+  });
+  const [rangeTo, setRangeTo]                 = useState<string>(new Date().toISOString().slice(0, 10));
+  const [rangeData, setRangeData]             = useState<{ date: string; presentes: number }[]>([]);
+  const [loadingRange, setLoadingRange]       = useState(false);
+
+  async function fetchRangeStats(from: string, to: string) {
+    if (!isSignedIn) return;
+    setLoadingRange(true);
+    try {
+      const token = await session?.getToken({ skipCache: true });
+      const res = await apiFetch<{ days: { date: string; presentes: number }[] }>(
+        `/attendance/range-stats?from=${from}&to=${to}`, { token }
+      );
+      setRangeData(res.days);
+    } catch { /* silencioso */ } finally {
+      setLoadingRange(false);
+    }
+  }
+
   useEffect(() => { loadReportes(); }, [isSignedIn, session]);
 
   // Tiempo real: SSE push desde el servidor
@@ -205,84 +229,202 @@ export default function ReportesPage() {
           })}
         </motion.div>
 
-        {/* Gráfica asistencia mensual */}
+        {/* Asistencia — card unificado con tabs Mes / Día / Rango */}
         <motion.div variants={cardVariant} className="bg-white border border-border rounded-xl p-4">
-          <div className="flex items-center justify-between mb-4">
+          {/* Encabezado + tabs */}
+          <div className="flex items-center justify-between mb-3">
             <p style={{ fontSize: 11, fontWeight: 600, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-              Asistencia últimos 6 meses
+              Asistencia
             </p>
+            {/* Tab selector pill */}
+            <div
+              className="flex items-center gap-0.5 p-0.5 rounded-full"
+              style={{ background: 'rgba(124,58,237,0.08)', border: '1px solid rgba(124,58,237,0.10)' }}
+            >
+              {(['mes', 'dia', 'rango'] as const).map((tab) => {
+                const labels = { mes: 'Mes', dia: 'Día', rango: 'Rango' };
+                const active = attTab === tab;
+                return (
+                  <button
+                    key={tab}
+                    onClick={() => setAttTab(tab)}
+                    style={{
+                      fontSize: 11,
+                      fontWeight: active ? 700 : 500,
+                      padding: '3px 11px',
+                      borderRadius: 999,
+                      border: 'none',
+                      cursor: 'pointer',
+                      transition: 'all 0.18s cubic-bezier(0.23,1,0.32,1)',
+                      background: active ? '#7C3AED' : 'transparent',
+                      color: active ? '#fff' : '#8E87A8',
+                    }}
+                  >
+                    {labels[tab]}
+                  </button>
+                );
+              })}
+            </div>
           </div>
-          {loading ? (
-            <div className="flex items-center justify-center h-[120px]">
-              <div className="w-5 h-5 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: ACCENT, borderTopColor: 'transparent' }} />
-            </div>
-          ) : monthlyAtt.every(m => m.presentes === 0) ? (
-            <div className="flex flex-col items-center py-6 gap-2">
-              <CalendarCheck className="w-8 h-8 text-muted-foreground/30" />
-              <p className="text-[12px] text-muted-foreground">Sin registros de asistencia</p>
-            </div>
-          ) : (
-            <ResponsiveContainer width="100%" height={140}>
-              <BarChart data={monthlyAtt} barCategoryGap="25%" margin={{ top: 4, right: 4, left: -24, bottom: 0 }}>
-                <XAxis dataKey="month" tick={{ fontSize: 11, fill: '#8E87A8', fontWeight: 600 }} axisLine={false} tickLine={false} />
-                <YAxis allowDecimals={false} tick={{ fontSize: 10, fill: '#C4C2CF' }} axisLine={false} tickLine={false} />
-                <Tooltip
-                  cursor={{ fill: 'rgba(67,97,238,0.06)' }}
-                  contentStyle={{ borderRadius: 10, border: '1px solid #E8E6F0', fontSize: 12, padding: '4px 10px' }}
-                  formatter={(v) => [Number(v ?? 0), 'Presentes']}
-                />
-                <Bar dataKey="presentes" radius={[6, 6, 0, 0]}>
-                  {monthlyAtt.map((_, i) => (
-                    <Cell key={i} fill={i === monthlyAtt.length - 1 ? ACCENT : `${ACCENT}55`} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          )}
-        </motion.div>
 
-        {/* Gráfica asistencia por día de la semana */}
-        <motion.div variants={cardVariant} className="bg-white border border-border rounded-xl p-4">
-          <div className="flex items-center justify-between mb-1">
-            <p style={{ fontSize: 11, fontWeight: 600, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-              Asistencia por día
-            </p>
-            <p className="text-[10px] text-muted-foreground">Últimas 8 semanas</p>
-          </div>
-          {loading ? (
-            <div className="flex items-center justify-center h-[120px]">
-              <div className="w-5 h-5 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: ACCENT, borderTopColor: 'transparent' }} />
-            </div>
-          ) : weekdayCounts.every(c => c === 0) ? (
-            <div className="flex flex-col items-center py-6 gap-2">
-              <CalendarCheck className="w-8 h-8 text-muted-foreground/30" />
-              <p className="text-[12px] text-muted-foreground">Sin datos de asistencia</p>
-            </div>
-          ) : (() => {
-            const maxCount = Math.max(...weekdayCounts, 1);
-            const chartData = DAY_LABELS.map((day, i) => ({ day, presentes: weekdayCounts[i] }));
-            return (
-              <ResponsiveContainer width="100%" height={140}>
-                <BarChart data={chartData} barCategoryGap="20%" margin={{ top: 4, right: 4, left: -24, bottom: 0 }}>
-                  <XAxis dataKey="day" tick={{ fontSize: 11, fill: '#8E87A8', fontWeight: 600 }} axisLine={false} tickLine={false} />
-                  <YAxis allowDecimals={false} tick={{ fontSize: 10, fill: '#C4C2CF' }} axisLine={false} tickLine={false} />
-                  <Tooltip
-                    cursor={{ fill: 'rgba(67,97,238,0.06)' }}
-                    contentStyle={{ borderRadius: 10, border: '1px solid #E8E6F0', fontSize: 12, padding: '4px 10px' }}
-                    formatter={(v) => [Number(v ?? 0), 'Presentes']}
+          {/* ── Tab: Mes ── */}
+          {attTab === 'mes' && (
+            loading ? (
+              <div className="flex items-center justify-center h-[140px]">
+                <div className="w-5 h-5 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: ACCENT, borderTopColor: 'transparent' }} />
+              </div>
+            ) : monthlyAtt.every(m => m.presentes === 0) ? (
+              <div className="flex flex-col items-center py-8 gap-2">
+                <CalendarCheck className="w-8 h-8 text-muted-foreground/30" />
+                <p className="text-[12px] text-muted-foreground">Sin registros de asistencia</p>
+              </div>
+            ) : (
+              <>
+                <p className="text-[10px] text-muted-foreground mb-2">Últimos 6 meses</p>
+                <ResponsiveContainer width="100%" height={140}>
+                  <BarChart data={monthlyAtt} barCategoryGap="25%" margin={{ top: 4, right: 4, left: -24, bottom: 0 }}>
+                    <XAxis dataKey="month" tick={{ fontSize: 11, fill: '#8E87A8', fontWeight: 600 }} axisLine={false} tickLine={false} />
+                    <YAxis allowDecimals={false} tick={{ fontSize: 10, fill: '#C4C2CF' }} axisLine={false} tickLine={false} />
+                    <Tooltip cursor={{ fill: 'rgba(67,97,238,0.06)' }} contentStyle={{ borderRadius: 10, border: '1px solid #E8E6F0', fontSize: 12, padding: '4px 10px' }} formatter={(v) => [Number(v ?? 0), 'Presentes']} />
+                    <Bar dataKey="presentes" radius={[6, 6, 0, 0]}>
+                      {monthlyAtt.map((_, i) => (
+                        <Cell key={i} fill={i === monthlyAtt.length - 1 ? ACCENT : `${ACCENT}55`} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </>
+            )
+          )}
+
+          {/* ── Tab: Día ── */}
+          {attTab === 'dia' && (
+            loading ? (
+              <div className="flex items-center justify-center h-[140px]">
+                <div className="w-5 h-5 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: ACCENT, borderTopColor: 'transparent' }} />
+              </div>
+            ) : weekdayCounts.every(c => c === 0) ? (
+              <div className="flex flex-col items-center py-8 gap-2">
+                <CalendarCheck className="w-8 h-8 text-muted-foreground/30" />
+                <p className="text-[12px] text-muted-foreground">Sin datos de asistencia</p>
+              </div>
+            ) : (() => {
+              const maxCount = Math.max(...weekdayCounts, 1);
+              const chartData = DAY_LABELS.map((day, i) => ({ day, presentes: weekdayCounts[i] }));
+              return (
+                <>
+                  <p className="text-[10px] text-muted-foreground mb-2">Por día de la semana — últimas 8 semanas</p>
+                  <ResponsiveContainer width="100%" height={140}>
+                    <BarChart data={chartData} barCategoryGap="20%" margin={{ top: 4, right: 4, left: -24, bottom: 0 }}>
+                      <XAxis dataKey="day" tick={{ fontSize: 11, fill: '#8E87A8', fontWeight: 600 }} axisLine={false} tickLine={false} />
+                      <YAxis allowDecimals={false} tick={{ fontSize: 10, fill: '#C4C2CF' }} axisLine={false} tickLine={false} />
+                      <Tooltip cursor={{ fill: 'rgba(67,97,238,0.06)' }} contentStyle={{ borderRadius: 10, border: '1px solid #E8E6F0', fontSize: 12, padding: '4px 10px' }} formatter={(v) => [Number(v ?? 0), 'Presentes']} />
+                      <Bar dataKey="presentes" radius={[6, 6, 0, 0]}>
+                        {chartData.map((entry, i) => (
+                          <Cell key={i} fill={entry.presentes === maxCount && entry.presentes > 0 ? ACCENT : `${ACCENT}55`} />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </>
+              );
+            })()
+          )}
+
+          {/* ── Tab: Rango ── */}
+          {attTab === 'rango' && (
+            <div>
+              {/* Selectores de fecha */}
+              <div className="flex items-center gap-2 mb-3 flex-wrap">
+                <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                  <span className="text-[10px] text-muted-foreground font-semibold whitespace-nowrap">Desde</span>
+                  <input
+                    type="date"
+                    value={rangeFrom}
+                    max={rangeTo}
+                    onChange={e => setRangeFrom(e.target.value)}
+                    className="flex-1 min-w-0 text-[11px] font-medium rounded-lg px-2 py-1.5 border"
+                    style={{ borderColor: 'rgba(124,58,237,0.18)', color: '#1A1028', background: '#F7F7FB', outline: 'none' }}
                   />
-                  <Bar dataKey="presentes" radius={[6, 6, 0, 0]}>
-                    {chartData.map((entry, i) => (
-                      <Cell
-                        key={i}
-                        fill={entry.presentes === maxCount && entry.presentes > 0 ? ACCENT : `${ACCENT}55`}
+                </div>
+                <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                  <span className="text-[10px] text-muted-foreground font-semibold whitespace-nowrap">Hasta</span>
+                  <input
+                    type="date"
+                    value={rangeTo}
+                    min={rangeFrom}
+                    max={new Date().toISOString().slice(0, 10)}
+                    onChange={e => setRangeTo(e.target.value)}
+                    className="flex-1 min-w-0 text-[11px] font-medium rounded-lg px-2 py-1.5 border"
+                    style={{ borderColor: 'rgba(124,58,237,0.18)', color: '#1A1028', background: '#F7F7FB', outline: 'none' }}
+                  />
+                </div>
+                <button
+                  onClick={() => fetchRangeStats(rangeFrom, rangeTo)}
+                  disabled={loadingRange || !rangeFrom || !rangeTo}
+                  style={{
+                    background: '#7C3AED',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: 8,
+                    padding: '6px 14px',
+                    fontSize: 11,
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    opacity: loadingRange ? 0.6 : 1,
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {loadingRange ? 'Cargando…' : 'Ver'}
+                </button>
+              </div>
+
+              {/* Gráfica de rango */}
+              {loadingRange ? (
+                <div className="flex items-center justify-center h-[130px]">
+                  <div className="w-5 h-5 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: ACCENT, borderTopColor: 'transparent' }} />
+                </div>
+              ) : rangeData.length === 0 ? (
+                <div className="flex flex-col items-center py-8 gap-2">
+                  <CalendarCheck className="w-8 h-8 text-muted-foreground/30" />
+                  <p className="text-[12px] text-muted-foreground">Selecciona un rango y presiona Ver</p>
+                </div>
+              ) : rangeData.every(d => d.presentes === 0) ? (
+                <div className="flex flex-col items-center py-8 gap-2">
+                  <CalendarCheck className="w-8 h-8 text-muted-foreground/30" />
+                  <p className="text-[12px] text-muted-foreground">Sin asistencia en el rango seleccionado</p>
+                </div>
+              ) : (() => {
+                const maxPres = Math.max(...rangeData.map(d => d.presentes), 1);
+                // Etiquetas compactas: mostrar solo algunas fechas si el rango es grande
+                const step = rangeData.length > 20 ? Math.ceil(rangeData.length / 10) : 1;
+                const chartData = rangeData.map((d, i) => ({
+                  date: i % step === 0 ? d.date.slice(5) : '',  // MM-DD
+                  dateLabel: d.date.slice(5),
+                  presentes: d.presentes,
+                }));
+                return (
+                  <ResponsiveContainer width="100%" height={140}>
+                    <BarChart data={chartData} barCategoryGap="15%" margin={{ top: 4, right: 4, left: -24, bottom: 0 }}>
+                      <XAxis dataKey="date" tick={{ fontSize: 9, fill: '#8E87A8', fontWeight: 600 }} axisLine={false} tickLine={false} />
+                      <YAxis allowDecimals={false} tick={{ fontSize: 10, fill: '#C4C2CF' }} axisLine={false} tickLine={false} />
+                      <Tooltip
+                        cursor={{ fill: 'rgba(67,97,238,0.06)' }}
+                        contentStyle={{ borderRadius: 10, border: '1px solid #E8E6F0', fontSize: 12, padding: '4px 10px' }}
+                        labelFormatter={(_, payload) => payload?.[0]?.payload?.dateLabel ?? ''}
+                        formatter={(v) => [Number(v ?? 0), 'Presentes']}
                       />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            );
-          })()}
+                      <Bar dataKey="presentes" radius={[4, 4, 0, 0]}>
+                        {chartData.map((entry, i) => (
+                          <Cell key={i} fill={entry.presentes === maxPres && entry.presentes > 0 ? ACCENT : `${ACCENT}55`} />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                );
+              })()}
+            </div>
+          )}
         </motion.div>
 
         {/* Distribución de pagos */}

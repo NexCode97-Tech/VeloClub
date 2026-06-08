@@ -1,11 +1,11 @@
 'use client';
 
-import { useAuth } from '@clerk/nextjs';
+import { useAuth, UserProfile } from '@clerk/nextjs';
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiFetch } from '@/lib/api-client';
-import { CheckCircle2, Camera, Building2, ChevronDown, X, Crop, ChevronRight, HelpCircle } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { CheckCircle2, Camera, Building2, ChevronDown, X, Crop, ChevronRight, HelpCircle, User, Settings2 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { stagger, cardVariant } from '@/lib/page-animations';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -109,11 +109,15 @@ function SearchableSelect({
   );
 }
 
+type Tab = 'perfil' | 'club';
+
 export default function AjustesPage() {
   const { getToken } = useAuth();
   const router = useRouter();
   const fileRef = useRef<HTMLInputElement>(null);
 
+  const [tab, setTab]               = useState<Tab>('perfil');
+  const [role, setRole]             = useState<string | null>(null);
   const [club, setClub]             = useState<Club | null>(null);
   const [name, setName]             = useState('');
   const [department, setDepartment] = useState('');
@@ -134,12 +138,18 @@ export default function AjustesPage() {
   useEffect(() => {
     (async () => {
       const token = await getToken();
-      const res = await apiFetch<{ club: Club }>('/clubs/settings', { token });
-      setClub(res.club);
-      setName(res.club.name);
-      setDepartment(res.club.department ?? '');
-      setCity(res.club.city ?? '');
-      setNoAttDays(res.club.noAttendanceDays ?? []);
+      // Obtener rol del usuario
+      const me = await apiFetch<{ user?: { role: string } }>('/me', { token });
+      setRole(me.user?.role ?? null);
+      // Cargar ajustes del club solo si es ADMIN
+      if (me.user?.role === 'ADMIN') {
+        const res = await apiFetch<{ club: Club }>('/clubs/settings', { token });
+        setClub(res.club);
+        setName(res.club.name);
+        setDepartment(res.club.department ?? '');
+        setCity(res.club.city ?? '');
+        setNoAttDays(res.club.noAttendanceDays ?? []);
+      }
       setLoading(false);
     })();
   }, []);
@@ -246,16 +256,92 @@ export default function AjustesPage() {
   );
 
   const logoSrc = logoPreview ?? club?.logoUrl ?? null;
+  const isAdmin = role === 'ADMIN';
 
   return (
     <div className="min-h-full bg-background">
       <div className="px-5 py-3 bg-background">
         <h1 className="text-[22px] font-extrabold text-foreground" style={{ fontFamily: 'inherit', lineHeight: 1.1 }}>
-          Ajustes del club
+          Ajustes
         </h1>
       </div>
 
-      <motion.div variants={stagger} initial="hidden" animate="show" className="px-4 pt-4 space-y-4 max-w-lg pb-8">
+      {/* ── Tab píldora (solo ADMIN) ─────────────────────────────────────── */}
+      {isAdmin && (
+        <div className="px-4 pb-4">
+          <div
+            className="relative flex rounded-2xl p-1 gap-1"
+            style={{ background: '#FFFFFF', boxShadow: '0 1px 4px rgba(0,0,0,0.08), inset 0 0 0 1px rgba(0,0,0,0.06)' }}
+          >
+            {([
+              { key: 'perfil' as Tab, label: 'Mi perfil',  icon: User },
+              { key: 'club'   as Tab, label: 'Mi club',    icon: Settings2 },
+            ]).map(({ key, label, icon: Icon }) => {
+              const active = tab === key;
+              return (
+                <button
+                  key={key}
+                  onClick={() => setTab(key)}
+                  className="relative flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl z-10"
+                >
+                  {active && (
+                    <motion.div
+                      layoutId="ajustes-tab-pill"
+                      className="absolute inset-0 rounded-xl"
+                      style={{ background: 'linear-gradient(135deg, #7C3AED 0%, #4361EE 100%)', boxShadow: '0 4px 20px rgba(124,58,237,0.40)' }}
+                      transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+                    />
+                  )}
+                  <Icon className="relative w-3.5 h-3.5 z-10" style={{ color: active ? '#fff' : '#8E87A8' }} />
+                  <p className="relative text-[12px] font-bold leading-none z-10" style={{ color: active ? '#fff' : '#8E87A8' }}>
+                    {label}
+                  </p>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* ── Tab: Mi perfil ──────────────────────────────────────────────── */}
+      <AnimatePresence mode="wait">
+        {(!isAdmin || tab === 'perfil') && (
+          <motion.div
+            key="perfil"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.2, ease: [0.23, 1, 0.32, 1] }}
+            className="px-4 pb-28"
+          >
+            <UserProfile
+              appearance={{
+                elements: {
+                  rootBox: { width: '100%' },
+                  card: {
+                    width: '100%',
+                    boxShadow: 'none',
+                    border: '1px solid rgba(0,0,0,0.07)',
+                    borderRadius: '1rem',
+                  },
+                  navbar: { display: 'none' },
+                  pageScrollBox: { padding: '16px' },
+                },
+              }}
+            />
+          </motion.div>
+        )}
+
+        {/* ── Tab: Mi club ────────────────────────────────────────────────── */}
+        {isAdmin && tab === 'club' && (
+          <motion.div
+            key="club"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.2, ease: [0.23, 1, 0.32, 1] }}
+          >
+      <motion.div variants={stagger} initial="hidden" animate="show" className="px-4 pt-0 space-y-4 max-w-lg pb-8">
 
         {/* Logo */}
         <motion.div variants={cardVariant} className="bg-white border border-border rounded-xl p-4">
@@ -438,6 +524,9 @@ export default function AjustesPage() {
           <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
         </button>
       </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

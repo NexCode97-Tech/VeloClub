@@ -24,7 +24,7 @@ function SlideCard({ slide }: { slide: SlideshowSlide }) {
       <img src={slide.img} alt={slide.title} className="w-full h-full object-cover" />
       <div
         className="absolute inset-0"
-        style={{ background: 'linear-gradient(to top, rgba(10,5,20,0.85) 0%, rgba(10,5,20,0.30) 50%, transparent 100%)' }}
+        style={{ background: 'linear-gradient(to top, rgba(10,5,20,0.88) 0%, rgba(10,5,20,0.35) 55%, transparent 100%)' }}
       />
       {slide.label && (
         <div
@@ -43,15 +43,15 @@ function SlideCard({ slide }: { slide: SlideshowSlide }) {
           </span>
         </div>
       )}
-      <div className="absolute bottom-0 left-0 right-0 px-4 pb-4 pt-8">
+      <div className="absolute bottom-0 left-0 right-0 px-4 pb-5 pt-10">
         <h2
-          className="text-white font-bold leading-tight mb-1"
-          style={{ fontSize: 16, textShadow: '0 1px 4px rgba(0,0,0,0.4)' }}
+          className="text-white font-bold leading-tight mb-1.5"
+          style={{ fontSize: 15, textShadow: '0 1px 6px rgba(0,0,0,0.5)' }}
         >
           {slide.title}
         </h2>
         {slide.description && (
-          <p className="text-white/60 leading-relaxed line-clamp-2" style={{ fontSize: 11, fontWeight: 400 }}>
+          <p className="text-white/65 leading-relaxed line-clamp-3" style={{ fontSize: 11, fontWeight: 400 }}>
             {slide.description}
           </p>
         )}
@@ -62,9 +62,10 @@ function SlideCard({ slide }: { slide: SlideshowSlide }) {
 
 export function Slideshow({ slides, autoPlayMs = 5000, className = '' }: SlideshowProps) {
   const [[page, direction], setPage] = useState([0, 0]);
+  const [startIndex, setStartIndex] = useState(0);
   const [paused, setPaused] = useState(false);
 
-  const index = ((page % slides.length) + slides.length) % slides.length;
+  const mobileIndex = ((page % slides.length) + slides.length) % slides.length;
 
   const paginate = useCallback((dir: number) => {
     setPage(([p]) => [p + dir, dir]);
@@ -72,16 +73,20 @@ export function Slideshow({ slides, autoPlayMs = 5000, className = '' }: Slidesh
 
   useEffect(() => {
     if (paused) return;
-    const t = setInterval(() => paginate(1), autoPlayMs);
+    const t = setInterval(() => {
+      paginate(1);
+      setStartIndex(i => (i + 1) % slides.length);
+    }, autoPlayMs);
     return () => clearInterval(t);
-  }, [paused, autoPlayMs, paginate]);
+  }, [paused, autoPlayMs, paginate, slides.length]);
 
   function handleInteraction() {
     setPaused(true);
     setTimeout(() => setPaused(false), 6000);
   }
 
-  const slide = slides[index];
+  const mobileSlide = slides[mobileIndex];
+  const getSlide = (offset: number) => slides[(startIndex + offset) % slides.length];
 
   return (
     <>
@@ -106,12 +111,12 @@ export function Slideshow({ slides, autoPlayMs = 5000, className = '' }: Slidesh
             className="absolute inset-0"
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={slide.img} alt={slide.title} className="w-full h-full object-cover" />
+            <img src={mobileSlide.img} alt={mobileSlide.title} className="w-full h-full object-cover" />
             <div
               className="absolute inset-0"
-              style={{ background: 'linear-gradient(to top, rgba(10,5,20,0.85) 0%, rgba(10,5,20,0.30) 50%, transparent 100%)' }}
+              style={{ background: 'linear-gradient(to top, rgba(10,5,20,0.88) 0%, rgba(10,5,20,0.35) 55%, transparent 100%)' }}
             />
-            {slide.label && (
+            {mobileSlide.label && (
               <div
                 className="absolute top-3 left-3 flex items-center"
                 style={{
@@ -124,20 +129,20 @@ export function Slideshow({ slides, autoPlayMs = 5000, className = '' }: Slidesh
                 }}
               >
                 <span className="text-[10px] font-bold text-white/90 tracking-wide uppercase leading-none">
-                  {slide.label}
+                  {mobileSlide.label}
                 </span>
               </div>
             )}
-            <div className="absolute bottom-0 left-0 right-0 px-4 pb-4 pt-8">
+            <div className="absolute bottom-0 left-0 right-0 px-4 pb-5 pt-10">
               <h2
-                className="text-white font-bold leading-tight mb-1"
-                style={{ fontSize: 16, textShadow: '0 1px 4px rgba(0,0,0,0.4)' }}
+                className="text-white font-bold leading-tight mb-1.5"
+                style={{ fontSize: 16, textShadow: '0 1px 6px rgba(0,0,0,0.5)' }}
               >
-                {slide.title}
+                {mobileSlide.title}
               </h2>
-              {slide.description && (
-                <p className="text-white/60 leading-relaxed line-clamp-2" style={{ fontSize: 11, fontWeight: 400 }}>
-                  {slide.description}
+              {mobileSlide.description && (
+                <p className="text-white/65 leading-relaxed line-clamp-3" style={{ fontSize: 11, fontWeight: 400 }}>
+                  {mobileSlide.description}
                 </p>
               )}
             </div>
@@ -152,13 +157,13 @@ export function Slideshow({ slides, autoPlayMs = 5000, className = '' }: Slidesh
               onClick={(e) => {
                 e.stopPropagation();
                 handleInteraction();
-                setPage([i, i > index ? 1 : -1]);
+                setPage([i, i > mobileIndex ? 1 : -1]);
               }}
               style={{
-                width: i === index ? 16 : 5,
+                width: i === mobileIndex ? 16 : 5,
                 height: 5,
                 borderRadius: 3,
-                background: i === index ? '#fff' : 'rgba(255,255,255,0.35)',
+                background: i === mobileIndex ? '#fff' : 'rgba(255,255,255,0.35)',
                 transition: 'all 0.3s ease',
                 border: 'none',
                 padding: 0,
@@ -169,23 +174,41 @@ export function Slideshow({ slides, autoPlayMs = 5000, className = '' }: Slidesh
         </div>
       </div>
 
-      {/* ── Tablet: grid 2 columnas ──────────────────────────────── */}
-      <div className="hidden md:grid lg:hidden grid-cols-2 gap-3">
-        {slides.slice(0, 2).map((s, i) => (
-          <div key={i} className="aspect-[16/9]">
-            <SlideCard slide={s} />
-          </div>
-        ))}
-      </div>
+      {/* ── Tablet: grid 2 columnas rotativo ────────────────────── */}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={`tablet-${startIndex}`}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.6, ease: [0.23, 1, 0.32, 1] }}
+          className="hidden md:grid lg:hidden grid-cols-2 gap-3"
+        >
+          {[0, 1].map(offset => (
+            <div key={offset} className="aspect-[3/2]">
+              <SlideCard slide={getSlide(offset)} />
+            </div>
+          ))}
+        </motion.div>
+      </AnimatePresence>
 
-      {/* ── Escritorio: grid 3 columnas ──────────────────────────── */}
-      <div className="hidden lg:grid grid-cols-3 gap-3">
-        {slides.slice(0, 3).map((s, i) => (
-          <div key={i} className="aspect-[16/9]">
-            <SlideCard slide={s} />
-          </div>
-        ))}
-      </div>
+      {/* ── Escritorio: grid 3 columnas rotativo ────────────────── */}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={`desktop-${startIndex}`}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.6, ease: [0.23, 1, 0.32, 1] }}
+          className="hidden lg:grid grid-cols-3 gap-3"
+        >
+          {[0, 1, 2].map(offset => (
+            <div key={offset} className="aspect-[3/2]">
+              <SlideCard slide={getSlide(offset)} />
+            </div>
+          ))}
+        </motion.div>
+      </AnimatePresence>
     </>
   );
 }

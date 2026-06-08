@@ -1,25 +1,9 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono, Open_Sans } from "next/font/google";
+import { Geist_Mono } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import { esES } from "@clerk/localizations";
 import { Providers } from "./providers";
 import "./globals.css";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
-const openSans = Open_Sans({
-  variable: "--font-open-sans",
-  subsets: ["latin"],
-  weight: ["400", "600", "700"],
-});
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -46,7 +30,7 @@ export default function RootLayout({
     <ClerkProvider localization={esES} signInForceRedirectUrl="/dashboard" afterSignOutUrl="/sign-in">
       <html
         lang="es"
-        className={`${geistSans.variable} ${geistMono.variable} ${openSans.variable} h-full antialiased`}
+        className="h-full antialiased"
       >
         <body className="min-h-full flex flex-col">
           {/* Desregistra service workers viejos en todos los dispositivos */}

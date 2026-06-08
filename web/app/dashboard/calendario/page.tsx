@@ -119,7 +119,7 @@ export default function CalendarioPage() {
     <motion.div variants={stagger} initial="hidden" animate="show" className="min-h-full bg-background px-4 py-5">
       {/* Header */}
       <div className="mb-5">
-        <h1 className="text-[22px] font-extrabold text-foreground" style={{ fontFamily: 'Open Sans, sans-serif', lineHeight: 1.1 }}>
+        <h1 className="text-[22px] font-extrabold text-foreground" style={{ fontFamily: 'inherit', lineHeight: 1.1 }}>
           Calendario
         </h1>
         <p className="text-[12px] text-muted-foreground mt-0.5">{MONTH_NAMES[month]} {year}</p>

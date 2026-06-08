@@ -270,9 +270,11 @@ export default function PerfilPage() {
   const router = useRouter();
 
   const [me, setMe]               = useState<MeResponse | null>(null);
-  const [posts, setPosts]         = useState<Post[]>([]);
-  const [loading, setLoading]     = useState(true);
-  const [activeTab, setActiveTab] = useState<Tab>('Publicaciones');
+  const [posts, setPosts]             = useState<Post[]>([]);
+  const [loading, setLoading]         = useState(true);
+  const [activeTab, setActiveTab]     = useState<Tab>('Publicaciones');
+  const [postScope, setPostScope]     = useState<'public' | 'private'>('private');
+  const postScopeRef = useRef<'public' | 'private'>('private');
   const [currentUserId, setCurrentUserId] = useState('');
   const [coverUrl, setCoverUrl]       = useState<string | null>(null);
   const [uploadingCover, setUploadingCover] = useState(false);
@@ -283,11 +285,12 @@ export default function PerfilPage() {
   // Referencia al nombre del usuario para filtrar posts (evita re-renders)
   const myNameRef = useRef<string>('');
 
-  const loadPosts = useCallback(async () => {
+  const loadPosts = useCallback(async (scope?: 'public' | 'private') => {
     if (!isSignedIn) return;
+    const s = scope ?? postScopeRef.current;
     try {
       const token = await session?.getToken();
-      const postsRes = await apiFetch<{ posts: Post[] }>('/posts?scope=private', { token });
+      const postsRes = await apiFetch<{ posts: Post[] }>(`/posts?scope=${s}`, { token });
       setPosts(postsRes.posts.filter(p => !myNameRef.current || p.authorName === myNameRef.current));
     } catch { /* silencioso */ }
   }, [isSignedIn, session]);
@@ -308,8 +311,10 @@ export default function PerfilPage() {
           myNameRef.current = meRes.value.user?.name ?? '';
         }
         if (postsRes.status === 'fulfilled') {
+          // carga inicial: scope privado por defecto
           setPosts(postsRes.value.posts.filter(p => !myNameRef.current || p.authorName === myNameRef.current));
         }
+        postScopeRef.current = 'private';
         setCurrentUserId(userId ?? '');
       } catch { /* silencioso */ } finally { setLoading(false); }
     })();
@@ -319,6 +324,12 @@ export default function PerfilPage() {
   useClubStream((ev) => {
     if (ev === 'posts') loadPosts();
   });
+
+  function handleScopeChange(scope: 'public' | 'private') {
+    postScopeRef.current = scope;
+    setPostScope(scope);
+    loadPosts(scope);
+  }
 
   async function handleLike(postId: string) {
     const token = await session?.getToken();
@@ -591,6 +602,39 @@ export default function PerfilPage() {
               initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2 }}
               className="space-y-4">
+
+              {/* Sub-tabs: Privadas / Públicas */}
+              <div
+                className="flex items-center gap-0.5 p-0.5 rounded-full self-start"
+                style={{ background: 'rgba(124,58,237,0.08)', border: '1px solid rgba(124,58,237,0.10)', width: 'fit-content' }}
+              >
+                {([
+                  { key: 'private' as const, label: '🔒 Privadas' },
+                  { key: 'public'  as const, label: '🌐 Públicas' },
+                ] as const).map(({ key, label }) => {
+                  const active = postScope === key;
+                  return (
+                    <button
+                      key={key}
+                      onClick={() => handleScopeChange(key)}
+                      style={{
+                        fontSize: 11,
+                        fontWeight: active ? 700 : 500,
+                        padding: '4px 14px',
+                        borderRadius: 999,
+                        border: 'none',
+                        cursor: 'pointer',
+                        transition: 'all 0.18s cubic-bezier(0.23,1,0.32,1)',
+                        background: active ? '#7C3AED' : 'transparent',
+                        color: active ? '#fff' : '#8E87A8',
+                      }}
+                    >
+                      {label}
+                    </button>
+                  );
+                })}
+              </div>
+
               {posts.length === 0 ? (
                 <div className="rounded-2xl px-6 py-10 flex flex-col items-center text-center mt-4"
                   style={{ background: 'linear-gradient(135deg,rgba(124,58,237,0.04),rgba(67,97,238,0.03))', border: '1px solid rgba(124,58,237,0.10)' }}>

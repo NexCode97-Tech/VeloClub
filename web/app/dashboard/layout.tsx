@@ -282,14 +282,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           {/* Logo del club + saludo */}
           <div className="flex items-center gap-2.5 min-w-0">
             {clubLogoUrl ? (
-              <Image
-                src={clubLogoUrl}
-                alt={clubName ?? 'Club'}
-                width={36}
-                height={36}
-                className="rounded-full object-cover shrink-0"
-                style={{ border: '2px solid rgba(124,58,237,0.15)' }}
-              />
+              <div className="shrink-0" style={{ width: 38, height: 38, borderRadius: '50%', overflow: 'hidden', border: '2px solid rgba(124,58,237,0.18)' }}>
+                <Image
+                  src={clubLogoUrl}
+                  alt={clubName ?? 'Club'}
+                  width={38}
+                  height={38}
+                  className="w-full h-full object-cover"
+                />
+              </div>
             ) : (
               <div
                 className="w-9 h-9 rounded-full shrink-0 flex items-center justify-center text-sm font-bold"

@@ -9,7 +9,7 @@ import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Bell, BellOff,
-  Heart, Image as ImageIcon, X, Send,
+  Heart, Image as ImageIcon, X, SendHorizontal,
   Globe, Lock, MessageCircle,
   Paperclip, Video, FileText,
   MoreHorizontal, Pencil, Trash2,
@@ -482,7 +482,7 @@ function PostCard({
                   style={{ background: 'linear-gradient(135deg,#7C3AED,#4361EE)' }}>
                   {sendingComment
                     ? <div className="w-3.5 h-3.5 border-2 border-white/50 border-t-white rounded-full animate-spin" />
-                    : <Send className="w-3.5 h-3.5 text-white" style={{ transform: 'translate(1px, -1px)' }} />
+                    : <SendHorizontal className="w-4 h-4 text-white" />
                   }
                 </motion.button>
               </div>

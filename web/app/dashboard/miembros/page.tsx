@@ -301,7 +301,7 @@ export default function MiembrosPage() {
       ══════════════════════════════════════════════════════════════════ */}
       <div className="md:hidden px-5 pt-5 pb-4 bg-card border-b border-border flex items-center justify-between">
         <div>
-          <h1 className="text-[22px] font-extrabold text-foreground uppercase" style={{ fontFamily: 'Cascadia Code, monospace', lineHeight: 1.1 }}>Miembros</h1>
+          <h1 className="text-[22px] font-extrabold text-foreground uppercase" style={{ fontFamily: 'Poppins, sans-serif', lineHeight: 1.1 }}>Miembros</h1>
           <p className="text-xs text-muted-foreground mt-0.5">{members.length} miembro{members.length !== 1 ? 's' : ''}</p>
         </div>
         <div className="flex items-center gap-2">
@@ -340,7 +340,7 @@ export default function MiembrosPage() {
         >
           <div className="flex items-start justify-between mb-6">
             <div>
-              <h1 className="text-[28px] font-extrabold tracking-tight" style={{ color: '#1A1028', fontFamily: "'Cascadia Code', monospace", lineHeight: 1.1 }}>
+              <h1 className="text-[28px] font-extrabold tracking-tight" style={{ color: '#1A1028', fontFamily: "'Poppins', sans-serif", lineHeight: 1.1 }}>
                 Miembros
               </h1>
               <p className="text-[13px] mt-1" style={{ color: '#8E87A8' }}>
@@ -399,7 +399,7 @@ export default function MiembrosPage() {
                     <Users className="w-5 h-5" style={{ color: s.color }} />
                   </div>
                   <div>
-                    <p className="text-[24px] font-extrabold leading-none" style={{ color: active ? s.color : '#1A1028', fontFamily: "'Cascadia Code', monospace" }}>{s.value}</p>
+                    <p className="text-[24px] font-extrabold leading-none" style={{ color: active ? s.color : '#1A1028', fontFamily: "'Poppins', sans-serif" }}>{s.value}</p>
                     <p className="text-[11px] font-semibold mt-0.5" style={{ color: active ? s.color : '#8E87A8' }}>{s.label}</p>
                   </div>
                 </motion.button>
@@ -518,7 +518,7 @@ export default function MiembrosPage() {
               <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4" style={{ background: 'rgba(124,58,237,0.08)' }}>
                 <Users className="w-8 h-8" style={{ color: '#7C3AED' }} />
               </div>
-              <p className="text-[17px] font-bold mb-1.5" style={{ color: '#1A1028', fontFamily: "'Cascadia Code', monospace" }}>
+              <p className="text-[17px] font-bold mb-1.5" style={{ color: '#1A1028', fontFamily: "'Poppins', sans-serif" }}>
                 {search ? 'Sin resultados' : 'Sin miembros aún'}
               </p>
               <p className="text-[13px] mb-6" style={{ color: '#8E87A8' }}>
@@ -569,7 +569,7 @@ export default function MiembrosPage() {
                         <div className="min-w-0 flex-1">
                           <h3
                             className="text-white font-extrabold text-[15px] leading-snug truncate"
-                            style={{ fontFamily: "'Cascadia Code', monospace", textShadow: '0 1px 4px rgba(0,0,0,0.12)' }}
+                            style={{ fontFamily: "'Poppins', sans-serif", textShadow: '0 1px 4px rgba(0,0,0,0.12)' }}
                           >
                             {m.fullName}
                           </h3>
@@ -719,7 +719,7 @@ export default function MiembrosPage() {
                   border: active ? `1.5px solid ${s.color}40` : '1px solid rgba(120,80,200,0.08)',
                 }}
               >
-                <p className="text-[18px] font-extrabold leading-none" style={{ color: active ? s.color : '#1A1028', fontFamily: "'Cascadia Code', monospace" }}>{s.value}</p>
+                <p className="text-[18px] font-extrabold leading-none" style={{ color: active ? s.color : '#1A1028', fontFamily: "'Poppins', sans-serif" }}>{s.value}</p>
                 <p className="text-[9px] font-semibold text-center leading-tight" style={{ color: active ? s.color : '#8E87A8' }}>{s.label}</p>
               </button>
             );
@@ -848,7 +848,7 @@ export default function MiembrosPage() {
                 <p className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: '#7C3AED' }}>
                   {editing ? 'Editar miembro' : 'Nuevo miembro'}
                 </p>
-                <h2 className="text-[22px] font-extrabold text-foreground leading-tight mt-0.5" style={{ fontFamily: "'Cascadia Code', monospace" }}>
+                <h2 className="text-[22px] font-extrabold text-foreground leading-tight mt-0.5" style={{ fontFamily: "'Poppins', sans-serif" }}>
                   {steps[step]?.label}
                 </h2>
               </div>
@@ -1192,7 +1192,7 @@ export default function MiembrosPage() {
                       <p className="text-white/70 text-[11px] font-semibold uppercase tracking-widest mb-0.5">
                         {ROLES[viewMember.role]}
                       </p>
-                      <h2 className="text-white font-extrabold text-[18px] leading-tight" style={{ fontFamily: "'Cascadia Code', monospace" }}>
+                      <h2 className="text-white font-extrabold text-[18px] leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
                         {viewMember.fullName}
                       </h2>
                       {viewMember.category && (

@@ -382,7 +382,7 @@ export default function PerfilPage() {
           <div className="mt-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
             <div>
               <h1 className="text-[24px] font-extrabold text-foreground leading-tight uppercase"
-                style={{ fontFamily: 'Cascadia Code, monospace' }}>
+                style={{ fontFamily: 'Poppins, sans-serif' }}>
                 {user?.name ?? 'Usuario'}
               </h1>
               <span className="inline-block mt-1 text-[10px] font-bold px-2.5 py-0.5 rounded-full tracking-widest uppercase"
@@ -396,13 +396,13 @@ export default function PerfilPage() {
           <div className="flex items-center gap-6 mt-4">
             <div className="text-center">
               <p className="text-[18px] font-extrabold text-foreground leading-none"
-                style={{ fontFamily: 'Cascadia Code, monospace' }}>{posts.length}</p>
+                style={{ fontFamily: 'Poppins, sans-serif' }}>{posts.length}</p>
               <p style={{ fontSize: 11, fontWeight: 600, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.08em', marginTop: 2 }}>Publicaciones</p>
             </div>
             {user?.club?.name && (
               <div className="text-center">
                 <p className="text-[14px] font-extrabold text-foreground leading-none truncate max-w-[120px]"
-                  style={{ fontFamily: 'Cascadia Code, monospace' }}>{user.club.name}</p>
+                  style={{ fontFamily: 'Poppins, sans-serif' }}>{user.club.name}</p>
                 <p style={{ fontSize: 11, fontWeight: 600, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.08em', marginTop: 2 }}>Club</p>
               </div>
             )}

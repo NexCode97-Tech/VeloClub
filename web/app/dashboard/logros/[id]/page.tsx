@@ -271,7 +271,7 @@ export default function CompetitionDetailPage() {
         </button>
         <div className="flex items-start justify-between">
           <div>
-            <h1 className="text-[17px] font-bold text-foreground leading-tight" style={{ fontFamily: "'Cascadia Code', monospace" }}>
+            <h1 className="text-[17px] font-bold text-foreground leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
               {competition.name}
             </h1>
             <div className="flex flex-wrap gap-3 mt-1">

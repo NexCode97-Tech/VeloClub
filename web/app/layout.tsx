@@ -1,11 +1,8 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono, Carlito } from "next/font/google";
+import { Geist, Geist_Mono, Poppins, Open_Sans } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import { esES } from "@clerk/localizations";
 import { Providers } from "./providers";
-import "@fontsource/cascadia-code/400.css";
-import "@fontsource/cascadia-code/600.css";
-import "@fontsource/cascadia-code/700.css";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -18,10 +15,16 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const carlito = Carlito({
-  variable: "--font-carlito",
+const poppins = Poppins({
+  variable: "--font-poppins",
   subsets: ["latin"],
-  weight: ["400", "700"],
+  weight: ["400", "600", "700", "800"],
+});
+
+const openSans = Open_Sans({
+  variable: "--font-open-sans",
+  subsets: ["latin"],
+  weight: ["400", "600", "700"],
 });
 
 export const viewport: Viewport = {
@@ -49,7 +52,7 @@ export default function RootLayout({
     <ClerkProvider localization={esES} signInForceRedirectUrl="/dashboard" afterSignOutUrl="/sign-in">
       <html
         lang="es"
-        className={`${geistSans.variable} ${geistMono.variable} ${carlito.variable} h-full antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${poppins.variable} ${openSans.variable} h-full antialiased`}
       >
         <body className="min-h-full flex flex-col">
           {/* Desregistra service workers viejos en todos los dispositivos */}

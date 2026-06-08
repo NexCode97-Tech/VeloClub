@@ -638,7 +638,7 @@ export default function FinanzasPage() {
     <div className="min-h-full bg-background">
       {/* Header */}
       <div className="px-5 py-3 bg-background border-b border-border">
-        <h1 className="text-[22px] font-extrabold text-foreground uppercase" style={{ fontFamily: 'Cascadia Code, monospace', lineHeight: 1.1 }}>
+        <h1 className="text-[22px] font-extrabold text-foreground uppercase" style={{ fontFamily: 'Poppins, sans-serif', lineHeight: 1.1 }}>
           Finanzas
         </h1>
       </div>
@@ -716,7 +716,7 @@ export default function FinanzasPage() {
                 {/* Fila superior: nombre del club + chip */}
                 <div className="flex items-center justify-between">
                   <p className="text-[11px] font-bold tracking-[0.15em] uppercase opacity-90"
-                    style={{ fontFamily: "'Cascadia Code', monospace" }}>
+                    style={{ fontFamily: "'Poppins', sans-serif" }}>
                     {clubName}
                   </p>
                   {/* Chip EMV decorativo */}
@@ -733,7 +733,7 @@ export default function FinanzasPage() {
                     Cobrado {MONTH_NAMES[filterMonth - 1]} {filterYear}
                   </p>
                   <p className="text-[32px] font-extrabold leading-none tracking-tight"
-                    style={{ fontFamily: "'Cascadia Code', monospace", textShadow: '0 2px 8px rgba(0,0,0,0.2)' }}>
+                    style={{ fontFamily: "'Poppins', sans-serif", textShadow: '0 2px 8px rgba(0,0,0,0.2)' }}>
                     {fmt.format(totalPaid)}
                   </p>
                   {totalPending > 0 && (
@@ -756,7 +756,7 @@ export default function FinanzasPage() {
                       return (
                         <>
                           <p className="text-[8px] opacity-50 uppercase tracking-widest mb-0.5">Plan {planLabel}</p>
-                          <p className="text-[12px] font-bold opacity-90" style={{ fontFamily: "'Cascadia Code', monospace" }}>
+                          <p className="text-[12px] font-bold opacity-90" style={{ fontFamily: "'Poppins', sans-serif" }}>
                             Vence {venceStr}
                           </p>
                         </>
@@ -803,7 +803,7 @@ export default function FinanzasPage() {
                       boxShadow: active ? `0 0 0 1px ${color}22` : '0 1px 3px rgba(0,0,0,0.06)',
                     }}
                   >
-                    <p className="text-[22px] md:text-[48px] font-extrabold leading-none" style={{ fontFamily: "'Cascadia Code', monospace", color }}>{value}</p>
+                    <p className="text-[22px] md:text-[48px] font-extrabold leading-none" style={{ fontFamily: "'Poppins', sans-serif", color }}>{value}</p>
                     <p className="text-[10px] md:text-[13px] font-semibold mt-0.5" style={{ color: active ? color : '#8E87A8' }}>{label}</p>
                   </motion.button>
                 );
@@ -907,7 +907,7 @@ export default function FinanzasPage() {
               ].map(({ label, value, color, icon: Icon }) => (
                 <div key={label} className="bg-white border border-border rounded-xl p-3 text-center">
                   <Icon className="w-4 h-4 mx-auto mb-1" style={{ color }} />
-                  <p className="text-[11px] font-extrabold text-foreground" style={{ fontFamily: "'Cascadia Code', monospace" }}>
+                  <p className="text-[11px] font-extrabold text-foreground" style={{ fontFamily: "'Poppins', sans-serif" }}>
                     {fmt.format(value)}
                   </p>
                   <p className="text-[9px] text-muted-foreground mt-0.5">{label}</p>

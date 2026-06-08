@@ -199,7 +199,7 @@ export default function PagosPage() {
       <div className="min-h-full bg-background">
         {/* Header */}
         <div className="px-5 py-3 bg-background border-b border-border">
-          <h1 className="text-[17px] font-bold text-foreground" style={{ fontFamily: "'Cascadia Code', monospace" }}>
+          <h1 className="text-[17px] font-bold text-foreground" style={{ fontFamily: "'Poppins', sans-serif" }}>
             Mis Pagos
           </h1>
         </div>
@@ -241,7 +241,7 @@ export default function PagosPage() {
                 {pending.length > 0 ? (
                   <>
                     <p className="text-[11px] opacity-75 uppercase tracking-wide mb-1">Por pagar</p>
-                    <p className="text-4xl font-extrabold mb-1" style={{ fontFamily: "'Cascadia Code', monospace" }}>
+                    <p className="text-4xl font-extrabold mb-1" style={{ fontFamily: "'Poppins', sans-serif" }}>
                       {fmt.format(totalOwed)}
                     </p>
                     <p className="text-[11px] opacity-70">
@@ -250,7 +250,7 @@ export default function PagosPage() {
                   </>
                 ) : (
                   <>
-                    <p className="text-3xl font-extrabold mb-1" style={{ fontFamily: "'Cascadia Code', monospace" }}>
+                    <p className="text-3xl font-extrabold mb-1" style={{ fontFamily: "'Poppins', sans-serif" }}>
                       ¡Todo pagado!
                     </p>
                     <p className="text-[11px] opacity-75">No tienes pagos pendientes</p>
@@ -265,7 +265,7 @@ export default function PagosPage() {
                     <TrendingUp className="w-3.5 h-3.5" style={{ color: '#06D6A0' }} />
                     <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Total pagado</p>
                   </div>
-                  <p className="text-[18px] font-extrabold text-foreground" style={{ fontFamily: "'Cascadia Code', monospace" }}>
+                  <p className="text-[18px] font-extrabold text-foreground" style={{ fontFamily: "'Poppins', sans-serif" }}>
                     {fmt.format(totalPaidStudent)}
                   </p>
                   <p className="text-[10px] text-muted-foreground">{paid.length} {paid.length === 1 ? 'pago' : 'pagos'}</p>
@@ -275,7 +275,7 @@ export default function PagosPage() {
                     <CalendarDays className="w-3.5 h-3.5" style={{ color: '#4361EE' }} />
                     <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Historial</p>
                   </div>
-                  <p className="text-[18px] font-extrabold text-foreground" style={{ fontFamily: "'Cascadia Code', monospace" }}>
+                  <p className="text-[18px] font-extrabold text-foreground" style={{ fontFamily: "'Poppins', sans-serif" }}>
                     {payments.length}
                   </p>
                   <p className="text-[10px] text-muted-foreground">registros totales</p>
@@ -313,7 +313,7 @@ export default function PagosPage() {
                             )}
                           </div>
                           <div className="text-right shrink-0">
-                            <p className="text-[14px] font-extrabold" style={{ color: sc.text, fontFamily: "'Cascadia Code', monospace" }}>
+                            <p className="text-[14px] font-extrabold" style={{ color: sc.text, fontFamily: "'Poppins', sans-serif" }}>
                               {fmt.format(p.amount)}
                             </p>
                             <span
@@ -352,7 +352,7 @@ export default function PagosPage() {
                             </p>
                           )}
                         </div>
-                        <p className="text-[14px] font-extrabold text-foreground shrink-0" style={{ fontFamily: "'Cascadia Code', monospace" }}>
+                        <p className="text-[14px] font-extrabold text-foreground shrink-0" style={{ fontFamily: "'Poppins', sans-serif" }}>
                           {fmt.format(p.amount)}
                         </p>
                       </motion.div>
@@ -380,7 +380,7 @@ export default function PagosPage() {
     <div className="min-h-full bg-background">
       {/* Encabezado */}
       <div className="px-5 py-3 bg-background border-b border-border flex items-center justify-between">
-        <h1 className="text-[17px] font-bold text-foreground" style={{ fontFamily: "'Cascadia Code', monospace" }}>
+        <h1 className="text-[17px] font-bold text-foreground" style={{ fontFamily: "'Poppins', sans-serif" }}>
           Pagos
         </h1>
         {canManage && (
@@ -429,19 +429,19 @@ export default function PagosPage() {
           <p className="text-[10px] font-semibold tracking-widest opacity-80 uppercase mb-1">
             Cobrado — {MONTH_NAMES[filterMonth - 1]} {filterYear}
           </p>
-          <p className="text-4xl font-extrabold mb-3" style={{ fontFamily: "'Cascadia Code', monospace" }}>
+          <p className="text-4xl font-extrabold mb-3" style={{ fontFamily: "'Poppins', sans-serif" }}>
             {fmt.format(totalPaid)}
           </p>
           <div className="flex gap-6">
             <div>
               <p className="text-[10px] opacity-70 uppercase tracking-wide">Total pagado</p>
-              <p className="text-base font-bold" style={{ fontFamily: "'Cascadia Code', monospace" }}>
+              <p className="text-base font-bold" style={{ fontFamily: "'Poppins', sans-serif" }}>
                 {fmt.format(totalPaid)}
               </p>
             </div>
             <div>
               <p className="text-[10px] opacity-70 uppercase tracking-wide">Pendiente</p>
-              <p className="text-base font-bold" style={{ fontFamily: "'Cascadia Code', monospace", color: '#FFB703' }}>
+              <p className="text-base font-bold" style={{ fontFamily: "'Poppins', sans-serif", color: '#FFB703' }}>
                 {fmt.format(totalPending)}
               </p>
             </div>

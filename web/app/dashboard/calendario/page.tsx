@@ -119,7 +119,7 @@ export default function CalendarioPage() {
     <motion.div variants={stagger} initial="hidden" animate="show" className="min-h-full bg-background px-4 py-5">
       {/* Header */}
       <div className="mb-5">
-        <h1 className="text-[22px] font-extrabold text-foreground uppercase" style={{ fontFamily: 'Cascadia Code, monospace', lineHeight: 1.1 }}>
+        <h1 className="text-[22px] font-extrabold text-foreground uppercase" style={{ fontFamily: 'Poppins, sans-serif', lineHeight: 1.1 }}>
           Calendario
         </h1>
         <p className="text-[12px] text-muted-foreground mt-0.5">{MONTH_NAMES[month]} {year}</p>
@@ -136,7 +136,7 @@ export default function CalendarioPage() {
               <button onClick={prevMonth} className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-secondary transition-colors">
                 <ChevronLeft size={16} className="text-muted-foreground" />
               </button>
-              <p className="text-[16px] font-bold text-foreground" style={{ fontFamily: "'Cascadia Code', monospace" }}>
+              <p className="text-[16px] font-bold text-foreground" style={{ fontFamily: "'Poppins', sans-serif" }}>
                 {MONTH_NAMES[month]} {year}
               </p>
               <button onClick={nextMonth} className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-secondary transition-colors">
@@ -201,7 +201,7 @@ export default function CalendarioPage() {
           {/* Eventos del día */}
           <div className="bg-white border border-border rounded-xl p-4">
             <div className="flex items-center justify-between mb-3">
-              <p className="text-[13px] font-bold text-foreground" style={{ fontFamily: "'Cascadia Code', monospace" }}>
+              <p className="text-[13px] font-bold text-foreground" style={{ fontFamily: "'Poppins', sans-serif" }}>
                 {selectedDay} de {MONTH_NAMES[month]}
               </p>
               <span
@@ -231,7 +231,7 @@ export default function CalendarioPage() {
           {/* Todos los eventos del mes */}
           <div className="bg-white border border-border rounded-xl p-4">
             <div className="flex items-center justify-between mb-3">
-              <p className="text-[13px] font-bold text-foreground" style={{ fontFamily: "'Cascadia Code', monospace" }}>
+              <p className="text-[13px] font-bold text-foreground" style={{ fontFamily: "'Poppins', sans-serif" }}>
                 Todo el mes
               </p>
               <span

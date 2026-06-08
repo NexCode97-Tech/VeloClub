@@ -312,7 +312,7 @@ export default function AsistenciaPage() {
       {/* Header */}
       <div className="px-5 py-3 bg-background border-b border-border flex items-center justify-between">
         <div>
-          <h1 className="text-[22px] font-extrabold text-foreground uppercase" style={{ fontFamily: 'Cascadia Code, monospace', lineHeight: 1.1 }}>
+          <h1 className="text-[22px] font-extrabold text-foreground uppercase" style={{ fontFamily: 'Poppins, sans-serif', lineHeight: 1.1 }}>
             Asistencia
           </h1>
           <p className="text-xs text-muted-foreground mt-0.5 capitalize">{todayLabel()}</p>
@@ -413,7 +413,7 @@ export default function AsistenciaPage() {
                     >
                       <div
                         className="text-xl md:text-[36px] font-extrabold leading-none mb-1"
-                        style={{ color: STATUS_COLOR[s], fontFamily: "'Cascadia Code', monospace" }}
+                        style={{ color: STATUS_COLOR[s], fontFamily: "'Poppins', sans-serif" }}
                       >
                         {n}
                       </div>

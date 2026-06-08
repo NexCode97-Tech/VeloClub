@@ -2,7 +2,7 @@
 
 export default function OfflinePage() {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', background: '#F7F7FB', padding: '0 24px', textAlign: 'center', fontFamily: 'Carlito, sans-serif' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', background: '#F7F7FB', padding: '0 24px', textAlign: 'center', fontFamily: 'Open Sans, sans-serif' }}>
       <div style={{ width: 64, height: 64, borderRadius: 20, background: 'rgba(124,58,237,0.10)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 20 }}>
         <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
           <line x1="1" y1="1" x2="23" y2="23"/>
@@ -14,7 +14,7 @@ export default function OfflinePage() {
           <line x1="12" y1="20" x2="12.01" y2="20"/>
         </svg>
       </div>
-      <h1 style={{ margin: '0 0 8px', fontSize: 22, fontWeight: 800, color: '#1A1028', fontFamily: 'Cascadia Code, monospace' }}>
+      <h1 style={{ margin: '0 0 8px', fontSize: 22, fontWeight: 800, color: '#1A1028', fontFamily: 'Poppins, sans-serif' }}>
         Sin conexión
       </h1>
       <p style={{ margin: '0 0 24px', fontSize: 14, color: '#8E87A8', lineHeight: 1.6 }}>
@@ -22,7 +22,7 @@ export default function OfflinePage() {
       </p>
       <button
         onClick={() => window.location.reload()}
-        style={{ padding: '12px 28px', borderRadius: 14, border: 'none', background: '#7C3AED', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'Carlito, sans-serif' }}
+        style={{ padding: '12px 28px', borderRadius: 14, border: 'none', background: '#7C3AED', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'Open Sans, sans-serif' }}
       >
         Reintentar
       </button>

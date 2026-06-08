@@ -204,9 +204,9 @@ export function Slideshow({ slides, autoPlayMs = 5000, className = '' }: Slidesh
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: '-100%', opacity: 0 }}
             transition={{ duration: 0.5, ease: [0.23, 1, 0.32, 1] }}
-            className="grid grid-cols-3 gap-3"
+            className="grid grid-cols-2 gap-3"
           >
-            {[0, 1, 2].map(offset => (
+            {[0, 1].map(offset => (
               <div key={offset} className="aspect-[3/2]" style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.08), inset 0 0 0 1px rgba(0,0,0,0.06)', borderRadius: '1rem', overflow: 'hidden' }}>
                 <SlideCard slide={getSlide(offset)} />
               </div>

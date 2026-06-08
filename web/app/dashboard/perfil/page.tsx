@@ -2,7 +2,7 @@
 
 import { useAuth, useSession } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { apiFetch } from '@/lib/api-client';
 import { useClubStream } from '@/hooks/useClubStream';
@@ -283,14 +283,14 @@ export default function PerfilPage() {
   // Referencia al nombre del usuario para filtrar posts (evita re-renders)
   const myNameRef = useRef<string>('');
 
-  async function loadPosts() {
+  const loadPosts = useCallback(async () => {
     if (!isSignedIn) return;
     try {
       const token = await session?.getToken();
       const postsRes = await apiFetch<{ posts: Post[] }>('/posts?scope=private', { token });
       setPosts(postsRes.posts.filter(p => !myNameRef.current || p.authorName === myNameRef.current));
     } catch { /* silencioso */ }
-  }
+  }, [isSignedIn, session]);
 
   useEffect(() => {
     if (!isLoaded) return;

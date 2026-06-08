@@ -387,7 +387,7 @@ function PostCard({
                   style={{ background: 'linear-gradient(135deg,#7C3AED,#4361EE)' }}>
                   {sendingComment
                     ? <div className="w-3.5 h-3.5 border-2 border-white/50 border-t-white rounded-full animate-spin" />
-                    : <Send className="w-3.5 h-3.5 text-white" />
+                    : <Send className="w-3.5 h-3.5 text-white" style={{ transform: 'translate(1px, -1px)' }} />
                   }
                 </motion.button>
               </div>

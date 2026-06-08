@@ -120,6 +120,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [clubLogoUrl, setClubLogoUrl] = useState<string | null>(null);
   const [clubName, setClubName] = useState<string | null>(null);
   const [userName, setUserName] = useState<string | null>(null);
+  const [collapsed, setCollapsed] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('sidebar-collapsed') === 'true';
+    }
+    return false;
+  });
 
   useEffect(() => {
     if (!isLoaded) return;
@@ -219,12 +225,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const accentBg    = 'rgba(67,97,238,0.12)';
 
   // Sidebar colapsable
-  const [collapsed, setCollapsed] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('sidebar-collapsed') === 'true';
-    }
-    return false;
-  });
   function toggleSidebar() {
     const next = !collapsed;
     setCollapsed(next);

@@ -75,7 +75,7 @@ export function Slideshow({ slides, autoPlayMs = 5000, className = '' }: Slidesh
     if (paused) return;
     const t = setInterval(() => {
       paginate(1);
-      setStartIndex(i => (i + 1) % slides.length);
+      setStartIndex(i => (i + 2) % slides.length);
     }, autoPlayMs);
     return () => clearInterval(t);
   }, [paused, autoPlayMs, paginate, slides.length]);

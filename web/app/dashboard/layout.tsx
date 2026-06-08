@@ -22,6 +22,8 @@ import {
   Settings,
   UserCircle,
   RefreshCw,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -216,21 +218,46 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const accentColor = '#4361EE';
   const accentBg    = 'rgba(67,97,238,0.12)';
 
+  // Sidebar colapsable
+  const [collapsed, setCollapsed] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('sidebar-collapsed') === 'true';
+    }
+    return false;
+  });
+  function toggleSidebar() {
+    const next = !collapsed;
+    setCollapsed(next);
+    localStorage.setItem('sidebar-collapsed', String(next));
+  }
+
   return (
     <div className="flex h-dvh overflow-hidden bg-background">
 
       {/* ── Desktop sidebar ─────────────────────────────────────────────── */}
-      <aside className="hidden md:flex w-60 flex-col shrink-0" style={{ background: '#fff', borderRight: '1px solid rgba(0,0,0,0.07)' }}>
-        {/* Logo */}
-        <div className="flex items-center justify-between px-4 py-4 shrink-0" style={{ borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
-          <Image src="/logo-full.jpg" alt="VeloClub" width={100} height={30} className="object-contain" />
+      <motion.aside
+        animate={{ width: collapsed ? 64 : 240 }}
+        transition={{ duration: 0.25, ease: [0.23, 1, 0.32, 1] }}
+        className="hidden md:flex flex-col shrink-0 overflow-hidden"
+        style={{ background: '#fff', borderRight: '1px solid rgba(0,0,0,0.07)' }}
+      >
+        {/* Logo + toggle */}
+        <div className="flex items-center justify-between px-3 py-4 shrink-0" style={{ borderBottom: '1px solid rgba(0,0,0,0.06)', minHeight: 58 }}>
+          {!collapsed && (
+            <Image src="/logo-full.jpg" alt="VeloClub" width={100} height={30} className="object-contain" />
+          )}
+          <button
+            onClick={toggleSidebar}
+            className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors hover:bg-secondary shrink-0"
+            style={{ color: '#8E87A8', marginLeft: collapsed ? 'auto' : undefined, marginRight: collapsed ? 'auto' : undefined }}
+          >
+            {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+          </button>
         </div>
 
-
-        {/* Nav items con pill deslizante */}
+        {/* Nav items */}
         <nav className="flex-1 px-2 py-2 overflow-y-auto relative">
-          {/* Pill deslizante */}
-          {activeSideIndex >= 0 && (
+          {!collapsed && activeSideIndex >= 0 && (
             <div
               className="absolute left-2 right-2 rounded-xl pointer-events-none"
               style={{
@@ -248,14 +275,20 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 <Link
                   key={href}
                   href={href}
-                  className="flex items-center gap-3 px-3 rounded-xl text-sm font-semibold transition-colors relative z-10"
+                  className="flex items-center rounded-xl text-sm font-semibold transition-colors relative z-10"
                   style={{
                     height: 44,
                     color: active ? accentColor : '#8E87A8',
+                    gap: collapsed ? 0 : 12,
+                    paddingLeft: collapsed ? 0 : 12,
+                    paddingRight: collapsed ? 0 : 12,
+                    justifyContent: collapsed ? 'center' : undefined,
+                    background: collapsed && active ? accentBg : undefined,
                   }}
+                  title={collapsed ? label : undefined}
                 >
                   <Icon className="w-[18px] h-[18px] shrink-0" strokeWidth={active ? 2.5 : 2} />
-                  <span>{label}</span>
+                  {!collapsed && <span>{label}</span>}
                 </Link>
               );
             })}
@@ -264,13 +297,19 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
         {/* User */}
         <div
-          className="flex items-center gap-3 px-4 py-3 shrink-0"
-          style={{ borderTop: '1px solid rgba(0,0,0,0.06)' }}
+          className="flex items-center shrink-0 py-3"
+          style={{
+            borderTop: '1px solid rgba(0,0,0,0.06)',
+            gap: collapsed ? 0 : 12,
+            paddingLeft: collapsed ? 0 : 16,
+            paddingRight: collapsed ? 0 : 16,
+            justifyContent: collapsed ? 'center' : undefined,
+          }}
         >
           <UserButton />
-          <span className="text-[12px] font-semibold truncate" style={{ color: '#8E87A8' }}>Mi cuenta</span>
+          {!collapsed && <span className="text-[12px] font-semibold truncate" style={{ color: '#8E87A8' }}>Mi cuenta</span>}
         </div>
-      </aside>
+      </motion.aside>
 
       {/* ── Main content ────────────────────────────────────────────────── */}
       <div className="flex-1 flex flex-col overflow-hidden min-w-0">

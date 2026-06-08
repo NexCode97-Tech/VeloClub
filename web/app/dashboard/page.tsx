@@ -765,7 +765,7 @@ export default function DashboardPage() {
         <motion.div variants={cardVariant}>
           <Slideshow
             slides={ADS.map(ad => ({ img: ad.image, label: ad.label, title: ad.title, description: ad.description, url: ad.url }))}
-            className="min-h-[300px] md:min-h-[190px]"
+            className="min-h-[340px] md:min-h-[190px]"
           />
         </motion.div>
 

@@ -353,7 +353,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 setTimeout(() => { window.location.reload(); }, 300);
               }}
               className="w-9 h-9 flex items-center justify-center rounded-full transition-colors"
-              style={{ color: '#8E87A8', background: 'rgba(30,20,50,0.07)', boxShadow: '0 2px 8px rgba(15,10,30,0.18)' }}
+              style={{ color: '#8E87A8', background: '#fff', boxShadow: '0 1px 4px rgba(0,0,0,0.08), inset 0 0 0 1px rgba(0,0,0,0.06)' }}
             >
               <RefreshCw
                 size={18}
@@ -367,14 +367,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <Link
               href="/dashboard/perfil"
               className="w-9 h-9 flex items-center justify-center rounded-full transition-colors"
-              style={{ color: '#8E87A8', background: 'rgba(30,20,50,0.07)', boxShadow: '0 2px 8px rgba(15,10,30,0.18)' }}
+              style={{ color: '#8E87A8', background: '#fff', boxShadow: '0 1px 4px rgba(0,0,0,0.08), inset 0 0 0 1px rgba(0,0,0,0.06)' }}
             >
               <UserCircle size={22} strokeWidth={1.8} />
             </Link>
             <Link
               href="/dashboard/ajustes"
               className="w-9 h-9 flex items-center justify-center rounded-full transition-colors"
-              style={{ color: '#8E87A8', background: 'rgba(30,20,50,0.07)', boxShadow: '0 2px 8px rgba(15,10,30,0.18)' }}
+              style={{ color: '#8E87A8', background: '#fff', boxShadow: '0 1px 4px rgba(0,0,0,0.08), inset 0 0 0 1px rgba(0,0,0,0.06)' }}
             >
               <Settings size={20} strokeWidth={1.8} />
             </Link>

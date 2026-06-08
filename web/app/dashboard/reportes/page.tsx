@@ -4,17 +4,20 @@ import { stagger, cardVariant } from '@/lib/page-animations';
 
 import { useAuth, useSession } from '@clerk/nextjs';
 import { useClubStream } from '@/hooks/useClubStream';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { apiFetch } from '@/lib/api-client';
 import { Users, CalendarCheck, CreditCard, Trophy, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell,
   PieChart, Pie, Legend,
 } from 'recharts';
+import { format, startOfMonth, endOfMonth } from 'date-fns';
+import { es } from 'date-fns/locale';
+import { MonthPicker, DateRange } from '@/components/ui/month-picker';
 
-const MONTH_NAMES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+const MONTH_NAMES      = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
 const MONTH_NAMES_FULL = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-const DAY_LABELS = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+const DAY_LABELS       = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
 
 const ACCENT = '#4361EE';
 const GREEN  = '#06D6A0';
@@ -25,26 +28,78 @@ const PURPLE = '#7C3AED';
 interface MonthlyAttendance { month: string; presentes: number }
 interface PaymentDist { name: string; value: number; color: string }
 
+function toISO(d: Date) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
 export default function ReportesPage() {
   const { isSignedIn } = useAuth();
   const { session } = useSession();
 
+  // ── Selector de período ──
+  const nowStr      = format(new Date(), 'yyyy-MM');
+  const [selectedMonth, setSelectedMonth]     = useState<string | null>(null);
+  const [selectedDateRange, setSelectedDateRange] = useState<DateRange | null>(null);
+
+  // Mes/año activos
+  const activeMonthKey = selectedMonth ?? nowStr;
+  const [activeYear, activeMonthNum] = activeMonthKey.split('-').map(Number);
+
+  function handlePickerChange(month: string | null, range: DateRange | null) {
+    setSelectedMonth(month);
+    setSelectedDateRange(range);
+    if (range) setAttTab('rango');
+  }
+
+  // ── Estado ──
   const [loading, setLoading] = useState(true);
 
-  async function loadReportes() {
+  // KPIs
+  const [totalMembers, setTotalMembers]   = useState<number | null>(null);
+  const [asistenciaHoy, setAsistenciaHoy] = useState<number | null>(null);
+  const [asistenciaMes, setAsistenciaMes] = useState<number | null>(null);
+  const [ingresosMes, setIngresosMes]     = useState<number | null>(null);
+  const [pagosAlDia, setPagosAlDia]       = useState<number | null>(null);
+  const [totalLogros, setTotalLogros]     = useState<number | null>(null);
+
+  // Gráficas
+  const [monthlyAtt, setMonthlyAtt]       = useState<MonthlyAttendance[]>([]);
+  const [weekdayCounts, setWeekdayCounts] = useState<number[]>([0,0,0,0,0,0,0]);
+  const [paymentDist, setPaymentDist]     = useState<PaymentDist[]>([]);
+
+  // Tab de asistencia
+  const [attTab, setAttTab]               = useState<'mes' | 'dia' | 'rango'>('mes');
+  const [rangeData, setRangeData]         = useState<{ date: string; presentes: number }[]>([]);
+  const [loadingRange, setLoadingRange]   = useState(false);
+
+  // ── Carga de rango de asistencia ──
+  const fetchRangeStats = useCallback(async (from: string, to: string) => {
+    if (!isSignedIn) return;
+    setLoadingRange(true);
+    try {
+      const token = await session?.getToken({ skipCache: true });
+      const res = await apiFetch<{ days: { date: string; presentes: number }[] }>(
+        `/attendance/range-stats?from=${from}&to=${to}`, { token }
+      );
+      setRangeData(res.days);
+    } catch { /* silencioso */ } finally {
+      setLoadingRange(false);
+    }
+  }, [isSignedIn, session]);
+
+  // ── Carga principal ──
+  const loadReportes = useCallback(async () => {
     if (!isSignedIn) return;
     setLoading(true);
     try {
-      const token = await session?.getToken({ skipCache: true });
-      const now   = new Date();
-      const month = now.getMonth() + 1;
-      const year  = now.getFullYear();
-      const todayISO = `${year}-${String(month).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+      const token       = await session?.getToken({ skipCache: true });
+      const now         = new Date();
+      const todayISO    = toISO(now);
 
       const [membersRes, attTodayRes, paymentsRes, compsRes, attMonthlyRes, weekdayRes] = await Promise.allSettled([
         apiFetch<{ members: { id: string }[] }>('/members', { token }),
         apiFetch<{ records: { status: string }[] }>(`/attendance?date=${todayISO}`, { token }),
-        apiFetch<{ payments: { status: string; amount: number; month: number; year: number }[] }>(`/payments?year=${year}`, { token }),
+        apiFetch<{ payments: { status: string; amount: number; month: number; year: number }[] }>(`/payments?year=${activeYear}`, { token }),
         apiFetch<{ competitions: { id: string; events: { results: { id: string }[] }[] }[] }>('/competitions', { token }),
         apiFetch<{ months: { month: number; year: number; presentes: number }[] }>('/attendance/monthly-stats', { token }),
         apiFetch<{ counts: number[] }>('/attendance/weekday-stats', { token }),
@@ -57,14 +112,14 @@ export default function ReportesPage() {
       if (paymentsRes.status === 'fulfilled') {
         const payments = paymentsRes.value.payments;
         const ingMes = payments
-          .filter(p => p.status === 'PAID' && p.month === month && p.year === year)
+          .filter(p => p.status === 'PAID' && p.month === activeMonthNum && p.year === activeYear)
           .reduce((s, p) => s + p.amount, 0);
         setIngresosMes(ingMes);
-        const totalMes   = payments.filter(p => p.month === month && p.year === year).length;
-        const pagadosMes = payments.filter(p => p.status === 'PAID' && p.month === month && p.year === year).length;
+        const totalMes   = payments.filter(p => p.month === activeMonthNum && p.year === activeYear).length;
+        const pagadosMes = payments.filter(p => p.status === 'PAID' && p.month === activeMonthNum && p.year === activeYear).length;
         setPagosAlDia(totalMes > 0 ? Math.round((pagadosMes / totalMes) * 100) : 0);
         const dist: Record<string, number> = { PAID: 0, PENDING: 0, OVERDUE: 0 };
-        payments.filter(p => p.month === month && p.year === year).forEach(p => {
+        payments.filter(p => p.month === activeMonthNum && p.year === activeYear).forEach(p => {
           if (dist[p.status] !== undefined) dist[p.status]++;
         });
         setPaymentDist([
@@ -84,7 +139,9 @@ export default function ReportesPage() {
           month: MONTH_NAMES[m.month - 1],
           presentes: m.presentes,
         }));
-        setAsistenciaMes(attMonths[attMonths.length - 1]?.presentes ?? 0);
+        // Para "asistencia mes" usar el mes activo
+        const activeMData = attMonthlyRes.value.months.find(m => m.month === activeMonthNum && m.year === activeYear);
+        setAsistenciaMes(activeMData?.presentes ?? attMonths[attMonths.length - 1]?.presentes ?? 0);
         setMonthlyAtt(attMonths);
       }
       if (weekdayRes.status === 'fulfilled') {
@@ -93,48 +150,21 @@ export default function ReportesPage() {
     } catch { /* silencioso */ } finally {
       setLoading(false);
     }
-  }
+  }, [isSignedIn, session, activeYear, activeMonthNum]);
 
-  // KPIs
-  const [totalMembers, setTotalMembers]       = useState<number | null>(null);
-  const [asistenciaHoy, setAsistenciaHoy]     = useState<number | null>(null);
-  const [asistenciaMes, setAsistenciaMes]     = useState<number | null>(null);
-  const [ingresosMes, setIngresosMes]         = useState<number | null>(null);
-  const [pagosAlDia, setPagosAlDia]           = useState<number | null>(null);
-  const [totalLogros, setTotalLogros]         = useState<number | null>(null);
+  // Re-cargar cuando cambia el mes seleccionado
+  useEffect(() => { loadReportes(); }, [loadReportes]);
 
-  // Gráficas
-  const [monthlyAtt, setMonthlyAtt]           = useState<MonthlyAttendance[]>([]);
-  const [weekdayCounts, setWeekdayCounts]     = useState<number[]>([0,0,0,0,0,0,0]);
-  const [paymentDist, setPaymentDist]         = useState<PaymentDist[]>([]);
-
-  // Tab de asistencia
-  const [attTab, setAttTab]                   = useState<'mes' | 'dia' | 'rango'>('mes');
-  const [rangeFrom, setRangeFrom]             = useState<string>(() => {
-    const d = new Date(); d.setDate(d.getDate() - 29);
-    return d.toISOString().slice(0, 10);
-  });
-  const [rangeTo, setRangeTo]                 = useState<string>(new Date().toISOString().slice(0, 10));
-  const [rangeData, setRangeData]             = useState<{ date: string; presentes: number }[]>([]);
-  const [loadingRange, setLoadingRange]       = useState(false);
-
-  async function fetchRangeStats(from: string, to: string) {
-    if (!isSignedIn) return;
-    setLoadingRange(true);
-    try {
-      const token = await session?.getToken({ skipCache: true });
-      const res = await apiFetch<{ days: { date: string; presentes: number }[] }>(
-        `/attendance/range-stats?from=${from}&to=${to}`, { token }
-      );
-      setRangeData(res.days);
-    } catch { /* silencioso */ } finally {
-      setLoadingRange(false);
+  // Cuando hay rango → cargar datos de rango automáticamente
+  useEffect(() => {
+    if (selectedDateRange) {
+      fetchRangeStats(toISO(selectedDateRange.start), toISO(selectedDateRange.end));
+    } else {
+      setRangeData([]);
     }
-  }
+  }, [selectedDateRange, fetchRangeStats]);
 
-  useEffect(() => { loadReportes(); }, [isSignedIn, session]);
-
-  // Tiempo real: SSE push desde el servidor
+  // Tiempo real SSE
   useClubStream((ev) => {
     if (['members', 'payments', 'attendance', 'competitions', 'training'].includes(ev)) {
       loadReportes();
@@ -148,6 +178,9 @@ export default function ReportesPage() {
       ? `$${(n / 1_000).toFixed(0)}k`
       : `$${n}`;
   }
+
+  // Nombre del mes activo para labels
+  const activeMonthLabel = MONTH_NAMES_FULL[activeMonthNum - 1];
 
   const kpis = [
     {
@@ -167,14 +200,14 @@ export default function ReportesPage() {
     {
       label: 'Ingresos mes',
       value: ingresosMes !== null ? fmt(ingresosMes) : '—',
-      sub: MONTH_NAMES_FULL[new Date().getMonth()],
+      sub: activeMonthLabel,
       color: YELLOW,
       icon: CreditCard,
     },
     {
       label: 'Pagos al día',
       value: pagosAlDia !== null ? `${pagosAlDia}%` : '—',
-      sub: 'Del mes actual',
+      sub: activeMonthLabel,
       color: pagosAlDia !== null && pagosAlDia >= 80 ? GREEN : pagosAlDia !== null && pagosAlDia >= 50 ? YELLOW : RED,
       icon: pagosAlDia !== null && pagosAlDia >= 80 ? TrendingUp : pagosAlDia !== null && pagosAlDia >= 50 ? Minus : TrendingDown,
     },
@@ -188,21 +221,45 @@ export default function ReportesPage() {
     {
       label: 'Asistencia mes',
       value: asistenciaMes !== null ? String(asistenciaMes) : '—',
-      sub: 'Presentes este mes',
+      sub: activeMonthLabel,
       color: ACCENT,
       icon: CalendarCheck,
     },
   ];
 
+  // Tabs de asistencia: Mes | Día | Rango (condicional)
+  const showRangeTab = !!selectedDateRange;
+  const attTabs = [
+    { key: 'mes' as const,   label: 'Mes'   },
+    { key: 'dia' as const,   label: 'Día'   },
+    ...(showRangeTab ? [{ key: 'rango' as const, label: 'Rango' }] : []),
+  ];
+
+  // Label de período en encabezado de pagos
+  const paymentPeriodLabel = selectedDateRange
+    ? `${format(selectedDateRange.start, 'd MMM', { locale: es })}–${format(selectedDateRange.end, 'd MMM yyyy', { locale: es })}`
+    : activeMonthLabel;
 
   return (
     <div className="min-h-full bg-background pb-8">
       {/* Header */}
       <div className="px-5 py-3 bg-background">
-        <h1 className="text-[22px] font-extrabold text-foreground" style={{ fontFamily: 'inherit', lineHeight: 1.1 }}>
-          Reportes
-        </h1>
-        <p className="text-[11px] text-muted-foreground mt-0.5">{MONTH_NAMES_FULL[new Date().getMonth()]} {new Date().getFullYear()}</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-[22px] font-extrabold text-foreground" style={{ fontFamily: 'inherit', lineHeight: 1.1 }}>
+              Reportes
+            </h1>
+            <p className="text-[11px] text-muted-foreground mt-0.5 capitalize">{activeMonthLabel} {activeYear}</p>
+          </div>
+          {/* MonthPicker */}
+          <MonthPicker
+            value={selectedMonth}
+            currentMonth={nowStr}
+            dateRange={selectedDateRange}
+            onChange={handlePickerChange}
+            alignRight
+          />
+        </div>
       </div>
 
       <motion.div variants={stagger} initial="hidden" animate="show" className="flex flex-col gap-4 px-4 py-4">
@@ -229,7 +286,7 @@ export default function ReportesPage() {
           })}
         </motion.div>
 
-        {/* Asistencia — card unificado con tabs Mes / Día / Rango */}
+        {/* Asistencia — card unificado */}
         <motion.div variants={cardVariant} className="bg-white border border-border rounded-xl p-4">
           {/* Encabezado + tabs */}
           <div className="flex items-center justify-between mb-3">
@@ -241,13 +298,12 @@ export default function ReportesPage() {
               className="flex items-center gap-0.5 p-0.5 rounded-full"
               style={{ background: 'rgba(124,58,237,0.08)', border: '1px solid rgba(124,58,237,0.10)' }}
             >
-              {(['mes', 'dia', 'rango'] as const).map((tab) => {
-                const labels = { mes: 'Mes', dia: 'Día', rango: 'Rango' };
-                const active = attTab === tab;
+              {attTabs.map(({ key, label }) => {
+                const active = attTab === key;
                 return (
                   <button
-                    key={tab}
-                    onClick={() => setAttTab(tab)}
+                    key={key}
+                    onClick={() => setAttTab(key)}
                     style={{
                       fontSize: 11,
                       fontWeight: active ? 700 : 500,
@@ -260,7 +316,7 @@ export default function ReportesPage() {
                       color: active ? '#fff' : '#8E87A8',
                     }}
                   >
-                    {labels[tab]}
+                    {label}
                   </button>
                 );
               })}
@@ -331,55 +387,21 @@ export default function ReportesPage() {
             })()
           )}
 
-          {/* ── Tab: Rango ── */}
-          {attTab === 'rango' && (
+          {/* ── Tab: Rango (controlado por MonthPicker) ── */}
+          {attTab === 'rango' && selectedDateRange && (
             <div>
-              {/* Selectores de fecha */}
-              <div className="flex items-center gap-2 mb-3 flex-wrap">
-                <div className="flex items-center gap-1.5 flex-1 min-w-0">
-                  <span className="text-[10px] text-muted-foreground font-semibold whitespace-nowrap">Desde</span>
-                  <input
-                    type="date"
-                    value={rangeFrom}
-                    max={rangeTo}
-                    onChange={e => setRangeFrom(e.target.value)}
-                    className="flex-1 min-w-0 text-[11px] font-medium rounded-lg px-2 py-1.5 border"
-                    style={{ borderColor: 'rgba(124,58,237,0.18)', color: '#1A1028', background: '#F7F7FB', outline: 'none' }}
-                  />
-                </div>
-                <div className="flex items-center gap-1.5 flex-1 min-w-0">
-                  <span className="text-[10px] text-muted-foreground font-semibold whitespace-nowrap">Hasta</span>
-                  <input
-                    type="date"
-                    value={rangeTo}
-                    min={rangeFrom}
-                    max={new Date().toISOString().slice(0, 10)}
-                    onChange={e => setRangeTo(e.target.value)}
-                    className="flex-1 min-w-0 text-[11px] font-medium rounded-lg px-2 py-1.5 border"
-                    style={{ borderColor: 'rgba(124,58,237,0.18)', color: '#1A1028', background: '#F7F7FB', outline: 'none' }}
-                  />
-                </div>
+              {/* Info del rango seleccionado */}
+              <p className="text-[10px] text-muted-foreground mb-3">
+                {format(selectedDateRange.start, 'd MMM', { locale: es })} — {format(selectedDateRange.end, 'd MMM yyyy', { locale: es })}
+                {' · '}
                 <button
-                  onClick={() => fetchRangeStats(rangeFrom, rangeTo)}
-                  disabled={loadingRange || !rangeFrom || !rangeTo}
-                  style={{
-                    background: '#7C3AED',
-                    color: '#fff',
-                    border: 'none',
-                    borderRadius: 8,
-                    padding: '6px 14px',
-                    fontSize: 11,
-                    fontWeight: 700,
-                    cursor: 'pointer',
-                    opacity: loadingRange ? 0.6 : 1,
-                    whiteSpace: 'nowrap',
-                  }}
+                  onClick={() => { setSelectedDateRange(null); setAttTab('mes'); }}
+                  className="text-purple-500 hover:text-purple-700 transition-colors cursor-pointer underline-offset-2 hover:underline"
                 >
-                  {loadingRange ? 'Cargando…' : 'Ver'}
+                  limpiar
                 </button>
-              </div>
+              </p>
 
-              {/* Gráfica de rango */}
               {loadingRange ? (
                 <div className="flex items-center justify-center h-[130px]">
                   <div className="w-5 h-5 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: ACCENT, borderTopColor: 'transparent' }} />
@@ -387,7 +409,7 @@ export default function ReportesPage() {
               ) : rangeData.length === 0 ? (
                 <div className="flex flex-col items-center py-8 gap-2">
                   <CalendarCheck className="w-8 h-8 text-muted-foreground/30" />
-                  <p className="text-[12px] text-muted-foreground">Selecciona un rango y presiona Ver</p>
+                  <p className="text-[12px] text-muted-foreground">Cargando datos del rango…</p>
                 </div>
               ) : rangeData.every(d => d.presentes === 0) ? (
                 <div className="flex flex-col items-center py-8 gap-2">
@@ -396,10 +418,9 @@ export default function ReportesPage() {
                 </div>
               ) : (() => {
                 const maxPres = Math.max(...rangeData.map(d => d.presentes), 1);
-                // Etiquetas compactas: mostrar solo algunas fechas si el rango es grande
                 const step = rangeData.length > 20 ? Math.ceil(rangeData.length / 10) : 1;
                 const chartData = rangeData.map((d, i) => ({
-                  date: i % step === 0 ? d.date.slice(5) : '',  // MM-DD
+                  date: i % step === 0 ? d.date.slice(5) : '',
                   dateLabel: d.date.slice(5),
                   presentes: d.presentes,
                 }));
@@ -430,7 +451,7 @@ export default function ReportesPage() {
         {/* Distribución de pagos */}
         <motion.div variants={cardVariant} className="bg-white border border-border rounded-xl p-4">
           <p style={{ fontSize: 11, fontWeight: 600, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 16 }}>
-            Estado de pagos — {MONTH_NAMES_FULL[new Date().getMonth()]}
+            Estado de pagos — {paymentPeriodLabel}
           </p>
           {loading ? (
             <div className="flex items-center justify-center h-[120px]">
@@ -439,7 +460,7 @@ export default function ReportesPage() {
           ) : paymentDist.length === 0 ? (
             <div className="flex flex-col items-center py-6 gap-2">
               <CreditCard className="w-8 h-8 text-muted-foreground/30" />
-              <p className="text-[12px] text-muted-foreground">Sin registros de pagos este mes</p>
+              <p className="text-[12px] text-muted-foreground">Sin registros de pagos este período</p>
             </div>
           ) : (
             <>

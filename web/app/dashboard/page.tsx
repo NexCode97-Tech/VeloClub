@@ -181,8 +181,20 @@ function PostCard({
 }) {
   const liked     = post.likes.some(l => l.userId === currentUserId);
   const likeCount = post.likes.length;
-  const [confirmDel, setConfirmDel]   = useState(false);
-  const [likeAnim, setLikeAnim]       = useState(false);
+  const [postMenuOpen, setPostMenuOpen] = useState(false);
+  const [confirmDel, setConfirmDel]     = useState(false);
+  const [likeAnim, setLikeAnim]         = useState(false);
+  const postMenuRef = useRef<HTMLDivElement>(null);
+
+  // Cerrar dropdown del post al clic fuera
+  useEffect(() => {
+    if (!postMenuOpen) return;
+    function close(e: MouseEvent) {
+      if (postMenuRef.current && !postMenuRef.current.contains(e.target as Node)) setPostMenuOpen(false);
+    }
+    document.addEventListener('mousedown', close);
+    return () => document.removeEventListener('mousedown', close);
+  }, [postMenuOpen]);
   const [showComments, setShowComments] = useState(false);
   const [commentText, setCommentText] = useState('');
   const [sendingComment, setSendingComment] = useState(false);
@@ -271,23 +283,80 @@ function PostCard({
           </div>
         </div>
         {canDelete && (
-          <AnimatePresence mode="wait">
-            {confirmDel ? (
-              <motion.div key="confirm" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }} transition={{ duration: 0.15 }} className="flex items-center gap-1.5">
-                <button onClick={() => onDelete(post.id)}
-                  className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-red-500 text-white active:scale-95 transition-transform">Eliminar</button>
-                <button onClick={() => setConfirmDel(false)}
-                  className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-secondary text-muted-foreground">Cancelar</button>
-              </motion.div>
-            ) : (
-              <motion.button key="dots" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                onClick={() => setConfirmDel(true)}
-                className="w-8 h-8 rounded-full flex items-center justify-center text-muted-foreground/50 hover:bg-secondary active:scale-90 transition-all">
-                <span className="text-[18px] font-bold leading-none mb-1">···</span>
-              </motion.button>
-            )}
-          </AnimatePresence>
+          <div ref={postMenuRef} className="relative">
+            <button
+              onClick={() => { setPostMenuOpen(v => !v); setConfirmDel(false); }}
+              className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-secondary active:scale-90 transition-all cursor-pointer"
+              style={{ color: '#8E87A8' }}
+            >
+              <MoreHorizontal className="w-4 h-4" />
+            </button>
+
+            <AnimatePresence>
+              {postMenuOpen && !confirmDel && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.92, y: -4 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.92, y: -4 }}
+                  transition={{ duration: 0.13, ease: [0.23, 1, 0.32, 1] }}
+                  className="absolute right-0 top-9 z-30 rounded-xl overflow-hidden"
+                  style={{
+                    background: '#fff',
+                    border: '1px solid rgba(0,0,0,0.08)',
+                    boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+                    minWidth: 148,
+                  }}
+                >
+                  <button
+                    onClick={() => { setPostMenuOpen(false); setConfirmDel(true); }}
+                    className="w-full flex items-center gap-2.5 px-4 py-2.5 text-[13px] font-semibold text-red-500 hover:bg-red-50 transition-colors cursor-pointer"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" /> Eliminar
+                  </button>
+                  <button
+                    onClick={() => setPostMenuOpen(false)}
+                    className="w-full flex items-center gap-2.5 px-4 py-2.5 text-[13px] font-semibold text-muted-foreground hover:bg-secondary transition-colors cursor-pointer border-t border-border/50"
+                  >
+                    <X className="w-3.5 h-3.5" /> Cancelar
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            <AnimatePresence>
+              {confirmDel && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.92, y: -4 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.92, y: -4 }}
+                  transition={{ duration: 0.13, ease: [0.23, 1, 0.32, 1] }}
+                  className="absolute right-0 top-9 z-30 rounded-xl overflow-hidden"
+                  style={{
+                    background: '#fff',
+                    border: '1px solid rgba(239,71,111,0.20)',
+                    boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+                    minWidth: 164,
+                  }}
+                >
+                  <p className="px-4 pt-3 pb-1 text-[11px] text-muted-foreground">¿Eliminar publicación?</p>
+                  <div className="flex gap-2 px-3 pb-3 pt-1">
+                    <button
+                      onClick={() => { onDelete(post.id); setConfirmDel(false); }}
+                      className="flex-1 text-[11px] font-bold py-1.5 rounded-lg bg-red-500 text-white cursor-pointer active:scale-95 transition-transform"
+                    >
+                      Eliminar
+                    </button>
+                    <button
+                      onClick={() => setConfirmDel(false)}
+                      className="flex-1 text-[11px] font-semibold py-1.5 rounded-lg bg-secondary text-muted-foreground cursor-pointer"
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         )}
       </div>
 

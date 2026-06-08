@@ -175,7 +175,7 @@ export default function ReportesPage() {
     <div className="min-h-full bg-background pb-8">
       {/* Header */}
       <div className="px-5 py-3 bg-background border-b border-border">
-        <h1 className="text-[22px] font-extrabold text-foreground uppercase" style={{ fontFamily: 'Poppins, sans-serif', lineHeight: 1.1 }}>
+        <h1 className="text-[22px] font-extrabold text-foreground" style={{ fontFamily: 'Poppins, sans-serif', lineHeight: 1.1 }}>
           Reportes
         </h1>
         <p className="text-[11px] text-muted-foreground mt-0.5">{MONTH_NAMES_FULL[new Date().getMonth()]} {new Date().getFullYear()}</p>

@@ -299,9 +299,9 @@ export default function MiembrosPage() {
       {/* ══════════════════════════════════════════════════════════════════
           HEADER MOBILE
       ══════════════════════════════════════════════════════════════════ */}
-      <div className="md:hidden px-5 pt-5 pb-4 bg-card border-b border-border flex items-center justify-between">
+      <div className="md:hidden px-5 pt-5 pb-4 flex items-center justify-between" style={{ background: '#F7F7FB' }}>
         <div>
-          <h1 className="text-[22px] font-extrabold text-foreground uppercase" style={{ fontFamily: 'Poppins, sans-serif', lineHeight: 1.1 }}>Miembros</h1>
+          <h1 className="text-[22px] font-extrabold text-foreground" style={{ fontFamily: 'Poppins, sans-serif', lineHeight: 1.1 }}>Miembros</h1>
           <p className="text-xs text-muted-foreground mt-0.5">{members.length} miembro{members.length !== 1 ? 's' : ''}</p>
         </div>
         <div className="flex items-center gap-2">

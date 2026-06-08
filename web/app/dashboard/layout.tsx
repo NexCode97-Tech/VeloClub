@@ -277,8 +277,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       {/* ── Main content ────────────────────────────────────────────────── */}
       <div className="flex-1 flex flex-col overflow-hidden min-w-0">
 
-        {/* ── Mobile header ── */}
-        <header className="md:hidden flex items-center justify-between px-4 py-3 shrink-0 bg-background">
+        {/* ── Mobile header — solo en home ── */}
+        <header className={`md:hidden flex items-center justify-between px-4 py-3 shrink-0 bg-background ${pathname !== '/dashboard' ? 'hidden' : ''}`}>
           {/* Logo del club + saludo */}
           <div className="flex items-center gap-2.5 min-w-0">
             {clubLogoUrl ? (

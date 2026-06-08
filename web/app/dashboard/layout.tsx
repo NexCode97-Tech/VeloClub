@@ -298,7 +298,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             borderBottom: '1px solid rgba(0,0,0,0.06)',
             minHeight: 58,
             padding: collapsed ? '0 16px' : '0 16px',
-            justifyContent: 'center',
+            justifyContent: 'flex-start',
           }}
         >
           <Image

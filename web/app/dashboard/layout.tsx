@@ -309,7 +309,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </div>
           </div>
           {/* Acciones rápidas */}
-          <div className="flex items-center gap-1 shrink-0">
+          <div className="flex items-center gap-3 shrink-0">
             <Link
               href="/dashboard/perfil"
               className="w-9 h-9 flex items-center justify-center rounded-full transition-colors"
@@ -324,9 +324,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             >
               <Settings size={20} strokeWidth={1.8} />
             </Link>
-            <div className="ml-1">
-              <UserButton appearance={{ elements: { avatarBox: { width: 34, height: 34 } } }} />
-            </div>
           </div>
         </header>
 

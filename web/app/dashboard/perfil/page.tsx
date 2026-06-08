@@ -8,7 +8,7 @@ import { apiFetch } from '@/lib/api-client';
 import Link from 'next/link';
 import {
   Pencil, MapPin, CalendarDays, Globe, Lock,
-  Heart, MessageCircle, ChevronRight, Send, X,
+  Heart, MessageCircle, ChevronRight, Send, X, Camera, Users,
 } from 'lucide-react';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -20,6 +20,7 @@ interface MeResponse {
     role: string;
     club?: { name: string; logoUrl?: string; city?: string; department?: string };
     pictureUrl?: string | null;
+    coverUrl?: string | null;
     createdAt?: string;
     category?: string;
     bio?: string;
@@ -264,11 +265,14 @@ export default function PerfilPage() {
   const { session } = useSession();
   const router = useRouter();
 
-  const [me, setMe]           = useState<MeResponse | null>(null);
-  const [posts, setPosts]     = useState<Post[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [me, setMe]               = useState<MeResponse | null>(null);
+  const [posts, setPosts]         = useState<Post[]>([]);
+  const [loading, setLoading]     = useState(true);
   const [activeTab, setActiveTab] = useState<Tab>('Publicaciones');
   const [currentUserId, setCurrentUserId] = useState('');
+  const [coverUrl, setCoverUrl]   = useState<string | null>(null);
+  const [uploadingCover, setUploadingCover] = useState(false);
+  const coverInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!isLoaded) return;
@@ -280,7 +284,10 @@ export default function PerfilPage() {
           apiFetch<MeResponse>('/me', { token }),
           apiFetch<{ posts: Post[] }>('/posts?scope=private', { token }),
         ]);
-        if (meRes.status === 'fulfilled') setMe(meRes.value);
+        if (meRes.status === 'fulfilled') {
+          setMe(meRes.value);
+          setCoverUrl(meRes.value.user?.coverUrl ?? null);
+        }
         if (postsRes.status === 'fulfilled') {
           // Filtrar solo posts del usuario actual
           const myName = meRes.status === 'fulfilled' ? meRes.value.user?.name : '';
@@ -315,6 +322,29 @@ export default function PerfilPage() {
     ));
   }
 
+  async function handleCoverChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) { alert('La imagen no puede superar 5MB'); return; }
+    setUploadingCover(true);
+    const reader = new FileReader();
+    reader.onload = async (ev) => {
+      const base64 = ev.target?.result as string;
+      try {
+        const token = await session?.getToken();
+        const res = await apiFetch<{ coverUrl: string }>('/me/cover', {
+          method: 'POST', token,
+          body: JSON.stringify({ base64 }),
+        });
+        setCoverUrl(res.coverUrl);
+      } catch (err) {
+        alert('Error al subir la portada: ' + (err instanceof Error ? err.message : 'intenta de nuevo'));
+      } finally { setUploadingCover(false); }
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  }
+
   async function handleDelete(postId: string) {
     const token = await session?.getToken();
     await apiFetch(`/posts/${postId}`, { token, method: 'DELETE' });
@@ -346,23 +376,47 @@ export default function PerfilPage() {
         className="bg-white border-b border-border"
         style={{ boxShadow: '0 1px 12px rgba(0,0,0,0.06)' }}
       >
-        {/* Banner */}
-        <div className="relative h-36 sm:h-48 overflow-hidden"
-          style={{ background: 'linear-gradient(135deg, #7C3AED 0%, #4361EE 60%, #06D6A0 100%)' }}>
-          {/* Patrón decorativo */}
-          <div className="absolute inset-0 opacity-10"
-            style={{ backgroundImage: 'radial-gradient(circle at 20% 50%, white 1px, transparent 1px), radial-gradient(circle at 80% 20%, white 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
-          <div className="absolute inset-0"
-            style={{ background: 'linear-gradient(to bottom, transparent 50%, rgba(0,0,0,0.18) 100%)' }} />
+        {/* Banner — sin overflow-hidden para que el avatar sobresalga */}
+        <div className="relative h-36 sm:h-48"
+          style={{ background: coverUrl ? undefined : 'linear-gradient(135deg, #7C3AED 0%, #4361EE 60%, #06D6A0 100%)' }}>
 
-          {/* Botón editar perfil */}
-          <div className="absolute top-3 right-3 sm:top-4 sm:right-4">
+          {/* Imagen de portada */}
+          {coverUrl && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={coverUrl} alt="Portada" className="absolute inset-0 w-full h-full object-cover" />
+          )}
+
+          {/* Patrón decorativo (solo si no hay imagen) */}
+          {!coverUrl && (
+            <div className="absolute inset-0 opacity-10"
+              style={{ backgroundImage: 'radial-gradient(circle at 20% 50%, white 1px, transparent 1px), radial-gradient(circle at 80% 20%, white 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
+          )}
+          <div className="absolute inset-0"
+            style={{ background: 'linear-gradient(to bottom, transparent 50%, rgba(0,0,0,0.22) 100%)' }} />
+
+          {/* Botones top-right */}
+          <div className="absolute top-3 right-3 flex items-center gap-2">
+            {/* Botón subir portada */}
+            <input ref={coverInputRef} type="file" accept="image/*" className="hidden" onChange={handleCoverChange} />
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              onClick={() => !uploadingCover && coverInputRef.current?.click()}
+              disabled={uploadingCover}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-[12px] font-bold text-white cursor-pointer disabled:opacity-60"
+              style={{ background: 'rgba(255,255,255,0.20)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.30)' }}
+            >
+              {uploadingCover
+                ? <div className="w-3.5 h-3.5 border-2 border-white/50 border-t-white rounded-full animate-spin" />
+                : <Camera className="w-3.5 h-3.5" />
+              }
+            </motion.button>
+
+            {/* Botón editar perfil */}
             <Link href="/dashboard/ajustes">
               <motion.div whileTap={{ scale: 0.95 }}
                 className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-[12px] font-bold text-white cursor-pointer"
                 style={{ background: 'rgba(255,255,255,0.20)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.30)' }}>
                 <Pencil className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Editar Perfil</span>
               </motion.div>
             </Link>
           </div>
@@ -370,26 +424,24 @@ export default function PerfilPage() {
 
         {/* Info del usuario */}
         <div className="px-5 pb-5">
-          {/* Avatar — sobresale del banner */}
-          <div className="flex items-end justify-between" style={{ marginTop: -36 }}>
-            <div className="rounded-full border-4 border-white overflow-hidden"
+          {/* Avatar — z-10 para quedar por encima del banner */}
+          <div className="flex items-end justify-between" style={{ marginTop: -40 }}>
+            <div className="relative z-10 rounded-full border-4 border-white overflow-hidden"
               style={{ boxShadow: '0 4px 16px rgba(124,58,237,0.20)' }}>
               <Avatar src={user?.pictureUrl} name={user?.name ?? 'Usuario'} size={80} role={role} />
             </div>
           </div>
 
           {/* Nombre y rol */}
-          <div className="mt-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-            <div>
-              <h1 className="text-[24px] font-extrabold text-foreground leading-tight uppercase"
-                style={{ fontFamily: 'inherit' }}>
-                {user?.name ?? 'Usuario'}
-              </h1>
-              <span className="inline-block mt-1 text-[10px] font-bold px-2.5 py-0.5 rounded-full tracking-widest uppercase"
-                style={{ background: rc.bg, color: rc.text }}>
-                {roleLabels[role] ?? role}
-              </span>
-            </div>
+          <div className="mt-3">
+            <h1 className="text-[24px] font-extrabold text-foreground leading-tight uppercase"
+              style={{ fontFamily: 'inherit' }}>
+              {user?.name ?? 'Usuario'}
+            </h1>
+            <span className="inline-block mt-1 text-[10px] font-bold px-2.5 py-0.5 rounded-full tracking-widest uppercase"
+              style={{ background: rc.bg, color: rc.text }}>
+              {roleLabels[role] ?? role}
+            </span>
           </div>
 
           {/* Stats */}
@@ -399,13 +451,6 @@ export default function PerfilPage() {
                 style={{ fontFamily: 'inherit' }}>{posts.length}</p>
               <p style={{ fontSize: 11, fontWeight: 600, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.08em', marginTop: 2 }}>Publicaciones</p>
             </div>
-            {user?.club?.name && (
-              <div className="text-center">
-                <p className="text-[14px] font-extrabold text-foreground leading-none truncate max-w-[120px]"
-                  style={{ fontFamily: 'inherit' }}>{user.club.name}</p>
-                <p style={{ fontSize: 11, fontWeight: 600, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.08em', marginTop: 2 }}>Club</p>
-              </div>
-            )}
           </div>
 
           {/* Bio */}
@@ -413,8 +458,14 @@ export default function PerfilPage() {
             <p className="mt-3 text-[13px] text-foreground/80 leading-relaxed max-w-lg">{user.bio}</p>
           )}
 
-          {/* Metadata */}
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-3">
+          {/* Metadata — Opción B: club inline con ubicación y fecha */}
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-3">
+            {user?.club?.name && (
+              <div className="flex items-center gap-1.5">
+                <Users className="w-3.5 h-3.5 shrink-0" style={{ color: '#8E87A8' }} />
+                <span className="text-[12px] text-muted-foreground">{user.club.name}</span>
+              </div>
+            )}
             {(user?.club?.city || user?.club?.department) && (
               <div className="flex items-center gap-1.5">
                 <MapPin className="w-3.5 h-3.5 shrink-0" style={{ color: '#8E87A8' }} />

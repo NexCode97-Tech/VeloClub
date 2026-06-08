@@ -1,6 +1,13 @@
 import { Router } from 'express';
 import { requireAuth } from '../auth/middleware';
 import { prisma } from '../db/client';
+import { v2 as cloudinary } from 'cloudinary';
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME?.trim(),
+  api_key:    process.env.CLOUDINARY_API_KEY?.trim(),
+  api_secret: process.env.CLOUDINARY_API_SECRET?.trim(),
+});
 
 const router = Router();
 
@@ -100,7 +107,7 @@ if (superadminEmails.includes(email.toLowerCase())) {
       return res.json({ status: 'complete_profile', user });
     }
 
-    return res.json({ status: 'ok', user, trial });
+    return res.json({ status: 'ok', user: { ...user, coverUrl: user.coverUrl ?? null }, trial });
   }
 
   // New user — check if email was pre-registered as a Member (case-insensitive)
@@ -148,6 +155,36 @@ if (superadminEmails.includes(email.toLowerCase())) {
   });
 
   return res.json({ status: 'complete_profile', user: newUser });
+});
+
+// POST /me/cover — subir foto de portada del perfil
+router.post('/cover', requireAuth, async (req, res) => {
+  if (!req.user) return res.status(401).json({ error: 'No autenticado' });
+  const { base64 } = req.body as { base64?: string };
+  if (!base64) return res.status(400).json({ error: 'base64 requerido' });
+
+  try {
+    // Eliminar portada anterior si existe
+    const current = await prisma.user.findUnique({ where: { id: req.user.id }, select: { coverPublicId: true } });
+    if (current?.coverPublicId) {
+      await cloudinary.uploader.destroy(current.coverPublicId).catch(() => {});
+    }
+
+    const result = await cloudinary.uploader.upload(base64, {
+      folder: 'veloclub/covers',
+      transformation: [{ width: 1200, height: 400, crop: 'fill', gravity: 'center', quality: 'auto:good' }],
+    });
+
+    const user = await prisma.user.update({
+      where: { id: req.user.id },
+      data: { coverUrl: result.secure_url, coverPublicId: result.public_id },
+    });
+
+    res.json({ coverUrl: user.coverUrl });
+  } catch (err) {
+    console.error('cover upload error:', err instanceof Error ? err.message : err);
+    res.status(500).json({ error: 'Error al subir la portada' });
+  }
 });
 
 // PATCH /me/profile — complete profile on first login

@@ -43,6 +43,8 @@ model User {
   email           String   @unique
   name            String
   picture         String?
+  coverUrl        String?
+  coverPublicId   String?
   role            Role     @default(ADMIN)
   profileComplete Boolean  @default(false)
   clubId          String?

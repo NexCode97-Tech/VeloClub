@@ -195,7 +195,7 @@ export function Slideshow({ slides, autoPlayMs = 5000, className = '' }: Slidesh
         </AnimatePresence>
       </div>
 
-      {/* ── Escritorio: grid 3 columnas rotativo ────────────────── */}
+      {/* ── Escritorio: grid 2 columnas rotativo ────────────────── */}
       <div className="hidden lg:block w-full overflow-hidden rounded-2xl">
         <AnimatePresence mode="wait">
           <motion.div
@@ -207,7 +207,7 @@ export function Slideshow({ slides, autoPlayMs = 5000, className = '' }: Slidesh
             className="grid grid-cols-2 gap-3"
           >
             {[0, 1].map(offset => (
-              <div key={offset} className="aspect-[3/2]" style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.08), inset 0 0 0 1px rgba(0,0,0,0.06)', borderRadius: '1rem', overflow: 'hidden' }}>
+              <div key={offset} className="h-[420px]" style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.08), inset 0 0 0 1px rgba(0,0,0,0.06)', borderRadius: '1rem', overflow: 'hidden' }}>
                 <SlideCard slide={getSlide(offset)} />
               </div>
             ))}

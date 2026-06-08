@@ -200,22 +200,22 @@ export function Slideshow({ slides, autoPlayMs = 5000, className = '' }: Slidesh
           <div className="aspect-[3/2]" />
           <div className="aspect-[3/2]" />
         </div>
-        {/* Capas precargadas — todas montadas, solo la activa es visible */}
         {slides.map((_, idx) => {
-          const pairIndex = Math.floor(idx / 2);
-          const activePair = Math.floor(startIndex / 2) % Math.ceil(slides.length / 2);
-          if (idx % 2 !== 0) return null; // renderizar solo pares de inicio
-          const isActive = (startIndex % slides.length) === idx || (startIndex % slides.length) === (idx + 1);
-          const s0 = slides[idx % slides.length];
+          if (idx % 2 !== 0) return null;
+          // Normalizar startIndex al par más cercano — evita pantalla en blanco con nº impar de slides
+          const normalizedStart = startIndex % slides.length;
+          const activePairStart = Math.floor(normalizedStart / 2) * 2;
+          const isActive = activePairStart === idx;
+          const s0 = slides[idx];
           const s1 = slides[(idx + 1) % slides.length];
           return (
             <div
               key={idx}
               className="absolute inset-0 grid grid-cols-2 gap-3"
               style={{
-                opacity: (startIndex % slides.length) === idx ? 1 : 0,
+                opacity: isActive ? 1 : 0,
                 transition: 'opacity 0.55s cubic-bezier(0.23,1,0.32,1)',
-                pointerEvents: (startIndex % slides.length) === idx ? 'auto' : 'none',
+                pointerEvents: isActive ? 'auto' : 'none',
               }}
             >
               <div className="aspect-[3/2]" style={{ boxShadow: '0 4px 16px rgba(0,0,0,0.13), inset 0 0 0 1px rgba(0,0,0,0.08)', borderRadius: '1rem', overflow: 'hidden' }}>
@@ -231,17 +231,18 @@ export function Slideshow({ slides, autoPlayMs = 5000, className = '' }: Slidesh
 
       {/* ── Escritorio: cross-fade suave — todas las capas montadas ─ */}
       <div className="hidden lg:block w-full rounded-2xl" style={{ position: 'relative' }}>
-        {/* Placeholder invisible para mantener el alto */}
         <div className="grid grid-cols-2 gap-3" style={{ visibility: 'hidden', pointerEvents: 'none' }} aria-hidden>
           <div className="h-[420px]" />
           <div className="h-[420px]" />
         </div>
-        {/* Todas las parejas de slides montadas simultáneamente — transición solo de opacidad */}
         {slides.map((_, idx) => {
-          if (idx % 2 !== 0) return null; // solo inicios de par
-          const s0 = slides[idx % slides.length];
+          if (idx % 2 !== 0) return null;
+          // Normalizar al par más cercano — cubre slides.length impar
+          const normalizedStart = startIndex % slides.length;
+          const activePairStart = Math.floor(normalizedStart / 2) * 2;
+          const isActive = activePairStart === idx;
+          const s0 = slides[idx];
           const s1 = slides[(idx + 1) % slides.length];
-          const isActive = (startIndex % slides.length) === idx;
           return (
             <div
               key={idx}
@@ -252,16 +253,10 @@ export function Slideshow({ slides, autoPlayMs = 5000, className = '' }: Slidesh
                 pointerEvents: isActive ? 'auto' : 'none',
               }}
             >
-              <div
-                className="h-[420px]"
-                style={{ boxShadow: '0 4px 16px rgba(0,0,0,0.13), inset 0 0 0 1px rgba(0,0,0,0.08)', borderRadius: '1rem', overflow: 'hidden' }}
-              >
+              <div className="h-[420px]" style={{ boxShadow: '0 4px 16px rgba(0,0,0,0.13), inset 0 0 0 1px rgba(0,0,0,0.08)', borderRadius: '1rem', overflow: 'hidden' }}>
                 <SlideCard slide={s0} priority={idx === 0} />
               </div>
-              <div
-                className="h-[420px]"
-                style={{ boxShadow: '0 4px 16px rgba(0,0,0,0.13), inset 0 0 0 1px rgba(0,0,0,0.08)', borderRadius: '1rem', overflow: 'hidden' }}
-              >
+              <div className="h-[420px]" style={{ boxShadow: '0 4px 16px rgba(0,0,0,0.13), inset 0 0 0 1px rgba(0,0,0,0.08)', borderRadius: '1rem', overflow: 'hidden' }}>
                 <SlideCard slide={s1} priority={idx === 0} />
               </div>
             </div>

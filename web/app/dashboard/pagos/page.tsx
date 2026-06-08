@@ -241,7 +241,7 @@ export default function PagosPage() {
                 {pending.length > 0 ? (
                   <>
                     <p className="text-[11px] opacity-75 uppercase tracking-wide mb-1">Por pagar</p>
-                    <p className="text-4xl font-extrabold mb-1" style={{ fontFamily: 'inherit' }}>
+                    <p className="text-4xl font-bold mb-1" style={{ fontFamily: 'inherit' }}>
                       {fmt.format(totalOwed)}
                     </p>
                     <p className="text-[11px] opacity-70">
@@ -250,7 +250,7 @@ export default function PagosPage() {
                   </>
                 ) : (
                   <>
-                    <p className="text-3xl font-extrabold mb-1" style={{ fontFamily: 'inherit' }}>
+                    <p className="text-3xl font-bold mb-1" style={{ fontFamily: 'inherit' }}>
                       ¡Todo pagado!
                     </p>
                     <p className="text-[11px] opacity-75">No tienes pagos pendientes</p>
@@ -265,7 +265,7 @@ export default function PagosPage() {
                     <TrendingUp className="w-3.5 h-3.5" style={{ color: '#06D6A0' }} />
                     <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Total pagado</p>
                   </div>
-                  <p className="text-[18px] font-extrabold text-foreground" style={{ fontFamily: 'inherit' }}>
+                  <p className="text-[18px] font-bold text-foreground" style={{ fontFamily: 'inherit' }}>
                     {fmt.format(totalPaidStudent)}
                   </p>
                   <p className="text-[10px] text-muted-foreground">{paid.length} {paid.length === 1 ? 'pago' : 'pagos'}</p>
@@ -275,7 +275,7 @@ export default function PagosPage() {
                     <CalendarDays className="w-3.5 h-3.5" style={{ color: '#4361EE' }} />
                     <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Historial</p>
                   </div>
-                  <p className="text-[18px] font-extrabold text-foreground" style={{ fontFamily: 'inherit' }}>
+                  <p className="text-[18px] font-bold text-foreground" style={{ fontFamily: 'inherit' }}>
                     {payments.length}
                   </p>
                   <p className="text-[10px] text-muted-foreground">registros totales</p>
@@ -313,7 +313,7 @@ export default function PagosPage() {
                             )}
                           </div>
                           <div className="text-right shrink-0">
-                            <p className="text-[14px] font-extrabold" style={{ color: sc.text, fontFamily: 'inherit' }}>
+                            <p className="text-[14px] font-bold" style={{ color: sc.text, fontFamily: 'inherit' }}>
                               {fmt.format(p.amount)}
                             </p>
                             <span
@@ -352,7 +352,7 @@ export default function PagosPage() {
                             </p>
                           )}
                         </div>
-                        <p className="text-[14px] font-extrabold text-foreground shrink-0" style={{ fontFamily: 'inherit' }}>
+                        <p className="text-[14px] font-bold text-foreground shrink-0" style={{ fontFamily: 'inherit' }}>
                           {fmt.format(p.amount)}
                         </p>
                       </motion.div>
@@ -429,7 +429,7 @@ export default function PagosPage() {
           <p className="text-[10px] font-semibold tracking-widest opacity-80 uppercase mb-1">
             Cobrado — {MONTH_NAMES[filterMonth - 1]} {filterYear}
           </p>
-          <p className="text-4xl font-extrabold mb-3" style={{ fontFamily: 'inherit' }}>
+          <p className="text-4xl font-bold mb-3" style={{ fontFamily: 'inherit' }}>
             {fmt.format(totalPaid)}
           </p>
           <div className="flex gap-6">

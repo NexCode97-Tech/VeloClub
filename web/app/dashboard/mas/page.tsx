@@ -97,7 +97,7 @@ export default function MasPage() {
 
   return (
     <motion.div variants={stagger} initial="hidden" animate="show" className="min-h-full bg-background px-4 py-4">
-      <h1 className="text-[22px] font-extrabold text-foreground mb-4" style={{ fontFamily: 'inherit', lineHeight: 1.1 }}>
+      <h1 className="text-[22px] font-semibold text-foreground mb-4" style={{ fontFamily: 'inherit', lineHeight: 1.1 }}>
         Más opciones
       </h1>
 

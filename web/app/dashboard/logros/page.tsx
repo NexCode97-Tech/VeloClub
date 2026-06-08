@@ -240,7 +240,7 @@ export default function LogrosPage() {
       <div className="px-5 py-3">
         <div className="flex items-start justify-between gap-2 mb-4">
           <div>
-            <h1 className="text-[22px] font-extrabold text-foreground" style={{ fontFamily: 'inherit', lineHeight: 1.1 }}>
+            <h1 className="text-[22px] font-semibold text-foreground" style={{ fontFamily: 'inherit', lineHeight: 1.1 }}>
               Resultados
             </h1>
             <p className="text-[12px] text-muted-foreground mt-0.5">
@@ -479,7 +479,7 @@ function CompCard({ comp: c, isStudent, myMemberId, canManage, deleting, onDelet
 
         {/* Info central */}
         <div className="flex-1 min-w-0">
-          <p className="text-[15px] font-extrabold text-foreground leading-tight truncate" style={{ fontFamily: 'inherit' }}>
+          <p className="text-[15px] font-bold text-foreground leading-tight truncate" style={{ fontFamily: 'inherit' }}>
             {c.name.charAt(0).toUpperCase() + c.name.slice(1).toLowerCase()}
           </p>
           <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1">
@@ -592,7 +592,7 @@ function TrainCard({ session: s, isStudent, myMemberId, canManage, deleting, onD
 
         {/* Info */}
         <div className="flex-1 min-w-0">
-          <p className="text-[15px] font-extrabold text-foreground leading-tight truncate" style={{ fontFamily: 'inherit' }}>{s.title}</p>
+          <p className="text-[15px] font-bold text-foreground leading-tight truncate" style={{ fontFamily: 'inherit' }}>{s.title}</p>
           <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1">
             {s.location && (
               <span className="flex items-center gap-1 text-[11px] text-muted-foreground">

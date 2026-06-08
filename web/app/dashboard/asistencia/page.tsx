@@ -312,7 +312,7 @@ export default function AsistenciaPage() {
       {/* Header */}
       <div className="px-5 py-3 bg-background flex items-center justify-between">
         <div>
-          <h1 className="text-[22px] font-extrabold text-foreground" style={{ fontFamily: 'inherit', lineHeight: 1.1 }}>
+          <h1 className="text-[22px] font-semibold text-foreground" style={{ fontFamily: 'inherit', lineHeight: 1.1 }}>
             Asistencia
           </h1>
           <p className="text-xs text-muted-foreground mt-0.5 capitalize">{todayLabel()}</p>
@@ -412,7 +412,7 @@ export default function AsistenciaPage() {
                       style={{ boxShadow: '0 1px 6px rgba(0,0,0,0.04)' }}
                     >
                       <div
-                        className="text-xl md:text-[36px] font-extrabold leading-none mb-1"
+                        className="text-xl md:text-[36px] font-bold leading-none mb-1"
                         style={{ color: STATUS_COLOR[s], fontFamily: 'inherit' }}
                       >
                         {n}
@@ -536,7 +536,7 @@ export default function AsistenciaPage() {
                         {canManage ? (
                           <button
                             onClick={() => toggle(m.id)}
-                            className="mt-auto w-full py-2 text-[11px] font-extrabold tracking-wide transition-all active:scale-95 flex items-center justify-center gap-1"
+                            className="mt-auto w-full py-2 text-[11px] font-bold tracking-wide transition-all active:scale-95 flex items-center justify-center gap-1"
                             style={{
                               background: `${color}18`,
                               color,
@@ -547,7 +547,7 @@ export default function AsistenciaPage() {
                           </button>
                         ) : (
                           <div
-                            className="mt-auto w-full py-2 text-[11px] font-extrabold tracking-wide flex items-center justify-center gap-1"
+                            className="mt-auto w-full py-2 text-[11px] font-bold tracking-wide flex items-center justify-center gap-1"
                             style={{
                               background: `${color}18`,
                               color,

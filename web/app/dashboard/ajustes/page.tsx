@@ -261,7 +261,7 @@ export default function AjustesPage() {
   return (
     <div className="min-h-full bg-background">
       <div className="px-5 py-3 bg-background">
-        <h1 className="text-[22px] font-extrabold text-foreground" style={{ fontFamily: 'inherit', lineHeight: 1.1 }}>
+        <h1 className="text-[22px] font-semibold text-foreground" style={{ fontFamily: 'inherit', lineHeight: 1.1 }}>
           Ajustes
         </h1>
       </div>

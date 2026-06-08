@@ -521,7 +521,7 @@ export default function PerfilPage() {
 
           {/* Nombre y rol */}
           <div className="mt-3">
-            <h1 className="text-[24px] font-extrabold text-foreground leading-tight uppercase"
+            <h1 className="text-[24px] font-semibold text-foreground leading-tight uppercase"
               style={{ fontFamily: 'inherit' }}>
               {user?.name ?? 'Usuario'}
             </h1>
@@ -534,7 +534,7 @@ export default function PerfilPage() {
           {/* Stats */}
           <div className="flex items-center gap-6 mt-4">
             <div className="text-center">
-              <p className="text-[18px] font-extrabold text-foreground leading-none"
+              <p className="text-[18px] font-bold text-foreground leading-none"
                 style={{ fontFamily: 'inherit' }}>{posts.length}</p>
               <p style={{ fontSize: 11, fontWeight: 600, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.08em', marginTop: 2 }}>Publicaciones</p>
             </div>

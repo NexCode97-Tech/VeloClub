@@ -301,7 +301,7 @@ export default function MiembrosPage() {
       ══════════════════════════════════════════════════════════════════ */}
       <div className="md:hidden px-5 py-3 flex items-center justify-between" style={{ background: '#F7F7FB' }}>
         <div>
-          <h1 className="text-[22px] font-extrabold text-foreground" style={{ fontFamily: 'inherit', lineHeight: 1.1 }}>Miembros</h1>
+          <h1 className="text-[22px] font-semibold text-foreground" style={{ fontFamily: 'inherit', lineHeight: 1.1 }}>Miembros</h1>
           <p className="text-xs text-muted-foreground mt-0.5">{members.length} miembro{members.length !== 1 ? 's' : ''}</p>
         </div>
         <div className="flex items-center gap-2">
@@ -340,7 +340,7 @@ export default function MiembrosPage() {
         >
           <div className="flex items-start justify-between mb-6">
             <div>
-              <h1 className="text-[22px] font-extrabold" style={{ color: '#1A1028', fontFamily: 'inherit', lineHeight: 1.1 }}>
+              <h1 className="text-[22px] font-bold" style={{ color: '#1A1028', fontFamily: 'inherit', lineHeight: 1.1 }}>
                 Miembros
               </h1>
               <p className="text-xs mt-0.5" style={{ color: '#8E87A8' }}>
@@ -399,7 +399,7 @@ export default function MiembrosPage() {
                     <Users className="w-5 h-5" style={{ color: s.color }} />
                   </div>
                   <div>
-                    <p className="text-[24px] font-extrabold leading-none" style={{ color: active ? s.color : '#1A1028', fontFamily: 'inherit' }}>{s.value}</p>
+                    <p className="text-[24px] font-bold leading-none" style={{ color: active ? s.color : '#1A1028', fontFamily: 'inherit' }}>{s.value}</p>
                     <p className="text-[11px] font-semibold mt-0.5" style={{ color: active ? s.color : '#8E87A8' }}>{s.label}</p>
                   </div>
                 </motion.button>
@@ -568,7 +568,7 @@ export default function MiembrosPage() {
                         />
                         <div className="min-w-0 flex-1">
                           <h3
-                            className="text-white font-extrabold text-[15px] leading-snug truncate"
+                            className="text-white font-bold text-[15px] leading-snug truncate"
                             style={{ fontFamily: 'inherit', textShadow: '0 1px 4px rgba(0,0,0,0.12)' }}
                           >
                             {m.fullName}
@@ -719,7 +719,7 @@ export default function MiembrosPage() {
                   border: active ? `1.5px solid ${s.color}40` : '1px solid rgba(120,80,200,0.08)',
                 }}
               >
-                <p className="text-[18px] font-extrabold leading-none" style={{ color: active ? s.color : '#1A1028', fontFamily: 'inherit' }}>{s.value}</p>
+                <p className="text-[18px] font-bold leading-none" style={{ color: active ? s.color : '#1A1028', fontFamily: 'inherit' }}>{s.value}</p>
                 <p className="text-[9px] font-semibold text-center leading-tight" style={{ color: active ? s.color : '#8E87A8' }}>{s.label}</p>
               </button>
             );
@@ -848,7 +848,7 @@ export default function MiembrosPage() {
                 <p className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: '#7C3AED' }}>
                   {editing ? 'Editar miembro' : 'Nuevo miembro'}
                 </p>
-                <h2 className="text-[22px] font-extrabold text-foreground leading-tight mt-0.5" style={{ fontFamily: 'inherit' }}>
+                <h2 className="text-[22px] font-bold text-foreground leading-tight mt-0.5" style={{ fontFamily: 'inherit' }}>
                   {steps[step]?.label}
                 </h2>
               </div>
@@ -1184,7 +1184,7 @@ export default function MiembrosPage() {
                     <X className="w-4 h-4 text-white" />
                   </button>
                   <div className="flex items-center gap-4">
-                    <div className="w-16 h-16 rounded-full flex items-center justify-center text-xl font-extrabold text-white shrink-0"
+                    <div className="w-16 h-16 rounded-full flex items-center justify-center text-xl font-bold text-white shrink-0"
                       style={{ background: 'rgba(255,255,255,0.2)' }}>
                       {initials(viewMember.fullName)}
                     </div>
@@ -1192,7 +1192,7 @@ export default function MiembrosPage() {
                       <p className="text-white/70 text-[11px] font-semibold uppercase tracking-widest mb-0.5">
                         {ROLES[viewMember.role]}
                       </p>
-                      <h2 className="text-white font-extrabold text-[18px] leading-tight" style={{ fontFamily: 'inherit' }}>
+                      <h2 className="text-white font-bold text-[18px] leading-tight" style={{ fontFamily: 'inherit' }}>
                         {viewMember.fullName}
                       </h2>
                       {viewMember.category && (

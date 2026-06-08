@@ -638,7 +638,7 @@ export default function FinanzasPage() {
     <div className="min-h-full bg-background">
       {/* Header */}
       <div className="px-5 py-3 bg-background">
-        <h1 className="text-[22px] font-extrabold text-foreground" style={{ fontFamily: 'inherit', lineHeight: 1.1 }}>
+        <h1 className="text-[22px] font-semibold text-foreground" style={{ fontFamily: 'inherit', lineHeight: 1.1 }}>
           Finanzas
         </h1>
       </div>
@@ -745,7 +745,7 @@ export default function FinanzasPage() {
                   <p className="text-[10px] font-semibold tracking-widest uppercase opacity-60 mb-1">
                     Cobrado {MONTH_NAMES[filterMonth - 1]} {filterYear}
                   </p>
-                  <p className="text-[32px] font-extrabold leading-none tracking-tight"
+                  <p className="text-[32px] font-bold leading-none tracking-tight"
                     style={{ fontFamily: 'inherit', textShadow: '0 2px 8px rgba(0,0,0,0.2)' }}>
                     {fmt.format(totalPaid)}
                   </p>
@@ -816,7 +816,7 @@ export default function FinanzasPage() {
                       boxShadow: active ? `0 0 0 1px ${color}22` : '0 1px 3px rgba(0,0,0,0.06)',
                     }}
                   >
-                    <p className="text-[22px] md:text-[48px] font-extrabold leading-none" style={{ fontFamily: 'inherit', color }}>{value}</p>
+                    <p className="text-[22px] md:text-[48px] font-bold leading-none" style={{ fontFamily: 'inherit', color }}>{value}</p>
                     <p className="text-[10px] md:text-[13px] font-semibold mt-0.5" style={{ color: active ? color : '#8E87A8' }}>{label}</p>
                   </motion.button>
                 );
@@ -907,7 +907,7 @@ export default function FinanzasPage() {
               ].map(({ label, value, color, icon: Icon }) => (
                 <div key={label} className="bg-white border border-border rounded-xl p-3 text-center">
                   <Icon className="w-4 h-4 mx-auto mb-1" style={{ color }} />
-                  <p className="text-[11px] font-extrabold text-foreground" style={{ fontFamily: 'inherit' }}>
+                  <p className="text-[11px] font-bold text-foreground" style={{ fontFamily: 'inherit' }}>
                     {fmt.format(value)}
                   </p>
                   <p className="text-[9px] text-muted-foreground mt-0.5">{label}</p>

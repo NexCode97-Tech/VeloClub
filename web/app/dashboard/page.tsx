@@ -90,7 +90,7 @@ function getInitials(name: string) {
 
 const ADS = [
   {
-    image: 'https://images.unsplash.com/photo-1517649763962-0c623066013b?w=600&q=80',
+    image: '/foto-equipamiento.jpg',
     label: 'Equipamiento',
     title: 'Nueva Colección Deportiva 2025',
     description: 'Descubre la línea de ropa técnica diseñada para ciclistas de alto rendimiento. Tejidos transpirables, corte aerodinámico y protección UV para cada etapa.',
@@ -98,7 +98,7 @@ const ADS = [
     color: '#7C3AED',
   },
   {
-    image: 'https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=600&q=80',
+    image: '/foto-academia.jpg',
     label: 'Academia',
     title: 'Academia de Alto Rendimiento',
     description: 'Programas de entrenamiento personalizados con los mejores coaches del país. Metodología basada en datos, seguimiento semanal y planes adaptados a tu nivel.',
@@ -106,7 +106,7 @@ const ADS = [
     color: '#4361EE',
   },
   {
-    image: 'https://images.unsplash.com/photo-1571902943202-507ec2618e8f?w=600&q=80',
+    image: '/foto-nutricion.png',
     label: 'Nutrición',
     title: 'Plan Nutricional para Deportistas',
     description: 'Optimiza tu rendimiento con planes de alimentación diseñados para atletas. Incluye recetas, guías de hidratación y suplementación estratégica por fase de entrenamiento.',
@@ -114,7 +114,7 @@ const ADS = [
     color: '#06D6A0',
   },
   {
-    image: 'https://images.unsplash.com/photo-1485965120184-e220f721d03e?w=600&q=80',
+    image: '/foto-bicicleta.jpg',
     label: 'Ciclismo',
     title: 'Trek & Specialized — Tienda Oficial',
     description: 'Las marcas líderes del ciclismo mundial en un solo lugar. Bicicletas de ruta, MTB, accesorios y componentes con garantía oficial y asesoría especializada.',

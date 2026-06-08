@@ -516,7 +516,7 @@ function PostComposer({
           whileTap={{ scale: 0.95 }}
           transition={{ type: 'spring' as const, stiffness: 500, damping: 15 }}
           className="shrink-0 px-5 py-2 rounded-full text-[13px] font-bold text-white disabled:opacity-50 transition-opacity"
-          style={{ background: '#7C3AED' }}>
+          style={{ background: 'linear-gradient(135deg, #7C3AED 0%, #4361EE 100%)' }}>
           {sending
             ? <div className="w-3.5 h-3.5 border-2 border-white/50 border-t-white rounded-full animate-spin" />
             : 'Publicar'
@@ -792,7 +792,7 @@ export default function DashboardPage() {
                     <motion.div
                       layoutId="feed-tab-pill"
                       className="absolute inset-0 rounded-xl"
-                      style={{ background: 'linear-gradient(135deg, #7C3AED 0%, #4361EE 55%, #06D6A0 100%)', boxShadow: '0 4px 20px rgba(124,58,237,0.40)' }}
+                      style={{ background: 'linear-gradient(135deg, #7C3AED 0%, #4361EE 100%)', boxShadow: '0 4px 20px rgba(124,58,237,0.40)' }}
                       transition={{ type: 'spring', stiffness: 500, damping: 35 }}
                     />
                   )}

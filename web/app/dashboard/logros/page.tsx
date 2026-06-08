@@ -93,7 +93,7 @@ function MedalIcon({ position }: { position: number }) {
 function StatPill({ value, label, color }: { value: number; label: string; color: string }) {
   return (
     <div className="flex-1 flex flex-col items-center gap-1 py-3 rounded-2xl" style={{ background: `${color}12` }}>
-      <span className="text-[26px] font-black leading-none" style={{ color, fontFamily: "'Open Sans', sans-serif" }}>{value}</span>
+      <span className="text-[26px] font-black leading-none" style={{ color, fontFamily: 'inherit' }}>{value}</span>
       <span className="text-[11px] font-semibold text-muted-foreground leading-none">{label}</span>
     </div>
   );
@@ -255,7 +255,7 @@ export default function LogrosPage() {
                 else { setSessionForm(emptySession); setSessionError(null); setSessionOpen(true); }
               }}
               className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[13px] font-bold text-white shadow-sm shrink-0 cursor-pointer"
-              style={{ background: tab === 'comp' ? '#4361EE' : '#06D6A0' }}
+              style={{ background: 'linear-gradient(135deg, #7C3AED 0%, #4361EE 100%)' }}
             >
               <Plus className="w-4 h-4" />
               <span className="hidden sm:inline">{tab === 'comp' ? 'Competencia' : 'Entrenamiento'}</span>
@@ -479,7 +479,7 @@ function CompCard({ comp: c, isStudent, myMemberId, canManage, deleting, onDelet
 
         {/* Info central */}
         <div className="flex-1 min-w-0">
-          <p className="text-[15px] font-extrabold text-foreground leading-tight truncate" style={{ fontFamily: "'Open Sans', sans-serif" }}>
+          <p className="text-[15px] font-extrabold text-foreground leading-tight truncate" style={{ fontFamily: 'inherit' }}>
             {c.name.charAt(0).toUpperCase() + c.name.slice(1).toLowerCase()}
           </p>
           <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1">
@@ -592,7 +592,7 @@ function TrainCard({ session: s, isStudent, myMemberId, canManage, deleting, onD
 
         {/* Info */}
         <div className="flex-1 min-w-0">
-          <p className="text-[15px] font-extrabold text-foreground leading-tight truncate" style={{ fontFamily: "'Open Sans', sans-serif" }}>{s.title}</p>
+          <p className="text-[15px] font-extrabold text-foreground leading-tight truncate" style={{ fontFamily: 'inherit' }}>{s.title}</p>
           <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1">
             {s.location && (
               <span className="flex items-center gap-1 text-[11px] text-muted-foreground">

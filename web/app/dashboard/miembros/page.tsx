@@ -320,7 +320,7 @@ export default function MiembrosPage() {
           <motion.button onClick={openNew} whileTap={reducedMotion ? {} : { scale: 0.97 }}
             transition={{ duration: 0.12, ease: EASE_OUT }}
             className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold text-white"
-            style={{ background: '#7C3AED' }}>
+            style={{ background: 'linear-gradient(135deg, #7C3AED 0%, #4361EE 100%)' }}>
             <Plus className="w-4 h-4" /><span className="hidden sm:inline">Nuevo</span>
           </motion.button>
         </div>
@@ -340,7 +340,7 @@ export default function MiembrosPage() {
         >
           <div className="flex items-start justify-between mb-6">
             <div>
-              <h1 className="text-[28px] font-extrabold tracking-tight" style={{ color: '#1A1028', fontFamily: "'Open Sans', sans-serif", lineHeight: 1.1 }}>
+              <h1 className="text-[28px] font-extrabold tracking-tight" style={{ color: '#1A1028', fontFamily: 'inherit', lineHeight: 1.1 }}>
                 Miembros
               </h1>
               <p className="text-[13px] mt-1" style={{ color: '#8E87A8' }}>
@@ -368,7 +368,7 @@ export default function MiembrosPage() {
                 whileTap={reducedMotion ? {} : { scale: 0.97 }}
                 transition={{ duration: 0.14, ease: EASE_OUT }}
                 className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-[13px] font-bold text-white cursor-pointer"
-                style={{ background: 'linear-gradient(135deg,#7C3AED,#4361EE)', boxShadow: '0 4px 16px rgba(124,58,237,0.30)' }}>
+                style={{ background: 'linear-gradient(135deg, #7C3AED 0%, #4361EE 100%)', boxShadow: '0 4px 16px rgba(124,58,237,0.30)' }}>
                 <Plus className="w-4 h-4" /> Nuevo miembro
               </motion.button>
             </div>
@@ -399,7 +399,7 @@ export default function MiembrosPage() {
                     <Users className="w-5 h-5" style={{ color: s.color }} />
                   </div>
                   <div>
-                    <p className="text-[24px] font-extrabold leading-none" style={{ color: active ? s.color : '#1A1028', fontFamily: "'Open Sans', sans-serif" }}>{s.value}</p>
+                    <p className="text-[24px] font-extrabold leading-none" style={{ color: active ? s.color : '#1A1028', fontFamily: 'inherit' }}>{s.value}</p>
                     <p className="text-[11px] font-semibold mt-0.5" style={{ color: active ? s.color : '#8E87A8' }}>{s.label}</p>
                   </div>
                 </motion.button>
@@ -518,7 +518,7 @@ export default function MiembrosPage() {
               <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4" style={{ background: 'rgba(124,58,237,0.08)' }}>
                 <Users className="w-8 h-8" style={{ color: '#7C3AED' }} />
               </div>
-              <p className="text-[17px] font-bold mb-1.5" style={{ color: '#1A1028', fontFamily: "'Open Sans', sans-serif" }}>
+              <p className="text-[17px] font-bold mb-1.5" style={{ color: '#1A1028', fontFamily: 'inherit' }}>
                 {search ? 'Sin resultados' : 'Sin miembros aún'}
               </p>
               <p className="text-[13px] mb-6" style={{ color: '#8E87A8' }}>
@@ -569,7 +569,7 @@ export default function MiembrosPage() {
                         <div className="min-w-0 flex-1">
                           <h3
                             className="text-white font-extrabold text-[15px] leading-snug truncate"
-                            style={{ fontFamily: "'Open Sans', sans-serif", textShadow: '0 1px 4px rgba(0,0,0,0.12)' }}
+                            style={{ fontFamily: 'inherit', textShadow: '0 1px 4px rgba(0,0,0,0.12)' }}
                           >
                             {m.fullName}
                           </h3>
@@ -719,7 +719,7 @@ export default function MiembrosPage() {
                   border: active ? `1.5px solid ${s.color}40` : '1px solid rgba(120,80,200,0.08)',
                 }}
               >
-                <p className="text-[18px] font-extrabold leading-none" style={{ color: active ? s.color : '#1A1028', fontFamily: "'Open Sans', sans-serif" }}>{s.value}</p>
+                <p className="text-[18px] font-extrabold leading-none" style={{ color: active ? s.color : '#1A1028', fontFamily: 'inherit' }}>{s.value}</p>
                 <p className="text-[9px] font-semibold text-center leading-tight" style={{ color: active ? s.color : '#8E87A8' }}>{s.label}</p>
               </button>
             );
@@ -848,7 +848,7 @@ export default function MiembrosPage() {
                 <p className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: '#7C3AED' }}>
                   {editing ? 'Editar miembro' : 'Nuevo miembro'}
                 </p>
-                <h2 className="text-[22px] font-extrabold text-foreground leading-tight mt-0.5" style={{ fontFamily: "'Open Sans', sans-serif" }}>
+                <h2 className="text-[22px] font-extrabold text-foreground leading-tight mt-0.5" style={{ fontFamily: 'inherit' }}>
                   {steps[step]?.label}
                 </h2>
               </div>
@@ -1192,7 +1192,7 @@ export default function MiembrosPage() {
                       <p className="text-white/70 text-[11px] font-semibold uppercase tracking-widest mb-0.5">
                         {ROLES[viewMember.role]}
                       </p>
-                      <h2 className="text-white font-extrabold text-[18px] leading-tight" style={{ fontFamily: "'Open Sans', sans-serif" }}>
+                      <h2 className="text-white font-extrabold text-[18px] leading-tight" style={{ fontFamily: 'inherit' }}>
                         {viewMember.fullName}
                       </h2>
                       {viewMember.category && (

@@ -105,7 +105,7 @@ export default function AyudaPage() {
   return (
     <div className="min-h-full bg-background">
       {/* Header */}
-      <div className="px-5 py-3 bg-background border-b border-border flex items-center gap-3">
+      <div className="px-5 py-3 bg-background flex items-center gap-3">
         <button
           onClick={() => router.back()}
           className="w-8 h-8 rounded-xl flex items-center justify-center hover:bg-secondary transition-colors"
@@ -114,7 +114,7 @@ export default function AyudaPage() {
         </button>
         <h1
           className="text-[17px] font-bold text-foreground"
-          style={{ fontFamily: "'Open Sans', sans-serif" }}
+          style={{ fontFamily: 'inherit' }}
         >
           Centro de ayuda
         </h1>

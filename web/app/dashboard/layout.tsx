@@ -301,7 +301,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <p className="text-[10px] font-semibold uppercase tracking-widest truncate" style={{ color: '#8E87A8' }}>
                 Bienvenido
               </p>
-              <p className="text-[13px] font-bold leading-tight truncate" style={{ color: '#1A1028', fontFamily: "'Open Sans', sans-serif" }}>
+              <p className="text-[13px] font-bold leading-tight truncate" style={{ color: '#1A1028', fontFamily: 'inherit' }}>
                 {clubName ?? 'VeloClub'}
               </p>
             </div>

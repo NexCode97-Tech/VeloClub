@@ -261,7 +261,7 @@ export default function CompetitionDetailPage() {
   return (
     <div className="min-h-full bg-background">
       {/* Encabezado */}
-      <div className="px-4 py-3 bg-background border-b border-border">
+      <div className="px-4 py-3 bg-background">
         <button
           onClick={() => router.back()}
           className="flex items-center gap-1.5 text-[12px] text-muted-foreground mb-2 hover:text-foreground transition-colors"
@@ -271,7 +271,7 @@ export default function CompetitionDetailPage() {
         </button>
         <div className="flex items-start justify-between">
           <div>
-            <h1 className="text-[17px] font-bold text-foreground leading-tight" style={{ fontFamily: "'Open Sans', sans-serif" }}>
+            <h1 className="text-[17px] font-bold text-foreground leading-tight" style={{ fontFamily: 'inherit' }}>
               {competition.name}
             </h1>
             <div className="flex flex-wrap gap-3 mt-1">

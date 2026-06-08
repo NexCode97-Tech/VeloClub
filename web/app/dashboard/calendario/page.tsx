@@ -136,7 +136,7 @@ export default function CalendarioPage() {
               <button onClick={prevMonth} className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-secondary transition-colors">
                 <ChevronLeft size={16} className="text-muted-foreground" />
               </button>
-              <p className="text-[16px] font-bold text-foreground" style={{ fontFamily: "'Open Sans', sans-serif" }}>
+              <p className="text-[16px] font-bold text-foreground" style={{ fontFamily: 'inherit' }}>
                 {MONTH_NAMES[month]} {year}
               </p>
               <button onClick={nextMonth} className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-secondary transition-colors">
@@ -201,7 +201,7 @@ export default function CalendarioPage() {
           {/* Eventos del día */}
           <div className="bg-white border border-border rounded-xl p-4">
             <div className="flex items-center justify-between mb-3">
-              <p className="text-[13px] font-bold text-foreground" style={{ fontFamily: "'Open Sans', sans-serif" }}>
+              <p className="text-[13px] font-bold text-foreground" style={{ fontFamily: 'inherit' }}>
                 {selectedDay} de {MONTH_NAMES[month]}
               </p>
               <span
@@ -231,7 +231,7 @@ export default function CalendarioPage() {
           {/* Todos los eventos del mes */}
           <div className="bg-white border border-border rounded-xl p-4">
             <div className="flex items-center justify-between mb-3">
-              <p className="text-[13px] font-bold text-foreground" style={{ fontFamily: "'Open Sans', sans-serif" }}>
+              <p className="text-[13px] font-bold text-foreground" style={{ fontFamily: 'inherit' }}>
                 Todo el mes
               </p>
               <span

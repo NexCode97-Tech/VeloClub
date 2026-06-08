@@ -105,12 +105,12 @@ export default function TrainingDetailPage() {
   return (
     <div className="min-h-full bg-background">
       {/* Header */}
-      <div className="px-4 py-3 bg-background border-b border-border flex items-center gap-3">
+      <div className="px-4 py-3 bg-background flex items-center gap-3">
         <Link href="/dashboard/logros" className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-secondary transition-colors">
           <ArrowLeft className="w-4 h-4 text-muted-foreground" />
         </Link>
         <div className="flex-1 min-w-0">
-          <h1 className="text-[15px] font-bold text-foreground truncate" style={{ fontFamily: "'Open Sans', sans-serif" }}>
+          <h1 className="text-[15px] font-bold text-foreground truncate" style={{ fontFamily: 'inherit' }}>
             {session.title}
           </h1>
           <p className="text-[11px] text-muted-foreground capitalize">{dateStr}</p>
@@ -119,7 +119,7 @@ export default function TrainingDetailPage() {
           <button
             onClick={() => { setForm(emptyForm); setError(null); setOpen(true); }}
             className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold text-white shrink-0"
-            style={{ background: '#4361EE' }}
+            style={{ background: 'linear-gradient(135deg, #7C3AED 0%, #4361EE 100%)' }}
           >
             <Plus className="w-4 h-4" />
             <span className="hidden sm:inline">Resultado</span>

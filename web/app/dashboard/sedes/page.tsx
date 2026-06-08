@@ -82,7 +82,7 @@ export default function SedesPage() {
         <button
           onClick={openNew}
           className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold text-white"
-          style={{ background: '#4361EE' }}
+          style={{ background: 'linear-gradient(135deg, #7C3AED 0%, #4361EE 100%)' }}
         >
           <Plus className="w-4 h-4" />
           <span className="hidden sm:inline">Nueva sede</span>

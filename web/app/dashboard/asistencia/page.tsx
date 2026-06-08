@@ -323,7 +323,7 @@ export default function AsistenciaPage() {
             disabled={saving}
             whileTap={{ scale: 0.93 }}
             className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold text-white cursor-pointer transition-colors"
-            animate={{ background: saved ? '#06D6A0' : '#4361EE' }}
+            style={{ background: saved ? '#06D6A0' : 'linear-gradient(135deg, #7C3AED 0%, #4361EE 100%)' }}
           >
             <CheckCircle2 className="w-4 h-4" />
             <span>{saving ? 'Guardando...' : saved ? 'Guardado' : 'Guardar'}</span>
@@ -413,7 +413,7 @@ export default function AsistenciaPage() {
                     >
                       <div
                         className="text-xl md:text-[36px] font-extrabold leading-none mb-1"
-                        style={{ color: STATUS_COLOR[s], fontFamily: "'Open Sans', sans-serif" }}
+                        style={{ color: STATUS_COLOR[s], fontFamily: 'inherit' }}
                       >
                         {n}
                       </div>

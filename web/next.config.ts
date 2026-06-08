@@ -1,7 +1,40 @@
 import type { NextConfig } from "next";
 import withPWA from "@ducanh2912/next-pwa";
 
+const CSP = [
+  "default-src 'self'",
+  // Scripts: propio dominio + Clerk
+  "script-src 'self' 'unsafe-inline' https://clerk.veloclubtech.com https://*.clerk.accounts.dev",
+  // Estilos: propio dominio + inline (Tailwind/shadcn lo requieren)
+  "style-src 'self' 'unsafe-inline'",
+  // Imágenes: propio dominio + Clerk + Cloudinary
+  "img-src 'self' data: blob: https://img.clerk.com https://images.clerk.dev https://res.cloudinary.com",
+  // Fuentes: solo propio dominio
+  "font-src 'self' data:",
+  // Conexiones: propio dominio + API Railway + Clerk + Cloudinary
+  "connect-src 'self' https://veloclub-production.up.railway.app https://clerk.veloclubtech.com https://*.clerk.accounts.dev https://api.cloudinary.com",
+  // Frames: solo Clerk (para su UI embebida)
+  "frame-src https://clerk.veloclubtech.com https://*.clerk.accounts.dev",
+  // No permitir embeber la app en iframes externos
+  "frame-ancestors 'none'",
+  // No ejecutar plugins (Flash, etc.)
+  "object-src 'none'",
+].join('; ');
+
 const nextConfig: NextConfig = {
+  async headers() {
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          { key: 'Content-Security-Policy', value: CSP },
+          { key: 'X-Frame-Options', value: 'DENY' },
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+        ],
+      },
+    ];
+  },
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: 'img.clerk.com' },

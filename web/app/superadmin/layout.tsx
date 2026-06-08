@@ -141,11 +141,11 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
   const noLeidas = notifs.filter(n => !n.leida).length;
 
   return (
-    <div className="flex flex-col h-dvh overflow-hidden" style={{ background: '#F7F7FB', fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
+    <div className="flex flex-col h-dvh overflow-hidden" style={{ background: '#F7F7FB', fontFamily: 'Carlito, sans-serif' }}>
 
       {/* Global Header */}
       <div className="flex items-center gap-2 shrink-0" style={{ padding: '12px 16px 10px', background: '#F7F7FB', borderBottom: '1px solid rgba(120,80,200,0.10)' }}>
-        <h2 className="flex-1 m-0 text-[17px] font-bold" style={{ fontFamily: 'Space Grotesk, sans-serif', color: '#1A1028' }}>
+        <h2 className="flex-1 m-0 text-[17px] font-bold" style={{ fontFamily: 'Cascadia Code, monospace', color: '#1A1028' }}>
           {title}
         </h2>
         {/* Refresh */}
@@ -215,7 +215,7 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
                   </svg>
                 </div>
                 <div style={{ flex: 1 }}>
-                  <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: '#1A1028', fontFamily: 'Space Grotesk, sans-serif', lineHeight: 1.2 }}>
+                  <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: '#1A1028', fontFamily: 'Cascadia Code, monospace', lineHeight: 1.2 }}>
                     Notificaciones
                   </h3>
                   {noLeidas > 0 && (
@@ -229,7 +229,7 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
                     onClick={marcarTodas}
                     whileTap={{ scale: 0.95 }}
                     transition={{ duration: 0.12 }}
-                    style={{ padding: '5px 10px', borderRadius: 8, background: 'rgba(124,58,237,0.08)', border: '1px solid rgba(124,58,237,0.18)', color: '#7C3AED', fontSize: 10, fontWeight: 700, cursor: 'pointer', fontFamily: 'Plus Jakarta Sans, sans-serif' }}
+                    style={{ padding: '5px 10px', borderRadius: 8, background: 'rgba(124,58,237,0.08)', border: '1px solid rgba(124,58,237,0.18)', color: '#7C3AED', fontSize: 10, fontWeight: 700, cursor: 'pointer', fontFamily: 'Carlito, sans-serif' }}
                   >
                     Marcar todas
                   </motion.button>

@@ -64,7 +64,7 @@ const inp: React.CSSProperties = {
   width: '100%', padding: '10px 12px', borderRadius: 10,
   border: '1.5px solid rgba(120,80,200,0.18)',
   background: '#fff', color: '#1A1028', fontSize: 14, outline: 'none',
-  boxSizing: 'border-box', fontFamily: 'Plus Jakarta Sans, sans-serif',
+  boxSizing: 'border-box', fontFamily: 'Carlito, sans-serif',
 };
 
 // ── Variantes de animación ────────────────────────────────────────────────────
@@ -121,7 +121,7 @@ function PlanSelector({ value, onChange }: { value: TipoPlan; onChange: (v: Tipo
               boxShadow: active ? '0 2px 10px rgba(124,58,237,0.28)' : 'none',
             }}
           >
-            <p style={{ margin: 0, fontSize: 11, fontWeight: 700, color: active ? '#fff' : '#8E87A8', fontFamily: 'Plus Jakarta Sans, sans-serif', transition: 'color 0.18s' }}>
+            <p style={{ margin: 0, fontSize: 11, fontWeight: 700, color: active ? '#fff' : '#8E87A8', fontFamily: 'Carlito, sans-serif', transition: 'color 0.18s' }}>
               {opt.label}
             </p>
             <p style={{ margin: 0, fontSize: 9, fontWeight: 500, color: active ? 'rgba(255,255,255,0.70)' : 'rgba(142,135,168,0.70)', transition: 'color 0.18s' }}>
@@ -153,7 +153,7 @@ function EstadoSelector({ value, onChange }: { value: string; onChange: (v: stri
               transition: 'all 0.15s',
             }}
           >
-            <p style={{ margin: 0, fontSize: 10, fontWeight: 700, color: active ? s.color : '#8E87A8', transition: 'color 0.15s', fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
+            <p style={{ margin: 0, fontSize: 10, fontWeight: 700, color: active ? s.color : '#8E87A8', transition: 'color 0.15s', fontFamily: 'Carlito, sans-serif' }}>
               {s.label}
             </p>
           </motion.button>
@@ -347,7 +347,7 @@ export default function FinanzasPage() {
               <div style={{ width: 32, height: 32, borderRadius: 10, background: s.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 8px' }}>
                 {s.icon}
               </div>
-              <p style={{ margin: 0, fontSize: 13, fontWeight: 800, color: s.color, fontFamily: 'Space Grotesk, sans-serif', lineHeight: 1 }}>{s.value}</p>
+              <p style={{ margin: 0, fontSize: 13, fontWeight: 800, color: s.color, fontFamily: 'Cascadia Code, monospace', lineHeight: 1 }}>{s.value}</p>
               <p style={{ margin: '4px 0 0', fontSize: 9, fontWeight: 600, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{s.label}</p>
             </motion.div>
           ))}
@@ -365,7 +365,7 @@ export default function FinanzasPage() {
             <div style={{ width: 52, height: 52, borderRadius: 14, background: 'rgba(124,58,237,0.07)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px' }}>
               <CircleDollarSign size={24} color="#7C3AED" />
             </div>
-            <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: '#1A1028', fontFamily: 'Space Grotesk, sans-serif' }}>Sin clubs registrados</p>
+            <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: '#1A1028', fontFamily: 'Cascadia Code, monospace' }}>Sin clubs registrados</p>
             <p style={{ margin: '6px 0 0', fontSize: 12, color: '#8E87A8' }}>Crea clubs desde el módulo de Clubs</p>
           </motion.div>
         )}
@@ -401,7 +401,7 @@ export default function FinanzasPage() {
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                     {/* Avatar */}
-                    <div style={{ width: 48, height: 48, borderRadius: '50%', background: sus ? pb.bg : trial ? trial.bg : 'rgba(142,135,168,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 800, color: sus ? pb.color : trial ? trial.color : '#8E87A8', fontFamily: 'Space Grotesk, sans-serif', flexShrink: 0, overflow: 'hidden' }}>
+                    <div style={{ width: 48, height: 48, borderRadius: '50%', background: sus ? pb.bg : trial ? trial.bg : 'rgba(142,135,168,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 800, color: sus ? pb.color : trial ? trial.color : '#8E87A8', fontFamily: 'Cascadia Code, monospace', flexShrink: 0, overflow: 'hidden' }}>
                       {c.logoUrl
                         ? <img src={c.logoUrl} alt={c.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                         : c.name.charAt(0).toUpperCase()
@@ -411,7 +411,7 @@ export default function FinanzasPage() {
                     {/* Nombre + plan */}
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3 }}>
-                        <p style={{ margin: 0, fontSize: 15, fontWeight: 700, color: '#1A1028', fontFamily: 'Space Grotesk, sans-serif', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        <p style={{ margin: 0, fontSize: 15, fontWeight: 700, color: '#1A1028', fontFamily: 'Cascadia Code, monospace', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                           {c.name}
                         </p>
                         {sus && (
@@ -452,7 +452,7 @@ export default function FinanzasPage() {
                           whileTap={{ scale: 0.97 }}
                           style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5 }}
                         >
-                          <span style={{ fontSize: 12, color: sus ? '#5A5278' : '#8E87A8', fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
+                          <span style={{ fontSize: 12, color: sus ? '#5A5278' : '#8E87A8', fontFamily: 'Carlito, sans-serif' }}>
                             {sus ? `${fmt.format(monto)}${planSuffix(tipo)}` : 'Sin plan — toca para configurar'}
                           </span>
                           <Pencil size={10} color="#C4BFD8" />
@@ -463,7 +463,7 @@ export default function FinanzasPage() {
                     {/* % recaudado (plan activo) */}
                     {sus && (
                       <div style={{ textAlign: 'center', flexShrink: 0 }}>
-                        <p style={{ margin: 0, fontSize: 24, fontWeight: 800, color: pctColor, fontFamily: 'Space Grotesk, sans-serif', lineHeight: 1 }}>{pct}%</p>
+                        <p style={{ margin: 0, fontSize: 24, fontWeight: 800, color: pctColor, fontFamily: 'Cascadia Code, monospace', lineHeight: 1 }}>{pct}%</p>
                         <p style={{ margin: '2px 0 0', fontSize: 9, color: '#8E87A8', whiteSpace: 'nowrap' }}>{fmt.format(rec)}</p>
                       </div>
                     )}
@@ -471,7 +471,7 @@ export default function FinanzasPage() {
                     {/* Días restantes de prueba */}
                     {!sus && trial && (
                       <div style={{ textAlign: 'center', flexShrink: 0 }}>
-                        <p style={{ margin: 0, fontSize: 24, fontWeight: 800, color: trial.color, fontFamily: 'Space Grotesk, sans-serif', lineHeight: 1 }}>{trial.daysLeft}</p>
+                        <p style={{ margin: 0, fontSize: 24, fontWeight: 800, color: trial.color, fontFamily: 'Cascadia Code, monospace', lineHeight: 1 }}>{trial.daysLeft}</p>
                         <p style={{ margin: '2px 0 0', fontSize: 9, color: '#8E87A8', whiteSpace: 'nowrap' }}>días</p>
                       </div>
                     )}
@@ -515,7 +515,7 @@ export default function FinanzasPage() {
                             animate={{ opacity: 1, y: 0, height: 'auto' }}
                             exit={{ opacity: 0, y: -4, height: 0 }}
                             transition={{ duration: 0.24, ease: EASE }}
-                            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, marginTop: 10, padding: '9px 0', borderRadius: 12, background: 'rgba(37,211,102,0.10)', border: '1.5px solid rgba(37,211,102,0.30)', color: '#1BA147', textDecoration: 'none', fontSize: 12, fontWeight: 700, fontFamily: 'Plus Jakarta Sans, sans-serif', cursor: 'pointer' }}
+                            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, marginTop: 10, padding: '9px 0', borderRadius: 12, background: 'rgba(37,211,102,0.10)', border: '1.5px solid rgba(37,211,102,0.30)', color: '#1BA147', textDecoration: 'none', fontSize: 12, fontWeight: 700, fontFamily: 'Carlito, sans-serif', cursor: 'pointer' }}
                             whileTap={{ scale: 0.97 }}
                           >
                             <MessageCircle size={13} />
@@ -568,7 +568,7 @@ export default function FinanzasPage() {
                                     return (
                                       <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 12, padding: '8px 10px', borderRadius: 10, background: s.bg, border: `1px solid ${s.border}` }}>
                                         <div style={{ width: 7, height: 7, borderRadius: '50%', background: s.color, flexShrink: 0 }} />
-                                        <p style={{ margin: 0, fontSize: 11, fontWeight: 600, color: s.color, fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
+                                        <p style={{ margin: 0, fontSize: 11, fontWeight: 600, color: s.color, fontFamily: 'Carlito, sans-serif' }}>
                                           Estado automático: <strong>{s.label}</strong>
                                         </p>
                                       </div>
@@ -576,11 +576,11 @@ export default function FinanzasPage() {
                                   })()}
                                   <div style={{ display: 'flex', gap: 8 }}>
                                     <motion.button onClick={() => setEditPagoId(null)} whileTap={{ scale: 0.97 }}
-                                      style={{ flex: 1, padding: '10px 0', borderRadius: 12, border: '1.5px solid rgba(120,80,200,0.15)', background: 'transparent', color: '#8E87A8', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
+                                      style={{ flex: 1, padding: '10px 0', borderRadius: 12, border: '1.5px solid rgba(120,80,200,0.15)', background: 'transparent', color: '#8E87A8', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'Carlito, sans-serif' }}>
                                       Cancelar
                                     </motion.button>
                                     <motion.button onClick={saveEditPago} disabled={savingEdit} whileTap={{ scale: 0.97 }}
-                                      style={{ flex: 2, padding: '10px 0', borderRadius: 12, border: 'none', background: '#7C3AED', color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'Plus Jakarta Sans, sans-serif', boxShadow: '0 3px 12px rgba(124,58,237,0.28)' }}>
+                                      style={{ flex: 2, padding: '10px 0', borderRadius: 12, border: 'none', background: '#7C3AED', color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'Carlito, sans-serif', boxShadow: '0 3px 12px rgba(124,58,237,0.28)' }}>
                                       {savingEdit ? 'Guardando...' : 'Guardar cambios'}
                                     </motion.button>
                                   </div>
@@ -606,7 +606,7 @@ export default function FinanzasPage() {
                                   {/* Monto + estado arriba, iconos abajo */}
                                   <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
                                     <div style={{ textAlign: 'right' }}>
-                                      <p style={{ margin: 0, fontSize: 14, fontWeight: 800, color: st.color, fontFamily: 'Space Grotesk, sans-serif', lineHeight: 1 }}>{fmt.format(p.monto)}</p>
+                                      <p style={{ margin: 0, fontSize: 14, fontWeight: 800, color: st.color, fontFamily: 'Cascadia Code, monospace', lineHeight: 1 }}>{fmt.format(p.monto)}</p>
                                       <span style={{ display: 'inline-block', marginTop: 3, fontSize: 9, fontWeight: 700, padding: '2px 7px', borderRadius: 99, background: st.bg, color: st.color }}>
                                         {st.label}
                                       </span>
@@ -648,7 +648,7 @@ export default function FinanzasPage() {
                         style={{ background: '#F7F5FF', border: '1.5px solid rgba(124,58,237,0.15)', borderRadius: 16, padding: 14 }}
                       >
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-                          <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: '#1A1028', fontFamily: 'Space Grotesk, sans-serif' }}>Registrar abono</p>
+                          <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: '#1A1028', fontFamily: 'Cascadia Code, monospace' }}>Registrar abono</p>
                           <span style={{ fontSize: 10, fontWeight: 600, color: '#7C3AED', background: 'rgba(124,58,237,0.10)', padding: '3px 8px', borderRadius: 99 }}>{c.name}</span>
                         </div>
                         <div style={{ marginBottom: 10 }}>
@@ -676,7 +676,7 @@ export default function FinanzasPage() {
                           return (
                             <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 14, padding: '8px 10px', borderRadius: 10, background: s.bg, border: `1px solid ${s.border}` }}>
                               <div style={{ width: 7, height: 7, borderRadius: '50%', background: s.color, flexShrink: 0 }} />
-                              <p style={{ margin: 0, fontSize: 11, fontWeight: 600, color: s.color, fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
+                              <p style={{ margin: 0, fontSize: 11, fontWeight: 600, color: s.color, fontFamily: 'Carlito, sans-serif' }}>
                                 Estado automático: <strong>{s.label}</strong>
                               </p>
                             </div>
@@ -685,7 +685,7 @@ export default function FinanzasPage() {
                         <div style={{ display: 'flex', gap: 8 }}>
                           <motion.button onClick={() => { setAbonoOpen(null); setAbonoForm({ concepto: '', monto: '', fecha: '' }); }}
                             whileTap={{ scale: 0.97 }}
-                            style={{ flex: 1, padding: '11px 0', borderRadius: 12, border: '1.5px solid rgba(120,80,200,0.15)', background: 'transparent', color: '#8E87A8', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
+                            style={{ flex: 1, padding: '11px 0', borderRadius: 12, border: '1.5px solid rgba(120,80,200,0.15)', background: 'transparent', color: '#8E87A8', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'Carlito, sans-serif' }}>
                             Cancelar
                           </motion.button>
                           <motion.button
@@ -693,7 +693,7 @@ export default function FinanzasPage() {
                             disabled={saving || saveSuccess}
                             whileTap={saveSuccess ? {} : { scale: 0.95 }}
                             animate={saveSuccess ? { scale: [1, 1.06, 1], transition: { duration: 0.35 } } : {}}
-                            style={{ flex: 2, padding: '11px 0', borderRadius: 12, border: 'none', cursor: saving || saveSuccess ? 'default' : 'pointer', fontFamily: 'Plus Jakarta Sans, sans-serif', fontWeight: 700, fontSize: 12, color: '#fff', boxShadow: saveSuccess ? '0 4px 14px rgba(6,214,160,0.40)' : '0 4px 14px rgba(124,58,237,0.32)', background: saveSuccess ? '#06D6A0' : 'linear-gradient(135deg,#7C3AED,#4361EE)', transition: 'background 0.3s, box-shadow 0.3s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                            style={{ flex: 2, padding: '11px 0', borderRadius: 12, border: 'none', cursor: saving || saveSuccess ? 'default' : 'pointer', fontFamily: 'Carlito, sans-serif', fontWeight: 700, fontSize: 12, color: '#fff', boxShadow: saveSuccess ? '0 4px 14px rgba(6,214,160,0.40)' : '0 4px 14px rgba(124,58,237,0.32)', background: saveSuccess ? '#06D6A0' : 'linear-gradient(135deg,#7C3AED,#4361EE)', transition: 'background 0.3s, box-shadow 0.3s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
                             <AnimatePresence mode="wait" initial={false}>
                               {saveSuccess ? (
                                 <motion.span key="ok" initial={{ opacity: 0, scale: 0.6 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.6 }} transition={{ duration: 0.2 }}
@@ -718,7 +718,7 @@ export default function FinanzasPage() {
                         onClick={() => setAbonoOpen(c.id)}
                         whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.97 }}
                         transition={{ duration: 0.14, ease: EASE }}
-                        style={{ width: '100%', padding: '12px 0', borderRadius: 14, border: 'none', background: 'linear-gradient(135deg,#7C3AED,#4361EE)', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'Plus Jakarta Sans, sans-serif', boxShadow: '0 4px 16px rgba(124,58,237,0.28)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                        style={{ width: '100%', padding: '12px 0', borderRadius: 14, border: 'none', background: 'linear-gradient(135deg,#7C3AED,#4361EE)', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'Carlito, sans-serif', boxShadow: '0 4px 16px rgba(124,58,237,0.28)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
                         <TrendingUp size={14} /> Registrar abono
                       </motion.button>
                     )}
@@ -754,7 +754,7 @@ export default function FinanzasPage() {
 
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
                 <div>
-                  <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: '#1A1028', fontFamily: 'Space Grotesk, sans-serif' }}>
+                  <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: '#1A1028', fontFamily: 'Cascadia Code, monospace' }}>
                     Comprobante de pago
                   </p>
                   <p style={{ margin: '2px 0 0', fontSize: 11, color: '#8E87A8' }}>{receiptModal.concepto}</p>
@@ -797,7 +797,7 @@ export default function FinanzasPage() {
                 {/* Seleccionar / Reemplazar archivo */}
                 <label style={{ display: 'block', cursor: 'pointer' }}>
                   <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handleReceiptFileChange} />
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px 0', borderRadius: 12, border: '1.5px solid rgba(124,58,237,0.25)', background: 'rgba(124,58,237,0.05)', color: '#7C3AED', fontSize: 12, fontWeight: 700, fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px 0', borderRadius: 12, border: '1.5px solid rgba(124,58,237,0.25)', background: 'rgba(124,58,237,0.05)', color: '#7C3AED', fontSize: 12, fontWeight: 700, fontFamily: 'Carlito, sans-serif' }}>
                     {receiptModal.receiptUrl ? <RotateCcw size={14} /> : <Upload size={14} />}
                     {receiptModal.receiptUrl ? 'Reemplazar comprobante' : 'Seleccionar imagen'}
                   </div>
@@ -808,7 +808,7 @@ export default function FinanzasPage() {
                   <motion.button
                     onClick={handleUploadReceipt} disabled={uploadingReceipt}
                     whileTap={{ scale: 0.97 }}
-                    style={{ width: '100%', padding: '12px 0', borderRadius: 12, border: 'none', background: uploadingReceipt ? '#A855F7' : '#7C3AED', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'Plus Jakarta Sans, sans-serif', boxShadow: '0 3px 14px rgba(124,58,237,0.30)' }}
+                    style={{ width: '100%', padding: '12px 0', borderRadius: 12, border: 'none', background: uploadingReceipt ? '#A855F7' : '#7C3AED', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'Carlito, sans-serif', boxShadow: '0 3px 14px rgba(124,58,237,0.30)' }}
                   >
                     {uploadingReceipt ? 'Subiendo...' : 'Confirmar y guardar'}
                   </motion.button>
@@ -819,7 +819,7 @@ export default function FinanzasPage() {
                   <motion.button
                     onClick={() => window.open(receiptModal.receiptUrl!, '_blank')}
                     whileTap={{ scale: 0.97 }}
-                    style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '11px 0', borderRadius: 12, border: '1.5px solid rgba(6,214,160,0.30)', background: 'rgba(6,214,160,0.07)', color: '#06D6A0', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'Plus Jakarta Sans, sans-serif' }}
+                    style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '11px 0', borderRadius: 12, border: '1.5px solid rgba(6,214,160,0.30)', background: 'rgba(6,214,160,0.07)', color: '#06D6A0', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'Carlito, sans-serif' }}
                   >
                     <Eye size={14} />
                     Ver comprobante completo
@@ -831,7 +831,7 @@ export default function FinanzasPage() {
                   <motion.button
                     onClick={handleDeleteReceipt} disabled={deletingReceipt}
                     whileTap={{ scale: 0.97 }}
-                    style={{ width: '100%', padding: '11px 0', borderRadius: 12, border: '1.5px solid rgba(239,71,111,0.22)', background: 'rgba(239,71,111,0.06)', color: '#EF476F', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'Plus Jakarta Sans, sans-serif' }}
+                    style={{ width: '100%', padding: '11px 0', borderRadius: 12, border: '1.5px solid rgba(239,71,111,0.22)', background: 'rgba(239,71,111,0.06)', color: '#EF476F', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'Carlito, sans-serif' }}
                   >
                     {deletingReceipt ? 'Eliminando...' : 'Eliminar comprobante'}
                   </motion.button>

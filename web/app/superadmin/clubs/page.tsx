@@ -56,7 +56,7 @@ const inp: React.CSSProperties = {
   width: '100%', padding: '10px 12px', borderRadius: 10,
   border: '1.5px solid rgba(120,80,200,0.18)',
   background: '#fff', color: '#1A1028', fontSize: 13, outline: 'none',
-  boxSizing: 'border-box', fontFamily: 'Plus Jakarta Sans, sans-serif',
+  boxSizing: 'border-box', fontFamily: 'Carlito, sans-serif',
 };
 
 // ── Deportes ──────────────────────────────────────────────────────────────────
@@ -92,7 +92,7 @@ function SportSelect({ value, onChange, placeholder = 'Seleccionar deporte' }: {
           width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           padding: '10px 12px', borderRadius: 10, cursor: 'pointer', boxSizing: 'border-box',
           border: open ? '1.5px solid rgba(124,58,237,0.45)' : '1.5px solid rgba(120,80,200,0.18)',
-          background: '#fff', fontFamily: 'Plus Jakarta Sans, sans-serif',
+          background: '#fff', fontFamily: 'Carlito, sans-serif',
           boxShadow: open ? '0 0 0 3px rgba(124,58,237,0.08)' : 'none',
           transition: 'border-color 0.15s, box-shadow 0.15s',
         }}
@@ -137,7 +137,7 @@ function SportSelect({ value, onChange, placeholder = 'Seleccionar deporte' }: {
                 padding: '10px 14px', border: 'none', cursor: 'pointer',
                 background: !value ? 'rgba(124,58,237,0.07)' : 'transparent',
                 borderBottom: '1px solid rgba(120,80,200,0.07)',
-                fontFamily: 'Plus Jakarta Sans, sans-serif',
+                fontFamily: 'Carlito, sans-serif',
               }}
             >
               <span style={{ fontSize: 12, color: !value ? '#7C3AED' : '#8E87A8', fontWeight: !value ? 700 : 400 }}>
@@ -162,7 +162,7 @@ function SportSelect({ value, onChange, placeholder = 'Seleccionar deporte' }: {
                     padding: '10px 14px', border: 'none', cursor: 'pointer',
                     background: selected ? 'rgba(124,58,237,0.07)' : 'transparent',
                     borderTop: i > 0 ? '1px solid rgba(120,80,200,0.06)' : 'none',
-                    fontFamily: 'Plus Jakarta Sans, sans-serif',
+                    fontFamily: 'Carlito, sans-serif',
                   }}
                 >
                   <span style={{ fontSize: 12, color: selected ? '#7C3AED' : '#1A1028', fontWeight: selected ? 700 : 500 }}>
@@ -198,7 +198,7 @@ function RoleToggle({ value, onChange }: { value: 'ADMIN' | 'COACH'; onChange: (
               transition: 'background 0.15s, box-shadow 0.15s',
             }}
           >
-            <p style={{ margin: 0, fontSize: 10, fontWeight: 700, color: active ? ROLE_COLOR[r] : '#8E87A8', transition: 'color 0.15s', fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
+            <p style={{ margin: 0, fontSize: 10, fontWeight: 700, color: active ? ROLE_COLOR[r] : '#8E87A8', transition: 'color 0.15s', fontFamily: 'Carlito, sans-serif' }}>
               {ROLE_LABEL[r]}
             </p>
           </motion.button>
@@ -393,7 +393,7 @@ export default function ClubsPage() {
               border: showNew ? '1.5px solid rgba(239,71,111,0.25)' : 'none',
               borderRadius: 12, padding: '7px 16px', cursor: 'pointer',
               color: showNew ? '#EF476F' : '#fff',
-              fontSize: 12, fontWeight: 700, fontFamily: 'Plus Jakarta Sans, sans-serif',
+              fontSize: 12, fontWeight: 700, fontFamily: 'Carlito, sans-serif',
               transition: 'background 0.18s, color 0.18s',
             }}
           >
@@ -414,7 +414,7 @@ export default function ClubsPage() {
               exit="exit"
               style={{ background: '#fff', border: '1.5px solid rgba(124,58,237,0.25)', borderRadius: 20, padding: '16px 14px', marginBottom: 12 }}
             >
-              <p style={{ margin: '0 0 14px', fontSize: 13, fontWeight: 700, color: '#1A1028', fontFamily: 'Space Grotesk, sans-serif' }}>
+              <p style={{ margin: '0 0 14px', fontSize: 13, fontWeight: 700, color: '#1A1028', fontFamily: 'Cascadia Code, monospace' }}>
                 Nuevo club
               </p>
               {[
@@ -449,7 +449,7 @@ export default function ClubsPage() {
                   onClick={() => { setShowNew(false); setNewForm({ clubName: '', adminEmail: '', adminName: '', deporte: '' }); }}
                   whileTap={{ scale: 0.97 }}
                   transition={{ duration: 0.12 }}
-                  style={{ flex: 1, padding: '11px 0', borderRadius: 12, border: '1.5px solid rgba(120,80,200,0.15)', background: 'transparent', color: '#8E87A8', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'Plus Jakarta Sans, sans-serif' }}
+                  style={{ flex: 1, padding: '11px 0', borderRadius: 12, border: '1.5px solid rgba(120,80,200,0.15)', background: 'transparent', color: '#8E87A8', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'Carlito, sans-serif' }}
                 >
                   Cancelar
                 </motion.button>
@@ -458,7 +458,7 @@ export default function ClubsPage() {
                   disabled={saving || !newForm.clubName || !newForm.adminEmail || !newForm.adminName}
                   whileTap={{ scale: 0.97 }}
                   transition={{ duration: 0.12 }}
-                  style={{ flex: 2, padding: '11px 0', borderRadius: 12, border: 'none', background: saving ? '#A855F7' : '#7C3AED', color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'Plus Jakarta Sans, sans-serif', boxShadow: '0 3px 14px rgba(124,58,237,0.28)', opacity: (!newForm.clubName || !newForm.adminEmail || !newForm.adminName) ? 0.6 : 1 }}
+                  style={{ flex: 2, padding: '11px 0', borderRadius: 12, border: 'none', background: saving ? '#A855F7' : '#7C3AED', color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'Carlito, sans-serif', boxShadow: '0 3px 14px rgba(124,58,237,0.28)', opacity: (!newForm.clubName || !newForm.adminEmail || !newForm.adminName) ? 0.6 : 1 }}
                 >
                   {saving ? 'Creando...' : 'Crear club'}
                 </motion.button>
@@ -505,7 +505,7 @@ export default function ClubsPage() {
                     transition={{ duration: 0.22, ease: EASE }}
                     style={{ marginBottom: 12 }}
                   >
-                    <p style={{ margin: '0 0 12px', fontSize: 12, fontWeight: 700, color: '#7C3AED', fontFamily: 'Space Grotesk, sans-serif' }}>
+                    <p style={{ margin: '0 0 12px', fontSize: 12, fontWeight: 700, color: '#7C3AED', fontFamily: 'Cascadia Code, monospace' }}>
                       Editar club
                     </p>
                     {[
@@ -563,14 +563,14 @@ export default function ClubsPage() {
                           <motion.button key={d}
                             onClick={() => setEditForm(f => ({ ...f, trialDays: String(d) }))}
                             whileTap={{ scale: 0.95 }} transition={{ duration: 0.1 }}
-                            style={{ padding: '4px 10px', borderRadius: 99, fontSize: 10, fontWeight: 700, cursor: 'pointer', border: editForm.trialDays === String(d) ? 'none' : '1px solid rgba(255,183,3,0.30)', background: editForm.trialDays === String(d) ? '#FFB703' : 'transparent', color: editForm.trialDays === String(d) ? '#fff' : '#B88A00', fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
+                            style={{ padding: '4px 10px', borderRadius: 99, fontSize: 10, fontWeight: 700, cursor: 'pointer', border: editForm.trialDays === String(d) ? 'none' : '1px solid rgba(255,183,3,0.30)', background: editForm.trialDays === String(d) ? '#FFB703' : 'transparent', color: editForm.trialDays === String(d) ? '#fff' : '#B88A00', fontFamily: 'Carlito, sans-serif' }}>
                             +{d} días
                           </motion.button>
                         ))}
                         <motion.button
                           onClick={() => setEditForm(f => ({ ...f, trialDays: '0' }))}
                           whileTap={{ scale: 0.95 }} transition={{ duration: 0.1 }}
-                          style={{ padding: '4px 10px', borderRadius: 99, fontSize: 10, fontWeight: 700, cursor: 'pointer', border: editForm.trialDays === '0' ? 'none' : '1px solid rgba(239,71,111,0.25)', background: editForm.trialDays === '0' ? '#EF476F' : 'transparent', color: editForm.trialDays === '0' ? '#fff' : '#EF476F', fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
+                          style={{ padding: '4px 10px', borderRadius: 99, fontSize: 10, fontWeight: 700, cursor: 'pointer', border: editForm.trialDays === '0' ? 'none' : '1px solid rgba(239,71,111,0.25)', background: editForm.trialDays === '0' ? '#EF476F' : 'transparent', color: editForm.trialDays === '0' ? '#fff' : '#EF476F', fontFamily: 'Carlito, sans-serif' }}>
                           Limpiar trial
                         </motion.button>
                       </div>
@@ -587,13 +587,13 @@ export default function ClubsPage() {
                     <div style={{ display: 'flex', gap: 8 }}>
                       <motion.button onClick={() => setEditId(null)}
                         whileTap={{ scale: 0.97 }} transition={{ duration: 0.12 }}
-                        style={{ flex: 1, padding: '10px 0', borderRadius: 12, border: '1.5px solid rgba(120,80,200,0.15)', background: 'transparent', color: '#8E87A8', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
+                        style={{ flex: 1, padding: '10px 0', borderRadius: 12, border: '1.5px solid rgba(120,80,200,0.15)', background: 'transparent', color: '#8E87A8', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'Carlito, sans-serif' }}>
                         Cancelar
                       </motion.button>
                       <motion.button onClick={() => handleEdit(club.id)}
                         disabled={!editForm.clubName.trim()}
                         whileTap={{ scale: 0.97 }} transition={{ duration: 0.12 }}
-                        style={{ flex: 2, padding: '10px 0', borderRadius: 12, border: 'none', background: '#7C3AED', color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'Plus Jakarta Sans, sans-serif', boxShadow: '0 3px 14px rgba(124,58,237,0.28)', opacity: !editForm.clubName.trim() ? 0.6 : 1 }}>
+                        style={{ flex: 2, padding: '10px 0', borderRadius: 12, border: 'none', background: '#7C3AED', color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'Carlito, sans-serif', boxShadow: '0 3px 14px rgba(124,58,237,0.28)', opacity: !editForm.clubName.trim() ? 0.6 : 1 }}>
                         Guardar cambios
                       </motion.button>
                     </div>
@@ -602,7 +602,7 @@ export default function ClubsPage() {
                   <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 10 }}>
                     {/* Identidad */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 1, minWidth: 0 }}>
-                      <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'rgba(124,58,237,0.10)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 800, color: '#7C3AED', fontFamily: 'Space Grotesk, sans-serif', flexShrink: 0, overflow: 'hidden' }}>
+                      <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'rgba(124,58,237,0.10)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 800, color: '#7C3AED', fontFamily: 'Cascadia Code, monospace', flexShrink: 0, overflow: 'hidden' }}>
                         {club.logoUrl
                           ? <img src={club.logoUrl} alt={club.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                           : club.name.charAt(0).toUpperCase()
@@ -695,14 +695,14 @@ export default function ClubsPage() {
                   <motion.button
                     onClick={() => openMembers(club.id)}
                     whileTap={{ scale: 0.96 }} transition={{ duration: 0.12, ease: EASE }}
-                    style={{ flex: 1, padding: '8px 0', borderRadius: 10, border: `1px solid ${membersClubId === club.id ? 'rgba(124,58,237,0.40)' : 'rgba(124,58,237,0.18)'}`, background: membersClubId === club.id ? 'rgba(124,58,237,0.10)' : 'transparent', color: '#7C3AED', fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'Plus Jakarta Sans, sans-serif', transition: 'all 0.15s' }}
+                    style={{ flex: 1, padding: '8px 0', borderRadius: 10, border: `1px solid ${membersClubId === club.id ? 'rgba(124,58,237,0.40)' : 'rgba(124,58,237,0.18)'}`, background: membersClubId === club.id ? 'rgba(124,58,237,0.10)' : 'transparent', color: '#7C3AED', fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'Carlito, sans-serif', transition: 'all 0.15s' }}
                   >
                     {membersClubId === club.id ? 'Cerrar' : 'Miembros'}
                   </motion.button>
                   <motion.button
                     onClick={() => handleToggle(club.id)}
                     whileTap={{ scale: 0.96 }} transition={{ duration: 0.12, ease: EASE }}
-                    style={{ flex: 1, padding: '8px 0', borderRadius: 10, border: `1px solid ${club.active ? 'rgba(255,183,3,0.28)' : 'rgba(6,214,160,0.28)'}`, background: club.active ? 'rgba(255,183,3,0.07)' : 'rgba(6,214,160,0.07)', color: club.active ? '#FFB703' : '#06D6A0', fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'Plus Jakarta Sans, sans-serif', transition: 'all 0.15s' }}
+                    style={{ flex: 1, padding: '8px 0', borderRadius: 10, border: `1px solid ${club.active ? 'rgba(255,183,3,0.28)' : 'rgba(6,214,160,0.28)'}`, background: club.active ? 'rgba(255,183,3,0.07)' : 'rgba(6,214,160,0.07)', color: club.active ? '#FFB703' : '#06D6A0', fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'Carlito, sans-serif', transition: 'all 0.15s' }}
                   >
                     {club.active ? 'Desactivar' : 'Activar'}
                   </motion.button>
@@ -742,7 +742,7 @@ export default function ClubsPage() {
                         <motion.button
                           onClick={() => { setShowAddMember(v => !v); setMemberError(null); }}
                           whileTap={{ scale: 0.94 }} transition={{ duration: 0.12 }}
-                          style={{ padding: '4px 10px', borderRadius: 8, background: showAddMember ? 'rgba(239,71,111,0.10)' : '#7C3AED', border: showAddMember ? '1px solid rgba(239,71,111,0.25)' : 'none', color: showAddMember ? '#EF476F' : '#fff', fontSize: 10, fontWeight: 700, cursor: 'pointer', fontFamily: 'Plus Jakarta Sans, sans-serif', transition: 'all 0.15s' }}
+                          style={{ padding: '4px 10px', borderRadius: 8, background: showAddMember ? 'rgba(239,71,111,0.10)' : '#7C3AED', border: showAddMember ? '1px solid rgba(239,71,111,0.25)' : 'none', color: showAddMember ? '#EF476F' : '#fff', fontSize: 10, fontWeight: 700, cursor: 'pointer', fontFamily: 'Carlito, sans-serif', transition: 'all 0.15s' }}
                         >
                           {showAddMember ? '✕ Cerrar' : '+ Agregar'}
                         </motion.button>
@@ -780,7 +780,7 @@ export default function ClubsPage() {
                               <motion.button
                                 onClick={() => { setShowAddMember(false); setMemberError(null); }}
                                 whileTap={{ scale: 0.97 }} transition={{ duration: 0.12 }}
-                                style={{ flex: 1, padding: '9px 0', borderRadius: 10, border: '1.5px solid rgba(120,80,200,0.15)', background: 'transparent', color: '#8E87A8', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'Plus Jakarta Sans, sans-serif' }}
+                                style={{ flex: 1, padding: '9px 0', borderRadius: 10, border: '1.5px solid rgba(120,80,200,0.15)', background: 'transparent', color: '#8E87A8', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'Carlito, sans-serif' }}
                               >
                                 Cancelar
                               </motion.button>
@@ -788,7 +788,7 @@ export default function ClubsPage() {
                                 onClick={() => handleAddMember(club.id)}
                                 disabled={memberSaving || !memberForm.fullName || !memberForm.email}
                                 whileTap={{ scale: 0.97 }} transition={{ duration: 0.12 }}
-                                style={{ flex: 2, padding: '9px 0', borderRadius: 10, border: 'none', background: memberSaving ? '#A855F7' : '#7C3AED', color: '#fff', fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'Plus Jakarta Sans, sans-serif', boxShadow: '0 2px 10px rgba(124,58,237,0.25)' }}
+                                style={{ flex: 2, padding: '9px 0', borderRadius: 10, border: 'none', background: memberSaving ? '#A855F7' : '#7C3AED', color: '#fff', fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'Carlito, sans-serif', boxShadow: '0 2px 10px rgba(124,58,237,0.25)' }}
                               >
                                 {memberSaving ? 'Guardando...' : 'Agregar y dar acceso'}
                               </motion.button>

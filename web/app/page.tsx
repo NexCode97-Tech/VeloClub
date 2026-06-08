@@ -176,7 +176,7 @@ export default function HomePage() {
 
         <h1
           className="text-4xl sm:text-5xl font-extrabold text-[#1A1028] leading-[1.15] tracking-tight mb-5"
-          style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif' }}
+          style={{ fontFamily: 'Cascadia Code, monospace' }}
         >
           Gestiona tu club{' '}
           <span
@@ -206,7 +206,7 @@ export default function HomePage() {
         <p className="text-xs font-bold uppercase tracking-widest text-[#8E87A8] text-center mb-3">Funcionalidades</p>
         <h2
           className="text-2xl sm:text-3xl font-extrabold text-[#1A1028] text-center mb-10 tracking-tight"
-          style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif' }}
+          style={{ fontFamily: 'Cascadia Code, monospace' }}
         >
           Todo lo que necesitas
         </h2>
@@ -222,7 +222,7 @@ export default function HomePage() {
               >
                 <Icon className="w-5 h-5" style={{ color }} />
               </div>
-              <p className="font-bold text-[#1A1028] text-sm mb-1" style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif' }}>
+              <p className="font-bold text-[#1A1028] text-sm mb-1" style={{ fontFamily: 'Cascadia Code, monospace' }}>
                 {label}
               </p>
               <p className="text-xs text-[#8E87A8] leading-relaxed">{desc}</p>
@@ -237,7 +237,7 @@ export default function HomePage() {
           <p className="text-xs font-bold uppercase tracking-widest text-[#8E87A8] mb-3">¿Por qué VeloClub?</p>
           <h2
             className="text-2xl font-extrabold text-[#1A1028] mb-8 tracking-tight"
-            style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif' }}
+            style={{ fontFamily: 'Cascadia Code, monospace' }}
           >
             Diseñado para clubes reales
           </h2>
@@ -265,7 +265,7 @@ export default function HomePage() {
           />
           <h2
             className="text-2xl sm:text-3xl font-extrabold mb-3 tracking-tight relative"
-            style={{ fontFamily: 'var(--font-space-grotesk), Space Grotesk, sans-serif' }}
+            style={{ fontFamily: 'Cascadia Code, monospace' }}
           >
             ¿Listo para empezar?
           </h2>

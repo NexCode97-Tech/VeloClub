@@ -74,7 +74,7 @@ export default function SedesPage() {
       {/* Header */}
       <div className="px-5 pt-5 pb-4 bg-card border-b border-border flex items-center justify-between">
         <div>
-          <h1 className="text-[22px] font-extrabold text-foreground uppercase" style={{ fontFamily: 'Space Grotesk, sans-serif', lineHeight: 1.1 }}>
+          <h1 className="text-[22px] font-extrabold text-foreground uppercase" style={{ fontFamily: 'Cascadia Code, monospace', lineHeight: 1.1 }}>
             Sedes
           </h1>
           <p className="text-xs text-muted-foreground mt-0.5">Lugares de entrenamiento del club</p>
@@ -133,7 +133,7 @@ export default function SedesPage() {
                     <MapPin className="w-5 h-5" style={{ color: '#06D6A0' }} />
                   </div>
                   <div>
-                    <p className="font-bold text-foreground" style={{ fontFamily: 'var(--font-space-grotesk)' }}>{loc.name}</p>
+                    <p className="font-bold text-foreground" style={{ fontFamily: ''Cascadia Code', monospace' }}>{loc.name}</p>
                     {loc.address && <p className="text-xs text-muted-foreground mt-0.5">{loc.address}</p>}
                   </div>
                 </div>

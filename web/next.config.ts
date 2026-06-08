@@ -17,6 +17,8 @@ const CSP = [
   "frame-src https://clerk.veloclubtech.com https://*.clerk.accounts.dev",
   // No permitir embeber la app en iframes externos
   "frame-ancestors 'none'",
+  // Workers: Clerk usa blob: para sus web workers
+  "worker-src blob:",
   // No ejecutar plugins (Flash, etc.)
   "object-src 'none'",
 ].join('; ');

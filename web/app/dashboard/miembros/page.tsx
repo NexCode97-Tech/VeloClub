@@ -336,14 +336,14 @@ export default function MiembrosPage() {
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.28, ease: EASE_OUT }}
-          className="px-8 pt-8 pb-0"
+          className="px-5 py-3 pb-0"
         >
           <div className="flex items-start justify-between mb-6">
             <div>
-              <h1 className="text-[28px] font-extrabold tracking-tight" style={{ color: '#1A1028', fontFamily: 'inherit', lineHeight: 1.1 }}>
+              <h1 className="text-[22px] font-extrabold" style={{ color: '#1A1028', fontFamily: 'inherit', lineHeight: 1.1 }}>
                 Miembros
               </h1>
-              <p className="text-[13px] mt-1" style={{ color: '#8E87A8' }}>
+              <p className="text-xs mt-0.5" style={{ color: '#8E87A8' }}>
                 Gestiona deportistas, entrenadores y administradores del club
               </p>
             </div>

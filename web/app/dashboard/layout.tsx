@@ -284,14 +284,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               className="object-contain shrink-0"
               style={{ borderRadius: 7 }}
             />
-            {!collapsed && (
-              <span
-                className="text-[11.5px] font-bold tracking-wide truncate"
-                style={{ color: '#1a1028', letterSpacing: '0.3px' }}
-              >
-                VELO CLUB
-              </span>
-            )}
           </div>
           {/* Toggle — pill con color lila suave */}
           {!collapsed && (

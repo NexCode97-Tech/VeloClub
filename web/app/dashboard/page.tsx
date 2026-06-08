@@ -15,6 +15,7 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import { Slideshow } from '@/components/ui/slideshow';
+import { MemberAvatar } from '@/components/ui/member-avatar';
 
 // ── Interfaces ────────────────────────────────────────────────────────────────
 
@@ -142,21 +143,23 @@ const cardVariant = {
   show:   { opacity: 1, y: 0, transition: { type: 'spring' as const, stiffness: 320, damping: 28 } },
 };
 
-// ── Avatar inline ─────────────────────────────────────────────────────────────
+// ── Gradientes por rol (mismo que Miembros) ───────────────────────────────────
+const ROLE_GRADIENT: Record<string, string> = {
+  SUPERADMIN: 'linear-gradient(135deg,#EF476F,#C1121F)',
+  ADMIN:      'linear-gradient(135deg,#FFB703,#FB8500)',
+  COACH:      'linear-gradient(135deg,#06D6A0,#0CB68D)',
+  STUDENT:    'linear-gradient(135deg,#7C3AED,#A855F7)',
+};
 
+// ── Avatar wrapper que usa MemberAvatar con gradiente por rol ─────────────────
 function Avatar({ src, name, size = 36, role }: { src?: string | null; name: string; size?: number; role?: string }) {
-  const rc = role ? (roleColors[role] ?? roleColors.ADMIN) : { text: '#7C3AED', bg: 'rgba(124,58,237,0.12)' };
-  if (src) {
-    // eslint-disable-next-line @next/next/no-img-element
-    return <img src={src} alt={name} style={{ width: size, height: size, borderRadius: size / 2, objectFit: 'cover' }} />;
-  }
   return (
-    <div style={{
-      width: size, height: size, borderRadius: size / 2,
-      background: rc.bg, display: 'flex', alignItems: 'center', justifyContent: 'center',
-    }}>
-      <span style={{ fontSize: size * 0.35, fontWeight: 800, color: rc.text }}>{getInitials(name)}</span>
-    </div>
+    <MemberAvatar
+      name={name}
+      photoUrl={src}
+      gradient={ROLE_GRADIENT[role ?? ''] ?? ROLE_GRADIENT.STUDENT}
+      size={size}
+    />
   );
 }
 

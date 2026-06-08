@@ -772,7 +772,7 @@ export default function DashboardPage() {
         {/* ── Tabs Público / Privado ──────────────────────────────────────── */}
         <motion.div variants={cardVariant}>
           <div
-            className="flex rounded-2xl p-1 gap-1"
+            className="relative flex rounded-2xl p-1 gap-1"
             style={{ background: 'rgba(124,58,237,0.06)', border: '1px solid rgba(124,58,237,0.10)' }}
           >
             {([
@@ -782,19 +782,22 @@ export default function DashboardPage() {
               const active = feedScope === tab.key;
               const Icon = tab.icon;
               return (
-                <motion.button
+                <button
                   key={tab.key}
                   onClick={() => setFeedScope(tab.key)}
-                  whileTap={{ scale: 0.97 }}
-                  transition={{ type: 'spring' as const, stiffness: 500, damping: 20 }}
-                  className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl transition-all"
-                  style={active
-                    ? { background: 'linear-gradient(135deg, #7C3AED, #4361EE)', boxShadow: '0 4px 14px rgba(124,58,237,0.35)' }
-                    : {}
-                  }
+                  className="relative flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl z-10"
                 >
-                  <Icon className="w-3.5 h-3.5" style={{ color: active ? '#fff' : '#8E87A8' }} />
-                  <div className="text-left">
+                  {/* Pill deslizante */}
+                  {active && (
+                    <motion.div
+                      layoutId="feed-tab-pill"
+                      className="absolute inset-0 rounded-xl"
+                      style={{ background: 'linear-gradient(135deg, #7C3AED, #4361EE)', boxShadow: '0 4px 14px rgba(124,58,237,0.35)' }}
+                      transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+                    />
+                  )}
+                  <Icon className="relative w-3.5 h-3.5 z-10" style={{ color: active ? '#fff' : '#8E87A8' }} />
+                  <div className="relative text-left z-10">
                     <p className="text-[12px] font-bold leading-none" style={{ color: active ? '#fff' : '#8E87A8' }}>
                       {tab.label}
                     </p>
@@ -802,7 +805,7 @@ export default function DashboardPage() {
                       {tab.desc}
                     </p>
                   </div>
-                </motion.button>
+                </button>
               );
             })}
           </div>

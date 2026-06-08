@@ -765,7 +765,7 @@ export default function DashboardPage() {
         <motion.div variants={cardVariant}>
           <Slideshow
             slides={ADS.map(ad => ({ img: ad.image, label: ad.label, title: ad.title, description: ad.description, url: ad.url }))}
-            className="min-h-[240px] md:min-h-[190px]"
+            className="min-h-[300px] md:min-h-[190px]"
           />
         </motion.div>
 
@@ -773,7 +773,7 @@ export default function DashboardPage() {
         <motion.div variants={cardVariant}>
           <div
             className="relative flex rounded-2xl p-1 gap-1"
-            style={{ background: 'rgba(124,58,237,0.06)', border: '1px solid rgba(124,58,237,0.10)' }}
+            style={{ background: '#FFFFFF', boxShadow: '0 1px 4px rgba(0,0,0,0.08), inset 0 0 0 1px rgba(0,0,0,0.06)' }}
           >
             {([
               { key: 'public'  as FeedScope, label: 'Público',  icon: Globe, desc: 'Todos los clubes' },

@@ -76,12 +76,18 @@ app.get('/health', (_req, res) => {
   res.json({ status: 'ok', service: 'veloclub-api' });
 });
 
-// Rate limiting estricto para /me: 20 req / 15min por IP
+// Rate limiting para /me: por usuario (header clerk), no por IP
+// 200 req / 15min — suficiente para uso intensivo sin bloquear usuarios legítimos
 const meLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 20,
+  max: 200,
   standardHeaders: true,
   legacyHeaders: false,
+  keyGenerator: (req) => {
+    // Usar el header de Clerk si está disponible, si no caer a IP
+    const clerkUserId = req.headers['x-clerk-user-id'] as string | undefined;
+    return clerkUserId ?? req.ip ?? 'unknown';
+  },
   message: { error: 'Demasiadas solicitudes, intenta más tarde' },
 });
 

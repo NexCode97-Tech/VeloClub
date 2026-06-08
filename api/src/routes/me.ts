@@ -74,15 +74,35 @@ if (superadminEmails.includes(email.toLowerCase())) {
       });
     }
 
-    // Sincronizar foto de Clerk/Google al Member vinculado (si tiene clerkId y foto)
+    // Sincronizar foto de Clerk/Google al Member, Posts y Comentarios si cambió
+    if (picture && user.picture === picture) {
+      // La foto es la misma que ya tenemos — verificar si posts/comments están desactualizados
+    }
     if (picture) {
       const linkedMember = await prisma.member.findFirst({ where: { clerkId } });
-      if (linkedMember && linkedMember.pictureUrl !== picture) {
+      const pictureChanged = linkedMember ? linkedMember.pictureUrl !== picture : false;
+
+      // Actualizar Member
+      if (linkedMember && pictureChanged) {
         await prisma.member.update({
           where: { id: linkedMember.id },
           data: { pictureUrl: picture },
         });
       }
+
+      // Sincronizar authorAvatar en Posts y Comentarios del usuario
+      // Se hace siempre (no solo cuando cambia) para cubrir posts creados antes de la sincronización
+      const userName = user.name;
+      await Promise.all([
+        prisma.post.updateMany({
+          where: { authorName: userName, clubId: user.clubId ?? undefined, authorAvatar: { not: picture } },
+          data: { authorAvatar: picture },
+        }),
+        prisma.postComment.updateMany({
+          where: { authorName: userName, authorAvatar: { not: picture } },
+          data: { authorAvatar: picture },
+        }),
+      ]);
     }
 
     // Check club active

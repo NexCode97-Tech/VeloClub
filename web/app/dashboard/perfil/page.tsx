@@ -19,7 +19,7 @@ interface MeResponse {
     name: string;
     role: string;
     club?: { name: string; logoUrl?: string; city?: string; department?: string };
-    pictureUrl?: string | null;
+    picture?: string | null;
     coverUrl?: string | null;
     createdAt?: string;
     category?: string;
@@ -428,7 +428,7 @@ export default function PerfilPage() {
           <div className="flex items-end justify-between" style={{ marginTop: -40 }}>
             <div className="relative z-10 rounded-full border-4 border-white overflow-hidden"
               style={{ boxShadow: '0 4px 16px rgba(124,58,237,0.20)' }}>
-              <Avatar src={user?.pictureUrl} name={user?.name ?? 'Usuario'} size={80} role={role} />
+              <Avatar src={user?.picture} name={user?.name ?? 'Usuario'} size={80} role={role} />
             </div>
           </div>
 

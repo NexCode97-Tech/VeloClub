@@ -311,15 +311,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <div className="flex items-center gap-1 shrink-0">
             <Link
               href="/dashboard/perfil"
-              className="w-9 h-9 flex items-center justify-center rounded-xl transition-colors hover:bg-secondary"
-              style={{ color: '#8E87A8' }}
+              className="w-9 h-9 flex items-center justify-center rounded-full transition-colors"
+              style={{ color: '#8E87A8', background: 'rgba(30,20,50,0.07)', boxShadow: '0 2px 8px rgba(15,10,30,0.18)' }}
             >
               <UserCircle size={22} strokeWidth={1.8} />
             </Link>
             <Link
               href="/dashboard/ajustes"
-              className="w-9 h-9 flex items-center justify-center rounded-xl transition-colors hover:bg-secondary"
-              style={{ color: '#8E87A8' }}
+              className="w-9 h-9 flex items-center justify-center rounded-full transition-colors"
+              style={{ color: '#8E87A8', background: 'rgba(30,20,50,0.07)', boxShadow: '0 2px 8px rgba(15,10,30,0.18)' }}
             >
               <Settings size={20} strokeWidth={1.8} />
             </Link>

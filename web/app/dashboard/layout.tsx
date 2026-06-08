@@ -25,6 +25,26 @@ import {
   ChevronLeft,
   ChevronRight,
 } from 'lucide-react';
+
+// ── Colores por rol (sidebar footer) ─────────────────────────────────────────
+const SIDEBAR_ROLE_LABEL: Record<string, string> = {
+  SUPERADMIN: 'Superadmin',
+  ADMIN:      'Admin',
+  COACH:      'Coach',
+  STUDENT:    'Deportista',
+};
+const SIDEBAR_ROLE_COLOR: Record<string, string> = {
+  SUPERADMIN: '#EF476F',
+  ADMIN:      '#FFB703',
+  COACH:      '#06D6A0',
+  STUDENT:    '#7C3AED',
+};
+const SIDEBAR_ROLE_GRADIENT: Record<string, string> = {
+  SUPERADMIN: 'linear-gradient(135deg,#EF476F,#C1121F)',
+  ADMIN:      'linear-gradient(135deg,#FFB703,#FB8500)',
+  COACH:      'linear-gradient(135deg,#06D6A0,#0CB68D)',
+  STUDENT:    'linear-gradient(135deg,#7C3AED,#A855F7)',
+};
 import { cn } from '@/lib/utils';
 
 // "Más" va en el índice 2 (centro del bottom bar) para ADMIN y COACH
@@ -120,6 +140,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [clubLogoUrl, setClubLogoUrl] = useState<string | null>(null);
   const [clubName, setClubName] = useState<string | null>(null);
   const [userName, setUserName] = useState<string | null>(null);
+  const [userPicture, setUserPicture] = useState<string | null>(null);
   const [collapsed, setCollapsed] = useState(() => {
     if (typeof window !== 'undefined') {
       return localStorage.getItem('sidebar-collapsed') === 'true';
@@ -141,11 +162,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         const token = await session?.getToken({ skipCache: true });
         if (stale) return;
 
-        let res: { status: string; user?: { role: string; name?: string; club?: { name?: string; logoUrl?: string } } } | null = null;
+        let res: { status: string; user?: { role: string; name?: string; picture?: string | null; club?: { name?: string; logoUrl?: string } } } | null = null;
         let attempts = 0;
         while (attempts < 3) {
           try {
-            res = await apiFetch<{ status: string; user?: { role: string; name?: string; club?: { name?: string; logoUrl?: string } } }>('/me', { token });
+            res = await apiFetch<{ status: string; user?: { role: string; name?: string; picture?: string | null; club?: { name?: string; logoUrl?: string } } }>('/me', { token });
             break;
           } catch (err) {
             const { ApiError } = await import('@/lib/api-client');
@@ -168,6 +189,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         setClubLogoUrl(res.user?.club?.logoUrl ?? null);
         setClubName(res.user?.club?.name ?? null);
         setUserName(res.user?.name ?? null);
+        setUserPicture(res.user?.picture ?? null);
 
         if (userRole === 'STUDENT') {
           const STUDENT_ALLOWED = ['/dashboard', '/dashboard/logros', '/dashboard/calendario', '/dashboard/pagos', '/dashboard/mas', '/dashboard/perfil', '/dashboard/ajustes'];
@@ -242,17 +264,69 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         style={{ background: '#fff', borderRight: '1px solid rgba(0,0,0,0.07)' }}
       >
         {/* Logo + toggle */}
-        <div className="flex items-center justify-between px-3 py-4 shrink-0" style={{ borderBottom: '1px solid rgba(0,0,0,0.06)', minHeight: 58 }}>
+        <div
+          className="flex items-center shrink-0"
+          style={{
+            borderBottom: '1px solid rgba(0,0,0,0.06)',
+            minHeight: 58,
+            padding: collapsed ? '0 12px' : '0 14px',
+            justifyContent: collapsed ? 'center' : 'space-between',
+            gap: collapsed ? 0 : 10,
+          }}
+        >
+          {/* Ícono del logo — siempre visible */}
+          <div className="flex items-center gap-2.5 min-w-0 shrink-0">
+            <Image
+              src="/logo.png"
+              alt="VeloClub"
+              width={28}
+              height={28}
+              className="object-contain shrink-0"
+              style={{ borderRadius: 7 }}
+            />
+            {!collapsed && (
+              <span
+                className="text-[11.5px] font-bold tracking-wide truncate"
+                style={{ color: '#1a1028', letterSpacing: '0.3px' }}
+              >
+                VELO CLUB
+              </span>
+            )}
+          </div>
+          {/* Toggle — pill con color lila suave */}
           {!collapsed && (
-            <Image src="/logo-full.jpg" alt="VeloClub" width={100} height={30} className="object-contain" />
+            <button
+              onClick={toggleSidebar}
+              className="flex items-center justify-center shrink-0 transition-colors"
+              style={{
+                width: 26, height: 26,
+                borderRadius: 7,
+                background: 'rgba(124,58,237,0.10)',
+                border: 'none',
+                color: '#7C3AED',
+                cursor: 'pointer',
+              }}
+            >
+              <ChevronLeft className="w-3.5 h-3.5" />
+            </button>
           )}
-          <button
-            onClick={toggleSidebar}
-            className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors hover:bg-secondary shrink-0"
-            style={{ color: '#8E87A8', marginLeft: collapsed ? 'auto' : undefined, marginRight: collapsed ? 'auto' : undefined }}
-          >
-            {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
-          </button>
+          {collapsed && (
+            <button
+              onClick={toggleSidebar}
+              className="flex items-center justify-center shrink-0 transition-colors"
+              style={{
+                width: 26, height: 26,
+                borderRadius: 7,
+                background: 'rgba(124,58,237,0.10)',
+                border: 'none',
+                color: '#7C3AED',
+                cursor: 'pointer',
+                marginTop: 6,
+              }}
+            >
+              <ChevronRight className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
 
         {/* Nav items */}
@@ -295,19 +369,68 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </div>
         </nav>
 
-        {/* User */}
+        {/* Footer — usuario */}
         <div
-          className="flex items-center shrink-0 py-3"
+          className="flex items-center shrink-0"
           style={{
             borderTop: '1px solid rgba(0,0,0,0.06)',
-            gap: collapsed ? 0 : 12,
-            paddingLeft: collapsed ? 0 : 16,
-            paddingRight: collapsed ? 0 : 16,
+            padding: collapsed ? '10px 0' : '10px 12px',
+            gap: collapsed ? 0 : 10,
             justifyContent: collapsed ? 'center' : undefined,
           }}
         >
-          <UserButton />
-          {!collapsed && <span className="text-[12px] font-semibold truncate" style={{ color: '#8E87A8' }}>Mi cuenta</span>}
+          {/* Avatar */}
+          <Link href="/dashboard/perfil" className="shrink-0" title="Mi Perfil">
+            {userPicture ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={userPicture}
+                alt={userName ?? 'Perfil'}
+                style={{
+                  width: 32, height: 32, borderRadius: '50%',
+                  objectFit: 'cover',
+                  border: '2px solid #fff',
+                  boxShadow: `0 2px 8px rgba(0,0,0,0.15)`,
+                }}
+              />
+            ) : (
+              <div style={{
+                width: 32, height: 32, borderRadius: '50%',
+                background: SIDEBAR_ROLE_GRADIENT[role ?? 'ADMIN'] ?? SIDEBAR_ROLE_GRADIENT.ADMIN,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 13, fontWeight: 700, color: '#fff',
+                border: '2px solid #fff',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
+                flexShrink: 0,
+              }}>
+                {userName?.charAt(0)?.toUpperCase() ?? 'U'}
+              </div>
+            )}
+          </Link>
+
+          {/* Nombre + rol (solo expandido) */}
+          {!collapsed && (
+            <Link href="/dashboard/perfil" className="flex-1 min-w-0">
+              <div className="text-[12px] font-bold truncate" style={{ color: '#1a1028' }}>
+                {userName ?? 'Usuario'}
+              </div>
+              <div className="text-[9px] font-bold uppercase tracking-wide" style={{ color: SIDEBAR_ROLE_COLOR[role ?? 'ADMIN'] ?? '#8E87A8' }}>
+                {SIDEBAR_ROLE_LABEL[role ?? 'ADMIN'] ?? role}
+              </div>
+            </Link>
+          )}
+
+          {/* Ícono de ajustes (solo expandido) */}
+          {!collapsed && (
+            <Link
+              href="/dashboard/ajustes"
+              title="Ajustes"
+              className="shrink-0 flex items-center justify-center transition-colors hover:bg-secondary rounded-lg"
+              style={{ width: 26, height: 26, color: '#8E87A8' }}
+            >
+              <Settings className="w-[14px] h-[14px]" />
+            </Link>
+          )}
         </div>
       </motion.aside>
 

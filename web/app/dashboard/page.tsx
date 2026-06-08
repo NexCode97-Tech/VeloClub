@@ -792,7 +792,7 @@ export default function DashboardPage() {
                     <motion.div
                       layoutId="feed-tab-pill"
                       className="absolute inset-0 rounded-xl"
-                      style={{ background: 'linear-gradient(135deg, #7C3AED, #4361EE)', boxShadow: '0 4px 14px rgba(124,58,237,0.35)' }}
+                      style={{ background: 'linear-gradient(135deg, #7C3AED 0%, #4361EE 55%, #06D6A0 100%)', boxShadow: '0 4px 20px rgba(124,58,237,0.40)' }}
                       transition={{ type: 'spring', stiffness: 500, damping: 35 }}
                     />
                   )}

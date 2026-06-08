@@ -209,7 +209,7 @@ function PostCard({
       transition={{ type: 'spring' as const, stiffness: 300, damping: 26 }}
       layout
       className="bg-white border border-border rounded-2xl overflow-hidden"
-      style={{ boxShadow: '0 1px 8px rgba(0,0,0,0.07)' }}
+      style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.08), inset 0 0 0 1px rgba(0,0,0,0.06)' }}
     >
       {/* Autor */}
       <div className="flex items-center justify-between px-4 pt-4 pb-2">
@@ -447,7 +447,7 @@ function PostComposer({
 
   return (
     <motion.div variants={cardVariant} className="bg-white border border-border rounded-2xl overflow-hidden"
-      style={{ boxShadow: '0 1px 8px rgba(0,0,0,0.07)' }}>
+      style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.08), inset 0 0 0 1px rgba(0,0,0,0.06)' }}>
 
       {/* Cabecera con avatar + textarea */}
       <div className="flex items-start gap-3 px-4 pt-4 pb-3">

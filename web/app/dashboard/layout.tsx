@@ -271,6 +271,38 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       {/* ── Main content ────────────────────────────────────────────────── */}
       <div className="flex-1 flex flex-col overflow-hidden min-w-0">
 
+        {/* ── Mobile header ── */}
+        <header className="md:hidden flex items-center justify-between px-4 py-3 shrink-0 bg-background">
+          {/* Letrero */}
+          <Image
+            src="/letrero.png"
+            alt="VeloClub"
+            width={120}
+            height={36}
+            className="object-contain"
+          />
+          {/* Acciones rápidas */}
+          <div className="flex items-center gap-1">
+            <Link
+              href="/dashboard/perfil"
+              className="w-9 h-9 flex items-center justify-center rounded-xl transition-colors hover:bg-secondary"
+              style={{ color: '#8E87A8' }}
+            >
+              <UserCircle size={22} strokeWidth={1.8} />
+            </Link>
+            <Link
+              href="/dashboard/ajustes"
+              className="w-9 h-9 flex items-center justify-center rounded-xl transition-colors hover:bg-secondary"
+              style={{ color: '#8E87A8' }}
+            >
+              <Settings size={20} strokeWidth={1.8} />
+            </Link>
+            <div className="ml-1">
+              <UserButton appearance={{ elements: { avatarBox: { width: 34, height: 34 } } }} />
+            </div>
+          </div>
+        </header>
+
         <main className="flex-1 overflow-y-auto pb-28 md:pb-0">
           {children}
         </main>

@@ -56,15 +56,11 @@ const ROLE_MAS_ITEMS: Record<string, { label: string; icon: React.ElementType; h
     { label: 'Calendario', icon: CalendarDays, href: '/dashboard/calendario', color: '#EF476F' },
     { label: 'Sedes',      icon: MapPin,       href: '/dashboard/sedes',      color: '#06D6A0' },
     { label: 'Reportes',   icon: BarChart2,    href: '/dashboard/reportes',   color: '#4361EE' },
-    { label: 'Mi Perfil',  icon: UserCircle,   href: '/dashboard/perfil',     color: '#7C3AED' },
-    { label: 'Ajustes',    icon: Settings,     href: '/dashboard/ajustes',    color: '#8E87A8' },
   ],
   COACH: [
     { label: 'Resultados', icon: Trophy,       href: '/dashboard/logros',     color: '#F59E0B' },
     { label: 'Calendario', icon: CalendarDays, href: '/dashboard/calendario', color: '#EF476F' },
     { label: 'Sedes',      icon: MapPin,       href: '/dashboard/sedes',      color: '#06D6A0' },
-    { label: 'Mi Perfil',  icon: UserCircle,   href: '/dashboard/perfil',     color: '#7C3AED' },
-    { label: 'Ajustes',    icon: Settings,     href: '/dashboard/ajustes',    color: '#8E87A8' },
   ],
 };
 

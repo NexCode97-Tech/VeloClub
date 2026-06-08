@@ -122,7 +122,7 @@ const ADS = [
     color: '#EF476F',
   },
   {
-    image: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=600&q=80',
+    image: '/foto-hidratacion.png',
     label: 'Hidratación',
     title: 'Hidratación Profesional Deportiva',
     description: 'Isotónicos, geles energéticos y suplementos formulados para resistencia y recuperación. Soluciones probadas por atletas de élite para antes, durante y después del esfuerzo.',

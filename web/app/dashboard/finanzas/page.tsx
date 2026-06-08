@@ -637,7 +637,7 @@ export default function FinanzasPage() {
   return (
     <div className="min-h-full bg-background">
       {/* Header */}
-      <div className="px-5 py-3 bg-background border-b border-border">
+      <div className="px-5 py-3 bg-background">
         <h1 className="text-[22px] font-extrabold text-foreground" style={{ fontFamily: 'Open Sans, sans-serif', lineHeight: 1.1 }}>
           Finanzas
         </h1>

@@ -198,7 +198,7 @@ export default function PagosPage() {
     return (
       <div className="min-h-full bg-background">
         {/* Header */}
-        <div className="px-5 py-3 bg-background border-b border-border">
+        <div className="px-5 py-3 bg-background">
           <h1 className="text-[17px] font-bold text-foreground" style={{ fontFamily: "'Open Sans', sans-serif" }}>
             Mis Pagos
           </h1>
@@ -379,7 +379,7 @@ export default function PagosPage() {
   return (
     <div className="min-h-full bg-background">
       {/* Encabezado */}
-      <div className="px-5 py-3 bg-background border-b border-border flex items-center justify-between">
+      <div className="px-5 py-3 bg-background flex items-center justify-between">
         <h1 className="text-[17px] font-bold text-foreground" style={{ fontFamily: "'Open Sans', sans-serif" }}>
           Pagos
         </h1>

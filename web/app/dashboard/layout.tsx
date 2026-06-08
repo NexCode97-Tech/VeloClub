@@ -21,6 +21,7 @@ import {
   CircleDollarSign,
   Settings,
   UserCircle,
+  RefreshCw,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -113,6 +114,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [role, setRole] = useState<string | null>(null);
   const [checking, setChecking] = useState(true);
   const [masMenuOpen, setMasMenuOpen] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [clubLogoUrl, setClubLogoUrl] = useState<string | null>(null);
   const [clubName, setClubName] = useState<string | null>(null);
   const [userName, setUserName] = useState<string | null>(null);
@@ -306,6 +308,23 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </div>
           {/* Acciones rápidas */}
           <div className="flex items-center gap-3 shrink-0">
+            <button
+              onClick={() => {
+                setRefreshing(true);
+                setTimeout(() => { window.location.reload(); }, 300);
+              }}
+              className="w-9 h-9 flex items-center justify-center rounded-full transition-colors"
+              style={{ color: '#8E87A8', background: 'rgba(30,20,50,0.07)', boxShadow: '0 2px 8px rgba(15,10,30,0.18)' }}
+            >
+              <RefreshCw
+                size={18}
+                strokeWidth={2}
+                style={{
+                  transition: 'transform 0.5s ease',
+                  transform: refreshing ? 'rotate(360deg)' : 'rotate(0deg)',
+                }}
+              />
+            </button>
             <Link
               href="/dashboard/perfil"
               className="w-9 h-9 flex items-center justify-center rounded-full transition-colors"

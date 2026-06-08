@@ -114,7 +114,7 @@ export default function AyudaPage() {
         </button>
         <h1
           className="text-[17px] font-bold text-foreground"
-          style={{ fontFamily: ''Cascadia Code', monospace' }}
+          style={{ fontFamily: "'Cascadia Code', monospace" }}
         >
           Centro de ayuda
         </h1>

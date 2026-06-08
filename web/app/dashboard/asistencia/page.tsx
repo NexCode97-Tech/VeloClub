@@ -413,7 +413,7 @@ export default function AsistenciaPage() {
                     >
                       <div
                         className="text-xl md:text-[36px] font-extrabold leading-none mb-1"
-                        style={{ color: STATUS_COLOR[s], fontFamily: ''Cascadia Code', monospace' }}
+                        style={{ color: STATUS_COLOR[s], fontFamily: "'Cascadia Code', monospace" }}
                       >
                         {n}
                       </div>

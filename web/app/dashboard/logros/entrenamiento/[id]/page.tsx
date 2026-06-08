@@ -110,7 +110,7 @@ export default function TrainingDetailPage() {
           <ArrowLeft className="w-4 h-4 text-muted-foreground" />
         </Link>
         <div className="flex-1 min-w-0">
-          <h1 className="text-[15px] font-bold text-foreground truncate" style={{ fontFamily: ''Cascadia Code', monospace' }}>
+          <h1 className="text-[15px] font-bold text-foreground truncate" style={{ fontFamily: "'Cascadia Code', monospace" }}>
             {session.title}
           </h1>
           <p className="text-[11px] text-muted-foreground capitalize">{dateStr}</p>

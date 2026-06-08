@@ -133,7 +133,7 @@ export default function SedesPage() {
                     <MapPin className="w-5 h-5" style={{ color: '#06D6A0' }} />
                   </div>
                   <div>
-                    <p className="font-bold text-foreground" style={{ fontFamily: ''Cascadia Code', monospace' }}>{loc.name}</p>
+                    <p className="font-bold text-foreground" style={{ fontFamily: "'Cascadia Code', monospace" }}>{loc.name}</p>
                     {loc.address && <p className="text-xs text-muted-foreground mt-0.5">{loc.address}</p>}
                   </div>
                 </div>

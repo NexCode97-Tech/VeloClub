@@ -176,40 +176,44 @@ export function Slideshow({ slides, autoPlayMs = 5000, className = '' }: Slidesh
       </div>
 
       {/* ── Tablet: grid 2 columnas rotativo ────────────────────── */}
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={`tablet-${startIndex}`}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.6, ease: [0.23, 1, 0.32, 1] }}
-          className="hidden md:grid lg:hidden grid-cols-2 gap-3"
-        >
-          {[0, 1].map(offset => (
-            <div key={offset} className="aspect-[3/2]" style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.08), inset 0 0 0 1px rgba(0,0,0,0.06)', borderRadius: '1rem', overflow: 'hidden' }}>
-              <SlideCard slide={getSlide(offset)} />
-            </div>
-          ))}
-        </motion.div>
-      </AnimatePresence>
+      <div className="hidden md:block lg:hidden w-full overflow-hidden rounded-2xl">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={`tablet-${startIndex}`}
+            initial={{ x: '100%', opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: '-100%', opacity: 0 }}
+            transition={{ duration: 0.5, ease: [0.23, 1, 0.32, 1] }}
+            className="grid grid-cols-2 gap-3"
+          >
+            {[0, 1].map(offset => (
+              <div key={offset} className="aspect-[3/2]" style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.08), inset 0 0 0 1px rgba(0,0,0,0.06)', borderRadius: '1rem', overflow: 'hidden' }}>
+                <SlideCard slide={getSlide(offset)} />
+              </div>
+            ))}
+          </motion.div>
+        </AnimatePresence>
+      </div>
 
       {/* ── Escritorio: grid 3 columnas rotativo ────────────────── */}
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={`desktop-${startIndex}`}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.6, ease: [0.23, 1, 0.32, 1] }}
-          className="hidden lg:grid grid-cols-3 gap-3"
-        >
-          {[0, 1, 2].map(offset => (
-            <div key={offset} className="aspect-[3/2]" style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.08), inset 0 0 0 1px rgba(0,0,0,0.06)', borderRadius: '1rem', overflow: 'hidden' }}>
-              <SlideCard slide={getSlide(offset)} />
-            </div>
-          ))}
-        </motion.div>
-      </AnimatePresence>
+      <div className="hidden lg:block w-full overflow-hidden rounded-2xl">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={`desktop-${startIndex}`}
+            initial={{ x: '100%', opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: '-100%', opacity: 0 }}
+            transition={{ duration: 0.5, ease: [0.23, 1, 0.32, 1] }}
+            className="grid grid-cols-3 gap-3"
+          >
+            {[0, 1, 2].map(offset => (
+              <div key={offset} className="aspect-[3/2]" style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.08), inset 0 0 0 1px rgba(0,0,0,0.06)', borderRadius: '1rem', overflow: 'hidden' }}>
+                <SlideCard slide={getSlide(offset)} />
+              </div>
+            ))}
+          </motion.div>
+        </AnimatePresence>
+      </div>
     </>
   );
 }

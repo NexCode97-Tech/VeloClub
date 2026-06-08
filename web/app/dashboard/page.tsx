@@ -27,6 +27,7 @@ interface MeResponse {
 }
 
 interface PostLike { userId: string }
+interface LikeUser { name: string; picture?: string | null; role?: string }
 interface PostComment {
   id: string;
   authorName: string;
@@ -168,7 +169,7 @@ function Avatar({ src, name, size = 36, role }: { src?: string | null; name: str
 // ── PostCard ──────────────────────────────────────────────────────────────────
 
 function PostCard({
-  post, currentUserId, canDelete, onLike, onDelete, onComment, onDeleteComment, onEditComment,
+  post, currentUserId, canDelete, onLike, onDelete, onComment, onDeleteComment, onEditComment, onFetchLikes,
 }: {
   post: Post; currentUserId: string; canDelete: boolean;
   onLike: (id: string) => void;
@@ -176,6 +177,7 @@ function PostCard({
   onComment: (postId: string, content: string) => Promise<void>;
   onDeleteComment: (postId: string, commentId: string) => void;
   onEditComment: (postId: string, commentId: string, content: string) => Promise<void>;
+  onFetchLikes: (postId: string) => Promise<LikeUser[]>;
 }) {
   const liked     = post.likes.some(l => l.userId === currentUserId);
   const likeCount = post.likes.length;
@@ -185,6 +187,23 @@ function PostCard({
   const [commentText, setCommentText] = useState('');
   const [sendingComment, setSendingComment] = useState(false);
   const commentInputRef = useRef<HTMLInputElement>(null);
+
+  // Popover de likes
+  const [showLikesPopover, setShowLikesPopover] = useState(false);
+  const [likeUsers, setLikeUsers]               = useState<LikeUser[]>([]);
+  const [loadingLikes, setLoadingLikes]         = useState(false);
+
+  async function handleShowLikes() {
+    if (showLikesPopover) { setShowLikesPopover(false); return; }
+    setShowLikesPopover(true);
+    if (likeUsers.length === 0) {
+      setLoadingLikes(true);
+      try {
+        const users = await onFetchLikes(post.id);
+        setLikeUsers(users);
+      } finally { setLoadingLikes(false); }
+    }
+  }
 
   // Menú ⋯ por comentario
   const [commentMenu, setCommentMenu]       = useState<string | null>(null); // commentId con menú abierto
@@ -293,19 +312,70 @@ function PostCard({
         </div>
       )}
 
-      {/* Contadores */}
+      {/* Contadores clicables */}
       {(likeCount > 0 || post.comments.length > 0) && (
-        <div className="flex items-center gap-3 px-4 pb-2">
+        <div className="relative flex items-center gap-3 px-4 pb-2">
           {likeCount > 0 && (
-            <span className="text-[12px] text-muted-foreground">
+            <button
+              onClick={handleShowLikes}
+              className="text-[12px] text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+            >
               {likeCount} Me gusta
-            </span>
+            </button>
           )}
           {post.comments.length > 0 && (
-            <span className="text-[12px] text-muted-foreground">
+            <button
+              onClick={() => { setShowComments(true); setTimeout(() => commentInputRef.current?.focus(), 150); }}
+              className="text-[12px] text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+            >
               {post.comments.length} comentario{post.comments.length !== 1 ? 's' : ''}
-            </span>
+            </button>
           )}
+
+          {/* Popover de likes */}
+          <AnimatePresence>
+            {showLikesPopover && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setShowLikesPopover(false)} />
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.93, y: -6 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.93, y: -6 }}
+                  transition={{ duration: 0.16, ease: [0.23, 1, 0.32, 1] }}
+                  className="absolute left-0 top-6 z-50"
+                  style={{
+                    background: '#fff',
+                    border: '1px solid rgba(124,58,237,0.12)',
+                    borderRadius: 14,
+                    boxShadow: '0 8px 28px rgba(0,0,0,0.10)',
+                    minWidth: 180,
+                    maxWidth: 240,
+                    padding: '10px 0',
+                  }}
+                >
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider px-3.5 mb-2">
+                    Les gustó a
+                  </p>
+                  {loadingLikes ? (
+                    <div className="flex items-center justify-center py-4">
+                      <div className="w-4 h-4 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: '#7C3AED', borderTopColor: 'transparent' }} />
+                    </div>
+                  ) : likeUsers.length === 0 ? (
+                    <p className="text-[12px] text-muted-foreground px-3.5 py-2">Sin datos</p>
+                  ) : (
+                    <div className="flex flex-col">
+                      {likeUsers.map((u, i) => (
+                        <div key={i} className="flex items-center gap-2.5 px-3.5 py-1.5 hover:bg-secondary/50 transition-colors">
+                          <Avatar src={u.picture} name={u.name} size={26} role={u.role} />
+                          <span className="text-[12px] font-semibold text-foreground leading-tight truncate">{u.name}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </motion.div>
+              </>
+            )}
+          </AnimatePresence>
         </div>
       )}
 
@@ -773,6 +843,12 @@ export default function DashboardPage() {
     ));
   }
 
+  async function handleFetchLikes(postId: string): Promise<LikeUser[]> {
+    const token = await session?.getToken();
+    const res = await apiFetch<{ users: LikeUser[] }>(`/posts/${postId}/likes`, { token });
+    return res.users;
+  }
+
   async function handleEditComment(postId: string, commentId: string, content: string) {
     const token = await session?.getToken();
     const res = await apiFetch<{ comment: PostComment }>(`/posts/${postId}/comments/${commentId}`, {
@@ -980,6 +1056,7 @@ export default function DashboardPage() {
                 onComment={handleComment}
                 onDeleteComment={handleDeleteComment}
                 onEditComment={handleEditComment}
+                onFetchLikes={handleFetchLikes}
               />
             ))}
           </AnimatePresence>

@@ -125,6 +125,27 @@ router.delete('/:id', requireAuth, async (req, res) => {
   res.json({ ok: true });
 });
 
+// GET /posts/:id/likes — lista de usuarios que dieron like
+router.get('/:id/likes', requireAuth, async (req, res) => {
+  if (!req.user) return res.status(401).json({ error: 'No autenticado' });
+  const postId = String(req.params.id);
+
+  const postLikes = await prisma.postLike.findMany({
+    where: { postId },
+    select: { userId: true },
+  });
+
+  const clerkIds = postLikes.map(l => l.userId);
+  if (clerkIds.length === 0) return res.json({ users: [] });
+
+  const users = await prisma.user.findMany({
+    where: { clerkId: { in: clerkIds } },
+    select: { name: true, picture: true, role: true },
+  });
+
+  res.json({ users });
+});
+
 // POST /posts/:id/like
 router.post('/:id/like', requireAuth, async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'No autenticado' });

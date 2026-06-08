@@ -322,6 +322,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           )}
           <div className="space-y-1 relative">
             {sideNavItems.map(({ href, label, icon: Icon }) => {
+              // Ajustes se oculta cuando el sidebar está expandido (ya aparece en el footer del usuario)
+              if (href === '/dashboard/ajustes' && !collapsed) return null;
               const active = isSideActive(href);
               return (
                 <Link

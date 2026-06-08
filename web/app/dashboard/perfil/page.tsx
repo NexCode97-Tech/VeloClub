@@ -630,6 +630,7 @@ export default function PerfilPage() {
 
       {/* ── Tabs ─────────────────────────────────────────────────────────────── */}
       <div className="bg-white border-b border-border sticky top-0 z-10">
+        {/* Fila principal */}
         <div className="flex">
           {TABS.map(tab => (
             <button
@@ -647,6 +648,34 @@ export default function PerfilPage() {
             </button>
           ))}
         </div>
+
+        {/* Sub-tabs scope — solo cuando tab Publicaciones está activo */}
+        {activeTab === 'Publicaciones' && (
+          <div className="flex border-t border-border/50">
+            {([
+              { key: 'private' as const, label: 'Privadas', Icon: Lock },
+              { key: 'public'  as const, label: 'Públicas', Icon: Globe },
+            ] as const).map(({ key, label, Icon }) => {
+              const active = postScope === key;
+              return (
+                <button
+                  key={key}
+                  onClick={() => handleScopeChange(key)}
+                  className="flex-1 flex items-center justify-center gap-1.5 py-2.5 relative transition-colors cursor-pointer"
+                  style={{ color: active ? '#7C3AED' : '#8E87A8' }}
+                >
+                  <Icon className="w-3.5 h-3.5 shrink-0" />
+                  <span style={{ fontSize: 12, fontWeight: active ? 600 : 500 }}>{label}</span>
+                  {active && (
+                    <motion.div layoutId="scope-tab-indicator"
+                      className="absolute bottom-0 left-6 right-6 h-[2px] rounded-full"
+                      style={{ background: '#7C3AED' }} />
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* ── Contenido del tab ─────────────────────────────────────────────────── */}
@@ -657,38 +686,6 @@ export default function PerfilPage() {
               initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2 }}
               className="space-y-4">
-
-              {/* Sub-tabs: Privadas / Públicas */}
-              <div
-                className="flex items-center gap-0.5 p-0.5 rounded-full self-start"
-                style={{ background: 'rgba(124,58,237,0.08)', border: '1px solid rgba(124,58,237,0.10)', width: 'fit-content' }}
-              >
-                {([
-                  { key: 'private' as const, label: '🔒 Privadas' },
-                  { key: 'public'  as const, label: '🌐 Públicas' },
-                ] as const).map(({ key, label }) => {
-                  const active = postScope === key;
-                  return (
-                    <button
-                      key={key}
-                      onClick={() => handleScopeChange(key)}
-                      style={{
-                        fontSize: 11,
-                        fontWeight: active ? 700 : 500,
-                        padding: '4px 14px',
-                        borderRadius: 999,
-                        border: 'none',
-                        cursor: 'pointer',
-                        transition: 'all 0.18s cubic-bezier(0.23,1,0.32,1)',
-                        background: active ? '#7C3AED' : 'transparent',
-                        color: active ? '#fff' : '#8E87A8',
-                      }}
-                    >
-                      {label}
-                    </button>
-                  );
-                })}
-              </div>
 
               {posts.length === 0 ? (
                 <div className="rounded-2xl px-6 py-10 flex flex-col items-center text-center mt-4"

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export interface SlideshowSlide {
@@ -17,11 +17,27 @@ interface SlideshowProps {
   className?: string;
 }
 
-function SlideCard({ slide }: { slide: SlideshowSlide }) {
+// Precarga todas las imágenes al montar — evita jank en las transiciones
+function usePreloadImages(slides: SlideshowSlide[]) {
+  useEffect(() => {
+    slides.forEach(slide => {
+      const img = new window.Image();
+      img.src = slide.img;
+    });
+  }, [slides]);
+}
+
+function SlideCard({ slide, priority }: { slide: SlideshowSlide; priority?: boolean }) {
   return (
     <div className="relative w-full h-full overflow-hidden rounded-2xl">
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={slide.img} alt={slide.title} className="w-full h-full object-cover" />
+      <img
+        src={slide.img}
+        alt={slide.title}
+        className="w-full h-full object-cover"
+        loading={priority ? 'eager' : 'lazy'}
+        decoding={priority ? 'sync' : 'async'}
+      />
       <div
         className="absolute inset-0"
         style={{ background: 'linear-gradient(to top, rgba(10,5,20,0.88) 0%, rgba(10,5,20,0.35) 55%, transparent 100%)' }}
@@ -65,6 +81,9 @@ export function Slideshow({ slides, autoPlayMs = 5000, className = '' }: Slidesh
   const [startIndex, setStartIndex] = useState(0);
   const [paused, setPaused] = useState(false);
 
+  // Precarga todas las imágenes inmediatamente
+  usePreloadImages(slides);
+
   const mobileIndex = ((page % slides.length) + slides.length) % slides.length;
 
   const paginate = useCallback((dir: number) => {
@@ -90,7 +109,7 @@ export function Slideshow({ slides, autoPlayMs = 5000, className = '' }: Slidesh
 
   return (
     <>
-      {/* ── Móvil: carrusel ─────────────────────────────────────── */}
+      {/* ── Móvil: carrusel con swipe ────────────────────────────── */}
       <div
         className="relative w-full overflow-hidden rounded-2xl md:hidden h-[400px]"
         style={{ boxShadow: '0 4px 16px rgba(0,0,0,0.13), inset 0 0 0 1px rgba(0,0,0,0.08)' }}
@@ -112,7 +131,7 @@ export function Slideshow({ slides, autoPlayMs = 5000, className = '' }: Slidesh
             className="absolute inset-0"
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={mobileSlide.img} alt={mobileSlide.title} className="w-full h-full object-cover" />
+            <img src={mobileSlide.img} alt={mobileSlide.title} className="w-full h-full object-cover" loading="eager" />
             <div
               className="absolute inset-0"
               style={{ background: 'linear-gradient(to top, rgba(10,5,20,0.88) 0%, rgba(10,5,20,0.35) 55%, transparent 100%)' }}
@@ -175,44 +194,79 @@ export function Slideshow({ slides, autoPlayMs = 5000, className = '' }: Slidesh
         </div>
       </div>
 
-      {/* ── Tablet: grid 2 columnas rotativo ────────────────────── */}
-      <div className="hidden md:block lg:hidden w-full overflow-hidden rounded-2xl">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={`tablet-${startIndex}`}
-            initial={{ x: '100%', opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            exit={{ x: '-100%', opacity: 0 }}
-            transition={{ duration: 0.5, ease: [0.23, 1, 0.32, 1] }}
-            className="grid grid-cols-2 gap-3"
-          >
-            {[0, 1].map(offset => (
-              <div key={offset} className="aspect-[3/2]" style={{ boxShadow: '0 4px 16px rgba(0,0,0,0.13), inset 0 0 0 1px rgba(0,0,0,0.08)', borderRadius: '1rem', overflow: 'hidden' }}>
-                <SlideCard slide={getSlide(offset)} />
+      {/* ── Tablet: cross-fade suave (sin slide translate) ──────── */}
+      <div className="hidden md:block lg:hidden w-full rounded-2xl" style={{ position: 'relative' }}>
+        <div className="grid grid-cols-2 gap-3" style={{ visibility: 'hidden', pointerEvents: 'none' }} aria-hidden>
+          <div className="aspect-[3/2]" />
+          <div className="aspect-[3/2]" />
+        </div>
+        {/* Capas precargadas — todas montadas, solo la activa es visible */}
+        {slides.map((_, idx) => {
+          const pairIndex = Math.floor(idx / 2);
+          const activePair = Math.floor(startIndex / 2) % Math.ceil(slides.length / 2);
+          if (idx % 2 !== 0) return null; // renderizar solo pares de inicio
+          const isActive = (startIndex % slides.length) === idx || (startIndex % slides.length) === (idx + 1);
+          const s0 = slides[idx % slides.length];
+          const s1 = slides[(idx + 1) % slides.length];
+          return (
+            <div
+              key={idx}
+              className="absolute inset-0 grid grid-cols-2 gap-3"
+              style={{
+                opacity: (startIndex % slides.length) === idx ? 1 : 0,
+                transition: 'opacity 0.55s cubic-bezier(0.23,1,0.32,1)',
+                pointerEvents: (startIndex % slides.length) === idx ? 'auto' : 'none',
+              }}
+            >
+              <div className="aspect-[3/2]" style={{ boxShadow: '0 4px 16px rgba(0,0,0,0.13), inset 0 0 0 1px rgba(0,0,0,0.08)', borderRadius: '1rem', overflow: 'hidden' }}>
+                <SlideCard slide={s0} priority={idx === 0} />
               </div>
-            ))}
-          </motion.div>
-        </AnimatePresence>
+              <div className="aspect-[3/2]" style={{ boxShadow: '0 4px 16px rgba(0,0,0,0.13), inset 0 0 0 1px rgba(0,0,0,0.08)', borderRadius: '1rem', overflow: 'hidden' }}>
+                <SlideCard slide={s1} priority={idx === 0} />
+              </div>
+            </div>
+          );
+        })}
       </div>
 
-      {/* ── Escritorio: grid 2 columnas rotativo ────────────────── */}
-      <div className="hidden lg:block w-full overflow-hidden rounded-2xl">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={`desktop-${startIndex}`}
-            initial={{ x: '100%', opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            exit={{ x: '-100%', opacity: 0 }}
-            transition={{ duration: 0.5, ease: [0.23, 1, 0.32, 1] }}
-            className="grid grid-cols-2 gap-3"
-          >
-            {[0, 1].map(offset => (
-              <div key={offset} className="h-[420px]" style={{ boxShadow: '0 4px 16px rgba(0,0,0,0.13), inset 0 0 0 1px rgba(0,0,0,0.08)', borderRadius: '1rem', overflow: 'hidden' }}>
-                <SlideCard slide={getSlide(offset)} />
+      {/* ── Escritorio: cross-fade suave — todas las capas montadas ─ */}
+      <div className="hidden lg:block w-full rounded-2xl" style={{ position: 'relative' }}>
+        {/* Placeholder invisible para mantener el alto */}
+        <div className="grid grid-cols-2 gap-3" style={{ visibility: 'hidden', pointerEvents: 'none' }} aria-hidden>
+          <div className="h-[420px]" />
+          <div className="h-[420px]" />
+        </div>
+        {/* Todas las parejas de slides montadas simultáneamente — transición solo de opacidad */}
+        {slides.map((_, idx) => {
+          if (idx % 2 !== 0) return null; // solo inicios de par
+          const s0 = slides[idx % slides.length];
+          const s1 = slides[(idx + 1) % slides.length];
+          const isActive = (startIndex % slides.length) === idx;
+          return (
+            <div
+              key={idx}
+              className="absolute inset-0 grid grid-cols-2 gap-3"
+              style={{
+                opacity: isActive ? 1 : 0,
+                transition: 'opacity 0.55s cubic-bezier(0.23,1,0.32,1)',
+                pointerEvents: isActive ? 'auto' : 'none',
+              }}
+            >
+              <div
+                className="h-[420px]"
+                style={{ boxShadow: '0 4px 16px rgba(0,0,0,0.13), inset 0 0 0 1px rgba(0,0,0,0.08)', borderRadius: '1rem', overflow: 'hidden' }}
+              >
+                <SlideCard slide={s0} priority={idx === 0} />
               </div>
-            ))}
-          </motion.div>
-        </AnimatePresence>
+              <div
+                className="h-[420px]"
+                style={{ boxShadow: '0 4px 16px rgba(0,0,0,0.13), inset 0 0 0 1px rgba(0,0,0,0.08)', borderRadius: '1rem', overflow: 'hidden' }}
+              >
+                <SlideCard slide={s1} priority={idx === 0} />
+              </div>
+            </div>
+          );
+        })}
       </div>
     </>
   );

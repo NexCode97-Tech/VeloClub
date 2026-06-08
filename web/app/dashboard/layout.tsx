@@ -240,7 +240,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   // Índice activo para el pill deslizante del bottom bar
   const activeTabIndex = tabItems.findIndex(t => isTabActive(t.href));
-  const activeSideIndex = sideNavItems.findIndex(t => isSideActive(t.href));
+  // Cuando el sidebar está expandido, Ajustes está oculto — no mostrar su pill activo
+  const activeSideIndex = sideNavItems.findIndex(t => {
+    if (!collapsed && t.href === '/dashboard/ajustes') return false;
+    return isSideActive(t.href);
+  });
 
   // Color de acento — uniforme para todos los roles
   const accentColor = '#4361EE';

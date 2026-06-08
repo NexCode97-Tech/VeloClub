@@ -260,65 +260,51 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <motion.aside
         animate={{ width: collapsed ? 64 : 240 }}
         transition={{ duration: 0.25, ease: [0.23, 1, 0.32, 1] }}
-        className="hidden md:flex flex-col shrink-0 overflow-hidden"
-        style={{ background: '#fff', borderRight: '1px solid rgba(0,0,0,0.07)' }}
+        className="hidden md:flex flex-col shrink-0 relative"
+        style={{ background: '#fff', borderRight: '1px solid rgba(0,0,0,0.07)', overflow: 'visible' }}
       >
-        {/* Logo + toggle */}
+        {/* Botón toggle — flotante en el borde derecho, centrado verticalmente */}
+        <button
+          onClick={toggleSidebar}
+          className="absolute z-20 flex items-center justify-center transition-all hover:scale-110"
+          style={{
+            top: '50%',
+            right: -13,
+            transform: 'translateY(-50%)',
+            width: 26,
+            height: 26,
+            borderRadius: '50%',
+            background: '#fff',
+            border: '1px solid rgba(0,0,0,0.10)',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.10)',
+            color: '#7C3AED',
+            cursor: 'pointer',
+          }}
+        >
+          {collapsed
+            ? <ChevronRight className="w-3.5 h-3.5" />
+            : <ChevronLeft className="w-3.5 h-3.5" />
+          }
+        </button>
+
+        {/* Logo */}
         <div
           className="flex items-center shrink-0"
           style={{
             borderBottom: '1px solid rgba(0,0,0,0.06)',
             minHeight: 58,
-            padding: collapsed ? '0 12px' : '0 14px',
-            justifyContent: collapsed ? 'center' : 'space-between',
-            gap: collapsed ? 0 : 10,
+            padding: collapsed ? '0 16px' : '0 16px',
+            justifyContent: 'center',
           }}
         >
-          {/* Ícono del logo — siempre visible */}
-          <div className="flex items-center gap-2.5 min-w-0 shrink-0">
-            <Image
-              src="/logo.png"
-              alt="VeloClub"
-              width={28}
-              height={28}
-              className="object-contain shrink-0"
-              style={{ borderRadius: 7 }}
-            />
-          </div>
-          {/* Toggle — pill con color lila suave */}
-          {!collapsed && (
-            <button
-              onClick={toggleSidebar}
-              className="flex items-center justify-center shrink-0 transition-colors"
-              style={{
-                width: 26, height: 26,
-                borderRadius: 7,
-                background: 'rgba(124,58,237,0.10)',
-                border: 'none',
-                color: '#7C3AED',
-                cursor: 'pointer',
-              }}
-            >
-              <ChevronLeft className="w-3.5 h-3.5" />
-            </button>
-          )}
-          {collapsed && (
-            <button
-              onClick={toggleSidebar}
-              className="flex items-center justify-center shrink-0 transition-colors"
-              style={{
-                width: 26, height: 26,
-                borderRadius: 7,
-                background: 'rgba(124,58,237,0.10)',
-                border: 'none',
-                color: '#7C3AED',
-                cursor: 'pointer',
-                marginTop: 6,
-              }}
-            >
-              <ChevronRight className="w-3.5 h-3.5" />
-            </button>
-          )}
+          <Image
+            src="/logo.png"
+            alt="VeloClub"
+            width={28}
+            height={28}
+            className="object-contain shrink-0"
+            style={{ borderRadius: 7 }}
+          />
         </div>
 
         {/* Nav items */}

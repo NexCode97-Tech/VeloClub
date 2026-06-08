@@ -237,7 +237,7 @@ export default function LogrosPage() {
     <div className="min-h-full bg-background">
 
       {/* ── Header ─────────────────────────────────────────────────────────── */}
-      <div className="px-4 pt-4 pb-3">
+      <div className="px-5 py-3">
         <div className="flex items-start justify-between gap-2 mb-4">
           <div>
             <h1 className="text-[22px] font-extrabold text-foreground" style={{ fontFamily: 'inherit', lineHeight: 1.1 }}>

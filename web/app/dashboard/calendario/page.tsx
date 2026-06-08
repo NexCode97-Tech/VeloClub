@@ -116,9 +116,9 @@ export default function CalendarioPage() {
   const selectedEvents = eventsOnDay(selectedDay);
 
   return (
-    <motion.div variants={stagger} initial="hidden" animate="show" className="min-h-full bg-background px-4 py-5">
+    <motion.div variants={stagger} initial="hidden" animate="show" className="min-h-full bg-background">
       {/* Header */}
-      <div className="mb-5">
+      <div className="px-5 py-3 bg-background">
         <h1 className="text-[22px] font-extrabold text-foreground" style={{ fontFamily: 'inherit', lineHeight: 1.1 }}>
           Calendario
         </h1>
@@ -126,7 +126,7 @@ export default function CalendarioPage() {
       </div>
 
       {/* Layout: columna única en móvil, dos columnas en desktop */}
-      <div className="flex flex-col md:flex-row gap-5 md:items-start">
+      <div className="flex flex-col md:flex-row gap-5 md:items-start px-4 pb-5">
 
         {/* ── Columna izquierda — Calendario ── */}
         <div className="flex flex-col gap-4 md:w-[420px] shrink-0">

@@ -1,6 +1,13 @@
 import type { Metadata, Viewport } from "next";
-import { Geist_Mono } from "next/font/google";
+import { Inter } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
+
+const inter = Inter({
+  variable: "--font-inter",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
+  display: "swap",
+});
 import { esES } from "@clerk/localizations";
 import { Providers } from "./providers";
 import "./globals.css";
@@ -30,7 +37,7 @@ export default function RootLayout({
     <ClerkProvider localization={esES} signInForceRedirectUrl="/dashboard" afterSignOutUrl="/sign-in">
       <html
         lang="es"
-        className="h-full antialiased"
+        className={`${inter.variable} h-full antialiased`}
       >
         <body className="min-h-full flex flex-col">
           {/* Desregistra service workers viejos en todos los dispositivos */}

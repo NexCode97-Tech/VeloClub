@@ -130,7 +130,7 @@ function PostCard({ post, currentUserId, onLike, onComment, canDelete, onDelete 
       style={{ boxShadow: '0 1px 8px rgba(0,0,0,0.07)' }}
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-4 pt-4 pb-2">
+      <div className="flex items-center justify-between px-5 py-3">
         <div className="flex items-center gap-3">
           <Avatar src={post.authorAvatar} name={post.authorName} size={40} role={post.authorRole} />
           <div>

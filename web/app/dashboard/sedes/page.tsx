@@ -72,7 +72,7 @@ export default function SedesPage() {
   return (
     <div className="min-h-full bg-background">
       {/* Header */}
-      <div className="px-5 pt-5 pb-4 bg-card flex items-center justify-between">
+      <div className="px-5 py-3 bg-background flex items-center justify-between">
         <div>
           <h1 className="text-[22px] font-extrabold text-foreground" style={{ fontFamily: 'inherit', lineHeight: 1.1 }}>
             Sedes

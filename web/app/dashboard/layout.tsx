@@ -484,7 +484,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto pb-28 md:pb-0">
+        <main className="flex-1 overflow-y-auto pb-28 md:pb-0" style={{ WebkitOverflowScrolling: 'touch', overscrollBehaviorY: 'contain' }}>
           {children}
         </main>
 
@@ -498,7 +498,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               exit={{ opacity: 0 }}
               transition={{ duration: 0.22, ease: [0.23, 1, 0.32, 1] }}
               className="md:hidden fixed inset-0"
-              style={{ background: 'rgba(15,10,30,0.48)', zIndex: 29, backdropFilter: 'blur(2px)', WebkitBackdropFilter: 'blur(2px)' }}
+              style={{ background: 'rgba(15,10,30,0.52)', zIndex: 29 }}
               onClick={() => setMasMenuOpen(false)}
             />
           )}
@@ -514,11 +514,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             const totalSlots = isStudent ? tabItems.length + 1 : tabItems.length;
             const hasNotch = role !== 'STUDENT';
             return (
-              /* Wrapper con drop-shadow — la sombra sigue la silueta visual de bar + bump */
-              <div style={{
-                filter: 'drop-shadow(0 -2px 6px rgba(124,58,237,0.08)) drop-shadow(0 4px 12px rgba(124,58,237,0.10))',
-                pointerEvents: 'auto',
-              }}>
+              /* box-shadow en lugar de filter:drop-shadow — mucho más eficiente en móvil */
+              <div style={{ pointerEvents: 'auto' }}>
                 {/* Bar — pill blanco, overflow visible para que el bump salga por arriba */}
                 <div
                   className="relative flex w-full"
@@ -527,6 +524,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     borderRadius: 40,
                     padding: '6px 0',
                     overflow: 'visible',
+                    boxShadow: '0 -2px 12px rgba(124,58,237,0.08), 0 4px 16px rgba(124,58,237,0.10)',
+                    transform: 'translateZ(0)', /* forzar capa GPU */
                   }}
                 >
                   {/* Bump — hijo del bar, misma superficie blanca, sin borde */}
@@ -547,7 +546,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     />
                   )}
 
-                  {/* Círculo deslizante */}
+                  {/* Círculo deslizante — will-change para promoción GPU anticipada */}
                   {activeTabIndex >= 0 && (
                     <div
                       className="absolute pointer-events-none"
@@ -561,6 +560,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                         transition: 'left 0.35s cubic-bezier(0.34,1.2,0.64,1)',
                         boxShadow: '0 4px 20px rgba(124,58,237,0.40)',
                         zIndex: 1,
+                        willChange: 'left',
+                        transform: 'translateZ(0)',
                       }}
                     />
                   )}

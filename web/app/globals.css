@@ -134,12 +134,44 @@
   body {
     @apply bg-background text-foreground;
     font-family: var(--font-inter), "Inter", ui-sans-serif, system-ui, sans-serif;
+    /* Evitar rebote de scroll en iOS */
+    overscroll-behavior-y: none;
   }
   html {
     @apply font-sans;
+    /* Scroll suave en iOS sin rebote */
+    overscroll-behavior: none;
   }
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-inter), "Inter", ui-sans-serif, system-ui, sans-serif;
+  }
+
+  /* ── Optimizaciones globales de rendimiento móvil ────────────────────────── */
+
+  /* Eliminar el flash azul/gris en tap (iOS y Android) */
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Eliminar delay de 300ms en todos los elementos interactivos */
+  a, button, [role="button"], input, select, textarea, label {
+    touch-action: manipulation;
+  }
+
+  /* Scroll fluido con momentum en iOS en contenedores overflow */
+  .overflow-y-auto,
+  .overflow-y-scroll,
+  .overflow-auto,
+  .overflow-scroll {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
+  }
+
+  /* Promoción GPU para elementos animados — previene repaints */
+  .will-gpu {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
   }
 }
 

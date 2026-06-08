@@ -46,10 +46,8 @@ function SlideCard({ slide, priority }: { slide: SlideshowSlide; priority?: bool
         <div
           className="absolute top-3 left-3 flex items-center"
           style={{
-            background: 'rgba(15,15,15,0.70)',
-            backdropFilter: 'blur(10px)',
-            WebkitBackdropFilter: 'blur(10px)',
-            border: '1px solid rgba(255,255,255,0.15)',
+            background: 'rgba(10,8,20,0.75)',
+            border: '1px solid rgba(255,255,255,0.12)',
             borderRadius: 20,
             padding: '4px 10px',
           }}

@@ -789,16 +789,16 @@ export default function DashboardPage() {
                   transition={{ type: 'spring' as const, stiffness: 500, damping: 20 }}
                   className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl transition-all"
                   style={active
-                    ? { background: '#fff', boxShadow: '0 2px 10px rgba(124,58,237,0.15)' }
+                    ? { background: 'linear-gradient(135deg, #7C3AED, #4361EE)', boxShadow: '0 4px 14px rgba(124,58,237,0.35)' }
                     : {}
                   }
                 >
-                  <Icon className="w-3.5 h-3.5" style={{ color: active ? '#7C3AED' : '#8E87A8' }} />
+                  <Icon className="w-3.5 h-3.5" style={{ color: active ? '#fff' : '#8E87A8' }} />
                   <div className="text-left">
-                    <p className="text-[12px] font-bold leading-none" style={{ color: active ? '#7C3AED' : '#8E87A8' }}>
+                    <p className="text-[12px] font-bold leading-none" style={{ color: active ? '#fff' : '#8E87A8' }}>
                       {tab.label}
                     </p>
-                    <p className="text-[9px] leading-none mt-0.5" style={{ color: active ? '#9B72F0' : '#B0ABCA' }}>
+                    <p className="text-[9px] leading-none mt-0.5" style={{ color: active ? 'rgba(255,255,255,0.70)' : '#B0ABCA' }}>
                       {tab.desc}
                     </p>
                   </div>

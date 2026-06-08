@@ -692,7 +692,7 @@ export default function FinanzasPage() {
               onClick={handleGenerateMonth}
               disabled={generatingMonth}
               className="flex items-center justify-center gap-1.5 px-3 h-9 rounded-xl text-[12px] font-bold cursor-pointer transition-opacity disabled:opacity-60 shrink-0"
-              style={{ background: 'rgba(67,97,238,0.08)', color: '#4361EE', border: '1.5px dashed rgba(67,97,238,0.25)' }}
+              style={{ background: 'rgba(124,58,237,0.08)', color: '#7C3AED', border: '1.5px dashed rgba(124,58,237,0.25)' }}
             >
               <Zap className="w-3.5 h-3.5" />
               {generatingMonth ? 'Generando...' : 'Generar cobros'}

@@ -93,7 +93,7 @@ export function Slideshow({ slides, autoPlayMs = 5000, className = '' }: Slidesh
       {/* ── Móvil: carrusel ─────────────────────────────────────── */}
       <div
         className="relative w-full overflow-hidden rounded-2xl md:hidden h-[400px]"
-        style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.08), inset 0 0 0 1px rgba(0,0,0,0.06)' }}
+        style={{ boxShadow: '0 4px 16px rgba(0,0,0,0.13), inset 0 0 0 1px rgba(0,0,0,0.08)' }}
         onClick={handleInteraction}
       >
         <AnimatePresence initial={false} custom={direction}>
@@ -187,7 +187,7 @@ export function Slideshow({ slides, autoPlayMs = 5000, className = '' }: Slidesh
             className="grid grid-cols-2 gap-3"
           >
             {[0, 1].map(offset => (
-              <div key={offset} className="aspect-[3/2]" style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.08), inset 0 0 0 1px rgba(0,0,0,0.06)', borderRadius: '1rem', overflow: 'hidden' }}>
+              <div key={offset} className="aspect-[3/2]" style={{ boxShadow: '0 4px 16px rgba(0,0,0,0.13), inset 0 0 0 1px rgba(0,0,0,0.08)', borderRadius: '1rem', overflow: 'hidden' }}>
                 <SlideCard slide={getSlide(offset)} />
               </div>
             ))}
@@ -207,7 +207,7 @@ export function Slideshow({ slides, autoPlayMs = 5000, className = '' }: Slidesh
             className="grid grid-cols-2 gap-3"
           >
             {[0, 1].map(offset => (
-              <div key={offset} className="h-[420px]" style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.08), inset 0 0 0 1px rgba(0,0,0,0.06)', borderRadius: '1rem', overflow: 'hidden' }}>
+              <div key={offset} className="h-[420px]" style={{ boxShadow: '0 4px 16px rgba(0,0,0,0.13), inset 0 0 0 1px rgba(0,0,0,0.08)', borderRadius: '1rem', overflow: 'hidden' }}>
                 <SlideCard slide={getSlide(offset)} />
               </div>
             ))}

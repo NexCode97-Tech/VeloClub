@@ -32,8 +32,8 @@ function pointOnArc(i: number, n: number, r: number) {
   };
 }
 
-// Radio mayor: más separación entre ítems y más altura sobre el bar
-const RADIUS = 155;
+// Radio ajustado: separación equilibrada entre ítems
+const RADIUS = 115;
 
 export function BottomCircleMenu({ items, pathname, isOpen, onToggle, onClose }: BottomCircleMenuProps) {
   const router = useRouter();

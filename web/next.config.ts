@@ -20,6 +20,8 @@ export default withPWA({
     document: '/offline',
   },
   workboxOptions: {
+    skipWaiting: true,
+    clientsClaim: true,
     // No interceptar rutas de Clerk, sign-in, sign-up ni APIs
     navigateFallbackDenylist: [
       /^\/sign-in/,

@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono, Poppins, Open_Sans } from "next/font/google";
+import { Geist, Geist_Mono, Open_Sans } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import { esES } from "@clerk/localizations";
 import { Providers } from "./providers";
@@ -13,12 +13,6 @@ const geistSans = Geist({
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
-});
-
-const poppins = Poppins({
-  variable: "--font-poppins",
-  subsets: ["latin"],
-  weight: ["400", "600", "700", "800"],
 });
 
 const openSans = Open_Sans({
@@ -52,7 +46,7 @@ export default function RootLayout({
     <ClerkProvider localization={esES} signInForceRedirectUrl="/dashboard" afterSignOutUrl="/sign-in">
       <html
         lang="es"
-        className={`${geistSans.variable} ${geistMono.variable} ${poppins.variable} ${openSans.variable} h-full antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${openSans.variable} h-full antialiased`}
       >
         <body className="min-h-full flex flex-col">
           {/* Desregistra service workers viejos en todos los dispositivos */}

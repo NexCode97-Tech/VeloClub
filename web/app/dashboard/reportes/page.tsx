@@ -175,7 +175,7 @@ export default function ReportesPage() {
     <div className="min-h-full bg-background pb-8">
       {/* Header */}
       <div className="px-5 py-3 bg-background border-b border-border">
-        <h1 className="text-[22px] font-extrabold text-foreground" style={{ fontFamily: 'Poppins, sans-serif', lineHeight: 1.1 }}>
+        <h1 className="text-[22px] font-extrabold text-foreground" style={{ fontFamily: 'Open Sans, sans-serif', lineHeight: 1.1 }}>
           Reportes
         </h1>
         <p className="text-[11px] text-muted-foreground mt-0.5">{MONTH_NAMES_FULL[new Date().getMonth()]} {new Date().getFullYear()}</p>
@@ -195,7 +195,7 @@ export default function ReportesPage() {
                   </div>
                   {loading && <div className="w-3 h-3 rounded-full border border-t-transparent animate-spin" style={{ borderColor: k.color, borderTopColor: 'transparent' }} />}
                 </div>
-                <p className="text-2xl font-extrabold mt-1.5" style={{ fontFamily: "'Poppins', sans-serif", color: k.color }}>
+                <p className="text-2xl font-extrabold mt-1.5" style={{ fontFamily: "'Open Sans', sans-serif", color: k.color }}>
                   {loading ? '—' : k.value}
                 </p>
                 <p className="text-[12px] font-semibold text-foreground leading-tight">{k.label}</p>
@@ -332,7 +332,7 @@ export default function ReportesPage() {
               <div className="flex gap-2 mt-2">
                 {paymentDist.map(d => (
                   <div key={d.name} className="flex-1 rounded-xl px-3 py-2 text-center" style={{ background: `${d.color}12` }}>
-                    <p className="text-[18px] font-extrabold" style={{ color: d.color, fontFamily: "'Poppins', sans-serif" }}>{d.value}</p>
+                    <p className="text-[18px] font-extrabold" style={{ color: d.color, fontFamily: "'Open Sans', sans-serif" }}>{d.value}</p>
                     <p className="text-[10px] font-semibold" style={{ color: d.color }}>{d.name}</p>
                   </div>
                 ))}

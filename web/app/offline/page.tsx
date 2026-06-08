@@ -14,7 +14,7 @@ export default function OfflinePage() {
           <line x1="12" y1="20" x2="12.01" y2="20"/>
         </svg>
       </div>
-      <h1 style={{ margin: '0 0 8px', fontSize: 22, fontWeight: 800, color: '#1A1028', fontFamily: 'Poppins, sans-serif' }}>
+      <h1 style={{ margin: '0 0 8px', fontSize: 22, fontWeight: 800, color: '#1A1028', fontFamily: 'Open Sans, sans-serif' }}>
         Sin conexión
       </h1>
       <p style={{ margin: '0 0 24px', fontSize: 14, color: '#8E87A8', lineHeight: 1.6 }}>

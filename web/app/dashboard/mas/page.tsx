@@ -97,7 +97,7 @@ export default function MasPage() {
 
   return (
     <motion.div variants={stagger} initial="hidden" animate="show" className="min-h-full bg-background px-4 py-4">
-      <h1 className="text-[22px] font-extrabold text-foreground mb-4" style={{ fontFamily: 'Poppins, sans-serif', lineHeight: 1.1 }}>
+      <h1 className="text-[22px] font-extrabold text-foreground mb-4" style={{ fontFamily: 'Open Sans, sans-serif', lineHeight: 1.1 }}>
         Más opciones
       </h1>
 
@@ -160,7 +160,7 @@ export default function MasPage() {
 
             {/* Nombre + email */}
             <div className="flex-1 min-w-0">
-              <p className="text-[14px] font-bold text-foreground truncate" style={{ fontFamily: "'Poppins', sans-serif" }}>
+              <p className="text-[14px] font-bold text-foreground truncate" style={{ fontFamily: "'Open Sans', sans-serif" }}>
                 {user?.fullName ?? user?.firstName ?? 'Mi cuenta'}
               </p>
               <p className="text-[11px] text-muted-foreground truncate">
@@ -206,7 +206,7 @@ export default function MasPage() {
             }
           </div>
           <div className="flex-1 min-w-0 pointer-events-none">
-            <p className="text-[14px] font-bold text-foreground truncate" style={{ fontFamily: "'Poppins', sans-serif" }}>
+            <p className="text-[14px] font-bold text-foreground truncate" style={{ fontFamily: "'Open Sans', sans-serif" }}>
               {user?.fullName ?? user?.firstName ?? 'Mi cuenta'}
             </p>
             <p className="text-[11px] text-muted-foreground truncate">
@@ -250,7 +250,7 @@ export default function MasPage() {
               >
                 <Icon className="w-5 h-5" />
               </div>
-              <span className="flex-1 text-sm font-semibold text-foreground" style={{ fontFamily: "'Poppins', sans-serif" }}>
+              <span className="flex-1 text-sm font-semibold text-foreground" style={{ fontFamily: "'Open Sans', sans-serif" }}>
                 {label}
               </span>
               <ChevronRight className="w-4 h-4 text-muted-foreground" />

@@ -347,7 +347,7 @@ export default function FinanzasPage() {
               <div style={{ width: 32, height: 32, borderRadius: 10, background: s.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 8px' }}>
                 {s.icon}
               </div>
-              <p style={{ margin: 0, fontSize: 13, fontWeight: 800, color: s.color, fontFamily: 'Poppins, sans-serif', lineHeight: 1 }}>{s.value}</p>
+              <p style={{ margin: 0, fontSize: 13, fontWeight: 800, color: s.color, fontFamily: 'Open Sans, sans-serif', lineHeight: 1 }}>{s.value}</p>
               <p style={{ margin: '4px 0 0', fontSize: 9, fontWeight: 600, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{s.label}</p>
             </motion.div>
           ))}
@@ -365,7 +365,7 @@ export default function FinanzasPage() {
             <div style={{ width: 52, height: 52, borderRadius: 14, background: 'rgba(124,58,237,0.07)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px' }}>
               <CircleDollarSign size={24} color="#7C3AED" />
             </div>
-            <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: '#1A1028', fontFamily: 'Poppins, sans-serif' }}>Sin clubs registrados</p>
+            <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: '#1A1028', fontFamily: 'Open Sans, sans-serif' }}>Sin clubs registrados</p>
             <p style={{ margin: '6px 0 0', fontSize: 12, color: '#8E87A8' }}>Crea clubs desde el módulo de Clubs</p>
           </motion.div>
         )}
@@ -401,7 +401,7 @@ export default function FinanzasPage() {
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                     {/* Avatar */}
-                    <div style={{ width: 48, height: 48, borderRadius: '50%', background: sus ? pb.bg : trial ? trial.bg : 'rgba(142,135,168,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 800, color: sus ? pb.color : trial ? trial.color : '#8E87A8', fontFamily: 'Poppins, sans-serif', flexShrink: 0, overflow: 'hidden' }}>
+                    <div style={{ width: 48, height: 48, borderRadius: '50%', background: sus ? pb.bg : trial ? trial.bg : 'rgba(142,135,168,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 800, color: sus ? pb.color : trial ? trial.color : '#8E87A8', fontFamily: 'Open Sans, sans-serif', flexShrink: 0, overflow: 'hidden' }}>
                       {c.logoUrl
                         ? <img src={c.logoUrl} alt={c.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                         : c.name.charAt(0).toUpperCase()
@@ -411,7 +411,7 @@ export default function FinanzasPage() {
                     {/* Nombre + plan */}
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3 }}>
-                        <p style={{ margin: 0, fontSize: 15, fontWeight: 700, color: '#1A1028', fontFamily: 'Poppins, sans-serif', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        <p style={{ margin: 0, fontSize: 15, fontWeight: 700, color: '#1A1028', fontFamily: 'Open Sans, sans-serif', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                           {c.name}
                         </p>
                         {sus && (
@@ -463,7 +463,7 @@ export default function FinanzasPage() {
                     {/* % recaudado (plan activo) */}
                     {sus && (
                       <div style={{ textAlign: 'center', flexShrink: 0 }}>
-                        <p style={{ margin: 0, fontSize: 24, fontWeight: 800, color: pctColor, fontFamily: 'Poppins, sans-serif', lineHeight: 1 }}>{pct}%</p>
+                        <p style={{ margin: 0, fontSize: 24, fontWeight: 800, color: pctColor, fontFamily: 'Open Sans, sans-serif', lineHeight: 1 }}>{pct}%</p>
                         <p style={{ margin: '2px 0 0', fontSize: 9, color: '#8E87A8', whiteSpace: 'nowrap' }}>{fmt.format(rec)}</p>
                       </div>
                     )}
@@ -471,7 +471,7 @@ export default function FinanzasPage() {
                     {/* Días restantes de prueba */}
                     {!sus && trial && (
                       <div style={{ textAlign: 'center', flexShrink: 0 }}>
-                        <p style={{ margin: 0, fontSize: 24, fontWeight: 800, color: trial.color, fontFamily: 'Poppins, sans-serif', lineHeight: 1 }}>{trial.daysLeft}</p>
+                        <p style={{ margin: 0, fontSize: 24, fontWeight: 800, color: trial.color, fontFamily: 'Open Sans, sans-serif', lineHeight: 1 }}>{trial.daysLeft}</p>
                         <p style={{ margin: '2px 0 0', fontSize: 9, color: '#8E87A8', whiteSpace: 'nowrap' }}>días</p>
                       </div>
                     )}
@@ -606,7 +606,7 @@ export default function FinanzasPage() {
                                   {/* Monto + estado arriba, iconos abajo */}
                                   <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
                                     <div style={{ textAlign: 'right' }}>
-                                      <p style={{ margin: 0, fontSize: 14, fontWeight: 800, color: st.color, fontFamily: 'Poppins, sans-serif', lineHeight: 1 }}>{fmt.format(p.monto)}</p>
+                                      <p style={{ margin: 0, fontSize: 14, fontWeight: 800, color: st.color, fontFamily: 'Open Sans, sans-serif', lineHeight: 1 }}>{fmt.format(p.monto)}</p>
                                       <span style={{ display: 'inline-block', marginTop: 3, fontSize: 9, fontWeight: 700, padding: '2px 7px', borderRadius: 99, background: st.bg, color: st.color }}>
                                         {st.label}
                                       </span>
@@ -648,7 +648,7 @@ export default function FinanzasPage() {
                         style={{ background: '#F7F5FF', border: '1.5px solid rgba(124,58,237,0.15)', borderRadius: 16, padding: 14 }}
                       >
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-                          <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: '#1A1028', fontFamily: 'Poppins, sans-serif' }}>Registrar abono</p>
+                          <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: '#1A1028', fontFamily: 'Open Sans, sans-serif' }}>Registrar abono</p>
                           <span style={{ fontSize: 10, fontWeight: 600, color: '#7C3AED', background: 'rgba(124,58,237,0.10)', padding: '3px 8px', borderRadius: 99 }}>{c.name}</span>
                         </div>
                         <div style={{ marginBottom: 10 }}>
@@ -754,7 +754,7 @@ export default function FinanzasPage() {
 
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
                 <div>
-                  <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: '#1A1028', fontFamily: 'Poppins, sans-serif' }}>
+                  <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: '#1A1028', fontFamily: 'Open Sans, sans-serif' }}>
                     Comprobante de pago
                   </p>
                   <p style={{ margin: '2px 0 0', fontSize: 11, color: '#8E87A8' }}>{receiptModal.concepto}</p>

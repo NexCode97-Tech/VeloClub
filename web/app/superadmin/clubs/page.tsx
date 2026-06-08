@@ -414,7 +414,7 @@ export default function ClubsPage() {
               exit="exit"
               style={{ background: '#fff', border: '1.5px solid rgba(124,58,237,0.25)', borderRadius: 20, padding: '16px 14px', marginBottom: 12 }}
             >
-              <p style={{ margin: '0 0 14px', fontSize: 13, fontWeight: 700, color: '#1A1028', fontFamily: 'Poppins, sans-serif' }}>
+              <p style={{ margin: '0 0 14px', fontSize: 13, fontWeight: 700, color: '#1A1028', fontFamily: 'Open Sans, sans-serif' }}>
                 Nuevo club
               </p>
               {[
@@ -505,7 +505,7 @@ export default function ClubsPage() {
                     transition={{ duration: 0.22, ease: EASE }}
                     style={{ marginBottom: 12 }}
                   >
-                    <p style={{ margin: '0 0 12px', fontSize: 12, fontWeight: 700, color: '#7C3AED', fontFamily: 'Poppins, sans-serif' }}>
+                    <p style={{ margin: '0 0 12px', fontSize: 12, fontWeight: 700, color: '#7C3AED', fontFamily: 'Open Sans, sans-serif' }}>
                       Editar club
                     </p>
                     {[
@@ -602,7 +602,7 @@ export default function ClubsPage() {
                   <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 10 }}>
                     {/* Identidad */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 1, minWidth: 0 }}>
-                      <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'rgba(124,58,237,0.10)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 800, color: '#7C3AED', fontFamily: 'Poppins, sans-serif', flexShrink: 0, overflow: 'hidden' }}>
+                      <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'rgba(124,58,237,0.10)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 800, color: '#7C3AED', fontFamily: 'Open Sans, sans-serif', flexShrink: 0, overflow: 'hidden' }}>
                         {club.logoUrl
                           ? <img src={club.logoUrl} alt={club.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                           : club.name.charAt(0).toUpperCase()

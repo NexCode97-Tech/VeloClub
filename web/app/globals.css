@@ -9,7 +9,7 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-open-sans), "Open Sans", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "Geist Mono", "Geist Mono Fallback", ui-monospace, monospace;
-  --font-heading: var(--font-poppins), "Poppins", ui-sans-serif, system-ui, sans-serif;
+  --font-heading: var(--font-open-sans), "Open Sans", ui-sans-serif, system-ui, sans-serif;
 
   /* VeloClub brand tokens */
   --color-vc-accent: #7C3AED;
@@ -139,7 +139,7 @@
     @apply font-sans;
   }
   h1, h2, h3, h4, h5, h6 {
-    font-family: var(--font-poppins), "Poppins", ui-sans-serif, system-ui, sans-serif;
+    font-family: var(--font-open-sans), "Open Sans", ui-sans-serif, system-ui, sans-serif;
   }
 }
 

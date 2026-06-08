@@ -145,7 +145,7 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
 
       {/* Global Header */}
       <div className="flex items-center gap-2 shrink-0" style={{ padding: '12px 16px 10px', background: '#F7F7FB', borderBottom: '1px solid rgba(120,80,200,0.10)' }}>
-        <h2 className="flex-1 m-0 text-[17px] font-bold" style={{ fontFamily: 'Poppins, sans-serif', color: '#1A1028' }}>
+        <h2 className="flex-1 m-0 text-[17px] font-bold" style={{ fontFamily: 'Open Sans, sans-serif', color: '#1A1028' }}>
           {title}
         </h2>
         {/* Refresh */}
@@ -215,7 +215,7 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
                   </svg>
                 </div>
                 <div style={{ flex: 1 }}>
-                  <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: '#1A1028', fontFamily: 'Poppins, sans-serif', lineHeight: 1.2 }}>
+                  <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: '#1A1028', fontFamily: 'Open Sans, sans-serif', lineHeight: 1.2 }}>
                     Notificaciones
                   </h3>
                   {noLeidas > 0 && (

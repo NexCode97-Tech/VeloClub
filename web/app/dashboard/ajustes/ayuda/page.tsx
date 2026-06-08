@@ -114,7 +114,7 @@ export default function AyudaPage() {
         </button>
         <h1
           className="text-[17px] font-bold text-foreground"
-          style={{ fontFamily: "'Poppins', sans-serif" }}
+          style={{ fontFamily: "'Open Sans', sans-serif" }}
         >
           Centro de ayuda
         </h1>

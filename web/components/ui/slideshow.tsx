@@ -82,17 +82,17 @@ export function Slideshow({ slides, autoPlayMs = 5000, className = '' }: Slidesh
           {/* Label pill */}
           {slide.label && (
             <div
-              className="absolute top-3 left-3"
+              className="absolute top-3 left-3 flex items-center"
               style={{
                 background: 'rgba(15,15,15,0.70)',
                 backdropFilter: 'blur(10px)',
                 WebkitBackdropFilter: 'blur(10px)',
                 border: '1px solid rgba(255,255,255,0.15)',
                 borderRadius: 20,
-                padding: '3px 10px',
+                padding: '4px 10px',
               }}
             >
-              <span className="text-[10px] font-bold text-white/90 tracking-wide uppercase">
+              <span className="text-[10px] font-bold text-white/90 tracking-wide uppercase leading-none">
                 {slide.label}
               </span>
             </div>

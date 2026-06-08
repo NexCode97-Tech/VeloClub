@@ -637,21 +637,10 @@ export default function FinanzasPage() {
   return (
     <div className="min-h-full bg-background">
       {/* Header */}
-      <div className="px-5 py-3 bg-background border-b border-border flex items-center justify-between">
+      <div className="px-5 py-3 bg-background border-b border-border">
         <h1 className="text-[22px] font-extrabold text-foreground uppercase" style={{ fontFamily: 'Space Grotesk, sans-serif', lineHeight: 1.1 }}>
           Finanzas
         </h1>
-        <button
-          onClick={() => tab === 'mensualidades'
-            ? (setPayForm({ memberId: '', amount: '', month: String(filterMonth), year: String(filterYear), status: 'PAID', notes: '' }), setPayError(null), setPayOpen(true))
-            : (setFlowForm({ type: 'INCOME', amount: '', description: '', date: '' }), setFlowError(null), setFlowOpen(true))
-          }
-          className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold text-white cursor-pointer"
-          style={{ background: '#4361EE' }}
-        >
-          <Plus className="w-4 h-4" />
-          <span className="hidden sm:inline">{tab === 'mensualidades' ? 'Registrar cobro' : 'Agregar'}</span>
-        </button>
       </div>
 
       <motion.div variants={pageStagger} initial="hidden" animate="show" className="px-4 pt-4 flex flex-col gap-4">

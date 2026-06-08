@@ -117,6 +117,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [role, setRole] = useState<string | null>(null);
   const [checking, setChecking] = useState(true);
   const [masMenuOpen, setMasMenuOpen] = useState(false);
+  const [clubLogoUrl, setClubLogoUrl] = useState<string | null>(null);
+  const [clubName, setClubName] = useState<string | null>(null);
+  const [userName, setUserName] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isLoaded) return;
@@ -132,11 +135,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         const token = await session?.getToken({ skipCache: true });
         if (stale) return;
 
-        let res: { status: string; user?: { role: string } } | null = null;
+        let res: { status: string; user?: { role: string; name?: string; club?: { name?: string; logoUrl?: string } } } | null = null;
         let attempts = 0;
         while (attempts < 3) {
           try {
-            res = await apiFetch<{ status: string; user?: { role: string } }>('/me', { token });
+            res = await apiFetch<{ status: string; user?: { role: string; name?: string; club?: { name?: string; logoUrl?: string } } }>('/me', { token });
             break;
           } catch (err) {
             const { ApiError } = await import('@/lib/api-client');
@@ -156,6 +159,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         if (res.status === 'complete_profile') { router.replace('/completar-perfil'); return; }
         const userRole = res.user?.role ?? null;
         setRole(userRole);
+        setClubLogoUrl(res.user?.club?.logoUrl ?? null);
+        setClubName(res.user?.club?.name ?? null);
+        setUserName(res.user?.name ?? null);
 
         if (userRole === 'STUDENT') {
           const STUDENT_ALLOWED = ['/dashboard', '/dashboard/logros', '/dashboard/calendario', '/dashboard/pagos', '/dashboard/mas', '/dashboard/perfil', '/dashboard/ajustes'];
@@ -273,16 +279,36 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
         {/* ── Mobile header ── */}
         <header className="md:hidden flex items-center justify-between px-4 py-3 shrink-0 bg-background">
-          {/* Letrero */}
-          <Image
-            src="/letrero.png"
-            alt="VeloClub"
-            width={120}
-            height={36}
-            className="object-contain"
-          />
+          {/* Logo del club + saludo */}
+          <div className="flex items-center gap-2.5 min-w-0">
+            {clubLogoUrl ? (
+              <Image
+                src={clubLogoUrl}
+                alt={clubName ?? 'Club'}
+                width={36}
+                height={36}
+                className="rounded-full object-cover shrink-0"
+                style={{ border: '2px solid rgba(124,58,237,0.15)' }}
+              />
+            ) : (
+              <div
+                className="w-9 h-9 rounded-full shrink-0 flex items-center justify-center text-sm font-bold"
+                style={{ background: 'rgba(124,58,237,0.10)', color: '#7C3AED' }}
+              >
+                {clubName?.charAt(0)?.toUpperCase() ?? 'V'}
+              </div>
+            )}
+            <div className="min-w-0">
+              <p className="text-[10px] font-semibold uppercase tracking-widest truncate" style={{ color: '#8E87A8' }}>
+                Bienvenido
+              </p>
+              <p className="text-[13px] font-bold leading-tight truncate" style={{ color: '#1A1028', fontFamily: "'Poppins', sans-serif" }}>
+                {clubName ?? 'VeloClub'}
+              </p>
+            </div>
+          </div>
           {/* Acciones rápidas */}
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1 shrink-0">
             <Link
               href="/dashboard/perfil"
               className="w-9 h-9 flex items-center justify-center rounded-xl transition-colors hover:bg-secondary"

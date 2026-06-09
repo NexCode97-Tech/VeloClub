@@ -509,25 +509,28 @@ export default function PerfilPage() {
 
       {/* ── Tabs ─────────────────────────────────────────────────────────────── */}
       <div className="bg-white border-b border-border sticky top-0 z-10">
-        {/* Fila principal */}
-        <div className="flex">
-          {TABS.map(tab => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className="flex-1 py-3.5 relative transition-colors"
-              style={{ fontSize: 12, fontWeight: 700, color: activeTab === tab ? '#7C3AED' : '#8E87A8' }}
-            >
-              {tab}
-              {activeTab === tab && (
-                <motion.div layoutId="profile-tab-indicator"
-                  className="absolute bottom-0 left-4 right-4 h-[2.5px] rounded-full"
-                  style={{ background: '#7C3AED' }} />
-              )}
-            </button>
-          ))}
+        <div className="sm:flex">
+          {/* Fila de tabs — 50% en desktop */}
+          <div className="flex sm:w-1/2">
+            {TABS.map(tab => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className="flex-1 py-3.5 relative transition-colors"
+                style={{ fontSize: 12, fontWeight: 700, color: activeTab === tab ? '#7C3AED' : '#8E87A8' }}
+              >
+                {tab}
+                {activeTab === tab && (
+                  <motion.div layoutId="profile-tab-indicator"
+                    className="absolute bottom-0 left-4 right-4 h-[2.5px] rounded-full"
+                    style={{ background: '#7C3AED' }} />
+                )}
+              </button>
+            ))}
+          </div>
+          {/* Espacio derecho vacío en desktop */}
+          <div className="hidden sm:block sm:w-1/2" />
         </div>
-
       </div>
 
       {/* ── Contenido del tab ─────────────────────────────────────────────────── */}

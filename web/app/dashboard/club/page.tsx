@@ -388,7 +388,8 @@ export default function ClubProfilePage() {
 
       {/* ── Tabs ──────────────────────────────────────────────────────────────── */}
       <div className="bg-white border-b border-border sticky top-0 z-10">
-        <div className="flex">
+        <div className="sm:flex">
+        <div className="flex sm:w-1/2">
           {TABS.map(tab => (
             <button
               key={tab}
@@ -404,6 +405,9 @@ export default function ClubProfilePage() {
               )}
             </button>
           ))}
+        </div>
+        {/* Espacio derecho vacío en desktop */}
+        <div className="hidden sm:block sm:w-1/2" />
         </div>
       </div>
 

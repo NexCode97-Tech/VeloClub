@@ -21,7 +21,7 @@ import {
 import {
   Plus, Pencil, Trash2, Users, Search, Download,
   FileSpreadsheet, Upload, X, ChevronRight, Eye,
-  Phone, Mail, Calendar, MapPin, Shield, Heart,
+  Phone, Mail, Calendar, MapPin, Shield, Heart, CreditCard,
   ArrowUpDown, Tag, ChevronDown,
 } from 'lucide-react';
 import { MemberAvatar } from '@/components/ui/member-avatar';
@@ -637,6 +637,19 @@ export default function MiembrosPage() {
                             <Heart className="w-3 h-3" style={{ color: '#06D6A0' }} />
                           </div>
                           <p className="text-[12px] font-medium" style={{ color: '#5A5278' }}>{m.eps}</p>
+                        </div>
+                      )}
+                      {((m as Member & { docType?: string; docNumber?: string }).docType || (m as Member & { docType?: string; docNumber?: string }).docNumber) && (
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'rgba(124,58,237,0.08)' }}>
+                            <CreditCard className="w-3 h-3" style={{ color: '#7C3AED' }} />
+                          </div>
+                          <p className="text-[12px] font-medium" style={{ color: '#5A5278' }}>
+                            {[
+                              (m as Member & { docType?: string }).docType,
+                              (m as Member & { docNumber?: string }).docNumber,
+                            ].filter(Boolean).join(' · ')}
+                          </p>
                         </div>
                       )}
 

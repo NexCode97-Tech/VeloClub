@@ -18,15 +18,25 @@ import {
 interface MeResponse {
   status: string;
   user?: {
+    id: string;
+    clerkId: string;
     name: string;
     role: string;
-    club?: { name: string; logoUrl?: string; city?: string; department?: string };
+    club?: { name: string; logoUrl?: string; city?: string; department?: string; verified?: boolean; deporte?: string };
     picture?: string | null;
     coverUrl?: string | null;
     createdAt?: string;
     category?: string;
     bio?: string;
   };
+}
+
+interface PostImage { id: string; imageUrl: string }
+
+interface FollowStats {
+  followersCount: number;
+  followingCount: number;
+  isFollowing: boolean;
 }
 
 interface PostLike { userId: string }
@@ -314,7 +324,7 @@ function PostCard({ post, currentUserId, onLike, onComment, canDelete, onDelete 
 
 // ── Tabs ──────────────────────────────────────────────────────────────────────
 
-const TABS = ['Publicaciones', 'Acerca de'] as const;
+const TABS = ['Publicaciones', 'Fotos', 'Acerca de'] as const;
 type Tab = typeof TABS[number];
 
 // ── Main ──────────────────────────────────────────────────────────────────────
@@ -336,6 +346,10 @@ export default function PerfilPage() {
   const [coverMenuOpen, setCoverMenuOpen]   = useState(false);
   const [deletingCover, setDeletingCover]   = useState(false);
   const coverInputRef = useRef<HTMLInputElement>(null);
+
+  const [postImages, setPostImages]   = useState<PostImage[]>([]);
+  const [followStats, setFollowStats] = useState<FollowStats>({ followersCount: 0, followingCount: 0, isFollowing: false });
+  const [myClerkId, setMyClerkId]     = useState<string>('');
 
   // Referencia al nombre del usuario para filtrar posts (evita re-renders)
   const myNameRef = useRef<string>('');
@@ -371,6 +385,23 @@ export default function PerfilPage() {
         }
         postScopeRef.current = 'public';
         setCurrentUserId(userId ?? '');
+        // Cargar follow stats y clerkId
+        if (meRes.status === 'fulfilled' && meRes.value.user?.clerkId) {
+          const clerkId = meRes.value.user.clerkId;
+          setMyClerkId(clerkId);
+          try {
+            const token2 = await session?.getToken();
+            const statsRes = await apiFetch<FollowStats>(`/follows/stats/${clerkId}`, { token: token2 });
+            setFollowStats(statsRes);
+          } catch { /* silencioso */ }
+        }
+        // Post images para galería
+        if (postsRes.status === 'fulfilled') {
+          const imgs = postsRes.value.posts
+            .filter(p => p.imageUrl)
+            .map(p => ({ id: p.id, imageUrl: p.imageUrl! }));
+          setPostImages(imgs);
+        }
       } catch { /* silencioso */ } finally { setLoading(false); }
     })();
   }, [isLoaded, isSignedIn, userId, session]);
@@ -565,12 +596,31 @@ export default function PerfilPage() {
         </div>
 
         {/* Info del usuario */}
-        <div className="px-5 pb-5">
-          {/* Avatar — z-10 para quedar por encima del banner */}
-          <div className="flex items-end justify-between" style={{ marginTop: -40 }}>
-            <div className="relative z-10 rounded-full border-4 border-white overflow-hidden"
-              style={{ boxShadow: '0 4px 16px rgba(124,58,237,0.20)' }}>
-              <Avatar src={user?.picture} name={user?.name ?? 'Usuario'} size={80} role={role} />
+        <div className="px-5 pb-5 max-w-4xl mx-auto w-full">
+          {/* Avatar con badge del club */}
+          <div className="flex items-end justify-between" style={{ marginTop: -60 }}>
+            <div className="relative z-10">
+              <div className="rounded-full border-4 border-white overflow-hidden"
+                style={{ boxShadow: '0 4px 16px rgba(124,58,237,0.20)', width: 120, height: 120 }}>
+                <Avatar src={user?.picture} name={user?.name ?? 'Usuario'} size={120} role={role} />
+              </div>
+              {/* Badge del club — esquina inferior derecha */}
+              {user?.club?.logoUrl && (
+                <div className="absolute bottom-0.5 right-0.5 rounded-full border-2 border-white overflow-hidden"
+                  style={{ width: 32, height: 32, boxShadow: '0 2px 8px rgba(0,0,0,0.15)' }}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={user.club.logoUrl} alt={user.club.name} className="w-full h-full object-cover" />
+                </div>
+              )}
+              {/* Badge verificado si el club está verificado y no tiene logo */}
+              {user?.club?.verified && !user?.club?.logoUrl && (
+                <div className="absolute bottom-0.5 right-0.5 rounded-full border-2 border-white flex items-center justify-center"
+                  style={{ width: 28, height: 28, background: '#4361EE' }}>
+                  <svg viewBox="0 0 24 24" fill="none" className="w-3.5 h-3.5">
+                    <path d="M5 13l4 4L19 7" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </div>
+              )}
             </div>
           </div>
 
@@ -586,12 +636,19 @@ export default function PerfilPage() {
             </span>
           </div>
 
-          {/* Stats */}
+          {/* Stats: Publicaciones · Seguidores · Siguiendo */}
           <div className="flex items-center gap-6 mt-4">
             <div className="text-center">
-              <p className="text-[18px] font-bold text-foreground leading-none"
-                style={{ fontFamily: 'inherit' }}>{posts.length}</p>
+              <p className="text-[18px] font-bold text-foreground leading-none" style={{ fontFamily: 'inherit' }}>{posts.length}</p>
               <p style={{ fontSize: 11, fontWeight: 600, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.08em', marginTop: 2 }}>Publicaciones</p>
+            </div>
+            <div className="text-center">
+              <p className="text-[18px] font-bold text-foreground leading-none" style={{ fontFamily: 'inherit' }}>{followStats.followersCount}</p>
+              <p style={{ fontSize: 11, fontWeight: 600, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.08em', marginTop: 2 }}>Seguidores</p>
+            </div>
+            <div className="text-center">
+              <p className="text-[18px] font-bold text-foreground leading-none" style={{ fontFamily: 'inherit' }}>{followStats.followingCount}</p>
+              <p style={{ fontSize: 11, fontWeight: 600, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.08em', marginTop: 2 }}>Siguiendo</p>
             </div>
           </div>
 
@@ -600,19 +657,26 @@ export default function PerfilPage() {
             <p className="mt-3 text-[13px] text-foreground/80 leading-relaxed max-w-lg">{user.bio}</p>
           )}
 
-          {/* Metadata — Opción B: club inline con ubicación y fecha */}
+          {/* Metadata */}
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-3">
             {user?.club?.name && (
               <div className="flex items-center gap-1.5">
                 <Users className="w-3.5 h-3.5 shrink-0" style={{ color: '#8E87A8' }} />
                 <span className="text-[12px] text-muted-foreground">{user.club.name}</span>
+                {user.club.verified && (
+                  <div className="w-3.5 h-3.5 rounded-full flex items-center justify-center" style={{ background: '#4361EE' }}>
+                    <svg viewBox="0 0 24 24" fill="none" className="w-2 h-2">
+                      <path d="M5 13l4 4L19 7" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </div>
+                )}
               </div>
             )}
             {(user?.club?.city || user?.club?.department) && (
               <div className="flex items-center gap-1.5">
                 <MapPin className="w-3.5 h-3.5 shrink-0" style={{ color: '#8E87A8' }} />
                 <span className="text-[12px] text-muted-foreground">
-                  {[user.club.city, user.club.department].filter(Boolean).join(', ')}
+                  {[user?.club?.city, user?.club?.department].filter(Boolean).join(', ')}
                 </span>
               </div>
             )}
@@ -679,7 +743,7 @@ export default function PerfilPage() {
       </div>
 
       {/* ── Contenido del tab ─────────────────────────────────────────────────── */}
-      <div className="w-full px-4 sm:px-6 py-4 max-w-2xl">
+      <div className="w-full px-4 sm:px-6 py-4 max-w-4xl mx-auto">
         <AnimatePresence mode="wait">
           {activeTab === 'Publicaciones' && (
             <motion.div key="posts"
@@ -718,6 +782,49 @@ export default function PerfilPage() {
                     onDelete={handleDelete}
                   />
                 ))
+              )}
+            </motion.div>
+          )}
+
+          {activeTab === 'Fotos' && (
+            <motion.div key="fotos"
+              initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2 }}>
+              {postImages.length === 0 ? (
+                <div className="rounded-2xl px-6 py-10 flex flex-col items-center text-center mt-4"
+                  style={{ background: 'linear-gradient(135deg,rgba(124,58,237,0.04),rgba(67,97,238,0.03))', border: '1px solid rgba(124,58,237,0.10)' }}>
+                  <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4"
+                    style={{ background: 'linear-gradient(135deg,#7C3AED,#4361EE)' }}>
+                    <ImagePlus className="w-6 h-6 text-white" />
+                  </div>
+                  <p className="text-[14px] font-bold text-foreground mb-1">Sin fotos aún</p>
+                  <p className="text-[12px] text-muted-foreground">Las fotos de tus publicaciones aparecerán aquí.</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-3 gap-1 mt-2">
+                  {postImages.slice(0, 5).map((img, idx) => {
+                    const isLast = idx === 4 && postImages.length > 5;
+                    const remaining = postImages.length - 5;
+                    return (
+                      <div key={img.id}
+                        className="relative aspect-square rounded-lg overflow-hidden cursor-pointer group"
+                        style={{ background: '#f0f0f0' }}>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={img.imageUrl}
+                          alt="Foto"
+                          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                        />
+                        {isLast && (
+                          <div className="absolute inset-0 flex items-center justify-center"
+                            style={{ background: 'rgba(0,0,0,0.52)' }}>
+                            <span className="text-white font-bold text-[22px]">+{remaining}</span>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
               )}
             </motion.div>
           )}

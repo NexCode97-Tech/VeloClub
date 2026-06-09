@@ -70,6 +70,7 @@ export function PostCard({ post, currentUserId, onLike, onComment, canDelete, on
   const [sending, setSending]           = useState(false);
   const [menuOpen, setMenuOpen]         = useState(false);
   const [confirmDel, setConfirmDel]     = useState(false);
+  const [lightbox, setLightbox]         = useState(false);
   const menuRef    = useRef<HTMLDivElement>(null);
   const commentRef = useRef<HTMLInputElement>(null);
 
@@ -188,8 +189,50 @@ export function PostCard({ post, currentUserId, onLike, onComment, canDelete, on
         <div className="mb-3 overflow-hidden">
           {isVideo
             ? <video src={post.imageUrl} controls className="w-full" style={{ maxHeight: 520 }} />
-            // eslint-disable-next-line @next/next/no-img-element
-            : <img src={post.imageUrl} alt="Publicación" className="w-full object-contain" style={{ maxHeight: 520, background: '#f4f4f6' }} />
+            : (
+              <>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={post.imageUrl} alt="Publicación"
+                  className="w-full object-contain cursor-zoom-in"
+                  style={{ maxHeight: 520, background: '#f4f4f6' }}
+                  onClick={() => setLightbox(true)}
+                />
+                {/* Lightbox */}
+                <AnimatePresence>
+                  {lightbox && (
+                    <motion.div
+                      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                      transition={{ duration: 0.18 }}
+                      className="fixed inset-0 z-[999] flex items-center justify-center p-4"
+                      style={{ background: 'rgba(0,0,0,0.88)', backdropFilter: 'blur(6px)' }}
+                      onClick={() => setLightbox(false)}
+                    >
+                      <motion.div
+                        initial={{ scale: 0.92, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.92, opacity: 0 }}
+                        transition={{ duration: 0.2, ease: [0.23, 1, 0.32, 1] }}
+                        className="relative max-w-[92vw] max-h-[90vh]"
+                        onClick={e => e.stopPropagation()}
+                      >
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={post.imageUrl!} alt="Publicación ampliada"
+                          className="rounded-2xl object-contain shadow-2xl"
+                          style={{ maxWidth: '92vw', maxHeight: '88vh' }}
+                        />
+                        <button
+                          onClick={() => setLightbox(false)}
+                          className="absolute -top-3 -right-3 w-8 h-8 rounded-full flex items-center justify-center shadow-lg cursor-pointer"
+                          style={{ background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.2)' }}
+                        >
+                          <X className="w-4 h-4 text-white" />
+                        </button>
+                      </motion.div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </>
+            )
           }
         </div>
       )}

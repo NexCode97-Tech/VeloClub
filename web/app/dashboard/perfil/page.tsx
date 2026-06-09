@@ -554,9 +554,9 @@ export default function PerfilPage() {
               </button>
             ))}
           </div>
-          {/* Tab Contacto — solo en desktop, alineado al 50% derecho */}
-          <div className="hidden sm:flex sm:w-1/2 items-center">
-            <div className="relative py-3.5 px-6">
+          {/* Tab Contacto — solo en desktop, centrado en el 50% derecho */}
+          <div className="hidden sm:flex sm:w-1/2 items-center justify-center">
+            <div className="relative py-3.5">
               <span style={{ fontSize: 12, fontWeight: 700, color: '#8E87A8' }}>Contacto</span>
             </div>
           </div>

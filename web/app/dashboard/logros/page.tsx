@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@clerk/nextjs';
 import { useEffect, useState } from 'react';
 import { apiFetch } from '@/lib/api-client';
-import { parseLocalDate } from '@/lib/utils';
+import { parseLocalDate, toSentenceCase } from '@/lib/utils';
 import { useCompetitions, useTraining, useLocations } from '@/hooks/useVeloQuery';
 import Link from 'next/link';
 import {
@@ -593,7 +593,7 @@ function TrainCard({ session: s, isStudent, myMemberId, canManage, deleting, onD
 
         {/* Info */}
         <div className="flex-1 min-w-0">
-          <p className="text-[15px] font-bold text-foreground leading-tight truncate" style={{ fontFamily: 'inherit' }}>{s.title}</p>
+          <p className="text-[15px] font-bold text-foreground leading-tight truncate" style={{ fontFamily: 'inherit' }}>{toSentenceCase(s.title)}</p>
           <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1">
             {s.location && (
               <span className="flex items-center gap-1 text-[11px] text-muted-foreground">

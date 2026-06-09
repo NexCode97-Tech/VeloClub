@@ -649,12 +649,13 @@ function PostCard({
 // ── Composer (crear post) ─────────────────────────────────────────────────────
 
 function PostComposer({
-  userName, userRole, userAvatar, onSubmit, loading, token,
+  userName, userRole, userAvatar, onSubmit, loading,
 }: {
   userName: string; userRole: string; userAvatar?: string | null;
   onSubmit: (content: string, mediaUrl?: string, mediaPublicId?: string) => Promise<void>;
-  loading: boolean; token: string | null;
+  loading: boolean;
 }) {
+  const { session: composerSession } = useSession();
   const [open, setOpen]         = useState(false);
   const [content, setContent]   = useState('');
   const [media, setMedia]       = useState<{ url: string; publicId: string; type: string; name: string } | null>(null);
@@ -672,9 +673,10 @@ function PostComposer({
         reader.onload = e => res(e.target?.result as string);
         reader.readAsDataURL(file);
       });
+      const freshToken = await composerSession?.getToken();
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/posts/upload-media`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        headers: { 'Content-Type': 'application/json', ...(freshToken ? { Authorization: `Bearer ${freshToken}` } : {}) },
         body: JSON.stringify({ data: base64, type }),
       });
       const data = await res.json();
@@ -1212,7 +1214,6 @@ export default function DashboardPage() {
             userAvatar={user?.picture ?? null}
             onSubmit={handleCreatePost}
             loading={postsLoading}
-            token={authToken}
           />
         )}
 

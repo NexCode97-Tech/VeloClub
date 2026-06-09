@@ -125,6 +125,7 @@ router.get('/profile', requireAuth, async (req, res) => {
     select: {
       id: true, name: true, city: true, department: true, deporte: true,
       logoUrl: true, coverUrl: true, verified: true, createdAt: true,
+      description: true,
       _count: { select: { members: true } },
     },
   });
@@ -143,6 +144,21 @@ router.get('/profile', requireAuth, async (req, res) => {
   });
 
   res.json({ club, members, followersCount });
+});
+
+// PATCH /clubs/description — actualizar descripción del club
+router.patch('/description', requireAuth, async (req, res) => {
+  if (!req.user) return res.status(401).json({ error: 'No autenticado' });
+  if (req.user.role !== 'ADMIN') return res.status(403).json({ error: 'Solo administradores' });
+
+  const { description } = req.body as { description?: string };
+  const clubId = req.user.clubId ?? '';
+  const updated = await prisma.club.update({
+    where: { id: clubId },
+    data: { description: description?.trim() || null },
+    select: { description: true },
+  });
+  res.json({ description: updated.description });
 });
 
 // POST /clubs/cover — portada del club

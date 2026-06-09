@@ -25,7 +25,7 @@ interface ClubMember {
 interface ClubProfile {
   id: string; name: string; city?: string | null; department?: string | null;
   deporte?: string | null; logoUrl?: string | null; coverUrl?: string | null;
-  verified: boolean; createdAt: string;
+  verified: boolean; createdAt: string; description?: string | null;
   _count: { members: number };
 }
 
@@ -50,6 +50,10 @@ export default function ClubProfilePage() {
   const [posts, setPosts]                 = useState<Post[]>([]);
   const [currentUserId, setCurrentUserId] = useState('');
   const [activeTab, setActiveTab]         = useState<Tab>('Publicaciones');
+  const [description, setDescription]     = useState<string>('');
+  const [editingDesc, setEditingDesc]     = useState(false);
+  const [descDraft, setDescDraft]         = useState('');
+  const [savingDesc, setSavingDesc]       = useState(false);
 
   useEffect(() => {
     if (!isLoaded) return;
@@ -70,6 +74,7 @@ export default function ClubProfilePage() {
           setCoverUrl(clubRes.value.club.coverUrl ?? null);
           setMembers(clubRes.value.members);
           setFollowers(clubRes.value.followersCount);
+          setDescription(clubRes.value.club.description ?? '');
         }
         if (postsRes.status === 'fulfilled') setPosts(postsRes.value.posts);
         setCurrentUserId(userId ?? '');
@@ -106,6 +111,19 @@ export default function ClubProfilePage() {
     const token = await session?.getToken();
     await apiFetch(`/posts/${postId}`, { token, method: 'DELETE' });
     setPosts(prev => prev.filter(p => p.id !== postId));
+  }
+
+  async function saveDescription() {
+    setSavingDesc(true);
+    try {
+      const token = await session?.getToken();
+      const res = await apiFetch<{ description: string | null }>('/clubs/description', {
+        method: 'PATCH', token, body: JSON.stringify({ description: descDraft }),
+      });
+      setDescription(res.description ?? '');
+      setEditingDesc(false);
+    } catch { /* silencioso */ }
+    finally { setSavingDesc(false); }
   }
 
   async function handleCoverChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -278,6 +296,57 @@ export default function ClubProfilePage() {
               {club.deporte}
             </span>
           )}
+
+          {/* Descripción del club */}
+          <div className="mt-3 max-w-lg">
+            {editingDesc ? (
+              <div className="flex flex-col gap-2">
+                <textarea
+                  autoFocus
+                  value={descDraft}
+                  onChange={e => setDescDraft(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Escape') setEditingDesc(false); }}
+                  maxLength={300}
+                  rows={3}
+                  placeholder="Describe tu club..."
+                  className="w-full text-[13px] leading-relaxed rounded-xl px-3 py-2 outline-none resize-none"
+                  style={{ background: 'rgba(67,97,238,0.05)', border: '1.5px solid rgba(67,97,238,0.25)', color: '#1A1028' }}
+                />
+                <div className="flex items-center gap-2">
+                  <motion.button
+                    whileTap={{ scale: 0.96 }}
+                    onClick={saveDescription}
+                    disabled={savingDesc}
+                    className="px-4 py-1.5 rounded-lg text-[12px] font-bold text-white disabled:opacity-60 cursor-pointer"
+                    style={{ background: 'linear-gradient(135deg,#4361EE,#7C3AED)' }}>
+                    {savingDesc ? 'Guardando…' : 'Guardar'}
+                  </motion.button>
+                  <button onClick={() => setEditingDesc(false)}
+                    className="px-3 py-1.5 rounded-lg text-[12px] font-semibold text-muted-foreground hover:bg-secondary transition-colors cursor-pointer">
+                    Cancelar
+                  </button>
+                  <span className="ml-auto text-[11px] text-muted-foreground/50">{descDraft.length}/300</span>
+                </div>
+              </div>
+            ) : (
+              <div
+                onClick={() => { if (isAdmin) { setDescDraft(description); setEditingDesc(true); } }}
+                className={`group ${isAdmin ? 'cursor-pointer' : ''}`}>
+                {description ? (
+                  <p className="text-[13px] text-foreground/75 leading-relaxed">
+                    {description}
+                    {isAdmin && (
+                      <Pencil className="inline-block ml-1.5 w-3 h-3 opacity-0 group-hover:opacity-40 transition-opacity" />
+                    )}
+                  </p>
+                ) : isAdmin ? (
+                  <p className="text-[13px] text-muted-foreground/50 italic hover:text-muted-foreground/70 transition-colors">
+                    + Agregar descripción del club
+                  </p>
+                ) : null}
+              </div>
+            )}
+          </div>
 
           {/* Stats */}
           <div className="flex items-center gap-6 mt-4">

@@ -8,7 +8,7 @@ const CSP = [
   // Estilos: propio dominio + inline (Tailwind/shadcn lo requieren)
   "style-src 'self' 'unsafe-inline'",
   // Imágenes: propio dominio + Clerk + Cloudinary + Google Maps
-  "img-src 'self' data: blob: https://img.clerk.com https://images.clerk.dev https://res.cloudinary.com https://maps.gstatic.com https://maps.googleapis.com https://*.googleapis.com",
+  "img-src 'self' data: blob: https://img.clerk.com https://images.clerk.dev https://res.cloudinary.com https://maps.gstatic.com https://maps.googleapis.com https://*.googleapis.com https://purecatamphetamine.github.io",
   // Fuentes: solo propio dominio + Google Maps
   "font-src 'self' data: https://fonts.gstatic.com",
   // Conexiones: propio dominio + API Railway + Clerk + Cloudinary + Google Maps

@@ -3,7 +3,8 @@
 import { useAuth, useSession } from '@clerk/nextjs';
 import { useClubStream } from '@/hooks/useClubStream';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback, useRef, useLayoutEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { apiFetch } from '@/lib/api-client';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -204,9 +205,16 @@ function PostCard({
   const [showLikesPopover, setShowLikesPopover] = useState(false);
   const [likeUsers, setLikeUsers]               = useState<LikeUser[]>([]);
   const [loadingLikes, setLoadingLikes]         = useState(false);
+  const likesButtonRef = useRef<HTMLButtonElement>(null);
+  const [popoverPos, setPopoverPos] = useState<{ top: number; left: number } | null>(null);
 
   async function handleShowLikes() {
     if (showLikesPopover) { setShowLikesPopover(false); return; }
+    // Calcular posición antes de mostrar
+    if (likesButtonRef.current) {
+      const rect = likesButtonRef.current.getBoundingClientRect();
+      setPopoverPos({ top: rect.bottom + 6, left: rect.left });
+    }
     setShowLikesPopover(true);
     if (likeUsers.length === 0) {
       setLoadingLikes(true);
@@ -386,6 +394,7 @@ function PostCard({
         <div className="relative flex items-center gap-3 px-4 pb-2">
           {likeCount > 0 && (
             <button
+              ref={likesButtonRef}
               onClick={handleShowLikes}
               className="text-[12px] text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
             >
@@ -401,22 +410,25 @@ function PostCard({
             </button>
           )}
 
-          {/* Popover de likes */}
-          <AnimatePresence>
-            {showLikesPopover && (
+          {/* Popover de likes — renderizado en portal para evitar overflow clipping */}
+          {showLikesPopover && popoverPos && typeof document !== 'undefined' && createPortal(
+            <AnimatePresence>
               <>
-                <div className="fixed inset-0 z-40" onClick={() => setShowLikesPopover(false)} />
+                <div className="fixed inset-0 z-[9998]" onClick={() => setShowLikesPopover(false)} />
                 <motion.div
                   initial={{ opacity: 0, scale: 0.93, y: -6 }}
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.93, y: -6 }}
                   transition={{ duration: 0.16, ease: [0.23, 1, 0.32, 1] }}
-                  className="absolute left-0 top-6 z-50"
                   style={{
+                    position: 'fixed',
+                    top: popoverPos.top,
+                    left: popoverPos.left,
+                    zIndex: 9999,
                     background: '#fff',
                     border: '1px solid rgba(124,58,237,0.12)',
                     borderRadius: 14,
-                    boxShadow: '0 8px 28px rgba(0,0,0,0.10)',
+                    boxShadow: '0 8px 28px rgba(0,0,0,0.13)',
                     minWidth: 180,
                     maxWidth: 240,
                     padding: '10px 0',
@@ -443,8 +455,9 @@ function PostCard({
                   )}
                 </motion.div>
               </>
-            )}
-          </AnimatePresence>
+            </AnimatePresence>,
+            document.body
+          )}
         </div>
       )}
 

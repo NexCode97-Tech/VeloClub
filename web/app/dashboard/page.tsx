@@ -1049,7 +1049,7 @@ export default function DashboardPage() {
       </div>
 
       {/* ── Contenido principal — desktop: 50% izquierdo, 50% derecho reservado ── */}
-      <div className="w-full px-6 py-4 sm:flex sm:gap-6">
+      <div className="w-full px-6 py-4 sm:flex sm:items-start sm:gap-6">
       <div className="sm:w-1/2">
       <motion.div
         variants={feedVariants}
@@ -1166,7 +1166,7 @@ export default function DashboardPage() {
       </motion.div>
       </div>
       {/* Columna derecha — Widgets sticky */}
-      <div className="hidden sm:flex sm:flex-col sm:w-1/2 sm:py-4 sm:pr-6 gap-4 sm:sticky sm:top-4 sm:self-start">
+      <div className="hidden sm:flex sm:flex-col sm:w-1/2 sm:pr-6 gap-4 sm:sticky sm:top-4 sm:self-start">
 
         {/* Widget — Próximos Eventos */}
         <div className="rounded-2xl bg-white border border-border overflow-hidden"

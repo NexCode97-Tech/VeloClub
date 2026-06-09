@@ -3,11 +3,12 @@
 import { useAuth, useSession } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, useRef } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { apiFetch } from '@/lib/api-client';
 import { MemberAvatar } from '@/components/ui/member-avatar';
-import { MapPin, Camera, Pencil, Trash2, ImagePlus, BadgeCheck, Users } from 'lucide-react';
+import { MapPin, Camera, Pencil, Trash2, ImagePlus, BadgeCheck, Users, Lock } from 'lucide-react';
 import Link from 'next/link';
+import { PostCard, Post, PostComment } from '@/components/ui/post-card';
 
 const ROLE_GRADIENT: Record<string, string> = {
   SUPERADMIN: 'linear-gradient(135deg,#EF476F,#C1121F)',
@@ -29,7 +30,7 @@ interface ClubProfile {
 }
 
 export default function ClubProfilePage() {
-  const { isLoaded, isSignedIn } = useAuth();
+  const { isLoaded, isSignedIn, userId } = useAuth();
   const { session } = useSession();
   const router = useRouter();
 
@@ -43,6 +44,8 @@ export default function ClubProfilePage() {
   const [coverMenuOpen, setCoverMenuOpen]   = useState(false);
   const [deletingCover, setDeletingCover]   = useState(false);
   const coverInputRef = useRef<HTMLInputElement>(null);
+  const [posts, setPosts]               = useState<Post[]>([]);
+  const [currentUserId, setCurrentUserId] = useState('');
 
   useEffect(() => {
     if (!isLoaded) return;
@@ -50,11 +53,12 @@ export default function ClubProfilePage() {
     (async () => {
       try {
         const token = await session?.getToken();
-        const [meRes, clubRes] = await Promise.allSettled([
+        const [meRes, clubRes, postsRes] = await Promise.allSettled([
           apiFetch<{ status: string; user?: { role: string } }>('/me', { token }),
           apiFetch<{ club: ClubProfile; members: ClubMember[]; followersCount: number }>(
             '/clubs/profile', { token }
           ),
+          apiFetch<{ posts: Post[] }>('/posts?scope=private', { token }),
         ]);
         if (meRes.status === 'fulfilled') setUserRole(meRes.value.user?.role ?? '');
         if (clubRes.status === 'fulfilled') {
@@ -63,10 +67,42 @@ export default function ClubProfilePage() {
           setMembers(clubRes.value.members);
           setFollowers(clubRes.value.followersCount);
         }
+        if (postsRes.status === 'fulfilled') setPosts(postsRes.value.posts);
+        setCurrentUserId(userId ?? '');
       } catch { /* silencioso */ }
       finally { setLoading(false); }
     })();
-  }, [isLoaded, isSignedIn, session, router]);
+  }, [isLoaded, isSignedIn, session, router, userId]);
+
+  async function handleLike(postId: string) {
+    const token = await session?.getToken();
+    const res = await apiFetch<{ liked: boolean }>(`/posts/${postId}/like`, { token, method: 'POST' });
+    setPosts(prev => prev.map(p => {
+      if (p.id !== postId) return p;
+      return {
+        ...p,
+        likes: res.liked
+          ? [...p.likes, { userId: currentUserId }]
+          : p.likes.filter(l => l.userId !== currentUserId),
+      };
+    }));
+  }
+
+  async function handleComment(postId: string, content: string) {
+    const token = await session?.getToken();
+    const res = await apiFetch<{ comment: PostComment }>(`/posts/${postId}/comments`, {
+      token, method: 'POST', body: JSON.stringify({ content }),
+    });
+    setPosts(prev => prev.map(p =>
+      p.id === postId ? { ...p, comments: [...p.comments, res.comment] } : p
+    ));
+  }
+
+  async function handleDelete(postId: string) {
+    const token = await session?.getToken();
+    await apiFetch(`/posts/${postId}`, { token, method: 'DELETE' });
+    setPosts(prev => prev.filter(p => p.id !== postId));
+  }
 
   async function handleCoverChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]; if (!file) return;
@@ -273,6 +309,46 @@ export default function ClubProfilePage() {
             </Link>
           ))}
         </div>
+      </div>
+
+      {/* Publicaciones privadas del club */}
+      <div className="px-4 sm:px-6 pb-6 w-full max-w-2xl sm:max-w-none mx-auto">
+        <div className="flex items-center gap-2 mb-3">
+          <Lock className="w-3.5 h-3.5" style={{ color: '#8E87A8' }} />
+          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Publicaciones del club</p>
+        </div>
+
+        <AnimatePresence>
+          {posts.length === 0 ? (
+            <motion.div
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+              className="rounded-2xl px-6 py-10 flex flex-col items-center text-center"
+              style={{ background: 'linear-gradient(135deg,rgba(124,58,237,0.04),rgba(67,97,238,0.03))', border: '1px solid rgba(124,58,237,0.10)' }}>
+              <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4"
+                style={{ background: 'linear-gradient(135deg,#7C3AED,#4361EE)' }}>
+                <Lock className="w-6 h-6 text-white" />
+              </div>
+              <p className="text-[14px] font-bold text-foreground mb-1">Sin publicaciones del club aún</p>
+              <p className="text-[12px] text-muted-foreground">
+                Las publicaciones para el club aparecerán aquí.
+              </p>
+            </motion.div>
+          ) : (
+            <div className="space-y-4">
+              {posts.map(post => (
+                <PostCard
+                  key={post.id}
+                  post={post}
+                  currentUserId={currentUserId}
+                  canDelete={isAdmin}
+                  onLike={handleLike}
+                  onComment={handleComment}
+                  onDelete={handleDelete}
+                />
+              ))}
+            </div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );

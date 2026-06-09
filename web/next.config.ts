@@ -4,15 +4,15 @@ import withPWA from "@ducanh2912/next-pwa";
 const CSP = [
   "default-src 'self'",
   // Scripts: propio dominio + Clerk
-  "script-src 'self' 'unsafe-inline' https://clerk.veloclubtech.com https://*.clerk.accounts.dev",
+  "script-src 'self' 'unsafe-inline' https://clerk.veloclubtech.com https://*.clerk.accounts.dev https://maps.googleapis.com https://*.googleapis.com",
   // Estilos: propio dominio + inline (Tailwind/shadcn lo requieren)
   "style-src 'self' 'unsafe-inline'",
-  // Imágenes: propio dominio + Clerk + Cloudinary + OpenStreetMap tiles (Leaflet)
-  "img-src 'self' data: blob: https://img.clerk.com https://images.clerk.dev https://res.cloudinary.com https://*.tile.openstreetmap.org https://unpkg.com",
-  // Fuentes: solo propio dominio
-  "font-src 'self' data:",
-  // Conexiones: propio dominio + API Railway + Clerk + Cloudinary
-  "connect-src 'self' https://veloclub-production.up.railway.app https://clerk.veloclubtech.com https://*.clerk.accounts.dev https://api.cloudinary.com https://nominatim.openstreetmap.org",
+  // Imágenes: propio dominio + Clerk + Cloudinary + Google Maps
+  "img-src 'self' data: blob: https://img.clerk.com https://images.clerk.dev https://res.cloudinary.com https://maps.gstatic.com https://maps.googleapis.com https://*.googleapis.com",
+  // Fuentes: solo propio dominio + Google Maps
+  "font-src 'self' data: https://fonts.gstatic.com",
+  // Conexiones: propio dominio + API Railway + Clerk + Cloudinary + Google Maps
+  "connect-src 'self' https://veloclub-production.up.railway.app https://clerk.veloclubtech.com https://*.clerk.accounts.dev https://api.cloudinary.com https://maps.googleapis.com https://*.googleapis.com",
   // Frames: solo Clerk (para su UI embebida)
   "frame-src https://clerk.veloclubtech.com https://*.clerk.accounts.dev",
   // No permitir embeber la app en iframes externos

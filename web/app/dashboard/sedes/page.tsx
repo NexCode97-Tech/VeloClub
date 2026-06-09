@@ -390,7 +390,7 @@ export default function SedesPage() {
                       height="200"
                       loading="lazy"
                       style={{ border: 0, display: 'block' }}
-                      src={`https://maps.google.com/maps?q=${loc.latitude},${loc.longitude}&z=15&output=embed`}
+                      src={`https://maps.google.com/maps?q=${loc.latitude},${loc.longitude}&z=12&output=embed`}
                     />
                   </div>
                 )}

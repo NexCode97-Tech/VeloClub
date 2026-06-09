@@ -1153,7 +1153,7 @@ export default function DashboardPage() {
                       <div className="flex-1 min-w-0">
                         <p className="text-[11px] font-semibold text-foreground truncate">{b.fullName}</p>
                         <p className="text-[10px]" style={{ color: isToday ? '#EF476F' : '#8E87A8', fontWeight: 500 }}>
-                          {isToday ? '¡Hoy!' : isTomorrow ? 'Mañana' : `En ${b.daysUntil} días`}
+                          {(() => { const d = new Date(b.birthDate); return d.toLocaleDateString('es-CO', { day: 'numeric', month: 'long' }); })()}
                         </p>
                       </div>
                     </div>
@@ -1401,7 +1401,7 @@ export default function DashboardPage() {
                     <div className="flex-1 min-w-0">
                       <p className="text-[12px] font-semibold text-foreground truncate">{b.fullName}</p>
                       <p className="text-[11px]" style={{ color: isToday ? '#EF476F' : '#8E87A8', fontWeight: 500 }}>
-                        {isToday ? '¡Hoy es su cumpleaños!' : isTomorrow ? 'Mañana es su cumpleaños' : `En ${b.daysUntil} días`}
+                        {(() => { const d = new Date(b.birthDate); return d.toLocaleDateString('es-CO', { day: 'numeric', month: 'long' }); })()}
                       </p>
                     </div>
                   </div>

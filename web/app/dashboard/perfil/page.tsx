@@ -626,11 +626,11 @@ export default function PerfilPage() {
 
           {/* Nombre y rol */}
           <div className="mt-3">
-            <h1 className="text-[24px] font-semibold text-foreground leading-tight uppercase"
+            <h1 className="text-[24px] font-semibold text-foreground leading-tight"
               style={{ fontFamily: 'inherit' }}>
               {user?.name ?? 'Usuario'}
             </h1>
-            <span className="inline-block mt-1 text-[10px] font-bold px-2.5 py-0.5 rounded-full tracking-widest uppercase"
+            <span className="inline-block mt-1 text-[10px] font-bold px-2.5 py-0.5 rounded-full tracking-widest"
               style={{ background: rc.bg, color: rc.text }}>
               {roleLabels[role] ?? role}
             </span>
@@ -640,15 +640,15 @@ export default function PerfilPage() {
           <div className="flex items-center gap-6 mt-4">
             <div className="text-center">
               <p className="text-[18px] font-bold text-foreground leading-none" style={{ fontFamily: 'inherit' }}>{posts.length}</p>
-              <p style={{ fontSize: 11, fontWeight: 600, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.08em', marginTop: 2 }}>Publicaciones</p>
+              <p style={{ fontSize: 11, fontWeight: 600, color: '#8E87A8', marginTop: 2 }}>Publicaciones</p>
             </div>
             <div className="text-center">
               <p className="text-[18px] font-bold text-foreground leading-none" style={{ fontFamily: 'inherit' }}>{followStats.followersCount}</p>
-              <p style={{ fontSize: 11, fontWeight: 600, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.08em', marginTop: 2 }}>Seguidores</p>
+              <p style={{ fontSize: 11, fontWeight: 600, color: '#8E87A8', marginTop: 2 }}>Seguidores</p>
             </div>
             <div className="text-center">
               <p className="text-[18px] font-bold text-foreground leading-none" style={{ fontFamily: 'inherit' }}>{followStats.followingCount}</p>
-              <p style={{ fontSize: 11, fontWeight: 600, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.08em', marginTop: 2 }}>Siguiendo</p>
+              <p style={{ fontSize: 11, fontWeight: 600, color: '#8E87A8', marginTop: 2 }}>Siguiendo</p>
             </div>
           </div>
 
@@ -701,7 +701,7 @@ export default function PerfilPage() {
               key={tab}
               onClick={() => setActiveTab(tab)}
               className="flex-1 py-3.5 relative transition-colors"
-              style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: activeTab === tab ? '#7C3AED' : '#8E87A8' }}
+              style={{ fontSize: 12, fontWeight: 700, color: activeTab === tab ? '#7C3AED' : '#8E87A8' }}
             >
               {tab}
               {activeTab === tab && (
@@ -743,7 +743,7 @@ export default function PerfilPage() {
       </div>
 
       {/* ── Contenido del tab ─────────────────────────────────────────────────── */}
-      <div className="w-full px-4 sm:px-6 py-4 max-w-4xl mx-auto">
+      <div className="w-full px-4 sm:px-6 py-4 max-w-2xl">
         <AnimatePresence mode="wait">
           {activeTab === 'Publicaciones' && (
             <motion.div key="posts"

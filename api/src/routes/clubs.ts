@@ -132,11 +132,11 @@ router.get('/profile', requireAuth, async (req, res) => {
   if (!club) return res.status(404).json({ error: 'Club no encontrado' });
 
   const members = await prisma.member.findMany({
-    where: { clubId, inviteStatus: 'ACCEPTED' },
+    where: { clubId },
     select: {
       id: true, fullName: true, pictureUrl: true, role: true, clerkId: true,
     },
-    orderBy: { createdAt: 'asc' },
+    orderBy: { fullName: 'asc' },
   });
 
   const followersCount = await prisma.follow.count({

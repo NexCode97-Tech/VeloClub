@@ -123,6 +123,8 @@ const MONTH_NAMES = [
 interface PaymentInvoice {
   id: string;
   memberName: string;
+  docType?: string | null;
+  docNumber?: string | null;
   amount: number;
   month: number;
   year: number;
@@ -221,6 +223,9 @@ export async function downloadInvoicePDF(
   // ── 6. Tabla de detalle PRIMERO ───────────────────────────────────────────
   const rows: [string, string][] = [
     ['DEPORTISTA',    payment.memberName],
+    ...(payment.docType || payment.docNumber
+      ? [[`${payment.docType ?? 'DOCUMENTO'}`, payment.docNumber ?? '—'] as [string, string]]
+      : []),
     ['CONCEPTO',      `Mensualidad ${MONTH_NAMES[payment.month - 1]} ${payment.year}`],
     ['PERÍODO',       `${MONTH_NAMES[payment.month - 1]} ${payment.year}`],
     ['FECHA DE PAGO', payment.paidAt

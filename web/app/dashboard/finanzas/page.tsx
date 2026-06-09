@@ -69,6 +69,7 @@ function getInitials(name: string) {
 interface Member {
   id: string; fullName: string; role: string;
   phone?: string; emergencyPhone?: string;
+  docType?: string | null; docNumber?: string | null;
   monthlyFee?: number | null; paymentDueDay?: number | null;
 }
 interface Payment {
@@ -200,7 +201,7 @@ function StudentRow({
         </motion.button>
       )}
       {payment && (
-        <button onClick={() => downloadInvoicePDF({ ...payment, memberName: m.fullName }, clubName, clubLogoUrl)}
+        <button onClick={() => downloadInvoicePDF({ ...payment, memberName: m.fullName, docType: m.docType, docNumber: m.docNumber }, clubName, clubLogoUrl)}
           className="w-7 h-7 rounded-lg bg-secondary flex items-center justify-center text-muted-foreground cursor-pointer" title="Descargar recibo">
           <Download className="w-3.5 h-3.5" />
         </button>
@@ -526,9 +527,10 @@ export default function FinanzasPage() {
       });
       setPayOpen(false);
       invalidatePay(); invalidateFlow();
-      const memberName = allMembers.find(m => m.id === payForm.memberId)?.fullName ?? '';
+      const memberData = allMembers.find(m => m.id === payForm.memberId);
+      const memberName = memberData?.fullName ?? '';
       if (created.payment.status === 'PAID') {
-        downloadInvoicePDF({ ...created.payment, memberName }, clubName, clubLogoUrl);
+        downloadInvoicePDF({ ...created.payment, memberName, docType: memberData?.docType, docNumber: memberData?.docNumber }, clubName, clubLogoUrl);
       }
     } catch (e) { setPayError(e instanceof Error ? e.message : 'Error'); }
     finally { setSavingPay(false); }

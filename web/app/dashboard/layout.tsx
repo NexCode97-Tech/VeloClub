@@ -329,7 +329,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             {sideNavItems.map(({ href, label, icon: Icon }) => {
               // Ajustes y Mi Perfil se ocultan cuando el sidebar está expandido (ya aparecen en el footer)
               if (href === '/dashboard/ajustes' && !collapsed) return null;
-              if (href === '/dashboard/perfil' && !collapsed) return null;
+              if (href === '/dashboard/perfil') return null;
               const active = isSideActive(href);
               return (
                 <Link

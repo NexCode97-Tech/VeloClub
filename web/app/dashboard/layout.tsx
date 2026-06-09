@@ -24,6 +24,7 @@ import {
   RefreshCw,
   ChevronLeft,
   ChevronRight,
+  Building2,
 } from 'lucide-react';
 
 // ── Colores por rol (sidebar footer) ─────────────────────────────────────────
@@ -96,6 +97,7 @@ const ADMIN_NAV = [
   { href: '/dashboard/logros',     label: 'Resultados',    icon: Trophy },
   { href: '/dashboard/calendario', label: 'Calendario',    icon: CalendarDays },
   { href: '/dashboard/reportes',   label: 'Reportes',      icon: BarChart2 },
+  { href: '/dashboard/club',       label: 'Club',          icon: Building2 },
   { href: '/dashboard/perfil',     label: 'Mi Perfil',     icon: UserCircle },
   { href: '/dashboard/ajustes',    label: 'Ajustes',       icon: Settings },
 ];
@@ -107,6 +109,7 @@ const COACH_NAV = [
   { href: '/dashboard/asistencia', label: 'Asistencia',    icon: CalendarCheck },
   { href: '/dashboard/logros',     label: 'Resultados',    icon: Trophy },
   { href: '/dashboard/calendario', label: 'Calendario',    icon: CalendarDays },
+  { href: '/dashboard/club',       label: 'Club',          icon: Building2 },
   { href: '/dashboard/perfil',     label: 'Mi Perfil',     icon: UserCircle },
   { href: '/dashboard/ajustes',    label: 'Ajustes',       icon: Settings },
 ];

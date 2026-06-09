@@ -43,9 +43,11 @@ export function DatePicker({
   maxDate,
 }: DatePickerProps) {
   const parsed   = value ? new Date(value + 'T00:00:00') : null;
-  const [open, setOpen]   = useState(false);
-  const [base, setBase]   = useState<Date>(() => parsed ?? new Date());
-  const ref = useRef<HTMLDivElement>(null);
+  const [open, setOpen]     = useState(false);
+  const [openUp, setOpenUp] = useState(false);   // true = abre hacia arriba
+  const [base, setBase]     = useState<Date>(() => parsed ?? new Date());
+  const ref        = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
 
   // Sincronizar base cuando cambia el valor externo
   useEffect(() => {
@@ -60,6 +62,17 @@ export function DatePicker({
     document.addEventListener('mousedown', h);
     return () => document.removeEventListener('mousedown', h);
   }, []);
+
+  // Detectar si hay espacio suficiente abajo; si no, abrir hacia arriba
+  function handleOpen() {
+    if (triggerRef.current) {
+      const rect         = triggerRef.current.getBoundingClientRect();
+      const spaceBelow   = window.innerHeight - rect.bottom;
+      const dropdownH    = 340; // altura aprox del dropdown
+      setOpenUp(spaceBelow < dropdownH);
+    }
+    setOpen(o => !o);
+  }
 
   function handleDay(day: Date) {
     if (minDate && day < minDate) return;
@@ -83,8 +96,9 @@ export function DatePicker({
     <div ref={ref} className={`relative ${className}`}>
       {/* ── Trigger ── */}
       <button
+        ref={triggerRef}
         type="button"
-        onClick={() => setOpen(o => !o)}
+        onClick={handleOpen}
         className="w-full flex items-center gap-2 h-12 px-3 rounded-xl border border-input bg-background hover:border-ring transition-colors text-left group"
       >
         <CalendarDays className="w-4 h-4 shrink-0 text-muted-foreground" />
@@ -109,11 +123,14 @@ export function DatePicker({
           <div className="fixed inset-0 z-[9998]" onClick={() => setOpen(false)} />
 
           <div
-            className="absolute left-0 top-[calc(100%+6px)] z-[9999] rounded-2xl p-4 w-[280px]"
+            className="absolute left-0 z-[9999] rounded-2xl p-4 w-[280px]"
             style={{
               background: '#fff',
               border:     '1px solid rgba(124,58,237,0.14)',
               boxShadow:  '0 16px 48px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)',
+              ...(openUp
+                ? { bottom: 'calc(100% + 6px)' }
+                : { top:    'calc(100% + 6px)' }),
             }}
           >
             {/* Nav mes */}

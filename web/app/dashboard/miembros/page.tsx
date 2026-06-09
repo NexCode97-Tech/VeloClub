@@ -25,6 +25,7 @@ import {
   ArrowUpDown, Tag, ChevronDown,
 } from 'lucide-react';
 import { MemberAvatar } from '@/components/ui/member-avatar';
+import { PhoneInput } from '@/components/ui/phone-input';
 import { downloadMembersPDF } from '@/lib/pdf';
 import { downloadMembersTemplate, parseMembersExcel } from '@/lib/excel';
 
@@ -974,8 +975,11 @@ export default function MiembrosPage() {
                       </div>
                       <div>
                         <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest block mb-2">Teléfono</label>
-                        <Input placeholder="ej. 3001234567" value={form.phone} className="h-12 rounded-xl"
-                          onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} />
+                        <PhoneInput
+                          value={form.phone}
+                          onChange={v => setForm(f => ({ ...f, phone: v }))}
+                          placeholder="Número de teléfono"
+                        />
                       </div>
                       <div className="grid grid-cols-2 gap-3">
                         <div>
@@ -1007,8 +1011,11 @@ export default function MiembrosPage() {
                       </div>
                       <div>
                         <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest block mb-2">Teléfono del acudiente</label>
-                        <Input placeholder="ej. 3001234567" value={form.guardianPhone} className="h-12 rounded-xl"
-                          onChange={e => setForm(f => ({ ...f, guardianPhone: e.target.value }))} />
+                        <PhoneInput
+                          value={form.guardianPhone}
+                          onChange={v => setForm(f => ({ ...f, guardianPhone: v }))}
+                          placeholder="Número del acudiente"
+                        />
                       </div>
                     </div>
                   )}

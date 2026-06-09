@@ -25,7 +25,7 @@ import {
   ArrowUpDown, Tag, ChevronDown,
 } from 'lucide-react';
 import { MemberAvatar } from '@/components/ui/member-avatar';
-import { PhoneInput } from '@/components/ui/phone-input';
+import { PhoneInput, parsePhoneDisplay, FlagImg } from '@/components/ui/phone-input';
 import { DatePicker } from '@/components/ui/date-picker';
 import { downloadMembersPDF } from '@/lib/pdf';
 import { downloadMembersTemplate, parseMembersExcel } from '@/lib/excel';
@@ -57,7 +57,7 @@ const ROLE_GRADIENT: Record<string, string> = {
 };
 
 // ── Empty form ─────────────────────────────────────────────────────────────────
-const DOC_TYPES = ['CC', 'TI', 'CE', 'PA', 'RC', 'NIT', 'Otro'] as const;
+const DOC_TYPES = ['CC', 'TI', 'CE', 'PA', 'NIT', 'Otro'] as const;
 
 const emptyForm = {
   fullName: '', email: '', phone: '', birthDate: '',
@@ -613,14 +613,20 @@ export default function MiembrosPage() {
                           <p className="text-[12px] font-medium truncate lowercase" style={{ color: '#5A5278' }}>{m.email}</p>
                         </div>
                       )}
-                      {m.phone && (
-                        <div className="flex items-center gap-2.5">
-                          <div className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'rgba(124,58,237,0.08)' }}>
-                            <Phone className="w-3 h-3" style={{ color: '#7C3AED' }} />
+                      {m.phone && (() => {
+                        const { iso2, dialCode, number } = parsePhoneDisplay(m.phone);
+                        return (
+                          <div className="flex items-center gap-2.5">
+                            <div className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'rgba(124,58,237,0.08)' }}>
+                              <Phone className="w-3 h-3" style={{ color: '#7C3AED' }} />
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                              <FlagImg code={iso2} size={16} />
+                              <p className="text-[12px] font-medium" style={{ color: '#5A5278' }}>+{dialCode} {number}</p>
+                            </div>
                           </div>
-                          <p className="text-[12px] font-medium" style={{ color: '#5A5278' }}>{m.phone}</p>
-                        </div>
-                      )}
+                        );
+                      })()}
                       {m.birthDate && (
                         <div className="flex items-center gap-2.5">
                           <div className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'rgba(124,58,237,0.08)' }}>
@@ -1267,17 +1273,23 @@ export default function MiembrosPage() {
                   <div>
                     <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-3">Contacto</p>
                     <div className="space-y-2.5">
-                      {viewMember.phone && (
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(124,58,237,0.08)' }}>
-                            <Phone className="w-3.5 h-3.5" style={{ color: '#7C3AED' }} />
+                      {viewMember.phone && (() => {
+                        const { iso2, dialCode, number } = parsePhoneDisplay(viewMember.phone);
+                        return (
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(124,58,237,0.08)' }}>
+                              <Phone className="w-3.5 h-3.5" style={{ color: '#7C3AED' }} />
+                            </div>
+                            <div>
+                              <p className="text-[10px] text-muted-foreground">Teléfono</p>
+                              <div className="flex items-center gap-1.5 mt-0.5">
+                                <FlagImg code={iso2} size={16} />
+                                <p className="text-[13px] font-semibold text-foreground">+{dialCode} {number}</p>
+                              </div>
+                            </div>
                           </div>
-                          <div>
-                            <p className="text-[10px] text-muted-foreground">Teléfono</p>
-                            <p className="text-[13px] font-semibold text-foreground">{viewMember.phone}</p>
-                          </div>
-                        </div>
-                      )}
+                        );
+                      })()}
                       {viewMember.email && (
                         <div className="flex items-center gap-3">
                           <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(124,58,237,0.08)' }}>
@@ -1321,17 +1333,23 @@ export default function MiembrosPage() {
                             </div>
                           </div>
                         )}
-                        {viewMember.emergencyPhone && (
-                          <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(67,97,238,0.08)' }}>
-                              <Phone className="w-3.5 h-3.5" style={{ color: '#4361EE' }} />
+                        {viewMember.emergencyPhone && (() => {
+                          const { iso2, dialCode, number } = parsePhoneDisplay(viewMember.emergencyPhone);
+                          return (
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(67,97,238,0.08)' }}>
+                                <Phone className="w-3.5 h-3.5" style={{ color: '#4361EE' }} />
+                              </div>
+                              <div>
+                                <p className="text-[10px] text-muted-foreground">Teléfono</p>
+                                <div className="flex items-center gap-1.5 mt-0.5">
+                                  <FlagImg code={iso2} size={16} />
+                                  <p className="text-[13px] font-semibold text-foreground">+{dialCode} {number}</p>
+                                </div>
+                              </div>
                             </div>
-                            <div>
-                              <p className="text-[10px] text-muted-foreground">Teléfono</p>
-                              <p className="text-[13px] font-semibold text-foreground">{viewMember.emergencyPhone}</p>
-                            </div>
-                          </div>
-                        )}
+                          );
+                        })()}
                       </div>
                     </div>
                   )}

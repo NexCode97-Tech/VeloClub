@@ -222,6 +222,20 @@ const COUNTRIES: Country[] = [
 ];
 
 /* ─────────────────────────────────────────────────────────────
+   parsePhoneDisplay — parsea un número guardado (+573164134212)
+   y devuelve { iso2, dialCode, number } para mostrar en UI
+   ───────────────────────────────────────────────────────────── */
+export function parsePhoneDisplay(raw: string): { iso2: string; dialCode: string; number: string } {
+  if (!raw) return { iso2: 'CO', dialCode: '57', number: '' };
+  const sorted = [...COUNTRIES].sort((a, b) => b.dialCode.length - a.dialCode.length);
+  const match  = sorted.find(c => raw.startsWith('+' + c.dialCode));
+  if (match) return { iso2: match.iso2, dialCode: match.dialCode, number: raw.slice(match.dialCode.length + 1).trim() };
+  return { iso2: 'CO', dialCode: '57', number: raw };
+}
+
+export { FlagImg };
+
+/* ─────────────────────────────────────────────────────────────
    PhoneInput — selector de indicativo + input de número
    Interface idéntica a la versión anterior para compatibilidad
    ───────────────────────────────────────────────────────────── */

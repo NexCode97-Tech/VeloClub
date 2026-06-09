@@ -10,7 +10,7 @@ import Link from 'next/link';
 import { MemberAvatar } from '@/components/ui/member-avatar';
 import {
   Pencil, MapPin, CalendarDays, Globe,
-  ChevronRight, Camera, Users, Trash2, ImagePlus,
+  Camera, Users, Trash2, ImagePlus,
 } from 'lucide-react';
 import { PostCard, Post, PostComment } from '@/components/ui/post-card';
 
@@ -89,7 +89,7 @@ function Avatar({ src, name, size = 36, role }: { src?: string | null; name: str
 
 // ── Tabs ──────────────────────────────────────────────────────────────────────
 
-const TABS = ['Publicaciones', 'Fotos', 'Acerca de'] as const;
+const TABS = ['Publicaciones', 'Fotos'] as const;
 type Tab = typeof TABS[number];
 
 // ── Main ──────────────────────────────────────────────────────────────────────
@@ -622,44 +622,6 @@ export default function PerfilPage() {
             </motion.div>
           )}
 
-          {activeTab === 'Acerca de' && (
-            <motion.div key="about"
-              initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2 }}
-              className="mt-4 space-y-3">
-              <div className="bg-white border border-border rounded-2xl divide-y divide-border"
-                style={{ boxShadow: '0 1px 8px rgba(0,0,0,0.06)' }}>
-                {[
-                  { label: 'Nombre', value: user?.name },
-                  { label: 'Rol', value: roleLabels[role] ?? role },
-                  { label: 'Club', value: user?.club?.name },
-                  { label: 'Categoría', value: user?.category },
-                  { label: 'Ciudad', value: [user?.club?.city, user?.club?.department].filter(Boolean).join(', ') || undefined },
-                  { label: 'Miembro desde', value: user?.createdAt ? formatJoinDate(user.createdAt) : undefined },
-                ].filter(r => r.value).map(row => (
-                  <div key={row.label} className="flex items-center justify-between px-4 py-3">
-                    <span style={{ fontSize: 11, fontWeight: 600, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{row.label}</span>
-                    <span className="text-[13px] font-semibold text-foreground text-right max-w-[55%] truncate">{row.value}</span>
-                  </div>
-                ))}
-              </div>
-
-              <Link href="/dashboard/ajustes">
-                <motion.div whileTap={{ scale: 0.98 }}
-                  className="flex items-center justify-between px-4 py-3.5 bg-white border border-border rounded-2xl cursor-pointer hover:bg-secondary transition-colors mt-3"
-                  style={{ boxShadow: '0 1px 8px rgba(0,0,0,0.06)' }}>
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-xl flex items-center justify-center"
-                      style={{ background: 'rgba(124,58,237,0.10)' }}>
-                      <Pencil className="w-4 h-4" style={{ color: '#7C3AED' }} />
-                    </div>
-                    <span className="text-[14px] font-semibold text-foreground">Editar información</span>
-                  </div>
-                  <ChevronRight className="w-4 h-4 text-muted-foreground/40" />
-                </motion.div>
-              </Link>
-            </motion.div>
-          )}
         </AnimatePresence>
       </div>
       {/* Columna derecha — reservada para contenido futuro */}

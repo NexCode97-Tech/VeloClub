@@ -397,20 +397,15 @@ export default function MiembrosPage() {
                   variants={{ hidden: { opacity: 0, y: 10, scale: 0.97 }, show: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.22, ease: EASE_OUT } } }}
                   whileTap={reducedMotion ? {} : { scale: 0.97 }}
                   onClick={() => setRoleFilter(s.filter)}
-                  className="rounded-2xl px-5 py-4 flex items-center gap-4 text-left w-full cursor-pointer transition-all"
+                  className="rounded-xl md:rounded-2xl py-3 md:py-5 flex flex-col items-center justify-center w-full cursor-pointer transition-all text-center"
                   style={{
                     background: active ? s.bg : '#fff',
                     border: active ? `1.5px solid ${s.color}40` : '1px solid rgba(120,80,200,0.08)',
-                    boxShadow: active ? `0 4px 16px ${s.color}20` : '0 2px 12px rgba(124,58,237,0.04)',
+                    boxShadow: active ? `0 4px 16px ${s.color}20` : '0 1px 6px rgba(0,0,0,0.04)',
                   }}
                 >
-                  <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: active ? `${s.color}22` : s.bg }}>
-                    <Users className="w-5 h-5" style={{ color: s.color }} />
-                  </div>
-                  <div>
-                    <p className="text-[24px] font-bold leading-none" style={{ color: active ? s.color : '#1A1028', fontFamily: 'inherit' }}>{s.value}</p>
-                    <p className="text-[11px] font-semibold mt-0.5" style={{ color: active ? s.color : '#8E87A8' }}>{s.label}</p>
-                  </div>
+                  <p className="text-xl md:text-[36px] font-bold leading-none mb-1" style={{ color: active ? s.color : '#1A1028', fontFamily: 'inherit' }}>{s.value}</p>
+                  <p className="text-[10px] md:text-[13px] font-semibold md:mt-0.5" style={{ color: active ? s.color : '#8E87A8' }}>{s.label}</p>
                 </motion.button>
               );
             })}
@@ -546,7 +541,7 @@ export default function MiembrosPage() {
             <motion.div
               variants={{ hidden: {}, show: { transition: { staggerChildren: 0.05, delayChildren: 0.04 } } }}
               initial="hidden" animate="show"
-              className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+              className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
             >
               {filtered.map((m) => {
                 const rc = ROLE_COLORS[m.role] ?? ROLE_COLORS.STUDENT;
@@ -744,14 +739,15 @@ export default function MiembrosPage() {
               <button
                 key={s.label}
                 onClick={() => setRoleFilter(s.filter)}
-                className="rounded-xl px-2 py-2.5 flex flex-col items-center gap-1 transition-all"
+                className="rounded-xl py-3 flex flex-col items-center justify-center transition-all text-center"
                 style={{
                   background: active ? s.bg : '#fff',
                   border: active ? `1.5px solid ${s.color}40` : '1px solid rgba(120,80,200,0.08)',
+                  boxShadow: '0 1px 6px rgba(0,0,0,0.04)',
                 }}
               >
-                <p className="text-[18px] font-bold leading-none" style={{ color: active ? s.color : '#1A1028', fontFamily: 'inherit' }}>{s.value}</p>
-                <p className="text-[9px] font-semibold text-center leading-tight" style={{ color: active ? s.color : '#8E87A8' }}>{s.label}</p>
+                <p className="text-xl font-bold leading-none mb-1" style={{ color: active ? s.color : '#1A1028', fontFamily: 'inherit' }}>{s.value}</p>
+                <p className="text-[10px] font-semibold text-center leading-tight" style={{ color: active ? s.color : '#8E87A8' }}>{s.label}</p>
               </button>
             );
           })}

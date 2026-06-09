@@ -37,7 +37,7 @@ interface Member {
   birthDate?: string; category?: string; tipo?: string;
   emergencyContact?: string; emergencyPhone?: string; eps?: string;
   paymentDueDay?: number | null; monthlyFee?: number | null;
-  pictureUrl?: string | null; docNumber?: string | null;
+  pictureUrl?: string | null; docType?: string | null; docNumber?: string | null;
   createdAt?: string;
   role: string;
   locations: { location: Location }[];
@@ -160,8 +160,8 @@ export default function MiembrosPage() {
     setForm({
       fullName: m.fullName, email: m.email ?? '', phone: m.phone ?? '',
       birthDate: m.birthDate ? m.birthDate.split('T')[0] : '',
-      docType: (m as Member & { docType?: string }).docType ?? '',
-      docNumber: (m as Member & { docNumber?: string }).docNumber ?? '',
+      docType: m.docType ?? '',
+      docNumber: m.docNumber ?? '',
       category: m.category ?? '', tipo: m.tipo ?? '',
       guardianName: m.emergencyContact ?? '',
       guardianPhone: m.emergencyPhone ?? '',
@@ -639,16 +639,13 @@ export default function MiembrosPage() {
                           <p className="text-[12px] font-medium" style={{ color: '#5A5278' }}>{m.eps}</p>
                         </div>
                       )}
-                      {((m as Member & { docType?: string; docNumber?: string }).docType || (m as Member & { docType?: string; docNumber?: string }).docNumber) && (
+                      {(m.docType || m.docNumber) && (
                         <div className="flex items-center gap-2.5">
                           <div className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'rgba(124,58,237,0.08)' }}>
                             <CreditCard className="w-3 h-3" style={{ color: '#7C3AED' }} />
                           </div>
                           <p className="text-[12px] font-medium" style={{ color: '#5A5278' }}>
-                            {[
-                              (m as Member & { docType?: string }).docType,
-                              (m as Member & { docNumber?: string }).docNumber,
-                            ].filter(Boolean).join(' · ')}
+                            {[m.docType, m.docNumber].filter(Boolean).join(' · ')}
                           </p>
                         </div>
                       )}

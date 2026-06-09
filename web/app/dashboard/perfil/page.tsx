@@ -2,14 +2,14 @@
 
 import { useAuth, useSession } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState, useRef, useCallback } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { apiFetch } from '@/lib/api-client';
 import { useClubStream } from '@/hooks/useClubStream';
 import Link from 'next/link';
 import { MemberAvatar } from '@/components/ui/member-avatar';
 import {
-  Pencil, MapPin, CalendarDays, Globe, Lock,
+  Pencil, MapPin, CalendarDays, Globe,
   Heart, MessageCircle, ChevronRight, Send, X, Camera, Users, Trash2, ImagePlus, MoreHorizontal,
 } from 'lucide-react';
 
@@ -338,8 +338,6 @@ export default function PerfilPage() {
   const [posts, setPosts]             = useState<Post[]>([]);
   const [loading, setLoading]         = useState(true);
   const [activeTab, setActiveTab]     = useState<Tab>('Publicaciones');
-  const [postScope, setPostScope]     = useState<'public' | 'private'>('public');
-  const postScopeRef = useRef<'public' | 'private'>('public');
   const [currentUserId, setCurrentUserId] = useState('');
   const [coverUrl, setCoverUrl]       = useState<string | null>(null);
   const [uploadingCover, setUploadingCover] = useState(false);
@@ -354,15 +352,14 @@ export default function PerfilPage() {
   // Referencia al nombre del usuario para filtrar posts (evita re-renders)
   const myNameRef = useRef<string>('');
 
-  const loadPosts = useCallback(async (scope?: 'public' | 'private') => {
+  const loadPosts = async () => {
     if (!isSignedIn) return;
-    const s = scope ?? postScopeRef.current;
     try {
       const token = await session?.getToken();
-      const postsRes = await apiFetch<{ posts: Post[] }>(`/posts?scope=${s}`, { token });
+      const postsRes = await apiFetch<{ posts: Post[] }>('/posts?scope=public', { token });
       setPosts(postsRes.posts.filter(p => !myNameRef.current || p.authorName === myNameRef.current));
     } catch { /* silencioso */ }
-  }, [isSignedIn, session]);
+  };
 
   useEffect(() => {
     if (!isLoaded) return;
@@ -380,10 +377,8 @@ export default function PerfilPage() {
           myNameRef.current = meRes.value.user?.name ?? '';
         }
         if (postsRes.status === 'fulfilled') {
-          // carga inicial: scope privado por defecto
           setPosts(postsRes.value.posts.filter(p => !myNameRef.current || p.authorName === myNameRef.current));
         }
-        postScopeRef.current = 'public';
         setCurrentUserId(userId ?? '');
         // Cargar follow stats y clerkId
         if (meRes.status === 'fulfilled' && meRes.value.user?.clerkId) {
@@ -410,12 +405,6 @@ export default function PerfilPage() {
   useClubStream((ev) => {
     if (ev === 'posts') loadPosts();
   });
-
-  function handleScopeChange(scope: 'public' | 'private') {
-    postScopeRef.current = scope;
-    setPostScope(scope);
-    loadPosts(scope);
-  }
 
   async function handleLike(postId: string) {
     const token = await session?.getToken();
@@ -713,33 +702,6 @@ export default function PerfilPage() {
           ))}
         </div>
 
-        {/* Sub-tabs scope — solo cuando tab Publicaciones está activo */}
-        {activeTab === 'Publicaciones' && (
-          <div className="flex border-t border-border/50">
-            {([
-              { key: 'public'  as const, label: 'Públicas', Icon: Globe },
-              { key: 'private' as const, label: 'Privadas', Icon: Lock },
-            ] as const).map(({ key, label, Icon }) => {
-              const active = postScope === key;
-              return (
-                <button
-                  key={key}
-                  onClick={() => handleScopeChange(key)}
-                  className="flex-1 flex items-center justify-center gap-1.5 py-2.5 relative transition-colors cursor-pointer"
-                  style={{ color: active ? '#7C3AED' : '#8E87A8' }}
-                >
-                  <Icon className="w-3.5 h-3.5 shrink-0" />
-                  <span style={{ fontSize: 12, fontWeight: active ? 600 : 500 }}>{label}</span>
-                  {active && (
-                    <motion.div layoutId="scope-tab-indicator"
-                      className="absolute bottom-0 left-6 right-6 h-[2px] rounded-full"
-                      style={{ background: '#7C3AED' }} />
-                  )}
-                </button>
-              );
-            })}
-          </div>
-        )}
       </div>
 
       {/* ── Contenido del tab ─────────────────────────────────────────────────── */}

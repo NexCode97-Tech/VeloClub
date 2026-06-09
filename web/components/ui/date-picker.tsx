@@ -16,6 +16,11 @@ import { CalendarDays, ChevronLeft, ChevronRight, X } from 'lucide-react';
 
 const WEEKDAYS = ['Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sá', 'Do'];
 
+const MONTHS = [
+  'Ene','Feb','Mar','Abr','May','Jun',
+  'Jul','Ago','Sep','Oct','Nov','Dic',
+];
+
 function buildDays(base: Date): Date[] {
   const start = startOfWeek(startOfMonth(base), { weekStartsOn: 1 });
   const end   = endOfWeek(endOfMonth(base),     { weekStartsOn: 1 });
@@ -34,6 +39,8 @@ interface DatePickerProps {
   maxDate?: Date;
 }
 
+type View = 'days' | 'months' | 'years';
+
 export function DatePicker({
   value,
   onChange,
@@ -43,21 +50,35 @@ export function DatePicker({
   maxDate,
 }: DatePickerProps) {
   const parsed   = value ? new Date(value + 'T00:00:00') : null;
-  const [open, setOpen]     = useState(false);
+  const [open, setOpen]         = useState(false);
   const [dropStyle, setDropStyle] = useState<React.CSSProperties>({});
-  const [base, setBase]     = useState<Date>(() => parsed ?? new Date());
+  const [base, setBase]         = useState<Date>(() => parsed ?? new Date());
+  const [view, setView]         = useState<View>('days');
+  // Para el selector de años: década visible
+  const [decadeStart, setDecadeStart] = useState<number>(() => {
+    const y = (parsed ?? new Date()).getFullYear();
+    return Math.floor(y / 12) * 12;
+  });
+
   const ref        = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
 
   // Sincronizar base cuando cambia el valor externo
   useEffect(() => {
-    if (value) setBase(new Date(value + 'T00:00:00'));
+    if (value) {
+      const d = new Date(value + 'T00:00:00');
+      setBase(d);
+      setDecadeStart(Math.floor(d.getFullYear() / 12) * 12);
+    }
   }, [value]);
 
   // Cerrar al clic fuera
   useEffect(() => {
     function h(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false);
+        setView('days');
+      }
     }
     document.addEventListener('mousedown', h);
     return () => document.removeEventListener('mousedown', h);
@@ -67,15 +88,16 @@ export function DatePicker({
   function handleOpen() {
     if (triggerRef.current) {
       const rect       = triggerRef.current.getBoundingClientRect();
-      const dropdownH  = 270;
+      const dropdownH  = 290;
       const spaceBelow = window.innerHeight - rect.bottom;
       const goUp       = spaceBelow < dropdownH;
 
       setDropStyle(goUp
-        ? { position: 'fixed', bottom: window.innerHeight - rect.top + 6, left: rect.left, width: Math.max(rect.width, 232) }
-        : { position: 'fixed', top: rect.bottom + 6,                      left: rect.left, width: Math.max(rect.width, 232) }
+        ? { position: 'fixed', bottom: window.innerHeight - rect.top + 6, left: rect.left, width: Math.max(rect.width, 240) }
+        : { position: 'fixed', top: rect.bottom + 6,                      left: rect.left, width: Math.max(rect.width, 240) }
       );
     }
+    setView('days');
     setOpen(o => !o);
   }
 
@@ -84,6 +106,7 @@ export function DatePicker({
     if (maxDate && day > maxDate) return;
     onChange(format(day, 'yyyy-MM-dd'));
     setOpen(false);
+    setView('days');
   }
 
   function handleClear(e: React.MouseEvent) {
@@ -91,11 +114,25 @@ export function DatePicker({
     onChange('');
   }
 
-  const days    = buildDays(base);
-  const today   = new Date();
-  const label   = parsed
+  function selectMonth(monthIdx: number) {
+    setBase(b => new Date(b.getFullYear(), monthIdx, 1));
+    setView('days');
+  }
+
+  function selectYear(year: number) {
+    setBase(b => new Date(year, b.getMonth(), 1));
+    setDecadeStart(Math.floor(year / 12) * 12);
+    setView('months');
+  }
+
+  const days  = buildDays(base);
+  const today = new Date();
+  const label = parsed
     ? format(parsed, "d MMM yyyy", { locale: es })
     : placeholder;
+
+  // Años para la vista de selección (12 años por página)
+  const years = Array.from({ length: 12 }, (_, i) => decadeStart + i);
 
   return (
     <div ref={ref} className={`relative ${className}`}>
@@ -124,89 +161,187 @@ export function DatePicker({
 
       {/* ── Dropdown (fixed para escapar modal overflow) ── */}
       {open && (
-          <div
-            className="z-[9999] rounded-xl p-3"
-            style={{
-              ...dropStyle,
-              background: '#fff',
-              border:     '1px solid rgba(124,58,237,0.14)',
-              boxShadow:  '0 12px 32px rgba(0,0,0,0.12), 0 2px 6px rgba(0,0,0,0.06)',
-            }}
-          >
-            {/* Nav mes */}
-            <div className="flex items-center justify-between mb-2">
-              <button
-                type="button"
-                onClick={() => setBase(b => subMonths(b, 1))}
-                className="w-6 h-6 flex items-center justify-center rounded-md text-muted-foreground hover:bg-secondary transition-colors"
-              >
-                <ChevronLeft className="w-3.5 h-3.5" />
-              </button>
-              <span className="text-[12px] font-bold text-foreground capitalize">
-                {format(base, 'MMMM yyyy', { locale: es })}
-              </span>
-              <button
-                type="button"
-                onClick={() => setBase(b => addMonths(b, 1))}
-                className="w-6 h-6 flex items-center justify-center rounded-md text-muted-foreground hover:bg-secondary transition-colors"
-              >
-                <ChevronRight className="w-3.5 h-3.5" />
-              </button>
-            </div>
+        <div
+          className="z-[9999] rounded-xl p-3"
+          style={{
+            ...dropStyle,
+            background: '#fff',
+            border:     '1px solid rgba(124,58,237,0.14)',
+            boxShadow:  '0 12px 32px rgba(0,0,0,0.12), 0 2px 6px rgba(0,0,0,0.06)',
+          }}
+        >
+          {/* ── VISTA DÍAS ── */}
+          {view === 'days' && (
+            <>
+              {/* Nav mes/año */}
+              <div className="flex items-center justify-between mb-2">
+                <button
+                  type="button"
+                  onClick={() => setBase(b => subMonths(b, 1))}
+                  className="w-6 h-6 flex items-center justify-center rounded-md text-muted-foreground hover:bg-secondary transition-colors"
+                >
+                  <ChevronLeft className="w-3.5 h-3.5" />
+                </button>
+                {/* Click en el header → ir a selector de mes */}
+                <button
+                  type="button"
+                  onClick={() => setView('months')}
+                  className="text-[12px] font-bold text-foreground capitalize hover:text-purple-600 transition-colors px-2 py-0.5 rounded-md hover:bg-secondary"
+                >
+                  {format(base, 'MMMM yyyy', { locale: es })}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setBase(b => addMonths(b, 1))}
+                  className="w-6 h-6 flex items-center justify-center rounded-md text-muted-foreground hover:bg-secondary transition-colors"
+                >
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
 
-            {/* Días de semana */}
-            <div className="grid grid-cols-7 mb-0.5">
-              {WEEKDAYS.map(d => (
-                <div key={d} className="text-center text-[9px] font-bold text-muted-foreground uppercase py-0.5">
-                  {d}
-                </div>
-              ))}
-            </div>
+              {/* Días de semana */}
+              <div className="grid grid-cols-7 mb-0.5">
+                {WEEKDAYS.map(d => (
+                  <div key={d} className="text-center text-[9px] font-bold text-muted-foreground uppercase py-0.5">
+                    {d}
+                  </div>
+                ))}
+              </div>
 
-            {/* Grid de días */}
-            <div className="grid grid-cols-7">
-              {days.map((day, idx) => {
-                const inMonth  = isSameMonth(day, base);
-                const isToday  = isSameDay(day, today);
-                const isSel    = parsed ? isSameDay(day, parsed) : false;
-                const disabled = !inMonth
-                  || (minDate ? day < minDate : false)
-                  || (maxDate ? day > maxDate : false);
+              {/* Grid de días */}
+              <div className="grid grid-cols-7">
+                {days.map((day, idx) => {
+                  const inMonth  = isSameMonth(day, base);
+                  const isToday  = isSameDay(day, today);
+                  const isSel    = parsed ? isSameDay(day, parsed) : false;
+                  const disabled = !inMonth
+                    || (minDate ? day < minDate : false)
+                    || (maxDate ? day > maxDate : false);
 
-                return (
-                  <button
-                    key={idx}
-                    type="button"
-                    disabled={disabled}
-                    onClick={() => !disabled && handleDay(day)}
-                    className="h-7 w-full flex items-center justify-center rounded-md text-[11px] font-medium transition-all"
-                    style={
-                      isSel
-                        ? { background: '#7C3AED', color: '#fff', fontWeight: 700,
-                            boxShadow: '0 1px 4px rgba(124,58,237,0.35)' }
-                        : isToday && !isSel
-                        ? { background: 'rgba(124,58,237,0.10)', color: '#7C3AED',
-                            fontWeight: 700, border: '1px solid rgba(124,58,237,0.30)' }
-                        : disabled
-                        ? { color: '#D1D0D8', cursor: 'default' }
+                  return (
+                    <button
+                      key={idx}
+                      type="button"
+                      disabled={disabled}
+                      onClick={() => !disabled && handleDay(day)}
+                      className="h-7 w-full flex items-center justify-center rounded-md text-[11px] font-medium transition-all"
+                      style={
+                        isSel
+                          ? { background: '#7C3AED', color: '#fff', fontWeight: 700,
+                              boxShadow: '0 1px 4px rgba(124,58,237,0.35)' }
+                          : isToday && !isSel
+                          ? { background: 'rgba(124,58,237,0.10)', color: '#7C3AED',
+                              fontWeight: 700, border: '1px solid rgba(124,58,237,0.30)' }
+                          : disabled
+                          ? { color: '#D1D0D8', cursor: 'default' }
+                          : { color: '#1A1028' }
+                      }
+                    >
+                      {inMonth ? format(day, 'd') : ''}
+                    </button>
+                  );
+                })}
+              </div>
+            </>
+          )}
+
+          {/* ── VISTA MESES ── */}
+          {view === 'months' && (
+            <>
+              <div className="flex items-center justify-between mb-3">
+                <button
+                  type="button"
+                  onClick={() => setBase(b => new Date(b.getFullYear() - 1, b.getMonth(), 1))}
+                  className="w-6 h-6 flex items-center justify-center rounded-md text-muted-foreground hover:bg-secondary transition-colors"
+                >
+                  <ChevronLeft className="w-3.5 h-3.5" />
+                </button>
+                {/* Click en el año → ir a selector de año */}
+                <button
+                  type="button"
+                  onClick={() => { setDecadeStart(Math.floor(base.getFullYear() / 12) * 12); setView('years'); }}
+                  className="text-[12px] font-bold text-foreground hover:text-purple-600 transition-colors px-2 py-0.5 rounded-md hover:bg-secondary"
+                >
+                  {base.getFullYear()}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setBase(b => new Date(b.getFullYear() + 1, b.getMonth(), 1))}
+                  className="w-6 h-6 flex items-center justify-center rounded-md text-muted-foreground hover:bg-secondary transition-colors"
+                >
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+              <div className="grid grid-cols-3 gap-1">
+                {MONTHS.map((name, idx) => {
+                  const isCurrent = base.getMonth() === idx && parsed && parsed.getFullYear() === base.getFullYear();
+                  return (
+                    <button
+                      key={name}
+                      type="button"
+                      onClick={() => selectMonth(idx)}
+                      className="py-2 rounded-lg text-[11px] font-semibold transition-all"
+                      style={isCurrent
+                        ? { background: '#7C3AED', color: '#fff' }
                         : { color: '#1A1028' }
-                    }
-                  >
-                    {inMonth ? format(day, 'd') : ''}
-                  </button>
-                );
-              })}
-            </div>
+                      }
+                      onMouseEnter={e => { if (!isCurrent) (e.currentTarget as HTMLElement).style.background = 'rgba(124,58,237,0.08)'; }}
+                      onMouseLeave={e => { if (!isCurrent) (e.currentTarget as HTMLElement).style.background = ''; }}
+                    >
+                      {name}
+                    </button>
+                  );
+                })}
+              </div>
+            </>
+          )}
 
-            {/* Ir a hoy */}
-            <button
-              type="button"
-              onClick={() => { setBase(new Date()); handleDay(new Date()); }}
-              className="mt-2 w-full text-[10px] text-muted-foreground hover:text-purple-600 transition-colors py-0.5"
-            >
-              → Ir a hoy
-            </button>
-          </div>
+          {/* ── VISTA AÑOS ── */}
+          {view === 'years' && (
+            <>
+              <div className="flex items-center justify-between mb-3">
+                <button
+                  type="button"
+                  onClick={() => setDecadeStart(d => d - 12)}
+                  className="w-6 h-6 flex items-center justify-center rounded-md text-muted-foreground hover:bg-secondary transition-colors"
+                >
+                  <ChevronLeft className="w-3.5 h-3.5" />
+                </button>
+                <span className="text-[12px] font-bold text-foreground">
+                  {decadeStart} – {decadeStart + 11}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setDecadeStart(d => d + 12)}
+                  className="w-6 h-6 flex items-center justify-center rounded-md text-muted-foreground hover:bg-secondary transition-colors"
+                >
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+              <div className="grid grid-cols-3 gap-1">
+                {years.map(yr => {
+                  const isCurrent = parsed && parsed.getFullYear() === yr;
+                  return (
+                    <button
+                      key={yr}
+                      type="button"
+                      onClick={() => selectYear(yr)}
+                      className="py-2 rounded-lg text-[11px] font-semibold transition-all"
+                      style={isCurrent
+                        ? { background: '#7C3AED', color: '#fff' }
+                        : { color: '#1A1028' }
+                      }
+                      onMouseEnter={e => { if (!isCurrent) (e.currentTarget as HTMLElement).style.background = 'rgba(124,58,237,0.08)'; }}
+                      onMouseLeave={e => { if (!isCurrent) (e.currentTarget as HTMLElement).style.background = ''; }}
+                    >
+                      {yr}
+                    </button>
+                  );
+                })}
+              </div>
+            </>
+          )}
+        </div>
       )}
     </div>
   );

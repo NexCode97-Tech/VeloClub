@@ -1022,6 +1022,14 @@ export default function DashboardPage() {
         )}
       </AnimatePresence>
 
+      {/* ── Slideshow publicitario — ancho completo ─────────────────────────── */}
+      <div className="w-full px-6 pt-4">
+        <Slideshow
+          slides={ADS.map(ad => ({ img: ad.image, label: ad.label, title: ad.title, description: ad.description, url: ad.url }))}
+          className="min-h-[400px] md:min-h-[190px]"
+        />
+      </div>
+
       {/* ── Contenido principal — desktop: 50% izquierdo, 50% derecho reservado ── */}
       <div className="w-full px-6 py-4 sm:flex sm:gap-6">
       <div className="sm:w-1/2">
@@ -1031,14 +1039,6 @@ export default function DashboardPage() {
         animate="show"
         className="space-y-4"
       >
-        {/* ── Slideshow publicitario ──────────────────────────────────────── */}
-        <motion.div variants={cardVariant}>
-          <Slideshow
-            slides={ADS.map(ad => ({ img: ad.image, label: ad.label, title: ad.title, description: ad.description, url: ad.url }))}
-            className="min-h-[400px] md:min-h-[190px]"
-          />
-        </motion.div>
-
         {/* ── Tabs Público / Privado ──────────────────────────────────────── */}
         <motion.div variants={cardVariant}>
           <div

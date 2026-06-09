@@ -89,7 +89,7 @@ export function DatePicker({
   const days    = buildDays(base);
   const today   = new Date();
   const label   = parsed
-    ? format(parsed, "d 'de' MMMM 'de' yyyy", { locale: es })
+    ? format(parsed, "d MMM yyyy", { locale: es })
     : placeholder;
 
   return (

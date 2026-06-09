@@ -16,6 +16,9 @@ model Club {
   department        String?
   logoUrl           String?
   logoPublicId      String?
+  coverUrl          String?         // portada del club
+  coverPublicId     String?         // public_id de Cloudinary
+  verified          Boolean         @default(false)  // club verificado
   active            Boolean         @default(true)
   trialEndsAt       DateTime?
   deporte           String?
@@ -375,6 +378,19 @@ model Notificacion {
   cuerpo    String
   leida     Boolean          @default(false)
   createdAt DateTime         @default(now())
+}
+
+// ─── Follow (sistema de seguidores) ─────────────────────────────────────────
+
+model Follow {
+  id               String   @id @default(cuid())
+  followerClerkId  String
+  followingClerkId String
+  createdAt        DateTime @default(now())
+
+  @@unique([followerClerkId, followingClerkId])
+  @@index([followerClerkId])
+  @@index([followingClerkId])
 }
 
 // ─── Enums ───────────────────────────────────────────────────────────────────

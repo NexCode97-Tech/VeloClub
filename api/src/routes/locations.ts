@@ -8,6 +8,8 @@ const router = Router();
 const locationSchema = z.object({
   name: z.string().min(2).max(100),
   address: z.string().optional(),
+  latitude: z.number().optional().nullable(),
+  longitude: z.number().optional().nullable(),
 });
 
 function getId(req: Request): string {

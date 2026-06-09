@@ -34,6 +34,7 @@ interface PublicProfile {
   name: string;
   picture?: string | null;
   coverUrl?: string | null;
+  bio?: string | null;
   role: string;
   createdAt: string;
   club?: { id: string; name: string; city?: string; department?: string; logoUrl?: string; verified?: boolean };
@@ -143,10 +144,11 @@ export default function PublicProfilePage() {
 
         {/* Info */}
         <div className="px-5 pb-5 max-w-4xl mx-auto w-full">
+          {/* Avatar + botón Follow */}
           <div className="flex items-end justify-between" style={{ marginTop: -60 }}>
             {/* Foto con badge del club */}
             <div className="relative z-10">
-              <div className="rounded-full border-4 border-white overflow-hidden"
+              <div className="rounded-full border-4 border-white overflow-hidden sm:w-[140px] sm:h-[140px]"
                 style={{ boxShadow: '0 4px 16px rgba(124,58,237,0.20)', width: 120, height: 120 }}>
                 <MemberAvatar
                   name={profile.name}
@@ -184,32 +186,23 @@ export default function PublicProfilePage() {
             )}
           </div>
 
-          {/* Nombre + rol */}
-          <div className="mt-3">
-            <h1 className="text-[24px] font-semibold text-foreground leading-tight uppercase">
+          {/* Nombre + badge de rol en la misma línea */}
+          <div className="mt-3 flex items-center gap-2 flex-wrap">
+            <h1 className="text-[22px] font-bold text-foreground leading-tight">
               {profile.name}
             </h1>
-            <span className="inline-block mt-1 text-[10px] font-bold px-2.5 py-0.5 rounded-full tracking-widest uppercase"
+            <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full tracking-widest"
               style={{ background: rc.bg, color: rc.text }}>
               {roleLabels[role] ?? role}
             </span>
           </div>
 
-          {/* Stats */}
-          <div className="flex items-center gap-6 mt-4">
-            <div className="text-center">
-              <p className="text-[18px] font-bold text-foreground leading-none">{profile.postImages.length}</p>
-              <p style={{ fontSize: 11, fontWeight: 600, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.08em', marginTop: 2 }}>Fotos</p>
+          {/* Bio — solo lectura */}
+          {profile.bio && (
+            <div className="mt-2 max-w-lg">
+              <p className="text-[13px] text-foreground/75 leading-relaxed">{profile.bio}</p>
             </div>
-            <div className="text-center">
-              <p className="text-[18px] font-bold text-foreground leading-none">{profile.followersCount}</p>
-              <p style={{ fontSize: 11, fontWeight: 600, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.08em', marginTop: 2 }}>Seguidores</p>
-            </div>
-            <div className="text-center">
-              <p className="text-[18px] font-bold text-foreground leading-none">{profile.followingCount}</p>
-              <p style={{ fontSize: 11, fontWeight: 600, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.08em', marginTop: 2 }}>Siguiendo</p>
-            </div>
-          </div>
+          )}
 
           {/* Metadata */}
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-3">
@@ -242,6 +235,22 @@ export default function PublicProfilePage() {
                 </span>
               </div>
             )}
+          </div>
+
+          {/* Stats: Publicaciones · Seguidores · Siguiendo */}
+          <div className="flex items-center gap-6 mt-4">
+            <div className="text-center">
+              <p className="text-[18px] font-bold text-foreground leading-none">{profile.postImages.length}</p>
+              <p style={{ fontSize: 11, fontWeight: 600, color: '#8E87A8', marginTop: 2 }}>Publicaciones</p>
+            </div>
+            <div className="text-center">
+              <p className="text-[18px] font-bold text-foreground leading-none">{profile.followersCount}</p>
+              <p style={{ fontSize: 11, fontWeight: 600, color: '#8E87A8', marginTop: 2 }}>Seguidores</p>
+            </div>
+            <div className="text-center">
+              <p className="text-[18px] font-bold text-foreground leading-none">{profile.followingCount}</p>
+              <p style={{ fontSize: 11, fontWeight: 600, color: '#8E87A8', marginTop: 2 }}>Siguiendo</p>
+            </div>
           </div>
         </div>
       </motion.div>

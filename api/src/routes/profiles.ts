@@ -19,6 +19,7 @@ router.get('/:clerkId', requireAuth, async (req, res) => {
       name: true,
       picture: true,
       coverUrl: true,
+      bio: true,
       role: true,
       createdAt: true,
       club: {
@@ -49,6 +50,7 @@ router.get('/:clerkId', requireAuth, async (req, res) => {
         name: user.name,
         picture: user.picture,
         coverUrl: user.coverUrl,
+        bio: user.bio ?? null,
         role: user.role,
         createdAt: user.createdAt,
         club: user.club,
@@ -98,6 +100,7 @@ router.get('/:clerkId', requireAuth, async (req, res) => {
       name: member.fullName,
       picture: member.pictureUrl,
       coverUrl: null,
+      bio: null,
       role: member.role,
       createdAt: member.createdAt,
       club: member.club,

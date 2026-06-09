@@ -282,16 +282,16 @@ export default function ClubProfilePage() {
           {/* Stats */}
           <div className="flex items-center gap-6 mt-4">
             <div className="text-center">
-              <p className="text-[18px] font-bold text-foreground leading-none">{club._count.members}</p>
-              <p style={{ fontSize: 11, fontWeight: 600, color: '#8E87A8', marginTop: 2 }}>Miembros</p>
+              <p className="text-[18px] font-bold text-foreground leading-none">{posts.length}</p>
+              <p style={{ fontSize: 11, fontWeight: 600, color: '#8E87A8', marginTop: 2 }}>Publicaciones</p>
             </div>
             <div className="text-center">
               <p className="text-[18px] font-bold text-foreground leading-none">{followersCount}</p>
               <p style={{ fontSize: 11, fontWeight: 600, color: '#8E87A8', marginTop: 2 }}>Seguidores</p>
             </div>
             <div className="text-center">
-              <p className="text-[18px] font-bold text-foreground leading-none">{posts.length}</p>
-              <p style={{ fontSize: 11, fontWeight: 600, color: '#8E87A8', marginTop: 2 }}>Publicaciones</p>
+              <p className="text-[18px] font-bold text-foreground leading-none">{club._count.members}</p>
+              <p style={{ fontSize: 11, fontWeight: 600, color: '#8E87A8', marginTop: 2 }}>Miembros</p>
             </div>
           </div>
 

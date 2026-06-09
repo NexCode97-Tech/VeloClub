@@ -68,7 +68,7 @@ export function DatePicker({
     if (triggerRef.current) {
       const rect         = triggerRef.current.getBoundingClientRect();
       const spaceBelow   = window.innerHeight - rect.bottom;
-      const dropdownH    = 340; // altura aprox del dropdown
+      const dropdownH    = 260; // altura aprox del dropdown
       setOpenUp(spaceBelow < dropdownH);
     }
     setOpen(o => !o);
@@ -119,48 +119,48 @@ export function DatePicker({
       {/* ── Dropdown ── */}
       {open && (
           <div
-            className="absolute left-0 z-[9999] rounded-2xl p-4 w-[280px]"
+            className="absolute left-0 z-[9999] rounded-xl p-3 w-[232px]"
             style={{
               background: '#fff',
               border:     '1px solid rgba(124,58,237,0.14)',
-              boxShadow:  '0 16px 48px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)',
+              boxShadow:  '0 12px 32px rgba(0,0,0,0.12), 0 2px 6px rgba(0,0,0,0.06)',
               ...(openUp
                 ? { bottom: 'calc(100% + 6px)' }
                 : { top:    'calc(100% + 6px)' }),
             }}
           >
             {/* Nav mes */}
-            <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center justify-between mb-2">
               <button
                 type="button"
                 onClick={() => setBase(b => subMonths(b, 1))}
-                className="w-7 h-7 flex items-center justify-center rounded-lg text-muted-foreground hover:bg-secondary transition-colors"
+                className="w-6 h-6 flex items-center justify-center rounded-md text-muted-foreground hover:bg-secondary transition-colors"
               >
-                <ChevronLeft className="w-4 h-4" />
+                <ChevronLeft className="w-3.5 h-3.5" />
               </button>
-              <span className="text-[13px] font-bold text-foreground capitalize">
+              <span className="text-[12px] font-bold text-foreground capitalize">
                 {format(base, 'MMMM yyyy', { locale: es })}
               </span>
               <button
                 type="button"
                 onClick={() => setBase(b => addMonths(b, 1))}
-                className="w-7 h-7 flex items-center justify-center rounded-lg text-muted-foreground hover:bg-secondary transition-colors"
+                className="w-6 h-6 flex items-center justify-center rounded-md text-muted-foreground hover:bg-secondary transition-colors"
               >
-                <ChevronRight className="w-4 h-4" />
+                <ChevronRight className="w-3.5 h-3.5" />
               </button>
             </div>
 
             {/* Días de semana */}
-            <div className="grid grid-cols-7 mb-1">
+            <div className="grid grid-cols-7 mb-0.5">
               {WEEKDAYS.map(d => (
-                <div key={d} className="text-center text-[10px] font-bold text-muted-foreground uppercase py-1">
+                <div key={d} className="text-center text-[9px] font-bold text-muted-foreground uppercase py-0.5">
                   {d}
                 </div>
               ))}
             </div>
 
             {/* Grid de días */}
-            <div className="grid grid-cols-7 gap-y-0.5">
+            <div className="grid grid-cols-7">
               {days.map((day, idx) => {
                 const inMonth  = isSameMonth(day, base);
                 const isToday  = isSameDay(day, today);
@@ -175,11 +175,11 @@ export function DatePicker({
                     type="button"
                     disabled={disabled}
                     onClick={() => !disabled && handleDay(day)}
-                    className="h-8 w-full flex items-center justify-center rounded-lg text-[12px] font-medium transition-all"
+                    className="h-7 w-full flex items-center justify-center rounded-md text-[11px] font-medium transition-all"
                     style={
                       isSel
                         ? { background: '#7C3AED', color: '#fff', fontWeight: 700,
-                            boxShadow: '0 2px 8px rgba(124,58,237,0.35)' }
+                            boxShadow: '0 1px 4px rgba(124,58,237,0.35)' }
                         : isToday && !isSel
                         ? { background: 'rgba(124,58,237,0.10)', color: '#7C3AED',
                             fontWeight: 700, border: '1px solid rgba(124,58,237,0.30)' }
@@ -198,7 +198,7 @@ export function DatePicker({
             <button
               type="button"
               onClick={() => { setBase(new Date()); handleDay(new Date()); }}
-              className="mt-3 w-full text-[11px] text-muted-foreground hover:text-purple-600 transition-colors py-1"
+              className="mt-2 w-full text-[10px] text-muted-foreground hover:text-purple-600 transition-colors py-0.5"
             >
               → Ir a hoy
             </button>

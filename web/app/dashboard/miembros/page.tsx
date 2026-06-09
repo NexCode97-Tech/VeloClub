@@ -1012,9 +1012,10 @@ export default function MiembrosPage() {
                         </div>
                         <div className="mt-2">
                           <Input
-                            placeholder="Número de documento"
+                            placeholder={form.docType ? `Número de ${form.docType}` : 'Selecciona primero el tipo'}
                             value={form.docNumber}
-                            className="h-11 rounded-xl"
+                            disabled={!form.docType}
+                            className="h-11 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
                             onChange={e => setForm(f => ({ ...f, docNumber: e.target.value }))}
                           />
                         </div>

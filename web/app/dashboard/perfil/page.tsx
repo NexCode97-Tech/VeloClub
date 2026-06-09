@@ -11,6 +11,7 @@ import { MemberAvatar } from '@/components/ui/member-avatar';
 import {
   Pencil, MapPin, CalendarDays, Globe,
   Camera, Users, Trash2, ImagePlus,
+  Phone, Mail, Building2,
 } from 'lucide-react';
 import { PostCard, Post, PostComment } from '@/components/ui/post-card';
 
@@ -22,6 +23,7 @@ interface MeResponse {
     id: string;
     clerkId: string;
     name: string;
+    email?: string;
     role: string;
     club?: { name: string; logoUrl?: string; city?: string; department?: string; verified?: boolean; deporte?: string };
     picture?: string | null;
@@ -30,6 +32,17 @@ interface MeResponse {
     category?: string;
     bio?: string;
   };
+}
+
+interface MemberMe {
+  id: string;
+  fullName: string;
+  role: string;
+  pictureUrl?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  category?: string | null;
+  tipo?: string | null;
 }
 
 interface PostImage { id: string; imageUrl: string }
@@ -100,6 +113,7 @@ export default function PerfilPage() {
   const router = useRouter();
 
   const [me, setMe]               = useState<MeResponse | null>(null);
+  const [memberMe, setMemberMe]   = useState<MemberMe | null>(null);
   const [posts, setPosts]             = useState<Post[]>([]);
   const [loading, setLoading]         = useState(true);
   const [activeTab, setActiveTab]     = useState<Tab>('Publicaciones');
@@ -136,9 +150,10 @@ export default function PerfilPage() {
     (async () => {
       try {
         const token = await session?.getToken();
-        const [meRes, postsRes] = await Promise.allSettled([
+        const [meRes, postsRes, memberMeRes] = await Promise.allSettled([
           apiFetch<MeResponse>('/me', { token }),
           apiFetch<{ posts: Post[] }>('/posts?scope=public', { token }),
+          apiFetch<{ member: MemberMe | null }>('/members/me', { token }),
         ]);
         if (meRes.status === 'fulfilled') {
           setMe(meRes.value);
@@ -148,6 +163,9 @@ export default function PerfilPage() {
         }
         if (postsRes.status === 'fulfilled') {
           setPosts(postsRes.value.posts.filter(p => !myNameRef.current || p.authorName === myNameRef.current));
+        }
+        if (memberMeRes.status === 'fulfilled' && memberMeRes.value.member) {
+          setMemberMe(memberMeRes.value.member);
         }
         setCurrentUserId(userId ?? '');
         // Cargar follow stats y clerkId
@@ -624,8 +642,111 @@ export default function PerfilPage() {
 
         </AnimatePresence>
       </div>
-      {/* Columna derecha — reservada para contenido futuro */}
-      <div className="hidden sm:block sm:w-1/2" />
+      {/* Columna derecha — tarjeta de contacto, sticky */}
+      <div className="px-4 sm:px-0 sm:pr-6 pb-6 sm:w-1/2 sm:py-4 sm:sticky sm:top-4 sm:self-start">
+        <div className="rounded-2xl overflow-hidden"
+          style={{ background: 'white', border: '1px solid rgba(124,58,237,0.10)', boxShadow: '0 1px 12px rgba(0,0,0,0.06)' }}>
+
+          {/* Header */}
+          <div className="flex items-center justify-between px-5 py-4 border-b border-border/50">
+            <p className="text-[11px] font-bold uppercase tracking-widest" style={{ color: '#8E87A8' }}>
+              Información de contacto
+            </p>
+          </div>
+
+          {/* Campos */}
+          <div className="divide-y divide-border/40">
+
+            {/* Teléfono */}
+            <div className="flex items-center gap-3 px-5 py-4">
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+                style={{ background: 'rgba(124,58,237,0.08)' }}>
+                <Phone className="w-4 h-4" style={{ color: '#7C3AED' }} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[10px] font-bold uppercase tracking-widest mb-0.5" style={{ color: '#8E87A8' }}>Teléfono</p>
+                <p className="text-[13px] font-medium text-foreground truncate">
+                  {memberMe?.phone || <span className="text-muted-foreground/50 italic text-[12px]">Sin registrar</span>}
+                </p>
+              </div>
+            </div>
+
+            {/* Correo */}
+            <div className="flex items-center gap-3 px-5 py-4">
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+                style={{ background: 'rgba(124,58,237,0.08)' }}>
+                <Mail className="w-4 h-4" style={{ color: '#7C3AED' }} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[10px] font-bold uppercase tracking-widest mb-0.5" style={{ color: '#8E87A8' }}>Correo electrónico</p>
+                <p className="text-[13px] font-medium text-foreground truncate">
+                  {(memberMe?.email || user?.email) || <span className="text-muted-foreground/50 italic text-[12px]">Sin registrar</span>}
+                </p>
+              </div>
+            </div>
+
+            {/* Club */}
+            {user?.club && (
+              <div className="flex items-center gap-3 px-5 py-4">
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 overflow-hidden"
+                  style={{ background: user.club.logoUrl ? undefined : 'rgba(124,58,237,0.08)' }}>
+                  {user.club.logoUrl
+                    // eslint-disable-next-line @next/next/no-img-element
+                    ? <img src={user.club.logoUrl} alt={user.club.name} className="w-full h-full object-cover" />
+                    : <Building2 className="w-4 h-4" style={{ color: '#7C3AED' }} />
+                  }
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[10px] font-bold uppercase tracking-widest mb-0.5" style={{ color: '#8E87A8' }}>Club</p>
+                  <div className="flex items-center gap-1.5">
+                    <p className="text-[13px] font-medium text-foreground truncate">{user.club.name}</p>
+                    {user.club.verified && (
+                      <div className="w-3.5 h-3.5 rounded-full flex items-center justify-center shrink-0" style={{ background: '#4361EE' }}>
+                        <svg viewBox="0 0 24 24" fill="none" className="w-2 h-2">
+                          <path d="M5 13l4 4L19 7" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Categoría / Nivel — solo STUDENT */}
+            {(memberMe?.category || memberMe?.tipo) && (
+              <div className="flex items-center gap-3 px-5 py-4">
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+                  style={{ background: 'rgba(124,58,237,0.08)' }}>
+                  <Users className="w-4 h-4" style={{ color: '#7C3AED' }} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[10px] font-bold uppercase tracking-widest mb-0.5" style={{ color: '#8E87A8' }}>Categoría</p>
+                  <p className="text-[13px] font-medium text-foreground">
+                    {[memberMe.category, memberMe.tipo].filter(Boolean).join(' · ')}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Ubicación */}
+            {(user?.club?.city || user?.club?.department) && (
+              <div className="flex items-center gap-3 px-5 py-4">
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+                  style={{ background: 'rgba(124,58,237,0.08)' }}>
+                  <MapPin className="w-4 h-4" style={{ color: '#7C3AED' }} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[10px] font-bold uppercase tracking-widest mb-0.5" style={{ color: '#8E87A8' }}>Ubicación</p>
+                  <p className="text-[13px] font-medium text-foreground">
+                    {[user.club.city, user.club.department].filter(Boolean).join(', ')}
+                  </p>
+                </div>
+              </div>
+            )}
+
+          </div>
+        </div>
+      </div>
       </div>
     </div>
   );

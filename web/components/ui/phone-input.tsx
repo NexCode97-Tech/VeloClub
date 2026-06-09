@@ -369,7 +369,7 @@ export function PhoneInput({ value, onChange, placeholder = 'Número de teléfon
         value={number}
         onChange={e => handleNumberChange(e.target.value)}
         placeholder={placeholder}
-        className="flex-1 h-full px-3 text-base md:text-sm bg-white rounded-r-xl focus:outline-none placeholder:text-muted-foreground"
+        className="flex-1 h-full px-3 text-[12px] md:text-sm bg-white rounded-r-xl focus:outline-none placeholder:text-muted-foreground"
       />
     </div>
   );

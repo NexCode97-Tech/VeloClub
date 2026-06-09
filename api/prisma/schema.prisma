@@ -87,6 +87,7 @@ model Member {
   birthDate         DateTime?
   pictureUrl        String?
   picturePublicId   String?
+  docType           String?
   docNumber         String?
   docFileUrl        String?
   docFilePublicId   String?

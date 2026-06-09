@@ -20,6 +20,7 @@ const memberSchema = z.object({
   email: z.string().email().optional().or(z.literal('')),
   phone: z.string().optional(),
   birthDate: z.string().optional(),
+  docType: z.string().optional(),
   docNumber: z.string().optional(),
   emergencyContact: z.string().optional(),
   emergencyPhone: z.string().optional(),

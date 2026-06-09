@@ -57,8 +57,11 @@ const ROLE_GRADIENT: Record<string, string> = {
 };
 
 // ── Empty form ─────────────────────────────────────────────────────────────────
+const DOC_TYPES = ['CC', 'TI', 'CE', 'PA', 'RC', 'NIT', 'Otro'] as const;
+
 const emptyForm = {
   fullName: '', email: '', phone: '', birthDate: '',
+  docType: '', docNumber: '',
   category: '', tipo: '',
   guardianName: '', guardianPhone: '',
   eps: '', role: 'STUDENT', locationIds: [] as string[],
@@ -157,6 +160,8 @@ export default function MiembrosPage() {
     setForm({
       fullName: m.fullName, email: m.email ?? '', phone: m.phone ?? '',
       birthDate: m.birthDate ? m.birthDate.split('T')[0] : '',
+      docType: (m as Member & { docType?: string }).docType ?? '',
+      docNumber: (m as Member & { docNumber?: string }).docNumber ?? '',
       category: m.category ?? '', tipo: m.tipo ?? '',
       guardianName: m.emergencyContact ?? '',
       guardianPhone: m.emergencyPhone ?? '',
@@ -179,6 +184,8 @@ export default function MiembrosPage() {
         email: form.email || undefined,
         phone: form.phone || undefined,
         birthDate: form.birthDate || undefined,
+        docType: form.docType || undefined,
+        docNumber: form.docNumber || undefined,
         category: form.category || undefined,
         tipo: form.tipo || undefined,
         emergencyContact: form.guardianName || undefined,
@@ -960,6 +967,40 @@ export default function MiembrosPage() {
                               {label}
                             </motion.button>
                           ))}
+                        </div>
+                      </div>
+
+                      {/* Documento */}
+                      <div>
+                        <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest block mb-2">
+                          Documento
+                        </label>
+                        <div className="flex gap-2">
+                          {/* Tipo de documento */}
+                          <div className="flex gap-1 flex-wrap shrink-0">
+                            {DOC_TYPES.map(t => (
+                              <button
+                                key={t}
+                                type="button"
+                                onClick={() => setForm(f => ({ ...f, docType: f.docType === t ? '' : t }))}
+                                className="h-9 px-2.5 rounded-lg text-[11px] font-bold border-2 transition-all"
+                                style={form.docType === t
+                                  ? { background: '#7C3AED', color: '#fff', borderColor: '#7C3AED' }
+                                  : { background: '#fff', color: '#8E87A8', borderColor: 'rgba(124,58,237,0.15)' }
+                                }
+                              >
+                                {t}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                        <div className="mt-2">
+                          <Input
+                            placeholder="Número de documento"
+                            value={form.docNumber}
+                            className="h-11 rounded-xl"
+                            onChange={e => setForm(f => ({ ...f, docNumber: e.target.value }))}
+                          />
                         </div>
                       </div>
 

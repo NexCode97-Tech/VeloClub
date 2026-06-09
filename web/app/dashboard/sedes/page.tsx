@@ -40,22 +40,25 @@ function MapButtons({ lat, lng }: { lat: number; lng: number }) {
     <div className="flex items-center gap-1.5 mt-2.5">
       <span className="text-[10px] text-muted-foreground mr-0.5">Abrir en:</span>
       <a href={`https://www.google.com/maps?q=${lat},${lng}`} target="_blank" rel="noopener noreferrer"
-        className="flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-medium bg-secondary hover:bg-secondary/80 transition-colors">
+        className="shrink-0 inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-medium transition-colors"
+        style={{ background: 'rgba(120,80,200,0.08)' }}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/google-maps-sign-logo.png" alt="Google Maps" className="w-3.5 h-3.5 object-contain" />
-        <span>Google</span>
+        <img src="/google-maps-sign-logo.png" alt="Google Maps" className="w-3.5 h-3.5 object-contain shrink-0" />
+        <span className="whitespace-nowrap">Google</span>
       </a>
       <a href={`https://waze.com/ul?ll=${lat},${lng}&navigate=yes`} target="_blank" rel="noopener noreferrer"
-        className="flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-medium bg-secondary hover:bg-secondary/80 transition-colors">
+        className="shrink-0 inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-medium transition-colors"
+        style={{ background: 'rgba(120,80,200,0.08)' }}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/waze-icon-logo.png" alt="Waze" className="w-3.5 h-3.5 object-contain" />
-        <span>Waze</span>
+        <img src="/waze-icon-logo.png" alt="Waze" className="w-3.5 h-3.5 object-contain shrink-0" />
+        <span className="whitespace-nowrap">Waze</span>
       </a>
       <a href={`https://maps.apple.com/?ll=${lat},${lng}`} target="_blank" rel="noopener noreferrer"
-        className="flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-medium bg-secondary hover:bg-secondary/80 transition-colors">
+        className="shrink-0 inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-medium transition-colors"
+        style={{ background: 'rgba(120,80,200,0.08)' }}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/apple-maps-icon-seeklogo.png" alt="Apple Maps" className="w-3.5 h-3.5 object-contain" />
-        <span>Maps</span>
+        <img src="/apple-maps-icon-seeklogo.png" alt="Apple Maps" className="w-3.5 h-3.5 object-contain shrink-0" />
+        <span className="whitespace-nowrap">Maps</span>
       </a>
     </div>
   );

@@ -57,6 +57,37 @@ router.get('/', requireAuth, async (req, res) => {
   res.json({ members });
 });
 
+// GET /members/birthdays — miembros con cumpleaños en los próximos 30 días
+router.get('/birthdays', requireAuth, async (req, res) => {
+  if (!req.user) return res.status(401).json({ error: 'No autenticado' });
+  const clubId = req.user.clubId ?? '';
+
+  const all = await prisma.member.findMany({
+    where: { clubId, birthDate: { not: null } },
+    select: { id: true, fullName: true, birthDate: true, pictureUrl: true, role: true },
+  });
+
+  // Normalizar "hoy" a medianoche para comparar solo por fecha
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const result = all
+    .filter(m => m.birthDate)
+    .map(m => {
+      const bd = m.birthDate!;
+      // Próxima ocurrencia del cumpleaños (este año o el siguiente)
+      const next = new Date(today.getFullYear(), bd.getMonth(), bd.getDate());
+      if (next < today) next.setFullYear(today.getFullYear() + 1);
+      const diff = Math.round((next.getTime() - today.getTime()) / 86400000);
+      return { id: m.id, fullName: m.fullName, pictureUrl: m.pictureUrl, role: m.role, birthDate: m.birthDate, daysUntil: diff };
+    })
+    .filter(m => m.daysUntil <= 30)
+    .sort((a, b) => a.daysUntil - b.daysUntil)
+    .slice(0, 6);
+
+  res.json({ birthdays: result });
+});
+
 // GET /members/me — retorna el Member vinculado al usuario autenticado
 router.get('/me', requireAuth, async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'No autenticado' });

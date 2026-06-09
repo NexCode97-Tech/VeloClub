@@ -41,6 +41,21 @@ router.get('/', requireAuth, async (req, res) => {
   res.json({ events });
 });
 
+// GET /events/upcoming — próximos 5 eventos desde hoy
+router.get('/upcoming', requireAuth, async (req, res) => {
+  if (!req.user) return res.status(401).json({ error: 'No autenticado' });
+  const clubId = req.user.clubId ?? '';
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
+  const events = await prisma.calendarEvent.findMany({
+    where: { clubId, startDate: { gte: now } },
+    orderBy: { startDate: 'asc' },
+    take: 5,
+    select: { id: true, title: true, type: true, startDate: true, allDay: true, location: { select: { name: true } } },
+  });
+  res.json({ events });
+});
+
 // POST /events
 router.post('/', requireAuth, async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'No autenticado' });

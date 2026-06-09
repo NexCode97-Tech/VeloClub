@@ -1057,6 +1057,94 @@ export default function DashboardPage() {
         animate="show"
         className="space-y-4"
       >
+        {/* ── Widgets móvil — grid 2 cols, encima de los tabs ─────────────── */}
+        <motion.div variants={cardVariant} className="sm:hidden grid grid-cols-2 gap-3">
+          {/* Próximos Eventos */}
+          <div className="rounded-2xl bg-white border border-border overflow-hidden"
+            style={{ boxShadow: '0 1px 8px rgba(0,0,0,0.06)' }}>
+            <div className="flex items-center gap-2 px-3 pt-3 pb-2">
+              <div className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0"
+                style={{ background: 'linear-gradient(135deg,#4361EE,#7C3AED)' }}>
+                <CalendarDays className="w-3 h-3 text-white" />
+              </div>
+              <p className="text-[11px] font-bold text-foreground truncate">Próximos Eventos</p>
+            </div>
+            {widgetsLoading ? (
+              <div className="px-3 pb-3 flex flex-col gap-1.5">
+                {[1,2].map(i => <div key={i} className="h-8 rounded-lg bg-secondary animate-pulse" />)}
+              </div>
+            ) : upcomingEvents.length === 0 ? (
+              <div className="px-3 pb-4 flex flex-col items-center gap-1 pt-1">
+                <CalendarDays className="w-6 h-6" style={{ color: '#C4BFDB' }} />
+                <p className="text-[10px] text-muted-foreground text-center">Sin eventos próximos</p>
+              </div>
+            ) : (
+              <div className="px-3 pb-3 flex flex-col gap-1">
+                {upcomingEvents.slice(0, 3).map(ev => {
+                  const d = new Date(ev.startDate);
+                  const typeColors: Record<string, { bg: string; text: string }> = {
+                    TRAINING:    { bg: 'rgba(6,214,160,0.10)',  text: '#06D6A0' },
+                    MEETUP:      { bg: 'rgba(67,97,238,0.10)',  text: '#4361EE' },
+                    COMPETITION: { bg: 'rgba(239,71,111,0.10)', text: '#EF476F' },
+                  };
+                  const tc = typeColors[ev.type] ?? typeColors.MEETUP;
+                  return (
+                    <div key={ev.id} className="flex items-center gap-2 py-1.5 rounded-lg">
+                      <div className="flex flex-col items-center justify-center w-8 h-8 rounded-lg shrink-0"
+                        style={{ background: tc.bg }}>
+                        <span className="text-[11px] font-black leading-none" style={{ color: tc.text }}>{d.getDate()}</span>
+                        <span className="text-[8px] font-semibold uppercase leading-none" style={{ color: tc.text }}>
+                          {d.toLocaleDateString('es-CO', { month: 'short' })}
+                        </span>
+                      </div>
+                      <p className="text-[11px] font-semibold text-foreground truncate flex-1">{ev.title}</p>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* Cumpleaños */}
+          <div className="rounded-2xl bg-white border border-border overflow-hidden"
+            style={{ boxShadow: '0 1px 8px rgba(0,0,0,0.06)' }}>
+            <div className="flex items-center gap-2 px-3 pt-3 pb-2">
+              <div className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0"
+                style={{ background: 'linear-gradient(135deg,#EF476F,#FFB703)' }}>
+                <Gift className="w-3 h-3 text-white" />
+              </div>
+              <p className="text-[11px] font-bold text-foreground">Cumpleaños</p>
+            </div>
+            {widgetsLoading ? (
+              <div className="px-3 pb-3 flex flex-col gap-1.5">
+                {[1,2].map(i => <div key={i} className="h-8 rounded-lg bg-secondary animate-pulse" />)}
+              </div>
+            ) : birthdays.length === 0 ? (
+              <div className="px-3 pb-4 flex flex-col items-center gap-1 pt-1">
+                <Gift className="w-6 h-6" style={{ color: '#C4BFDB' }} />
+                <p className="text-[10px] text-muted-foreground text-center">Sin cumpleaños en 30 días</p>
+              </div>
+            ) : (
+              <div className="px-3 pb-3 flex flex-col gap-1">
+                {birthdays.slice(0, 3).map(b => {
+                  const isToday = b.daysUntil === 0;
+                  const label = isToday ? '¡Hoy!' : b.daysUntil === 1 ? 'Mañana' : `${b.daysUntil}d`;
+                  return (
+                    <div key={b.id} className="flex items-center gap-2 py-1.5 rounded-lg">
+                      <MemberAvatar name={b.fullName} photoUrl={b.pictureUrl}
+                        gradient={ROLE_GRADIENT[b.role] ?? ROLE_GRADIENT.STUDENT} size={28} />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[11px] font-semibold text-foreground truncate">{b.fullName}</p>
+                        <p className="text-[10px]" style={{ color: isToday ? '#EF476F' : '#8E87A8', fontWeight: isToday ? 700 : 500 }}>{label}</p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </motion.div>
+
         {/* ── Tabs Público / Privado ──────────────────────────────────────── */}
         <motion.div variants={cardVariant}>
           <div

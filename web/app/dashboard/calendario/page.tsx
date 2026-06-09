@@ -50,7 +50,7 @@ export default function CalendarioPage() {
   const [month, setMonth]             = useState(now.getMonth());
   const [selectedDay, setSelectedDay] = useState(now.getDate());
   const [events, setEvents]           = useState<CalEvent[]>([]);
-  const [loading, setLoading]         = useState(false);
+  const [loading, setLoading]         = useState(true);
 
   const today = now.getDate();
   const isCurrentMonth = year === now.getFullYear() && month === now.getMonth();

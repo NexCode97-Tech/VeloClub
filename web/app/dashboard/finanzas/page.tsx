@@ -363,7 +363,7 @@ export default function FinanzasPage() {
   const [receiptError, setReceiptError]         = useState<string | null>(null);
 
   // ── Datos con caché ──────────────────────────────────────────────────────────
-  const { data: membersData } = useQuery({
+  const { data: membersData, isLoading: loadingMembers } = useQuery({
     queryKey: QK.members(),
     queryFn: async () => { const token = await getToken(); return apiFetch<{ members: Member[] }>('/members', { token }); },
   });
@@ -843,7 +843,7 @@ export default function FinanzasPage() {
           </div>
 
             {/* Lista deportistas */}
-            {loadingPay && !paymentsData ? (
+            {((loadingPay && !paymentsData) || (loadingMembers && !membersData)) ? (
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-3 md:grid-cols-3 md:gap-4">
                 {[1,2,3,4,5,6].map(i => (
                   <div key={i} className="bg-white rounded-2xl overflow-hidden animate-pulse" style={{ border: '1px solid rgba(120,80,200,0.08)' }}>

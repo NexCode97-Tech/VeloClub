@@ -248,7 +248,8 @@ export default function LogrosPage() {
               Competencias y entrenamientos del club
             </p>
           </div>
-          {canManage && (
+          {/* Reservar espacio del botón mientras role carga para evitar shift */}
+          {role !== 'STUDENT' && (
             <motion.button
               whileTap={{ scale: 0.93 }}
               onClick={() => {
@@ -256,7 +257,12 @@ export default function LogrosPage() {
                 else { setSessionForm(emptySession); setSessionError(null); setSessionOpen(true); }
               }}
               className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[13px] font-bold text-white shadow-sm shrink-0 cursor-pointer"
-              style={{ background: 'linear-gradient(135deg, #7C3AED 0%, #4361EE 100%)' }}
+              style={{
+                background: 'linear-gradient(135deg, #7C3AED 0%, #4361EE 100%)',
+                opacity: canManage ? 1 : 0,
+                pointerEvents: canManage ? 'auto' : 'none',
+                transition: 'opacity 0.15s ease',
+              }}
             >
               <Plus className="w-4 h-4" />
               <span className="hidden sm:inline">{tab === 'comp' ? 'Competencia' : 'Entrenamiento'}</span>
@@ -264,28 +270,21 @@ export default function LogrosPage() {
           )}
         </div>
 
-        {/* Stats strip */}
-        {!loading && (
-          <motion.div
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="flex gap-2 mb-4 w-full"
-          >
-            {tab === 'comp' ? (
-              <>
-                <StatPill value={visibleComps.length} label="Competencias" color="#4361EE" />
-                <StatPill value={visibleComps.reduce((s, c) => s + c.events.length, 0)} label="Pruebas" color="#7C3AED" />
-                <StatPill value={totalCompResults} label="Resultados" color="#06D6A0" />
-              </>
-            ) : (
-              <>
-                <StatPill value={visibleSessions.length} label="Sesiones" color="#06D6A0" />
-                <StatPill value={totalTrainResults} label="Resultados" color="#4361EE" />
-              </>
-            )}
-          </motion.div>
-        )}
+        {/* Stats strip — siempre ocupa espacio para evitar layout shift */}
+        <div className="flex gap-2 mb-4 w-full" style={{ opacity: loading ? 0 : 1, transition: 'opacity 0.2s ease' }}>
+          {tab === 'comp' ? (
+            <>
+              <StatPill value={loading ? 0 : visibleComps.length} label="Competencias" color="#4361EE" />
+              <StatPill value={loading ? 0 : visibleComps.reduce((s, c) => s + c.events.length, 0)} label="Pruebas" color="#7C3AED" />
+              <StatPill value={loading ? 0 : totalCompResults} label="Resultados" color="#06D6A0" />
+            </>
+          ) : (
+            <>
+              <StatPill value={loading ? 0 : visibleSessions.length} label="Sesiones" color="#06D6A0" />
+              <StatPill value={loading ? 0 : totalTrainResults} label="Resultados" color="#4361EE" />
+            </>
+          )}
+        </div>
 
         {/* Tabs */}
         <div className="relative flex bg-secondary rounded-2xl p-1">

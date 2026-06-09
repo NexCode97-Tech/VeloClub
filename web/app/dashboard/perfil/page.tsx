@@ -328,8 +328,8 @@ export default function PerfilPage() {
   const [posts, setPosts]             = useState<Post[]>([]);
   const [loading, setLoading]         = useState(true);
   const [activeTab, setActiveTab]     = useState<Tab>('Publicaciones');
-  const [postScope, setPostScope]     = useState<'public' | 'private'>('private');
-  const postScopeRef = useRef<'public' | 'private'>('private');
+  const [postScope, setPostScope]     = useState<'public' | 'private'>('public');
+  const postScopeRef = useRef<'public' | 'private'>('public');
   const [currentUserId, setCurrentUserId] = useState('');
   const [coverUrl, setCoverUrl]       = useState<string | null>(null);
   const [uploadingCover, setUploadingCover] = useState(false);
@@ -358,7 +358,7 @@ export default function PerfilPage() {
         const token = await session?.getToken();
         const [meRes, postsRes] = await Promise.allSettled([
           apiFetch<MeResponse>('/me', { token }),
-          apiFetch<{ posts: Post[] }>('/posts?scope=private', { token }),
+          apiFetch<{ posts: Post[] }>('/posts?scope=public', { token }),
         ]);
         if (meRes.status === 'fulfilled') {
           setMe(meRes.value);
@@ -369,7 +369,7 @@ export default function PerfilPage() {
           // carga inicial: scope privado por defecto
           setPosts(postsRes.value.posts.filter(p => !myNameRef.current || p.authorName === myNameRef.current));
         }
-        postScopeRef.current = 'private';
+        postScopeRef.current = 'public';
         setCurrentUserId(userId ?? '');
       } catch { /* silencioso */ } finally { setLoading(false); }
     })();
@@ -653,8 +653,8 @@ export default function PerfilPage() {
         {activeTab === 'Publicaciones' && (
           <div className="flex border-t border-border/50">
             {([
-              { key: 'private' as const, label: 'Privadas', Icon: Lock },
               { key: 'public'  as const, label: 'Públicas', Icon: Globe },
+              { key: 'private' as const, label: 'Privadas', Icon: Lock },
             ] as const).map(({ key, label, Icon }) => {
               const active = postScope === key;
               return (

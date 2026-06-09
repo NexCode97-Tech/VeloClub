@@ -2,7 +2,7 @@ import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import dotenv from 'dotenv';
-import rateLimit from 'express-rate-limit';
+import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
 import meRouter from './routes/me';
 import clubsRouter from './routes/clubs';
 import locationsRouter from './routes/locations';
@@ -84,9 +84,9 @@ const meLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   keyGenerator: (req) => {
-    // Usar el header de Clerk si está disponible, si no caer a IP
+    // Usar el header de Clerk si está disponible, si no caer a IP (con soporte IPv6)
     const clerkUserId = req.headers['x-clerk-user-id'] as string | undefined;
-    return clerkUserId ?? req.ip ?? 'unknown';
+    return clerkUserId ?? ipKeyGenerator(req.ip ?? 'unknown');
   },
   message: { error: 'Demasiadas solicitudes, intenta más tarde' },
 });

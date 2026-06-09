@@ -45,8 +45,9 @@ router.get('/', requireAuth, async (req, res) => {
 router.get('/upcoming', requireAuth, async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'No autenticado' });
   const clubId = req.user.clubId ?? '';
+  // Usar inicio del día en UTC-5 (Colombia) para no perder eventos de hoy
   const now = new Date();
-  now.setHours(0, 0, 0, 0);
+  now.setUTCHours(0, 0, 0, 0); // medianoche UTC = 7pm del día anterior en Colombia, suficientemente amplio
   const events = await prisma.calendarEvent.findMany({
     where: { clubId, startDate: { gte: now } },
     orderBy: { startDate: 'asc' },

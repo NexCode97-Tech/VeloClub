@@ -11,11 +11,14 @@ export function downloadMembersTemplate(locations: LocationOption[] = []) {
   const NIVELES    = ['Escuela', 'Novatos', 'Intermedio', 'Avanzados', 'Federados'];
   const SEDES      = locations.map(l => l.name);
 
+  const DOC_TYPES = ['CC', 'TI', 'CE', 'Pasaporte', 'NIT', 'Otro'];
+
   const headers = [
     'Nombre Completo *',
     'Correo electrónico *',
     'Teléfono',
     'Fecha de nacimiento (YYYY-MM-DD)',
+    'Tipo de documento',
     'Número de documento',
     'Contacto de emergencia',
     'Teléfono de emergencia',
@@ -32,6 +35,7 @@ export function downloadMembersTemplate(locations: LocationOption[] = []) {
     'juan@ejemplo.com',
     '3001234567',
     '2005-03-15',
+    'CC',
     '1023456789',
     'María Pérez',
     '3109876543',
@@ -47,6 +51,7 @@ export function downloadMembersTemplate(locations: LocationOption[] = []) {
     '* Campos obligatorios',
     '* El correo debe ser único por deportista',
     '* Rol: ADMIN = Administrador, COACH = Entrenador, STUDENT = Deportista',
+    '* Tipo de documento: CC, TI, CE, Pasaporte, NIT u Otro',
     '* Categoría y Nivel son opcionales (solo aplican a STUDENT)',
     '* Día de corte: número entre 1 y 31',
     '* Sede: selecciona de la lista desplegable (opcional)',
@@ -60,8 +65,8 @@ export function downloadMembersTemplate(locations: LocationOption[] = []) {
 
   ws['!cols'] = [
     { wch: 25 }, { wch: 28 }, { wch: 14 }, { wch: 28 },
-    { wch: 20 }, { wch: 25 }, { wch: 24 }, { wch: 14 },
-    { wch: 22 }, { wch: 16 }, { wch: 28 }, { wch: 30 }, { wch: 25 },
+    { wch: 18 }, { wch: 20 }, { wch: 25 }, { wch: 24 },
+    { wch: 14 }, { wch: 22 }, { wch: 16 }, { wch: 28 }, { wch: 30 }, { wch: 25 },
   ];
 
   // ── Hoja oculta "Listas" con las sedes del club ────────────────────────────
@@ -72,10 +77,18 @@ export function downloadMembersTemplate(locations: LocationOption[] = []) {
   }
 
   // ── Validaciones de datos (dropdowns) ──────────────────────────────────────
-  // Columnas: I=Categoría(8), J=Nivel(9), K=Rol(10), M=Sede(12)
+  // Columnas: E=TipoDoc(4), J=Categoría(9), K=Nivel(10), L=Rol(11), N=Sede(13)
   const validations: object[] = [
     {
-      sqref: 'K2:K1000',
+      sqref: 'E2:E1000',
+      type: 'list',
+      formula1: `"${DOC_TYPES.join(',')}"`,
+      showErrorMessage: true,
+      errorTitle: 'Tipo de documento inválido',
+      error: 'Selecciona CC, TI, CE, Pasaporte, NIT u Otro',
+    },
+    {
+      sqref: 'L2:L1000',
       type: 'list',
       formula1: `"${ROLES.join(',')}"`,
       showErrorMessage: true,
@@ -83,7 +96,7 @@ export function downloadMembersTemplate(locations: LocationOption[] = []) {
       error: 'Selecciona ADMIN, COACH o STUDENT de la lista',
     },
     {
-      sqref: 'I2:I1000',
+      sqref: 'J2:J1000',
       type: 'list',
       formula1: `"${CATEGORIAS.join(',')}"`,
       showErrorMessage: true,
@@ -91,7 +104,7 @@ export function downloadMembersTemplate(locations: LocationOption[] = []) {
       error: 'Selecciona una categoría de la lista',
     },
     {
-      sqref: 'J2:J1000',
+      sqref: 'K2:K1000',
       type: 'list',
       formula1: `"${NIVELES.join(',')}"`,
       showErrorMessage: true,
@@ -102,7 +115,7 @@ export function downloadMembersTemplate(locations: LocationOption[] = []) {
 
   if (SEDES.length > 0) {
     validations.push({
-      sqref: 'M2:M1000',
+      sqref: 'N2:N1000',
       type: 'list',
       formula1: `Listas!$A$1:$A$${SEDES.length}`,
       showErrorMessage: true,
@@ -136,6 +149,7 @@ export interface MemberImportRow {
   email?: string;
   phone?: string;
   birthDate?: string;
+  docType?: string;
   docNumber?: string;
   emergencyContact?: string;
   emergencyPhone?: string;
@@ -208,6 +222,7 @@ export function parseMembersExcel(file: File): Promise<{ rows: MemberImportRow[]
           email:            email || undefined,
           phone:            String(r['Teléfono'] ?? '').trim() || undefined,
           birthDate:        parseBirthDate(r['Fecha de nacimiento (YYYY-MM-DD)']),
+          docType:          String(r['Tipo de documento'] ?? '').trim() || undefined,
           docNumber:        String(r['Número de documento'] ?? '').trim() || undefined,
           emergencyContact: String(r['Contacto de emergencia'] ?? '').trim() || undefined,
           emergencyPhone:   String(r['Teléfono de emergencia'] ?? '').trim() || undefined,

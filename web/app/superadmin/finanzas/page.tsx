@@ -4,6 +4,7 @@ import { useAuth } from '@clerk/nextjs';
 import { useEffect, useState } from 'react';
 import { apiFetch } from '@/lib/api-client';
 import { Pencil, Trash2, X, Check, TrendingUp, CalendarClock, CircleDollarSign, Eye, Upload, RotateCcw, MessageCircle } from 'lucide-react';
+import { DatePicker } from '@/components/ui/date-picker';
 import { motion, AnimatePresence, type Variants } from 'framer-motion';
 import { stagger as pageStagger, cardVariant as pageCard } from '@/lib/page-animations';
 
@@ -558,7 +559,7 @@ export default function FinanzasPage() {
                                     </div>
                                     <div>
                                       <p style={{ margin: '0 0 4px', fontSize: 9, fontWeight: 600, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Fecha pago</p>
-                                      <input type="date" value={editPagoForm.fecha} onChange={e => setEditPagoForm(f => ({ ...f, fecha: e.target.value }))} style={inp} />
+                                      <DatePicker value={editPagoForm.fecha} onChange={v => setEditPagoForm(f => ({ ...f, fecha: v }))} />
                                     </div>
                                   </div>
                                   {/* Preview estado automático */}
@@ -666,7 +667,7 @@ export default function FinanzasPage() {
                           </div>
                           <div>
                             <p style={{ margin: '0 0 4px', fontSize: 9, fontWeight: 600, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Fecha pago</p>
-                            <input type="date" value={abonoForm.fecha} onChange={e => setAbonoForm(f => ({ ...f, fecha: e.target.value }))} style={inp} />
+                            <DatePicker value={abonoForm.fecha} onChange={v => setAbonoForm(f => ({ ...f, fecha: v }))} />
                           </div>
                         </div>
                         {/* Preview estado automático */}

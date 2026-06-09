@@ -20,6 +20,7 @@ import { Button } from '@/components/ui/button';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
+import { DatePicker } from '@/components/ui/date-picker';
 import { motion, AnimatePresence, useReducedMotion, type Variants } from 'framer-motion';
 import { stagger as pageStagger, cardVariant as pageCard } from '@/lib/page-animations';
 
@@ -1087,7 +1088,7 @@ export default function FinanzasPage() {
             </div>
             <div className="space-y-2">
               <Label>Fecha</Label>
-              <Input type="date" value={flowForm.date} onChange={e => setFlowForm(f => ({ ...f, date: e.target.value }))} />
+              <DatePicker value={flowForm.date} onChange={v => setFlowForm(f => ({ ...f, date: v }))} />
             </div>
             {flowError && <p className="text-sm text-red-600">{flowError}</p>}
             <Button onClick={handleSaveFlow} disabled={savingFlow || !flowForm.amount || !flowForm.description} className="w-full">
@@ -1131,7 +1132,7 @@ export default function FinanzasPage() {
             </div>
             <div className="space-y-2">
               <Label>Fecha</Label>
-              <Input type="date" value={editFlowForm.date} onChange={e => setEditFlowForm(f => ({ ...f, date: e.target.value }))} />
+              <DatePicker value={editFlowForm.date} onChange={v => setEditFlowForm(f => ({ ...f, date: v }))} />
             </div>
             {editFlowError && <p className="text-sm text-red-600">{editFlowError}</p>}
             <Button onClick={handleSaveEditFlow} disabled={savingEditFlow || !editFlowForm.amount || !editFlowForm.description} className="w-full">

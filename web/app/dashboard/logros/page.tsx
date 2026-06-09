@@ -15,6 +15,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select';
+import { DatePicker } from '@/components/ui/date-picker';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 interface EventResult  { id: string; position?: number; member: { id: string; fullName: string; pictureUrl?: string | null } }
@@ -377,7 +378,7 @@ export default function LogrosPage() {
             </div>
             <div className="space-y-2">
               <Label>Fecha *</Label>
-              <Input type="date" value={compForm.date} onChange={e => setCompForm(f => ({ ...f, date: e.target.value }))} />
+              <DatePicker value={compForm.date} onChange={v => setCompForm(f => ({ ...f, date: v }))} />
             </div>
             {compError && <p className="text-sm text-red-600">{compError}</p>}
             <Button onClick={handleSaveComp} disabled={savingComp || !compForm.name.trim() || !compForm.date} className="w-full">
@@ -405,7 +406,7 @@ export default function LogrosPage() {
             </div>
             <div className="space-y-2">
               <Label>Fecha *</Label>
-              <Input type="date" value={sessionForm.date} onChange={e => setSessionForm(f => ({ ...f, date: e.target.value }))} />
+              <DatePicker value={sessionForm.date} onChange={v => setSessionForm(f => ({ ...f, date: v }))} />
             </div>
             {locations.length > 0 && (
               <div className="space-y-2">

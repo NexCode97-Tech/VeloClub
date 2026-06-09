@@ -26,6 +26,7 @@ import {
 } from 'lucide-react';
 import { MemberAvatar } from '@/components/ui/member-avatar';
 import { PhoneInput } from '@/components/ui/phone-input';
+import { DatePicker } from '@/components/ui/date-picker';
 import { downloadMembersPDF } from '@/lib/pdf';
 import { downloadMembersTemplate, parseMembersExcel } from '@/lib/excel';
 
@@ -984,8 +985,7 @@ export default function MiembrosPage() {
                       <div className="grid grid-cols-2 gap-3">
                         <div>
                           <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest block mb-2">Nacimiento</label>
-                          <Input type="date" value={form.birthDate} className="h-12 rounded-xl text-sm"
-                            onChange={e => setForm(f => ({ ...f, birthDate: e.target.value }))} />
+                          <DatePicker value={form.birthDate} onChange={v => setForm(f => ({ ...f, birthDate: v }))} placeholder="Fecha de nacimiento" />
                         </div>
                         <div>
                           <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest block mb-2">EPS</label>

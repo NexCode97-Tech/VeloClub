@@ -5,6 +5,7 @@ import { ClerkProvider } from "@clerk/nextjs";
 import { esES } from "@clerk/localizations";
 import { Providers } from "./providers";
 import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
 
 export const viewport: Viewport = {
@@ -48,6 +49,7 @@ export default function RootLayout({
           `}} />
           <Providers>{children}</Providers>
           <Analytics />
+          <SpeedInsights />
         </body>
       </html>
     </ClerkProvider>

@@ -355,8 +355,8 @@ export default function SedesPage() {
         ) : (
           <div className="space-y-3">
             {locations.map(loc => (
-              <motion.div variants={cardVariant} key={loc.id} className="bg-card border border-border rounded-xl px-4 py-4">
-                <div className="flex items-start justify-between">
+              <motion.div variants={cardVariant} key={loc.id} className="bg-card border border-border rounded-xl overflow-hidden">
+                <div className="flex items-start justify-between px-4 py-4">
                   <div className="flex items-start gap-3 flex-1 min-w-0">
                     <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 mt-0.5" style={{ background: 'rgba(6,214,160,0.12)' }}>
                       <MapPin className="w-5 h-5" style={{ color: '#06D6A0' }} />
@@ -382,6 +382,18 @@ export default function SedesPage() {
                     </Button>
                   </div>
                 </div>
+                {loc.latitude && loc.longitude && (
+                  <div className="border-t border-border overflow-hidden" style={{ height: 200 }}>
+                    <iframe
+                      title={`Mapa ${loc.name}`}
+                      width="100%"
+                      height="200"
+                      loading="lazy"
+                      style={{ border: 0, display: 'block' }}
+                      src={`https://maps.google.com/maps?q=${loc.latitude},${loc.longitude}&z=15&output=embed`}
+                    />
+                  </div>
+                )}
               </motion.div>
             ))}
           </div>

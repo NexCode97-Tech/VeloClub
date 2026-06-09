@@ -303,6 +303,5 @@ export function LocationMapPicker({ initialLat, initialLng, onConfirm, onClose }
           </p>
         )}
       </div>
-    </div>
   );
 }

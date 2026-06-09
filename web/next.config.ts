@@ -12,7 +12,7 @@ const CSP = [
   // Fuentes: solo propio dominio + Google Maps
   "font-src 'self' data: https://fonts.gstatic.com",
   // Conexiones: propio dominio + API Railway + Clerk + Cloudinary + Google Maps
-  "connect-src 'self' https://veloclub-production.up.railway.app https://clerk.veloclubtech.com https://*.clerk.accounts.dev https://api.cloudinary.com https://maps.googleapis.com https://*.googleapis.com",
+  "connect-src 'self' https://veloclub-production.up.railway.app https://clerk.veloclubtech.com https://*.clerk.accounts.dev https://api.cloudinary.com https://res.cloudinary.com https://maps.googleapis.com https://*.googleapis.com",
   // Frames: solo Clerk (para su UI embebida)
   "frame-src https://clerk.veloclubtech.com https://*.clerk.accounts.dev",
   // No permitir embeber la app en iframes externos

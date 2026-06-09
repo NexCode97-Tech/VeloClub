@@ -14,6 +14,12 @@ export function cn(...inputs: ClassValue[]) {
  *
  * Solución: extraer YYYY-MM-DD y forzar hora local midnight ✅
  */
+/** Primera letra en mayúscula, resto en minúscula. */
+export function toSentenceCase(str: string): string {
+  if (!str) return str;
+  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+}
+
 export function parseLocalDate(dateStr: string): Date {
   // Extrae solo la parte YYYY-MM-DD y la parsea como hora local
   const match = dateStr.match(/^(\d{4}-\d{2}-\d{2})/);

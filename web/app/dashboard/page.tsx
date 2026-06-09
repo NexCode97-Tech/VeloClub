@@ -1097,7 +1097,7 @@ export default function DashboardPage() {
                           {d.toLocaleDateString('es-CO', { month: 'short' })}
                         </span>
                       </div>
-                      <p className="text-[11px] font-semibold text-foreground truncate flex-1">{ev.title}</p>
+                      <p className="text-[11px] font-semibold text-foreground truncate flex-1">{ev.title.charAt(0).toUpperCase() + ev.title.slice(1).toLowerCase()}</p>
                     </div>
                   );
                 })}
@@ -1127,15 +1127,32 @@ export default function DashboardPage() {
             ) : (
               <div className="px-3 pb-3 flex flex-col gap-1">
                 {birthdays.slice(0, 3).map(b => {
-                  const isToday = b.daysUntil === 0;
-                  const label = isToday ? '¡Hoy!' : b.daysUntil === 1 ? 'Mañana' : `${b.daysUntil}d`;
+                  const isToday    = b.daysUntil === 0;
+                  const isTomorrow = b.daysUntil === 1;
+                  const daysBg    = isToday ? 'rgba(239,71,111,0.12)' : 'rgba(124,58,237,0.10)';
+                  const daysColor = isToday ? '#EF476F' : '#7C3AED';
                   return (
                     <div key={b.id} className="flex items-center gap-2 py-1.5 rounded-lg">
-                      <MemberAvatar name={b.fullName} photoUrl={b.pictureUrl}
-                        gradient={ROLE_GRADIENT[b.role] ?? ROLE_GRADIENT.STUDENT} size={28} />
+                      <div className="w-8 h-8 rounded-lg flex flex-col items-center justify-center shrink-0"
+                        style={{ background: daysBg }}>
+                        {isToday ? (
+                          <span className="text-[14px] leading-none">🎂</span>
+                        ) : (
+                          <>
+                            <p className="text-[12px] font-bold leading-none" style={{ color: daysColor }}>
+                              {isTomorrow ? '1' : b.daysUntil}
+                            </p>
+                            <p className="text-[7px] font-bold uppercase leading-none mt-0.5" style={{ color: daysColor }}>
+                              {isTomorrow ? 'mañ' : 'días'}
+                            </p>
+                          </>
+                        )}
+                      </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-[11px] font-semibold text-foreground truncate">{b.fullName}</p>
-                        <p className="text-[10px]" style={{ color: isToday ? '#EF476F' : '#8E87A8', fontWeight: isToday ? 700 : 500 }}>{label}</p>
+                        <p className="text-[10px]" style={{ color: isToday ? '#EF476F' : '#8E87A8', fontWeight: 500 }}>
+                          {isToday ? '¡Hoy!' : isTomorrow ? 'Mañana' : `En ${b.daysUntil} días`}
+                        </p>
                       </div>
                     </div>
                   );
@@ -1314,7 +1331,7 @@ export default function DashboardPage() {
                     </div>
                     {/* Info */}
                     <div className="flex-1 min-w-0">
-                      <p className="text-[12px] font-semibold text-foreground truncate">{ev.title}</p>
+                      <p className="text-[12px] font-semibold text-foreground truncate">{ev.title.charAt(0).toUpperCase() + ev.title.slice(1).toLowerCase()}</p>
                       <div className="flex items-center gap-2 mt-0.5">
                         <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: tc.bg, color: tc.text }}>
                           {typeLabel[ev.type] ?? ev.type}
@@ -1357,26 +1374,35 @@ export default function DashboardPage() {
           ) : (
             <div className="px-4 pb-3 flex flex-col gap-1">
               {birthdays.map(b => {
-                const isToday = b.daysUntil === 0;
-                const label   = isToday ? '¡Hoy!' : b.daysUntil === 1 ? 'Mañana' : `En ${b.daysUntil} días`;
+                const isToday    = b.daysUntil === 0;
+                const isTomorrow = b.daysUntil === 1;
+                const daysBg  = isToday ? 'rgba(239,71,111,0.12)' : 'rgba(124,58,237,0.10)';
+                const daysColor = isToday ? '#EF476F' : '#7C3AED';
                 return (
                   <div key={b.id}
                     className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-secondary/60 transition-colors cursor-default">
-                    <MemberAvatar
-                      name={b.fullName}
-                      photoUrl={b.pictureUrl}
-                      gradient={ROLE_GRADIENT[b.role] ?? ROLE_GRADIENT.STUDENT}
-                      size={36}
-                    />
+                    {/* Días restantes en lugar del avatar */}
+                    <div className="w-10 h-10 rounded-xl flex flex-col items-center justify-center shrink-0"
+                      style={{ background: daysBg }}>
+                      {isToday ? (
+                        <span className="text-[18px] leading-none">🎂</span>
+                      ) : (
+                        <>
+                          <p className="text-[14px] font-bold leading-none" style={{ color: daysColor }}>
+                            {isTomorrow ? '1' : b.daysUntil}
+                          </p>
+                          <p className="text-[8px] font-bold uppercase tracking-wide leading-none mt-0.5" style={{ color: daysColor }}>
+                            {isTomorrow ? 'mañana' : 'días'}
+                          </p>
+                        </>
+                      )}
+                    </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-[12px] font-semibold text-foreground truncate">{b.fullName}</p>
-                      <p className="text-[11px]" style={{ color: isToday ? '#EF476F' : '#8E87A8', fontWeight: isToday ? 700 : 500 }}>
-                        {label}
+                      <p className="text-[11px]" style={{ color: isToday ? '#EF476F' : '#8E87A8', fontWeight: 500 }}>
+                        {isToday ? '¡Hoy es su cumpleaños!' : isTomorrow ? 'Mañana es su cumpleaños' : `En ${b.daysUntil} días`}
                       </p>
                     </div>
-                    {isToday && (
-                      <span className="text-[18px]">🎂</span>
-                    )}
                   </div>
                 );
               })}

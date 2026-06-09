@@ -427,7 +427,7 @@ export default function MiembrosPage() {
             <div className="relative flex-1 min-w-[180px] max-w-sm">
               <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: '#8E87A8' }} />
               <input
-                className="w-full h-[42px] pl-10 pr-4 rounded-xl text-[13px] outline-none transition-all"
+                className="w-full pl-10 pr-4 py-2.5 rounded-xl text-[13px] outline-none transition-all"
                 style={{ background: '#fff', border: '1px solid rgba(120,80,200,0.12)', color: '#1A1028' }}
                 placeholder="Buscar por nombre o email..."
                 value={search} onChange={e => setSearch(e.target.value)}

@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { apiFetch } from '@/lib/api-client';
-import { MapPin, Camera, Pencil, Trash2, ImagePlus, BadgeCheck, Lock, CalendarDays, Phone, Mail, Building2, Check, X } from 'lucide-react';
+import { MapPin, Camera, Pencil, Trash2, ImagePlus, BadgeCheck, Lock, CalendarDays, Phone, Mail, Building2, Check, X, UserPlus, UserCheck } from 'lucide-react';
 import { PostCard, Post, PostComment } from '@/components/ui/post-card';
 
 interface ClubMember {
@@ -25,8 +25,128 @@ interface MainLocation {
   id: string; name: string; address?: string | null;
 }
 
-const TABS = ['Publicaciones'] as const;
+const TABS = ['Publicaciones', 'Contacto'] as const;
 type Tab = typeof TABS[number];
+
+// ── ContactCard — compartido entre tab móvil y columna desktop ───────────────
+
+interface ContactCardProps {
+  isAdmin: boolean;
+  phone: string; email: string;
+  phoneDraft: string; emailDraft: string;
+  editingContact: boolean; savingContact: boolean;
+  mainLocation: { id: string; name: string; address?: string | null } | null;
+  clubCity?: string | null; clubDept?: string | null; clubName: string;
+  onEditStart: () => void;
+  onPhoneChange: (v: string) => void;
+  onEmailChange: (v: string) => void;
+  onSave: () => void;
+  onCancel: () => void;
+}
+
+function ContactCard({ isAdmin, phone, email, phoneDraft, emailDraft, editingContact, savingContact, mainLocation, clubCity, clubDept, clubName, onEditStart, onPhoneChange, onEmailChange, onSave, onCancel }: ContactCardProps) {
+  return (
+    <div className="rounded-2xl overflow-hidden"
+      style={{ background: 'white', border: '1px solid rgba(67,97,238,0.10)', boxShadow: '0 1px 12px rgba(0,0,0,0.06)' }}>
+      {/* Header */}
+      <div className="flex items-center justify-between px-5 py-4 border-b border-border/50">
+        <p className="text-[11px] font-bold uppercase tracking-widest" style={{ color: '#8E87A8' }}>
+          Información de contacto
+        </p>
+        {isAdmin && !editingContact && (
+          <motion.button whileTap={{ scale: 0.96 }} onClick={onEditStart}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold cursor-pointer transition-colors hover:bg-secondary"
+            style={{ color: '#4361EE' }}>
+            <Pencil className="w-3 h-3" /> Editar
+          </motion.button>
+        )}
+        {isAdmin && editingContact && (
+          <div className="flex items-center gap-1.5">
+            <motion.button whileTap={{ scale: 0.96 }} onClick={onSave} disabled={savingContact}
+              className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-[11px] font-bold text-white cursor-pointer disabled:opacity-60"
+              style={{ background: 'linear-gradient(135deg,#4361EE,#7C3AED)' }}>
+              <Check className="w-3 h-3" /> {savingContact ? 'Guardando…' : 'Guardar'}
+            </motion.button>
+            <button onClick={onCancel}
+              className="flex items-center gap-1 px-2 py-1.5 rounded-lg text-[11px] font-semibold text-muted-foreground hover:bg-secondary transition-colors cursor-pointer">
+              <X className="w-3 h-3" />
+            </button>
+          </div>
+        )}
+      </div>
+      {/* Campos */}
+      <div className="divide-y divide-border/40">
+        {/* Teléfono */}
+        <div className="flex items-center gap-3 px-5 py-4">
+          <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(67,97,238,0.08)' }}>
+            <Phone className="w-4 h-4" style={{ color: '#4361EE' }} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-[10px] font-bold uppercase tracking-widest mb-0.5" style={{ color: '#8E87A8' }}>Teléfono</p>
+            {editingContact ? (
+              <input value={phoneDraft} onChange={e => onPhoneChange(e.target.value)} placeholder="+57 300 000 0000"
+                className="w-full text-[13px] font-medium outline-none bg-transparent border-b border-dashed pb-0.5"
+                style={{ borderColor: 'rgba(67,97,238,0.30)', color: '#1A1028' }} />
+            ) : (
+              <p className="text-[13px] font-medium text-foreground truncate">
+                {phone || <span className="text-muted-foreground/50 italic text-[12px]">{isAdmin ? 'Agregar teléfono' : 'Sin registrar'}</span>}
+              </p>
+            )}
+          </div>
+        </div>
+        {/* Correo */}
+        <div className="flex items-center gap-3 px-5 py-4">
+          <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(67,97,238,0.08)' }}>
+            <Mail className="w-4 h-4" style={{ color: '#4361EE' }} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-[10px] font-bold uppercase tracking-widest mb-0.5" style={{ color: '#8E87A8' }}>Correo electrónico</p>
+            {editingContact ? (
+              <input value={emailDraft} onChange={e => onEmailChange(e.target.value)} placeholder="club@ejemplo.com" type="email"
+                className="w-full text-[13px] font-medium outline-none bg-transparent border-b border-dashed pb-0.5"
+                style={{ borderColor: 'rgba(67,97,238,0.30)', color: '#1A1028' }} />
+            ) : (
+              <p className="text-[13px] font-medium text-foreground truncate">
+                {email || <span className="text-muted-foreground/50 italic text-[12px]">{isAdmin ? 'Agregar correo' : 'Sin registrar'}</span>}
+              </p>
+            )}
+          </div>
+        </div>
+        {/* Sede principal */}
+        <div className="flex items-start gap-3 px-5 py-4">
+          <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 mt-0.5" style={{ background: 'rgba(67,97,238,0.08)' }}>
+            <Building2 className="w-4 h-4" style={{ color: '#4361EE' }} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-[10px] font-bold uppercase tracking-widest mb-0.5" style={{ color: '#8E87A8' }}>Sede principal</p>
+            {mainLocation ? (
+              <>
+                <p className="text-[13px] font-semibold text-foreground">{mainLocation.name}</p>
+                {mainLocation.address && <p className="text-[12px] text-muted-foreground mt-0.5">{mainLocation.address}</p>}
+              </>
+            ) : (
+              <p className="text-muted-foreground/50 italic text-[12px]">Sin sede registrada</p>
+            )}
+          </div>
+        </div>
+        {/* Ubicación */}
+        {(clubCity || clubDept) && (
+          <div className="flex items-center gap-3 px-5 py-4">
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(67,97,238,0.08)' }}>
+              <MapPin className="w-4 h-4" style={{ color: '#4361EE' }} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-[10px] font-bold uppercase tracking-widest mb-0.5" style={{ color: '#8E87A8' }}>Ubicación</p>
+              <p className="text-[13px] font-medium text-foreground">
+                {[clubCity, clubDept].filter(Boolean).join(', ')}
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
 
 export default function ClubProfilePage() {
   const { isLoaded, isSignedIn, userId } = useAuth();
@@ -46,6 +166,8 @@ export default function ClubProfilePage() {
   const [posts, setPosts]                 = useState<Post[]>([]);
   const [currentUserId, setCurrentUserId] = useState('');
   const [activeTab, setActiveTab]         = useState<Tab>('Publicaciones');
+  const [following, setFollowing]         = useState(false);
+  const [toggling, setToggling]           = useState(false);
   const [description, setDescription]     = useState<string>('');
   const [editingDesc, setEditingDesc]     = useState(false);
   const [descDraft, setDescDraft]         = useState('');
@@ -72,6 +194,14 @@ export default function ClubProfilePage() {
           ),
           apiFetch<{ posts: Post[] }>('/posts?scope=private', { token }),
         ]);
+
+        // Cargar estado de follow una vez que tengamos el clubId
+        if (clubRes.status === 'fulfilled') {
+          const clubId = clubRes.value.club.id;
+          apiFetch<{ isFollowing: boolean }>(`/follows/stats/club:${clubId}`, { token })
+            .then(r => setFollowing(r.isFollowing))
+            .catch(() => {});
+        }
         if (meRes.status === 'fulfilled') setUserRole(meRes.value.user?.role ?? '');
         if (clubRes.status === 'fulfilled') {
           const c = clubRes.value.club;
@@ -119,6 +249,20 @@ export default function ClubProfilePage() {
     const token = await session?.getToken();
     await apiFetch(`/posts/${postId}`, { token, method: 'DELETE' });
     setPosts(prev => prev.filter(p => p.id !== postId));
+  }
+
+  async function handleFollow() {
+    if (!club || toggling) return;
+    setToggling(true);
+    try {
+      const token = await session?.getToken();
+      const res = await apiFetch<{ following: boolean }>(
+        `/follows/toggle/club:${club.id}`, { token, method: 'POST' }
+      );
+      setFollowing(res.following);
+      setFollowers(prev => prev + (res.following ? 1 : -1));
+    } catch { /* silencioso */ }
+    finally { setToggling(false); }
   }
 
   async function saveDescription() {
@@ -304,6 +448,25 @@ export default function ClubProfilePage() {
                 </div>
               )}
             </div>
+
+            {/* Botón Seguir — solo visible para no-ADMIN */}
+            {!isAdmin && (
+              <motion.button
+                whileTap={{ scale: 0.97 }}
+                onClick={handleFollow}
+                disabled={toggling}
+                className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-[13px] font-bold transition-all cursor-pointer disabled:opacity-60"
+                style={following
+                  ? { background: 'rgba(67,97,238,0.10)', color: '#4361EE', border: '1.5px solid rgba(67,97,238,0.25)' }
+                  : { background: 'linear-gradient(135deg,#4361EE,#7C3AED)', color: '#fff', border: 'none' }
+                }
+              >
+                {following
+                  ? <><UserCheck className="w-4 h-4" /> Siguiendo</>
+                  : <><UserPlus className="w-4 h-4" /> Seguir</>
+                }
+              </motion.button>
+            )}
           </div>
 
           {/* Nombre + badge de deporte en la misma línea */}
@@ -416,7 +579,8 @@ export default function ClubProfilePage() {
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className="flex-1 py-3.5 relative transition-colors"
+              // "Contacto" solo visible en móvil — en desktop siempre está en la columna derecha
+              className={`flex-1 py-3.5 relative transition-colors${tab === 'Contacto' ? ' sm:hidden' : ''}`}
               style={{ fontSize: 12, fontWeight: 700, color: activeTab === tab ? '#4361EE' : '#8E87A8' }}
             >
               {tab}
@@ -436,7 +600,7 @@ export default function ClubProfilePage() {
       {/* ── Contenido: 2 columnas en desktop ──────────────────────────────────── */}
       <div className="sm:flex sm:gap-6">
 
-        {/* Columna izquierda — Publicaciones */}
+        {/* Columna izquierda — Publicaciones / Contacto (móvil) */}
         <div className="sm:w-1/2">
           <AnimatePresence mode="wait">
             {activeTab === 'Publicaciones' && (
@@ -475,134 +639,61 @@ export default function ClubProfilePage() {
                 )}
               </motion.div>
             )}
+            {/* Tab Contacto — solo en móvil */}
+            {activeTab === 'Contacto' && (
+              <motion.div key="contacto-mobile"
+                initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2 }}
+                className="px-4 py-4 sm:hidden">
+                <ContactCard
+                  isAdmin={isAdmin} phone={phone} email={email}
+                  phoneDraft={phoneDraft} emailDraft={emailDraft}
+                  editingContact={editingContact} savingContact={savingContact}
+                  mainLocation={mainLocation} clubCity={club.city} clubDept={club.department}
+                  clubName={club.name}
+                  onEditStart={() => { setPhoneDraft(phone); setEmailDraft(email); setEditingContact(true); }}
+                  onPhoneChange={setPhoneDraft} onEmailChange={setEmailDraft}
+                  onSave={saveContact} onCancel={() => setEditingContact(false)}
+                />
+              </motion.div>
+            )}
           </AnimatePresence>
         </div>
 
-        {/* Columna derecha — Información de contacto */}
-        <div className="px-4 sm:px-0 sm:pr-6 pb-6 sm:w-1/2 sm:py-4">
-          <div className="rounded-2xl overflow-hidden"
-            style={{ background: 'white', border: '1px solid rgba(67,97,238,0.10)', boxShadow: '0 1px 12px rgba(0,0,0,0.06)' }}>
+        {/* Columna derecha — solo desktop, sticky */}
+        <div className="hidden sm:block sm:px-0 sm:pr-6 pb-6 sm:w-1/2 sm:py-4 sm:sticky sm:top-4 sm:self-start">
+          <ContactCard
+            isAdmin={isAdmin} phone={phone} email={email}
+            phoneDraft={phoneDraft} emailDraft={emailDraft}
+            editingContact={editingContact} savingContact={savingContact}
+            mainLocation={mainLocation} clubCity={club.city} clubDept={club.department}
+            clubName={club.name}
+            onEditStart={() => { setPhoneDraft(phone); setEmailDraft(email); setEditingContact(true); }}
+            onPhoneChange={setPhoneDraft} onEmailChange={setEmailDraft}
+            onSave={saveContact} onCancel={() => setEditingContact(false)}
+          />
 
-            {/* Header */}
-            <div className="flex items-center justify-between px-5 py-4 border-b border-border/50">
-              <p className="text-[11px] font-bold uppercase tracking-widest" style={{ color: '#8E87A8' }}>
-                Información de contacto
-              </p>
-              {isAdmin && !editingContact && (
-                <motion.button
-                  whileTap={{ scale: 0.96 }}
-                  onClick={() => { setPhoneDraft(phone); setEmailDraft(email); setEditingContact(true); }}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold cursor-pointer transition-colors hover:bg-secondary"
-                  style={{ color: '#4361EE' }}>
-                  <Pencil className="w-3 h-3" /> Editar
-                </motion.button>
-              )}
-              {isAdmin && editingContact && (
-                <div className="flex items-center gap-1.5">
-                  <motion.button whileTap={{ scale: 0.96 }}
-                    onClick={saveContact} disabled={savingContact}
-                    className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-[11px] font-bold text-white cursor-pointer disabled:opacity-60"
-                    style={{ background: 'linear-gradient(135deg,#4361EE,#7C3AED)' }}>
-                    <Check className="w-3 h-3" /> {savingContact ? 'Guardando…' : 'Guardar'}
-                  </motion.button>
-                  <button onClick={() => setEditingContact(false)}
-                    className="flex items-center gap-1 px-2 py-1.5 rounded-lg text-[11px] font-semibold text-muted-foreground hover:bg-secondary transition-colors cursor-pointer">
-                    <X className="w-3 h-3" />
-                  </button>
-                </div>
-              )}
-            </div>
-
-            {/* Campos */}
-            <div className="divide-y divide-border/40">
-
-              {/* Teléfono */}
-              <div className="flex items-center gap-3 px-5 py-4">
-                <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
-                  style={{ background: 'rgba(67,97,238,0.08)' }}>
-                  <Phone className="w-4 h-4" style={{ color: '#4361EE' }} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-[10px] font-bold uppercase tracking-widest mb-0.5" style={{ color: '#8E87A8' }}>Teléfono</p>
-                  {editingContact ? (
-                    <input
-                      value={phoneDraft}
-                      onChange={e => setPhoneDraft(e.target.value)}
-                      placeholder="+57 300 000 0000"
-                      className="w-full text-[13px] font-medium outline-none bg-transparent border-b border-dashed pb-0.5"
-                      style={{ borderColor: 'rgba(67,97,238,0.30)', color: '#1A1028' }}
-                    />
-                  ) : (
-                    <p className="text-[13px] font-medium text-foreground truncate">
-                      {phone || <span className="text-muted-foreground/50 italic text-[12px]">{isAdmin ? 'Agregar teléfono' : 'Sin registrar'}</span>}
-                    </p>
-                  )}
-                </div>
+          {/* Mapa Google Maps */}
+          {(mainLocation?.address || club.city || club.department) && (() => {
+            const query = encodeURIComponent(
+              mainLocation?.address
+                ? `${mainLocation.address}, ${[club.city, club.department].filter(Boolean).join(', ')}`
+                : `${club.name}, ${[club.city, club.department].filter(Boolean).join(', ')}, Colombia`
+            );
+            return (
+              <div className="mt-3 rounded-2xl overflow-hidden"
+                style={{ border: '1px solid rgba(67,97,238,0.10)', boxShadow: '0 1px 12px rgba(0,0,0,0.06)' }}>
+                <iframe
+                  title="Ubicación del club"
+                  width="100%"
+                  height="220"
+                  loading="lazy"
+                  style={{ border: 0, display: 'block' }}
+                  src={`https://maps.google.com/maps?q=${query}&output=embed&z=15`}
+                />
               </div>
-
-              {/* Correo */}
-              <div className="flex items-center gap-3 px-5 py-4">
-                <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
-                  style={{ background: 'rgba(67,97,238,0.08)' }}>
-                  <Mail className="w-4 h-4" style={{ color: '#4361EE' }} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-[10px] font-bold uppercase tracking-widest mb-0.5" style={{ color: '#8E87A8' }}>Correo electrónico</p>
-                  {editingContact ? (
-                    <input
-                      value={emailDraft}
-                      onChange={e => setEmailDraft(e.target.value)}
-                      placeholder="club@ejemplo.com"
-                      type="email"
-                      className="w-full text-[13px] font-medium outline-none bg-transparent border-b border-dashed pb-0.5"
-                      style={{ borderColor: 'rgba(67,97,238,0.30)', color: '#1A1028' }}
-                    />
-                  ) : (
-                    <p className="text-[13px] font-medium text-foreground truncate">
-                      {email || <span className="text-muted-foreground/50 italic text-[12px]">{isAdmin ? 'Agregar correo' : 'Sin registrar'}</span>}
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              {/* Sede principal */}
-              <div className="flex items-start gap-3 px-5 py-4">
-                <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 mt-0.5"
-                  style={{ background: 'rgba(67,97,238,0.08)' }}>
-                  <Building2 className="w-4 h-4" style={{ color: '#4361EE' }} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-[10px] font-bold uppercase tracking-widest mb-0.5" style={{ color: '#8E87A8' }}>Sede principal</p>
-                  {mainLocation ? (
-                    <>
-                      <p className="text-[13px] font-semibold text-foreground">{mainLocation.name}</p>
-                      {mainLocation.address && (
-                        <p className="text-[12px] text-muted-foreground mt-0.5">{mainLocation.address}</p>
-                      )}
-                    </>
-                  ) : (
-                    <p className="text-muted-foreground/50 italic text-[12px]">Sin sede registrada</p>
-                  )}
-                </div>
-              </div>
-
-              {/* Ubicación */}
-              {(club.city || club.department) && (
-                <div className="flex items-center gap-3 px-5 py-4">
-                  <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
-                    style={{ background: 'rgba(67,97,238,0.08)' }}>
-                    <MapPin className="w-4 h-4" style={{ color: '#4361EE' }} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[10px] font-bold uppercase tracking-widest mb-0.5" style={{ color: '#8E87A8' }}>Ubicación</p>
-                    <p className="text-[13px] font-medium text-foreground">
-                      {[club.city, club.department].filter(Boolean).join(', ')}
-                    </p>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
+            );
+          })()}
         </div>
 
       </div>

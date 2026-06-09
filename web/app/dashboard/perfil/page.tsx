@@ -13,6 +13,7 @@ import {
   Camera, Users, Trash2, ImagePlus,
   Phone, Mail, Building2,
 } from 'lucide-react';
+
 import { PostCard, Post, PostComment } from '@/components/ui/post-card';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -102,7 +103,7 @@ function Avatar({ src, name, size = 36, role }: { src?: string | null; name: str
 
 // ── Tabs ──────────────────────────────────────────────────────────────────────
 
-const TABS = ['Publicaciones', 'Fotos'] as const;
+const TABS = ['Publicaciones', 'Fotos', 'Contacto'] as const;
 type Tab = typeof TABS[number];
 
 // ── Main ──────────────────────────────────────────────────────────────────────
@@ -478,7 +479,13 @@ export default function PerfilPage() {
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-3">
             {user?.club?.name && (
               <div className="flex items-center gap-1.5">
-                <Users className="w-3.5 h-3.5 shrink-0" style={{ color: '#8E87A8' }} />
+                {user.club.logoUrl
+                  ? <div className="w-3.5 h-3.5 rounded-full overflow-hidden shrink-0">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={user.club.logoUrl} alt={user.club.name} className="w-full h-full object-cover" />
+                    </div>
+                  : <Users className="w-3.5 h-3.5 shrink-0" style={{ color: '#8E87A8' }} />
+                }
                 <span className="text-[12px] text-muted-foreground">{user.club.name}</span>
                 {user.club.verified && (
                   <div className="w-3.5 h-3.5 rounded-full flex items-center justify-center" style={{ background: '#4361EE' }}>
@@ -534,7 +541,8 @@ export default function PerfilPage() {
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className="flex-1 py-3.5 relative transition-colors"
+                // "Contacto" solo en móvil — en desktop siempre visible en columna derecha
+                className={`flex-1 py-3.5 relative transition-colors${tab === 'Contacto' ? ' sm:hidden' : ''}`}
                 style={{ fontSize: 12, fontWeight: 700, color: activeTab === tab ? '#7C3AED' : '#8E87A8' }}
               >
                 {tab}
@@ -642,8 +650,80 @@ export default function PerfilPage() {
 
         </AnimatePresence>
       </div>
-      {/* Columna derecha — tarjeta de contacto, sticky */}
-      <div className="px-4 sm:px-0 sm:pr-6 pb-6 sm:w-1/2 sm:py-4 sm:sticky sm:top-4 sm:self-start">
+      {/* Tab Contacto — solo móvil */}
+      {activeTab === 'Contacto' && (
+        <div className="sm:hidden px-4 py-4 sm:w-1/2">
+          <div className="rounded-2xl overflow-hidden"
+            style={{ background: 'white', border: '1px solid rgba(124,58,237,0.10)', boxShadow: '0 1px 12px rgba(0,0,0,0.06)' }}>
+            <div className="px-5 py-4 border-b border-border/50">
+              <p className="text-[11px] font-bold uppercase tracking-widest" style={{ color: '#8E87A8' }}>Información de contacto</p>
+            </div>
+            <div className="divide-y divide-border/40">
+              <div className="flex items-center gap-3 px-5 py-4">
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(124,58,237,0.08)' }}>
+                  <Phone className="w-4 h-4" style={{ color: '#7C3AED' }} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[10px] font-bold uppercase tracking-widest mb-0.5" style={{ color: '#8E87A8' }}>Teléfono</p>
+                  <p className="text-[13px] font-medium text-foreground truncate">
+                    {memberMe?.phone || <span className="text-muted-foreground/50 italic text-[12px]">Sin registrar</span>}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 px-5 py-4">
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(124,58,237,0.08)' }}>
+                  <Mail className="w-4 h-4" style={{ color: '#7C3AED' }} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[10px] font-bold uppercase tracking-widest mb-0.5" style={{ color: '#8E87A8' }}>Correo electrónico</p>
+                  <p className="text-[13px] font-medium text-foreground truncate">
+                    {(memberMe?.email || user?.email) || <span className="text-muted-foreground/50 italic text-[12px]">Sin registrar</span>}
+                  </p>
+                </div>
+              </div>
+              {user?.club && (
+                <div className="flex items-center gap-3 px-5 py-4">
+                  <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 overflow-hidden" style={{ background: user.club.logoUrl ? undefined : 'rgba(124,58,237,0.08)' }}>
+                    {user.club.logoUrl
+                      // eslint-disable-next-line @next/next/no-img-element
+                      ? <img src={user.club.logoUrl} alt={user.club.name} className="w-full h-full object-cover" />
+                      : <Building2 className="w-4 h-4" style={{ color: '#7C3AED' }} />}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[10px] font-bold uppercase tracking-widest mb-0.5" style={{ color: '#8E87A8' }}>Club</p>
+                    <p className="text-[13px] font-medium text-foreground truncate">{user.club.name}</p>
+                  </div>
+                </div>
+              )}
+              {(memberMe?.category || memberMe?.tipo) && (
+                <div className="flex items-center gap-3 px-5 py-4">
+                  <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(124,58,237,0.08)' }}>
+                    <Users className="w-4 h-4" style={{ color: '#7C3AED' }} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[10px] font-bold uppercase tracking-widest mb-0.5" style={{ color: '#8E87A8' }}>Categoría</p>
+                    <p className="text-[13px] font-medium text-foreground">{[memberMe.category, memberMe.tipo].filter(Boolean).join(' · ')}</p>
+                  </div>
+                </div>
+              )}
+              {(user?.club?.city || user?.club?.department) && (
+                <div className="flex items-center gap-3 px-5 py-4">
+                  <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(124,58,237,0.08)' }}>
+                    <MapPin className="w-4 h-4" style={{ color: '#7C3AED' }} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[10px] font-bold uppercase tracking-widest mb-0.5" style={{ color: '#8E87A8' }}>Ubicación</p>
+                    <p className="text-[13px] font-medium text-foreground">{[user.club.city, user.club.department].filter(Boolean).join(', ')}</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Columna derecha — tarjeta de contacto, solo desktop, sticky */}
+      <div className="hidden sm:block sm:px-0 sm:pr-6 pb-6 sm:w-1/2 sm:py-4 sm:sticky sm:top-4 sm:self-start">
         <div className="rounded-2xl overflow-hidden"
           style={{ background: 'white', border: '1px solid rgba(124,58,237,0.10)', boxShadow: '0 1px 12px rgba(0,0,0,0.06)' }}>
 

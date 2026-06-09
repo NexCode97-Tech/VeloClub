@@ -41,20 +41,50 @@ router.get('/', requireAuth, async (req, res) => {
   res.json({ events });
 });
 
-// GET /events/upcoming — próximos 5 eventos desde hoy
+// GET /events/upcoming — próximos 5 eventos desde hoy (CalendarEvents + Competitions)
 router.get('/upcoming', requireAuth, async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'No autenticado' });
   const clubId = req.user.clubId ?? '';
-  // Usar inicio del día en UTC-5 (Colombia) para no perder eventos de hoy
   const now = new Date();
-  now.setUTCHours(0, 0, 0, 0); // medianoche UTC = 7pm del día anterior en Colombia, suficientemente amplio
-  const events = await prisma.calendarEvent.findMany({
-    where: { clubId, startDate: { gte: now } },
-    orderBy: { startDate: 'asc' },
-    take: 5,
-    select: { id: true, title: true, type: true, startDate: true, allDay: true, location: { select: { name: true } } },
-  });
-  res.json({ events });
+  now.setUTCHours(0, 0, 0, 0);
+
+  const [calEvents, competitions] = await Promise.all([
+    prisma.calendarEvent.findMany({
+      where: { clubId, startDate: { gte: now } },
+      orderBy: { startDate: 'asc' },
+      take: 10,
+      select: { id: true, title: true, type: true, startDate: true, allDay: true, location: { select: { name: true } } },
+    }),
+    prisma.competition.findMany({
+      where: { clubId, date: { gte: now } },
+      orderBy: { date: 'asc' },
+      take: 10,
+      select: { id: true, name: true, date: true, place: true },
+    }),
+  ]);
+
+  const merged = [
+    ...calEvents.map(e => ({
+      id: e.id,
+      title: e.title,
+      type: e.type,
+      startDate: e.startDate,
+      allDay: e.allDay,
+      location: e.location,
+    })),
+    ...competitions.map(c => ({
+      id: c.id,
+      title: c.name,
+      type: 'COMPETITION' as const,
+      startDate: c.date,
+      allDay: true,
+      location: c.place ? { name: c.place } : null,
+    })),
+  ]
+    .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime())
+    .slice(0, 5);
+
+  res.json({ events: merged });
 });
 
 // POST /events

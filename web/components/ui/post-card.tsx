@@ -187,9 +187,9 @@ export function PostCard({ post, currentUserId, onLike, onComment, canDelete, on
       {post.imageUrl && (
         <div className="mb-3 overflow-hidden">
           {isVideo
-            ? <video src={post.imageUrl} controls className="w-full" style={{ maxHeight: 360 }} />
+            ? <video src={post.imageUrl} controls className="w-full" style={{ maxHeight: 520 }} />
             // eslint-disable-next-line @next/next/no-img-element
-            : <img src={post.imageUrl} alt="Publicación" className="w-full object-cover" style={{ maxHeight: 360 }} />
+            : <img src={post.imageUrl} alt="Publicación" className="w-full object-contain" style={{ maxHeight: 520, background: '#f4f4f6' }} />
           }
         </div>
       )}

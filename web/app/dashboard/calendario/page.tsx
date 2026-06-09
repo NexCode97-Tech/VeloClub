@@ -259,6 +259,11 @@ export default function CalendarioPage() {
   );
 }
 
+function toSentenceCase(str: string): string {
+  if (!str) return str;
+  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+}
+
 function EventCard({ event }: { event: CalEvent }) {
   const color = TYPE_COLOR[event.type];
   const Icon  = event.type === 'COMPETITION' ? Trophy : Dumbbell;
@@ -283,7 +288,7 @@ function EventCard({ event }: { event: CalEvent }) {
           </span>
           <span className="text-[10px] text-muted-foreground">{dateStr}</span>
         </div>
-        <p className="text-[13px] font-semibold text-foreground truncate">{event.title}</p>
+        <p className="text-[13px] font-semibold text-foreground truncate">{toSentenceCase(event.title)}</p>
         {sub && (
           <div className="flex items-center gap-1 mt-0.5">
             <MapPin className="w-3 h-3 text-muted-foreground shrink-0" />

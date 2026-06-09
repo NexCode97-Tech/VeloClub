@@ -255,8 +255,11 @@ export default function PublicProfilePage() {
         </div>
       </motion.div>
 
+      {/* Contenido — en desktop: izquierda 50%, derecha 50% reservado */}
+      <div className="sm:flex sm:gap-6">
+      <div className="sm:w-1/2">
       {/* Galería de fotos */}
-      <div className="px-4 sm:px-6 py-4 max-w-4xl mx-auto">
+      <div className="px-4 sm:px-6 py-4">
         <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-3">Fotos</p>
         {profile.postImages.length === 0 ? (
           <div className="rounded-2xl px-6 py-8 flex flex-col items-center text-center"
@@ -287,6 +290,10 @@ export default function PublicProfilePage() {
             })}
           </div>
         )}
+      </div>
+      </div>
+      {/* Columna derecha — reservada para contenido futuro */}
+      <div className="hidden sm:block sm:w-1/2" />
       </div>
     </div>
   );

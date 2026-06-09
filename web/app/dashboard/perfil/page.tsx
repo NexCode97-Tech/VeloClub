@@ -531,7 +531,9 @@ export default function PerfilPage() {
       </div>
 
       {/* ── Contenido del tab ─────────────────────────────────────────────────── */}
-      <div className="w-full px-4 sm:px-6 py-4 max-w-2xl sm:max-w-none">
+      {/* En desktop: 2 columnas — izquierda 50% contenido, derecha 50% reservado */}
+      <div className="w-full px-4 sm:px-6 py-4 sm:flex sm:gap-6">
+      <div className="sm:w-1/2">
         <AnimatePresence mode="wait">
           {activeTab === 'Publicaciones' && (
             <motion.div key="posts"
@@ -656,6 +658,9 @@ export default function PerfilPage() {
             </motion.div>
           )}
         </AnimatePresence>
+      </div>
+      {/* Columna derecha — reservada para contenido futuro */}
+      <div className="hidden sm:block sm:w-1/2" />
       </div>
     </div>
   );

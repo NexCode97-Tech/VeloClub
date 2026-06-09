@@ -408,6 +408,9 @@ export default function ClubProfilePage() {
       </div>
 
       {/* ── Contenido del tab ──────────────────────────────────────────────────── */}
+      {/* En desktop: 2 columnas — izquierda 50% contenido, derecha 50% reservado */}
+      <div className="sm:flex sm:gap-6">
+      <div className="sm:w-1/2">
       <AnimatePresence mode="wait">
 
         {/* Tab: Miembros */}
@@ -499,6 +502,10 @@ export default function ClubProfilePage() {
         )}
 
       </AnimatePresence>
+      </div>
+      {/* Columna derecha — reservada para contenido futuro */}
+      <div className="hidden sm:block sm:w-1/2" />
+      </div>
     </div>
   );
 }

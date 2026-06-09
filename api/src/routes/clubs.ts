@@ -31,7 +31,8 @@ router.get('/settings', requireAuth, async (req, res) => {
     where: { id: req.user.clubId ?? '' },
     select: {
       id: true, name: true, city: true, department: true,
-      logoUrl: true, noAttendanceDays: true, createdAt: true,
+      logoUrl: true, coverUrl: true, verified: true,
+      noAttendanceDays: true, createdAt: true,
       suscripcion: { select: { tipoPlan: true, createdAt: true } },
     },
   });
@@ -110,6 +111,88 @@ router.delete('/logo', requireAuth, async (req, res) => {
   await prisma.club.update({
     where: { id: clubId },
     data:  { logoUrl: null, logoPublicId: null },
+  });
+  res.json({ ok: true });
+});
+
+// GET /clubs/profile — datos del club para la página de perfil
+router.get('/profile', requireAuth, async (req, res) => {
+  if (!req.user) return res.status(401).json({ error: 'No autenticado' });
+
+  const clubId = req.user.clubId ?? '';
+  const club = await prisma.club.findUnique({
+    where: { id: clubId },
+    select: {
+      id: true, name: true, city: true, department: true, deporte: true,
+      logoUrl: true, coverUrl: true, verified: true, createdAt: true,
+      _count: { select: { members: true } },
+    },
+  });
+  if (!club) return res.status(404).json({ error: 'Club no encontrado' });
+
+  const members = await prisma.member.findMany({
+    where: { clubId, inviteStatus: 'ACCEPTED' },
+    select: {
+      id: true, fullName: true, pictureUrl: true, role: true, clerkId: true,
+    },
+    orderBy: { createdAt: 'asc' },
+    take: 30,
+  });
+
+  const followersCount = await prisma.follow.count({
+    where: { followingClerkId: `club:${clubId}` },
+  });
+
+  res.json({ club, members, followersCount });
+});
+
+// POST /clubs/cover — portada del club
+router.post('/cover', requireAuth, async (req, res) => {
+  if (!req.user) return res.status(401).json({ error: 'No autenticado' });
+  if (req.user.role !== 'ADMIN') return res.status(403).json({ error: 'Solo administradores' });
+
+  const { base64 } = req.body as { base64?: string };
+  if (!base64) return res.status(400).json({ error: 'base64 requerido' });
+
+  const clubId = req.user.clubId ?? '';
+  try {
+    const existing = await prisma.club.findUnique({ where: { id: clubId }, select: { coverPublicId: true } });
+    if (existing?.coverPublicId) {
+      await cloudinary.uploader.destroy(existing.coverPublicId).catch(() => {});
+    }
+
+    const result = await cloudinary.uploader.upload(base64, {
+      folder: 'veloclub/club-covers',
+      transformation: [{ width: 1200, height: 400, crop: 'fill', gravity: 'center', quality: 'auto:good' }],
+    });
+
+    const club = await prisma.club.update({
+      where: { id: clubId },
+      data: { coverUrl: result.secure_url, coverPublicId: result.public_id },
+      select: { coverUrl: true },
+    });
+
+    res.json({ coverUrl: club.coverUrl });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : JSON.stringify(err);
+    console.error('[club cover upload]', msg);
+    res.status(500).json({ error: msg });
+  }
+});
+
+// DELETE /clubs/cover
+router.delete('/cover', requireAuth, async (req, res) => {
+  if (!req.user) return res.status(401).json({ error: 'No autenticado' });
+  if (req.user.role !== 'ADMIN') return res.status(403).json({ error: 'Solo administradores' });
+
+  const clubId = req.user.clubId ?? '';
+  const existing = await prisma.club.findUnique({ where: { id: clubId }, select: { coverPublicId: true } });
+  if (existing?.coverPublicId) {
+    await cloudinary.uploader.destroy(existing.coverPublicId).catch(() => {});
+  }
+  await prisma.club.update({
+    where: { id: clubId },
+    data: { coverUrl: null, coverPublicId: null },
   });
   res.json({ ok: true });
 });

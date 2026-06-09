@@ -604,15 +604,18 @@ export default function MiembrosPage() {
 
                     {/* ── Cuerpo ── */}
                     <div className="px-5 pt-4 pb-3 flex-1 space-y-2.5">
-                      {/* Contacto */}
-                      {m.email && (
-                        <div className="flex items-center gap-2.5 min-w-0">
+                      {/* 1. Documento */}
+                      {(m.docType || m.docNumber) && (
+                        <div className="flex items-center gap-2.5">
                           <div className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'rgba(124,58,237,0.08)' }}>
-                            <Mail className="w-3 h-3" style={{ color: '#7C3AED' }} />
+                            <CreditCard className="w-3 h-3" style={{ color: '#7C3AED' }} />
                           </div>
-                          <p className="text-[12px] font-medium truncate lowercase" style={{ color: '#5A5278' }}>{m.email}</p>
+                          <p className="text-[12px] font-medium" style={{ color: '#5A5278' }}>
+                            {[m.docType, m.docNumber].filter(Boolean).join(' · ')}
+                          </p>
                         </div>
                       )}
+                      {/* 2. Teléfono */}
                       {m.phone && (() => {
                         const { iso2, dialCode, number } = parsePhoneDisplay(m.phone);
                         return (
@@ -627,6 +630,16 @@ export default function MiembrosPage() {
                           </div>
                         );
                       })()}
+                      {/* 3. Correo */}
+                      {m.email && (
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <div className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'rgba(124,58,237,0.08)' }}>
+                            <Mail className="w-3 h-3" style={{ color: '#7C3AED' }} />
+                          </div>
+                          <p className="text-[12px] font-medium truncate lowercase" style={{ color: '#5A5278' }}>{m.email}</p>
+                        </div>
+                      )}
+                      {/* 4. Nacimiento */}
                       {m.birthDate && (
                         <div className="flex items-center gap-2.5">
                           <div className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'rgba(124,58,237,0.08)' }}>
@@ -637,22 +650,13 @@ export default function MiembrosPage() {
                           </p>
                         </div>
                       )}
+                      {/* 5. EPS */}
                       {m.eps && (
                         <div className="flex items-center gap-2.5">
                           <div className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'rgba(6,214,160,0.08)' }}>
                             <Heart className="w-3 h-3" style={{ color: '#06D6A0' }} />
                           </div>
                           <p className="text-[12px] font-medium" style={{ color: '#5A5278' }}>{m.eps}</p>
-                        </div>
-                      )}
-                      {(m.docType || m.docNumber) && (
-                        <div className="flex items-center gap-2.5">
-                          <div className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'rgba(124,58,237,0.08)' }}>
-                            <CreditCard className="w-3 h-3" style={{ color: '#7C3AED' }} />
-                          </div>
-                          <p className="text-[12px] font-medium" style={{ color: '#5A5278' }}>
-                            {[m.docType, m.docNumber].filter(Boolean).join(' · ')}
-                          </p>
                         </div>
                       )}
 

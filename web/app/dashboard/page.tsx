@@ -14,7 +14,7 @@ import {
   Globe, Lock, MessageCircle,
   Paperclip, Video, FileText,
   MoreHorizontal, Pencil, Trash2,
-  ChevronRight,
+  ChevronRight, CalendarDays, Trophy, Users, Gift,
 } from 'lucide-react';
 import { Slideshow } from '@/components/ui/slideshow';
 import { MemberAvatar } from '@/components/ui/member-avatar';
@@ -802,6 +802,17 @@ export default function DashboardPage() {
   const [posts, setPosts]           = useState<Post[]>([]);
   const [postsLoading, setPostsLoading] = useState(false);
 
+  // Widgets — Próximos Eventos y Cumpleaños
+  const [upcomingEvents, setUpcomingEvents] = useState<{
+    id: string; title: string; type: string; startDate: string; allDay: boolean;
+    location?: { name: string } | null;
+  }[]>([]);
+  const [birthdays, setBirthdays] = useState<{
+    id: string; fullName: string; pictureUrl?: string | null; role: string;
+    birthDate: string; daysUntil: number;
+  }[]>([]);
+  const [widgetsLoading, setWidgetsLoading] = useState(true);
+
   // currentUserId (clerkId del usuario autenticado)
   const [currentUserId, setCurrentUserId] = useState('');
   const [authToken, setAuthToken] = useState<string | null>(null);
@@ -843,11 +854,13 @@ export default function DashboardPage() {
         setAuthToken(token ?? null);
 
         const [
-          meRes, notifRes, postsRes,
+          meRes, notifRes, postsRes, eventsRes, birdaysRes,
         ] = await Promise.allSettled([
           apiFetch<MeResponse>('/me', { token }),
           apiFetch<{ notifications: typeof notifs }>('/payments/notifications', { token }),
           apiFetch<{ posts: Post[] }>('/posts?scope=public', { token }),
+          apiFetch<{ events: typeof upcomingEvents }>('/events/upcoming', { token }),
+          apiFetch<{ birthdays: typeof birthdays }>('/members/birthdays', { token }),
         ]);
 
         if (meRes.status === 'rejected') return;
@@ -869,6 +882,11 @@ export default function DashboardPage() {
 
         // Posts
         if (postsRes.status === 'fulfilled') setPosts(postsRes.value.posts);
+
+        // Widgets
+        if (eventsRes.status === 'fulfilled') setUpcomingEvents(eventsRes.value.events);
+        if (birdaysRes.status === 'fulfilled') setBirthdays(birdaysRes.value.birthdays);
+        setWidgetsLoading(false);
 
       } catch { /* silencioso */ } finally {
         setLoading(false);
@@ -1147,8 +1165,138 @@ export default function DashboardPage() {
 
       </motion.div>
       </div>
-      {/* Columna derecha — reservada para contenido futuro */}
-      <div className="hidden sm:block sm:w-1/2" />
+      {/* Columna derecha — Widgets sticky */}
+      <div className="hidden sm:flex sm:flex-col sm:w-1/2 sm:py-4 sm:pr-6 gap-4 sm:sticky sm:top-4 sm:self-start">
+
+        {/* Widget — Próximos Eventos */}
+        <div className="rounded-2xl bg-white border border-border overflow-hidden"
+          style={{ boxShadow: '0 1px 8px rgba(0,0,0,0.06)' }}>
+          <div className="flex items-center justify-between px-4 pt-4 pb-2">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-lg flex items-center justify-center"
+                style={{ background: 'linear-gradient(135deg,#4361EE,#7C3AED)' }}>
+                <CalendarDays className="w-3.5 h-3.5 text-white" />
+              </div>
+              <p className="text-[13px] font-bold text-foreground">Próximos Eventos</p>
+            </div>
+            <Link href="/dashboard/calendario"
+              className="text-[11px] font-semibold text-purple-600 hover:underline cursor-pointer">
+              Ver todos
+            </Link>
+          </div>
+
+          {widgetsLoading ? (
+            <div className="px-4 pb-4 flex flex-col gap-2">
+              {[1,2,3].map(i => (
+                <div key={i} className="h-10 rounded-xl bg-secondary animate-pulse" />
+              ))}
+            </div>
+          ) : upcomingEvents.length === 0 ? (
+            <div className="px-4 pb-5 flex flex-col items-center gap-1.5 pt-2">
+              <CalendarDays className="w-7 h-7" style={{ color: '#C4BFDB' }} />
+              <p className="text-[12px] text-muted-foreground text-center">Sin eventos próximos</p>
+            </div>
+          ) : (
+            <div className="px-4 pb-3 flex flex-col gap-1">
+              {upcomingEvents.map(ev => {
+                const d = new Date(ev.startDate);
+                const day   = d.toLocaleDateString('es-CO', { day: 'numeric', month: 'short' });
+                const time  = ev.allDay ? 'Todo el día' : d.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
+                const typeColors: Record<string, { bg: string; text: string }> = {
+                  TRAINING:    { bg: 'rgba(6,214,160,0.10)',   text: '#06D6A0' },
+                  MEETUP:      { bg: 'rgba(67,97,238,0.10)',   text: '#4361EE' },
+                  COMPETITION: { bg: 'rgba(239,71,111,0.10)',  text: '#EF476F' },
+                };
+                const tc = typeColors[ev.type] ?? typeColors.MEETUP;
+                const typeLabel: Record<string, string> = {
+                  TRAINING: 'Entrenamiento', MEETUP: 'Reunión', COMPETITION: 'Competencia',
+                };
+                return (
+                  <div key={ev.id}
+                    className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-secondary/60 transition-colors cursor-default">
+                    {/* Fecha */}
+                    <div className="flex flex-col items-center justify-center w-10 h-10 rounded-xl shrink-0"
+                      style={{ background: tc.bg }}>
+                      <span className="text-[13px] font-black leading-none" style={{ color: tc.text }}>
+                        {d.getDate()}
+                      </span>
+                      <span className="text-[9px] font-semibold uppercase leading-none mt-0.5" style={{ color: tc.text }}>
+                        {d.toLocaleDateString('es-CO', { month: 'short' })}
+                      </span>
+                    </div>
+                    {/* Info */}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[12px] font-semibold text-foreground truncate">{ev.title}</p>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: tc.bg, color: tc.text }}>
+                          {typeLabel[ev.type] ?? ev.type}
+                        </span>
+                        <span className="text-[10px] text-muted-foreground">{time}</span>
+                        {ev.location?.name && (
+                          <span className="text-[10px] text-muted-foreground truncate">· {ev.location.name}</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Widget — Recordatorios de Cumpleaños */}
+        <div className="rounded-2xl bg-white border border-border overflow-hidden"
+          style={{ boxShadow: '0 1px 8px rgba(0,0,0,0.06)' }}>
+          <div className="flex items-center gap-2 px-4 pt-4 pb-2">
+            <div className="w-7 h-7 rounded-lg flex items-center justify-center"
+              style={{ background: 'linear-gradient(135deg,#EF476F,#FFB703)' }}>
+              <Gift className="w-3.5 h-3.5 text-white" />
+            </div>
+            <p className="text-[13px] font-bold text-foreground">Cumpleaños</p>
+          </div>
+
+          {widgetsLoading ? (
+            <div className="px-4 pb-4 flex flex-col gap-2">
+              {[1,2].map(i => (
+                <div key={i} className="h-10 rounded-xl bg-secondary animate-pulse" />
+              ))}
+            </div>
+          ) : birthdays.length === 0 ? (
+            <div className="px-4 pb-5 flex flex-col items-center gap-1.5 pt-2">
+              <Gift className="w-7 h-7" style={{ color: '#C4BFDB' }} />
+              <p className="text-[12px] text-muted-foreground text-center">Sin cumpleaños en los próximos 30 días</p>
+            </div>
+          ) : (
+            <div className="px-4 pb-3 flex flex-col gap-1">
+              {birthdays.map(b => {
+                const isToday = b.daysUntil === 0;
+                const label   = isToday ? '¡Hoy!' : b.daysUntil === 1 ? 'Mañana' : `En ${b.daysUntil} días`;
+                return (
+                  <div key={b.id}
+                    className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-secondary/60 transition-colors cursor-default">
+                    <MemberAvatar
+                      name={b.fullName}
+                      photoUrl={b.pictureUrl}
+                      gradient={ROLE_GRADIENT[b.role] ?? ROLE_GRADIENT.STUDENT}
+                      size={36}
+                    />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[12px] font-semibold text-foreground truncate">{b.fullName}</p>
+                      <p className="text-[11px]" style={{ color: isToday ? '#EF476F' : '#8E87A8', fontWeight: isToday ? 700 : 500 }}>
+                        {label}
+                      </p>
+                    </div>
+                    {isToday && (
+                      <span className="text-[18px]">🎂</span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+      </div>
       </div>
     </div>
   );

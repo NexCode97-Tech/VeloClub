@@ -1022,8 +1022,9 @@ export default function DashboardPage() {
         )}
       </AnimatePresence>
 
-      {/* ── Contenido principal ───────────────────────────────────────────── */}
-      <div className="w-full px-6 py-4">
+      {/* ── Contenido principal — desktop: 50% izquierdo, 50% derecho reservado ── */}
+      <div className="w-full px-6 py-4 sm:flex sm:gap-6">
+      <div className="sm:w-1/2">
       <motion.div
         variants={feedVariants}
         initial="hidden"
@@ -1145,6 +1146,9 @@ export default function DashboardPage() {
         )}
 
       </motion.div>
+      </div>
+      {/* Columna derecha — reservada para contenido futuro */}
+      <div className="hidden sm:block sm:w-1/2" />
       </div>
     </div>
   );

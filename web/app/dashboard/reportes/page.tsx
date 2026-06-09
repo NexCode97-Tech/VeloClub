@@ -17,7 +17,6 @@ import { MonthPicker, DateRange } from '@/components/ui/month-picker';
 
 const MONTH_NAMES      = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
 const MONTH_NAMES_FULL = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-const DAY_LABELS       = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
 
 const ACCENT = '#4361EE';
 const GREEN  = '#06D6A0';
@@ -48,7 +47,6 @@ export default function ReportesPage() {
   function handlePickerChange(month: string | null, range: DateRange | null) {
     setSelectedMonth(month);
     setSelectedDateRange(range);
-    if (range) setAttTab('rango');
   }
 
   // ── Estado ──
@@ -64,11 +62,9 @@ export default function ReportesPage() {
 
   // Gráficas
   const [monthlyAtt, setMonthlyAtt]       = useState<MonthlyAttendance[]>([]);
-  const [weekdayCounts, setWeekdayCounts] = useState<number[]>([0,0,0,0,0,0,0]);
   const [paymentDist, setPaymentDist]     = useState<PaymentDist[]>([]);
 
-  // Tab de asistencia
-  const [attTab, setAttTab]               = useState<'mes' | 'dia' | 'rango'>('mes');
+  // Datos de rango de asistencia
   const [rangeData, setRangeData]         = useState<{ date: string; presentes: number }[]>([]);
   const [loadingRange, setLoadingRange]   = useState(false);
 
@@ -96,13 +92,12 @@ export default function ReportesPage() {
       const now         = new Date();
       const todayISO    = toISO(now);
 
-      const [membersRes, attTodayRes, paymentsRes, compsRes, attMonthlyRes, weekdayRes] = await Promise.allSettled([
+      const [membersRes, attTodayRes, paymentsRes, compsRes, attMonthlyRes] = await Promise.allSettled([
         apiFetch<{ members: { id: string }[] }>('/members', { token }),
         apiFetch<{ records: { status: string }[] }>(`/attendance?date=${todayISO}`, { token }),
         apiFetch<{ payments: { status: string; amount: number; month: number; year: number }[] }>(`/payments?year=${activeYear}`, { token }),
         apiFetch<{ competitions: { id: string; events: { results: { id: string }[] }[] }[] }>('/competitions', { token }),
         apiFetch<{ months: { month: number; year: number; presentes: number }[] }>('/attendance/monthly-stats', { token }),
-        apiFetch<{ counts: number[] }>('/attendance/weekday-stats', { token }),
       ]);
 
       if (membersRes.status === 'fulfilled') setTotalMembers(membersRes.value.members.length);
@@ -143,9 +138,6 @@ export default function ReportesPage() {
         const activeMData = attMonthlyRes.value.months.find(m => m.month === activeMonthNum && m.year === activeYear);
         setAsistenciaMes(activeMData?.presentes ?? attMonths[attMonths.length - 1]?.presentes ?? 0);
         setMonthlyAtt(attMonths);
-      }
-      if (weekdayRes.status === 'fulfilled') {
-        setWeekdayCounts(weekdayRes.value.counts);
       }
     } catch { /* silencioso */ } finally {
       setLoading(false);
@@ -227,13 +219,6 @@ export default function ReportesPage() {
     },
   ];
 
-  // Tabs de asistencia: Mes | Día | Rango (condicional)
-  const showRangeTab = !!selectedDateRange;
-  const attTabs = [
-    { key: 'mes' as const,   label: 'Mes'   },
-    { key: 'dia' as const,   label: 'Día'   },
-    ...(showRangeTab ? [{ key: 'rango' as const, label: 'Rango' }] : []),
-  ];
 
   // Label de período en encabezado de pagos
   const paymentPeriodLabel = selectedDateRange
@@ -265,7 +250,7 @@ export default function ReportesPage() {
       <motion.div variants={stagger} initial="hidden" animate="show" className="flex flex-col gap-4 px-4 py-4">
 
         {/* KPIs */}
-        <motion.div variants={cardVariant} className="grid grid-cols-2 gap-3">
+        <motion.div variants={cardVariant} className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           {kpis.map((k) => {
             const Icon = k.icon;
             return (
@@ -286,130 +271,28 @@ export default function ReportesPage() {
           })}
         </motion.div>
 
-        {/* Asistencia — card unificado */}
+        {/* Asistencia */}
         <motion.div variants={cardVariant} className="bg-white border border-border rounded-xl p-4">
-          {/* Encabezado + tabs */}
-          <div className="flex items-center justify-between mb-3">
-            <p style={{ fontSize: 11, fontWeight: 600, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-              Asistencia
-            </p>
-            {/* Tab selector pill */}
-            <div
-              className="flex items-center gap-0.5 p-0.5 rounded-full"
-              style={{ background: 'rgba(124,58,237,0.08)', border: '1px solid rgba(124,58,237,0.10)' }}
-            >
-              {attTabs.map(({ key, label }) => {
-                const active = attTab === key;
-                return (
-                  <button
-                    key={key}
-                    onClick={() => setAttTab(key)}
-                    style={{
-                      fontSize: 11,
-                      fontWeight: active ? 700 : 500,
-                      padding: '3px 11px',
-                      borderRadius: 999,
-                      border: 'none',
-                      cursor: 'pointer',
-                      transition: 'all 0.18s cubic-bezier(0.23,1,0.32,1)',
-                      background: active ? '#7C3AED' : 'transparent',
-                      color: active ? '#fff' : '#8E87A8',
-                    }}
-                  >
-                    {label}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
+          <p className="mb-3" style={{ fontSize: 11, fontWeight: 600, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+            Asistencia
+          </p>
 
-          {/* ── Tab: Mes ── */}
-          {attTab === 'mes' && (
-            loading ? (
-              <div className="flex items-center justify-center h-[140px]">
-                <div className="w-5 h-5 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: ACCENT, borderTopColor: 'transparent' }} />
-              </div>
-            ) : monthlyAtt.every(m => m.presentes === 0) ? (
-              <div className="flex flex-col items-center py-8 gap-2">
-                <CalendarCheck className="w-8 h-8 text-muted-foreground/30" />
-                <p className="text-[12px] text-muted-foreground">Sin registros de asistencia</p>
-              </div>
-            ) : (
-              <>
-                <p className="text-[10px] text-muted-foreground mb-2">Últimos 6 meses</p>
-                <ResponsiveContainer width="100%" height={140}>
-                  <BarChart data={monthlyAtt} barCategoryGap="25%" margin={{ top: 4, right: 4, left: -24, bottom: 0 }}>
-                    <XAxis dataKey="month" tick={{ fontSize: 11, fill: '#8E87A8', fontWeight: 600 }} axisLine={false} tickLine={false} />
-                    <YAxis allowDecimals={false} tick={{ fontSize: 10, fill: '#C4C2CF' }} axisLine={false} tickLine={false} />
-                    <Tooltip cursor={{ fill: 'rgba(67,97,238,0.06)' }} contentStyle={{ borderRadius: 10, border: '1px solid #E8E6F0', fontSize: 12, padding: '4px 10px' }} formatter={(v) => [Number(v ?? 0), 'Presentes']} />
-                    <Bar dataKey="presentes" radius={[6, 6, 0, 0]}>
-                      {monthlyAtt.map((_, i) => (
-                        <Cell key={i} fill={i === monthlyAtt.length - 1 ? ACCENT : `${ACCENT}55`} />
-                      ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              </>
-            )
-          )}
-
-          {/* ── Tab: Día ── */}
-          {attTab === 'dia' && (
-            loading ? (
-              <div className="flex items-center justify-center h-[140px]">
-                <div className="w-5 h-5 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: ACCENT, borderTopColor: 'transparent' }} />
-              </div>
-            ) : weekdayCounts.every(c => c === 0) ? (
-              <div className="flex flex-col items-center py-8 gap-2">
-                <CalendarCheck className="w-8 h-8 text-muted-foreground/30" />
-                <p className="text-[12px] text-muted-foreground">Sin datos de asistencia</p>
-              </div>
-            ) : (() => {
-              const maxCount = Math.max(...weekdayCounts, 1);
-              const chartData = DAY_LABELS.map((day, i) => ({ day, presentes: weekdayCounts[i] }));
-              return (
-                <>
-                  <p className="text-[10px] text-muted-foreground mb-2">Por día de la semana — últimas 8 semanas</p>
-                  <ResponsiveContainer width="100%" height={140}>
-                    <BarChart data={chartData} barCategoryGap="20%" margin={{ top: 4, right: 4, left: -24, bottom: 0 }}>
-                      <XAxis dataKey="day" tick={{ fontSize: 11, fill: '#8E87A8', fontWeight: 600 }} axisLine={false} tickLine={false} />
-                      <YAxis allowDecimals={false} tick={{ fontSize: 10, fill: '#C4C2CF' }} axisLine={false} tickLine={false} />
-                      <Tooltip cursor={{ fill: 'rgba(67,97,238,0.06)' }} contentStyle={{ borderRadius: 10, border: '1px solid #E8E6F0', fontSize: 12, padding: '4px 10px' }} formatter={(v) => [Number(v ?? 0), 'Presentes']} />
-                      <Bar dataKey="presentes" radius={[6, 6, 0, 0]}>
-                        {chartData.map((entry, i) => (
-                          <Cell key={i} fill={entry.presentes === maxCount && entry.presentes > 0 ? ACCENT : `${ACCENT}55`} />
-                        ))}
-                      </Bar>
-                    </BarChart>
-                  </ResponsiveContainer>
-                </>
-              );
-            })()
-          )}
-
-          {/* ── Tab: Rango (controlado por MonthPicker) ── */}
-          {attTab === 'rango' && selectedDateRange && (
+          {/* Gráfico de rango si hay fecha seleccionada, sino gráfico mensual */}
+          {selectedDateRange ? (
             <div>
-              {/* Info del rango seleccionado */}
               <p className="text-[10px] text-muted-foreground mb-3">
                 {format(selectedDateRange.start, 'd MMM', { locale: es })} — {format(selectedDateRange.end, 'd MMM yyyy', { locale: es })}
                 {' · '}
                 <button
-                  onClick={() => { setSelectedDateRange(null); setAttTab('mes'); }}
+                  onClick={() => { setSelectedDateRange(null); setSelectedMonth(null); }}
                   className="text-purple-500 hover:text-purple-700 transition-colors cursor-pointer underline-offset-2 hover:underline"
                 >
                   limpiar
                 </button>
               </p>
-
               {loadingRange ? (
-                <div className="flex items-center justify-center h-[130px]">
+                <div className="flex items-center justify-center h-[140px]">
                   <div className="w-5 h-5 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: ACCENT, borderTopColor: 'transparent' }} />
-                </div>
-              ) : rangeData.length === 0 ? (
-                <div className="flex flex-col items-center py-8 gap-2">
-                  <CalendarCheck className="w-8 h-8 text-muted-foreground/30" />
-                  <p className="text-[12px] text-muted-foreground">Cargando datos del rango…</p>
                 </div>
               ) : rangeData.every(d => d.presentes === 0) ? (
                 <div className="flex flex-col items-center py-8 gap-2">
@@ -445,6 +328,31 @@ export default function ReportesPage() {
                 );
               })()}
             </div>
+          ) : loading ? (
+            <div className="flex items-center justify-center h-[140px]">
+              <div className="w-5 h-5 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: ACCENT, borderTopColor: 'transparent' }} />
+            </div>
+          ) : monthlyAtt.every(m => m.presentes === 0) ? (
+            <div className="flex flex-col items-center py-8 gap-2">
+              <CalendarCheck className="w-8 h-8 text-muted-foreground/30" />
+              <p className="text-[12px] text-muted-foreground">Sin registros de asistencia</p>
+            </div>
+          ) : (
+            <>
+              <p className="text-[10px] text-muted-foreground mb-2">Últimos 6 meses</p>
+              <ResponsiveContainer width="100%" height={140}>
+                <BarChart data={monthlyAtt} barCategoryGap="25%" margin={{ top: 4, right: 4, left: -24, bottom: 0 }}>
+                  <XAxis dataKey="month" tick={{ fontSize: 11, fill: '#8E87A8', fontWeight: 600 }} axisLine={false} tickLine={false} />
+                  <YAxis allowDecimals={false} tick={{ fontSize: 10, fill: '#C4C2CF' }} axisLine={false} tickLine={false} />
+                  <Tooltip cursor={{ fill: 'rgba(67,97,238,0.06)' }} contentStyle={{ borderRadius: 10, border: '1px solid #E8E6F0', fontSize: 12, padding: '4px 10px' }} formatter={(v) => [Number(v ?? 0), 'Presentes']} />
+                  <Bar dataKey="presentes" radius={[6, 6, 0, 0]}>
+                    {monthlyAtt.map((_, i) => (
+                      <Cell key={i} fill={i === monthlyAtt.length - 1 ? ACCENT : `${ACCENT}55`} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </>
           )}
         </motion.div>
 

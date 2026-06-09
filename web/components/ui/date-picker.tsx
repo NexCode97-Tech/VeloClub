@@ -118,10 +118,6 @@ export function DatePicker({
 
       {/* ── Dropdown ── */}
       {open && (
-        <>
-          {/* Overlay para cerrar en móvil */}
-          <div className="fixed inset-0 z-[9998]" onClick={() => setOpen(false)} />
-
           <div
             className="absolute left-0 z-[9999] rounded-2xl p-4 w-[280px]"
             style={{
@@ -207,7 +203,6 @@ export function DatePicker({
               → Ir a hoy
             </button>
           </div>
-        </>
       )}
     </div>
   );

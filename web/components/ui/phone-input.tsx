@@ -304,8 +304,6 @@ export function PhoneInput({ value, onChange, placeholder = 'Número de teléfon
         </button>
 
         {open && (
-          <>
-            <div className="fixed inset-0 z-[9998]" onClick={() => { setOpen(false); setSearch(''); }} />
             <div
               className="absolute left-0 top-full mt-1.5 z-[9999] bg-white border border-border rounded-2xl shadow-xl overflow-hidden"
               style={{ width: 260 }}
@@ -340,7 +338,6 @@ export function PhoneInput({ value, onChange, placeholder = 'Número de teléfon
                 ))}
               </div>
             </div>
-          </>
         )}
       </div>
 

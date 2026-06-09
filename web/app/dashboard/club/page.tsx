@@ -592,8 +592,12 @@ export default function ClubProfilePage() {
             </button>
           ))}
         </div>
-        {/* Espacio derecho vacío en desktop */}
-        <div className="hidden sm:block sm:w-1/2" />
+        {/* Label Contacto centrado en la columna derecha (desktop) */}
+        <div className="hidden sm:flex sm:w-1/2 items-center justify-center">
+          <div className="relative py-3.5">
+            <span style={{ fontSize: 12, fontWeight: 700, color: '#8E87A8' }}>Contacto</span>
+          </div>
+        </div>
         </div>
       </div>
 

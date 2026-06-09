@@ -136,7 +136,6 @@ router.get('/profile', requireAuth, async (req, res) => {
       id: true, fullName: true, pictureUrl: true, role: true, clerkId: true,
     },
     orderBy: { createdAt: 'asc' },
-    take: 30,
   });
 
   const followersCount = await prisma.follow.count({

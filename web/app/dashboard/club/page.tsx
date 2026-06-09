@@ -29,7 +29,7 @@ interface ClubProfile {
   _count: { members: number };
 }
 
-const TABS = ['Miembros', 'Publicaciones'] as const;
+const TABS = ['Publicaciones', 'Miembros'] as const;
 type Tab = typeof TABS[number];
 
 export default function ClubProfilePage() {
@@ -49,7 +49,7 @@ export default function ClubProfilePage() {
   const coverInputRef = useRef<HTMLInputElement>(null);
   const [posts, setPosts]                 = useState<Post[]>([]);
   const [currentUserId, setCurrentUserId] = useState('');
-  const [activeTab, setActiveTab]         = useState<Tab>('Miembros');
+  const [activeTab, setActiveTab]         = useState<Tab>('Publicaciones');
 
   useEffect(() => {
     if (!isLoaded) return;

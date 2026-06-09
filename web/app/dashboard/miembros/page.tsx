@@ -546,8 +546,7 @@ export default function MiembrosPage() {
             <motion.div
               variants={{ hidden: {}, show: { transition: { staggerChildren: 0.05, delayChildren: 0.04 } } }}
               initial="hidden" animate="show"
-              className="grid gap-4"
-              style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))' }}
+              className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
             >
               {filtered.map((m) => {
                 const rc = ROLE_COLORS[m.role] ?? ROLE_COLORS.STUDENT;

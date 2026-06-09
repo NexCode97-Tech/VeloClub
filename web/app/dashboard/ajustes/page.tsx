@@ -4,7 +4,7 @@ import { useAuth, UserProfile } from '@clerk/nextjs';
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiFetch } from '@/lib/api-client';
-import { CheckCircle2, Camera, Building2, ChevronDown, X, Crop, ChevronRight, HelpCircle, User, Settings2 } from 'lucide-react';
+import { CheckCircle2, Camera, Building2, ChevronDown, X, Crop, ChevronRight, HelpCircle, User, Settings2, LogOut } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { stagger, cardVariant } from '@/lib/page-animations';
 import { Button } from '@/components/ui/button';
@@ -112,7 +112,7 @@ function SearchableSelect({
 type Tab = 'perfil' | 'club';
 
 export default function AjustesPage() {
-  const { getToken } = useAuth();
+  const { getToken, signOut } = useAuth();
   const router = useRouter();
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -507,8 +507,8 @@ export default function AjustesPage() {
 
       </motion.div>
 
-      {/* ── Acceso a Centro de ayuda ──────────────────────────────────────── */}
-      <div className="px-4 pb-28 mt-2">
+      {/* ── Acceso a Centro de ayuda + Cerrar sesión ─────────────────────── */}
+      <div className="px-4 pb-28 mt-2 flex flex-col gap-3">
         <button
           onClick={() => router.push('/dashboard/ajustes/ayuda')}
           className="w-full flex items-center gap-3 bg-white rounded-2xl px-4 py-4 text-left transition-colors hover:bg-secondary/40 active:bg-secondary/60"
@@ -522,6 +522,20 @@ export default function AjustesPage() {
             <p className="text-[11px] text-muted-foreground">Guía rápida de cada módulo</p>
           </div>
           <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
+        </button>
+
+        <button
+          onClick={() => signOut({ redirectUrl: '/sign-in' })}
+          className="w-full flex items-center gap-3 bg-white rounded-2xl px-4 py-4 text-left transition-colors hover:bg-red-50 active:bg-red-100 cursor-pointer"
+          style={{ border: '1px solid rgba(239,71,111,0.15)' }}
+        >
+          <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(239,71,111,0.10)' }}>
+            <LogOut className="w-4 h-4" style={{ color: '#EF476F' }} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-[13px] font-bold" style={{ color: '#EF476F' }}>Cerrar sesión</p>
+            <p className="text-[11px] text-muted-foreground">Salir de tu cuenta</p>
+          </div>
         </button>
       </div>
           </motion.div>

@@ -44,7 +44,7 @@ export function DatePicker({
 }: DatePickerProps) {
   const parsed   = value ? new Date(value + 'T00:00:00') : null;
   const [open, setOpen]     = useState(false);
-  const [openUp, setOpenUp] = useState(false);   // true = abre hacia arriba
+  const [dropStyle, setDropStyle] = useState<React.CSSProperties>({});
   const [base, setBase]     = useState<Date>(() => parsed ?? new Date());
   const ref        = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -63,13 +63,18 @@ export function DatePicker({
     return () => document.removeEventListener('mousedown', h);
   }, []);
 
-  // Detectar si hay espacio suficiente abajo; si no, abrir hacia arriba
+  // Calcular posición fixed para escapar del overflow del modal
   function handleOpen() {
     if (triggerRef.current) {
-      const rect         = triggerRef.current.getBoundingClientRect();
-      const spaceBelow   = window.innerHeight - rect.bottom;
-      const dropdownH    = 260; // altura aprox del dropdown
-      setOpenUp(spaceBelow < dropdownH);
+      const rect       = triggerRef.current.getBoundingClientRect();
+      const dropdownH  = 270;
+      const spaceBelow = window.innerHeight - rect.bottom;
+      const goUp       = spaceBelow < dropdownH;
+
+      setDropStyle(goUp
+        ? { position: 'fixed', bottom: window.innerHeight - rect.top + 6, left: rect.left, width: Math.max(rect.width, 232) }
+        : { position: 'fixed', top: rect.bottom + 6,                      left: rect.left, width: Math.max(rect.width, 232) }
+      );
     }
     setOpen(o => !o);
   }
@@ -99,10 +104,11 @@ export function DatePicker({
         ref={triggerRef}
         type="button"
         onClick={handleOpen}
-        className="w-full flex items-center gap-2 h-12 px-3 rounded-xl border border-input bg-background hover:border-ring transition-colors text-left group"
+        className="w-full flex items-center gap-2 h-12 px-3 rounded-xl border border-input hover:border-ring transition-colors text-left group"
+        style={{ background: '#fff' }}
       >
         <CalendarDays className="w-4 h-4 shrink-0 text-muted-foreground" />
-        <span className={`flex-1 text-sm ${parsed ? 'text-foreground' : 'text-muted-foreground'} capitalize`}>
+        <span className={`flex-1 text-sm ${parsed ? 'text-foreground' : 'text-muted-foreground'}`}>
           {label}
         </span>
         {parsed && (
@@ -116,17 +122,15 @@ export function DatePicker({
         )}
       </button>
 
-      {/* ── Dropdown ── */}
+      {/* ── Dropdown (fixed para escapar modal overflow) ── */}
       {open && (
           <div
-            className="absolute left-0 z-[9999] rounded-xl p-3 w-[232px]"
+            className="z-[9999] rounded-xl p-3"
             style={{
+              ...dropStyle,
               background: '#fff',
               border:     '1px solid rgba(124,58,237,0.14)',
               boxShadow:  '0 12px 32px rgba(0,0,0,0.12), 0 2px 6px rgba(0,0,0,0.06)',
-              ...(openUp
-                ? { bottom: 'calc(100% + 6px)' }
-                : { top:    'calc(100% + 6px)' }),
             }}
           >
             {/* Nav mes */}

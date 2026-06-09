@@ -347,8 +347,7 @@ export function PhoneInput({ value, onChange, placeholder = 'Número de teléfon
         value={number}
         onChange={e => handleNumberChange(e.target.value)}
         placeholder={placeholder}
-        className="flex-1 h-full px-3 text-sm bg-transparent rounded-r-xl focus:outline-none placeholder:text-muted-foreground"
-        style={{ fontSize: '16px' }}
+        className="flex-1 h-full px-3 text-sm bg-white rounded-r-xl focus:outline-none placeholder:text-muted-foreground"
       />
     </div>
   );

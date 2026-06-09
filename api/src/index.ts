@@ -18,6 +18,7 @@ import streamRouter from './routes/stream';
 import cronRouter from './routes/cron';
 import postsRouter from './routes/posts';
 import followsRouter from './routes/follows';
+import profilesRouter from './routes/profiles';
 
 dotenv.config();
 
@@ -108,6 +109,7 @@ app.use('/stream', strictLimiter, streamRouter);
 app.use('/cron', cronRouter);
 app.use('/posts', postsRouter);
 app.use('/follows', followsRouter);
+app.use('/profiles', profilesRouter);
 
 // ── Manejador global de errores ───────────────────────────────────────────────
 // Evita que stack traces o mensajes internos lleguen al cliente

@@ -624,8 +624,11 @@ export default function MiembrosPage() {
                               <Phone className="w-3 h-3" style={{ color: '#7C3AED' }} />
                             </div>
                             <div className="flex items-center gap-1.5">
-                              <FlagImg code={iso2} size={16} />
-                              <p className="text-[12px] font-medium" style={{ color: '#5A5278' }}>+{dialCode} {number}</p>
+                              <span className="flex items-center gap-0.5">
+                                <FlagImg code={iso2} size={16} />
+                                <span className="text-[12px] font-medium" style={{ color: '#5A5278' }}>+{dialCode}</span>
+                              </span>
+                              <p className="text-[12px] font-medium" style={{ color: '#5A5278' }}>{number}</p>
                             </div>
                           </div>
                         );
@@ -1288,8 +1291,11 @@ export default function MiembrosPage() {
                             <div>
                               <p className="text-[10px] text-muted-foreground">Teléfono</p>
                               <div className="flex items-center gap-1.5 mt-0.5">
-                                <FlagImg code={iso2} size={16} />
-                                <p className="text-[13px] font-semibold text-foreground">+{dialCode} {number}</p>
+                                <span className="flex items-center gap-0.5">
+                                  <FlagImg code={iso2} size={16} />
+                                  <span className="text-[13px] font-semibold text-foreground">+{dialCode}</span>
+                                </span>
+                                <p className="text-[13px] font-semibold text-foreground">{number}</p>
                               </div>
                             </div>
                           </div>

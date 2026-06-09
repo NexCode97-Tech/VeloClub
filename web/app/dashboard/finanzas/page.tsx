@@ -200,7 +200,7 @@ function StudentRow({
       )}
       {payment && (
         <button onClick={() => downloadInvoicePDF({ ...payment, memberName: m.fullName }, clubName, clubLogoUrl)}
-          className="w-7 h-7 rounded-lg bg-secondary flex items-center justify-center text-muted-foreground cursor-pointer" title="Descargar factura">
+          className="w-7 h-7 rounded-lg bg-secondary flex items-center justify-center text-muted-foreground cursor-pointer" title="Descargar recibo">
           <Download className="w-3.5 h-3.5" />
         </button>
       )}

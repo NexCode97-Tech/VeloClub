@@ -33,46 +33,7 @@ interface Location {
   longitude?: number | null;
 }
 
-// ── Íconos de apps de mapas ─────────────────────────────────────────────────
-
-function GoogleMapsIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="#34A853"/>
-      <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13V2z" fill="#4285F4"/>
-      <path d="M12 2C15.87 2 19 5.13 19 9c0 2.5-1.5 5.2-3.5 7.8L12 2z" fill="#FBBC04"/>
-      <path d="M5 9c0-3.87 3.13-7 7-7L8.5 16.8C6.5 14.2 5 11.5 5 9z" fill="#EA4335"/>
-      <circle cx="12" cy="9" r="2.5" fill="white"/>
-    </svg>
-  );
-}
-
-function WazeIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M20.54 7.15C19.94 4.17 17.3 2 14.22 2H9.78C6.7 2 4.06 4.17 3.46 7.15L2.06 14.27C1.74 15.87 2.13 17.52 3.12 18.82C4.12 20.12 5.64 20.88 7.27 20.98L7.5 21H10v1h4v-1h2.5l.23-.02c1.63-.1 3.15-.86 4.15-2.16.99-1.3 1.38-2.95 1.06-4.55L20.54 7.15z" fill="#33CCFF"/>
-      <circle cx="9" cy="12" r="1.5" fill="#1A1028"/>
-      <circle cx="15" cy="12" r="1.5" fill="#1A1028"/>
-      <path d="M9 15.5c1.5 1 4.5 1 6 0" stroke="#1A1028" strokeWidth="1.2" strokeLinecap="round"/>
-    </svg>
-  );
-}
-
-function AppleMapsIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect width="24" height="24" rx="5" fill="url(#appleMapGrad)"/>
-      <defs>
-        <linearGradient id="appleMapGrad" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="#34C759"/>
-          <stop offset="100%" stopColor="#007AFF"/>
-        </linearGradient>
-      </defs>
-      <path d="M12 6C9.24 6 7 8.24 7 11c0 3.75 5 9 5 9s5-5.25 5-9c0-2.76-2.24-5-5-5z" fill="white" fillOpacity="0.9"/>
-      <circle cx="12" cy="11" r="1.8" fill="url(#appleMapGrad)"/>
-    </svg>
-  );
-}
+// ── Botones de apps de mapas ─────────────────────────────────────────────────
 
 function MapButtons({ lat, lng }: { lat: number; lng: number }) {
   return (
@@ -80,15 +41,21 @@ function MapButtons({ lat, lng }: { lat: number; lng: number }) {
       <span className="text-[10px] text-muted-foreground mr-0.5">Abrir en:</span>
       <a href={`https://www.google.com/maps?q=${lat},${lng}`} target="_blank" rel="noopener noreferrer"
         className="flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-medium bg-secondary hover:bg-secondary/80 transition-colors">
-        <GoogleMapsIcon className="w-3.5 h-3.5" /><span>Google</span>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/google-maps-sign-logo.png" alt="Google Maps" className="w-3.5 h-3.5 object-contain" />
+        <span>Google</span>
       </a>
       <a href={`https://waze.com/ul?ll=${lat},${lng}&navigate=yes`} target="_blank" rel="noopener noreferrer"
         className="flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-medium bg-secondary hover:bg-secondary/80 transition-colors">
-        <WazeIcon className="w-3.5 h-3.5" /><span>Waze</span>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/waze-icon-logo.png" alt="Waze" className="w-3.5 h-3.5 object-contain" />
+        <span>Waze</span>
       </a>
       <a href={`https://maps.apple.com/?ll=${lat},${lng}`} target="_blank" rel="noopener noreferrer"
         className="flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-medium bg-secondary hover:bg-secondary/80 transition-colors">
-        <AppleMapsIcon className="w-3.5 h-3.5" /><span>Maps</span>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/apple-maps-icon-seeklogo.png" alt="Apple Maps" className="w-3.5 h-3.5 object-contain" />
+        <span>Maps</span>
       </a>
     </div>
   );

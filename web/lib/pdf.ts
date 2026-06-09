@@ -11,15 +11,22 @@ const BG      = [247, 247, 251] as [number,number,number]; // #F7F7FB
 const WHITE   = [255, 255, 255] as [number,number,number];
 
 // ── Helper: fetch logo como dataURL ──────────────────────────────────────────
-async function fetchLogoDataUrl(url: string): Promise<string | null> {
+async function fetchLogoDataUrl(url: string): Promise<{ dataUrl: string; format: string } | null> {
   try {
     const res = await fetch(url);
+    if (!res.ok) return null;
     const blob = await res.blob();
-    return await new Promise<string>(resolve => {
+    const dataUrl = await new Promise<string>(resolve => {
       const reader = new FileReader();
       reader.onload = () => resolve(reader.result as string);
       reader.readAsDataURL(blob);
     });
+    // Detectar formato desde el mime type real del blob
+    const mime = blob.type.toLowerCase();
+    let format = 'JPEG';
+    if (mime.includes('png'))  format = 'PNG';
+    if (mime.includes('webp')) format = 'WEBP';
+    return { dataUrl, format };
   } catch { return null; }
 }
 
@@ -147,13 +154,12 @@ export async function downloadInvoicePDF(
   let logoLoaded  = false;
 
   if (clubLogoUrl) {
-    const dataUrl = await fetchLogoDataUrl(clubLogoUrl);
-    if (dataUrl) {
+    const result = await fetchLogoDataUrl(clubLogoUrl);
+    if (result) {
       // Fondo blanco redondeado detrás del logo
       doc.setFillColor(...WHITE);
       doc.roundedRect(LOGO_X - 1, LOGO_Y - 1, LOGO_SIZE + 2, LOGO_SIZE + 2, 3, 3, 'F');
-      const ext = clubLogoUrl.includes('.png') ? 'PNG' : 'JPEG';
-      doc.addImage(dataUrl, ext, LOGO_X, LOGO_Y, LOGO_SIZE, LOGO_SIZE);
+      doc.addImage(result.dataUrl, result.format, LOGO_X, LOGO_Y, LOGO_SIZE, LOGO_SIZE);
       logoLoaded = true;
     }
   }

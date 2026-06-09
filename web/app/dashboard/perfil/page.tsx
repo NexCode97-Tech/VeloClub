@@ -479,13 +479,7 @@ export default function PerfilPage() {
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-3">
             {user?.club?.name && (
               <div className="flex items-center gap-1.5">
-                {user.club.logoUrl
-                  ? <div className="w-3.5 h-3.5 rounded-full overflow-hidden shrink-0">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={user.club.logoUrl} alt={user.club.name} className="w-full h-full object-cover" />
-                    </div>
-                  : <Users className="w-3.5 h-3.5 shrink-0" style={{ color: '#8E87A8' }} />
-                }
+                <Building2 className="w-3.5 h-3.5 shrink-0" style={{ color: '#8E87A8' }} />
                 <span className="text-[12px] text-muted-foreground">{user.club.name}</span>
                 {user.club.verified && (
                   <div className="w-3.5 h-3.5 rounded-full flex items-center justify-center" style={{ background: '#4361EE' }}>

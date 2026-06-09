@@ -4,7 +4,8 @@ import { stagger, cardVariant } from '@/lib/page-animations';
 import dynamic from 'next/dynamic';
 
 import { useAuth } from '@clerk/nextjs';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
+import { COLOMBIA } from '@/lib/colombia';
 import { apiFetch } from '@/lib/api-client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,7 +13,7 @@ import { Label } from '@/components/ui/label';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog';
-import { Plus, Pencil, Trash2, MapPin, LocateFixed, X, ChevronRight } from 'lucide-react';
+import { Plus, Pencil, Trash2, MapPin, LocateFixed, X, ChevronRight, ChevronDown, AlertCircle } from 'lucide-react';
 
 // Carga dinámica del mapa (no SSR — Leaflet requiere window)
 const LocationMapPicker = dynamic(
@@ -99,24 +100,52 @@ export default function SedesPage() {
   const { getToken } = useAuth();
   const [locations, setLocations] = useState<Location[]>([]);
   const [loading, setLoading] = useState(true);
+  const [clubDepartment, setClubDepartment] = useState<string | null>(null);
 
   // Dialog crear/editar
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Location | null>(null);
   const [name, setName] = useState('');
-  const [address, setAddress] = useState('');
+  const [address, setAddress] = useState('');  // municipio
   const [lat, setLat] = useState<number | null>(null);
   const [lng, setLng] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Selector municipio
+  const [muniOpen, setMuniOpen] = useState(false);
+  const [muniSearch, setMuniSearch] = useState('');
+  const muniRef = useRef<HTMLDivElement>(null);
+
   // Dialog mapa
   const [mapOpen, setMapOpen] = useState(false);
 
+  // Municipios filtrados por departamento del club
+  const municipios = clubDepartment ? (COLOMBIA[clubDepartment] ?? []).sort() : [];
+  const filteredMunis = muniSearch.trim()
+    ? municipios.filter(m => m.toLowerCase().includes(muniSearch.toLowerCase()))
+    : municipios;
+
+  // Cerrar dropdown al clic fuera
+  useEffect(() => {
+    function handler(e: MouseEvent) {
+      if (muniRef.current && !muniRef.current.contains(e.target as Node)) {
+        setMuniOpen(false);
+        setMuniSearch('');
+      }
+    }
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
   async function load() {
     const token = await getToken();
-    const res = await apiFetch<{ locations: Location[] }>('/locations', { token });
-    setLocations(res.locations);
+    const [locRes, clubRes] = await Promise.allSettled([
+      apiFetch<{ locations: Location[] }>('/locations', { token }),
+      apiFetch<{ club: { department?: string } }>('/clubs/settings', { token }),
+    ]);
+    if (locRes.status === 'fulfilled') setLocations(locRes.value.locations);
+    if (clubRes.status === 'fulfilled') setClubDepartment(clubRes.value.club.department ?? null);
     setLoading(false);
   }
 
@@ -215,9 +244,62 @@ export default function SedesPage() {
               <Label>Nombre *</Label>
               <Input value={name} onChange={e => setName(e.target.value)} placeholder="Ej: Sede Norte" />
             </div>
-            <div className="space-y-2">
-              <Label>Dirección</Label>
-              <Input value={address} onChange={e => setAddress(e.target.value)} placeholder="Ej: Calle 10 #45-20" />
+            {/* Selector de municipio */}
+            <div className="space-y-2" ref={muniRef}>
+              <Label>Municipio</Label>
+              {!clubDepartment ? (
+                <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl border border-border bg-muted/50">
+                  <AlertCircle className="w-4 h-4 shrink-0 text-muted-foreground" />
+                  <p className="text-xs text-muted-foreground">
+                    Configura el departamento del club en{' '}
+                    <a href="/dashboard/ajustes" className="text-primary underline underline-offset-2">Ajustes</a>
+                    {' '}para seleccionar municipio.
+                  </p>
+                </div>
+              ) : (
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => { setMuniOpen(o => !o); setMuniSearch(''); }}
+                    className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
+                  >
+                    <span className={address ? 'text-foreground' : 'text-muted-foreground'}>
+                      {address || `Seleccionar municipio de ${clubDepartment}`}
+                    </span>
+                    <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${muniOpen ? 'rotate-180' : ''}`} />
+                  </button>
+
+                  {muniOpen && (
+                    <div className="absolute z-50 left-0 right-0 mt-1.5 bg-white border border-border rounded-xl shadow-lg overflow-hidden">
+                      {/* Búsqueda dentro del dropdown */}
+                      <div className="p-2 border-b border-border">
+                        <input
+                          autoFocus
+                          type="text"
+                          value={muniSearch}
+                          onChange={e => setMuniSearch(e.target.value)}
+                          placeholder="Buscar municipio..."
+                          className="w-full px-3 py-1.5 text-sm rounded-lg border border-border bg-muted/40 focus:outline-none focus:ring-1 focus:ring-primary/30"
+                        />
+                      </div>
+                      <div className="max-h-48 overflow-y-auto">
+                        {filteredMunis.length === 0 ? (
+                          <p className="px-3 py-3 text-xs text-muted-foreground text-center">Sin resultados</p>
+                        ) : filteredMunis.map(m => (
+                          <button
+                            key={m}
+                            type="button"
+                            onClick={() => { setAddress(m); setMuniOpen(false); setMuniSearch(''); }}
+                            className={`w-full text-left px-3 py-2 text-sm hover:bg-secondary/60 transition-colors ${address === m ? 'text-primary font-semibold bg-primary/5' : 'text-foreground'}`}
+                          >
+                            {m}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Ubicación GPS */}
@@ -314,7 +396,11 @@ export default function SedesPage() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="font-bold text-foreground">{loc.name}</p>
-                      {loc.address && <p className="text-xs text-muted-foreground mt-0.5">{loc.address}</p>}
+                      {loc.address && (
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {loc.address}{clubDepartment ? `, ${clubDepartment}` : ''}
+                        </p>
+                      )}
                       {loc.latitude && loc.longitude && (
                         <MapButtons lat={loc.latitude} lng={loc.longitude} />
                       )}

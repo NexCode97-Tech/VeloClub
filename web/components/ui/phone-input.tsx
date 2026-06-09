@@ -229,7 +229,15 @@ export function parsePhoneDisplay(raw: string): { iso2: string; dialCode: string
   if (!raw) return { iso2: 'CO', dialCode: '57', number: '' };
   const sorted = [...COUNTRIES].sort((a, b) => b.dialCode.length - a.dialCode.length);
   const match  = sorted.find(c => raw.startsWith('+' + c.dialCode));
-  if (match) return { iso2: match.iso2, dialCode: match.dialCode, number: raw.slice(match.dialCode.length + 1).trim() };
+  if (match) {
+    const local = raw.slice(match.dialCode.length + 1).trim().replace(/\D/g, '');
+    // Colombia: (316) 413-4212
+    let formatted = local;
+    if (match.iso2 === 'CO' && local.length === 10) {
+      formatted = `(${local.slice(0,3)}) ${local.slice(3,6)}-${local.slice(6)}`;
+    }
+    return { iso2: match.iso2, dialCode: match.dialCode, number: formatted };
+  }
   return { iso2: 'CO', dialCode: '57', number: raw };
 }
 

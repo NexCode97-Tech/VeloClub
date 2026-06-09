@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { Search, Loader2, X, LocateFixed, MapPin } from 'lucide-react';
+import type { Map as LeafletMap, Marker } from 'leaflet';
 
 interface NominatimResult {
   place_id: number;
@@ -19,8 +20,8 @@ interface Props {
 
 export function LocationMapPicker({ initialLat, initialLng, onConfirm, onClose }: Props) {
   const mapRef = useRef<HTMLDivElement>(null);
-  const leafletMapRef = useRef<any>(null);
-  const markerRef = useRef<any>(null);
+  const leafletMapRef = useRef<LeafletMap | null>(null);
+  const markerRef = useRef<Marker | null>(null);
 
   const [pin, setPin] = useState<{ lat: number; lng: number } | null>(
     initialLat && initialLng ? { lat: initialLat, lng: initialLng } : null
@@ -39,7 +40,7 @@ export function LocationMapPicker({ initialLat, initialLng, onConfirm, onClose }
 
     import('leaflet').then((L) => {
       // Fix icono default de Leaflet con Next.js
-      delete (L.Icon.Default.prototype as any)._getIconUrl;
+      delete (L.Icon.Default.prototype as typeof L.Icon.Default.prototype & { _getIconUrl?: unknown })._getIconUrl;
       L.Icon.Default.mergeOptions({
         iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
         iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
@@ -88,7 +89,7 @@ export function LocationMapPicker({ initialLat, initialLng, onConfirm, onClose }
       }
 
       // Click en el mapa → poner/mover pin
-      map.on('click', (e: any) => {
+      map.on('click', (e: import('leaflet').LeafletMouseEvent) => {
         const { lat, lng } = e.latlng;
         const rounded = { lat: parseFloat(lat.toFixed(6)), lng: parseFloat(lng.toFixed(6)) };
 

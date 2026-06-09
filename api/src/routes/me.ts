@@ -177,6 +177,18 @@ if (superadminEmails.includes(email.toLowerCase())) {
   return res.json({ status: 'complete_profile', user: newUser });
 });
 
+// PATCH /me/bio — actualizar bio del usuario
+router.patch('/bio', requireAuth, async (req, res) => {
+  if (!req.user) return res.status(401).json({ error: 'No autenticado' });
+  const { bio } = req.body as { bio?: string };
+  const updated = await prisma.user.update({
+    where: { id: req.user.id },
+    data: { bio: bio?.trim() || null },
+    select: { bio: true },
+  });
+  res.json({ bio: updated.bio });
+});
+
 // POST /me/cover — subir foto de portada del perfil
 router.post('/cover', requireAuth, async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'No autenticado' });

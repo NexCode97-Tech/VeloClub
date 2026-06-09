@@ -113,6 +113,10 @@ export default function PerfilPage() {
   const [postImages, setPostImages]   = useState<PostImage[]>([]);
   const [followStats, setFollowStats] = useState<FollowStats>({ followersCount: 0, followingCount: 0, isFollowing: false });
   const [myClerkId, setMyClerkId]     = useState<string>('');
+  const [bio, setBio]                 = useState('');
+  const [editingBio, setEditingBio]   = useState(false);
+  const [bioDraft, setBioDraft]       = useState('');
+  const [savingBio, setSavingBio]     = useState(false);
 
   // Referencia al nombre del usuario para filtrar posts (evita re-renders)
   const myNameRef = useRef<string>('');
@@ -139,6 +143,7 @@ export default function PerfilPage() {
         if (meRes.status === 'fulfilled') {
           setMe(meRes.value);
           setCoverUrl(meRes.value.user?.coverUrl ?? null);
+          setBio(meRes.value.user?.bio ?? '');
           myNameRef.current = meRes.value.user?.name ?? '';
         }
         if (postsRes.status === 'fulfilled') {
@@ -193,6 +198,19 @@ export default function PerfilPage() {
     setPosts(prev => prev.map(p =>
       p.id === postId ? { ...p, comments: [...p.comments, res.comment] } : p
     ));
+  }
+
+  async function saveBio() {
+    setSavingBio(true);
+    try {
+      const token = await session?.getToken();
+      const res = await apiFetch<{ bio: string | null }>('/me/bio', {
+        method: 'PATCH', token, body: JSON.stringify({ bio: bioDraft }),
+      });
+      setBio(res.bio ?? '');
+      setEditingBio(false);
+    } catch { /* silencioso */ }
+    finally { setSavingBio(false); }
   }
 
   async function handleCoverChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -407,9 +425,53 @@ export default function PerfilPage() {
           </div>
 
           {/* Bio */}
-          {user?.bio && (
-            <p className="mt-3 text-[13px] text-foreground/80 leading-relaxed max-w-lg">{user.bio}</p>
-          )}
+          <div className="mt-3 max-w-lg">
+            {editingBio ? (
+              <div className="flex flex-col gap-2">
+                <textarea
+                  autoFocus
+                  value={bioDraft}
+                  onChange={e => setBioDraft(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Escape') setEditingBio(false); }}
+                  maxLength={200}
+                  rows={3}
+                  placeholder="Cuéntale algo a tu equipo..."
+                  className="w-full text-[13px] leading-relaxed rounded-xl px-3 py-2 outline-none resize-none"
+                  style={{ background: 'rgba(124,58,237,0.05)', border: '1.5px solid rgba(124,58,237,0.25)', color: '#1A1028' }}
+                />
+                <div className="flex items-center gap-2">
+                  <motion.button
+                    whileTap={{ scale: 0.96 }}
+                    onClick={saveBio}
+                    disabled={savingBio}
+                    className="px-4 py-1.5 rounded-lg text-[12px] font-bold text-white disabled:opacity-60 cursor-pointer"
+                    style={{ background: 'linear-gradient(135deg,#7C3AED,#4361EE)' }}>
+                    {savingBio ? 'Guardando…' : 'Guardar'}
+                  </motion.button>
+                  <button onClick={() => setEditingBio(false)}
+                    className="px-3 py-1.5 rounded-lg text-[12px] font-semibold text-muted-foreground hover:bg-secondary transition-colors cursor-pointer">
+                    Cancelar
+                  </button>
+                  <span className="ml-auto text-[11px] text-muted-foreground/50">{bioDraft.length}/200</span>
+                </div>
+              </div>
+            ) : (
+              <div
+                onClick={() => { setBioDraft(bio); setEditingBio(true); }}
+                className="group cursor-pointer">
+                {bio ? (
+                  <p className="text-[13px] text-foreground/80 leading-relaxed">
+                    {bio}
+                    <Pencil className="inline-block ml-1.5 w-3 h-3 opacity-0 group-hover:opacity-40 transition-opacity" />
+                  </p>
+                ) : (
+                  <p className="text-[13px] text-muted-foreground/50 italic hover:text-muted-foreground/70 transition-colors">
+                    + Agregar descripción
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
 
           {/* Metadata */}
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-3">

@@ -1352,6 +1352,26 @@ export default function MiembrosPage() {
                     </div>
                   )}
 
+                  {/* Documento */}
+                  {(viewMember.docType || viewMember.docNumber) && (
+                    <div>
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-3">Documento</p>
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(124,58,237,0.08)' }}>
+                          <CreditCard className="w-3.5 h-3.5" style={{ color: '#7C3AED' }} />
+                        </div>
+                        <div>
+                          {viewMember.docType && (
+                            <p className="text-[10px] text-muted-foreground">{viewMember.docType}</p>
+                          )}
+                          {viewMember.docNumber && (
+                            <p className="text-[13px] font-semibold text-foreground">{viewMember.docNumber}</p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Sedes */}
                   {viewMember.locations.length > 0 && (
                     <div>

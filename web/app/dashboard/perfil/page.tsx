@@ -9,7 +9,7 @@ import { useClubStream } from '@/hooks/useClubStream';
 import Link from 'next/link';
 import { MemberAvatar } from '@/components/ui/member-avatar';
 import {
-  Pencil, MapPin, CalendarDays, Globe,
+  Pencil, MapPin, CalendarDays, Globe, Lock,
   Heart, MessageCircle, ChevronRight, Send, X, Camera, Users, Trash2, ImagePlus, MoreHorizontal,
 } from 'lucide-react';
 

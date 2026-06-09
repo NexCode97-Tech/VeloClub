@@ -120,9 +120,10 @@ export function LocationMapPicker({ initialLat, initialLng, onConfirm, onClose }
 
   // Mover mapa cuando cambia pin externamente (GPS / búsqueda)
   function flyTo(lat: number, lng: number) {
-    if (!leafletMapRef.current) return;
+    const map = leafletMapRef.current;
+    if (!map) return;
     import('leaflet').then((L) => {
-      leafletMapRef.current.flyTo([lat, lng], 16, { duration: 0.8 });
+      map.flyTo([lat, lng], 16, { duration: 0.8 });
 
       const purpleIcon = L.divIcon({
         html: `<div style="
@@ -141,7 +142,7 @@ export function LocationMapPicker({ initialLat, initialLng, onConfirm, onClose }
       if (markerRef.current) {
         markerRef.current.setLatLng([lat, lng]);
       } else {
-        const m = L.marker([lat, lng], { icon: purpleIcon, draggable: true }).addTo(leafletMapRef.current);
+        const m = L.marker([lat, lng], { icon: purpleIcon, draggable: true }).addTo(map);
         m.on('dragend', () => {
           const pos = m.getLatLng();
           setPin({ lat: parseFloat(pos.lat.toFixed(6)), lng: parseFloat(pos.lng.toFixed(6)) });

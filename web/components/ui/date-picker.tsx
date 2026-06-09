@@ -145,7 +145,7 @@ export function DatePicker({
         style={{ background: '#fff' }}
       >
         <CalendarDays className="w-4 h-4 shrink-0 text-muted-foreground" />
-        <span className={`flex-1 text-sm ${parsed ? 'text-foreground' : 'text-muted-foreground'}`}>
+        <span className={`flex-1 text-[12px] md:text-sm ${parsed ? 'text-foreground' : 'text-muted-foreground'}`}>
           {label}
         </span>
         {parsed && (

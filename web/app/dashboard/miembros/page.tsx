@@ -1277,7 +1277,27 @@ export default function MiembrosPage() {
                 {/* Info scrollable */}
                 <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
 
-                  {/* Contacto */}
+                  {/* 1. Documento */}
+                  {(viewMember.docType || viewMember.docNumber) && (
+                    <div>
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-3">Documento</p>
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(124,58,237,0.08)' }}>
+                          <CreditCard className="w-3.5 h-3.5" style={{ color: '#7C3AED' }} />
+                        </div>
+                        <div>
+                          {viewMember.docType && (
+                            <p className="text-[10px] text-muted-foreground">{viewMember.docType}</p>
+                          )}
+                          {viewMember.docNumber && (
+                            <p className="text-[13px] font-semibold text-foreground">{viewMember.docNumber}</p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 2. Contacto */}
                   <div>
                     <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-3">Contacto</p>
                     <div className="space-y-2.5">
@@ -1328,7 +1348,7 @@ export default function MiembrosPage() {
                     </div>
                   </div>
 
-                  {/* Acudiente */}
+                  {/* 3. Acudiente */}
                   {(viewMember.emergencyContact || viewMember.emergencyPhone) && (
                     <div>
                       <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-3">Acudiente</p>
@@ -1354,8 +1374,11 @@ export default function MiembrosPage() {
                               <div>
                                 <p className="text-[10px] text-muted-foreground">Teléfono</p>
                                 <div className="flex items-center gap-1.5 mt-0.5">
-                                  <FlagImg code={iso2} size={16} />
-                                  <p className="text-[13px] font-semibold text-foreground">+{dialCode} {number}</p>
+                                  <span className="flex items-center gap-0.5">
+                                    <FlagImg code={iso2} size={16} />
+                                    <span className="text-[13px] font-semibold text-foreground">+{dialCode}</span>
+                                  </span>
+                                  <p className="text-[13px] font-semibold text-foreground">{number}</p>
                                 </div>
                               </div>
                             </div>
@@ -1365,7 +1388,7 @@ export default function MiembrosPage() {
                     </div>
                   )}
 
-                  {/* Salud */}
+                  {/* 4. Salud */}
                   {viewMember.eps && (
                     <div>
                       <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-3">Salud</p>
@@ -1376,26 +1399,6 @@ export default function MiembrosPage() {
                         <div>
                           <p className="text-[10px] text-muted-foreground">EPS</p>
                           <p className="text-[13px] font-semibold text-foreground">{viewMember.eps}</p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Documento */}
-                  {(viewMember.docType || viewMember.docNumber) && (
-                    <div>
-                      <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-3">Documento</p>
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(124,58,237,0.08)' }}>
-                          <CreditCard className="w-3.5 h-3.5" style={{ color: '#7C3AED' }} />
-                        </div>
-                        <div>
-                          {viewMember.docType && (
-                            <p className="text-[10px] text-muted-foreground">{viewMember.docType}</p>
-                          )}
-                          {viewMember.docNumber && (
-                            <p className="text-[13px] font-semibold text-foreground">{viewMember.docNumber}</p>
-                          )}
                         </div>
                       </div>
                     </div>

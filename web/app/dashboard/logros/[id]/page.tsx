@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { apiFetch } from '@/lib/api-client';
 import { parseLocalDate } from '@/lib/utils';
-import { ChevronLeft, Plus, Trash2, Trophy, Users, MapPin, CalendarDays } from 'lucide-react';
+import { ChevronLeft, Plus, Trash2, Trophy, Users, MapPin, CalendarDays, Pencil } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -41,6 +41,11 @@ function toPlace(str: string): string {
   const up = str.toUpperCase().trim();
   if (PLACE_FIX[up]) return PLACE_FIX[up];
   return str.replace(/\w\S*/g, w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
+}
+
+function toSentenceCase(str: string): string {
+  if (!str) return str;
+  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
 }
 
 const MEDAL_COLORS: Record<number, { bg: string; text: string; crown: string; colH: number }> = {
@@ -150,6 +155,12 @@ export default function CompetitionDetailPage() {
 
   const [deleting, setDeleting] = useState<string | null>(null);
 
+  // Modal editar competencia
+  const [editOpen, setEditOpen]     = useState(false);
+  const [editForm, setEditForm]     = useState({ name: '', place: '', date: '' });
+  const [savingEdit, setSavingEdit] = useState(false);
+  const [editError, setEditError]   = useState<string | null>(null);
+
   async function load() {
     const token = await getToken();
     const [compRes, membersRes, meRes] = await Promise.all([
@@ -238,6 +249,39 @@ export default function CompetitionDetailPage() {
     }
   }
 
+  function openEditCompetition() {
+    if (!competition) return;
+    setEditForm({
+      name: competition.name,
+      place: competition.place ?? '',
+      date: competition.date.slice(0, 10),
+    });
+    setEditError(null);
+    setEditOpen(true);
+  }
+
+  async function handleEditCompetition() {
+    if (!editForm.name.trim()) return;
+    setSavingEdit(true); setEditError(null);
+    try {
+      const token = await getToken();
+      await apiFetch(`/competitions/${id}`, {
+        method: 'PATCH', token,
+        body: JSON.stringify({
+          name:  editForm.name.trim(),
+          place: editForm.place.trim() || undefined,
+          date:  editForm.date || undefined,
+        }),
+      });
+      setEditOpen(false);
+      await load();
+    } catch (e) {
+      setEditError(e instanceof Error ? e.message : 'Error al guardar');
+    } finally {
+      setSavingEdit(false);
+    }
+  }
+
   const canManage = role === 'ADMIN' || role === 'COACH';
 
   if (loading) {
@@ -272,7 +316,7 @@ export default function CompetitionDetailPage() {
         <div className="flex items-start justify-between">
           <div>
             <h1 className="text-[17px] font-bold text-foreground leading-tight" style={{ fontFamily: 'inherit' }}>
-              {competition.name}
+              {toSentenceCase(competition.name)}
             </h1>
             <div className="flex flex-wrap gap-3 mt-1">
               {competition.place && (
@@ -286,14 +330,24 @@ export default function CompetitionDetailPage() {
             </div>
           </div>
           {canManage && (
-            <button
-              onClick={() => { setEventName(''); setEventError(null); setEventOpen(true); }}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold text-white shrink-0"
-              style={{ background: '#4361EE' }}
-            >
-              <Plus className="w-4 h-4" />
-              <span className="hidden sm:inline">Prueba</span>
-            </button>
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                onClick={openEditCompetition}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold"
+                style={{ background: 'rgba(124,58,237,0.10)', color: '#7C3AED' }}
+              >
+                <Pencil className="w-4 h-4" />
+                <span className="hidden sm:inline">Editar</span>
+              </button>
+              <button
+                onClick={() => { setEventName(''); setEventError(null); setEventOpen(true); }}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold text-white"
+                style={{ background: '#4361EE' }}
+              >
+                <Plus className="w-4 h-4" />
+                <span className="hidden sm:inline">Prueba</span>
+              </button>
+            </div>
           )}
         </div>
       </div>
@@ -372,7 +426,7 @@ export default function CompetitionDetailPage() {
                       <div className="flex-1 min-w-0">
                         <p className="text-[13px] font-semibold text-foreground truncate">{r.member.fullName}</p>
                         <div className="flex gap-2 mt-0.5">
-                          {r.category && <p className="text-[10px] font-semibold" style={{ color: '#4361EE' }}>{r.category}</p>}
+                          {r.category && <p className="text-[10px] font-semibold" style={{ color: '#4361EE' }}>{toSentenceCase(r.category)}</p>}
                           {r.observations && <p className="text-[10px] text-muted-foreground truncate">{r.observations}</p>}
                         </div>
                       </div>
@@ -394,6 +448,33 @@ export default function CompetitionDetailPage() {
           ))
         )}
       </div>
+
+      {/* Modal editar competencia */}
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Editar competencia</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 mt-2">
+            <div className="space-y-2">
+              <Label>Nombre *</Label>
+              <Input value={editForm.name} onChange={e => setEditForm(f => ({ ...f, name: e.target.value }))} placeholder="Nombre de la competencia" />
+            </div>
+            <div className="space-y-2">
+              <Label>Ciudad</Label>
+              <Input value={editForm.place} onChange={e => setEditForm(f => ({ ...f, place: e.target.value }))} placeholder="ej. Bogotá" />
+            </div>
+            <div className="space-y-2">
+              <Label>Fecha</Label>
+              <Input type="date" value={editForm.date} onChange={e => setEditForm(f => ({ ...f, date: e.target.value }))} />
+            </div>
+            {editError && <p className="text-sm text-red-600">{editError}</p>}
+            <Button onClick={handleEditCompetition} disabled={savingEdit || !editForm.name.trim()} className="w-full">
+              {savingEdit ? 'Guardando...' : 'Guardar cambios'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Modal nueva prueba */}
       <Dialog open={eventOpen} onOpenChange={setEventOpen}>

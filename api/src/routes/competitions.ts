@@ -86,6 +86,27 @@ router.get('/:id', requireAuth, async (req, res) => {
   res.json({ competition });
 });
 
+// PATCH /competitions/:id
+router.patch('/:id', requireAuth, async (req, res) => {
+  if (!req.user) return res.status(401).json({ error: 'No autenticado' });
+  const id = String(req.params.id);
+
+  const competition = await prisma.competition.findFirst({ where: { id, clubId: req.user.clubId ?? '' } });
+  if (!competition) return res.status(404).json({ error: 'Competencia no encontrada' });
+
+  const { name, place, date } = req.body as { name?: string; place?: string; date?: string };
+  const updated = await prisma.competition.update({
+    where: { id },
+    data: {
+      ...(name  ? { name }  : {}),
+      ...(place !== undefined ? { place } : {}),
+      ...(date  ? { date: new Date(date) } : {}),
+    },
+  });
+  emitToClub(req.user.clubId ?? '', 'competitions');
+  res.json({ competition: updated });
+});
+
 // DELETE /competitions/:id
 router.delete('/:id', requireAuth, async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'No autenticado' });

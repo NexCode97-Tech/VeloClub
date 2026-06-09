@@ -1,9 +1,10 @@
 'use client';
 import { motion } from 'framer-motion';
 import { stagger, cardVariant } from '@/lib/page-animations';
+import dynamic from 'next/dynamic';
 
 import { useAuth } from '@clerk/nextjs';
-import { useEffect, useState, useRef, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { apiFetch } from '@/lib/api-client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,7 +12,17 @@ import { Label } from '@/components/ui/label';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog';
-import { Plus, Pencil, Trash2, MapPin, Navigation, LocateFixed, X, Search, Loader2 } from 'lucide-react';
+import { Plus, Pencil, Trash2, MapPin, LocateFixed, X, ChevronRight } from 'lucide-react';
+
+// Carga dinámica del mapa (no SSR — Leaflet requiere window)
+const LocationMapPicker = dynamic(
+  () => import('@/components/ui/location-map-picker').then(m => m.LocationMapPicker),
+  { ssr: false, loading: () => (
+    <div className="flex items-center justify-center rounded-xl bg-muted" style={{ height: 280 }}>
+      <div className="w-5 h-5 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+    </div>
+  )}
+);
 
 interface Location {
   id: string;
@@ -19,13 +30,6 @@ interface Location {
   address?: string;
   latitude?: number | null;
   longitude?: number | null;
-}
-
-interface NominatimResult {
-  place_id: number;
-  display_name: string;
-  lat: string;
-  lon: string;
 }
 
 // ── Íconos de apps de mapas ─────────────────────────────────────────────────
@@ -69,164 +73,22 @@ function AppleMapsIcon({ className }: { className?: string }) {
   );
 }
 
-// ── Botones abrir en mapa ──────────────────────────────────────────────────
-
 function MapButtons({ lat, lng }: { lat: number; lng: number }) {
-  const googleUrl = `https://www.google.com/maps?q=${lat},${lng}`;
-  const wazeUrl = `https://waze.com/ul?ll=${lat},${lng}&navigate=yes`;
-  const appleUrl = `https://maps.apple.com/?ll=${lat},${lng}`;
-
   return (
     <div className="flex items-center gap-1.5 mt-2.5">
       <span className="text-[10px] text-muted-foreground mr-0.5">Abrir en:</span>
-      <a
-        href={googleUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-medium bg-secondary hover:bg-secondary/80 transition-colors"
-        title="Google Maps"
-      >
-        <GoogleMapsIcon className="w-3.5 h-3.5" />
-        <span>Google</span>
+      <a href={`https://www.google.com/maps?q=${lat},${lng}`} target="_blank" rel="noopener noreferrer"
+        className="flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-medium bg-secondary hover:bg-secondary/80 transition-colors">
+        <GoogleMapsIcon className="w-3.5 h-3.5" /><span>Google</span>
       </a>
-      <a
-        href={wazeUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-medium bg-secondary hover:bg-secondary/80 transition-colors"
-        title="Waze"
-      >
-        <WazeIcon className="w-3.5 h-3.5" />
-        <span>Waze</span>
+      <a href={`https://waze.com/ul?ll=${lat},${lng}&navigate=yes`} target="_blank" rel="noopener noreferrer"
+        className="flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-medium bg-secondary hover:bg-secondary/80 transition-colors">
+        <WazeIcon className="w-3.5 h-3.5" /><span>Waze</span>
       </a>
-      <a
-        href={appleUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-medium bg-secondary hover:bg-secondary/80 transition-colors"
-        title="Apple Maps"
-      >
-        <AppleMapsIcon className="w-3.5 h-3.5" />
-        <span>Maps</span>
+      <a href={`https://maps.apple.com/?ll=${lat},${lng}`} target="_blank" rel="noopener noreferrer"
+        className="flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-medium bg-secondary hover:bg-secondary/80 transition-colors">
+        <AppleMapsIcon className="w-3.5 h-3.5" /><span>Maps</span>
       </a>
-    </div>
-  );
-}
-
-// ── Buscador de ubicación (Nominatim) ─────────────────────────────────────
-
-function LocationSearch({
-  onSelect,
-}: {
-  onSelect: (lat: number, lng: number, displayName: string) => void;
-}) {
-  const [query, setQuery] = useState('');
-  const [results, setResults] = useState<NominatimResult[]>([]);
-  const [searching, setSearching] = useState(false);
-  const [open, setOpen] = useState(false);
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const wrapperRef = useRef<HTMLDivElement>(null);
-
-  // Cerrar al click fuera
-  useEffect(() => {
-    function handler(e: MouseEvent) {
-      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
-    }
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, []);
-
-  function search(q: string) {
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    if (!q.trim() || q.length < 3) { setResults([]); setOpen(false); return; }
-    debounceRef.current = setTimeout(async () => {
-      setSearching(true);
-      try {
-        const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=5&accept-language=es`;
-        const res = await fetch(url, { headers: { 'Accept-Language': 'es' } });
-        const data: NominatimResult[] = await res.json();
-        setResults(data);
-        setOpen(data.length > 0);
-      } catch {
-        setResults([]);
-      } finally {
-        setSearching(false);
-      }
-    }, 500);
-  }
-
-  function handleSelect(r: NominatimResult) {
-    onSelect(parseFloat(r.lat), parseFloat(r.lon), r.display_name);
-    setQuery('');
-    setResults([]);
-    setOpen(false);
-  }
-
-  // Formatear nombre de lugar — mostrar las 2 primeras partes (lugar, ciudad)
-  function shortName(displayName: string) {
-    const parts = displayName.split(', ');
-    return parts.slice(0, 3).join(', ');
-  }
-
-  function fullDetail(displayName: string) {
-    const parts = displayName.split(', ');
-    return parts.slice(3).join(', ');
-  }
-
-  return (
-    <div ref={wrapperRef} className="relative">
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-        <input
-          type="text"
-          value={query}
-          onChange={e => { setQuery(e.target.value); search(e.target.value); }}
-          onFocus={() => results.length > 0 && setOpen(true)}
-          placeholder="Buscar dirección, lugar, ciudad..."
-          className="w-full pl-9 pr-9 py-2.5 text-sm rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
-        />
-        {searching ? (
-          <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground animate-spin" />
-        ) : query ? (
-          <button
-            onClick={() => { setQuery(''); setResults([]); setOpen(false); }}
-            className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 rounded-full hover:bg-muted transition-colors"
-          >
-            <X className="w-3.5 h-3.5 text-muted-foreground" />
-          </button>
-        ) : null}
-      </div>
-
-      {/* Dropdown de resultados */}
-      {open && results.length > 0 && (
-        <div className="absolute z-50 left-0 right-0 mt-1.5 bg-white border border-border rounded-xl shadow-lg overflow-hidden">
-          {results.map((r) => (
-            <button
-              key={r.place_id}
-              onClick={() => handleSelect(r)}
-              className="w-full flex items-start gap-2.5 px-3 py-2.5 hover:bg-secondary/60 transition-colors text-left border-b border-border last:border-0"
-            >
-              <MapPin className="w-4 h-4 shrink-0 mt-0.5" style={{ color: '#7C3AED' }} />
-              <div className="min-w-0">
-                <p className="text-[13px] font-medium text-foreground leading-snug truncate">
-                  {shortName(r.display_name)}
-                </p>
-                {fullDetail(r.display_name) && (
-                  <p className="text-[10px] text-muted-foreground mt-0.5 truncate">
-                    {fullDetail(r.display_name)}
-                  </p>
-                )}
-              </div>
-            </button>
-          ))}
-          <div className="px-3 py-1.5 bg-muted/40 flex items-center gap-1.5">
-            <svg className="w-3 h-3 opacity-40" viewBox="0 0 256 256" fill="currentColor"><path d="M128 16a112 112 0 1 0 112 112A112.12 112.12 0 0 0 128 16zm0 208a96 96 0 1 1 96-96 96.11 96.11 0 0 1-96 96zm16-88h-8V80a8 8 0 0 0-16 0v64a8 8 0 0 0 8 8h16a8 8 0 0 0 0-16z"/></svg>
-            <span className="text-[9px] text-muted-foreground">OpenStreetMap · Nominatim</span>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
@@ -237,16 +99,19 @@ export default function SedesPage() {
   const { getToken } = useAuth();
   const [locations, setLocations] = useState<Location[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Dialog crear/editar
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Location | null>(null);
   const [name, setName] = useState('');
   const [address, setAddress] = useState('');
   const [lat, setLat] = useState<number | null>(null);
   const [lng, setLng] = useState<number | null>(null);
-  const [locating, setLocating] = useState(false);
-  const [locError, setLocError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Dialog mapa
+  const [mapOpen, setMapOpen] = useState(false);
 
   async function load() {
     const token = await getToken();
@@ -261,7 +126,7 @@ export default function SedesPage() {
     setEditing(null);
     setName(''); setAddress('');
     setLat(null); setLng(null);
-    setLocError(null); setError(null);
+    setError(null);
     setOpen(true);
   }
 
@@ -271,46 +136,20 @@ export default function SedesPage() {
     setAddress(loc.address ?? '');
     setLat(loc.latitude ?? null);
     setLng(loc.longitude ?? null);
-    setLocError(null); setError(null);
+    setError(null);
     setOpen(true);
   }
 
-  function handleGetLocation() {
-    if (!navigator.geolocation) {
-      setLocError('Tu navegador no soporta geolocalización.');
-      return;
-    }
-    setLocating(true);
-    setLocError(null);
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setLat(parseFloat(pos.coords.latitude.toFixed(6)));
-        setLng(parseFloat(pos.coords.longitude.toFixed(6)));
-        setLocating(false);
-      },
-      () => {
-        setLocError('No se pudo obtener la ubicación. Verifica los permisos.');
-        setLocating(false);
-      },
-      { timeout: 10000, enableHighAccuracy: true }
-    );
-  }
-
-  function handleSearchSelect(selLat: number, selLng: number, displayName: string) {
+  function handleMapConfirm(selLat: number, selLng: number, displayAddress: string) {
     setLat(selLat);
     setLng(selLng);
-    // Si el campo dirección está vacío, rellenarlo con las primeras 2 partes del nombre
-    if (!address.trim()) {
-      const short = displayName.split(', ').slice(0, 2).join(', ');
-      setAddress(short);
-    }
-    setLocError(null);
+    if (!address.trim()) setAddress(displayAddress);
+    setMapOpen(false);
   }
 
   function clearLocation() {
     setLat(null);
     setLng(null);
-    setLocError(null);
   }
 
   async function handleSave() {
@@ -365,9 +204,9 @@ export default function SedesPage() {
         </button>
       </div>
 
-      {/* Dialog crear/editar */}
+      {/* Dialog crear/editar sede */}
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto">
+        <DialogContent>
           <DialogHeader>
             <DialogTitle>{editing ? 'Editar sede' : 'Nueva sede'}</DialogTitle>
           </DialogHeader>
@@ -381,12 +220,12 @@ export default function SedesPage() {
               <Input value={address} onChange={e => setAddress(e.target.value)} placeholder="Ej: Calle 10 #45-20" />
             </div>
 
-            {/* Selector de ubicación */}
-            <div className="space-y-2.5">
+            {/* Ubicación GPS */}
+            <div className="space-y-2">
               <Label>Ubicación GPS</Label>
 
-              {/* Chip de ubicación guardada */}
-              {lat && lng && (
+              {lat && lng ? (
+                /* Chip coordenadas guardadas */
                 <div className="flex items-center justify-between bg-[rgba(6,214,160,0.08)] border border-[rgba(6,214,160,0.25)] rounded-xl px-3 py-2.5">
                   <div className="flex items-center gap-2">
                     <LocateFixed className="w-4 h-4 shrink-0" style={{ color: '#06D6A0' }} />
@@ -395,45 +234,36 @@ export default function SedesPage() {
                       <p className="text-[10px] text-muted-foreground font-mono">{lat.toFixed(5)}, {lng.toFixed(5)}</p>
                     </div>
                   </div>
-                  <button
-                    onClick={clearLocation}
-                    className="p-1 rounded-lg hover:bg-black/5 transition-colors"
-                  >
-                    <X className="w-3.5 h-3.5 text-muted-foreground" />
-                  </button>
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => setMapOpen(true)}
+                      className="px-2 py-1 rounded-lg text-[11px] font-medium text-primary hover:bg-primary/10 transition-colors"
+                    >
+                      Editar
+                    </button>
+                    <button onClick={clearLocation} className="p-1 rounded-lg hover:bg-black/5 transition-colors">
+                      <X className="w-3.5 h-3.5 text-muted-foreground" />
+                    </button>
+                  </div>
                 </div>
+              ) : (
+                /* Botón abrir mapa */
+                <button
+                  onClick={() => setMapOpen(true)}
+                  className="w-full flex items-center justify-between px-3 py-3 rounded-xl border border-dashed border-border hover:border-primary/40 hover:bg-secondary/40 transition-all group"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'rgba(124,58,237,0.10)' }}>
+                      <MapPin className="w-4 h-4" style={{ color: '#7C3AED' }} />
+                    </div>
+                    <div className="text-left">
+                      <p className="text-sm font-medium text-foreground">Seleccionar en el mapa</p>
+                      <p className="text-[10px] text-muted-foreground">Busca o toca para colocar el pin</p>
+                    </div>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                </button>
               )}
-
-              {/* Buscador de dirección */}
-              <LocationSearch onSelect={handleSearchSelect} />
-
-              {/* Separador */}
-              <div className="flex items-center gap-2">
-                <div className="flex-1 h-px bg-border" />
-                <span className="text-[10px] text-muted-foreground font-medium">o</span>
-                <div className="flex-1 h-px bg-border" />
-              </div>
-
-              {/* Botón GPS */}
-              <button
-                onClick={handleGetLocation}
-                disabled={locating}
-                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-dashed border-border text-sm text-muted-foreground hover:bg-secondary hover:border-primary/30 hover:text-foreground transition-all disabled:opacity-50"
-              >
-                {locating ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Obteniendo ubicación...
-                  </>
-                ) : (
-                  <>
-                    <Navigation className="w-4 h-4" />
-                    Usar mi ubicación actual
-                  </>
-                )}
-              </button>
-
-              {locError && <p className="text-xs text-destructive">{locError}</p>}
             </div>
 
             {error && <p className="text-sm text-destructive">{error}</p>}
@@ -441,6 +271,21 @@ export default function SedesPage() {
               {saving ? 'Guardando...' : editing ? 'Guardar cambios' : 'Crear sede'}
             </Button>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog mapa */}
+      <Dialog open={mapOpen} onOpenChange={setMapOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Seleccionar ubicación</DialogTitle>
+          </DialogHeader>
+          <LocationMapPicker
+            initialLat={lat}
+            initialLng={lng}
+            onConfirm={handleMapConfirm}
+            onClose={() => setMapOpen(false)}
+          />
         </DialogContent>
       </Dialog>
 

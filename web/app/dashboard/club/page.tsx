@@ -6,7 +6,7 @@ import { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { apiFetch } from '@/lib/api-client';
 import { MemberAvatar } from '@/components/ui/member-avatar';
-import { MapPin, Camera, Pencil, Trash2, ImagePlus, BadgeCheck, Users, Lock } from 'lucide-react';
+import { MapPin, Camera, Pencil, Trash2, ImagePlus, BadgeCheck, Users, Lock, CalendarDays } from 'lucide-react';
 import Link from 'next/link';
 import { PostCard, Post, PostComment } from '@/components/ui/post-card';
 
@@ -284,21 +284,21 @@ export default function ClubProfilePage() {
             </div>
           </div>
 
-          {/* Nombre del club */}
-          <div className="mt-3 flex items-center gap-2">
-            <h1 className="text-[24px] font-semibold text-foreground leading-tight">
+          {/* Nombre + badge de deporte en la misma línea */}
+          <div className="mt-3 flex items-center gap-2 flex-wrap">
+            <h1 className="text-[22px] font-bold text-foreground leading-tight">
               {club.name}
             </h1>
+            {club.deporte && (
+              <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full tracking-widest"
+                style={{ background: 'rgba(67,97,238,0.10)', color: '#4361EE' }}>
+                {club.deporte}
+              </span>
+            )}
           </div>
-          {club.deporte && (
-            <span className="inline-block mt-1 text-[10px] font-bold px-2.5 py-0.5 rounded-full tracking-widest uppercase"
-              style={{ background: 'rgba(67,97,238,0.10)', color: '#4361EE' }}>
-              {club.deporte}
-            </span>
-          )}
 
           {/* Descripción del club */}
-          <div className="mt-3 max-w-lg">
+          <div className="mt-2 max-w-lg">
             {editingDesc ? (
               <div className="flex flex-col gap-2">
                 <textarea
@@ -348,7 +348,27 @@ export default function ClubProfilePage() {
             )}
           </div>
 
-          {/* Stats */}
+          {/* Metadata: ubicación + fecha de creación */}
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-3">
+            {(club.city || club.department) && (
+              <div className="flex items-center gap-1.5">
+                <MapPin className="w-3.5 h-3.5 shrink-0" style={{ color: '#8E87A8' }} />
+                <span className="text-[12px] text-muted-foreground">
+                  {[club.city, club.department].filter(Boolean).join(', ')}
+                </span>
+              </div>
+            )}
+            {club.createdAt && (
+              <div className="flex items-center gap-1.5">
+                <CalendarDays className="w-3.5 h-3.5 shrink-0" style={{ color: '#8E87A8' }} />
+                <span className="text-[12px] text-muted-foreground">
+                  Fundado en {new Date(club.createdAt).toLocaleDateString('es-CO', { month: 'long', year: 'numeric' })}
+                </span>
+              </div>
+            )}
+          </div>
+
+          {/* Stats: Publicaciones · Seguidores · Miembros */}
           <div className="flex items-center gap-6 mt-4">
             <div className="text-center">
               <p className="text-[18px] font-bold text-foreground leading-none">{posts.length}</p>
@@ -363,16 +383,6 @@ export default function ClubProfilePage() {
               <p style={{ fontSize: 11, fontWeight: 600, color: '#8E87A8', marginTop: 2 }}>Miembros</p>
             </div>
           </div>
-
-          {/* Ubicación */}
-          {(club.city || club.department) && (
-            <div className="flex items-center gap-1.5 mt-3">
-              <MapPin className="w-3.5 h-3.5 shrink-0" style={{ color: '#8E87A8' }} />
-              <span className="text-[12px] text-muted-foreground">
-                {[club.city, club.department].filter(Boolean).join(', ')}
-              </span>
-            </div>
-          )}
         </div>
       </motion.div>
 

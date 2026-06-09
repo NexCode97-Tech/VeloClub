@@ -396,36 +396,19 @@ export default function PerfilPage() {
             </div>
           </div>
 
-          {/* Nombre y rol */}
-          <div className="mt-3">
-            <h1 className="text-[24px] font-semibold text-foreground leading-tight"
-              style={{ fontFamily: 'inherit' }}>
+          {/* Nombre + badge de rol en la misma línea */}
+          <div className="mt-3 flex items-center gap-2 flex-wrap">
+            <h1 className="text-[22px] font-bold text-foreground leading-tight">
               {user?.name ?? 'Usuario'}
             </h1>
-            <span className="inline-block mt-1 text-[10px] font-bold px-2.5 py-0.5 rounded-full tracking-widest"
+            <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full tracking-widest"
               style={{ background: rc.bg, color: rc.text }}>
               {roleLabels[role] ?? role}
             </span>
           </div>
 
-          {/* Stats: Publicaciones · Seguidores · Siguiendo */}
-          <div className="flex items-center gap-6 mt-4">
-            <div className="text-center">
-              <p className="text-[18px] font-bold text-foreground leading-none" style={{ fontFamily: 'inherit' }}>{posts.length}</p>
-              <p style={{ fontSize: 11, fontWeight: 600, color: '#8E87A8', marginTop: 2 }}>Publicaciones</p>
-            </div>
-            <div className="text-center">
-              <p className="text-[18px] font-bold text-foreground leading-none" style={{ fontFamily: 'inherit' }}>{followStats.followersCount}</p>
-              <p style={{ fontSize: 11, fontWeight: 600, color: '#8E87A8', marginTop: 2 }}>Seguidores</p>
-            </div>
-            <div className="text-center">
-              <p className="text-[18px] font-bold text-foreground leading-none" style={{ fontFamily: 'inherit' }}>{followStats.followingCount}</p>
-              <p style={{ fontSize: 11, fontWeight: 600, color: '#8E87A8', marginTop: 2 }}>Siguiendo</p>
-            </div>
-          </div>
-
           {/* Bio */}
-          <div className="mt-3 max-w-lg">
+          <div className="mt-2 max-w-lg">
             {editingBio ? (
               <div className="flex flex-col gap-2">
                 <textarea
@@ -504,6 +487,22 @@ export default function PerfilPage() {
                 </span>
               </div>
             )}
+          </div>
+
+          {/* Stats: Publicaciones · Seguidores · Siguiendo */}
+          <div className="flex items-center gap-6 mt-4">
+            <div className="text-center">
+              <p className="text-[18px] font-bold text-foreground leading-none">{posts.length}</p>
+              <p style={{ fontSize: 11, fontWeight: 600, color: '#8E87A8', marginTop: 2 }}>Publicaciones</p>
+            </div>
+            <div className="text-center">
+              <p className="text-[18px] font-bold text-foreground leading-none">{followStats.followersCount}</p>
+              <p style={{ fontSize: 11, fontWeight: 600, color: '#8E87A8', marginTop: 2 }}>Seguidores</p>
+            </div>
+            <div className="text-center">
+              <p className="text-[18px] font-bold text-foreground leading-none">{followStats.followingCount}</p>
+              <p style={{ fontSize: 11, fontWeight: 600, color: '#8E87A8', marginTop: 2 }}>Siguiendo</p>
+            </div>
           </div>
         </div>
       </motion.div>

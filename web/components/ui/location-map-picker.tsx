@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Search, Loader2, X, LocateFixed, MapPin } from 'lucide-react';
 import type { Map as LeafletMap, Marker } from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 
 interface NominatimResult {
   place_id: number;
@@ -213,14 +214,7 @@ export function LocationMapPicker({ initialLat, initialLng, onConfirm, onClose }
   }
 
   return (
-    <>
-      {/* Importar CSS de Leaflet */}
-      <link
-        rel="stylesheet"
-        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-      />
-
-      <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-3">
         {/* Buscador */}
         <div ref={searchRef} className="relative">
           <div className="relative">
@@ -309,6 +303,6 @@ export function LocationMapPicker({ initialLat, initialLng, onConfirm, onClose }
           </p>
         )}
       </div>
-    </>
+    </div>
   );
 }

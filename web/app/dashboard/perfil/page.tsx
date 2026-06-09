@@ -75,6 +75,18 @@ const ROLE_GRADIENT: Record<string, string> = {
   STUDENT:    'linear-gradient(135deg,#7C3AED,#A855F7)',
 };
 
+// ── Avatar wrapper ────────────────────────────────────────────────────────────
+function Avatar({ src, name, size = 36, role }: { src?: string | null; name: string; size?: number; role?: string }) {
+  return (
+    <MemberAvatar
+      name={name}
+      photoUrl={src}
+      gradient={ROLE_GRADIENT[role ?? ''] ?? ROLE_GRADIENT.STUDENT}
+      size={size}
+    />
+  );
+}
+
 // ── Tabs ──────────────────────────────────────────────────────────────────────
 
 const TABS = ['Publicaciones', 'Fotos', 'Acerca de'] as const;

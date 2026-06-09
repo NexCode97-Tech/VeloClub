@@ -5,17 +5,8 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { apiFetch } from '@/lib/api-client';
-import { MemberAvatar } from '@/components/ui/member-avatar';
-import { MapPin, Camera, Pencil, Trash2, ImagePlus, BadgeCheck, Users, Lock, CalendarDays } from 'lucide-react';
-import Link from 'next/link';
+import { MapPin, Camera, Pencil, Trash2, ImagePlus, BadgeCheck, Lock, CalendarDays, Phone, Mail, Building2, Check, X } from 'lucide-react';
 import { PostCard, Post, PostComment } from '@/components/ui/post-card';
-
-const ROLE_GRADIENT: Record<string, string> = {
-  SUPERADMIN: 'linear-gradient(135deg,#EF476F,#C1121F)',
-  ADMIN:      'linear-gradient(135deg,#FFB703,#FB8500)',
-  COACH:      'linear-gradient(135deg,#06D6A0,#0CB68D)',
-  STUDENT:    'linear-gradient(135deg,#7C3AED,#A855F7)',
-};
 
 interface ClubMember {
   id: string; fullName: string; pictureUrl?: string | null;
@@ -26,10 +17,15 @@ interface ClubProfile {
   id: string; name: string; city?: string | null; department?: string | null;
   deporte?: string | null; logoUrl?: string | null; coverUrl?: string | null;
   verified: boolean; createdAt: string; description?: string | null;
+  phone?: string | null; email?: string | null;
   _count: { members: number };
 }
 
-const TABS = ['Publicaciones', 'Miembros'] as const;
+interface MainLocation {
+  id: string; name: string; address?: string | null;
+}
+
+const TABS = ['Publicaciones'] as const;
 type Tab = typeof TABS[number];
 
 export default function ClubProfilePage() {
@@ -54,6 +50,14 @@ export default function ClubProfilePage() {
   const [editingDesc, setEditingDesc]     = useState(false);
   const [descDraft, setDescDraft]         = useState('');
   const [savingDesc, setSavingDesc]       = useState(false);
+  const [mainLocation, setMainLocation]   = useState<MainLocation | null>(null);
+  // Contacto
+  const [phone, setPhone]                 = useState<string>('');
+  const [email, setEmail]                 = useState<string>('');
+  const [editingContact, setEditingContact] = useState(false);
+  const [phoneDraft, setPhoneDraft]       = useState('');
+  const [emailDraft, setEmailDraft]       = useState('');
+  const [savingContact, setSavingContact] = useState(false);
 
   useEffect(() => {
     if (!isLoaded) return;
@@ -70,11 +74,15 @@ export default function ClubProfilePage() {
         ]);
         if (meRes.status === 'fulfilled') setUserRole(meRes.value.user?.role ?? '');
         if (clubRes.status === 'fulfilled') {
-          setClub(clubRes.value.club);
-          setCoverUrl(clubRes.value.club.coverUrl ?? null);
+          const c = clubRes.value.club;
+          setClub(c);
+          setCoverUrl(c.coverUrl ?? null);
           setMembers(clubRes.value.members);
           setFollowers(clubRes.value.followersCount);
-          setDescription(clubRes.value.club.description ?? '');
+          setDescription(c.description ?? '');
+          setPhone(c.phone ?? '');
+          setEmail(c.email ?? '');
+          setMainLocation((clubRes.value as { mainLocation?: MainLocation | null }).mainLocation ?? null);
         }
         if (postsRes.status === 'fulfilled') setPosts(postsRes.value.posts);
         setCurrentUserId(userId ?? '');
@@ -124,6 +132,20 @@ export default function ClubProfilePage() {
       setEditingDesc(false);
     } catch { /* silencioso */ }
     finally { setSavingDesc(false); }
+  }
+
+  async function saveContact() {
+    setSavingContact(true);
+    try {
+      const token = await session?.getToken();
+      const res = await apiFetch<{ phone: string | null; email: string | null }>('/clubs/contact', {
+        method: 'PATCH', token, body: JSON.stringify({ phone: phoneDraft, email: emailDraft }),
+      });
+      setPhone(res.phone ?? '');
+      setEmail(res.email ?? '');
+      setEditingContact(false);
+    } catch { /* silencioso */ }
+    finally { setSavingContact(false); }
   }
 
   async function handleCoverChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -411,104 +433,178 @@ export default function ClubProfilePage() {
         </div>
       </div>
 
-      {/* ── Contenido del tab ──────────────────────────────────────────────────── */}
-      {/* En desktop: 2 columnas — izquierda 50% contenido, derecha 50% reservado */}
+      {/* ── Contenido: 2 columnas en desktop ──────────────────────────────────── */}
       <div className="sm:flex sm:gap-6">
-      <div className="sm:w-1/2">
-      <AnimatePresence mode="wait">
 
-        {/* Tab: Miembros */}
-        {activeTab === 'Miembros' && (
-          <motion.div key="miembros"
-            initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2 }}
-            className="px-4 sm:px-6 py-4 max-w-4xl mx-auto">
-            <div className="flex items-center gap-2 mb-3">
-              <Users className="w-3.5 h-3.5" style={{ color: '#8E87A8' }} />
-              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                {club._count.members} miembro{club._count.members !== 1 ? 's' : ''}
-              </p>
-            </div>
-            {members.length === 0 ? (
-              <div className="rounded-2xl px-6 py-10 flex flex-col items-center text-center"
-                style={{ background: 'linear-gradient(135deg,rgba(67,97,238,0.04),rgba(124,58,237,0.03))', border: '1px solid rgba(67,97,238,0.10)' }}>
-                <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4"
-                  style={{ background: 'linear-gradient(135deg,#4361EE,#7C3AED)' }}>
-                  <Users className="w-6 h-6 text-white" />
+        {/* Columna izquierda — Publicaciones */}
+        <div className="sm:w-1/2">
+          <AnimatePresence mode="wait">
+            {activeTab === 'Publicaciones' && (
+              <motion.div key="publicaciones"
+                initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2 }}
+                className="px-4 sm:px-6 py-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <Lock className="w-3.5 h-3.5" style={{ color: '#8E87A8' }} />
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Solo visibles para el club</p>
                 </div>
-                <p className="text-[14px] font-bold text-foreground mb-1">Sin miembros activos</p>
-                <p className="text-[12px] text-muted-foreground">Los miembros aprobados aparecerán aquí.</p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-6">
-                {members.map(m => (
-                  <Link
-                    key={m.id}
-                    href={m.clerkId ? `/dashboard/perfil/${m.clerkId}` : '#'}
-                    className="flex flex-col items-center gap-1.5 p-2 rounded-xl hover:bg-secondary transition-colors cursor-pointer"
-                  >
-                    <div className="rounded-full overflow-hidden" style={{ width: 56, height: 56 }}>
-                      <MemberAvatar
-                        name={m.fullName}
-                        photoUrl={m.pictureUrl}
-                        gradient={ROLE_GRADIENT[m.role] ?? ROLE_GRADIENT.STUDENT}
-                        size={56}
-                      />
+                {posts.length === 0 ? (
+                  <div className="rounded-2xl px-6 py-10 flex flex-col items-center text-center"
+                    style={{ background: 'linear-gradient(135deg,rgba(67,97,238,0.04),rgba(124,58,237,0.03))', border: '1px solid rgba(67,97,238,0.10)' }}>
+                    <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4"
+                      style={{ background: 'linear-gradient(135deg,#4361EE,#7C3AED)' }}>
+                      <Lock className="w-6 h-6 text-white" />
                     </div>
-                    <p className="text-[11px] font-semibold text-foreground text-center leading-tight line-clamp-2">
-                      {m.fullName.split(' ')[0]}
-                    </p>
-                  </Link>
-                ))}
-              </div>
+                    <p className="text-[14px] font-bold text-foreground mb-1">Sin publicaciones del club aún</p>
+                    <p className="text-[12px] text-muted-foreground">Las publicaciones privadas del club aparecerán aquí.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {posts.map(post => (
+                      <PostCard
+                        key={post.id}
+                        post={post}
+                        currentUserId={currentUserId}
+                        canDelete={isAdmin}
+                        onLike={handleLike}
+                        onComment={handleComment}
+                        onDelete={handleDelete}
+                      />
+                    ))}
+                  </div>
+                )}
+              </motion.div>
             )}
-          </motion.div>
-        )}
+          </AnimatePresence>
+        </div>
 
-        {/* Tab: Publicaciones */}
-        {activeTab === 'Publicaciones' && (
-          <motion.div key="publicaciones"
-            initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2 }}
-            className="px-4 sm:px-6 py-4 w-full max-w-2xl sm:max-w-none mx-auto">
-            <div className="flex items-center gap-2 mb-3">
-              <Lock className="w-3.5 h-3.5" style={{ color: '#8E87A8' }} />
-              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Solo visibles para el club</p>
-            </div>
-            {posts.length === 0 ? (
-              <div className="rounded-2xl px-6 py-10 flex flex-col items-center text-center"
-                style={{ background: 'linear-gradient(135deg,rgba(67,97,238,0.04),rgba(124,58,237,0.03))', border: '1px solid rgba(67,97,238,0.10)' }}>
-                <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4"
-                  style={{ background: 'linear-gradient(135deg,#4361EE,#7C3AED)' }}>
-                  <Lock className="w-6 h-6 text-white" />
+        {/* Columna derecha — Información de contacto */}
+        <div className="px-4 sm:px-0 sm:pr-6 pb-6 sm:w-1/2 sm:py-4">
+          <div className="rounded-2xl overflow-hidden"
+            style={{ background: 'white', border: '1px solid rgba(67,97,238,0.10)', boxShadow: '0 1px 12px rgba(0,0,0,0.06)' }}>
+
+            {/* Header */}
+            <div className="flex items-center justify-between px-5 py-4 border-b border-border/50">
+              <p className="text-[11px] font-bold uppercase tracking-widest" style={{ color: '#8E87A8' }}>
+                Información de contacto
+              </p>
+              {isAdmin && !editingContact && (
+                <motion.button
+                  whileTap={{ scale: 0.96 }}
+                  onClick={() => { setPhoneDraft(phone); setEmailDraft(email); setEditingContact(true); }}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold cursor-pointer transition-colors hover:bg-secondary"
+                  style={{ color: '#4361EE' }}>
+                  <Pencil className="w-3 h-3" /> Editar
+                </motion.button>
+              )}
+              {isAdmin && editingContact && (
+                <div className="flex items-center gap-1.5">
+                  <motion.button whileTap={{ scale: 0.96 }}
+                    onClick={saveContact} disabled={savingContact}
+                    className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-[11px] font-bold text-white cursor-pointer disabled:opacity-60"
+                    style={{ background: 'linear-gradient(135deg,#4361EE,#7C3AED)' }}>
+                    <Check className="w-3 h-3" /> {savingContact ? 'Guardando…' : 'Guardar'}
+                  </motion.button>
+                  <button onClick={() => setEditingContact(false)}
+                    className="flex items-center gap-1 px-2 py-1.5 rounded-lg text-[11px] font-semibold text-muted-foreground hover:bg-secondary transition-colors cursor-pointer">
+                    <X className="w-3 h-3" />
+                  </button>
                 </div>
-                <p className="text-[14px] font-bold text-foreground mb-1">Sin publicaciones del club aún</p>
-                <p className="text-[12px] text-muted-foreground">
-                  Las publicaciones privadas del club aparecerán aquí.
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {posts.map(post => (
-                  <PostCard
-                    key={post.id}
-                    post={post}
-                    currentUserId={currentUserId}
-                    canDelete={isAdmin}
-                    onLike={handleLike}
-                    onComment={handleComment}
-                    onDelete={handleDelete}
-                  />
-                ))}
-              </div>
-            )}
-          </motion.div>
-        )}
+              )}
+            </div>
 
-      </AnimatePresence>
-      </div>
-      {/* Columna derecha — reservada para contenido futuro */}
-      <div className="hidden sm:block sm:w-1/2" />
+            {/* Campos */}
+            <div className="divide-y divide-border/40">
+
+              {/* Teléfono */}
+              <div className="flex items-center gap-3 px-5 py-4">
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+                  style={{ background: 'rgba(67,97,238,0.08)' }}>
+                  <Phone className="w-4 h-4" style={{ color: '#4361EE' }} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[10px] font-bold uppercase tracking-widest mb-0.5" style={{ color: '#8E87A8' }}>Teléfono</p>
+                  {editingContact ? (
+                    <input
+                      value={phoneDraft}
+                      onChange={e => setPhoneDraft(e.target.value)}
+                      placeholder="+57 300 000 0000"
+                      className="w-full text-[13px] font-medium outline-none bg-transparent border-b border-dashed pb-0.5"
+                      style={{ borderColor: 'rgba(67,97,238,0.30)', color: '#1A1028' }}
+                    />
+                  ) : (
+                    <p className="text-[13px] font-medium text-foreground truncate">
+                      {phone || <span className="text-muted-foreground/50 italic text-[12px]">{isAdmin ? 'Agregar teléfono' : 'Sin registrar'}</span>}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Correo */}
+              <div className="flex items-center gap-3 px-5 py-4">
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+                  style={{ background: 'rgba(67,97,238,0.08)' }}>
+                  <Mail className="w-4 h-4" style={{ color: '#4361EE' }} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[10px] font-bold uppercase tracking-widest mb-0.5" style={{ color: '#8E87A8' }}>Correo electrónico</p>
+                  {editingContact ? (
+                    <input
+                      value={emailDraft}
+                      onChange={e => setEmailDraft(e.target.value)}
+                      placeholder="club@ejemplo.com"
+                      type="email"
+                      className="w-full text-[13px] font-medium outline-none bg-transparent border-b border-dashed pb-0.5"
+                      style={{ borderColor: 'rgba(67,97,238,0.30)', color: '#1A1028' }}
+                    />
+                  ) : (
+                    <p className="text-[13px] font-medium text-foreground truncate">
+                      {email || <span className="text-muted-foreground/50 italic text-[12px]">{isAdmin ? 'Agregar correo' : 'Sin registrar'}</span>}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Sede principal */}
+              <div className="flex items-start gap-3 px-5 py-4">
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 mt-0.5"
+                  style={{ background: 'rgba(67,97,238,0.08)' }}>
+                  <Building2 className="w-4 h-4" style={{ color: '#4361EE' }} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[10px] font-bold uppercase tracking-widest mb-0.5" style={{ color: '#8E87A8' }}>Sede principal</p>
+                  {mainLocation ? (
+                    <>
+                      <p className="text-[13px] font-semibold text-foreground">{mainLocation.name}</p>
+                      {mainLocation.address && (
+                        <p className="text-[12px] text-muted-foreground mt-0.5">{mainLocation.address}</p>
+                      )}
+                    </>
+                  ) : (
+                    <p className="text-muted-foreground/50 italic text-[12px]">Sin sede registrada</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Ubicación */}
+              {(club.city || club.department) && (
+                <div className="flex items-center gap-3 px-5 py-4">
+                  <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+                    style={{ background: 'rgba(67,97,238,0.08)' }}>
+                    <MapPin className="w-4 h-4" style={{ color: '#4361EE' }} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[10px] font-bold uppercase tracking-widest mb-0.5" style={{ color: '#8E87A8' }}>Ubicación</p>
+                    <p className="text-[13px] font-medium text-foreground">
+                      {[club.city, club.department].filter(Boolean).join(', ')}
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
   );

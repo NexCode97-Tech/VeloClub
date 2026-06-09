@@ -23,6 +23,8 @@ model Club {
   trialEndsAt       DateTime?
   deporte           String?
   description       String?
+  phone             String?
+  email             String?
   noAttendanceDays  Int[]
   createdAt         DateTime        @default(now())
   updatedAt         DateTime        @updatedAt

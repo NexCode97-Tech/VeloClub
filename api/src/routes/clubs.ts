@@ -125,7 +125,7 @@ router.get('/profile', requireAuth, async (req, res) => {
     select: {
       id: true, name: true, city: true, department: true, deporte: true,
       logoUrl: true, coverUrl: true, verified: true, createdAt: true,
-      description: true,
+      description: true, phone: true, email: true,
       _count: { select: { members: true } },
     },
   });
@@ -143,7 +143,32 @@ router.get('/profile', requireAuth, async (req, res) => {
     where: { followingClerkId: `club:${clubId}` },
   });
 
-  res.json({ club, members, followersCount });
+  // Sede principal (primera sede registrada)
+  const mainLocation = await prisma.location.findFirst({
+    where: { clubId },
+    select: { id: true, name: true, address: true },
+    orderBy: { createdAt: 'asc' },
+  });
+
+  res.json({ club, members, followersCount, mainLocation: mainLocation ?? null });
+});
+
+// PATCH /clubs/contact — actualizar info de contacto (solo ADMIN)
+router.patch('/contact', requireAuth, async (req, res) => {
+  if (!req.user) return res.status(401).json({ error: 'No autenticado' });
+  if (req.user.role !== 'ADMIN') return res.status(403).json({ error: 'Solo administradores' });
+
+  const { phone, email } = req.body as { phone?: string; email?: string };
+  const clubId = req.user.clubId ?? '';
+  const updated = await prisma.club.update({
+    where: { id: clubId },
+    data: {
+      phone: phone !== undefined ? (phone.trim() || null) : undefined,
+      email: email !== undefined ? (email.trim() || null) : undefined,
+    },
+    select: { phone: true, email: true },
+  });
+  res.json(updated);
 });
 
 // PATCH /clubs/description — actualizar descripción del club

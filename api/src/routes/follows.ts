@@ -8,7 +8,7 @@ const router = Router();
 router.post('/toggle/:targetClerkId', requireAuth, async (req, res) => {
   if (!req.auth) return res.status(401).json({ error: 'No autenticado' });
   const followerClerkId  = req.auth.clerkId;
-  const followingClerkId = req.params.targetClerkId;
+  const followingClerkId = String(req.params.targetClerkId);
 
   if (followerClerkId === followingClerkId) {
     return res.status(400).json({ error: 'No puedes seguirte a ti mismo' });
@@ -31,7 +31,7 @@ router.post('/toggle/:targetClerkId', requireAuth, async (req, res) => {
 router.get('/stats/:targetClerkId', requireAuth, async (req, res) => {
   if (!req.auth) return res.status(401).json({ error: 'No autenticado' });
   const viewerClerkId    = req.auth.clerkId;
-  const targetClerkId    = req.params.targetClerkId;
+  const targetClerkId    = String(req.params.targetClerkId);
 
   const [followersCount, followingCount, isFollowing] = await Promise.all([
     prisma.follow.count({ where: { followingClerkId: targetClerkId } }),

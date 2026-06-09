@@ -8,7 +8,7 @@ const router = Router();
 router.get('/:clerkId', requireAuth, async (req, res) => {
   if (!req.auth) return res.status(401).json({ error: 'No autenticado' });
 
-  const { clerkId } = req.params;
+  const clerkId = String(req.params.clerkId);
 
   // Buscar como User (ADMIN, COACH)
   const user = await prisma.user.findUnique({

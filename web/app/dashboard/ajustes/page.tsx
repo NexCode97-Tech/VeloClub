@@ -303,7 +303,7 @@ export default function AjustesPage() {
       {/* Encabezado con avatar */}
       <div className="px-5 py-4 border-b border-border">
         <div className="flex items-center gap-4">
-          <div className="w-16 h-16 rounded-2xl overflow-hidden bg-secondary border border-border shrink-0 flex items-center justify-center">
+          <div className="w-16 h-16 rounded-full overflow-hidden bg-secondary border border-border shrink-0 flex items-center justify-center">
             {avatarSrc
               // eslint-disable-next-line @next/next/no-img-element
               ? <img src={avatarSrc} alt={displayName} className="w-full h-full object-cover" />

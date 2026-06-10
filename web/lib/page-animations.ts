@@ -12,8 +12,8 @@ export const stagger: Variants = {
 
 // Cada card / ítem individual
 export const cardVariant: Variants = {
-  hidden: { opacity: 0, y: 20, scale: 0.96 },
-  show:   { opacity: 1, y: 0,  scale: 1, transition: { duration: 0.52, ease: EASE } },
+  hidden: { opacity: 0, y: 10 },
+  show:   { opacity: 1, y: 0,  transition: { duration: 0.28, ease: EASE } },
 };
 
 // Para formularios / paneles que expanden verticalmente

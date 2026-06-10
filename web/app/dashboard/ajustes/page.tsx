@@ -1,12 +1,14 @@
 'use client';
 
-import { useAuth, UserProfile } from '@clerk/nextjs';
+import { useAuth, useUser, useClerk } from '@clerk/nextjs';
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiFetch } from '@/lib/api-client';
-import { CheckCircle2, Camera, Building2, ChevronDown, X, Crop, ChevronRight, HelpCircle, User, Settings2, LogOut } from 'lucide-react';
+import {
+  CheckCircle2, Camera, Building2, ChevronDown, X, Crop,
+  ChevronRight, HelpCircle, User, Settings2, LogOut, Lock, KeyRound,
+} from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { stagger, cardVariant } from '@/lib/page-animations';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -15,18 +17,23 @@ import ReactCrop, { type Crop as CropType, centerCrop, makeAspectCrop } from 're
 import 'react-image-crop/dist/ReactCrop.css';
 
 const DAYS = [
-  { label: 'Domingo',   value: 0 },
-  { label: 'Lunes',     value: 1 },
-  { label: 'Martes',    value: 2 },
-  { label: 'Miércoles', value: 3 },
-  { label: 'Jueves',    value: 4 },
-  { label: 'Viernes',   value: 5 },
-  { label: 'Sábado',    value: 6 },
+  { label: 'Lunes',     short: 'L', value: 1 },
+  { label: 'Martes',    short: 'M', value: 2 },
+  { label: 'Miércoles', short: 'X', value: 3 },
+  { label: 'Jueves',    short: 'J', value: 4 },
+  { label: 'Viernes',   short: 'V', value: 5 },
+  { label: 'Sábado',    short: 'S', value: 6 },
+  { label: 'Domingo',   short: 'D', value: 0 },
 ];
 
 interface Club {
   id: string; name: string; city?: string; department?: string;
   logoUrl?: string; noAttendanceDays: number[];
+}
+interface MemberMe {
+  id: string; fullName: string; role: string; pictureUrl?: string;
+  phone?: string; email?: string; category?: string; tipo?: string;
+  createdAt?: string;
 }
 
 function SearchableSelect({
@@ -38,7 +45,6 @@ function SearchableSelect({
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
   const ref = useRef<HTMLDivElement>(null);
-
   const filtered = options.filter(o => o.toLowerCase().includes(query.toLowerCase()));
 
   useEffect(() => {
@@ -49,15 +55,11 @@ function SearchableSelect({
     return () => document.removeEventListener('mousedown', handleClick);
   }, []);
 
-  function select(v: string) {
-    onChange(v);
-    setQuery('');
-    setOpen(false);
-  }
+  function select(v: string) { onChange(v); setQuery(''); setOpen(false); }
 
   return (
-    <div className="space-y-2">
-      <Label>{label}</Label>
+    <div className="space-y-1.5">
+      <Label className="text-[12px]">{label}</Label>
       <div className="relative" ref={ref}>
         <button
           type="button"
@@ -71,36 +73,27 @@ function SearchableSelect({
           <div className="absolute z-50 mt-1 w-full bg-white border border-border rounded-xl shadow-lg overflow-hidden">
             <div className="p-2 border-b border-border">
               <input
-                autoFocus
-                value={query}
-                onChange={e => setQuery(e.target.value)}
-                placeholder="Buscar..."
-                className="w-full text-base px-2 py-1 outline-none bg-transparent"
+                autoFocus value={query} onChange={e => setQuery(e.target.value)}
+                placeholder="Buscar..." className="w-full text-base px-2 py-1 outline-none bg-transparent"
                 style={{ fontSize: '16px' }}
               />
             </div>
             <div className="max-h-52 overflow-y-auto">
               {value && (
-                <button
-                  type="button"
-                  onClick={() => select('')}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground hover:bg-secondary"
-                >
+                <button type="button" onClick={() => select('')}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground hover:bg-secondary">
                   <X className="w-3 h-3" /> Limpiar
                 </button>
               )}
-              {filtered.length === 0 ? (
-                <p className="px-3 py-2 text-sm text-muted-foreground">Sin resultados</p>
-              ) : filtered.map(o => (
-                <button
-                  key={o}
-                  type="button"
-                  onClick={() => select(o)}
-                  className={`w-full text-left px-3 py-2 text-sm hover:bg-secondary transition-colors ${o === value ? 'font-semibold text-primary' : 'text-foreground'}`}
-                >
-                  {o}
-                </button>
-              ))}
+              {filtered.length === 0
+                ? <p className="px-3 py-2 text-sm text-muted-foreground">Sin resultados</p>
+                : filtered.map(o => (
+                  <button key={o} type="button" onClick={() => select(o)}
+                    className={`w-full text-left px-3 py-2 text-sm hover:bg-secondary transition-colors ${o === value ? 'font-semibold text-primary' : 'text-foreground'}`}>
+                    {o}
+                  </button>
+                ))
+              }
             </div>
           </div>
         )}
@@ -111,11 +104,9 @@ function SearchableSelect({
 
 function SectionHeader({ label, icon: Icon }: { label: string; icon: React.ElementType }) {
   return (
-    <div className="flex items-center gap-2 mb-4">
-      <div
-        className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
-        style={{ background: 'linear-gradient(135deg, #7C3AED 0%, #4361EE 100%)' }}
-      >
+    <div className="flex items-center gap-2 mb-3">
+      <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
+        style={{ background: 'linear-gradient(135deg, #7C3AED 0%, #4361EE 100%)' }}>
         <Icon className="w-3.5 h-3.5 text-white" />
       </div>
       <h2 className="text-[15px] font-bold text-foreground">{label}</h2>
@@ -123,15 +114,33 @@ function SectionHeader({ label, icon: Icon }: { label: string; icon: React.Eleme
   );
 }
 
+function formatJoinDate(dateStr?: string) {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  const mes = d.toLocaleDateString('es-CO', { month: 'long' });
+  const año = d.getFullYear();
+  return `Socio desde ${mes.charAt(0).toUpperCase() + mes.slice(1)} ${año}`;
+}
+
+const ROLE_LABELS: Record<string, string> = {
+  ADMIN: 'Administrador',
+  COACH: 'Entrenador',
+  STUDENT: 'Deportista',
+  SUPERADMIN: 'Superadmin',
+};
+
 type Tab = 'perfil' | 'club';
 
 export default function AjustesPage() {
   const { getToken, signOut } = useAuth();
+  const { user } = useUser();
+  const clerk = useClerk();
   const router = useRouter();
   const fileRef = useRef<HTMLInputElement>(null);
 
   const [tab, setTab]               = useState<Tab>('perfil');
   const [role, setRole]             = useState<string | null>(null);
+  const [memberMe, setMemberMe]     = useState<MemberMe | null>(null);
   const [club, setClub]             = useState<Club | null>(null);
   const [name, setName]             = useState('');
   const [department, setDepartment] = useState('');
@@ -140,9 +149,16 @@ export default function AjustesPage() {
   const [loading, setLoading]       = useState(true);
   const [saving, setSaving]         = useState(false);
   const [saved, setSaved]           = useState(false);
-  const [uploadingLogo, setUploadingLogo]   = useState(false);
-  const [deletingLogo, setDeletingLogo]     = useState(false);
-  const [logoPreview, setLogoPreview]       = useState<string | null>(null);
+
+  // Perfil
+  const [phone, setPhone]               = useState('');
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [savedProfile, setSavedProfile]   = useState(false);
+
+  // Logo
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [deletingLogo, setDeletingLogo]   = useState(false);
+  const [logoPreview, setLogoPreview]     = useState<string | null>(null);
   const [cropSrc, setCropSrc]             = useState<string | null>(null);
   const [crop, setCrop]                   = useState<CropType>();
   const imgRef                            = useRef<HTMLImageElement>(null);
@@ -154,6 +170,13 @@ export default function AjustesPage() {
       const token = await getToken();
       const me = await apiFetch<{ user?: { role: string } }>('/me', { token });
       setRole(me.user?.role ?? null);
+
+      const memberRes = await apiFetch<{ member: MemberMe | null }>('/members/me', { token });
+      if (memberRes.member) {
+        setMemberMe(memberRes.member);
+        setPhone(memberRes.member.phone ?? '');
+      }
+
       if (me.user?.role === 'ADMIN') {
         const res = await apiFetch<{ club: Club }>('/clubs/settings', { token });
         setClub(res.club);
@@ -177,12 +200,7 @@ export default function AjustesPage() {
       const token = await getToken();
       const res = await apiFetch<{ club: Club }>('/clubs/settings', {
         method: 'PATCH', token,
-        body: JSON.stringify({
-          name: name.trim(),
-          department: department || undefined,
-          city: city || undefined,
-          noAttendanceDays: noAttDays,
-        }),
+        body: JSON.stringify({ name: name.trim(), department: department || undefined, city: city || undefined, noAttendanceDays: noAttDays }),
       });
       setClub(res.club);
       setSaved(true);
@@ -192,14 +210,30 @@ export default function AjustesPage() {
     }
   }
 
+  async function handleSaveProfile() {
+    if (!memberMe?.id) return;
+    setSavingProfile(true);
+    try {
+      const token = await getToken();
+      const res = await apiFetch<{ member: MemberMe }>(`/members/${memberMe.id}/contact`, {
+        method: 'PATCH', token,
+        body: JSON.stringify({ phone: phone || null }),
+      });
+      setMemberMe(res.member);
+      setSavedProfile(true);
+      setTimeout(() => setSavedProfile(false), 3000);
+    } catch (err) {
+      alert('Error al guardar: ' + (err instanceof Error ? err.message : 'intenta de nuevo'));
+    } finally {
+      setSavingProfile(false);
+    }
+  }
+
   function handleLogoChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
     if (fileRef.current) fileRef.current.value = '';
-    if (file.size > 2 * 1024 * 1024) {
-      alert('La imagen no puede superar 2MB');
-      return;
-    }
+    if (file.size > 2 * 1024 * 1024) { alert('La imagen no puede superar 2MB'); return; }
     const reader = new FileReader();
     reader.onload = (ev) => setCropSrc(ev.target?.result as string);
     reader.readAsDataURL(file);
@@ -207,37 +241,26 @@ export default function AjustesPage() {
 
   const onImageLoad = useCallback((e: React.SyntheticEvent<HTMLImageElement>) => {
     const { naturalWidth: w, naturalHeight: h } = e.currentTarget;
-    const initial = centerCrop(makeAspectCrop({ unit: '%', width: 90 }, 1, w, h), w, h);
-    setCrop(initial);
+    setCrop(centerCrop(makeAspectCrop({ unit: '%', width: 90 }, 1, w, h), w, h));
   }, []);
 
   async function handleCropConfirm() {
     if (!imgRef.current || !crop) return;
-    const img  = imgRef.current;
+    const img = imgRef.current;
     const SIZE = 400;
-    const scaleX = img.naturalWidth  / img.width;
+    const scaleX = img.naturalWidth / img.width;
     const scaleY = img.naturalHeight / img.height;
     const canvas = document.createElement('canvas');
-    canvas.width  = SIZE;
-    canvas.height = SIZE;
+    canvas.width = SIZE; canvas.height = SIZE;
     const ctx = canvas.getContext('2d')!;
-    ctx.drawImage(
-      img,
-      (crop.x ?? 0) * scaleX,
-      (crop.y ?? 0) * scaleY,
-      (crop.width  ?? img.naturalWidth)  * scaleX,
-      (crop.height ?? img.naturalHeight) * scaleY,
-      0, 0, SIZE, SIZE,
-    );
+    ctx.drawImage(img, (crop.x ?? 0) * scaleX, (crop.y ?? 0) * scaleY,
+      (crop.width ?? img.naturalWidth) * scaleX, (crop.height ?? img.naturalHeight) * scaleY, 0, 0, SIZE, SIZE);
     const base64 = canvas.toDataURL('image/jpeg', 0.85);
-    setCropSrc(null);
-    setLogoPreview(base64);
-    setUploadingLogo(true);
+    setCropSrc(null); setLogoPreview(base64); setUploadingLogo(true);
     try {
       const token = await getToken();
       const res = await apiFetch<{ club: { id: string; logoUrl: string } }>('/clubs/logo', {
-        method: 'POST', token,
-        body: JSON.stringify({ base64 }),
+        method: 'POST', token, body: JSON.stringify({ base64 }),
       });
       setClub(prev => prev ? { ...prev, logoUrl: res.club.logoUrl } : prev);
       setLogoPreview(null);
@@ -269,190 +292,240 @@ export default function AjustesPage() {
 
   const logoSrc = logoPreview ?? club?.logoUrl ?? null;
   const isAdmin = role === 'ADMIN';
+  const avatarSrc = memberMe?.pictureUrl || user?.imageUrl || null;
+  const displayName = memberMe?.fullName || user?.fullName || '';
+  const displayEmail = memberMe?.email || user?.emailAddresses?.[0]?.emailAddress || '';
+  const phoneChanged = phone !== (memberMe?.phone ?? '');
 
-  /* ── Bloque: UserProfile de Clerk ─────────────────────────────────── */
-  const userProfileBlock = (
-    <div className="w-full min-w-0 overflow-hidden">
-      <UserProfile
-        appearance={{
-          elements: {
-            rootBox: { width: '100%', maxWidth: '100%' },
-            card: {
-              width: '100%',
-              maxWidth: '100%',
-              boxShadow: 'none',
-              border: '1px solid rgba(0,0,0,0.07)',
-              borderRadius: '1rem',
-            },
-            navbar: { display: 'none' },
-            pageScrollBox: { padding: '16px' },
-            cardBox: { width: '100%', maxWidth: '100%' },
-          },
-        }}
-      />
-    </div>
-  );
-
-  /* ── Bloque: Ayuda + Cerrar sesión ────────────────────────────────── */
-  const helpAndSignOut = (
-    <div className="flex flex-col gap-3">
-      <button
-        onClick={() => router.push('/dashboard/ajustes/ayuda')}
-        className="w-full flex items-center gap-3 bg-white rounded-2xl px-4 py-4 text-left transition-colors hover:bg-secondary/40 active:bg-secondary/60"
-        style={{ border: '1px solid rgba(120,80,200,0.10)' }}
-      >
-        <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(67,97,238,0.10)' }}>
-          <HelpCircle className="w-4 h-4" style={{ color: '#4361EE' }} />
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-[13px] font-bold text-foreground">Centro de ayuda</p>
-          <p className="text-[11px] text-muted-foreground">Guía rápida de cada módulo</p>
-        </div>
-        <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
-      </button>
-
-      <button
-        onClick={() => signOut({ redirectUrl: '/sign-in' })}
-        className="w-full flex items-center gap-3 bg-white rounded-2xl px-4 py-4 text-left transition-colors hover:bg-red-50 active:bg-red-100 cursor-pointer"
-        style={{ border: '1px solid rgba(239,71,111,0.15)' }}
-      >
-        <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(239,71,111,0.10)' }}>
-          <LogOut className="w-4 h-4" style={{ color: '#EF476F' }} />
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-[13px] font-bold" style={{ color: '#EF476F' }}>Cerrar sesión</p>
-          <p className="text-[11px] text-muted-foreground">Salir de tu cuenta</p>
-        </div>
-      </button>
-    </div>
-  );
-
-  /* ── Bloque: Tarjetas del club ────────────────────────────────────── */
-  const clubCards = (
-    <motion.div variants={stagger} initial="hidden" animate="show" className="space-y-4">
-
-      {/* Logo */}
-      <motion.div variants={cardVariant} className="bg-white border border-border rounded-xl p-4">
-        <p style={{ fontSize: 11, fontWeight: 600, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>Logo del club</p>
+  /* ── Tarjeta Mi Perfil ───────────────────────────────────────────────── */
+  const perfilCard = (
+    <div className="bg-white border border-border rounded-2xl overflow-hidden">
+      {/* Encabezado con avatar */}
+      <div className="px-5 py-4 border-b border-border">
         <div className="flex items-center gap-4">
-          <div className="relative">
-            <div className="relative w-20 h-20 rounded-2xl border border-border overflow-hidden flex items-center justify-center bg-secondary shrink-0">
-              {logoSrc ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={logoSrc} alt="Logo" className="w-full h-full" style={{ objectFit: 'cover' }} />
-              ) : (
-                <Building2 className="w-8 h-8 text-muted-foreground/40" />
-              )}
-            </div>
-            {uploadingLogo && (
-              <div className="absolute inset-0 rounded-2xl bg-black/40 flex items-center justify-center">
-                <div className="w-5 h-5 rounded-full border-2 border-white border-t-transparent animate-spin" />
-              </div>
+          <div className="w-16 h-16 rounded-2xl overflow-hidden bg-secondary border border-border shrink-0 flex items-center justify-center">
+            {avatarSrc
+              // eslint-disable-next-line @next/next/no-img-element
+              ? <img src={avatarSrc} alt={displayName} className="w-full h-full object-cover" />
+              : <User className="w-7 h-7 text-muted-foreground/40" />
+            }
+          </div>
+          <div className="min-w-0">
+            <p className="text-[16px] font-bold text-foreground truncate">{displayName}</p>
+            <span
+              className="inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide mt-1"
+              style={{ background: 'rgba(124,58,237,0.10)', color: '#7C3AED' }}
+            >
+              {ROLE_LABELS[role ?? ''] ?? role}
+            </span>
+            {memberMe?.createdAt && (
+              <p className="text-[11px] text-muted-foreground mt-1">{formatJoinDate(memberMe.createdAt)}</p>
             )}
           </div>
-          <div>
-            <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleLogoChange} />
-            <div className="flex gap-2">
-              <button
-                onClick={() => fileRef.current?.click()}
-                disabled={uploadingLogo || deletingLogo}
-                className="flex items-center gap-2 px-3 py-2 rounded-xl border border-border text-[12px] font-semibold text-muted-foreground hover:bg-secondary transition-colors"
-              >
-                <Camera className="w-3.5 h-3.5" />
-                {uploadingLogo ? 'Subiendo...' : logoSrc ? 'Cambiar' : 'Subir logo'}
-              </button>
-              {logoSrc && (
-                <button
-                  onClick={handleDeleteLogo}
-                  disabled={uploadingLogo || deletingLogo}
-                  className="flex items-center gap-2 px-3 py-2 rounded-xl border border-red-200 text-[12px] font-semibold text-red-400 hover:bg-red-50 transition-colors"
-                >
-                  {deletingLogo ? '...' : <X className="w-3.5 h-3.5" />}
-                </button>
-              )}
-            </div>
-            <p className="text-[10px] text-muted-foreground mt-1.5">PNG, JPG · 400×400px · máx. 2MB</p>
-            <p className="text-[10px] mt-0.5" style={{ color: '#7C3AED' }}>Se recomienda PNG sin fondo para un mejor diseño visual</p>
+        </div>
+      </div>
+
+      {/* Campos del formulario */}
+      <div className="px-5 py-4 space-y-3 border-b border-border">
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1.5">
+            <Label className="text-[12px]">Nombre de usuario</Label>
+            <Input
+              value={displayName} readOnly
+              className="text-muted-foreground bg-muted/30 cursor-not-allowed text-sm"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-[12px]">Teléfono</Label>
+            <Input
+              value={phone}
+              onChange={e => { setPhone(e.target.value); setSavedProfile(false); }}
+              placeholder="Número de contacto"
+              className="text-sm"
+            />
           </div>
         </div>
-      </motion.div>
+        <div className="space-y-1.5">
+          <Label className="text-[12px]">Correo electrónico</Label>
+          <div className="relative">
+            <Input
+              value={displayEmail} readOnly
+              className="text-muted-foreground bg-muted/30 cursor-not-allowed pr-10 text-sm"
+            />
+            <Lock className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground/40" />
+          </div>
+        </div>
+        <Button
+          onClick={handleSaveProfile}
+          disabled={savingProfile || !phoneChanged}
+          className="w-full transition-all"
+          style={savedProfile ? { background: '#06D6A0' } : {}}
+        >
+          {savedProfile
+            ? <><CheckCircle2 className="w-4 h-4 mr-2" />Guardado</>
+            : savingProfile ? 'Guardando...' : 'Guardar cambios'
+          }
+        </Button>
+      </div>
 
-      {/* Información */}
-      <motion.div variants={cardVariant} className="bg-white border border-border rounded-xl p-4 space-y-3">
-        <p style={{ fontSize: 11, fontWeight: 600, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Información del club</p>
-        <div className="space-y-2">
-          <Label>Nombre del club</Label>
+      {/* Cambiar contraseña */}
+      <button
+        type="button"
+        onClick={() => clerk.openUserProfile()}
+        className="w-full flex items-center gap-3 px-5 py-3.5 text-left hover:bg-secondary/40 active:bg-secondary/60 transition-colors border-b border-border"
+      >
+        <KeyRound className="w-4 h-4 text-muted-foreground shrink-0" />
+        <span className="flex-1 text-[13px] font-semibold text-foreground">Cambiar contraseña</span>
+        <ChevronRight className="w-4 h-4 text-muted-foreground" />
+      </button>
+
+      {/* Centro de ayuda */}
+      <button
+        type="button"
+        onClick={() => router.push('/dashboard/ajustes/ayuda')}
+        className="w-full flex items-center gap-3 px-5 py-3.5 text-left hover:bg-secondary/40 active:bg-secondary/60 transition-colors border-b border-border"
+      >
+        <HelpCircle className="w-4 h-4 text-muted-foreground shrink-0" />
+        <div className="flex-1 min-w-0">
+          <p className="text-[13px] font-semibold text-foreground">Centro de ayuda</p>
+          <p className="text-[11px] text-muted-foreground">Tutoriales y soporte técnico</p>
+        </div>
+        <ChevronRight className="w-4 h-4 text-muted-foreground" />
+      </button>
+
+      {/* Cerrar sesión */}
+      <button
+        type="button"
+        onClick={() => signOut({ redirectUrl: '/sign-in' })}
+        className="w-full flex items-center gap-3 px-5 py-3.5 text-left hover:bg-red-50 active:bg-red-100 transition-colors"
+      >
+        <LogOut className="w-4 h-4 shrink-0" style={{ color: '#EF476F' }} />
+        <span className="flex-1 text-[13px] font-semibold" style={{ color: '#EF476F' }}>Cerrar sesión</span>
+      </button>
+    </div>
+  );
+
+  /* ── Tarjeta Mi Club ──────────────────────────────────────────────────── */
+  const clubCard = (
+    <div className="bg-white border border-border rounded-2xl p-5 space-y-5">
+      {/* Logo */}
+      <div className="flex items-center gap-4">
+        <div className="relative w-20 h-20 rounded-2xl border border-border overflow-hidden flex items-center justify-center bg-secondary shrink-0">
+          {logoSrc
+            // eslint-disable-next-line @next/next/no-img-element
+            ? <img src={logoSrc} alt="Logo" className="w-full h-full object-cover" />
+            : <Building2 className="w-8 h-8 text-muted-foreground/40" />
+          }
+          {uploadingLogo && (
+            <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+              <div className="w-5 h-5 rounded-full border-2 border-white border-t-transparent animate-spin" />
+            </div>
+          )}
+        </div>
+        <div>
+          <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleLogoChange} />
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => fileRef.current?.click()}
+              disabled={uploadingLogo || deletingLogo}
+              className="flex items-center gap-2 px-3 py-2 rounded-xl border border-border text-[12px] font-semibold text-foreground hover:bg-secondary transition-colors"
+            >
+              <Camera className="w-3.5 h-3.5" />
+              {uploadingLogo ? 'Subiendo...' : logoSrc ? 'Cambiar' : 'Subir logo'}
+            </button>
+            {logoSrc && (
+              <button
+                onClick={handleDeleteLogo}
+                disabled={uploadingLogo || deletingLogo}
+                className="text-[12px] font-semibold transition-colors hover:opacity-70"
+                style={{ color: '#EF476F' }}
+              >
+                {deletingLogo ? '...' : 'Eliminar'}
+              </button>
+            )}
+          </div>
+          <p className="text-[10px] text-muted-foreground mt-1.5">PNG, JPG · 400×400px · máx. 2MB</p>
+        </div>
+      </div>
+
+      {/* Información del club */}
+      <div className="space-y-3">
+        <p style={{ fontSize: 11, fontWeight: 600, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+          Información del club
+        </p>
+        <div className="space-y-1.5">
+          <Label className="text-[12px]">Nombre del club</Label>
           <Input value={name} onChange={e => { setName(e.target.value); setSaved(false); }} placeholder="Nombre del club" />
         </div>
-        <SearchableSelect
-          label="Departamento"
-          value={department}
-          options={DEPARTMENTS}
-          placeholder="Seleccionar departamento"
-          onChange={v => { setDepartment(v); setCity(''); setSaved(false); }}
-        />
-        <SearchableSelect
-          label="Ciudad / Municipio"
-          value={city}
-          options={cityOptions}
-          placeholder={department ? 'Seleccionar ciudad' : 'Primero elige un departamento'}
-          onChange={v => { setCity(v); setSaved(false); }}
-        />
-      </motion.div>
+        <div className="grid grid-cols-2 gap-3">
+          <SearchableSelect
+            label="Departamento"
+            value={department}
+            options={DEPARTMENTS}
+            placeholder="Departamento"
+            onChange={v => { setDepartment(v); setCity(''); setSaved(false); }}
+          />
+          <SearchableSelect
+            label="Ciudad / Municipio"
+            value={city}
+            options={cityOptions}
+            placeholder={department ? 'Ciudad' : '— primero depto —'}
+            onChange={v => { setCity(v); setSaved(false); }}
+          />
+        </div>
+      </div>
 
       {/* Días sin entrenamiento */}
-      <motion.div variants={cardVariant} className="bg-white border border-border rounded-xl p-4 space-y-3">
-        <div>
-          <p style={{ fontSize: 11, fontWeight: 600, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Días sin entrenamiento</p>
-          <p className="text-[11px] text-muted-foreground mt-0.5">La asistencia no se registrará estos días</p>
-        </div>
-        <div className="grid grid-cols-2 gap-2">
-          {DAYS.map(({ label, value }) => {
+      <div className="space-y-3">
+        <p style={{ fontSize: 11, fontWeight: 600, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+          Días sin entrenamiento
+        </p>
+        <p className="text-[11px] text-muted-foreground -mt-2">La asistencia no se registrará estos días</p>
+        <div className="flex gap-2 flex-wrap">
+          {DAYS.map(({ short, value }) => {
             const active = noAttDays.includes(value);
             return (
               <button
                 key={value}
+                type="button"
                 onClick={() => toggleDay(value)}
-                className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl border text-left transition-all"
+                className="w-10 h-10 rounded-full text-[12px] font-bold border-2 transition-all flex items-center justify-center"
                 style={active
                   ? { background: 'rgba(239,71,111,0.08)', borderColor: '#EF476F', color: '#EF476F' }
-                  : { background: '#fff', borderColor: 'rgba(120,80,200,0.12)', color: '#8E87A8' }
+                  : { background: '#fff', borderColor: 'rgba(120,80,200,0.15)', color: '#8E87A8' }
                 }
               >
-                <div className="w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0"
-                  style={active ? { borderColor: '#EF476F', background: '#EF476F' } : { borderColor: '#C4C2CF' }}>
-                  {active && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
-                </div>
-                <span className="text-[12px] font-semibold">{label}</span>
+                {short}
               </button>
             );
           })}
         </div>
-        {noAttDays.length === 0 && (
-          <p className="text-[11px] text-muted-foreground text-center">Ningún día bloqueado</p>
-        )}
-      </motion.div>
+      </div>
 
-      <Button onClick={handleSave} disabled={saving || !name.trim()} className="w-full"
-        style={saved ? { background: '#06D6A0' } : {}}>
+      <Button
+        onClick={handleSave}
+        disabled={saving || !name.trim()}
+        className="w-full transition-all"
+        style={saved ? { background: '#06D6A0' } : {}}
+      >
         {saved
-          ? <><CheckCircle2 className="w-4 h-4 mr-2" />Guardado</>
+          ? <><CheckCircle2 className="w-4 h-4 mr-2" />Cambios guardados</>
           : saving ? 'Guardando...' : 'Guardar ajustes'
         }
       </Button>
-    </motion.div>
+    </div>
   );
 
   return (
     <div className="min-h-full bg-background">
-      {/* ── Header ───────────────────────────────────────────────────── */}
+      {/* Header */}
       <div className="px-5 py-3 bg-background">
-        <h1 className="text-[22px] font-semibold text-foreground" style={{ fontFamily: 'inherit', lineHeight: 1.1 }}>
+        <h1 className="text-[22px] font-semibold text-foreground" style={{ lineHeight: 1.1 }}>
           Ajustes
         </h1>
       </div>
 
-      {/* ── Modal recorte de logo ─────────────────────────────────────── */}
+      {/* Modal recorte de logo */}
       {cropSrc && (
         <div className="fixed inset-0 z-50 bg-black/70 flex flex-col items-end justify-end sm:items-center sm:justify-center">
           <div className="bg-white rounded-t-2xl sm:rounded-2xl w-full sm:max-w-sm flex flex-col" style={{ maxHeight: '90dvh' }}>
@@ -466,34 +539,18 @@ export default function AjustesPage() {
               </button>
             </div>
             <div className="flex-1 overflow-auto p-4 flex justify-center items-center bg-secondary/40 min-h-0">
-              <ReactCrop
-                crop={crop}
-                onChange={c => setCrop(c)}
-                aspect={1}
-                circularCrop={false}
-                minWidth={50}
-              >
+              <ReactCrop crop={crop} onChange={c => setCrop(c)} aspect={1} circularCrop={false} minWidth={50}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  ref={imgRef}
-                  src={cropSrc}
-                  alt="Recortar"
-                  onLoad={onImageLoad}
-                  style={{ maxHeight: '55dvh', width: 'auto' }}
-                />
+                <img ref={imgRef} src={cropSrc} alt="Recortar" onLoad={onImageLoad} style={{ maxHeight: '55dvh', width: 'auto' }} />
               </ReactCrop>
             </div>
             <div className="flex gap-2 px-4 py-4 shrink-0 border-t border-border">
-              <button
-                onClick={() => setCropSrc(null)}
-                className="flex-1 py-2.5 rounded-xl border border-border text-[13px] font-semibold text-muted-foreground"
-              >
+              <button onClick={() => setCropSrc(null)}
+                className="flex-1 py-2.5 rounded-xl border border-border text-[13px] font-semibold text-muted-foreground">
                 Cancelar
               </button>
-              <button
-                onClick={handleCropConfirm}
-                className="flex-1 py-2.5 rounded-xl bg-primary text-white text-[13px] font-semibold"
-              >
+              <button onClick={handleCropConfirm}
+                className="flex-1 py-2.5 rounded-xl bg-primary text-white text-[13px] font-semibold">
                 Confirmar
               </button>
             </div>
@@ -501,9 +558,7 @@ export default function AjustesPage() {
         </div>
       )}
 
-      {/* ══════════════════════════════════════════════════════════════
-          MOBILE (< lg) — tabs para admin, directo para otros
-      ══════════════════════════════════════════════════════════════ */}
+      {/* ══ MOBILE (< lg) ══════════════════════════════════════════════════ */}
       <div className="lg:hidden">
         {isAdmin && (
           <div className="px-4 pb-4">
@@ -512,23 +567,17 @@ export default function AjustesPage() {
               style={{ background: '#FFFFFF', boxShadow: '0 1px 4px rgba(0,0,0,0.08), inset 0 0 0 1px rgba(0,0,0,0.06)' }}
             >
               {([
-                { key: 'perfil' as Tab, label: 'Mi perfil',  icon: User },
-                { key: 'club'   as Tab, label: 'Mi club',    icon: Settings2 },
+                { key: 'perfil' as Tab, label: 'Mi perfil', icon: User },
+                { key: 'club'   as Tab, label: 'Mi club',   icon: Settings2 },
               ]).map(({ key, label, icon: Icon }) => {
                 const active = tab === key;
                 return (
-                  <button
-                    key={key}
-                    onClick={() => setTab(key)}
-                    className="relative flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl z-10"
-                  >
+                  <button key={key} onClick={() => setTab(key)}
+                    className="relative flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl z-10">
                     {active && (
-                      <motion.div
-                        layoutId="ajustes-tab-pill"
-                        className="absolute inset-0 rounded-xl"
+                      <motion.div layoutId="ajustes-tab-pill" className="absolute inset-0 rounded-xl"
                         style={{ background: 'linear-gradient(135deg, #7C3AED 0%, #4361EE 100%)', boxShadow: '0 4px 20px rgba(124,58,237,0.40)' }}
-                        transition={{ type: 'spring', stiffness: 500, damping: 35 }}
-                      />
+                        transition={{ type: 'spring', stiffness: 500, damping: 35 }} />
                     )}
                     <Icon className="relative w-3.5 h-3.5 z-10" style={{ color: active ? '#fff' : '#8E87A8' }} />
                     <p className="relative text-[12px] font-bold leading-none z-10" style={{ color: active ? '#fff' : '#8E87A8' }}>
@@ -540,55 +589,40 @@ export default function AjustesPage() {
             </div>
           </div>
         )}
-
         <AnimatePresence mode="wait">
           {(!isAdmin || tab === 'perfil') && (
-            <motion.div
-              key="perfil"
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
+            <motion.div key="perfil"
+              initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
               transition={{ duration: 0.2, ease: [0.23, 1, 0.32, 1] }}
-              className="px-4 pb-28 space-y-3"
-            >
-              {userProfileBlock}
-              {helpAndSignOut}
+              className="px-4 pb-28">
+              {perfilCard}
             </motion.div>
           )}
-
           {isAdmin && tab === 'club' && (
-            <motion.div
-              key="club"
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
+            <motion.div key="club"
+              initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
               transition={{ duration: 0.2, ease: [0.23, 1, 0.32, 1] }}
-              className="px-4 pb-28"
-            >
-              {clubCards}
+              className="px-4 pb-28">
+              {clubCard}
             </motion.div>
           )}
         </AnimatePresence>
       </div>
 
-      {/* ══════════════════════════════════════════════════════════════
-          DESKTOP (>= lg) — columna única centrada, perfil arriba / club abajo
-      ══════════════════════════════════════════════════════════════ */}
-      <div className="hidden lg:block px-6 pb-8 max-w-2xl space-y-8">
-        {/* Bloque: Mi perfil */}
-        <div className="space-y-4 min-w-0">
-          <SectionHeader label="Mi perfil" icon={User} />
-          {userProfileBlock}
-          {helpAndSignOut}
-        </div>
-
-        {/* Bloque: Mi club (solo admin) */}
-        {isAdmin && (
-          <div className="space-y-4">
-            <SectionHeader label="Mi club" icon={Settings2} />
-            {clubCards}
+      {/* ══ DESKTOP (>= lg) — columna centrada ═══════════════════════════ */}
+      <div className="hidden lg:block px-6 pb-8">
+        <div className="max-w-2xl mx-auto space-y-6">
+          <div>
+            <SectionHeader label="Mi perfil" icon={User} />
+            {perfilCard}
           </div>
-        )}
+          {isAdmin && (
+            <div>
+              <SectionHeader label="Mi club" icon={Settings2} />
+              {clubCard}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

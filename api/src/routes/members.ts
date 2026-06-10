@@ -93,7 +93,7 @@ router.get('/me', requireAuth, async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'No autenticado' });
   const member = await prisma.member.findFirst({
     where: { clerkId: req.auth?.clerkId, clubId: req.user.clubId ?? '' },
-    select: { id: true, fullName: true, role: true, pictureUrl: true, phone: true, category: true, tipo: true, email: true },
+    select: { id: true, fullName: true, role: true, pictureUrl: true, phone: true, category: true, tipo: true, email: true, createdAt: true },
   });
   if (!member) return res.json({ member: null });
   res.json({ member });

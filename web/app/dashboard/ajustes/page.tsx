@@ -6,8 +6,9 @@ import { useRouter } from 'next/navigation';
 import { apiFetch } from '@/lib/api-client';
 import {
   CheckCircle2, Camera, Building2, ChevronDown, X, Crop,
-  ChevronRight, HelpCircle, User, Settings2, LogOut, Lock, KeyRound,
+  ChevronRight, HelpCircle, User, Settings2, LogOut, Lock, UserCog,
 } from 'lucide-react';
+import { PhoneInput } from '@/components/ui/phone-input';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -337,11 +338,10 @@ export default function AjustesPage() {
           </div>
           <div className="space-y-1.5">
             <Label className="text-[12px]">Teléfono</Label>
-            <Input
+            <PhoneInput
               value={phone}
-              onChange={e => { setPhone(e.target.value); setSavedProfile(false); }}
+              onChange={v => { setPhone(v); setSavedProfile(false); }}
               placeholder="Número de contacto"
-              className="text-sm"
             />
           </div>
         </div>
@@ -368,14 +368,17 @@ export default function AjustesPage() {
         </Button>
       </div>
 
-      {/* Cambiar contraseña */}
+      {/* Gestionar cuenta */}
       <button
         type="button"
         onClick={() => clerk.openUserProfile()}
         className="w-full flex items-center gap-3 px-5 py-3.5 text-left hover:bg-secondary/40 active:bg-secondary/60 transition-colors border-b border-border"
       >
-        <KeyRound className="w-4 h-4 text-muted-foreground shrink-0" />
-        <span className="flex-1 text-[13px] font-semibold text-foreground">Cambiar contraseña</span>
+        <UserCog className="w-4 h-4 text-muted-foreground shrink-0" />
+        <div className="flex-1 min-w-0">
+          <p className="text-[13px] font-semibold text-foreground">Gestionar cuenta</p>
+          <p className="text-[11px] text-muted-foreground">Nombre, contraseña y datos de acceso</p>
+        </div>
         <ChevronRight className="w-4 h-4 text-muted-foreground" />
       </button>
 

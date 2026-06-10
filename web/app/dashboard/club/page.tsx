@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { apiFetch } from '@/lib/api-client';
 import { MapPin, Camera, Pencil, Trash2, ImagePlus, BadgeCheck, Lock, CalendarDays, Phone, Mail, Building2, Check, X, UserPlus, UserCheck } from 'lucide-react';
 import { PostCard, Post, PostComment } from '@/components/ui/post-card';
+import { PhoneInput } from '@/components/ui/phone-input';
 
 interface ClubMember {
   id: string; fullName: string; pictureUrl?: string | null;
@@ -84,9 +85,7 @@ function ContactCard({ isAdmin, phone, email, phoneDraft, emailDraft, editingCon
           <div className="flex-1 min-w-0">
             <p className="text-[10px] font-bold uppercase tracking-widest mb-0.5" style={{ color: '#8E87A8' }}>Teléfono</p>
             {editingContact ? (
-              <input value={phoneDraft} onChange={e => onPhoneChange(e.target.value)} placeholder="+57 300 000 0000"
-                className="w-full text-[13px] font-medium outline-none bg-transparent border-b border-dashed pb-0.5"
-                style={{ borderColor: 'rgba(67,97,238,0.30)', color: '#1A1028' }} />
+              <PhoneInput value={phoneDraft} onChange={onPhoneChange} placeholder="+57 300 000 0000" />
             ) : (
               <p className="text-[13px] font-medium text-foreground truncate">
                 {phone || <span className="text-muted-foreground/50 italic text-[12px]">{isAdmin ? 'Agregar teléfono' : 'Sin registrar'}</span>}

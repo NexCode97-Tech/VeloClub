@@ -312,7 +312,7 @@ export function PhoneInput({ value, onChange, placeholder = 'Número de teléfon
   );
 
   return (
-    <div className={`relative flex h-12 rounded-xl border border-input bg-background focus-within:ring-2 focus-within:ring-primary/30 focus-within:border-primary transition-all ${className}`}>
+    <div className={`relative flex h-10 rounded-xl border border-input bg-background focus-within:ring-2 focus-within:ring-primary/30 focus-within:border-primary transition-all ${className}`}>
       {/* Selector de país */}
       <div ref={dropdownRef} className="relative flex-shrink-0">
         <button

@@ -11,8 +11,9 @@ import { MemberAvatar } from '@/components/ui/member-avatar';
 import {
   Pencil, MapPin, CalendarDays, Globe,
   Camera, Users, Trash2, ImagePlus,
-  Phone, Mail, Building2,
+  Phone, Mail, Building2, X, Loader2,
 } from 'lucide-react';
+import { PhoneInput } from '@/components/ui/phone-input';
 
 import { PostCard, Post, PostComment } from '@/components/ui/post-card';
 
@@ -131,6 +132,12 @@ export default function PerfilPage() {
   const [bio, setBio]                 = useState('');
   const [editingBio, setEditingBio]   = useState(false);
   const [bioDraft, setBioDraft]       = useState('');
+
+  // Edición de contacto
+  const [editingContact, setEditingContact] = useState(false);
+  const [contactPhone, setContactPhone]     = useState('');
+  const [contactEmail, setContactEmail]     = useState('');
+  const [savingContact, setSavingContact]   = useState(false);
   const [savingBio, setSavingBio]     = useState(false);
 
   // Referencia al nombre del usuario para filtrar posts (evita re-renders)
@@ -232,6 +239,27 @@ export default function PerfilPage() {
     finally { setSavingBio(false); }
   }
 
+  function openContactEdit() {
+    setContactPhone(memberMe?.phone ?? '');
+    setContactEmail(memberMe?.email ?? user?.email ?? '');
+    setEditingContact(true);
+  }
+
+  async function saveContact() {
+    if (!memberMe?.id) return;
+    setSavingContact(true);
+    try {
+      const token = await session?.getToken();
+      await apiFetch(`/members/${memberMe.id}`, {
+        method: 'PUT', token,
+        body: JSON.stringify({ phone: contactPhone || null, email: contactEmail || null }),
+      });
+      setMemberMe(prev => prev ? { ...prev, phone: contactPhone || null, email: contactEmail || null } : prev);
+      setEditingContact(false);
+    } catch { /* silencioso */ }
+    finally { setSavingContact(false); }
+  }
+
   async function handleCoverChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -276,6 +304,7 @@ export default function PerfilPage() {
   const canDelete = role === 'ADMIN' || role === 'COACH';
 
   return (
+    <>
     <div className="min-h-full bg-background">
 
       {/* ── Tarjeta de perfil ─────────────────────────────────────────────── */}
@@ -653,8 +682,14 @@ export default function PerfilPage() {
         <div className="sm:hidden px-4 py-4 sm:w-1/2">
           <div className="rounded-2xl overflow-hidden"
             style={{ background: 'white', border: '1px solid rgba(124,58,237,0.10)', boxShadow: '0 1px 12px rgba(0,0,0,0.06)' }}>
-            <div className="px-5 py-4 border-b border-border/50">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-border/50">
               <p className="text-[11px] font-bold uppercase tracking-widest" style={{ color: '#8E87A8' }}>Información de contacto</p>
+              <button
+                onClick={openContactEdit}
+                className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors hover:bg-secondary cursor-pointer"
+              >
+                <Pencil className="w-3.5 h-3.5" style={{ color: '#8E87A8' }} />
+              </button>
             </div>
             <div className="divide-y divide-border/40">
               <div className="flex items-center gap-3 px-5 py-4">
@@ -730,6 +765,12 @@ export default function PerfilPage() {
             <p className="text-[11px] font-bold uppercase tracking-widest" style={{ color: '#8E87A8' }}>
               Información de contacto
             </p>
+            <button
+              onClick={openContactEdit}
+              className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors hover:bg-secondary cursor-pointer"
+            >
+              <Pencil className="w-3.5 h-3.5" style={{ color: '#8E87A8' }} />
+            </button>
           </div>
 
           {/* Campos */}
@@ -827,5 +868,66 @@ export default function PerfilPage() {
       </div>
       </div>
     </div>
+
+    {/* Modal edición de contacto */}
+    <AnimatePresence>
+      {editingContact && (
+        <motion.div
+          initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ background: 'rgba(0,0,0,0.45)' }}
+          onClick={() => setEditingContact(false)}
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 12 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 12 }}
+            transition={{ duration: 0.2, ease: [0.23, 1, 0.32, 1] }}
+            className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-5">
+              <h3 className="text-[16px] font-bold text-foreground">Editar contacto</h3>
+              <button onClick={() => setEditingContact(false)} className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-secondary transition-colors cursor-pointer">
+                <X className="w-4 h-4 text-muted-foreground" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="text-[11px] font-bold uppercase tracking-widest mb-1.5 block" style={{ color: '#8E87A8' }}>Teléfono</label>
+                <PhoneInput value={contactPhone} onChange={setContactPhone} />
+              </div>
+              <div>
+                <label className="text-[11px] font-bold uppercase tracking-widest mb-1.5 block" style={{ color: '#8E87A8' }}>Correo electrónico</label>
+                <input
+                  type="email"
+                  value={contactEmail}
+                  onChange={e => setContactEmail(e.target.value)}
+                  placeholder="correo@ejemplo.com"
+                  className="w-full h-11 px-3 rounded-xl border border-border bg-background text-[13px] focus:outline-none focus:ring-2 focus:ring-purple-200"
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-2 mt-6">
+              <button
+                onClick={() => setEditingContact(false)}
+                className="flex-1 h-11 rounded-xl border border-border text-[13px] font-semibold text-muted-foreground hover:bg-secondary transition-colors cursor-pointer"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={saveContact}
+                disabled={savingContact}
+                className="flex-1 h-11 rounded-xl text-[13px] font-bold text-white flex items-center justify-center gap-2 disabled:opacity-60 cursor-pointer"
+                style={{ background: 'linear-gradient(135deg,#7C3AED,#4361EE)' }}
+              >
+                {savingContact ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Guardar'}
+              </button>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+    </>
   );
 }

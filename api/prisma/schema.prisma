@@ -332,6 +332,7 @@ model Post {
   clubId          String
   club            Club       @relation(fields: [clubId], references: [id], onDelete: Cascade)
   clubName        String     @default("")
+  authorClerkId   String?
   authorName      String
   authorRole      String
   authorAvatar    String?
@@ -363,6 +364,7 @@ model PostComment {
   id          String   @id @default(cuid())
   postId      String
   post        Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  authorClerkId String?
   authorName  String
   authorRole  String
   authorAvatar String?

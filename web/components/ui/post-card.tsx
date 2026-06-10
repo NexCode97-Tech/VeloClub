@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MemberAvatar } from '@/components/ui/member-avatar';
@@ -13,11 +14,12 @@ import {
 
 export interface PostLike { userId: string }
 export interface PostComment {
-  id: string; authorName: string; authorRole: string;
+  id: string; authorClerkId?: string | null; authorName: string; authorRole: string;
   authorAvatar?: string | null; content: string; createdAt: string;
 }
 export interface Post {
   id: string; clubId: string; clubName: string;
+  authorClerkId?: string | null;
   authorName: string; authorRole: string; authorAvatar?: string | null;
   content: string; imageUrl?: string | null;
   scope: 'PUBLIC' | 'PRIVATE';
@@ -63,6 +65,7 @@ export function PostCard({ post, currentUserId, onLike, onComment, canDelete, on
   onDelete: (id: string) => void;
   onComment: (postId: string, content: string) => Promise<void>;
 }) {
+  const router    = useRouter();
   const liked     = post.likes.some(l => l.userId === currentUserId);
   const likeCount = post.likes.length;
   const [likeAnim, setLikeAnim]         = useState(false);
@@ -107,10 +110,19 @@ export function PostCard({ post, currentUserId, onLike, onComment, canDelete, on
       {/* Header */}
       <div className="flex items-center justify-between px-5 py-3">
         <div className="flex items-center gap-3">
-          <Avatar src={post.authorAvatar} name={post.authorName} size={40} role={post.authorRole} />
+          <button
+            type="button"
+            onClick={() => post.authorClerkId && router.push(`/dashboard/perfil/${post.authorClerkId}`)}
+            className={post.authorClerkId ? 'cursor-pointer shrink-0' : 'cursor-default shrink-0'}
+          >
+            <Avatar src={post.authorAvatar} name={post.authorName} size={40} role={post.authorRole} />
+          </button>
           <div>
             <div className="flex items-center gap-2">
-              <p className="text-[14px] font-bold text-foreground">{post.authorName}</p>
+              <p
+                className={`text-[14px] font-bold text-foreground ${post.authorClerkId ? 'cursor-pointer hover:underline' : ''}`}
+                onClick={() => post.authorClerkId && router.push(`/dashboard/perfil/${post.authorClerkId}`)}
+              >{post.authorName}</p>
               {post.scope === 'PUBLIC'
                 ? <Globe className="w-3 h-3 text-muted-foreground/40" />
                 : <Lock className="w-3 h-3 text-muted-foreground/40" />}
@@ -279,7 +291,13 @@ export function PostCard({ post, currentUserId, onLike, onComment, canDelete, on
             <div className="px-4 pb-4 pt-3 border-t border-border/40 space-y-3" style={{ background: 'rgba(124,58,237,0.02)' }}>
               {post.comments.map(c => (
                 <div key={c.id} className="flex items-start gap-2.5">
-                  <Avatar src={c.authorAvatar} name={c.authorName} size={28} role={c.authorRole} />
+                  <button
+                    type="button"
+                    onClick={() => c.authorClerkId && router.push(`/dashboard/perfil/${c.authorClerkId}`)}
+                    className={c.authorClerkId ? 'cursor-pointer shrink-0' : 'cursor-default shrink-0'}
+                  >
+                    <Avatar src={c.authorAvatar} name={c.authorName} size={28} role={c.authorRole} />
+                  </button>
                   <div className="rounded-2xl rounded-tl-sm px-3 py-2 flex-1"
                     style={{ background: '#fff', border: '1px solid rgba(124,58,237,0.08)' }}>
                     <p className="text-[11px] font-bold text-foreground mb-0.5">{c.authorName}</p>

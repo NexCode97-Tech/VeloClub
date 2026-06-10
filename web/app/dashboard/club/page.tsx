@@ -449,24 +449,22 @@ export default function ClubProfilePage() {
               )}
             </div>
 
-            {/* Botón Seguir — solo visible para no-ADMIN */}
-            {!isAdmin && (
-              <motion.button
-                whileTap={{ scale: 0.97 }}
-                onClick={handleFollow}
-                disabled={toggling}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-[13px] font-bold transition-all cursor-pointer disabled:opacity-60"
-                style={following
-                  ? { background: 'rgba(67,97,238,0.10)', color: '#4361EE', border: '1.5px solid rgba(67,97,238,0.25)' }
-                  : { background: 'linear-gradient(135deg,#4361EE,#7C3AED)', color: '#fff', border: 'none' }
-                }
-              >
-                {following
-                  ? <><UserCheck className="w-4 h-4" /> Siguiendo</>
-                  : <><UserPlus className="w-4 h-4" /> Seguir</>
-                }
-              </motion.button>
-            )}
+            {/* Botón Seguir */}
+            <motion.button
+              whileTap={{ scale: 0.97 }}
+              onClick={handleFollow}
+              disabled={toggling}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-[13px] font-bold transition-all cursor-pointer disabled:opacity-60"
+              style={following
+                ? { background: 'rgba(67,97,238,0.10)', color: '#4361EE', border: '1.5px solid rgba(67,97,238,0.25)' }
+                : { background: 'linear-gradient(135deg,#4361EE,#7C3AED)', color: '#fff', border: 'none' }
+              }
+            >
+              {following
+                ? <><UserCheck className="w-4 h-4" /> Siguiendo</>
+                : <><UserPlus className="w-4 h-4" /> Seguir</>
+              }
+            </motion.button>
           </div>
 
           {/* Nombre + badge de deporte en la misma línea */}

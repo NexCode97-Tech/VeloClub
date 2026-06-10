@@ -292,8 +292,8 @@ export default function PublicProfilePage() {
         )}
       </div>
       </div>
-      {/* Columna derecha — reservada para contenido futuro */}
-      <div className="hidden sm:block sm:w-1/2" />
+      {/* Columna derecha — reservada, sticky */}
+      <div className="hidden sm:block sm:w-1/2 sm:sticky sm:top-4 sm:self-start" />
       </div>
     </div>
   );

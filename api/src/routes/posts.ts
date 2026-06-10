@@ -14,7 +14,7 @@ cloudinary.config({
 const router = Router();
 
 const COMMENT_SELECT = {
-  id: true, authorName: true, authorRole: true,
+  id: true, authorClerkId: true, authorName: true, authorRole: true,
   authorAvatar: true, content: true, createdAt: true,
 };
 
@@ -93,6 +93,7 @@ router.post('/', requireAuth, async (req, res) => {
     data: {
       clubId:        req.user.clubId ?? '',
       clubName:      club?.name ?? '',
+      authorClerkId: req.auth?.clerkId ?? null,
       authorName:    req.auth?.name ?? 'Autor',
       authorRole:    req.user.role,
       authorAvatar:  req.auth?.picture ?? null,
@@ -199,6 +200,7 @@ router.post('/:id/comments', requireAuth, async (req, res) => {
   const comment = await prisma.postComment.create({
     data: {
       postId,
+      authorClerkId: req.auth?.clerkId ?? null,
       authorName:   req.auth?.name ?? 'Usuario',
       authorRole:   req.user.role,
       authorAvatar: req.auth?.picture ?? null,

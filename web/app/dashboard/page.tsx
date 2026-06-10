@@ -31,6 +31,7 @@ interface PostLike { userId: string }
 interface LikeUser { name: string; picture?: string | null; role?: string }
 interface PostComment {
   id: string;
+  authorClerkId?: string | null;
   authorName: string;
   authorRole: string;
   authorAvatar?: string | null;
@@ -41,6 +42,7 @@ interface Post {
   id: string;
   clubId: string;
   clubName: string;
+  authorClerkId?: string | null;
   authorName: string;
   authorRole: string;
   authorAvatar?: string | null;
@@ -180,6 +182,7 @@ function PostCard({
   onEditComment: (postId: string, commentId: string, content: string) => Promise<void>;
   onFetchLikes: (postId: string) => Promise<LikeUser[]>;
 }) {
+  const router    = useRouter();
   const liked     = post.likes.some(l => l.userId === currentUserId);
   const likeCount = post.likes.length;
   const [postMenuOpen, setPostMenuOpen] = useState(false);
@@ -273,10 +276,19 @@ function PostCard({
       {/* Autor */}
       <div className="flex items-center justify-between px-4 pt-4 pb-2">
         <div className="flex items-center gap-3">
-          <Avatar src={post.authorAvatar} name={post.authorName} size={42} role={post.authorRole} />
+          <button
+            type="button"
+            onClick={() => post.authorClerkId && router.push(`/dashboard/perfil/${post.authorClerkId}`)}
+            className={post.authorClerkId ? 'cursor-pointer shrink-0' : 'cursor-default shrink-0'}
+          >
+            <Avatar src={post.authorAvatar} name={post.authorName} size={42} role={post.authorRole} />
+          </button>
           <div>
             <div className="flex items-center gap-2 flex-wrap">
-              <p className="text-[14px] font-bold text-foreground leading-tight">{post.authorName || 'Usuario'}</p>
+              <p
+                className={`text-[14px] font-bold text-foreground leading-tight ${post.authorClerkId ? 'cursor-pointer hover:underline' : ''}`}
+                onClick={() => post.authorClerkId && router.push(`/dashboard/perfil/${post.authorClerkId}`)}
+              >{post.authorName || 'Usuario'}</p>
               <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full"
                 style={{ background: 'rgba(124,58,237,0.10)', color: '#7C3AED' }}>
                 {roleLabels[post.authorRole] ?? post.authorRole}
@@ -515,7 +527,13 @@ function PostCard({
                 <div className="space-y-2.5">
                   {post.comments.map(c => (
                     <div key={c.id} className="flex items-start gap-2.5">
-                      <Avatar src={c.authorAvatar} name={c.authorName} size={28} role={c.authorRole} />
+                      <button
+                        type="button"
+                        onClick={() => c.authorClerkId && router.push(`/dashboard/perfil/${c.authorClerkId}`)}
+                        className={c.authorClerkId ? 'cursor-pointer shrink-0' : 'cursor-default shrink-0'}
+                      >
+                        <Avatar src={c.authorAvatar} name={c.authorName} size={28} role={c.authorRole} />
+                      </button>
                       <div className="flex-1 min-w-0">
                         {editingComment === c.id ? (
                           /* ── Modo edición inline ── */

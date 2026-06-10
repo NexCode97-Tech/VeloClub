@@ -109,6 +109,20 @@ function SearchableSelect({
   );
 }
 
+function SectionHeader({ label, icon: Icon }: { label: string; icon: React.ElementType }) {
+  return (
+    <div className="flex items-center gap-2 mb-4">
+      <div
+        className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
+        style={{ background: 'linear-gradient(135deg, #7C3AED 0%, #4361EE 100%)' }}
+      >
+        <Icon className="w-3.5 h-3.5 text-white" />
+      </div>
+      <h2 className="text-[15px] font-bold text-foreground">{label}</h2>
+    </div>
+  );
+}
+
 type Tab = 'perfil' | 'club';
 
 export default function AjustesPage() {
@@ -138,10 +152,8 @@ export default function AjustesPage() {
   useEffect(() => {
     (async () => {
       const token = await getToken();
-      // Obtener rol del usuario
       const me = await apiFetch<{ user?: { role: string } }>('/me', { token });
       setRole(me.user?.role ?? null);
-      // Cargar ajustes del club solo si es ADMIN
       if (me.user?.role === 'ADMIN') {
         const res = await apiFetch<{ club: Club }>('/clubs/settings', { token });
         setClub(res.club);
@@ -258,290 +270,322 @@ export default function AjustesPage() {
   const logoSrc = logoPreview ?? club?.logoUrl ?? null;
   const isAdmin = role === 'ADMIN';
 
+  /* ── Bloque: UserProfile de Clerk ─────────────────────────────────── */
+  const userProfileBlock = (
+    <UserProfile
+      appearance={{
+        elements: {
+          rootBox: { width: '100%' },
+          card: {
+            width: '100%',
+            boxShadow: 'none',
+            border: '1px solid rgba(0,0,0,0.07)',
+            borderRadius: '1rem',
+          },
+          navbar: { display: 'none' },
+          pageScrollBox: { padding: '16px' },
+        },
+      }}
+    />
+  );
+
+  /* ── Bloque: Ayuda + Cerrar sesión ────────────────────────────────── */
+  const helpAndSignOut = (
+    <div className="flex flex-col gap-3">
+      <button
+        onClick={() => router.push('/dashboard/ajustes/ayuda')}
+        className="w-full flex items-center gap-3 bg-white rounded-2xl px-4 py-4 text-left transition-colors hover:bg-secondary/40 active:bg-secondary/60"
+        style={{ border: '1px solid rgba(120,80,200,0.10)' }}
+      >
+        <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(67,97,238,0.10)' }}>
+          <HelpCircle className="w-4 h-4" style={{ color: '#4361EE' }} />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-[13px] font-bold text-foreground">Centro de ayuda</p>
+          <p className="text-[11px] text-muted-foreground">Guía rápida de cada módulo</p>
+        </div>
+        <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
+      </button>
+
+      <button
+        onClick={() => signOut({ redirectUrl: '/sign-in' })}
+        className="w-full flex items-center gap-3 bg-white rounded-2xl px-4 py-4 text-left transition-colors hover:bg-red-50 active:bg-red-100 cursor-pointer"
+        style={{ border: '1px solid rgba(239,71,111,0.15)' }}
+      >
+        <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(239,71,111,0.10)' }}>
+          <LogOut className="w-4 h-4" style={{ color: '#EF476F' }} />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-[13px] font-bold" style={{ color: '#EF476F' }}>Cerrar sesión</p>
+          <p className="text-[11px] text-muted-foreground">Salir de tu cuenta</p>
+        </div>
+      </button>
+    </div>
+  );
+
+  /* ── Bloque: Tarjetas del club ────────────────────────────────────── */
+  const clubCards = (
+    <motion.div variants={stagger} initial="hidden" animate="show" className="space-y-4">
+
+      {/* Logo */}
+      <motion.div variants={cardVariant} className="bg-white border border-border rounded-xl p-4">
+        <p style={{ fontSize: 11, fontWeight: 600, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>Logo del club</p>
+        <div className="flex items-center gap-4">
+          <div className="relative">
+            <div className="relative w-20 h-20 rounded-2xl border border-border overflow-hidden flex items-center justify-center bg-secondary shrink-0">
+              {logoSrc ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={logoSrc} alt="Logo" className="w-full h-full" style={{ objectFit: 'cover' }} />
+              ) : (
+                <Building2 className="w-8 h-8 text-muted-foreground/40" />
+              )}
+            </div>
+            {uploadingLogo && (
+              <div className="absolute inset-0 rounded-2xl bg-black/40 flex items-center justify-center">
+                <div className="w-5 h-5 rounded-full border-2 border-white border-t-transparent animate-spin" />
+              </div>
+            )}
+          </div>
+          <div>
+            <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleLogoChange} />
+            <div className="flex gap-2">
+              <button
+                onClick={() => fileRef.current?.click()}
+                disabled={uploadingLogo || deletingLogo}
+                className="flex items-center gap-2 px-3 py-2 rounded-xl border border-border text-[12px] font-semibold text-muted-foreground hover:bg-secondary transition-colors"
+              >
+                <Camera className="w-3.5 h-3.5" />
+                {uploadingLogo ? 'Subiendo...' : logoSrc ? 'Cambiar' : 'Subir logo'}
+              </button>
+              {logoSrc && (
+                <button
+                  onClick={handleDeleteLogo}
+                  disabled={uploadingLogo || deletingLogo}
+                  className="flex items-center gap-2 px-3 py-2 rounded-xl border border-red-200 text-[12px] font-semibold text-red-400 hover:bg-red-50 transition-colors"
+                >
+                  {deletingLogo ? '...' : <X className="w-3.5 h-3.5" />}
+                </button>
+              )}
+            </div>
+            <p className="text-[10px] text-muted-foreground mt-1.5">PNG, JPG · 400×400px · máx. 2MB</p>
+            <p className="text-[10px] mt-0.5" style={{ color: '#7C3AED' }}>Se recomienda PNG sin fondo para un mejor diseño visual</p>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Información */}
+      <motion.div variants={cardVariant} className="bg-white border border-border rounded-xl p-4 space-y-3">
+        <p style={{ fontSize: 11, fontWeight: 600, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Información del club</p>
+        <div className="space-y-2">
+          <Label>Nombre del club</Label>
+          <Input value={name} onChange={e => { setName(e.target.value); setSaved(false); }} placeholder="Nombre del club" />
+        </div>
+        <SearchableSelect
+          label="Departamento"
+          value={department}
+          options={DEPARTMENTS}
+          placeholder="Seleccionar departamento"
+          onChange={v => { setDepartment(v); setCity(''); setSaved(false); }}
+        />
+        <SearchableSelect
+          label="Ciudad / Municipio"
+          value={city}
+          options={cityOptions}
+          placeholder={department ? 'Seleccionar ciudad' : 'Primero elige un departamento'}
+          onChange={v => { setCity(v); setSaved(false); }}
+        />
+      </motion.div>
+
+      {/* Días sin entrenamiento */}
+      <motion.div variants={cardVariant} className="bg-white border border-border rounded-xl p-4 space-y-3">
+        <div>
+          <p style={{ fontSize: 11, fontWeight: 600, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Días sin entrenamiento</p>
+          <p className="text-[11px] text-muted-foreground mt-0.5">La asistencia no se registrará estos días</p>
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          {DAYS.map(({ label, value }) => {
+            const active = noAttDays.includes(value);
+            return (
+              <button
+                key={value}
+                onClick={() => toggleDay(value)}
+                className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl border text-left transition-all"
+                style={active
+                  ? { background: 'rgba(239,71,111,0.08)', borderColor: '#EF476F', color: '#EF476F' }
+                  : { background: '#fff', borderColor: 'rgba(120,80,200,0.12)', color: '#8E87A8' }
+                }
+              >
+                <div className="w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0"
+                  style={active ? { borderColor: '#EF476F', background: '#EF476F' } : { borderColor: '#C4C2CF' }}>
+                  {active && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                </div>
+                <span className="text-[12px] font-semibold">{label}</span>
+              </button>
+            );
+          })}
+        </div>
+        {noAttDays.length === 0 && (
+          <p className="text-[11px] text-muted-foreground text-center">Ningún día bloqueado</p>
+        )}
+      </motion.div>
+
+      <Button onClick={handleSave} disabled={saving || !name.trim()} className="w-full"
+        style={saved ? { background: '#06D6A0' } : {}}>
+        {saved
+          ? <><CheckCircle2 className="w-4 h-4 mr-2" />Guardado</>
+          : saving ? 'Guardando...' : 'Guardar ajustes'
+        }
+      </Button>
+    </motion.div>
+  );
+
   return (
     <div className="min-h-full bg-background">
+      {/* ── Header ───────────────────────────────────────────────────── */}
       <div className="px-5 py-3 bg-background">
         <h1 className="text-[22px] font-semibold text-foreground" style={{ fontFamily: 'inherit', lineHeight: 1.1 }}>
           Ajustes
         </h1>
       </div>
 
-      {/* ── Tab píldora (solo ADMIN) ─────────────────────────────────────── */}
-      {isAdmin && (
-        <div className="px-4 pb-4">
-          <div
-            className="relative flex rounded-2xl p-1 gap-1"
-            style={{ background: '#FFFFFF', boxShadow: '0 1px 4px rgba(0,0,0,0.08), inset 0 0 0 1px rgba(0,0,0,0.06)' }}
-          >
-            {([
-              { key: 'perfil' as Tab, label: 'Mi perfil',  icon: User },
-              { key: 'club'   as Tab, label: 'Mi club',    icon: Settings2 },
-            ]).map(({ key, label, icon: Icon }) => {
-              const active = tab === key;
-              return (
-                <button
-                  key={key}
-                  onClick={() => setTab(key)}
-                  className="relative flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl z-10"
-                >
-                  {active && (
-                    <motion.div
-                      layoutId="ajustes-tab-pill"
-                      className="absolute inset-0 rounded-xl"
-                      style={{ background: 'linear-gradient(135deg, #7C3AED 0%, #4361EE 100%)', boxShadow: '0 4px 20px rgba(124,58,237,0.40)' }}
-                      transition={{ type: 'spring', stiffness: 500, damping: 35 }}
-                    />
-                  )}
-                  <Icon className="relative w-3.5 h-3.5 z-10" style={{ color: active ? '#fff' : '#8E87A8' }} />
-                  <p className="relative text-[12px] font-bold leading-none z-10" style={{ color: active ? '#fff' : '#8E87A8' }}>
-                    {label}
-                  </p>
-                </button>
-              );
-            })}
+      {/* ── Modal recorte de logo ─────────────────────────────────────── */}
+      {cropSrc && (
+        <div className="fixed inset-0 z-50 bg-black/70 flex flex-col items-end justify-end sm:items-center sm:justify-center">
+          <div className="bg-white rounded-t-2xl sm:rounded-2xl w-full sm:max-w-sm flex flex-col" style={{ maxHeight: '90dvh' }}>
+            <div className="flex items-center justify-between px-4 py-3 border-b border-border shrink-0">
+              <div className="flex items-center gap-2">
+                <Crop className="w-4 h-4 text-primary" />
+                <p className="text-[13px] font-bold text-foreground">Recortar logo</p>
+              </div>
+              <button onClick={() => setCropSrc(null)} className="text-muted-foreground hover:text-foreground">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="flex-1 overflow-auto p-4 flex justify-center items-center bg-secondary/40 min-h-0">
+              <ReactCrop
+                crop={crop}
+                onChange={c => setCrop(c)}
+                aspect={1}
+                circularCrop={false}
+                minWidth={50}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  ref={imgRef}
+                  src={cropSrc}
+                  alt="Recortar"
+                  onLoad={onImageLoad}
+                  style={{ maxHeight: '55dvh', width: 'auto' }}
+                />
+              </ReactCrop>
+            </div>
+            <div className="flex gap-2 px-4 py-4 shrink-0 border-t border-border">
+              <button
+                onClick={() => setCropSrc(null)}
+                className="flex-1 py-2.5 rounded-xl border border-border text-[13px] font-semibold text-muted-foreground"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleCropConfirm}
+                className="flex-1 py-2.5 rounded-xl bg-primary text-white text-[13px] font-semibold"
+              >
+                Confirmar
+              </button>
+            </div>
           </div>
         </div>
       )}
 
-      {/* ── Tab: Mi perfil ──────────────────────────────────────────────── */}
-      <AnimatePresence mode="wait">
-        {(!isAdmin || tab === 'perfil') && (
-          <motion.div
-            key="perfil"
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.2, ease: [0.23, 1, 0.32, 1] }}
-            className="px-4 pb-28"
-          >
-            <UserProfile
-              appearance={{
-                elements: {
-                  rootBox: { width: '100%' },
-                  card: {
-                    width: '100%',
-                    boxShadow: 'none',
-                    border: '1px solid rgba(0,0,0,0.07)',
-                    borderRadius: '1rem',
-                  },
-                  navbar: { display: 'none' },
-                  pageScrollBox: { padding: '16px' },
-                },
-              }}
-            />
-          </motion.div>
-        )}
-
-        {/* ── Tab: Mi club ────────────────────────────────────────────────── */}
-        {isAdmin && tab === 'club' && (
-          <motion.div
-            key="club"
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.2, ease: [0.23, 1, 0.32, 1] }}
-          >
-      <motion.div variants={stagger} initial="hidden" animate="show" className="px-4 pt-0 space-y-4 max-w-lg pb-8">
-
-        {/* Logo */}
-        <motion.div variants={cardVariant} className="bg-white border border-border rounded-xl p-4">
-          <p style={{ fontSize: 11, fontWeight: 600, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>Logo del club</p>
-          <div className="flex items-center gap-4">
-            <div className="relative">
-              <div className="relative w-20 h-20 rounded-2xl border border-border overflow-hidden flex items-center justify-center bg-secondary shrink-0">
-                {logoSrc ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={logoSrc} alt="Logo" className="w-full h-full" style={{ objectFit: 'cover' }} />
-                ) : (
-                  <Building2 className="w-8 h-8 text-muted-foreground/40" />
-                )}
-              </div>
-              {uploadingLogo && (
-                <div className="absolute inset-0 rounded-2xl bg-black/40 flex items-center justify-center">
-                  <div className="w-5 h-5 rounded-full border-2 border-white border-t-transparent animate-spin" />
-                </div>
-              )}
-            </div>
-            <div>
-              <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleLogoChange} />
-              <div className="flex gap-2">
-                <button
-                  onClick={() => fileRef.current?.click()}
-                  disabled={uploadingLogo || deletingLogo}
-                  className="flex items-center gap-2 px-3 py-2 rounded-xl border border-border text-[12px] font-semibold text-muted-foreground hover:bg-secondary transition-colors"
-                >
-                  <Camera className="w-3.5 h-3.5" />
-                  {uploadingLogo ? 'Subiendo...' : logoSrc ? 'Cambiar' : 'Subir logo'}
-                </button>
-                {logoSrc && (
+      {/* ══════════════════════════════════════════════════════════════
+          MOBILE (< lg) — tabs para admin, directo para otros
+      ══════════════════════════════════════════════════════════════ */}
+      <div className="lg:hidden">
+        {isAdmin && (
+          <div className="px-4 pb-4">
+            <div
+              className="relative flex rounded-2xl p-1 gap-1"
+              style={{ background: '#FFFFFF', boxShadow: '0 1px 4px rgba(0,0,0,0.08), inset 0 0 0 1px rgba(0,0,0,0.06)' }}
+            >
+              {([
+                { key: 'perfil' as Tab, label: 'Mi perfil',  icon: User },
+                { key: 'club'   as Tab, label: 'Mi club',    icon: Settings2 },
+              ]).map(({ key, label, icon: Icon }) => {
+                const active = tab === key;
+                return (
                   <button
-                    onClick={handleDeleteLogo}
-                    disabled={uploadingLogo || deletingLogo}
-                    className="flex items-center gap-2 px-3 py-2 rounded-xl border border-red-200 text-[12px] font-semibold text-red-400 hover:bg-red-50 transition-colors"
+                    key={key}
+                    onClick={() => setTab(key)}
+                    className="relative flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl z-10"
                   >
-                    {deletingLogo ? '...' : <X className="w-3.5 h-3.5" />}
+                    {active && (
+                      <motion.div
+                        layoutId="ajustes-tab-pill"
+                        className="absolute inset-0 rounded-xl"
+                        style={{ background: 'linear-gradient(135deg, #7C3AED 0%, #4361EE 100%)', boxShadow: '0 4px 20px rgba(124,58,237,0.40)' }}
+                        transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+                      />
+                    )}
+                    <Icon className="relative w-3.5 h-3.5 z-10" style={{ color: active ? '#fff' : '#8E87A8' }} />
+                    <p className="relative text-[12px] font-bold leading-none z-10" style={{ color: active ? '#fff' : '#8E87A8' }}>
+                      {label}
+                    </p>
                   </button>
-                )}
-              </div>
-              <p className="text-[10px] text-muted-foreground mt-1.5">PNG, JPG · 400×400px · máx. 2MB</p>
-              <p className="text-[10px] mt-0.5" style={{ color: '#7C3AED' }}>Se recomienda PNG sin fondo para un mejor diseño visual</p>
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Modal recorte de logo */}
-        {cropSrc && (
-          <div className="fixed inset-0 z-50 bg-black/70 flex flex-col items-end justify-end sm:items-center sm:justify-center">
-            <div className="bg-white rounded-t-2xl sm:rounded-2xl w-full sm:max-w-sm flex flex-col" style={{ maxHeight: '90dvh' }}>
-              {/* Header */}
-              <div className="flex items-center justify-between px-4 py-3 border-b border-border shrink-0">
-                <div className="flex items-center gap-2">
-                  <Crop className="w-4 h-4 text-primary" />
-                  <p className="text-[13px] font-bold text-foreground">Recortar logo</p>
-                </div>
-                <button onClick={() => setCropSrc(null)} className="text-muted-foreground hover:text-foreground">
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-              {/* Imagen scrollable */}
-              <div className="flex-1 overflow-auto p-4 flex justify-center items-center bg-secondary/40 min-h-0">
-                <ReactCrop
-                  crop={crop}
-                  onChange={c => setCrop(c)}
-                  aspect={1}
-                  circularCrop={false}
-                  minWidth={50}
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    ref={imgRef}
-                    src={cropSrc}
-                    alt="Recortar"
-                    onLoad={onImageLoad}
-                    style={{ maxHeight: '55dvh', width: 'auto' }}
-                  />
-                </ReactCrop>
-              </div>
-              {/* Botones siempre visibles */}
-              <div className="flex gap-2 px-4 py-4 shrink-0 border-t border-border">
-                <button
-                  onClick={() => setCropSrc(null)}
-                  className="flex-1 py-2.5 rounded-xl border border-border text-[13px] font-semibold text-muted-foreground"
-                >
-                  Cancelar
-                </button>
-                <button
-                  onClick={handleCropConfirm}
-                  className="flex-1 py-2.5 rounded-xl bg-primary text-white text-[13px] font-semibold"
-                >
-                  Confirmar
-                </button>
-              </div>
+                );
+              })}
             </div>
           </div>
         )}
 
-        {/* Información */}
-        <motion.div variants={cardVariant} className="bg-white border border-border rounded-xl p-4 space-y-3">
-          <p style={{ fontSize: 11, fontWeight: 600, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Información del club</p>
-          <div className="space-y-2">
-            <Label>Nombre del club</Label>
-            <Input value={name} onChange={e => { setName(e.target.value); setSaved(false); }} placeholder="Nombre del club" />
-          </div>
-          <SearchableSelect
-            label="Departamento"
-            value={department}
-            options={DEPARTMENTS}
-            placeholder="Seleccionar departamento"
-            onChange={v => { setDepartment(v); setCity(''); setSaved(false); }}
-          />
-          <SearchableSelect
-            label="Ciudad / Municipio"
-            value={city}
-            options={cityOptions}
-            placeholder={department ? 'Seleccionar ciudad' : 'Primero elige un departamento'}
-            onChange={v => { setCity(v); setSaved(false); }}
-          />
-        </motion.div>
-
-        {/* Días sin entrenamiento */}
-        <motion.div variants={cardVariant} className="bg-white border border-border rounded-xl p-4 space-y-3">
-          <div>
-            <p style={{ fontSize: 11, fontWeight: 600, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Días sin entrenamiento</p>
-            <p className="text-[11px] text-muted-foreground mt-0.5">La asistencia no se registrará estos días</p>
-          </div>
-          <div className="grid grid-cols-2 gap-2">
-            {DAYS.map(({ label, value }) => {
-              const active = noAttDays.includes(value);
-              return (
-                <button
-                  key={value}
-                  onClick={() => toggleDay(value)}
-                  className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl border text-left transition-all"
-                  style={active
-                    ? { background: 'rgba(239,71,111,0.08)', borderColor: '#EF476F', color: '#EF476F' }
-                    : { background: '#fff', borderColor: 'rgba(120,80,200,0.12)', color: '#8E87A8' }
-                  }
-                >
-                  <div className="w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0"
-                    style={active ? { borderColor: '#EF476F', background: '#EF476F' } : { borderColor: '#C4C2CF' }}>
-                    {active && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
-                  </div>
-                  <span className="text-[12px] font-semibold">{label}</span>
-                </button>
-              );
-            })}
-          </div>
-          {noAttDays.length === 0 && (
-            <p className="text-[11px] text-muted-foreground text-center">Ningún día bloqueado</p>
+        <AnimatePresence mode="wait">
+          {(!isAdmin || tab === 'perfil') && (
+            <motion.div
+              key="perfil"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.2, ease: [0.23, 1, 0.32, 1] }}
+              className="px-4 pb-28 space-y-3"
+            >
+              {userProfileBlock}
+              {helpAndSignOut}
+            </motion.div>
           )}
-        </motion.div>
 
-        <Button onClick={handleSave} disabled={saving || !name.trim()} className="w-full"
-          style={saved ? { background: '#06D6A0' } : {}}>
-          {saved
-            ? <><CheckCircle2 className="w-4 h-4 mr-2" />Guardado</>
-            : saving ? 'Guardando...' : 'Guardar ajustes'
-          }
-        </Button>
-
-      </motion.div>
-
-      {/* ── Acceso a Centro de ayuda + Cerrar sesión ─────────────────────── */}
-      <div className="px-4 pb-28 mt-2 flex flex-col gap-3">
-        <button
-          onClick={() => router.push('/dashboard/ajustes/ayuda')}
-          className="w-full flex items-center gap-3 bg-white rounded-2xl px-4 py-4 text-left transition-colors hover:bg-secondary/40 active:bg-secondary/60"
-          style={{ border: '1px solid rgba(120,80,200,0.10)' }}
-        >
-          <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(67,97,238,0.10)' }}>
-            <HelpCircle className="w-4 h-4" style={{ color: '#4361EE' }} />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-[13px] font-bold text-foreground">Centro de ayuda</p>
-            <p className="text-[11px] text-muted-foreground">Guía rápida de cada módulo</p>
-          </div>
-          <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
-        </button>
-
-        <button
-          onClick={() => signOut({ redirectUrl: '/sign-in' })}
-          className="w-full flex items-center gap-3 bg-white rounded-2xl px-4 py-4 text-left transition-colors hover:bg-red-50 active:bg-red-100 cursor-pointer"
-          style={{ border: '1px solid rgba(239,71,111,0.15)' }}
-        >
-          <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(239,71,111,0.10)' }}>
-            <LogOut className="w-4 h-4" style={{ color: '#EF476F' }} />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-[13px] font-bold" style={{ color: '#EF476F' }}>Cerrar sesión</p>
-            <p className="text-[11px] text-muted-foreground">Salir de tu cuenta</p>
-          </div>
-        </button>
+          {isAdmin && tab === 'club' && (
+            <motion.div
+              key="club"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.2, ease: [0.23, 1, 0.32, 1] }}
+              className="px-4 pb-28"
+            >
+              {clubCards}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
-          </motion.div>
+
+      {/* ══════════════════════════════════════════════════════════════
+          DESKTOP (>= lg) — dos columnas side-by-side
+      ══════════════════════════════════════════════════════════════ */}
+      <div className={`hidden lg:grid lg:gap-8 px-6 pb-8 items-start ${isAdmin ? 'lg:grid-cols-2' : 'max-w-xl'}`}>
+        {/* Columna izquierda: Mi perfil */}
+        <div className="space-y-4">
+          <SectionHeader label="Mi perfil" icon={User} />
+          {userProfileBlock}
+          {helpAndSignOut}
+        </div>
+
+        {/* Columna derecha: Mi club (solo admin) */}
+        {isAdmin && (
+          <div className="space-y-0">
+            <SectionHeader label="Mi club" icon={Settings2} />
+            {clubCards}
+          </div>
         )}
-      </AnimatePresence>
+      </div>
     </div>
   );
 }
-

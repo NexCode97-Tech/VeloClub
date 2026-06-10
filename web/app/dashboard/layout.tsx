@@ -10,18 +10,14 @@ import { apiFetch } from '@/lib/api-client';
 import LoadingScreen from '@/components/ui/loading-screen';
 import { BottomCircleMenu } from '@/components/ui/bottom-circle-menu';
 import {
-  Trophy,
-  MapPin,
   CreditCard,
-  CircleDollarSign,
   Settings,
   UserCircle,
   RefreshCw,
   ChevronLeft,
   ChevronRight,
-  Building2,
 } from 'lucide-react';
-import { IconHome, IconUsers, IconCalendar, IconStatistics } from '@/components/ui/custom-icons';
+import { IconHome, IconUsers, IconCalendar, IconStatistics, IconClub, IconFinanzas, IconUbicacion, IconAsistencias, IconResultados } from '@/components/ui/custom-icons';
 
 // ── Colores por rol (sidebar footer) ─────────────────────────────────────────
 const SIDEBAR_ROLE_LABEL: Record<string, string> = {
@@ -51,19 +47,19 @@ const ROLE_TABS: Record<string, { href: string; label: string; icon: React.Eleme
     { href: '/dashboard',             label: 'Inicio',      icon: IconHome},
     { href: '/dashboard/miembros',    label: 'Miembros',    icon: IconUsers },
     { href: '/dashboard/mas',         label: 'Más',         icon: IconHome}, // reemplazado por CircleMenu
-    { href: '/dashboard/asistencia',  label: 'Asistencia',  icon: IconCalendar },
-    { href: '/dashboard/finanzas',    label: 'Finanzas',    icon: CircleDollarSign },
+    { href: '/dashboard/asistencia',  label: 'Asistencia',  icon: IconAsistencias },
+    { href: '/dashboard/finanzas',    label: 'Finanzas',    icon: IconFinanzas },
   ],
   COACH: [
     { href: '/dashboard',             label: 'Inicio',      icon: IconHome},
     { href: '/dashboard/miembros',    label: 'Miembros',    icon: IconUsers },
     { href: '/dashboard/mas',         label: 'Más',         icon: IconHome}, // reemplazado por CircleMenu
-    { href: '/dashboard/asistencia',  label: 'Asistencia',  icon: IconCalendar },
-    { href: '/dashboard/logros',      label: 'Resultados',  icon: Trophy },
+    { href: '/dashboard/asistencia',  label: 'Asistencia',  icon: IconAsistencias },
+    { href: '/dashboard/logros',      label: 'Resultados',  icon: IconResultados },
   ],
   STUDENT: [
     { href: '/dashboard',             label: 'Inicio',      icon: IconHome},
-    { href: '/dashboard/logros',      label: 'Resultados',  icon: Trophy },
+    { href: '/dashboard/logros',      label: 'Resultados',  icon: IconResultados },
     { href: '/dashboard/calendario',  label: 'Calendario',  icon: IconCalendar },
     { href: '/dashboard/pagos',       label: 'Mis Pagos',   icon: CreditCard },
   ],
@@ -72,28 +68,28 @@ const ROLE_TABS: Record<string, { href: string; label: string; icon: React.Eleme
 // Ítems del CircleMenu por rol
 const ROLE_MAS_ITEMS: Record<string, { label: string; icon: React.ElementType; href: string; color: string }[]> = {
   ADMIN: [
-    { label: 'Resultados', icon: Trophy,           href: '/dashboard/logros',     color: '#F59E0B' },
+    { label: 'Resultados', icon: IconResultados,   href: '/dashboard/logros',     color: '#F59E0B' },
     { label: 'Calendario', icon: IconCalendar,     href: '/dashboard/calendario', color: '#EF476F' },
-    { label: 'Sedes',      icon: MapPin,           href: '/dashboard/sedes',      color: '#06D6A0' },
+    { label: 'Sedes',      icon: IconUbicacion,    href: '/dashboard/sedes',      color: '#06D6A0' },
     { label: 'Reportes',   icon: IconStatistics,   href: '/dashboard/reportes',   color: '#4361EE' },
   ],
   COACH: [
-    { label: 'Resultados', icon: Trophy,           href: '/dashboard/logros',     color: '#F59E0B' },
+    { label: 'Resultados', icon: IconResultados,   href: '/dashboard/logros',     color: '#F59E0B' },
     { label: 'Calendario', icon: IconCalendar,     href: '/dashboard/calendario', color: '#EF476F' },
-    { label: 'Sedes',      icon: MapPin,           href: '/dashboard/sedes',      color: '#06D6A0' },
+    { label: 'Sedes',      icon: IconUbicacion,    href: '/dashboard/sedes',      color: '#06D6A0' },
   ],
 };
 
 const ADMIN_NAV = [
   { href: '/dashboard',            label: 'Inicio',        icon: IconHome},
   { href: '/dashboard/miembros',   label: 'Miembros',      icon: IconUsers },
-  { href: '/dashboard/sedes',      label: 'Sedes',         icon: MapPin },
-  { href: '/dashboard/asistencia', label: 'Asistencia',    icon: IconCalendar },
-  { href: '/dashboard/finanzas',   label: 'Finanzas',      icon: CircleDollarSign },
-  { href: '/dashboard/logros',     label: 'Resultados',    icon: Trophy },
+  { href: '/dashboard/sedes',      label: 'Sedes',         icon: IconUbicacion },
+  { href: '/dashboard/asistencia', label: 'Asistencia',    icon: IconAsistencias },
+  { href: '/dashboard/finanzas',   label: 'Finanzas',      icon: IconFinanzas },
+  { href: '/dashboard/logros',     label: 'Resultados',    icon: IconResultados },
   { href: '/dashboard/calendario', label: 'Calendario',    icon: IconCalendar },
   { href: '/dashboard/reportes',   label: 'Reportes',      icon: IconStatistics },
-  { href: '/dashboard/club',       label: 'Club',          icon: Building2 },
+  { href: '/dashboard/club',       label: 'Club',          icon: IconClub },
   { href: '/dashboard/perfil',     label: 'Mi Perfil',     icon: UserCircle },
   { href: '/dashboard/ajustes',    label: 'Ajustes',       icon: Settings },
 ];
@@ -101,18 +97,18 @@ const ADMIN_NAV = [
 const COACH_NAV = [
   { href: '/dashboard',            label: 'Inicio',        icon: IconHome},
   { href: '/dashboard/miembros',   label: 'Miembros',      icon: IconUsers },
-  { href: '/dashboard/sedes',      label: 'Sedes',         icon: MapPin },
-  { href: '/dashboard/asistencia', label: 'Asistencia',    icon: IconCalendar },
-  { href: '/dashboard/logros',     label: 'Resultados',    icon: Trophy },
+  { href: '/dashboard/sedes',      label: 'Sedes',         icon: IconUbicacion },
+  { href: '/dashboard/asistencia', label: 'Asistencia',    icon: IconAsistencias },
+  { href: '/dashboard/logros',     label: 'Resultados',    icon: IconResultados },
   { href: '/dashboard/calendario', label: 'Calendario',    icon: IconCalendar },
-  { href: '/dashboard/club',       label: 'Club',          icon: Building2 },
+  { href: '/dashboard/club',       label: 'Club',          icon: IconClub },
   { href: '/dashboard/perfil',     label: 'Mi Perfil',     icon: UserCircle },
   { href: '/dashboard/ajustes',    label: 'Ajustes',       icon: Settings },
 ];
 
 const STUDENT_NAV = [
   { href: '/dashboard',            label: 'Inicio',        icon: IconHome},
-  { href: '/dashboard/logros',     label: 'Resultados',    icon: Trophy },
+  { href: '/dashboard/logros',     label: 'Resultados',    icon: IconResultados },
   { href: '/dashboard/calendario', label: 'Calendario',    icon: IconCalendar },
   { href: '/dashboard/pagos',      label: 'Mis Pagos',     icon: CreditCard },
   { href: '/dashboard/perfil',     label: 'Mi Perfil',     icon: UserCircle },

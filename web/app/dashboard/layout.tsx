@@ -415,7 +415,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <div className="text-[12px] font-bold truncate" style={{ color: '#1a1028' }}>
                 {userName ?? 'Usuario'}
               </div>
-              <div className="text-[9px] font-bold uppercase tracking-wide" style={{ color: SIDEBAR_ROLE_COLOR[role ?? 'ADMIN'] ?? '#8E87A8' }}>
+              <div className="text-[9px] font-bold tracking-wide" style={{ color: SIDEBAR_ROLE_COLOR[role ?? 'ADMIN'] ?? '#8E87A8' }}>
                 {SIDEBAR_ROLE_LABEL[role ?? 'ADMIN'] ?? role}
               </div>
             </Link>

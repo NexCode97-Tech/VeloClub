@@ -337,8 +337,63 @@ export default function ReportesPage() {
           )}
         </motion.div>
 
-        {/* Asistencia + Distribución de pagos — fila en desktop, columna en móvil */}
+        {/* Distribución de pagos + Asistencia — fila en desktop, columna en móvil */}
         <motion.div variants={cardVariant} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+          {/* Distribución de pagos */}
+          <div className="bg-white border border-border rounded-xl p-4">
+            <p style={{ fontSize: 11, fontWeight: 600, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 16 }}>
+              Estado de pagos — {paymentPeriodLabel}
+            </p>
+            {loading ? (
+              <div className="flex items-center justify-center h-[160px]">
+                <div className="w-5 h-5 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: YELLOW, borderTopColor: 'transparent' }} />
+              </div>
+            ) : paymentDist.length === 0 ? (
+              <div className="flex flex-col items-center py-6 gap-2">
+                <CreditCard className="w-8 h-8 text-muted-foreground/30" />
+                <p className="text-[12px] text-muted-foreground">Sin registros de pagos este período</p>
+              </div>
+            ) : (
+              <>
+                <ResponsiveContainer width="100%" height={160}>
+                  <PieChart>
+                    <Pie
+                      data={paymentDist}
+                      dataKey="value"
+                      nameKey="name"
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={45}
+                      outerRadius={68}
+                      paddingAngle={3}
+                    >
+                      {paymentDist.map((d, i) => (
+                        <Cell key={i} fill={d.color} />
+                      ))}
+                    </Pie>
+                    <Legend
+                      iconType="circle"
+                      iconSize={8}
+                      formatter={(v) => <span style={{ fontSize: 11, color: '#8E87A8' }}>{v}</span>}
+                    />
+                    <Tooltip
+                      contentStyle={{ borderRadius: 10, border: '1px solid #E8E6F0', fontSize: 12, padding: '4px 10px' }}
+                      formatter={(v) => [Number(v ?? 0), 'pagos']}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+                <div className="flex gap-2 mt-2">
+                  {paymentDist.map(d => (
+                    <div key={d.name} className="flex-1 rounded-xl px-3 py-2 text-center" style={{ background: `${d.color}12` }}>
+                      <p className="text-[18px] font-bold" style={{ color: d.color, fontFamily: 'inherit' }}>{d.value}</p>
+                      <p className="text-[10px] font-semibold" style={{ color: d.color }}>{d.name}</p>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
 
           {/* Asistencia */}
           <div className="bg-white border border-border rounded-xl p-4">
@@ -419,61 +474,6 @@ export default function ReportesPage() {
                     </Bar>
                   </BarChart>
                 </ResponsiveContainer>
-              </>
-            )}
-          </div>
-
-          {/* Distribución de pagos */}
-          <div className="bg-white border border-border rounded-xl p-4">
-            <p style={{ fontSize: 11, fontWeight: 600, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 16 }}>
-              Estado de pagos — {paymentPeriodLabel}
-            </p>
-            {loading ? (
-              <div className="flex items-center justify-center h-[160px]">
-                <div className="w-5 h-5 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: YELLOW, borderTopColor: 'transparent' }} />
-              </div>
-            ) : paymentDist.length === 0 ? (
-              <div className="flex flex-col items-center py-6 gap-2">
-                <CreditCard className="w-8 h-8 text-muted-foreground/30" />
-                <p className="text-[12px] text-muted-foreground">Sin registros de pagos este período</p>
-              </div>
-            ) : (
-              <>
-                <ResponsiveContainer width="100%" height={160}>
-                  <PieChart>
-                    <Pie
-                      data={paymentDist}
-                      dataKey="value"
-                      nameKey="name"
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={45}
-                      outerRadius={68}
-                      paddingAngle={3}
-                    >
-                      {paymentDist.map((d, i) => (
-                        <Cell key={i} fill={d.color} />
-                      ))}
-                    </Pie>
-                    <Legend
-                      iconType="circle"
-                      iconSize={8}
-                      formatter={(v) => <span style={{ fontSize: 11, color: '#8E87A8' }}>{v}</span>}
-                    />
-                    <Tooltip
-                      contentStyle={{ borderRadius: 10, border: '1px solid #E8E6F0', fontSize: 12, padding: '4px 10px' }}
-                      formatter={(v) => [Number(v ?? 0), 'pagos']}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
-                <div className="flex gap-2 mt-2">
-                  {paymentDist.map(d => (
-                    <div key={d.name} className="flex-1 rounded-xl px-3 py-2 text-center" style={{ background: `${d.color}12` }}>
-                      <p className="text-[18px] font-bold" style={{ color: d.color, fontFamily: 'inherit' }}>{d.value}</p>
-                      <p className="text-[10px] font-semibold" style={{ color: d.color }}>{d.name}</p>
-                    </div>
-                  ))}
-                </div>
               </>
             )}
           </div>

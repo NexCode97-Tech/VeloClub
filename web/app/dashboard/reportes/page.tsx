@@ -10,6 +10,7 @@ import { Users, CalendarCheck, CreditCard, Trophy, TrendingUp, TrendingDown, Min
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell,
   PieChart, Pie, Legend,
+  AreaChart, Area,
 } from 'recharts';
 import { format, startOfMonth, endOfMonth } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -63,6 +64,7 @@ export default function ReportesPage() {
   // Gráficas
   const [monthlyAtt, setMonthlyAtt]       = useState<MonthlyAttendance[]>([]);
   const [paymentDist, setPaymentDist]     = useState<PaymentDist[]>([]);
+  const [monthlyIncome, setMonthlyIncome] = useState<{ month: string; total: number }[]>([]);
 
   // Datos de rango de asistencia
   const [rangeData, setRangeData]         = useState<{ date: string; presentes: number }[]>([]);
@@ -122,6 +124,14 @@ export default function ReportesPage() {
           { name: 'Pendiente', value: dist.PENDING, color: YELLOW },
           { name: 'Vencido',   value: dist.OVERDUE, color: RED    },
         ].filter(d => d.value > 0));
+
+        // Ingresos mensuales del año activo
+        const incomeByMonth = Array.from({ length: 12 }, (_, i) => ({
+          month: MONTH_NAMES[i],
+          total: payments.filter(p => p.status === 'PAID' && p.year === activeYear && p.month === i + 1)
+            .reduce((s, p) => s + p.amount, 0),
+        }));
+        setMonthlyIncome(incomeByMonth);
       }
       if (compsRes.status === 'fulfilled') {
         const total = compsRes.value.competitions.reduce(
@@ -409,6 +419,62 @@ export default function ReportesPage() {
                 ))}
               </div>
             </>
+          )}
+        </motion.div>
+
+        {/* Tendencia de ingresos */}
+        <motion.div variants={cardVariant} className="bg-white border border-border rounded-xl p-4">
+          <div className="flex items-baseline gap-1.5 mb-4">
+            <p style={{ fontSize: 11, fontWeight: 600, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+              Tendencia
+            </p>
+            <span style={{ fontSize: 11, fontWeight: 600, color: ACCENT }}>· Total facturado {activeYear}</span>
+          </div>
+          {loading ? (
+            <div className="flex items-center justify-center h-[160px]">
+              <div className="w-5 h-5 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: ACCENT, borderTopColor: 'transparent' }} />
+            </div>
+          ) : monthlyIncome.every(m => m.total === 0) ? (
+            <div className="flex flex-col items-center py-8 gap-2">
+              <CreditCard className="w-8 h-8 text-muted-foreground/30" />
+              <p className="text-[12px] text-muted-foreground">Sin ingresos registrados en {activeYear}</p>
+            </div>
+          ) : (
+            <ResponsiveContainer width="100%" height={180}>
+              <AreaChart data={monthlyIncome} margin={{ top: 8, right: 8, left: -8, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="incomeGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%"  stopColor={ACCENT} stopOpacity={0.18} />
+                    <stop offset="95%" stopColor={ACCENT} stopOpacity={0.01} />
+                  </linearGradient>
+                </defs>
+                <XAxis
+                  dataKey="month"
+                  tick={{ fontSize: 11, fill: '#8E87A8', fontWeight: 600 }}
+                  axisLine={false} tickLine={false}
+                />
+                <YAxis
+                  tickFormatter={(v) => v === 0 ? '$0' : v >= 1_000_000 ? `$${(v/1_000_000).toFixed(1)}M` : `$${(v/1_000).toFixed(0)}k`}
+                  tick={{ fontSize: 10, fill: '#C4C2CF' }}
+                  axisLine={false} tickLine={false} width={48}
+                />
+                <Tooltip
+                  contentStyle={{ borderRadius: 12, border: '1px solid #E8E6F0', fontSize: 13, padding: '8px 14px', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}
+                  labelStyle={{ fontWeight: 700, color: '#1A1028', marginBottom: 2 }}
+                  formatter={(v) => [`$${Number(v ?? 0).toLocaleString('es-CO')}`, 'Total facturado']}
+                  cursor={{ stroke: ACCENT, strokeWidth: 1, strokeDasharray: '4 2' }}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="total"
+                  stroke={ACCENT}
+                  strokeWidth={2.5}
+                  fill="url(#incomeGradient)"
+                  dot={{ r: 3, fill: ACCENT, strokeWidth: 0 }}
+                  activeDot={{ r: 5, fill: ACCENT, strokeWidth: 0 }}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
           )}
         </motion.div>
 

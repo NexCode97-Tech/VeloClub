@@ -241,7 +241,7 @@ export default function PerfilPage() {
 
   function openContactEdit() {
     setContactPhone(memberMe?.phone ?? '');
-    setContactEmail(memberMe?.email ?? user?.email ?? '');
+    setContactEmail(memberMe?.email ?? me?.user?.email ?? '');
     setEditingContact(true);
   }
 
@@ -250,14 +250,15 @@ export default function PerfilPage() {
     setSavingContact(true);
     try {
       const token = await session?.getToken();
-      await apiFetch(`/members/${memberMe.id}`, {
-        method: 'PUT', token,
+      const res = await apiFetch<{ member: MemberMe }>(`/members/${memberMe.id}/contact`, {
+        method: 'PATCH', token,
         body: JSON.stringify({ phone: contactPhone || null, email: contactEmail || null }),
       });
-      setMemberMe(prev => prev ? { ...prev, phone: contactPhone || null, email: contactEmail || null } : prev);
+      setMemberMe(res.member);
       setEditingContact(false);
-    } catch { /* silencioso */ }
-    finally { setSavingContact(false); }
+    } catch (err) {
+      alert('Error al guardar: ' + (err instanceof Error ? err.message : 'intenta de nuevo'));
+    } finally { setSavingContact(false); }
   }
 
   async function handleCoverChange(e: React.ChangeEvent<HTMLInputElement>) {

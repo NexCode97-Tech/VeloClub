@@ -199,6 +199,28 @@ router.put('/:id', requireAuth, async (req, res) => {
   res.json({ member });
 });
 
+// PATCH /members/:id/contact — actualiza solo teléfono y correo (usado desde Mi Perfil)
+router.patch('/:id/contact', requireAuth, async (req, res) => {
+  if (!req.user) return res.status(401).json({ error: 'No autenticado' });
+  const id = getId(req);
+
+  const existing = await prisma.member.findFirst({
+    where: { id, clubId: req.user.clubId ?? '' },
+  });
+  if (!existing) return res.status(404).json({ error: 'Miembro no encontrado' });
+
+  const phone = typeof req.body.phone === 'string' ? req.body.phone.trim() || null : null;
+  const email = typeof req.body.email === 'string' ? req.body.email.trim() || null : null;
+
+  const member = await prisma.member.update({
+    where: { id },
+    data: { phone, email: email || undefined },
+    select: { id: true, fullName: true, role: true, pictureUrl: true, phone: true, email: true, category: true, tipo: true },
+  });
+
+  res.json({ member });
+});
+
 // DELETE /members/:id
 router.delete('/:id', requireAuth, async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'No autenticado' });

@@ -272,21 +272,25 @@ export default function AjustesPage() {
 
   /* ── Bloque: UserProfile de Clerk ─────────────────────────────────── */
   const userProfileBlock = (
-    <UserProfile
-      appearance={{
-        elements: {
-          rootBox: { width: '100%' },
-          card: {
-            width: '100%',
-            boxShadow: 'none',
-            border: '1px solid rgba(0,0,0,0.07)',
-            borderRadius: '1rem',
+    <div className="w-full min-w-0 overflow-hidden">
+      <UserProfile
+        appearance={{
+          elements: {
+            rootBox: { width: '100%', maxWidth: '100%' },
+            card: {
+              width: '100%',
+              maxWidth: '100%',
+              boxShadow: 'none',
+              border: '1px solid rgba(0,0,0,0.07)',
+              borderRadius: '1rem',
+            },
+            navbar: { display: 'none' },
+            pageScrollBox: { padding: '16px' },
+            cardBox: { width: '100%', maxWidth: '100%' },
           },
-          navbar: { display: 'none' },
-          pageScrollBox: { padding: '16px' },
-        },
-      }}
-    />
+        }}
+      />
+    </div>
   );
 
   /* ── Bloque: Ayuda + Cerrar sesión ────────────────────────────────── */
@@ -572,7 +576,7 @@ export default function AjustesPage() {
       ══════════════════════════════════════════════════════════════ */}
       <div className={`hidden lg:grid lg:gap-8 px-6 pb-8 items-start ${isAdmin ? 'lg:grid-cols-2' : 'max-w-xl'}`}>
         {/* Columna izquierda: Mi perfil */}
-        <div className="space-y-4">
+        <div className="space-y-4 min-w-0 overflow-hidden">
           <SectionHeader label="Mi perfil" icon={User} />
           {userProfileBlock}
           {helpAndSignOut}

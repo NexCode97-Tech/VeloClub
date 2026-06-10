@@ -436,4 +436,33 @@ router.post('/fix-member-names', requireAuth, requireSuperadmin, async (_req, re
   res.json({ ok: true, total: members.length, updated });
 });
 
+// POST /superadmin/backfill-author-clerk-ids — rellena authorClerkId en posts/comentarios viejos
+router.post('/backfill-author-clerk-ids', requireAuth, requireSuperadmin, async (_req, res) => {
+  const members = await prisma.member.findMany({
+    where: { clerkId: { not: null } },
+    select: { clerkId: true, fullName: true },
+  });
+
+  let updatedPosts    = 0;
+  let updatedComments = 0;
+
+  for (const m of members) {
+    if (!m.clerkId) continue;
+
+    const rPosts = await prisma.post.updateMany({
+      where: { authorName: m.fullName, authorClerkId: null },
+      data:  { authorClerkId: m.clerkId },
+    });
+    updatedPosts += rPosts.count;
+
+    const rComments = await prisma.postComment.updateMany({
+      where: { authorName: m.fullName, authorClerkId: null },
+      data:  { authorClerkId: m.clerkId },
+    });
+    updatedComments += rComments.count;
+  }
+
+  res.json({ ok: true, updatedPosts, updatedComments });
+});
+
 export default router;

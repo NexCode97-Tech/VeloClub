@@ -16,6 +16,8 @@ import {
   RefreshCw,
   ChevronLeft,
   ChevronRight,
+  Bell,
+  Search,
 } from 'lucide-react';
 import { IconHome, IconUsers, IconCalendar, IconStatistics, IconClub, IconFinanzas, IconUbicacion, IconAsistencias, IconResultados } from '@/components/ui/custom-icons';
 
@@ -293,8 +295,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           style={{
             borderBottom: '1px solid rgba(0,0,0,0.06)',
             minHeight: 58,
-            padding: collapsed ? '0 16px' : '0 16px',
-            justifyContent: 'flex-start',
+            padding: '0 12px',
+            gap: 8,
           }}
         >
           <Image
@@ -305,6 +307,24 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             className="object-contain shrink-0"
             style={{ borderRadius: 7 }}
           />
+          {!collapsed && (
+            <div className="flex items-center gap-1 ml-auto">
+              <button
+                className="flex items-center justify-center rounded-lg transition-colors hover:bg-secondary"
+                style={{ width: 28, height: 28, color: '#8E87A8' }}
+                title="Buscar"
+              >
+                <Search className="w-[14px] h-[14px]" />
+              </button>
+              <button
+                className="relative flex items-center justify-center rounded-lg transition-colors hover:bg-secondary"
+                style={{ width: 28, height: 28, color: '#8E87A8' }}
+                title="Notificaciones"
+              >
+                <Bell className="w-[14px] h-[14px]" />
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Nav items */}

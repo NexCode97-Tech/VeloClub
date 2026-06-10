@@ -112,6 +112,7 @@ const STUDENT_NAV = [
   { href: '/dashboard',            label: 'Inicio',        icon: IconHome},
   { href: '/dashboard/logros',     label: 'Resultados',    icon: IconResultados },
   { href: '/dashboard/calendario', label: 'Calendario',    icon: IconCalendar },
+  { href: '/dashboard/sedes',      label: 'Sedes',         icon: IconUbicacion },
   { href: '/dashboard/pagos',      label: 'Mis Pagos',     icon: CreditCard },
   { href: '/dashboard/perfil',     label: 'Mi Perfil',     icon: UserCircle },
   { href: '/dashboard/ajustes',    label: 'Ajustes',       icon: Settings },
@@ -189,7 +190,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         setUserPicture(res.user?.picture ?? null);
 
         if (userRole === 'STUDENT') {
-          const STUDENT_ALLOWED = ['/dashboard', '/dashboard/logros', '/dashboard/calendario', '/dashboard/pagos', '/dashboard/mas', '/dashboard/perfil', '/dashboard/ajustes'];
+          const STUDENT_ALLOWED = ['/dashboard', '/dashboard/logros', '/dashboard/calendario', '/dashboard/sedes', '/dashboard/pagos', '/dashboard/mas', '/dashboard/perfil', '/dashboard/ajustes'];
           const allowed = STUDENT_ALLOWED.some(r => pathname === r || pathname.startsWith(r + '/'));
           if (!allowed) { router.replace('/dashboard'); return; }
         }

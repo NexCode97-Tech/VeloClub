@@ -71,6 +71,7 @@ export default function SedesPage() {
   const [locations, setLocations] = useState<Location[]>([]);
   const [loading, setLoading] = useState(true);
   const [clubDepartment, setClubDepartment] = useState<string | null>(null);
+  const [canManage, setCanManage] = useState(false);
 
   // Dialog crear/editar
   const [open, setOpen] = useState(false);
@@ -110,12 +111,17 @@ export default function SedesPage() {
 
   async function load() {
     const token = await getToken();
-    const [locRes, clubRes] = await Promise.allSettled([
+    const [locRes, clubRes, meRes] = await Promise.allSettled([
       apiFetch<{ locations: Location[] }>('/locations', { token }),
       apiFetch<{ club: { department?: string } }>('/clubs/settings', { token }),
+      apiFetch<{ status: string; user?: { role: string } }>('/me', { token }),
     ]);
     if (locRes.status === 'fulfilled') setLocations(locRes.value.locations);
     if (clubRes.status === 'fulfilled') setClubDepartment(clubRes.value.club.department ?? null);
+    if (meRes.status === 'fulfilled') {
+      const r = meRes.value.user?.role ?? '';
+      setCanManage(r === 'ADMIN' || r === 'COACH');
+    }
     setLoading(false);
   }
 
@@ -193,14 +199,16 @@ export default function SedesPage() {
           </h1>
           <p className="text-xs text-muted-foreground mt-0.5">Lugares de entrenamiento del club</p>
         </div>
-        <button
-          onClick={openNew}
-          className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold text-white"
-          style={{ background: 'linear-gradient(135deg, #7C3AED 0%, #4361EE 100%)' }}
-        >
-          <Plus className="w-4 h-4" />
-          <span className="hidden sm:inline">Nueva sede</span>
-        </button>
+        {canManage && (
+          <button
+            onClick={openNew}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold text-white"
+            style={{ background: 'linear-gradient(135deg, #7C3AED 0%, #4361EE 100%)' }}
+          >
+            <Plus className="w-4 h-4" />
+            <span className="hidden sm:inline">Nueva sede</span>
+          </button>
+        )}
       </div>
 
       {/* Dialog crear/editar sede */}
@@ -376,14 +384,16 @@ export default function SedesPage() {
                       )}
                     </div>
                   </div>
-                  <div className="flex gap-1 shrink-0 ml-2">
-                    <Button size="sm" variant="ghost" onClick={() => openEdit(loc)}>
-                      <Pencil className="w-4 h-4" />
-                    </Button>
-                    <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive" onClick={() => handleDelete(loc.id)}>
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
+                  {canManage && (
+                    <div className="flex gap-1 shrink-0 ml-2">
+                      <Button size="sm" variant="ghost" onClick={() => openEdit(loc)}>
+                        <Pencil className="w-4 h-4" />
+                      </Button>
+                      <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive" onClick={() => handleDelete(loc.id)}>
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  )}
                 </div>
                 {loc.latitude && loc.longitude && (
                   <div className="border-t border-border overflow-hidden" style={{ height: 200 }}>

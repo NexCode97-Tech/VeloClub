@@ -4,16 +4,16 @@ import type { Variants } from 'framer-motion';
 export const EASE     = [0.23, 1, 0.32, 1]  as [number, number, number, number];
 export const EASE_IN  = [0.55, 0, 1, 0.45] as [number, number, number, number];
 
-// Contenedor que escalonea sus hijos
+// Contenedor — sin animación de entrada (igual que el módulo Inicio)
 export const stagger: Variants = {
   hidden: {},
-  show:   { transition: { staggerChildren: 0.12, delayChildren: 0.08 } },
+  show:   {},
 };
 
-// Cada card / ítem individual
+// Cada card / sección — sin animación de entrada
 export const cardVariant: Variants = {
-  hidden: { opacity: 0, y: 10 },
-  show:   { opacity: 1, y: 0,  transition: { duration: 0.28, ease: EASE } },
+  hidden: {},
+  show:   {},
 };
 
 // Para formularios / paneles que expanden verticalmente

@@ -57,10 +57,10 @@ type FeedScope = 'public' | 'private';
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 const roleLabels: Record<string, string> = {
-  SUPERADMIN: 'SUPER ADMIN',
-  ADMIN:      'ADMINISTRADOR',
-  COACH:      'ENTRENADOR',
-  STUDENT:    'DEPORTISTA',
+  SUPERADMIN: 'Super Admin',
+  ADMIN:      'Administrador',
+  COACH:      'Entrenador',
+  STUDENT:    'Deportista',
 };
 
 const roleColors: Record<string, { text: string; bg: string }> = {
@@ -384,7 +384,7 @@ function PostCard({
             </a>
           ) : (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={post.imageUrl} alt="Publicación" className="w-full object-cover" style={{ maxHeight: 360 }} />
+            <img src={post.imageUrl} alt="Publicación" className="w-full object-contain" style={{ maxHeight: 600, background: '#f8f8f8' }} />
           )}
         </div>
       )}

@@ -419,13 +419,13 @@ export default function ClubProfilePage() {
         {/* Info del club */}
         <div className="px-5 pb-5 max-w-4xl mx-auto w-full">
           {/* Logo — sobresale el banner, mismo patrón que avatar de perfil */}
-          <div className="flex items-end justify-between" style={{ marginTop: -60 }}>
+          <div className="flex items-end justify-between" style={{ marginTop: -75 }}>
             <div className="relative z-10">
-              {/* Mobile: 120px | Desktop: 140px */}
+              {/* Mobile: 150px | Desktop: 170px */}
               <div
-                className="rounded-full border-4 border-white overflow-hidden sm:w-[140px] sm:h-[140px]"
+                className="rounded-full border-4 border-white overflow-hidden sm:w-[170px] sm:h-[170px]"
                 style={{
-                  width: 120, height: 120,
+                  width: 150, height: 150,
                   boxShadow: '0 4px 16px rgba(67,97,238,0.22)',
                   background: club.logoUrl ? undefined : 'linear-gradient(135deg,#4361EE,#7C3AED)',
                 }}>

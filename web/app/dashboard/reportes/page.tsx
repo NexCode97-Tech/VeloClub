@@ -281,147 +281,6 @@ export default function ReportesPage() {
           })}
         </motion.div>
 
-        {/* Asistencia */}
-        <motion.div variants={cardVariant} className="bg-white border border-border rounded-xl p-4">
-          <p className="mb-3" style={{ fontSize: 11, fontWeight: 600, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-            Asistencia
-          </p>
-
-          {/* Gráfico de rango si hay fecha seleccionada, sino gráfico mensual */}
-          {selectedDateRange ? (
-            <div>
-              <p className="text-[10px] text-muted-foreground mb-3">
-                {format(selectedDateRange.start, 'd MMM', { locale: es })} — {format(selectedDateRange.end, 'd MMM yyyy', { locale: es })}
-                {' · '}
-                <button
-                  onClick={() => { setSelectedDateRange(null); setSelectedMonth(null); }}
-                  className="text-purple-500 hover:text-purple-700 transition-colors cursor-pointer underline-offset-2 hover:underline"
-                >
-                  limpiar
-                </button>
-              </p>
-              {loadingRange ? (
-                <div className="flex items-center justify-center h-[140px]">
-                  <div className="w-5 h-5 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: ACCENT, borderTopColor: 'transparent' }} />
-                </div>
-              ) : rangeData.every(d => d.presentes === 0) ? (
-                <div className="flex flex-col items-center py-8 gap-2">
-                  <CalendarCheck className="w-8 h-8 text-muted-foreground/30" />
-                  <p className="text-[12px] text-muted-foreground">Sin asistencia en el rango seleccionado</p>
-                </div>
-              ) : (() => {
-                const maxPres = Math.max(...rangeData.map(d => d.presentes), 1);
-                const step = rangeData.length > 20 ? Math.ceil(rangeData.length / 10) : 1;
-                const chartData = rangeData.map((d, i) => ({
-                  date: i % step === 0 ? d.date.slice(5) : '',
-                  dateLabel: d.date.slice(5),
-                  presentes: d.presentes,
-                }));
-                return (
-                  <ResponsiveContainer width="100%" height={140}>
-                    <BarChart data={chartData} barCategoryGap="15%" margin={{ top: 4, right: 4, left: -24, bottom: 0 }}>
-                      <XAxis dataKey="date" tick={{ fontSize: 9, fill: '#8E87A8', fontWeight: 600 }} axisLine={false} tickLine={false} />
-                      <YAxis allowDecimals={false} tick={{ fontSize: 10, fill: '#C4C2CF' }} axisLine={false} tickLine={false} />
-                      <Tooltip
-                        cursor={{ fill: 'rgba(67,97,238,0.06)' }}
-                        contentStyle={{ borderRadius: 10, border: '1px solid #E8E6F0', fontSize: 12, padding: '4px 10px' }}
-                        labelFormatter={(_, payload) => payload?.[0]?.payload?.dateLabel ?? ''}
-                        formatter={(v) => [Number(v ?? 0), 'Presentes']}
-                      />
-                      <Bar dataKey="presentes" radius={[4, 4, 0, 0]}>
-                        {chartData.map((entry, i) => (
-                          <Cell key={i} fill={entry.presentes === maxPres && entry.presentes > 0 ? ACCENT : `${ACCENT}55`} />
-                        ))}
-                      </Bar>
-                    </BarChart>
-                  </ResponsiveContainer>
-                );
-              })()}
-            </div>
-          ) : loading ? (
-            <div className="flex items-center justify-center h-[140px]">
-              <div className="w-5 h-5 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: ACCENT, borderTopColor: 'transparent' }} />
-            </div>
-          ) : monthlyAtt.every(m => m.presentes === 0) ? (
-            <div className="flex flex-col items-center py-8 gap-2">
-              <CalendarCheck className="w-8 h-8 text-muted-foreground/30" />
-              <p className="text-[12px] text-muted-foreground">Sin registros de asistencia</p>
-            </div>
-          ) : (
-            <>
-              <p className="text-[10px] text-muted-foreground mb-2">Últimos 6 meses</p>
-              <ResponsiveContainer width="100%" height={140}>
-                <BarChart data={monthlyAtt} barCategoryGap="25%" margin={{ top: 4, right: 4, left: -24, bottom: 0 }}>
-                  <XAxis dataKey="month" tick={{ fontSize: 11, fill: '#8E87A8', fontWeight: 600 }} axisLine={false} tickLine={false} />
-                  <YAxis allowDecimals={false} tick={{ fontSize: 10, fill: '#C4C2CF' }} axisLine={false} tickLine={false} />
-                  <Tooltip cursor={{ fill: 'rgba(67,97,238,0.06)' }} contentStyle={{ borderRadius: 10, border: '1px solid #E8E6F0', fontSize: 12, padding: '4px 10px' }} formatter={(v) => [Number(v ?? 0), 'Presentes']} />
-                  <Bar dataKey="presentes" radius={[6, 6, 0, 0]}>
-                    {monthlyAtt.map((_, i) => (
-                      <Cell key={i} fill={i === monthlyAtt.length - 1 ? ACCENT : `${ACCENT}55`} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            </>
-          )}
-        </motion.div>
-
-        {/* Distribución de pagos */}
-        <motion.div variants={cardVariant} className="bg-white border border-border rounded-xl p-4">
-          <p style={{ fontSize: 11, fontWeight: 600, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 16 }}>
-            Estado de pagos — {paymentPeriodLabel}
-          </p>
-          {loading ? (
-            <div className="flex items-center justify-center h-[120px]">
-              <div className="w-5 h-5 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: YELLOW, borderTopColor: 'transparent' }} />
-            </div>
-          ) : paymentDist.length === 0 ? (
-            <div className="flex flex-col items-center py-6 gap-2">
-              <CreditCard className="w-8 h-8 text-muted-foreground/30" />
-              <p className="text-[12px] text-muted-foreground">Sin registros de pagos este período</p>
-            </div>
-          ) : (
-            <>
-              <ResponsiveContainer width="100%" height={160}>
-                <PieChart>
-                  <Pie
-                    data={paymentDist}
-                    dataKey="value"
-                    nameKey="name"
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={45}
-                    outerRadius={68}
-                    paddingAngle={3}
-                  >
-                    {paymentDist.map((d, i) => (
-                      <Cell key={i} fill={d.color} />
-                    ))}
-                  </Pie>
-                  <Legend
-                    iconType="circle"
-                    iconSize={8}
-                    formatter={(v) => <span style={{ fontSize: 11, color: '#8E87A8' }}>{v}</span>}
-                  />
-                  <Tooltip
-                    contentStyle={{ borderRadius: 10, border: '1px solid #E8E6F0', fontSize: 12, padding: '4px 10px' }}
-                    formatter={(v) => [Number(v ?? 0), 'pagos']}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-              {/* Resumen numérico */}
-              <div className="flex gap-2 mt-2">
-                {paymentDist.map(d => (
-                  <div key={d.name} className="flex-1 rounded-xl px-3 py-2 text-center" style={{ background: `${d.color}12` }}>
-                    <p className="text-[18px] font-bold" style={{ color: d.color, fontFamily: 'inherit' }}>{d.value}</p>
-                    <p className="text-[10px] font-semibold" style={{ color: d.color }}>{d.name}</p>
-                  </div>
-                ))}
-              </div>
-            </>
-          )}
-        </motion.div>
-
         {/* Tendencia de ingresos */}
         <motion.div variants={cardVariant} className="bg-white border border-border rounded-xl p-4">
           <div className="flex items-baseline gap-1.5 mb-4">
@@ -476,6 +335,149 @@ export default function ReportesPage() {
               </AreaChart>
             </ResponsiveContainer>
           )}
+        </motion.div>
+
+        {/* Asistencia + Distribución de pagos — fila en desktop, columna en móvil */}
+        <motion.div variants={cardVariant} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+          {/* Asistencia */}
+          <div className="bg-white border border-border rounded-xl p-4">
+            <p className="mb-3" style={{ fontSize: 11, fontWeight: 600, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+              Asistencia
+            </p>
+            {selectedDateRange ? (
+              <div>
+                <p className="text-[10px] text-muted-foreground mb-3">
+                  {format(selectedDateRange.start, 'd MMM', { locale: es })} — {format(selectedDateRange.end, 'd MMM yyyy', { locale: es })}
+                  {' · '}
+                  <button
+                    onClick={() => { setSelectedDateRange(null); setSelectedMonth(null); }}
+                    className="text-purple-500 hover:text-purple-700 transition-colors cursor-pointer underline-offset-2 hover:underline"
+                  >
+                    limpiar
+                  </button>
+                </p>
+                {loadingRange ? (
+                  <div className="flex items-center justify-center h-[140px]">
+                    <div className="w-5 h-5 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: ACCENT, borderTopColor: 'transparent' }} />
+                  </div>
+                ) : rangeData.every(d => d.presentes === 0) ? (
+                  <div className="flex flex-col items-center py-8 gap-2">
+                    <CalendarCheck className="w-8 h-8 text-muted-foreground/30" />
+                    <p className="text-[12px] text-muted-foreground">Sin asistencia en el rango seleccionado</p>
+                  </div>
+                ) : (() => {
+                  const maxPres = Math.max(...rangeData.map(d => d.presentes), 1);
+                  const step = rangeData.length > 20 ? Math.ceil(rangeData.length / 10) : 1;
+                  const chartData = rangeData.map((d, i) => ({
+                    date: i % step === 0 ? d.date.slice(5) : '',
+                    dateLabel: d.date.slice(5),
+                    presentes: d.presentes,
+                  }));
+                  return (
+                    <ResponsiveContainer width="100%" height={160}>
+                      <BarChart data={chartData} barCategoryGap="15%" margin={{ top: 4, right: 4, left: -24, bottom: 0 }}>
+                        <XAxis dataKey="date" tick={{ fontSize: 9, fill: '#8E87A8', fontWeight: 600 }} axisLine={false} tickLine={false} />
+                        <YAxis allowDecimals={false} tick={{ fontSize: 10, fill: '#C4C2CF' }} axisLine={false} tickLine={false} />
+                        <Tooltip
+                          cursor={{ fill: 'rgba(67,97,238,0.06)' }}
+                          contentStyle={{ borderRadius: 10, border: '1px solid #E8E6F0', fontSize: 12, padding: '4px 10px' }}
+                          labelFormatter={(_, payload) => payload?.[0]?.payload?.dateLabel ?? ''}
+                          formatter={(v) => [Number(v ?? 0), 'Presentes']}
+                        />
+                        <Bar dataKey="presentes" radius={[4, 4, 0, 0]}>
+                          {chartData.map((entry, i) => (
+                            <Cell key={i} fill={entry.presentes === maxPres && entry.presentes > 0 ? ACCENT : `${ACCENT}55`} />
+                          ))}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  );
+                })()}
+              </div>
+            ) : loading ? (
+              <div className="flex items-center justify-center h-[140px]">
+                <div className="w-5 h-5 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: ACCENT, borderTopColor: 'transparent' }} />
+              </div>
+            ) : monthlyAtt.every(m => m.presentes === 0) ? (
+              <div className="flex flex-col items-center py-8 gap-2">
+                <CalendarCheck className="w-8 h-8 text-muted-foreground/30" />
+                <p className="text-[12px] text-muted-foreground">Sin registros de asistencia</p>
+              </div>
+            ) : (
+              <>
+                <p className="text-[10px] text-muted-foreground mb-2">Últimos 6 meses</p>
+                <ResponsiveContainer width="100%" height={160}>
+                  <BarChart data={monthlyAtt} barCategoryGap="25%" margin={{ top: 4, right: 4, left: -24, bottom: 0 }}>
+                    <XAxis dataKey="month" tick={{ fontSize: 11, fill: '#8E87A8', fontWeight: 600 }} axisLine={false} tickLine={false} />
+                    <YAxis allowDecimals={false} tick={{ fontSize: 10, fill: '#C4C2CF' }} axisLine={false} tickLine={false} />
+                    <Tooltip cursor={{ fill: 'rgba(67,97,238,0.06)' }} contentStyle={{ borderRadius: 10, border: '1px solid #E8E6F0', fontSize: 12, padding: '4px 10px' }} formatter={(v) => [Number(v ?? 0), 'Presentes']} />
+                    <Bar dataKey="presentes" radius={[6, 6, 0, 0]}>
+                      {monthlyAtt.map((_, i) => (
+                        <Cell key={i} fill={i === monthlyAtt.length - 1 ? ACCENT : `${ACCENT}55`} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </>
+            )}
+          </div>
+
+          {/* Distribución de pagos */}
+          <div className="bg-white border border-border rounded-xl p-4">
+            <p style={{ fontSize: 11, fontWeight: 600, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 16 }}>
+              Estado de pagos — {paymentPeriodLabel}
+            </p>
+            {loading ? (
+              <div className="flex items-center justify-center h-[160px]">
+                <div className="w-5 h-5 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: YELLOW, borderTopColor: 'transparent' }} />
+              </div>
+            ) : paymentDist.length === 0 ? (
+              <div className="flex flex-col items-center py-6 gap-2">
+                <CreditCard className="w-8 h-8 text-muted-foreground/30" />
+                <p className="text-[12px] text-muted-foreground">Sin registros de pagos este período</p>
+              </div>
+            ) : (
+              <>
+                <ResponsiveContainer width="100%" height={160}>
+                  <PieChart>
+                    <Pie
+                      data={paymentDist}
+                      dataKey="value"
+                      nameKey="name"
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={45}
+                      outerRadius={68}
+                      paddingAngle={3}
+                    >
+                      {paymentDist.map((d, i) => (
+                        <Cell key={i} fill={d.color} />
+                      ))}
+                    </Pie>
+                    <Legend
+                      iconType="circle"
+                      iconSize={8}
+                      formatter={(v) => <span style={{ fontSize: 11, color: '#8E87A8' }}>{v}</span>}
+                    />
+                    <Tooltip
+                      contentStyle={{ borderRadius: 10, border: '1px solid #E8E6F0', fontSize: 12, padding: '4px 10px' }}
+                      formatter={(v) => [Number(v ?? 0), 'pagos']}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+                <div className="flex gap-2 mt-2">
+                  {paymentDist.map(d => (
+                    <div key={d.name} className="flex-1 rounded-xl px-3 py-2 text-center" style={{ background: `${d.color}12` }}>
+                      <p className="text-[18px] font-bold" style={{ color: d.color, fontFamily: 'inherit' }}>{d.value}</p>
+                      <p className="text-[10px] font-semibold" style={{ color: d.color }}>{d.name}</p>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+
         </motion.div>
 
       </motion.div>

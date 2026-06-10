@@ -185,3 +185,18 @@
 button {
   cursor: pointer !important;
 }
+
+/* Clerk UserProfile — eliminar altura mínima forzada */
+.cl-card,
+.cl-cardBox,
+.cl-scrollBox,
+.cl-pageScrollBox,
+.cl-profilePage,
+.cl-profileSection,
+.cl-rootBox {
+  min-height: unset !important;
+  height: auto !important;
+}
+.cl-scrollBox {
+  overflow: visible !important;
+}

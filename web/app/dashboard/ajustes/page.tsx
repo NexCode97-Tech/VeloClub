@@ -280,17 +280,13 @@ export default function AjustesPage() {
             card: {
               width: '100%',
               maxWidth: '100%',
-              minHeight: 'unset',
               boxShadow: 'none',
               border: '1px solid rgba(0,0,0,0.07)',
               borderRadius: '1rem',
             },
             navbar: { display: 'none' },
-            pageScrollBox: { padding: '16px', paddingBottom: '4px', minHeight: 'unset' },
-            cardBox: { width: '100%', maxWidth: '100%', minHeight: 'unset' },
-            scrollBox: { minHeight: 'unset' },
-            profileSection__connectedAccounts: { display: 'none' },
-            profileSectionContent__connectedAccounts: { display: 'none' },
+            pageScrollBox: { padding: '16px' },
+            cardBox: { width: '100%', maxWidth: '100%' },
           },
         }}
       />

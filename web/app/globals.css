@@ -186,7 +186,7 @@ button {
   cursor: pointer !important;
 }
 
-/* Clerk UserProfile — eliminar altura mínima forzada */
+/* Clerk UserProfile — eliminar altura mínima forzada y bordes grises */
 .cl-card,
 .cl-cardBox,
 .cl-scrollBox,
@@ -199,4 +199,10 @@ button {
 }
 .cl-scrollBox {
   overflow: visible !important;
+}
+.cl-cardBox {
+  background: transparent !important;
+  box-shadow: none !important;
+  border-radius: 1rem !important;
+  padding: 0 !important;
 }

@@ -333,7 +333,7 @@ export default function AjustesPage() {
             <Label className="text-[12px]">Nombre de usuario</Label>
             <Input
               value={displayName} readOnly
-              className="text-muted-foreground bg-muted/30 cursor-not-allowed text-sm"
+              className="text-muted-foreground bg-muted/30 cursor-not-allowed text-sm h-12"
             />
           </div>
           <div className="space-y-1.5">
@@ -350,7 +350,7 @@ export default function AjustesPage() {
           <div className="relative">
             <Input
               value={displayEmail} readOnly
-              className="text-muted-foreground bg-muted/30 cursor-not-allowed pr-10 text-sm"
+              className="text-muted-foreground bg-muted/30 cursor-not-allowed pr-10 text-sm h-12"
             />
             <Lock className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground/40" />
           </div>
@@ -413,7 +413,7 @@ export default function AjustesPage() {
     <div className="bg-white border border-border rounded-2xl p-5 space-y-5">
       {/* Logo */}
       <div className="flex items-center gap-4">
-        <div className="relative w-20 h-20 rounded-2xl border border-border overflow-hidden flex items-center justify-center bg-secondary shrink-0">
+        <div className="relative w-20 h-20 rounded-full border border-border overflow-hidden flex items-center justify-center bg-secondary shrink-0">
           {logoSrc
             // eslint-disable-next-line @next/next/no-img-element
             ? <img src={logoSrc} alt="Logo" className="w-full h-full object-cover" />

@@ -52,6 +52,7 @@ export default function ReportesPage() {
 
   // ── Estado ──
   const [loading, setLoading] = useState(true);
+  const [barsReady, setBarsReady] = useState(false);
 
   // KPIs
   const [totalMembers, setTotalMembers]   = useState<number | null>(null);
@@ -89,6 +90,7 @@ export default function ReportesPage() {
   const loadReportes = useCallback(async () => {
     if (!isSignedIn) return;
     setLoading(true);
+    setBarsReady(false);
     try {
       const token       = await session?.getToken({ skipCache: true });
       const now         = new Date();
@@ -151,6 +153,7 @@ export default function ReportesPage() {
       }
     } catch { /* silencioso */ } finally {
       setLoading(false);
+      setTimeout(() => setBarsReady(true), 60);
     }
   }, [isSignedIn, session, activeYear, activeMonthNum]);
 
@@ -383,13 +386,32 @@ export default function ReportesPage() {
                     />
                   </PieChart>
                 </ResponsiveContainer>
-                <div className="flex gap-2 mt-2">
-                  {paymentDist.map(d => (
-                    <div key={d.name} className="flex-1 rounded-xl px-3 py-2 text-center" style={{ background: `${d.color}12` }}>
-                      <p className="text-[18px] font-bold" style={{ color: d.color, fontFamily: 'inherit' }}>{d.value}</p>
-                      <p className="text-[10px] font-semibold" style={{ color: d.color }}>{d.name}</p>
-                    </div>
-                  ))}
+                {/* Barras de porcentaje horizontales */}
+                <div className="flex flex-col gap-2 mt-3">
+                  {(() => {
+                    const total = paymentDist.reduce((s, d) => s + d.value, 0);
+                    return paymentDist.map(d => {
+                      const pct = total > 0 ? Math.round((d.value / total) * 100) : 0;
+                      return (
+                        <div key={d.name}>
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-[11px] font-semibold" style={{ color: d.color }}>{d.name}</span>
+                            <span className="text-[11px] font-bold" style={{ color: d.color }}>{d.value} · {pct}%</span>
+                          </div>
+                          <div className="w-full rounded-full overflow-hidden" style={{ height: 7, background: `${d.color}18` }}>
+                            <div
+                              className="h-full rounded-full"
+                              style={{
+                                width: barsReady ? `${pct}%` : '0%',
+                                background: d.color,
+                                transition: 'width 0.9s cubic-bezier(0.23,1,0.32,1)',
+                              }}
+                            />
+                          </div>
+                        </div>
+                      );
+                    });
+                  })()}
                 </div>
               </>
             )}

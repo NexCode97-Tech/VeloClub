@@ -121,3 +121,16 @@ Actualizar al final de cada sesión o cuando se complete un bloque de trabajo im
   - Agregar env var `CRON_SECRET` en Railway
 - Verificar que la migración de `monthlyFee` se aplique correctamente en el próximo deploy
 - Plan 3 — Asistencia: módulo pendiente de implementar
+
+## Sesión 2026-06-10
+
+**Cambios (commit 71c1771):**
+- Fix global de animaciones: eliminado scale de entrada en todos los módulos (cargan como Inicio)
+- Badge de rol en sentence case; imágenes de posts completas (object-contain)
+- Mi Perfil: avatar 150px + modal para editar teléfono/correo (PUT /members/:id)
+- Club: logo 150/170px, botón Seguir visible para admin
+- Ajustes: rediseño desktop en dos columnas (Mi perfil | Mi club), ayuda y cerrar sesión en Mi perfil
+- Social: Post/PostComment guardan authorClerkId (migración 20260610150000); clic en avatar/nombre redirige al perfil del autor (posts nuevos)
+- Corregido error de sintaxis en perfil/page.tsx que rompía el build
+
+**Pendiente:** Plan 3 (Asistencia) · trial 15 días (plan) · lightbox tab Fotos en Mi Perfil

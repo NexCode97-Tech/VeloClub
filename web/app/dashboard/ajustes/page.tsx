@@ -285,8 +285,10 @@ export default function AjustesPage() {
               borderRadius: '1rem',
             },
             navbar: { display: 'none' },
-            pageScrollBox: { padding: '16px' },
+            pageScrollBox: { padding: '16px', paddingBottom: '8px' },
             cardBox: { width: '100%', maxWidth: '100%' },
+            profileSection__connectedAccounts: { display: 'none' },
+            profileSectionContent__connectedAccounts: { display: 'none' },
           },
         }}
       />

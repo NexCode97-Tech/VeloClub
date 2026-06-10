@@ -394,7 +394,7 @@ export default function MiembrosPage() {
               return (
                 <motion.button
                   key={s.label}
-                  variants={{ hidden: { opacity: 0, y: 10, scale: 0.97 }, show: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.22, ease: EASE_OUT } } }}
+                  variants={{ hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0, transition: { duration: 0.22, ease: EASE_OUT } } }}
                   whileTap={reducedMotion ? {} : { scale: 0.97 }}
                   onClick={() => setRoleFilter(s.filter)}
                   className="rounded-xl md:rounded-2xl py-3 md:py-5 flex flex-col items-center justify-center w-full cursor-pointer transition-all text-center"
@@ -514,8 +514,8 @@ export default function MiembrosPage() {
             </div>
           ) : filtered.length === 0 ? (
             <motion.div
-              initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.28, ease: EASE_OUT }}
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+              transition={{ duration: 0.22, ease: EASE_OUT }}
               className="flex flex-col items-center justify-center py-32 bg-white rounded-2xl"
               style={{ border: '1px solid rgba(120,80,200,0.08)' }}
             >
@@ -548,7 +548,7 @@ export default function MiembrosPage() {
                 return (
                   <motion.div
                     key={m.id}
-                    variants={{ hidden: { opacity: 0, y: 18, scale: 0.97 }, show: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.38, ease: EASE_OUT } } }}
+                    variants={{ hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0, transition: { duration: 0.25, ease: EASE_OUT } } }}
                     whileHover={reducedMotion ? {} : { y: -3, boxShadow: '0 12px 40px rgba(124,58,237,0.14)', transition: { duration: 0.22, ease: EASE_OUT } }}
                     className="bg-white rounded-2xl overflow-hidden flex flex-col cursor-default"
                     style={{

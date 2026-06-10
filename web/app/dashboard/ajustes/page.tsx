@@ -280,13 +280,15 @@ export default function AjustesPage() {
             card: {
               width: '100%',
               maxWidth: '100%',
+              minHeight: 'unset',
               boxShadow: 'none',
               border: '1px solid rgba(0,0,0,0.07)',
               borderRadius: '1rem',
             },
             navbar: { display: 'none' },
-            pageScrollBox: { padding: '16px', paddingBottom: '8px' },
-            cardBox: { width: '100%', maxWidth: '100%' },
+            pageScrollBox: { padding: '16px', paddingBottom: '4px', minHeight: 'unset' },
+            cardBox: { width: '100%', maxWidth: '100%', minHeight: 'unset' },
+            scrollBox: { minHeight: 'unset' },
             profileSection__connectedAccounts: { display: 'none' },
             profileSectionContent__connectedAccounts: { display: 'none' },
           },
@@ -574,19 +576,19 @@ export default function AjustesPage() {
       </div>
 
       {/* ══════════════════════════════════════════════════════════════
-          DESKTOP (>= lg) — dos columnas side-by-side
+          DESKTOP (>= lg) — columna única centrada, perfil arriba / club abajo
       ══════════════════════════════════════════════════════════════ */}
-      <div className={`hidden lg:grid lg:gap-8 px-6 pb-8 items-start ${isAdmin ? 'lg:grid-cols-2' : 'max-w-xl'}`}>
-        {/* Columna izquierda: Mi perfil */}
-        <div className="space-y-4 min-w-0 overflow-hidden">
+      <div className="hidden lg:block px-6 pb-8 max-w-2xl space-y-8">
+        {/* Bloque: Mi perfil */}
+        <div className="space-y-4 min-w-0">
           <SectionHeader label="Mi perfil" icon={User} />
           {userProfileBlock}
           {helpAndSignOut}
         </div>
 
-        {/* Columna derecha: Mi club (solo admin) */}
+        {/* Bloque: Mi club (solo admin) */}
         {isAdmin && (
-          <div className="space-y-0">
+          <div className="space-y-4">
             <SectionHeader label="Mi club" icon={Settings2} />
             {clubCards}
           </div>

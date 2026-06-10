@@ -131,6 +131,8 @@ export default function LogrosPage() {
   const [role, setRole]             = useState('');
   const [myMemberId, setMyMemberId] = useState<string | null>(null);
 
+  const [roleLoaded, setRoleLoaded] = useState(false);
+
   const [compOpen, setCompOpen]     = useState(false);
   const [compForm, setCompForm]     = useState(emptyComp);
   const [savingComp, setSavingComp] = useState(false);
@@ -151,7 +153,7 @@ export default function LogrosPage() {
   const sessions     = (trainData?.sessions     ?? []) as TrainingSession[];
   const locations    = (locsData?.locations     ?? []) as Location[];
 
-  const loading = loadingComps || loadingTrain || loadingLocs;
+  const loading = loadingComps || loadingTrain || loadingLocs || !roleLoaded;
 
   useEffect(() => {
     getToken().then(async token => {
@@ -162,6 +164,7 @@ export default function LogrosPage() {
         const memberRes = await apiFetch<{ member: { id: string } }>('/members/me', { token }).catch(() => null);
         setMyMemberId(memberRes?.member.id ?? null);
       }
+      setRoleLoaded(true);
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

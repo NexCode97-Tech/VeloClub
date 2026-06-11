@@ -3,6 +3,7 @@ import { requireAuth } from '../auth/middleware';
 import { prisma } from '../db/client';
 import { z } from 'zod';
 import { v2 as cloudinary } from 'cloudinary';
+import { cacheGet, cacheSet, cacheDel } from '../lib/redis';
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME?.trim(),
@@ -27,8 +28,14 @@ const settingsSchema = z.object({
 // GET /clubs/settings
 router.get('/settings', requireAuth, async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'No autenticado' });
+  const clubId = req.user.clubId ?? '';
+  const cacheKey = `club:settings:${clubId}`;
+
+  const cached = await cacheGet<{ club: unknown }>(cacheKey);
+  if (cached) return res.json(cached);
+
   const club = await prisma.club.findUnique({
-    where: { id: req.user.clubId ?? '' },
+    where: { id: clubId },
     select: {
       id: true, name: true, city: true, department: true,
       logoUrl: true, coverUrl: true, verified: true,
@@ -37,6 +44,7 @@ router.get('/settings', requireAuth, async (req, res) => {
     },
   });
   if (!club) return res.status(404).json({ error: 'Club no encontrado' });
+  await cacheSet(cacheKey, { club }, 300); // 5 min
   res.json({ club });
 });
 
@@ -54,11 +62,14 @@ router.patch('/settings', requireAuth, async (req, res) => {
   if (parsed.data.department       !== undefined) data.department       = parsed.data.department;
   if (parsed.data.noAttendanceDays !== undefined) data.noAttendanceDays = parsed.data.noAttendanceDays;
 
+  const clubId = req.user.clubId ?? '';
   const club = await prisma.club.update({
-    where: { id: req.user.clubId ?? '' },
+    where: { id: clubId },
     data,
     select: { id: true, name: true, city: true, department: true, logoUrl: true, noAttendanceDays: true },
   });
+  await cacheDel(`club:settings:${clubId}`);
+  await cacheDel(`club:profile:${clubId}`);
   res.json({ club });
 });
 
@@ -90,6 +101,8 @@ router.post('/logo', requireAuth, async (req, res) => {
       select: { id: true, logoUrl: true },
     });
 
+    await cacheDel(`club:settings:${clubId}`);
+    await cacheDel(`club:profile:${clubId}`);
     res.json({ club });
   } catch (err) {
     const msg = err instanceof Error ? err.message : JSON.stringify(err);
@@ -112,6 +125,8 @@ router.delete('/logo', requireAuth, async (req, res) => {
     where: { id: clubId },
     data:  { logoUrl: null, logoPublicId: null },
   });
+  await cacheDel(`club:settings:${clubId}`);
+  await cacheDel(`club:profile:${clubId}`);
   res.json({ ok: true });
 });
 
@@ -120,6 +135,10 @@ router.get('/profile', requireAuth, async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'No autenticado' });
 
   const clubId = req.user.clubId ?? '';
+  const cacheKey = `club:profile:${clubId}`;
+  const cached = await cacheGet<unknown>(cacheKey);
+  if (cached) return res.json(cached);
+
   const club = await prisma.club.findUnique({
     where: { id: clubId },
     select: {
@@ -150,7 +169,9 @@ router.get('/profile', requireAuth, async (req, res) => {
     orderBy: { createdAt: 'asc' },
   });
 
-  res.json({ club, members, followersCount, mainLocation: mainLocation ?? null });
+  const payload = { club, members, followersCount, mainLocation: mainLocation ?? null };
+  await cacheSet(cacheKey, payload, 300); // 5 min
+  res.json(payload);
 });
 
 // PATCH /clubs/contact — actualizar info de contacto (solo ADMIN)
@@ -168,6 +189,7 @@ router.patch('/contact', requireAuth, async (req, res) => {
     },
     select: { phone: true, email: true },
   });
+  await cacheDel(`club:profile:${clubId}`);
   res.json(updated);
 });
 
@@ -183,6 +205,7 @@ router.patch('/description', requireAuth, async (req, res) => {
     data: { description: description?.trim() || null },
     select: { description: true },
   });
+  await cacheDel(`club:profile:${clubId}`);
   res.json({ description: updated.description });
 });
 
@@ -212,6 +235,8 @@ router.post('/cover', requireAuth, async (req, res) => {
       select: { coverUrl: true },
     });
 
+    await cacheDel(`club:settings:${clubId}`);
+    await cacheDel(`club:profile:${clubId}`);
     res.json({ coverUrl: club.coverUrl });
   } catch (err) {
     const msg = err instanceof Error ? err.message : JSON.stringify(err);

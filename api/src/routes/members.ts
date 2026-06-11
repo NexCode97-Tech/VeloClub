@@ -6,6 +6,7 @@ import { requireAuth } from '../auth/middleware';
 import { prisma } from '../db/client';
 import { emitToClub } from '../lib/sse';
 import { addToAllowlist, removeFromAllowlist, revokeClerkAccess, revokeClerkSessions } from '../lib/clerk-allowlist';
+import { cacheGet, cacheSet, cacheDel } from '../lib/redis';
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME?.trim(),
@@ -49,11 +50,18 @@ function toTitleCase(str: string): string {
 // GET /members
 router.get('/', requireAuth, async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'No autenticado' });
+  const clubId = req.user.clubId ?? '';
+  const cacheKey = `members:${clubId}`;
+
+  const cached = await cacheGet<{ members: unknown[] }>(cacheKey);
+  if (cached) return res.json(cached);
+
   const members = await prisma.member.findMany({
-    where: { clubId: req.user.clubId ?? '' },
+    where: { clubId },
     include: { locations: { include: { location: true } } },
     orderBy: { fullName: 'asc' },
   });
+  await cacheSet(cacheKey, { members }, 300); // 5 min
   res.json({ members });
 });
 
@@ -147,6 +155,7 @@ router.post('/', requireAuth, async (req, res) => {
     try { await addToAllowlist(member.email); } catch { /* ya existe o error de Clerk */ }
   }
 
+  await cacheDel(`members:${req.user.clubId ?? ''}`);
   emitToClub(req.user.clubId ?? '', 'members');
   res.status(201).json({ member });
 });
@@ -195,6 +204,7 @@ router.put('/:id', requireAuth, async (req, res) => {
     if (roleCambio) await revokeClerkSessions(member.clerkId);
   }
 
+  await cacheDel(`members:${req.user.clubId ?? ''}`);
   emitToClub(req.user.clubId ?? '', 'members');
   res.json({ member });
 });
@@ -240,6 +250,7 @@ router.delete('/:id', requireAuth, async (req, res) => {
   }
 
   await prisma.member.delete({ where: { id } });
+  await cacheDel(`members:${req.user.clubId ?? ''}`);
   emitToClub(req.user.clubId ?? '', 'members');
   res.json({ ok: true });
 });

@@ -2,6 +2,7 @@ import { Router, Request } from 'express';
 import { z } from 'zod';
 import { requireAuth } from '../auth/middleware';
 import { prisma } from '../db/client';
+import { cacheGet, cacheSet, cacheDel } from '../lib/redis';
 
 const router = Router();
 
@@ -19,10 +20,17 @@ function getId(req: Request): string {
 // GET /locations
 router.get('/', requireAuth, async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'No autenticado' });
+  const clubId = req.user.clubId ?? '';
+  const cacheKey = `locations:${clubId}`;
+
+  const cached = await cacheGet<{ locations: unknown[] }>(cacheKey);
+  if (cached) return res.json(cached);
+
   const locations = await prisma.location.findMany({
-    where: { clubId: req.user.clubId ?? '' },
+    where: { clubId },
     orderBy: { createdAt: 'asc' },
   });
+  await cacheSet(cacheKey, { locations }, 600); // 10 min
   res.json({ locations });
 });
 
@@ -35,6 +43,7 @@ router.post('/', requireAuth, async (req, res) => {
   const location = await prisma.location.create({
     data: { ...parsed.data, clubId: req.user.clubId ?? '' },
   });
+  await cacheDel(`locations:${req.user.clubId ?? ''}`);
   res.status(201).json({ location });
 });
 
@@ -53,6 +62,7 @@ router.put('/:id', requireAuth, async (req, res) => {
     where: { id },
     data: parsed.data,
   });
+  await cacheDel(`locations:${req.user.clubId ?? ''}`);
   res.json({ location: updated });
 });
 
@@ -66,6 +76,7 @@ router.delete('/:id', requireAuth, async (req, res) => {
   });
   if (!existing) return res.status(404).json({ error: 'Sede no encontrada' });
   await prisma.location.delete({ where: { id } });
+  await cacheDel(`locations:${req.user.clubId ?? ''}`);
   res.json({ ok: true });
 });
 

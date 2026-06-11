@@ -103,15 +103,22 @@ export default function HomePage() {
           />
 
           {/* Desktop — derecha */}
-          <div className="hidden sm:flex items-center">
+          <div className="hidden sm:flex items-center gap-3">
+            <Link
+              href="/sign-in"
+              className="text-sm font-semibold text-white/90 hover:text-white transition-colors"
+            >
+              Iniciar sesión
+            </Link>
             <a
               href="https://wa.me/573153171225"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1.5 text-sm font-semibold text-white/90 hover:text-white transition-colors"
+              className="flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-bold text-white transition-all hover:scale-[1.02]"
+              style={{ background: 'linear-gradient(135deg, #7C3AED, #9333EA)' }}
             >
-              Soporte
-              <ChevronRight className="w-4 h-4" />
+              Empezar
+              <ChevronRight className="w-3.5 h-3.5" />
             </a>
           </div>
 
@@ -152,6 +159,16 @@ export default function HomePage() {
               </div>
               ¿Por qué VeloClub?
             </a>
+            <Link
+              href="/sign-in"
+              onClick={() => setMenuOpen(false)}
+              className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium text-white/90 hover:bg-white/10 transition-colors"
+            >
+              <div className="w-7 h-7 rounded-lg bg-white/10 flex items-center justify-center shrink-0">
+                <ChevronRight className="w-3.5 h-3.5 text-white" />
+              </div>
+              Iniciar sesión
+            </Link>
             <a
               href="https://wa.me/573153171225"
               target="_blank"
@@ -163,7 +180,7 @@ export default function HomePage() {
               <div className="w-7 h-7 rounded-lg bg-white/20 flex items-center justify-center shrink-0">
                 <ChevronRight className="w-3.5 h-3.5 text-white" />
               </div>
-              Soporte
+              Empezar
             </a>
           </div>
         </div>
@@ -173,7 +190,7 @@ export default function HomePage() {
       <GlassmorphismHero />
 
       {/* Features */}
-      <section id="funcionalidades" className="px-5 py-16 max-w-2xl mx-auto">
+      <section id="funcionalidades" className="px-5 py-16 max-w-5xl mx-auto">
         <p className="text-xs font-bold uppercase tracking-widest text-[#8E87A8] text-center mb-3">Funcionalidades</p>
         <h2
           className="text-2xl sm:text-3xl font-extrabold text-[#1A1028] text-center mb-10 tracking-tight"
@@ -181,7 +198,7 @@ export default function HomePage() {
         >
           Todo lo que necesitas
         </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {features.map(({ icon: Icon, label, desc, color, bg }) => (
             <div
               key={label}
@@ -203,7 +220,7 @@ export default function HomePage() {
       </section>
 
       {/* Benefits */}
-      <section id="por-que" className="px-5 py-16 max-w-2xl mx-auto">
+      <section id="por-que" className="px-5 py-16 max-w-5xl mx-auto">
         <div className="bg-white rounded-3xl border border-[rgba(120,80,200,0.08)] shadow-sm p-7 sm:p-10">
           <p className="text-xs font-bold uppercase tracking-widest text-[#8E87A8] mb-3">¿Por qué VeloClub?</p>
           <h2
@@ -226,7 +243,7 @@ export default function HomePage() {
       </section>
 
       {/* CTA final */}
-      <section className="px-5 pb-20 max-w-2xl mx-auto">
+      <section className="px-5 pb-20 max-w-5xl mx-auto">
         <div
           className="rounded-3xl p-8 sm:p-12 text-center text-white relative overflow-hidden"
           style={{ background: 'linear-gradient(135deg, #7C3AED 0%, #9333EA 60%, #A855F7 100%)' }}
@@ -254,7 +271,8 @@ export default function HomePage() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-[rgba(120,80,200,0.08)] px-5 py-6 text-center text-xs text-[#8E87A8] space-y-1">
+      <footer className="border-t border-[rgba(120,80,200,0.08)] py-6 text-center text-xs text-[#8E87A8] space-y-1">
+        <div className="max-w-5xl mx-auto px-5">
         <p>© {new Date().getFullYear()} VeloClub · Todos los derechos reservados</p>
         <p>
           Desarrollado por{' '}
@@ -267,6 +285,7 @@ export default function HomePage() {
             NexCode97
           </a>
         </p>
+        </div>
       </footer>
     </main>
   );

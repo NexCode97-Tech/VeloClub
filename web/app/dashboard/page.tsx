@@ -1357,7 +1357,7 @@ export default function DashboardPage() {
                         </span>
                         <span className="text-[10px] text-muted-foreground">{time}</span>
                         {ev.location?.name && (
-                          <span className="text-[10px] text-muted-foreground truncate">· {ev.location.name}</span>
+                          <span className="text-[10px] text-muted-foreground truncate">· {ev.location.name.charAt(0).toUpperCase() + ev.location.name.slice(1).toLowerCase()}</span>
                         )}
                       </div>
                     </div>

@@ -3,7 +3,8 @@
 import { useAuth } from '@clerk/nextjs';
 import { useEffect, useState } from 'react';
 import { apiFetch } from '@/lib/api-client';
-import { CreditCard, Plus, Trash2, CheckCircle2, Clock, AlertCircle, CalendarDays, TrendingUp } from 'lucide-react';
+import { Plus, Trash2, CheckCircle2, Clock, AlertCircle, CalendarDays, TrendingUp } from 'lucide-react';
+import { IconMisPagos } from '@/components/ui/custom-icons';
 import { motion } from 'framer-motion';
 import { stagger, cardVariant } from '@/lib/page-animations';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -33,7 +34,7 @@ const STATUS_COLORS: Record<string, { text: string; bg: string; icon: React.Elem
   PAID:     { text: '#06D6A0', bg: 'rgba(6,214,160,0.12)',   icon: CheckCircle2 },
   PENDING:  { text: '#FFB703', bg: 'rgba(255,183,3,0.12)',   icon: Clock },
   OVERDUE:  { text: '#EF476F', bg: 'rgba(239,71,111,0.12)',  icon: AlertCircle },
-  REFUNDED: { text: '#8E87A8', bg: 'rgba(142,135,168,0.12)', icon: CreditCard },
+  REFUNDED: { text: '#8E87A8', bg: 'rgba(142,135,168,0.12)', icon: IconMisPagos },
 };
 
 const TABS = ['Todos', 'Pagados', 'Pendientes', 'Vencidos'] as const;
@@ -363,7 +364,7 @@ export default function PagosPage() {
 
               {payments.length === 0 && (
                 <div className="bg-white border border-border rounded-xl px-4 py-10 text-center">
-                  <CreditCard className="w-10 h-10 mx-auto mb-3 text-muted-foreground/30" />
+                  <IconMisPagos className="w-10 h-10 mx-auto mb-3 text-muted-foreground/30" />
                   <p className="text-[13px] font-semibold text-muted-foreground">Sin pagos registrados</p>
                   <p className="text-[11px] text-muted-foreground mt-1">Tu historial de pagos aparecerá aquí</p>
                 </div>

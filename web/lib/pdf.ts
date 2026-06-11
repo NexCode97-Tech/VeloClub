@@ -188,7 +188,7 @@ export async function downloadInvoicePDF(
   doc.setFontSize(11);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(...DARK);
-  doc.text('Comprobante de pago', CX, cy, { align: 'center' });
+  doc.text('COMPROBANTE DE PAGO', CX, cy, { align: 'center' });
 
   cy += 5;
   doc.setFontSize(7.5);
@@ -205,67 +205,92 @@ export async function downloadInvoicePDF(
   // ── 5. Filas de detalle ───────────────────────────────────────────────────
   const COL_LABEL = MX + 2;
   const COL_VALUE = W - MX - 2;
-  const ROW_H     = 10;
+  const ROW_H     = 12; // un poco más de altura para la fila de fecha con hora
 
-  const rows: [string, string, boolean][] = [
-    ['Estado del pago',  STATUS_ES[payment.status] ?? payment.status, payment.status === 'PAID'],
-    ['Deportista',       payment.memberName, false],
+  // Fecha formateada + hora por separado
+  const paidDate = payment.paidAt ? new Date(payment.paidAt) : null;
+  const paidDateStr = paidDate
+    ? paidDate.toLocaleDateString('es-CO', { day: '2-digit', month: 'long', year: 'numeric' })
+    : '—';
+  const paidTimeStr = paidDate
+    ? paidDate.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+    : null;
+
+  // [label, value, isStatus, isDate]
+  type Row = [string, string, boolean, boolean];
+  const rows: Row[] = [
+    ['ESTADO DEL PAGO', STATUS_ES[payment.status] ?? payment.status, payment.status === 'PAID', false],
+    ['DEPORTISTA',      payment.memberName,                          false,                      false],
     ...(payment.docType || payment.docNumber
-      ? [[payment.docType ?? 'Documento', payment.docNumber ?? '—', false] as [string, string, boolean]]
+      ? [[(payment.docType ?? 'DOCUMENTO').toUpperCase(), payment.docNumber ?? '—', false, false] as Row]
       : []),
-    ['Concepto',        `Mensualidad ${MONTH_NAMES[payment.month - 1]} ${payment.year}`, false],
-    ['Período',         `${MONTH_NAMES[payment.month - 1]} ${payment.year}`, false],
-    ['Fecha de pago',   payment.paidAt
-      ? new Date(payment.paidAt).toLocaleDateString('es-CO', { day: 'numeric', month: 'long', year: 'numeric' })
-      : '—', false],
-    ...(payment.notes ? [['Notas', payment.notes, false] as [string, string, boolean]] : []),
+    ['CONCEPTO',        `Mensualidad ${MONTH_NAMES[payment.month - 1]} ${payment.year}`, false, false],
+    ['PERÍODO',         `${MONTH_NAMES[payment.month - 1]} ${payment.year}`,             false, false],
+    ['FECHA DE PAGO',   paidDateStr, false, true],
+    ...(payment.notes ? [['NOTAS', payment.notes, false, false] as Row] : []),
   ];
 
-  cy += 2;
-  rows.forEach(([label, value, highlight], i) => {
-    const rowY = cy + i * ROW_H;
-    // Fondo alternado suave
-    if (i % 2 === 0) {
-      doc.setFillColor(...BG);
-      doc.rect(MX, rowY, W - MX * 2, ROW_H, 'F');
-    }
-    const textY = rowY + ROW_H / 2 + 1.5;
+  cy += 3;
+  rows.forEach(([label, value, isStatus, isDate], i) => {
+    const rowY  = cy + i * ROW_H;
+    const textY = rowY + ROW_H / 2 + (isDate && paidTimeStr ? 0 : 1.5);
 
-    doc.setFontSize(7.5);
-    doc.setFont('helvetica', 'normal');
+    // Label — CAPS pequeño gris
+    doc.setFontSize(6.5);
+    doc.setFont('helvetica', 'bold');
     doc.setTextColor(...MUTED);
     doc.text(label, COL_LABEL, textY);
 
-    if (highlight) {
-      // Estado "Pagado" en verde bold
-      doc.setFontSize(8.5);
+    // Valor
+    if (isStatus) {
+      doc.setFontSize(9);
       doc.setFont('helvetica', 'bold');
       doc.setTextColor(...GREEN);
-    } else {
-      doc.setFontSize(8.5);
-      doc.setFont('helvetica', label === 'Deportista' ? 'bold' : 'normal');
+      doc.text(value, COL_VALUE, textY, { align: 'right' });
+    } else if (isDate && paidTimeStr) {
+      // Fecha en bold + hora debajo en pequeño
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'bold');
       doc.setTextColor(...DARK);
+      doc.text(value, COL_VALUE, rowY + ROW_H / 2 - 0.5, { align: 'right' });
+      doc.setFontSize(6.5);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(...MUTED);
+      doc.text(paidTimeStr, COL_VALUE, rowY + ROW_H / 2 + 4, { align: 'right' });
+    } else {
+      doc.setFontSize(9);
+      doc.setFont('helvetica', label === 'DEPORTISTA' ? 'bold' : 'normal');
+      doc.setTextColor(...DARK);
+      doc.text(value, COL_VALUE, textY, { align: 'right' });
     }
-    doc.text(value, COL_VALUE, textY, { align: 'right' });
 
-    // Línea separadora (no en la última fila)
+    // Línea separadora
     if (i < rows.length - 1) {
       doc.setDrawColor(225, 220, 245);
-      doc.setLineWidth(0.1);
+      doc.setLineWidth(0.15);
       doc.line(MX, rowY + ROW_H, W - MX, rowY + ROW_H);
     }
   });
 
-  // ── 6. Caja total con gradiente — estilo Bancolombia ─────────────────────
+  // ── 6. Caja total con gradiente ───────────────────────────────────────────
   const totalY = cy + rows.length * ROW_H + 6;
-  gradientRect(doc, MX, totalY, W - MX * 2, 18, 20);
+  const BOX_H  = 20;
+  gradientRect(doc, MX, totalY, W - MX * 2, BOX_H, 20);
+
+  // "Total transferido:" a la izquierda
   doc.setTextColor(...WHITE);
   doc.setFontSize(8);
   doc.setFont('helvetica', 'normal');
-  doc.text('Total transferido:', MX + 6, totalY + 7);
-  doc.setFontSize(13);
+  doc.text('Total transferido:', MX + 5, totalY + BOX_H / 2 + 1.5);
+
+  // Monto grande + "COP" pequeño a la derecha
+  const amountRaw = fmt.format(payment.amount).replace(/\s?COP/, '').trim();
+  doc.setFontSize(16);
   doc.setFont('helvetica', 'bold');
-  doc.text(fmt.format(payment.amount), W - MX - 6, totalY + 13, { align: 'right' });
+  doc.text(amountRaw, COL_VALUE - 8, totalY + BOX_H / 2 + 2.5, { align: 'right' });
+  doc.setFontSize(8);
+  doc.setFont('helvetica', 'bold');
+  doc.text('COP', COL_VALUE, totalY + BOX_H / 2 + 2.5);
 
   // ── 7. Sello PAGADO inclinado ─────────────────────────────────────────────
   if (payment.status === 'PAID') {

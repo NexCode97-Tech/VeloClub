@@ -11,8 +11,8 @@ const CSP = [
   "img-src 'self' data: blob: https://img.clerk.com https://images.clerk.dev https://res.cloudinary.com https://maps.gstatic.com https://maps.googleapis.com https://*.googleapis.com https://*.googleusercontent.com https://purecatamphetamine.github.io",
   // Fuentes: solo propio dominio + Google Maps
   "font-src 'self' data: https://fonts.gstatic.com",
-  // Conexiones: propio dominio + API Railway + Clerk + Cloudinary + Google Maps
-  "connect-src 'self' https://veloclub-production.up.railway.app https://clerk.veloclubtech.com https://*.clerk.accounts.dev https://api.cloudinary.com https://res.cloudinary.com https://maps.googleapis.com https://*.googleapis.com",
+  // Conexiones: propio dominio + API Railway + Clerk + Cloudinary + Google Maps + Nominatim (geocodificación)
+  "connect-src 'self' https://veloclub-production.up.railway.app https://clerk.veloclubtech.com https://*.clerk.accounts.dev https://api.cloudinary.com https://res.cloudinary.com https://maps.googleapis.com https://*.googleapis.com https://nominatim.openstreetmap.org",
   // Frames: Clerk (UI embebida) + Google Maps (embeds)
   "frame-src https://clerk.veloclubtech.com https://*.clerk.accounts.dev https://maps.google.com https://www.google.com",
   // No permitir embeber la app en iframes externos

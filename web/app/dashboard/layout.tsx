@@ -10,7 +10,6 @@ import { apiFetch } from '@/lib/api-client';
 import LoadingScreen from '@/components/ui/loading-screen';
 import { BottomCircleMenu } from '@/components/ui/bottom-circle-menu';
 import {
-  CreditCard,
   Settings,
   UserCircle,
   RefreshCw,
@@ -19,7 +18,7 @@ import {
   Bell,
   Search,
 } from 'lucide-react';
-import { IconHome, IconUsers, IconCalendar, IconStatistics, IconClub, IconFinanzas, IconUbicacion, IconAsistencias, IconResultados, IconAjustes } from '@/components/ui/custom-icons';
+import { IconHome, IconUsers, IconCalendar, IconStatistics, IconClub, IconFinanzas, IconUbicacion, IconAsistencias, IconResultados, IconAjustes, IconMisPagos } from '@/components/ui/custom-icons';
 
 // ── Colores por rol (sidebar footer) ─────────────────────────────────────────
 const SIDEBAR_ROLE_LABEL: Record<string, string> = {
@@ -63,7 +62,7 @@ const ROLE_TABS: Record<string, { href: string; label: string; icon: React.Eleme
     { href: '/dashboard',             label: 'Inicio',      icon: IconHome},
     { href: '/dashboard/logros',      label: 'Resultados',  icon: IconResultados },
     { href: '/dashboard/calendario',  label: 'Calendario',  icon: IconCalendar },
-    { href: '/dashboard/pagos',       label: 'Mis Pagos',   icon: CreditCard },
+    { href: '/dashboard/pagos',       label: 'Mis Pagos',   icon: IconMisPagos},
   ],
 };
 
@@ -113,7 +112,7 @@ const STUDENT_NAV = [
   { href: '/dashboard/logros',     label: 'Resultados',    icon: IconResultados },
   { href: '/dashboard/calendario', label: 'Calendario',    icon: IconCalendar },
   { href: '/dashboard/sedes',      label: 'Sedes',         icon: IconUbicacion },
-  { href: '/dashboard/pagos',      label: 'Mis Pagos',     icon: CreditCard },
+  { href: '/dashboard/pagos',      label: 'Mis Pagos',     icon: IconMisPagos},
   { href: '/dashboard/perfil',     label: 'Mi Perfil',     icon: UserCircle },
   { href: '/dashboard/ajustes',    label: 'Ajustes',       icon: IconAjustes},
 ];

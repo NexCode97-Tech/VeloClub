@@ -13,7 +13,7 @@ import {
   Waves,
   Dumbbell,
   Zap,
-  Target,
+  Dribbble,
   Shield,
 } from 'lucide-react';
 
@@ -21,7 +21,7 @@ const SPORTS = [
   { name: 'Ciclismo',      icon: Bike },
   { name: 'Natación',      icon: Waves },
   { name: 'Atletismo',     icon: Zap },
-  { name: 'Fútbol',        icon: Target },
+  { name: 'Fútbol',        icon: Dribbble },
   { name: 'Fitness',       icon: Dumbbell },
   { name: 'Multi-deporte', icon: Shield },
 ];
@@ -60,7 +60,7 @@ export default function GlassmorphismHero() {
       <div
         className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat"
         style={{
-          backgroundImage: "url(https://images.unsplash.com/photo-1551698618-1dfe5d97d256?w=1920&q=80)",
+          backgroundImage: "url(/hero-bg.webp)",
           opacity: 0.55,
           maskImage: 'linear-gradient(180deg, transparent, black 0%, black 70%, transparent)',
           WebkitMaskImage: 'linear-gradient(180deg, transparent, black 0%, black 70%, transparent)',
@@ -119,20 +119,16 @@ export default function GlassmorphismHero() {
               </p>
 
               {/* CTAs */}
-              <div className="vc-fade d4 flex flex-col sm:flex-row gap-3">
-                <Link
-                  href="/sign-in"
+              <div className="vc-fade d4">
+                <a
+                  href="https://wa.me/573153171225"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="group inline-flex items-center justify-center gap-2 rounded-full px-6 py-2.5 text-sm font-bold text-white transition-all hover:scale-[1.02] active:scale-[0.98]"
                   style={{ background: 'linear-gradient(135deg, #7C3AED, #9333EA)' }}
                 >
-                  Iniciar sesión
+                  Empezar
                   <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
-                </Link>
-                <a
-                  href="#funcionalidades"
-                  className="inline-flex items-center justify-center gap-2 rounded-full border border-white/10 bg-white/5 px-6 py-2.5 text-sm font-semibold text-white backdrop-blur-sm transition-colors hover:bg-white/10"
-                >
-                  Ver funcionalidades
                 </a>
               </div>
             </div>
@@ -175,23 +171,23 @@ export default function GlassmorphismHero() {
                     <StatItem value="4" label="Países" />
                   </div>
 
-                  <div className="mt-3 flex flex-wrap gap-1.5">
-                    <div className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[9px] font-medium tracking-wide text-zinc-300">
+                  <div className="mt-3 flex flex-nowrap gap-1.5">
+                    <div className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[9px] font-medium tracking-wide text-zinc-300 whitespace-nowrap">
                       <span className="relative flex h-1.5 w-1.5">
                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
                         <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-green-500" />
                       </span>
                       EN PRODUCCIÓN
                     </div>
-                    <div className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[9px] font-medium tracking-wide text-zinc-300">
+                    <div className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[9px] font-medium tracking-wide text-zinc-300 whitespace-nowrap">
                       <Trophy className="w-2.5 h-2.5 text-yellow-500" />
                       MULTI-DEPORTE
                     </div>
-                    <div className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[9px] font-medium tracking-wide text-zinc-300">
+                    <div className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[9px] font-medium tracking-wide text-zinc-300 whitespace-nowrap">
                       <CalendarCheck className="w-2.5 h-2.5 text-violet-400" />
-                      ASISTENCIA QR
+                      ASISTENCIA
                     </div>
-                    <div className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[9px] font-medium tracking-wide text-zinc-300">
+                    <div className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[9px] font-medium tracking-wide text-zinc-300 whitespace-nowrap">
                       <CreditCard className="w-2.5 h-2.5 text-[#06D6A0]" />
                       PAGOS
                     </div>

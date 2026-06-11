@@ -103,23 +103,14 @@ export default function HomePage() {
           />
 
           {/* Desktop — derecha */}
-          <div className="hidden sm:flex items-center gap-3">
+          <div className="hidden sm:flex items-center">
             <Link
               href="/sign-in"
-              className="text-sm font-semibold text-white/90 hover:text-white transition-colors"
+              className="flex items-center gap-1.5 text-sm font-semibold text-white/90 hover:text-white transition-colors"
             >
               Iniciar sesión
+              <ChevronRight className="w-4 h-4" />
             </Link>
-            <a
-              href="https://wa.me/573153171225"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-bold text-white transition-all hover:scale-[1.02]"
-              style={{ background: 'linear-gradient(135deg, #7C3AED, #9333EA)' }}
-            >
-              Empezar
-              <ChevronRight className="w-3.5 h-3.5" />
-            </a>
           </div>
 
           {/* Mobile hamburger */}
@@ -162,26 +153,14 @@ export default function HomePage() {
             <Link
               href="/sign-in"
               onClick={() => setMenuOpen(false)}
-              className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium text-white/90 hover:bg-white/10 transition-colors"
-            >
-              <div className="w-7 h-7 rounded-lg bg-white/10 flex items-center justify-center shrink-0">
-                <ChevronRight className="w-3.5 h-3.5 text-white" />
-              </div>
-              Iniciar sesión
-            </Link>
-            <a
-              href="https://wa.me/573153171225"
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => setMenuOpen(false)}
               className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-semibold text-white transition-colors mt-1"
               style={{ background: 'linear-gradient(135deg, #7C3AED, #9333EA)' }}
             >
               <div className="w-7 h-7 rounded-lg bg-white/20 flex items-center justify-center shrink-0">
                 <ChevronRight className="w-3.5 h-3.5 text-white" />
               </div>
-              Empezar
-            </a>
+              Iniciar sesión
+            </Link>
           </div>
         </div>
       </nav>

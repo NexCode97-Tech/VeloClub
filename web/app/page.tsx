@@ -57,10 +57,17 @@ export default function HomePage() {
   const { isLoaded, isSignedIn } = useAuth();
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
     if (isLoaded && isSignedIn) router.push('/dashboard');
   }, [isLoaded, isSignedIn, router]);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 80);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   // Close menu on resize to desktop
   useEffect(() => {
@@ -81,7 +88,7 @@ export default function HomePage() {
     <main className="min-h-dvh bg-[#F7F7FB] [overflow-x:clip]">
 
       {/* Nav — transparente, encima del hero */}
-      <nav className="fixed top-0 left-0 right-0 z-50">
+      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? 'bg-[#0D0520]/95 backdrop-blur-md border-b border-white/5 shadow-lg shadow-black/30' : ''}`}>
         <div className="max-w-5xl mx-auto flex items-center justify-between px-5 py-0 sm:h-20">
           {/* Desktop links — izquierda */}
           <div className="hidden sm:flex items-center gap-6">
@@ -177,7 +184,7 @@ export default function HomePage() {
         >
           Todo lo que necesitas
         </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {features.map(({ icon: Icon, label, desc, color, bg }) => (
             <div
               key={label}
@@ -196,6 +203,17 @@ export default function HomePage() {
             </div>
           ))}
         </div>
+      </section>
+
+      {/* App móvil preview */}
+      <section className="px-5 pb-10 max-w-5xl mx-auto flex justify-center">
+        <Image
+          src="/version-movil.png"
+          alt="VeloClub versión móvil"
+          width={720}
+          height={400}
+          className="w-full max-w-2xl object-contain"
+        />
       </section>
 
       {/* Benefits */}

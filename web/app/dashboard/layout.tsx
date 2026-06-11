@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
-import { UserButton, useAuth, useSession } from '@clerk/nextjs';
+import { UserButton, useAuth, useSession, useUser } from '@clerk/nextjs';
 import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { apiFetch } from '@/lib/api-client';
@@ -131,6 +131,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const router = useRouter();
   const { isLoaded, isSignedIn, userId, sessionId } = useAuth();
   const { session } = useSession();
+  const { user: clerkUser } = useUser();
   const [role, setRole] = useState<string | null>(null);
   const [checking, setChecking] = useState(true);
   const [masMenuOpen, setMasMenuOpen] = useState(false);
@@ -383,10 +384,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         >
           {/* Avatar */}
           <Link href="/dashboard/perfil" className="shrink-0" title="Mi Perfil">
-            {userPicture ? (
+            {(userPicture || clerkUser?.imageUrl) ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
-                src={userPicture}
+                src={userPicture || clerkUser?.imageUrl || ''}
                 alt={userName ?? 'Perfil'}
                 style={{
                   width: 32, height: 32, borderRadius: '50%',

@@ -20,15 +20,15 @@ import { DatePicker } from '@/components/ui/date-picker';
 // ── Types ──────────────────────────────────────────────────────────────────────
 interface EventResult  { id: string; position?: number; member: { id: string; fullName: string; pictureUrl?: string | null } }
 interface CompEvent    { id: string; name: string; results: EventResult[] }
-interface Competition  { id: string; name: string; place?: string; date: string; events: CompEvent[] }
+interface Competition  { id: string; name: string; place?: string; latitude?: number | null; longitude?: number | null; date: string; events: CompEvent[] }
 
 interface TrainingResult { id: string; time?: string; distance?: string; laps?: number; observations?: string; member: { id: string; fullName: string } }
 interface TrainingSession { id: string; title: string; date: string; notes?: string; location?: { id: string; name: string } | null; results: TrainingResult[] }
 
-interface Location { id: string; name: string }
+interface Location { id: string; name: string; latitude?: number | null; longitude?: number | null; address?: string | null }
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
-const emptyComp    = { name: '', place: '', date: '' };
+const emptyComp    = { name: '', place: '', latitude: null as number | null, longitude: null as number | null, date: '' };
 const emptySession = { title: '', date: '', locationId: '', notes: '' };
 
 // Corrección ortográfica de ciudades/lugares (clave en MAYÚSCULAS)
@@ -186,7 +186,12 @@ export default function LogrosPage() {
       const token = await getToken();
       await apiFetch('/competitions', {
         method: 'POST', token,
-        body: JSON.stringify({ ...compForm, place: compForm.place || undefined }),
+        body: JSON.stringify({
+          ...compForm,
+          place:     compForm.place     || undefined,
+          latitude:  compForm.latitude  ?? undefined,
+          longitude: compForm.longitude ?? undefined,
+        }),
       });
       setCompOpen(false); setCompForm(emptyComp);
       await refetchComps();
@@ -375,8 +380,46 @@ export default function LogrosPage() {
               <Input value={compForm.name} onChange={e => setCompForm(f => ({ ...f, name: e.target.value }))} placeholder="ej. Copa Patinaje Antioquia 2025" />
             </div>
             <div className="space-y-2">
-              <Label>Lugar</Label>
-              <Input value={compForm.place} onChange={e => setCompForm(f => ({ ...f, place: e.target.value }))} placeholder="Ciudad o municipio" />
+              <Label>Ubicación</Label>
+              {locations.length > 0 && (
+                <Select
+                  value={locations.find(l => l.latitude === compForm.latitude && l.longitude === compForm.longitude && compForm.latitude !== null)?.id ?? ''}
+                  onValueChange={v => {
+                    if (!v) {
+                      setCompForm(f => ({ ...f, latitude: null, longitude: null }));
+                      return;
+                    }
+                    const loc = locations.find(l => l.id === v);
+                    if (loc) setCompForm(f => ({
+                      ...f,
+                      place:     loc.name,
+                      latitude:  loc.latitude  ?? null,
+                      longitude: loc.longitude ?? null,
+                    }));
+                  }}
+                >
+                  <SelectTrigger>
+                    <span className="text-sm">
+                      {locations.find(l => l.latitude === compForm.latitude && l.longitude === compForm.longitude && compForm.latitude !== null)?.name ?? 'Seleccionar sede registrada (opcional)'}
+                    </span>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">— Ninguna / lugar externo —</SelectItem>
+                    {locations.map(l => <SelectItem key={l.id} value={l.id}>{l.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              )}
+              <Input
+                value={compForm.place}
+                onChange={e => setCompForm(f => ({ ...f, place: e.target.value, latitude: null, longitude: null }))}
+                placeholder="Ciudad, municipio o lugar específico"
+              />
+              {compForm.latitude && compForm.longitude && (
+                <p className="text-[11px] text-muted-foreground flex items-center gap-1">
+                  <MapPin className="w-3 h-3 text-green-500" />
+                  Coordenadas guardadas · enlace Google Maps disponible para deportistas
+                </p>
+              )}
             </div>
             <div className="space-y-2">
               <Label>Fecha *</Label>

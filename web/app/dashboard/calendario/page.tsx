@@ -23,6 +23,8 @@ interface CalEvent {
   type: EventType;
   date: Date;
   place?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
   location?: string | null;
 }
 
@@ -60,17 +62,19 @@ export default function CalendarioPage() {
     try {
       const token = await getToken();
       const [compRes, trainRes] = await Promise.all([
-        apiFetch<{ competitions: Array<{ id: string; name: string; place?: string | null; date: string }> }>('/competitions', { token }),
+        apiFetch<{ competitions: Array<{ id: string; name: string; place?: string | null; latitude?: number | null; longitude?: number | null; date: string }> }>('/competitions', { token }),
         apiFetch<{ sessions: Array<{ id: string; title: string; date: string; location?: { name: string } | null }> }>(`/training?month=${month + 1}&year=${year}`, { token }),
       ]);
 
       const comps: CalEvent[] = (compRes.competitions ?? [])
         .map(c => ({
-          id:    c.id,
-          title: c.name,
-          type:  'COMPETITION' as EventType,
-          date:  parseLocalDate(c.date),
-          place: c.place,
+          id:        c.id,
+          title:     c.name,
+          type:      'COMPETITION' as EventType,
+          date:      parseLocalDate(c.date),
+          place:     c.place,
+          latitude:  c.latitude  ?? null,
+          longitude: c.longitude ?? null,
         }))
         .filter(c => c.date.getFullYear() === year && c.date.getMonth() === month);
 
@@ -289,12 +293,30 @@ function EventCard({ event }: { event: CalEvent }) {
           <span className="text-[10px] text-muted-foreground">{dateStr}</span>
         </div>
         <p className="text-[13px] font-semibold text-foreground truncate">{toSentenceCase(event.title)}</p>
-        {sub && (
-          <div className="flex items-center gap-1 mt-0.5">
-            <MapPin className="w-3 h-3 text-muted-foreground shrink-0" />
-            <p className="text-[11px] text-muted-foreground truncate">{toSentenceCase(sub)}</p>
-          </div>
-        )}
+        {sub && (() => {
+          const hasCoords = event.latitude && event.longitude;
+          const mapsUrl = hasCoords
+            ? `https://www.google.com/maps/search/?api=1&query=${event.latitude},${event.longitude}`
+            : null;
+          return (
+            <div className="flex items-center gap-1 mt-0.5">
+              <MapPin className={`w-3 h-3 shrink-0 ${hasCoords ? 'text-rose-400' : 'text-muted-foreground'}`} />
+              {mapsUrl ? (
+                <a
+                  href={mapsUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[11px] font-medium truncate underline-offset-2 hover:underline"
+                  style={{ color: '#EF476F' }}
+                >
+                  {toSentenceCase(sub)}
+                </a>
+              ) : (
+                <p className="text-[11px] text-muted-foreground truncate">{toSentenceCase(sub)}</p>
+              )}
+            </div>
+          );
+        })()}
       </div>
     </div>
   );

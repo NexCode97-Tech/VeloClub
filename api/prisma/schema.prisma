@@ -203,6 +203,8 @@ model Competition {
   club      Club               @relation(fields: [clubId], references: [id], onDelete: Cascade)
   name      String
   place     String?
+  latitude  Float?
+  longitude Float?
   date      DateTime
   events    CompetitionEvent[]
   createdAt DateTime           @default(now())

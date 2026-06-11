@@ -7,9 +7,11 @@ import { emitToClub } from '../lib/sse';
 const router = Router();
 
 const competitionSchema = z.object({
-  name:  z.string().min(1).max(200),
-  place: z.string().optional(),
-  date:  z.string(),
+  name:      z.string().min(1).max(200),
+  place:     z.string().optional(),
+  latitude:  z.number().optional().nullable(),
+  longitude: z.number().optional().nullable(),
+  date:      z.string(),
 });
 
 const eventSchema = z.object({
@@ -50,10 +52,12 @@ router.post('/', requireAuth, async (req, res) => {
 
   const competition = await prisma.competition.create({
     data: {
-      clubId: req.user.clubId ?? '',
-      name:   parsed.data.name,
-      place:  parsed.data.place ?? null,
-      date:   new Date(parsed.data.date),
+      clubId:    req.user.clubId ?? '',
+      name:      parsed.data.name,
+      place:     parsed.data.place     ?? null,
+      latitude:  parsed.data.latitude  ?? null,
+      longitude: parsed.data.longitude ?? null,
+      date:      new Date(parsed.data.date),
     },
     include: { events: true },
   });
@@ -94,13 +98,19 @@ router.patch('/:id', requireAuth, async (req, res) => {
   const competition = await prisma.competition.findFirst({ where: { id, clubId: req.user.clubId ?? '' } });
   if (!competition) return res.status(404).json({ error: 'Competencia no encontrada' });
 
-  const { name, place, date } = req.body as { name?: string; place?: string; date?: string };
+  const { name, place, latitude, longitude, date } = req.body as {
+    name?: string; place?: string;
+    latitude?: number | null; longitude?: number | null;
+    date?: string;
+  };
   const updated = await prisma.competition.update({
     where: { id },
     data: {
-      ...(name  ? { name }  : {}),
-      ...(place !== undefined ? { place } : {}),
-      ...(date  ? { date: new Date(date) } : {}),
+      ...(name      ? { name }      : {}),
+      ...(place     !== undefined ? { place }     : {}),
+      ...(latitude  !== undefined ? { latitude }  : {}),
+      ...(longitude !== undefined ? { longitude } : {}),
+      ...(date      ? { date: new Date(date) } : {}),
     },
   });
   emitToClub(req.user.clubId ?? '', 'competitions');

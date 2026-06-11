@@ -72,11 +72,11 @@ export default function GlassmorphismHero() {
       {/* Halo violeta de fondo */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] rounded-full bg-[#7C3AED]/20 blur-[120px] pointer-events-none z-0" />
 
-      <div className="relative z-10 mx-auto max-w-7xl px-4 pt-28 pb-14 sm:px-6 md:pt-36 md:pb-20 lg:px-8">
-        <div className="grid grid-cols-1 gap-12 lg:grid-cols-12 lg:gap-8 items-start">
+      <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex flex-col min-h-screen justify-center py-0">
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:gap-8 items-center">
 
           {/* --- COLUMNA IZQUIERDA --- */}
-          <div className="lg:col-span-7 flex flex-col justify-center space-y-8 pt-8">
+          <div className="lg:col-span-7 flex flex-col justify-center space-y-6 pt-20 lg:pt-0">
 
             {/* Badge */}
             <div className="animate-fade-in delay-100">
@@ -90,7 +90,7 @@ export default function GlassmorphismHero() {
 
             {/* Headline */}
             <h1
-              className="animate-fade-in delay-200 text-5xl sm:text-6xl lg:text-7xl xl:text-8xl font-bold tracking-tighter leading-[0.9]"
+              className="animate-fade-in delay-200 text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold tracking-tighter leading-[0.9]"
               style={{
                 maskImage: 'linear-gradient(180deg, black 0%, black 80%, transparent 100%)',
                 WebkitMaskImage: 'linear-gradient(180deg, black 0%, black 80%, transparent 100%)',
@@ -130,14 +130,14 @@ export default function GlassmorphismHero() {
           </div>
 
           {/* --- COLUMNA DERECHA --- */}
-          <div className="lg:col-span-5 space-y-6 lg:mt-12">
+          <div className="lg:col-span-5 space-y-4 lg:mt-0">
 
             {/* Stats Card */}
-            <div className="animate-fade-in delay-500 relative overflow-hidden rounded-3xl border border-white/10 bg-white/5 p-8 backdrop-blur-xl shadow-2xl">
+            <div className="animate-fade-in delay-500 relative overflow-hidden rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur-xl shadow-2xl">
               <div className="absolute top-0 right-0 -mr-16 -mt-16 h-64 w-64 rounded-full bg-[#7C3AED]/10 blur-3xl pointer-events-none" />
 
               <div className="relative z-10">
-                <div className="flex items-center gap-4 mb-8">
+                <div className="flex items-center gap-4 mb-5">
                   <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#7C3AED]/20 ring-1 ring-[#7C3AED]/30">
                     <Users className="h-6 w-6 text-violet-300" />
                   </div>
@@ -148,7 +148,7 @@ export default function GlassmorphismHero() {
                 </div>
 
                 {/* Progress */}
-                <div className="space-y-3 mb-8">
+                <div className="space-y-2 mb-5">
                   <div className="flex justify-between text-sm">
                     <span className="text-zinc-400">Asistencia promedio</span>
                     <span className="text-white font-medium">92%</span>
@@ -158,7 +158,7 @@ export default function GlassmorphismHero() {
                   </div>
                 </div>
 
-                <div className="h-px w-full bg-white/10 mb-6" />
+                <div className="h-px w-full bg-white/10 mb-4" />
 
                 {/* Mini Stats */}
                 <div className="grid grid-cols-3 gap-4 text-center">
@@ -170,7 +170,7 @@ export default function GlassmorphismHero() {
                 </div>
 
                 {/* Tags */}
-                <div className="mt-8 flex flex-wrap gap-2">
+                <div className="mt-4 flex flex-wrap gap-2">
                   <div className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] font-medium tracking-wide text-zinc-300">
                     <span className="relative flex h-2 w-2">
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />

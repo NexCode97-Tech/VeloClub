@@ -80,20 +80,27 @@ export default function HomePage() {
   return (
     <main className="min-h-dvh bg-[#F7F7FB] overflow-x-hidden">
 
-      {/* Nav */}
-      <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-[rgba(120,80,200,0.08)]">
+      {/* Nav — transparente, encima del hero */}
+      <nav className="fixed top-0 left-0 right-0 z-50">
         <div className="max-w-5xl mx-auto flex items-center justify-between px-5 py-0 sm:h-20">
           {/* Desktop links — izquierda */}
           <div className="hidden sm:flex items-center gap-6">
-            <a href="#funcionalidades" className="text-sm font-medium text-[#4A4060] hover:text-[#7C3AED] transition-colors">
+            <a href="#funcionalidades" className="text-sm font-medium text-white/85 hover:text-white transition-colors">
               Funcionalidades
             </a>
-            <a href="#por-que" className="text-sm font-medium text-[#4A4060] hover:text-[#7C3AED] transition-colors">
+            <a href="#por-que" className="text-sm font-medium text-white/85 hover:text-white transition-colors">
               ¿Por qué VeloClub?
             </a>
           </div>
 
-          <Image src="/logo-full.jpg" alt="VeloClub" width={120} height={120} className="object-contain h-14 w-auto sm:h-20 sm:absolute sm:left-1/2 sm:-translate-x-1/2" />
+          <Image
+            src="/logo.png"
+            alt="VeloClub"
+            width={120}
+            height={120}
+            className="object-contain h-14 w-auto sm:h-16 sm:absolute sm:left-1/2 sm:-translate-x-1/2"
+            style={{ filter: 'brightness(0) invert(1)' }}
+          />
 
           {/* Desktop — derecha */}
           <div className="hidden sm:flex items-center">
@@ -101,7 +108,7 @@ export default function HomePage() {
               href="https://wa.me/573153171225"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1.5 text-sm font-semibold text-[#7C3AED] hover:text-[#6D28D9] transition-colors"
+              className="flex items-center gap-1.5 text-sm font-semibold text-white/90 hover:text-white transition-colors"
             >
               Soporte
               <ChevronRight className="w-4 h-4" />
@@ -110,7 +117,7 @@ export default function HomePage() {
 
           {/* Mobile hamburger */}
           <button
-            className="sm:hidden p-2.5 rounded-xl text-[#4A4060] hover:bg-[rgba(124,58,237,0.06)] transition-colors"
+            className="sm:hidden p-2.5 rounded-xl text-white hover:bg-white/10 transition-colors"
             onClick={() => setMenuOpen(v => !v)}
             aria-label={menuOpen ? 'Cerrar menú' : 'Abrir menú'}
           >
@@ -124,24 +131,24 @@ export default function HomePage() {
             menuOpen ? 'max-h-64 opacity-100' : 'max-h-0 opacity-0'
           }`}
         >
-          <div className="px-5 pb-4 pt-1 flex flex-col gap-1 border-t border-[rgba(120,80,200,0.08)]">
+          <div className="mx-3 mb-2 px-3 pb-3 pt-2 flex flex-col gap-1 rounded-2xl bg-black/40 backdrop-blur-lg border border-white/15">
             <a
               href="#funcionalidades"
               onClick={() => setMenuOpen(false)}
-              className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium text-[#4A4060] hover:bg-[rgba(124,58,237,0.06)] hover:text-[#7C3AED] transition-colors"
+              className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium text-white/90 hover:bg-white/10 transition-colors"
             >
-              <div className="w-7 h-7 rounded-lg bg-[rgba(124,58,237,0.08)] flex items-center justify-center shrink-0">
-                <Zap className="w-3.5 h-3.5 text-[#7C3AED]" />
+              <div className="w-7 h-7 rounded-lg bg-white/10 flex items-center justify-center shrink-0">
+                <Zap className="w-3.5 h-3.5 text-white" />
               </div>
               Funcionalidades
             </a>
             <a
               href="#por-que"
               onClick={() => setMenuOpen(false)}
-              className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium text-[#4A4060] hover:bg-[rgba(124,58,237,0.06)] hover:text-[#7C3AED] transition-colors"
+              className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium text-white/90 hover:bg-white/10 transition-colors"
             >
-              <div className="w-7 h-7 rounded-lg bg-[rgba(124,58,237,0.08)] flex items-center justify-center shrink-0">
-                <Shield className="w-3.5 h-3.5 text-[#7C3AED]" />
+              <div className="w-7 h-7 rounded-lg bg-white/10 flex items-center justify-center shrink-0">
+                <Shield className="w-3.5 h-3.5 text-white" />
               </div>
               ¿Por qué VeloClub?
             </a>

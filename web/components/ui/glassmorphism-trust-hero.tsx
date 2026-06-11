@@ -225,7 +225,6 @@ export default function GlassmorphismHero() {
 
             </div>
           </div>
-        </div>
       </div>
     </div>
   );

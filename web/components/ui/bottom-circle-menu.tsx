@@ -23,8 +23,8 @@ interface BottomCircleMenuProps {
 // Arco hacia arriba — todos los ítems parten y regresan desde (0,0)
 function pointOnArc(i: number, n: number, r: number) {
   // Ángulos más cerrados en la base para que los extremos no rocen el bar
-  const startDeg = n <= 1 ? -90 : -140;
-  const endDeg   = n <= 1 ? -90 : -40;
+  const startDeg = n <= 1 ? -90 : n === 2 ? -115 : -140;
+  const endDeg   = n <= 1 ? -90 : n === 2 ?  -65 :  -40;
   const deg = n <= 1 ? -90 : startDeg + (endDeg - startDeg) * (i / (n - 1));
   const theta = deg * (Math.PI / 180);
   return {

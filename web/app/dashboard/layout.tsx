@@ -528,9 +528,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           style={{ padding: '0 16px 20px', pointerEvents: 'none' }}
         >
           {(() => {
-            const isStudent = role === 'STUDENT';
-            const totalSlots = isStudent ? tabItems.length + 1 : tabItems.length;
-            const hasNotch = role !== 'STUDENT';
+            const totalSlots = tabItems.length;
+            const hasNotch = true;
             return (
               /* box-shadow en lugar de filter:drop-shadow — mucho más eficiente en móvil */
               <div style={{ pointerEvents: 'auto' }}>

@@ -1025,7 +1025,7 @@ export default function DashboardPage() {
 
       {/* ── Banner trial ─────────────────────────────────────────────────── */}
       <AnimatePresence>
-        {trial !== null && (
+        {trial !== null && role === 'ADMIN' && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}

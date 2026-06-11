@@ -581,7 +581,6 @@ export const HorizonHeroSection: React.FC = () => {
                   className="text-5xl sm:text-7xl md:text-8xl lg:text-9xl font-extrabold tracking-tight leading-none bg-clip-text text-transparent"
                   style={{
                     backgroundImage: 'linear-gradient(135deg, #F5F3FF 0%, #C4B5FD 45%, #A855F7 75%, #7C3AED 100%)',
-                    visibility: idx === 0 ? 'hidden' : 'visible',
                   }}
                 >
                   {idx === 0 ? splitTitle(scene.title) : scene.title}
@@ -590,7 +589,6 @@ export const HorizonHeroSection: React.FC = () => {
                 <div
                   ref={idx === 0 ? heroSubtitleRef : null}
                   className="mt-5 sm:mt-7 max-w-2xl"
-                  style={{ visibility: idx === 0 ? 'hidden' : 'visible' }}
                 >
                   <p className="subtitle-line text-base sm:text-lg md:text-xl text-violet-100/85 font-light leading-relaxed">
                     {scene.subtitle.line1}
@@ -605,7 +603,6 @@ export const HorizonHeroSection: React.FC = () => {
                   <div
                     ref={ctaRef}
                     className="mt-8 sm:mt-10 flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center"
-                    style={{ visibility: 'hidden' }}
                   >
                     <Link
                       href="/sign-in"
@@ -632,7 +629,6 @@ export const HorizonHeroSection: React.FC = () => {
         <div
           ref={scrollProgressRef}
           className="absolute bottom-6 sm:bottom-8 left-1/2 -translate-x-1/2 z-20 flex items-center gap-3 sm:gap-4"
-          style={{ visibility: 'hidden' }}
         >
           <span className="text-[10px] sm:text-xs uppercase tracking-[0.3em] text-violet-200/70 font-semibold">
             Scroll

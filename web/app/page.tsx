@@ -78,7 +78,7 @@ export default function HomePage() {
   if (!isLoaded || isSignedIn) return null;
 
   return (
-    <main className="min-h-dvh bg-[#F7F7FB] overflow-x-hidden">
+    <main className="min-h-dvh bg-[#F7F7FB] [overflow-x:clip]">
 
       {/* Nav — transparente, encima del hero */}
       <nav className="fixed top-0 left-0 right-0 z-50">
@@ -96,9 +96,9 @@ export default function HomePage() {
           <Image
             src="/logo.png"
             alt="VeloClub"
-            width={120}
-            height={120}
-            className="object-contain h-14 w-auto sm:h-16 sm:absolute sm:left-1/2 sm:-translate-x-1/2"
+            width={80}
+            height={80}
+            className="object-contain h-9 w-auto sm:h-10 sm:absolute sm:left-1/2 sm:-translate-x-1/2"
             style={{ filter: 'brightness(0) invert(1)' }}
           />
 

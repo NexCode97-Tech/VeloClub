@@ -124,7 +124,10 @@ router.patch('/clubs/:id', requireAuth, requireSuperadmin, async (req, res) => {
     if (trialDays === 0) {
       clubData.trialEndsAt = null; // limpiar trial
     } else {
-      const t = new Date();
+      // Calcular desde createdAt del club para respetar días ya transcurridos
+      const currentClub = await prisma.club.findUnique({ where: { id }, select: { createdAt: true } });
+      const base = currentClub?.createdAt ?? new Date();
+      const t = new Date(base);
       t.setDate(t.getDate() + trialDays);
       clubData.trialEndsAt = t;
     }

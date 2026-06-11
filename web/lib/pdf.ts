@@ -188,7 +188,7 @@ export async function downloadInvoicePDF(
   doc.setFontSize(11);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(...DARK);
-  doc.text('COMPROBANTE DE PAGO', CX, cy, { align: 'center' });
+  doc.text('RECIBO DE PAGO', CX, cy, { align: 'center' });
 
   cy += 5;
   doc.setFontSize(7.5);
@@ -283,14 +283,15 @@ export async function downloadInvoicePDF(
   doc.setFont('helvetica', 'normal');
   doc.text('Total transferido:', MX + 5, totalY + BOX_H / 2 + 1.5);
 
-  // Monto grande + "COP" pequeño a la derecha
+  // Monto grande + "COP" pequeño a la derecha (dentro del margen)
   const amountRaw = fmt.format(payment.amount).replace(/\s?COP/, '').trim();
-  doc.setFontSize(16);
-  doc.setFont('helvetica', 'bold');
-  doc.text(amountRaw, COL_VALUE - 8, totalY + BOX_H / 2 + 2.5, { align: 'right' });
+  const RIGHT_EDGE = W - MX - 3;
   doc.setFontSize(8);
   doc.setFont('helvetica', 'bold');
-  doc.text('COP', COL_VALUE, totalY + BOX_H / 2 + 2.5);
+  doc.text('COP', RIGHT_EDGE, totalY + BOX_H / 2 + 2.5, { align: 'right' });
+  doc.setFontSize(16);
+  doc.setFont('helvetica', 'bold');
+  doc.text(amountRaw, RIGHT_EDGE - 10, totalY + BOX_H / 2 + 2.5, { align: 'right' });
 
   // ── 7. Sello PAGADO inclinado ─────────────────────────────────────────────
   if (payment.status === 'PAID') {

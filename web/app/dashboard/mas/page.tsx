@@ -2,7 +2,7 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { stagger, cardVariant } from '@/lib/page-animations';
 
-import { useAuth } from '@clerk/nextjs';
+import { useAuth, useClerk } from '@clerk/nextjs';
 import { UserButton, useUser } from '@clerk/nextjs';
 import { useEffect, useRef, useState } from 'react';
 import { apiFetch } from '@/lib/api-client';
@@ -33,6 +33,7 @@ const ITEMS_BY_ROLE: Record<string, { label: string; icon: React.ElementType; co
 export default function MasPage() {
   const { getToken } = useAuth();
   const { user } = useUser();
+  const clerk = useClerk();
   const [role, setRole]           = useState<string | null>(null);
   const [memberPic, setMemberPic] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -182,18 +183,14 @@ export default function MasPage() {
               </AnimatePresence>
             </div>
 
-            {/* UserButton invisible para gestión de cuenta Clerk */}
-            <div className="relative w-8 h-8 shrink-0">
+            {/* Gestionar cuenta — abre UserProfile completo (igual que admin) */}
+            <button
+              onClick={() => clerk.openUserProfile()}
+              className="w-8 h-8 shrink-0 flex items-center justify-center cursor-pointer"
+              aria-label="Gestionar cuenta"
+            >
               <ChevronRight className="w-4 h-4 text-muted-foreground" />
-              <div className="absolute inset-0 opacity-0 overflow-hidden">
-                <UserButton appearance={{
-                  elements: {
-                    avatarBox: { width: 32, height: 32 },
-                    userButtonTrigger: { width: 32, height: 32 },
-                  },
-                }} />
-              </div>
-            </div>
+            </button>
           </div>
         </motion.div>
       )}

@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
-import { UserButton, useAuth, useSession, useUser } from '@clerk/nextjs';
+import { useAuth, useSession, useUser } from '@clerk/nextjs';
 import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { apiFetch } from '@/lib/api-client';
@@ -61,6 +61,7 @@ const ROLE_TABS: Record<string, { href: string; label: string; icon: React.Eleme
   STUDENT: [
     { href: '/dashboard',             label: 'Inicio',      icon: IconHome},
     { href: '/dashboard/logros',      label: 'Resultados',  icon: IconResultados },
+    { href: '/dashboard/mas',         label: 'Más',         icon: IconHome}, // reemplazado por CircleMenu
     { href: '/dashboard/calendario',  label: 'Calendario',  icon: IconCalendar },
     { href: '/dashboard/pagos',       label: 'Mis Pagos',   icon: IconMisPagos},
   ],
@@ -78,6 +79,10 @@ const ROLE_MAS_ITEMS: Record<string, { label: string; icon: React.ElementType; h
     { label: 'Resultados', icon: IconResultados,   href: '/dashboard/logros',     color: '#F59E0B' },
     { label: 'Calendario', icon: IconCalendar,     href: '/dashboard/calendario', color: '#EF476F' },
     { label: 'Sedes',      icon: IconUbicacion,    href: '/dashboard/sedes',      color: '#06D6A0' },
+  ],
+  STUDENT: [
+    { label: 'Club',  icon: IconClub,      href: '/dashboard/club',  color: '#06D6A0' },
+    { label: 'Sedes', icon: IconUbicacion, href: '/dashboard/sedes', color: '#4361EE' },
   ],
 };
 
@@ -382,33 +387,23 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             justifyContent: collapsed ? 'center' : undefined,
           }}
         >
-          {/* Avatar */}
+          {/* Avatar — fuente: foto app > foto Google OAuth > imageUrl Clerk */}
           <Link href="/dashboard/perfil" className="shrink-0" title="Mi Perfil">
-            {(userPicture || clerkUser?.imageUrl) ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={userPicture || clerkUser?.imageUrl || ''}
-                alt={userName ?? 'Perfil'}
-                style={{
-                  width: 32, height: 32, borderRadius: '50%',
-                  objectFit: 'cover',
-                  border: '2px solid #fff',
-                  boxShadow: `0 2px 8px rgba(0,0,0,0.15)`,
-                }}
-              />
-            ) : (
-              <div style={{
-                width: 32, height: 32, borderRadius: '50%',
-                background: SIDEBAR_ROLE_GRADIENT[role ?? 'ADMIN'] ?? SIDEBAR_ROLE_GRADIENT.ADMIN,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 13, fontWeight: 700, color: '#fff',
-                border: '2px solid #fff',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
-                flexShrink: 0,
-              }}>
-                {userName?.charAt(0)?.toUpperCase() ?? 'U'}
-              </div>
-            )}
+            {(() => {
+              const googlePhoto = clerkUser?.externalAccounts?.find(a => a.provider === 'google')?.imageUrl;
+              const src = userPicture || googlePhoto || clerkUser?.imageUrl || null;
+              if (src) return (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={src} alt={userName ?? 'Perfil'}
+                  style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover', border: '2px solid #fff', boxShadow: '0 2px 8px rgba(0,0,0,0.15)' }}
+                />
+              );
+              return (
+                <div style={{ width: 32, height: 32, borderRadius: '50%', background: SIDEBAR_ROLE_GRADIENT[role ?? 'ADMIN'] ?? SIDEBAR_ROLE_GRADIENT.ADMIN, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: '#fff', border: '2px solid #fff', boxShadow: '0 2px 8px rgba(0,0,0,0.12)', flexShrink: 0 }}>
+                  {userName?.charAt(0)?.toUpperCase() ?? 'U'}
+                </div>
+              );
+            })()}
           </Link>
 
           {/* Nombre + rol (solo expandido) */}
@@ -644,26 +639,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     );
                   })}
 
-                  {isStudent && (
-                    <div
-                      className="flex-1 flex flex-col items-center relative z-10"
-                      style={{ gap: 4, paddingBottom: 2 }}
-                    >
-                      <div className="flex items-center justify-center" style={{ width: 44, height: 44 }}>
-                        <UserButton
-                          appearance={{
-                            elements: {
-                              avatarBox: { width: 38, height: 38, borderRadius: '50%' },
-                              userButtonPopoverCard: { borderRadius: 16 },
-                            },
-                          }}
-                        />
-                      </div>
-                      <span className="text-[9px] tracking-wide leading-none" style={{ color: '#8E87A8', fontWeight: 500 }}>
-                        Perfil
-                      </span>
-                    </div>
-                  )}
                 </div>
               </div>
             );

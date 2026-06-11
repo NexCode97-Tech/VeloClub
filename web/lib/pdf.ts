@@ -293,32 +293,7 @@ export async function downloadInvoicePDF(
   doc.setFont('helvetica', 'bold');
   doc.text(amountRaw, RIGHT_EDGE - 10, totalY + BOX_H / 2 + 2.5, { align: 'right' });
 
-  // ── 7. Sello PAGADO inclinado ─────────────────────────────────────────────
-  if (payment.status === 'PAID') {
-    const cx2  = W - MX - 28;
-    const cy2  = cy + rows.length * ROW_H / 2;
-    const DEG  = 18;
-    const RAD  = (DEG * Math.PI) / 180;
-    function rotPt(px: number, py: number): [number, number] {
-      const dx = px - cx2, dy = py - cy2;
-      return [cx2 + dx * Math.cos(-RAD) - dy * Math.sin(-RAD), cy2 + dx * Math.sin(-RAD) + dy * Math.cos(-RAD)];
-    }
-    function rotRect(rx: number, ry: number, rw: number, rh: number) {
-      const corners: [number,number][] = [rotPt(rx,ry),rotPt(rx+rw,ry),rotPt(rx+rw,ry+rh),rotPt(rx,ry+rh)];
-      for (let i=0;i<4;i++){const[x1,y1]=corners[i];const[x2,y2]=corners[(i+1)%4];doc.line(x1,y1,x2,y2);}
-    }
-    doc.setDrawColor(...GREEN);
-    doc.setLineWidth(1.4);
-    rotRect(cx2 - 22, cy2 - 7, 44, 14);
-    doc.setLineWidth(0.5);
-    rotRect(cx2 - 19, cy2 - 5, 38, 10);
-    doc.setTextColor(...GREEN);
-    doc.setFontSize(12);
-    doc.setFont('helvetica', 'bold');
-    doc.text('PAGADO', cx2, cy2 + 4, { align: 'center', angle: DEG });
-  }
-
-  // ── 8. Pie de página ──────────────────────────────────────────────────────
+  // ── 7. Pie de página ──────────────────────────────────────────────────────
   doc.setFontSize(6.5);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(...MUTED);

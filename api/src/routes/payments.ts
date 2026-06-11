@@ -4,6 +4,7 @@ import { requireAuth } from '../auth/middleware';
 import { prisma } from '../db/client';
 import { emitToClub } from '../lib/sse';
 import { v2 as cloudinary } from 'cloudinary';
+import { createQueue } from '../lib/queue';
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME?.trim(),
@@ -57,32 +58,9 @@ router.post('/generate-month', requireAuth, async (req, res) => {
   const { month, year } = parsed.data;
   const clubId = req.user.clubId ?? '';
 
-  const members = await prisma.member.findMany({
-    where: {
-      clubId,
-      monthlyFee:    { not: null },
-      paymentDueDay: { not: null },
-    },
-    select: {
-      id: true, fullName: true, monthlyFee: true, paymentDueDay: true,
-      payments: { where: { month, year }, select: { id: true } },
-    },
-  });
-
-  let created = 0;
-  let skipped = 0;
-
-  for (const m of members) {
-    if (m.payments.length > 0) { skipped++; continue; }
-    const dueDate = new Date(year, month - 1, m.paymentDueDay!);
-    await prisma.payment.create({
-      data: { clubId, memberId: m.id, amount: m.monthlyFee!, month, year, status: 'PENDING', dueDate },
-    });
-    created++;
-  }
-
-  if (created > 0) emitToClub(clubId, 'payments');
-  res.json({ ok: true, created, skipped });
+  const queue = createQueue('bulk-payments');
+  await queue.add('generate-month', { clubId, month, year });
+  res.json({ ok: true, queued: true });
 });
 
 // GET /payments/notifications — pagos PENDING próximos a vencer o vencidos

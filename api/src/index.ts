@@ -21,6 +21,7 @@ import cronRouter from './routes/cron';
 import postsRouter from './routes/posts';
 import followsRouter from './routes/follows';
 import profilesRouter from './routes/profiles';
+import { startWorkers } from './workers';
 
 dotenv.config();
 
@@ -124,4 +125,5 @@ app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
 
 app.listen(PORT, () => {
   console.log(`API en http://localhost:${PORT}`);
+  startWorkers();
 });

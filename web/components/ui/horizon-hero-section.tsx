@@ -295,15 +295,6 @@ export const HorizonHeroSection: React.FC = () => {
       refs.scene!.add(new THREE.Mesh(geometry, material));
     };
 
-    // Verificar soporte WebGL antes de inicializar
-    const testCanvas = document.createElement('canvas');
-    const hasWebGL = !!(testCanvas.getContext('webgl2') || testCanvas.getContext('webgl'));
-    if (!hasWebGL) {
-      setWebglFailed(true);
-      setIsReady(true);
-      return;
-    }
-
     try {
       refs.scene = new THREE.Scene();
       refs.scene.fog = new THREE.FogExp2(0x000000, 0.00025);
@@ -346,7 +337,7 @@ export const HorizonHeroSection: React.FC = () => {
 
       refs.locations = refs.mountains.map(m => m.position.z);
     } catch (err) {
-      console.warn('WebGL no disponible, usando fallback:', err);
+      console.error('[VeloClub Hero] WebGL init falló, usando fallback estático:', err);
       setWebglFailed(true);
       setIsReady(true);
       return;

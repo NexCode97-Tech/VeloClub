@@ -6,6 +6,7 @@ import { useAuth } from '@clerk/nextjs';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Users, CalendarCheck, CreditCard, Trophy, CheckCircle2, ChevronRight, Zap, Shield, Smartphone, Menu, X } from 'lucide-react';
+import Hero from '@/components/ui/animated-shader-hero';
 
 const features = [
   {
@@ -161,45 +162,22 @@ export default function HomePage() {
         </div>
       </nav>
 
-      {/* Hero */}
-      <section className="relative px-5 pt-16 pb-20 max-w-2xl mx-auto text-center overflow-hidden">
-        {/* Blob de fondo */}
-        <div
-          className="absolute -top-20 left-1/2 -translate-x-1/2 w-[500px] h-[500px] rounded-full opacity-[0.07] blur-3xl pointer-events-none"
-          style={{ background: 'radial-gradient(circle, #7C3AED 0%, #A855F7 60%, transparent 100%)' }}
-        />
-
-        <span className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-[#7C3AED] bg-[rgba(124,58,237,0.08)] border border-[rgba(124,58,237,0.15)] px-3.5 py-1.5 rounded-full mb-6">
-          <span className="w-1.5 h-1.5 rounded-full bg-[#7C3AED] animate-pulse" />
-          Plataforma para clubes de patinaje
-        </span>
-
-        <h1
-          className="text-4xl sm:text-5xl font-extrabold text-[#1A1028] leading-[1.15] tracking-tight mb-5"
-          style={{ fontFamily: 'Open Sans, sans-serif' }}
-        >
-          Gestiona tu club{' '}
-          <span
-            className="inline-block"
-            style={{ background: 'linear-gradient(135deg, #7C3AED, #A855F7)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}
-          >
-            desde un solo lugar
-          </span>
-        </h1>
-
-        <p className="text-base sm:text-lg text-[#8E87A8] leading-relaxed mb-10 max-w-lg mx-auto">
-          Todo lo que necesitas para administrar tu club: miembros, asistencia, pagos, resultados y calendario, sin complicaciones.
-        </p>
-
-        <Link
-          href="/sign-in"
-          className="inline-flex items-center gap-2 px-8 py-3.5 rounded-2xl text-white font-bold text-base shadow-lg shadow-[rgba(124,58,237,0.35)] transition-all active:scale-95 hover:shadow-xl hover:shadow-[rgba(124,58,237,0.4)] hover:-translate-y-0.5"
-          style={{ background: 'linear-gradient(135deg, #7C3AED, #9333EA)' }}
-        >
-          Entrar a VeloClub
-          <ChevronRight className="w-4 h-4" />
-        </Link>
-      </section>
+      {/* Hero animado con shader */}
+      <Hero
+        trustBadge={{
+          text: 'Plataforma para clubes deportivos',
+          icons: ['✦'],
+        }}
+        headline={{
+          line1: 'Gestiona tu club',
+          line2: 'desde un solo lugar',
+        }}
+        subtitle="Todo lo que necesitas para administrar tu club: miembros, asistencia, pagos, resultados y calendario, sin complicaciones."
+        buttons={{
+          primary:   { text: 'Entrar a VeloClub', href: '/sign-in' },
+          secondary: { text: 'Ver funcionalidades', href: '#funcionalidades' },
+        }}
+      />
 
       {/* Features */}
       <section id="funcionalidades" className="px-5 py-16 max-w-2xl mx-auto">

@@ -3,6 +3,8 @@
 import { SignIn, useAuth } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
+import Link from 'next/link';
+import { ArrowLeft } from 'lucide-react';
 
 export default function SignInPage() {
   const { isSignedIn, isLoaded } = useAuth();
@@ -15,7 +17,14 @@ export default function SignInPage() {
   if (!isLoaded || isSignedIn) return null;
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-slate-50">
+    <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-slate-50 relative">
+      <Link
+        href="/"
+        className="absolute top-4 left-4 inline-flex items-center gap-1.5 px-3 h-9 rounded-full bg-white border border-slate-200 text-slate-600 hover:text-slate-900 hover:border-slate-300 transition-colors text-[12px] font-semibold shadow-sm"
+      >
+        <ArrowLeft className="w-3.5 h-3.5" />
+        Atrás
+      </Link>
       <style>{`
         .cl-logo-custom { height: 72px; width: auto; }
         @media (max-width: 767px) { .cl-logo-custom { height: 110px !important; width: auto !important; } }

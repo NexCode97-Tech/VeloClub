@@ -300,14 +300,13 @@ function EventCard({ event }: { event: CalEvent }) {
             : null;
           return (
             <div className="flex items-center gap-1 mt-0.5">
-              <MapPin className={`w-3 h-3 shrink-0 ${hasCoords ? 'text-rose-400' : 'text-muted-foreground'}`} />
+              <MapPin className="w-3 h-3 shrink-0 text-muted-foreground" />
               {mapsUrl ? (
                 <a
                   href={mapsUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-[11px] font-medium truncate underline-offset-2 hover:underline"
-                  style={{ color: '#EF476F' }}
+                  className="text-[11px] font-medium truncate text-muted-foreground underline-offset-2 hover:underline"
                 >
                   {toSentenceCase(sub)}
                 </a>

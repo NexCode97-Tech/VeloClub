@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { ArrowRight, Star } from 'lucide-react';
 
 export default function GlassmorphismHero() {
@@ -106,8 +107,16 @@ export default function GlassmorphismHero() {
             </div>
           </div>
 
-          {/* Columna derecha vacía — solo desktop */}
-          <div className="hidden lg:block lg:col-span-5" />
+          {/* Columna derecha — imagen solo desktop */}
+          <div className="hidden lg:flex lg:col-span-5 items-center justify-center">
+            <Image
+              src="/version-movil.png"
+              alt="VeloClub versión móvil"
+              width={480}
+              height={340}
+              className="w-full max-w-md object-contain drop-shadow-2xl"
+            />
+          </div>
 
         </div>
       </div>

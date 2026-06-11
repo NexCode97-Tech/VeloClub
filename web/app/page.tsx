@@ -205,8 +205,8 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* App móvil preview */}
-      <section className="px-5 pb-10 max-w-5xl mx-auto flex justify-center">
+      {/* App móvil preview — solo mobile (en desktop está en el hero) */}
+      <section className="lg:hidden px-5 pb-10 max-w-5xl mx-auto flex justify-center">
         <Image
           src="/version-movil.png"
           alt="VeloClub versión móvil"

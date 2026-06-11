@@ -20,11 +20,11 @@ interface Scene {
 
 const SCENES: Scene[] = [
   {
-    id: 'veloclub',
-    title: 'VELOCLUB',
+    id: 'futuro',
+    title: 'FUTURO',
     subtitle: {
-      line1: 'Plataforma para clubes deportivos',
-      line2: 'del futuro',
+      line1: 'La plataforma para clubes deportivos',
+      line2: 'del nuevo siglo',
     },
   },
   {
@@ -426,13 +426,11 @@ export const HorizonHeroSection: React.FC = () => {
     const tl = gsap.timeline();
 
     if (heroTitleRef.current) {
-      const chars = heroTitleRef.current.querySelectorAll('.title-char');
-      tl.from(chars, {
-        y: 160,
+      tl.from(heroTitleRef.current, {
+        y: 60,
         opacity: 0,
-        duration: 1.2,
-        stagger: 0.05,
-        ease: 'power4.out',
+        duration: 1.0,
+        ease: 'power3.out',
       });
     }
     if (heroSubtitleRef.current) {
@@ -516,13 +514,6 @@ export const HorizonHeroSection: React.FC = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, [totalSections]);
 
-  const splitTitle = (text: string) =>
-    text.split('').map((char, i) => (
-      <span key={i} className="title-char inline-block" style={{ whiteSpace: 'pre' }}>
-        {char === ' ' ? ' ' : char}
-      </span>
-    ));
-
   return (
     <div ref={containerRef} className="relative w-full" style={{ height: `${100 * totalSections}vh` }}>
       <style jsx global>{`
@@ -569,12 +560,12 @@ export const HorizonHeroSection: React.FC = () => {
               >
                 <h1
                   ref={idx === 0 ? heroTitleRef : null}
-                  className="text-5xl sm:text-7xl md:text-8xl lg:text-9xl font-extrabold tracking-tight leading-none bg-clip-text text-transparent"
+                  className="text-6xl sm:text-7xl md:text-8xl lg:text-9xl font-extrabold tracking-tight leading-none bg-clip-text text-transparent"
                   style={{
                     backgroundImage: 'linear-gradient(135deg, #F5F3FF 0%, #C4B5FD 45%, #A855F7 75%, #7C3AED 100%)',
                   }}
                 >
-                  {idx === 0 ? splitTitle(scene.title) : scene.title}
+                  {scene.title}
                 </h1>
 
                 <div

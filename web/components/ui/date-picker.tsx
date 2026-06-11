@@ -92,17 +92,43 @@ export function DatePicker({
   // Calcular posición fixed para escapar del overflow del modal
   function handleOpen() {
     if (triggerRef.current) {
-      const rect       = triggerRef.current.getBoundingClientRect();
-      const DROP_H     = 296; // altura real del dropdown días
-      const vh         = window.innerHeight;
-      const goUp       = (vh - rect.bottom) < DROP_H + 12;
-      const topDown    = rect.bottom + 6;
-      const topUp      = Math.max(8, rect.top - DROP_H - 6);
+      const rect    = triggerRef.current.getBoundingClientRect();
+      const DROP_H  = 296;
+      const DROP_W  = 280;
+      const vh      = window.innerHeight;
+      const vw      = window.innerWidth;
+      const GAP     = 8;
 
-      setDropStyle(goUp
-        ? { position: 'fixed', top: topUp,   left: rect.left, width: Math.max(rect.width, 240) }
-        : { position: 'fixed', top: topDown, left: rect.left, width: Math.max(rect.width, 240) }
-      );
+      const spaceBelow = vh - rect.bottom;
+      const spaceAbove = rect.top;
+
+      // Si no cabe ni arriba ni abajo (modal en mobile), centrar en pantalla
+      if (spaceBelow < DROP_H + 12 && spaceAbove < DROP_H + 12) {
+        setDropStyle({
+          position: 'fixed',
+          top:      Math.max(GAP, (vh - DROP_H) / 2),
+          left:     Math.max(GAP, (vw - DROP_W) / 2),
+          width:    Math.min(DROP_W, vw - GAP * 2),
+        });
+      } else if (spaceBelow >= DROP_H + 12) {
+        // Cabe abajo
+        const width = Math.max(rect.width, 240);
+        setDropStyle({
+          position: 'fixed',
+          top:      rect.bottom + 6,
+          left:     Math.min(rect.left, vw - width - GAP),
+          width,
+        });
+      } else {
+        // Cabe arriba
+        const width = Math.max(rect.width, 240);
+        setDropStyle({
+          position: 'fixed',
+          top:      Math.max(GAP, rect.top - DROP_H - 6),
+          left:     Math.min(rect.left, vw - width - GAP),
+          width,
+        });
+      }
     }
     setView('days');
     setOpen(o => !o);

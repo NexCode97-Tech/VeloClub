@@ -13,6 +13,8 @@ import { Button } from '@/components/ui/button';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
+import { DatePicker } from '@/components/ui/date-picker';
+import { LocationPicker } from '@/components/ui/location-picker';
 
 interface Member { id: string; fullName: string }
 interface EventResult {
@@ -23,7 +25,7 @@ interface CompetitionEvent {
   id: string; name: string; results: EventResult[];
 }
 interface Competition {
-  id: string; name: string; place?: string; date: string;
+  id: string; name: string; place?: string; latitude?: number | null; longitude?: number | null; date: string;
   events: CompetitionEvent[];
 }
 
@@ -157,7 +159,7 @@ export default function CompetitionDetailPage() {
 
   // Modal editar competencia
   const [editOpen, setEditOpen]     = useState(false);
-  const [editForm, setEditForm]     = useState({ name: '', place: '', date: '' });
+  const [editForm, setEditForm]     = useState({ name: '', place: '', date: '', latitude: null as number | null, longitude: null as number | null });
   const [savingEdit, setSavingEdit] = useState(false);
   const [editError, setEditError]   = useState<string | null>(null);
 
@@ -252,9 +254,11 @@ export default function CompetitionDetailPage() {
   function openEditCompetition() {
     if (!competition) return;
     setEditForm({
-      name: competition.name,
-      place: competition.place ?? '',
-      date: competition.date.slice(0, 10),
+      name:      competition.name,
+      place:     competition.place     ?? '',
+      date:      competition.date.slice(0, 10),
+      latitude:  competition.latitude  ?? null,
+      longitude: competition.longitude ?? null,
     });
     setEditError(null);
     setEditOpen(true);
@@ -268,9 +272,11 @@ export default function CompetitionDetailPage() {
       await apiFetch(`/competitions/${id}`, {
         method: 'PATCH', token,
         body: JSON.stringify({
-          name:  editForm.name.trim(),
-          place: editForm.place.trim() || undefined,
-          date:  editForm.date || undefined,
+          name:      editForm.name.trim(),
+          place:     editForm.place.trim() || undefined,
+          date:      editForm.date         || undefined,
+          latitude:  editForm.latitude     ?? undefined,
+          longitude: editForm.longitude    ?? undefined,
         }),
       });
       setEditOpen(false);
@@ -453,7 +459,12 @@ export default function CompetitionDetailPage() {
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle>Editar competencia</DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              <span className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'rgba(67,97,238,0.10)' }}>
+                <Trophy className="w-4 h-4" style={{ color: '#4361EE' }} />
+              </span>
+              Editar competencia
+            </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 mt-2">
             <div className="space-y-2">
@@ -461,12 +472,19 @@ export default function CompetitionDetailPage() {
               <Input value={editForm.name} onChange={e => setEditForm(f => ({ ...f, name: e.target.value }))} placeholder="Nombre de la competencia" />
             </div>
             <div className="space-y-2">
-              <Label>Ciudad</Label>
-              <Input value={editForm.place} onChange={e => setEditForm(f => ({ ...f, place: e.target.value }))} placeholder="ej. Bogotá" />
+              <Label>Fecha</Label>
+              <DatePicker value={editForm.date} onChange={v => setEditForm(f => ({ ...f, date: v }))} />
             </div>
             <div className="space-y-2">
-              <Label>Fecha</Label>
-              <Input type="date" value={editForm.date} onChange={e => setEditForm(f => ({ ...f, date: e.target.value }))} />
+              <Label>Ubicación</Label>
+              <LocationPicker
+                value={editForm.place}
+                hasCoords={!!(editForm.latitude && editForm.longitude)}
+                initialLat={editForm.latitude}
+                initialLng={editForm.longitude}
+                onSelect={(place, lat, lng) => setEditForm(f => ({ ...f, place, latitude: lat, longitude: lng }))}
+                onClear={() => setEditForm(f => ({ ...f, place: '', latitude: null, longitude: null }))}
+              />
             </div>
             {editError && <p className="text-sm text-red-600">{editError}</p>}
             <Button onClick={handleEditCompetition} disabled={savingEdit || !editForm.name.trim()} className="w-full">

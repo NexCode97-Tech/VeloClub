@@ -1033,20 +1033,22 @@ export default function DashboardPage() {
             transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
           >
             <div
-              className="mx-4 mt-3 rounded-2xl px-4 py-3 flex items-center justify-center gap-2"
+              className="mx-4 mt-3 rounded-2xl px-4 py-3"
               style={{
                 background: trial.daysLeft <= 3 ? 'rgba(239,71,111,0.08)' : 'rgba(255,183,3,0.09)',
                 border: `1px solid ${trial.daysLeft <= 3 ? 'rgba(239,71,111,0.20)' : 'rgba(255,183,3,0.25)'}`,
               }}
             >
-              <span className="text-[16px] leading-none">⏳</span>
-              <p className="text-[12px] font-bold" style={{ color: trial.daysLeft <= 3 ? '#EF476F' : '#B88A00' }}>
-                {trial.daysLeft === 0
-                  ? 'Tu período de prueba vence hoy'
-                  : `Período de prueba · ${trial.daysLeft} día${trial.daysLeft !== 1 ? 's' : ''} restante${trial.daysLeft !== 1 ? 's' : ''}`}
-              </p>
+              <div className="flex items-center justify-center gap-2">
+                <span className="text-[16px] leading-none">⏳</span>
+                <p className="text-[12px] font-bold" style={{ color: trial.daysLeft <= 3 ? '#EF476F' : '#B88A00' }}>
+                  {trial.daysLeft === 0
+                    ? 'Tu período de prueba vence hoy'
+                    : `Período de prueba · ${trial.daysLeft} día${trial.daysLeft !== 1 ? 's' : ''} restante${trial.daysLeft !== 1 ? 's' : ''}`}
+                </p>
+              </div>
               {trial.daysLeft <= 3 && (
-                <p className="text-[11px]" style={{ color: '#EF476F', opacity: 0.8 }}>
+                <p className="text-[11px] text-center mt-1" style={{ color: '#EF476F', opacity: 0.8 }}>
                   Contacta a NexCode97 para activar tu plan
                 </p>
               )}

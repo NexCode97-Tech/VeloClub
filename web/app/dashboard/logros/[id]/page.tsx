@@ -370,7 +370,7 @@ export default function CompetitionDetailPage() {
             src={`https://maps.google.com/maps?q=${competition.latitude},${competition.longitude}&z=15&output=embed`}
             className="block"
           />
-          <div className="px-4 py-3 bg-white flex items-center justify-center gap-2">
+          <div className="px-4 py-3 bg-white flex items-center justify-center">
             <div className="flex items-center gap-1.5">
               <a
                 href={`https://www.google.com/maps?q=${competition.latitude},${competition.longitude}`}

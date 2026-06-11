@@ -63,6 +63,7 @@ export function DatePicker({
 
   const ref        = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
+  const portalRef  = useRef<HTMLDivElement>(null);
 
   // Sincronizar base cuando cambia el valor externo
   useEffect(() => {
@@ -73,10 +74,13 @@ export function DatePicker({
     }
   }, [value]);
 
-  // Cerrar al clic fuera
+  // Cerrar al clic fuera (incluye el portal)
   useEffect(() => {
     function h(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
+      const t = e.target as Node;
+      const insideTrigger = ref.current?.contains(t);
+      const insidePortal  = portalRef.current?.contains(t);
+      if (!insideTrigger && !insidePortal) {
         setOpen(false);
         setView('days');
       }
@@ -165,6 +169,7 @@ export function DatePicker({
       {/* ── Dropdown — Portal para escapar transforms del Dialog ── */}
       {open && typeof document !== 'undefined' && createPortal(
         <div
+          ref={portalRef}
           className="z-[9999] rounded-xl p-3"
           style={{
             ...dropStyle,

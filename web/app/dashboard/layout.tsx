@@ -79,6 +79,7 @@ const ROLE_MAS_ITEMS: Record<string, { label: string; icon: React.ElementType; h
     { label: 'Resultados', icon: IconResultados,   href: '/dashboard/logros',     color: '#F59E0B' },
     { label: 'Calendario', icon: IconCalendar,     href: '/dashboard/calendario', color: '#EF476F' },
     { label: 'Sedes',      icon: IconUbicacion,    href: '/dashboard/sedes',      color: '#06D6A0' },
+    { label: 'Club',       icon: IconClub,         href: '/dashboard/club',       color: '#7C3AED' },
   ],
   STUDENT: [
     { label: 'Club',  icon: IconClub,      href: '/dashboard/club',  color: '#06D6A0' },

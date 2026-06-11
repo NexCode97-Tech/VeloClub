@@ -370,14 +370,8 @@ export default function CompetitionDetailPage() {
             src={`https://maps.google.com/maps?q=${competition.latitude},${competition.longitude}&z=15&output=embed`}
             className="block"
           />
-          <div className="px-4 py-3 bg-white flex items-center justify-between gap-2">
-            <div className="flex items-center gap-1.5 min-w-0">
-              <MapPin className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-              <p className="text-[12px] text-muted-foreground truncate">
-                {competition.place ? toPlace(competition.place) : 'Ubicación registrada'}
-              </p>
-            </div>
-            <div className="flex items-center gap-1.5 shrink-0">
+          <div className="px-4 py-3 bg-white flex items-center justify-center gap-2">
+            <div className="flex items-center gap-1.5">
               <a
                 href={`https://www.google.com/maps?q=${competition.latitude},${competition.longitude}`}
                 target="_blank" rel="noopener noreferrer"

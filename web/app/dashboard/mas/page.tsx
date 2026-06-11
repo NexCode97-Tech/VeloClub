@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { stagger, cardVariant } from '@/lib/page-animations';
 
 import { useAuth, useClerk } from '@clerk/nextjs';
-import { UserButton, useUser } from '@clerk/nextjs';
+import { useUser } from '@clerk/nextjs';
 import { useEffect, useRef, useState } from 'react';
 import { apiFetch } from '@/lib/api-client';
 import Link from 'next/link';
@@ -195,16 +195,20 @@ export default function MasPage() {
         </motion.div>
       )}
 
-      {/* Tarjeta Mi cuenta — ADMIN / COACH (overlay invisible con UserButton) */}
+      {/* Tarjeta Mi cuenta — ADMIN / COACH */}
       {items !== null && role !== 'STUDENT' && (
-        <motion.div variants={cardVariant} className="relative bg-white border border-border rounded-2xl px-4 py-3.5 flex items-center gap-3 mb-4 overflow-hidden">
-          <div className="w-12 h-12 rounded-full bg-violet-100 shrink-0 flex items-center justify-center overflow-hidden pointer-events-none">
+        <motion.div
+          variants={cardVariant}
+          onClick={() => clerk.openUserProfile()}
+          className="bg-white border border-border rounded-2xl px-4 py-3.5 flex items-center gap-3 mb-4 cursor-pointer active:bg-secondary transition-colors"
+        >
+          <div className="w-12 h-12 rounded-full bg-violet-100 shrink-0 flex items-center justify-center overflow-hidden">
             {user?.imageUrl
               ? <img src={user.imageUrl} alt="avatar" className="w-full h-full object-cover" />
               : <span className="text-violet-500 font-bold text-lg">{avatarInitial}</span>
             }
           </div>
-          <div className="flex-1 min-w-0 pointer-events-none">
+          <div className="flex-1 min-w-0">
             <p className="text-[14px] font-bold text-foreground truncate" style={{ fontFamily: 'inherit' }}>
               {user?.fullName ?? user?.firstName ?? 'Mi cuenta'}
             </p>
@@ -212,15 +216,7 @@ export default function MasPage() {
               {user?.primaryEmailAddress?.emailAddress ?? roleLabel[role ?? 'ADMIN']}
             </p>
           </div>
-          <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0 pointer-events-none" />
-          <div className="absolute inset-0 flex items-center justify-start px-4 opacity-0">
-            <UserButton appearance={{
-              elements: {
-                avatarBox: { width: '100%', height: '100%', borderRadius: 0 },
-                userButtonTrigger: { width: '100vw', height: '100%', position: 'absolute', inset: 0, borderRadius: 0 },
-              },
-            }} />
-          </div>
+          <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
         </motion.div>
       )}
 

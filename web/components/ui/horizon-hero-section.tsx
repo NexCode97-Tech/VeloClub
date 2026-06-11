@@ -73,6 +73,7 @@ export const HorizonHeroSection: React.FC = () => {
   const [scrollProgress, setScrollProgress] = useState(0);
   const [currentSection, setCurrentSection] = useState(0);
   const [isReady, setIsReady] = useState(false);
+  const [webglFailed, setWebglFailed] = useState(false);
   const totalSections = SCENES.length;
 
   const threeRefs = useRef<ThreeRefs>({
@@ -294,45 +295,62 @@ export const HorizonHeroSection: React.FC = () => {
       refs.scene!.add(new THREE.Mesh(geometry, material));
     };
 
-    refs.scene = new THREE.Scene();
-    refs.scene.fog = new THREE.FogExp2(0x000000, 0.00025);
+    // Verificar soporte WebGL antes de inicializar
+    const testCanvas = document.createElement('canvas');
+    const hasWebGL = !!(testCanvas.getContext('webgl2') || testCanvas.getContext('webgl'));
+    if (!hasWebGL) {
+      setWebglFailed(true);
+      setIsReady(true);
+      return;
+    }
 
-    refs.camera = new THREE.PerspectiveCamera(
-      75,
-      window.innerWidth / window.innerHeight,
-      0.1,
-      2000
-    );
-    refs.camera.position.z = 100;
-    refs.camera.position.y = 20;
+    try {
+      refs.scene = new THREE.Scene();
+      refs.scene.fog = new THREE.FogExp2(0x000000, 0.00025);
 
-    refs.renderer = new THREE.WebGLRenderer({
-      canvas: canvasRef.current,
-      antialias: true,
-      alpha: true,
-    });
-    refs.renderer.setSize(window.innerWidth, window.innerHeight);
-    refs.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    refs.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    refs.renderer.toneMappingExposure = 0.5;
+      refs.camera = new THREE.PerspectiveCamera(
+        75,
+        window.innerWidth / window.innerHeight,
+        0.1,
+        2000
+      );
+      refs.camera.position.z = 100;
+      refs.camera.position.y = 20;
 
-    refs.composer = new EffectComposer(refs.renderer);
-    refs.composer.addPass(new RenderPass(refs.scene, refs.camera));
-    refs.composer.addPass(
-      new UnrealBloomPass(
-        new THREE.Vector2(window.innerWidth, window.innerHeight),
-        0.9,
-        0.4,
-        0.85
-      )
-    );
+      refs.renderer = new THREE.WebGLRenderer({
+        canvas: canvasRef.current,
+        antialias: true,
+        alpha: true,
+        failIfMajorPerformanceCaveat: false,
+      });
+      refs.renderer.setSize(window.innerWidth, window.innerHeight);
+      refs.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      refs.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      refs.renderer.toneMappingExposure = 0.5;
 
-    createStarField();
-    createNebula();
-    createMountains();
-    createAtmosphere();
+      refs.composer = new EffectComposer(refs.renderer);
+      refs.composer.addPass(new RenderPass(refs.scene, refs.camera));
+      refs.composer.addPass(
+        new UnrealBloomPass(
+          new THREE.Vector2(window.innerWidth, window.innerHeight),
+          0.9,
+          0.4,
+          0.85
+        )
+      );
 
-    refs.locations = refs.mountains.map(m => m.position.z);
+      createStarField();
+      createNebula();
+      createMountains();
+      createAtmosphere();
+
+      refs.locations = refs.mountains.map(m => m.position.z);
+    } catch (err) {
+      console.warn('WebGL no disponible, usando fallback:', err);
+      setWebglFailed(true);
+      setIsReady(true);
+      return;
+    }
 
     const animate = () => {
       refs.animationId = requestAnimationFrame(animate);
@@ -522,7 +540,31 @@ export const HorizonHeroSection: React.FC = () => {
 
       {/* Canvas y contenido sticky — viajan junto al scroll */}
       <div className="sticky top-0 h-screen w-full overflow-hidden bg-black">
-        <canvas ref={canvasRef} className="absolute inset-0 w-full h-full block" />
+        <canvas
+          ref={canvasRef}
+          className="absolute inset-0 w-full h-full block"
+          style={{ display: webglFailed ? 'none' : 'block' }}
+        />
+
+        {/* Fallback estático cuando WebGL no está disponible */}
+        {webglFailed && (
+          <>
+            <div
+              className="absolute inset-0"
+              style={{
+                background:
+                  'radial-gradient(ellipse at 50% 30%, #4C1D95 0%, #1E1B4B 40%, #0B0220 100%)',
+              }}
+            />
+            <div
+              className="absolute inset-0 opacity-50"
+              style={{
+                background:
+                  'radial-gradient(circle at 30% 70%, rgba(168,85,247,0.35) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(124,58,237,0.3) 0%, transparent 50%)',
+              }}
+            />
+          </>
+        )}
 
         {/* Contenedor de escenas */}
         <div className="absolute inset-0 z-10 flex flex-col items-center justify-center text-white px-5">

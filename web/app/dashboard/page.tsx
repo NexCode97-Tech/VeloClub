@@ -1033,28 +1033,23 @@ export default function DashboardPage() {
             transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
           >
             <div
-              className="mx-4 mt-3 rounded-2xl px-4 py-3 flex items-center gap-3"
+              className="mx-4 mt-3 rounded-2xl px-4 py-3 flex flex-col items-center justify-center gap-1 text-center"
               style={{
                 background: trial.daysLeft <= 3 ? 'rgba(239,71,111,0.08)' : 'rgba(255,183,3,0.09)',
                 border: `1px solid ${trial.daysLeft <= 3 ? 'rgba(239,71,111,0.20)' : 'rgba(255,183,3,0.25)'}`,
               }}
             >
-              <div
-                className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 text-[14px]"
-                style={{ background: trial.daysLeft <= 3 ? 'rgba(239,71,111,0.12)' : 'rgba(255,183,3,0.15)' }}
-              >{trial.daysLeft <= 3 ? '⚠️' : '🧪'}</div>
-              <div className="flex-1 min-w-0">
-                <p className="text-[12px] font-bold" style={{ color: trial.daysLeft <= 3 ? '#EF476F' : '#B88A00' }}>
-                  {trial.daysLeft === 0
-                    ? 'Tu período de prueba vence hoy'
-                    : `Período de prueba · ${trial.daysLeft} día${trial.daysLeft !== 1 ? 's' : ''} restante${trial.daysLeft !== 1 ? 's' : ''}`}
+              <div className="text-[18px] leading-none">⏳</div>
+              <p className="text-[12px] font-bold" style={{ color: trial.daysLeft <= 3 ? '#EF476F' : '#B88A00' }}>
+                {trial.daysLeft === 0
+                  ? 'Tu período de prueba vence hoy'
+                  : `Período de prueba · ${trial.daysLeft} día${trial.daysLeft !== 1 ? 's' : ''} restante${trial.daysLeft !== 1 ? 's' : ''}`}
+              </p>
+              {trial.daysLeft <= 3 && (
+                <p className="text-[11px]" style={{ color: '#EF476F', opacity: 0.8 }}>
+                  Contacta a NexCode97 para activar tu plan
                 </p>
-                {trial.daysLeft <= 3 && (
-                  <p className="text-[11px] mt-0.5" style={{ color: '#EF476F', opacity: 0.8 }}>
-                    Contacta a NexCode97 para activar tu plan
-                  </p>
-                )}
-              </div>
+              )}
             </div>
           </motion.div>
         )}

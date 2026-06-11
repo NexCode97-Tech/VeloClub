@@ -688,6 +688,18 @@ export default function FinanzasPage() {
               ))}
             </SelectContent>
           </Select>
+          {tab === 'flujo' && (
+            <motion.button
+              whileTap={reducedMotion ? {} : { scale: 0.96 }}
+              transition={{ duration: 0.12, ease: EASE_OUT }}
+              onClick={() => { setFlowForm({ type: 'INCOME', amount: '', description: '', date: '' }); setFlowError(null); setFlowOpen(true); }}
+              className="flex items-center justify-center gap-1.5 px-3 h-9 rounded-xl text-[12px] font-bold cursor-pointer shrink-0"
+              style={{ background: 'rgba(6,214,160,0.08)', color: '#06D6A0', border: '1.5px dashed rgba(6,214,160,0.25)' }}
+            >
+              <Plus className="w-3.5 h-3.5" />
+              Nuevo
+            </motion.button>
+          )}
           {tab === 'mensualidades' && (
             <motion.button
               whileTap={reducedMotion ? {} : { scale: 0.96 }}

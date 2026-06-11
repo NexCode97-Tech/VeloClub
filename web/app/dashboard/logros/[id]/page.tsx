@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { apiFetch } from '@/lib/api-client';
 import { parseLocalDate } from '@/lib/utils';
-import { ChevronLeft, Plus, Trash2, Trophy, Users, MapPin, CalendarDays, Pencil } from 'lucide-react';
+import { ChevronLeft, Plus, Trash2, Trophy, Users, MapPin, CalendarDays, Pencil, Navigation } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -357,6 +357,61 @@ export default function CompetitionDetailPage() {
           )}
         </div>
       </div>
+
+      {/* Mapa de ubicación — visible para todos los roles */}
+      {competition.latitude && competition.longitude && (
+        <div className="mx-4 mt-2 mb-1 rounded-2xl overflow-hidden border border-border">
+          <iframe
+            title="Ubicación de la competencia"
+            width="100%"
+            height="180"
+            loading="lazy"
+            referrerPolicy="no-referrer-when-downgrade"
+            src={`https://maps.google.com/maps?q=${competition.latitude},${competition.longitude}&z=15&output=embed`}
+            className="block"
+          />
+          <div className="px-4 py-3 bg-white flex items-center justify-between gap-2">
+            <div className="flex items-center gap-1.5 min-w-0">
+              <MapPin className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+              <p className="text-[12px] text-muted-foreground truncate">
+                {competition.place ? toPlace(competition.place) : 'Ubicación registrada'}
+              </p>
+            </div>
+            <div className="flex items-center gap-1.5 shrink-0">
+              <a
+                href={`https://www.google.com/maps?q=${competition.latitude},${competition.longitude}`}
+                target="_blank" rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-medium"
+                style={{ background: 'rgba(120,80,200,0.08)' }}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/google-maps-sign-logo.png" alt="Google Maps" className="w-3.5 h-3.5 object-contain" />
+                <span>Google</span>
+              </a>
+              <a
+                href={`https://waze.com/ul?ll=${competition.latitude},${competition.longitude}&navigate=yes`}
+                target="_blank" rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-medium"
+                style={{ background: 'rgba(120,80,200,0.08)' }}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/waze-icon-logo.png" alt="Waze" className="w-3.5 h-3.5 object-contain" />
+                <span>Waze</span>
+              </a>
+              <a
+                href={`https://maps.apple.com/?ll=${competition.latitude},${competition.longitude}`}
+                target="_blank" rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-medium"
+                style={{ background: 'rgba(120,80,200,0.08)' }}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/apple-maps-icon-seeklogo.png" alt="Apple Maps" className="w-3.5 h-3.5 object-contain" />
+                <span>Maps</span>
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="px-4 pt-4 flex flex-col gap-4 pb-6">
         {competition.events.length === 0 ? (

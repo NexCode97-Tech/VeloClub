@@ -2,25 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import {
-  ArrowRight,
-  Star,
-  Bike,
-  Waves,
-  Dumbbell,
-  Zap,
-  CircleDot,
-  Shield,
-} from 'lucide-react';
-
-const SPORTS = [
-  { name: 'Ciclismo',      icon: Bike },
-  { name: 'Natación',      icon: Waves },
-  { name: 'Atletismo',     icon: Zap },
-  { name: 'Fútbol',        icon: CircleDot },
-  { name: 'Fitness',       icon: Dumbbell },
-  { name: 'Multi-deporte', icon: Shield },
-];
+import { ArrowRight, Star } from 'lucide-react';
 
 export default function GlassmorphismHero() {
   return (
@@ -118,31 +100,8 @@ export default function GlassmorphismHero() {
             </div>
           </div>
 
-          {/* COLUMNA DERECHA — marquee */}
-          <div className="lg:col-span-5">
-            <div className="vc-fade d5 relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 py-4 backdrop-blur-xl">
-              <h3 className="mb-3 px-5 text-[11px] font-medium text-zinc-400">Disciplinas compatibles</h3>
-              <div
-                className="relative flex overflow-hidden"
-                style={{
-                  maskImage: 'linear-gradient(to right, transparent, black 15%, black 85%, transparent)',
-                  WebkitMaskImage: 'linear-gradient(to right, transparent, black 15%, black 85%, transparent)',
-                }}
-              >
-                <div className="vc-marquee flex gap-8 whitespace-nowrap px-3">
-                  {[...SPORTS, ...SPORTS, ...SPORTS].map((sport, i) => (
-                    <div
-                      key={i}
-                      className="flex items-center gap-1.5 opacity-50 transition-all hover:opacity-100 hover:scale-105 cursor-default"
-                    >
-                      <sport.icon className="h-4 w-4 text-violet-400" />
-                      <span className="text-sm font-bold text-white tracking-tight">{sport.name}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
+          {/* COLUMNA DERECHA — vacía en desktop para balancear el layout */}
+          <div className="hidden lg:block lg:col-span-5" />
 
         </div>
       </div>

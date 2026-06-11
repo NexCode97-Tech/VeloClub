@@ -142,200 +142,161 @@ export async function downloadInvoicePDF(
   clubName: string,
   clubLogoUrl?: string | null,
 ) {
-  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  // A5 (148 × 210 mm) — tamaño compacto ideal para imprimir un recibo
+  const W = 148, H = 210;
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: [W, H] });
   const fmt = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 });
-  const isPaid = payment.status === 'PAID';
+  const CX  = W / 2; // centro horizontal
+  const MX  = 12;    // margen lateral
 
-  // ── 1. Banda superior con gradiente ────────────────────────────────────────
-  gradientRect(doc, 0, 0, 210, 48);
-
-  // ── 2. Logo del club ───────────────────────────────────────────────────────
-  const LOGO_SIZE = 22;
-  const LOGO_X    = 14;
+  // ── 1. Cabecera: logo centrado + nombre del club ──────────────────────────
+  const LOGO_SIZE = 18;
+  const LOGO_X    = CX - LOGO_SIZE / 2;
   const LOGO_Y    = 10;
-  let logoLoaded  = false;
+  let   logoLoaded = false;
 
   if (clubLogoUrl) {
     const result = await fetchLogoDataUrl(clubLogoUrl);
     if (result) {
-      // Fondo blanco redondeado detrás del logo
-      doc.setFillColor(...WHITE);
-      doc.roundedRect(LOGO_X - 1, LOGO_Y - 1, LOGO_SIZE + 2, LOGO_SIZE + 2, 3, 3, 'F');
       doc.addImage(result.dataUrl, result.format, LOGO_X, LOGO_Y, LOGO_SIZE, LOGO_SIZE);
       logoLoaded = true;
     }
   }
-
   if (!logoLoaded) {
-    // Fallback: cuadrado con inicial
-    doc.setFillColor(255, 255, 255, 0.2);
+    doc.setFillColor(...PURPLE);
     doc.roundedRect(LOGO_X, LOGO_Y, LOGO_SIZE, LOGO_SIZE, 3, 3, 'F');
     doc.setTextColor(...WHITE);
-    doc.setFontSize(14);
+    doc.setFontSize(11);
     doc.setFont('helvetica', 'bold');
-    doc.text(clubName.charAt(0).toUpperCase(), LOGO_X + LOGO_SIZE / 2, LOGO_Y + LOGO_SIZE / 2 + 2, { align: 'center' });
+    doc.text(clubName.charAt(0).toUpperCase(), CX, LOGO_Y + LOGO_SIZE / 2 + 2, { align: 'center' });
   }
 
-  // ── 3. Nombre del club ─────────────────────────────────────────────────────
-  const nameX = LOGO_X + LOGO_SIZE + 8;
-  doc.setTextColor(...WHITE);
-  doc.setFontSize(15);
-  doc.setFont('helvetica', 'bold');
-  doc.text(clubName, nameX, 20);
-  doc.setFontSize(8);
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(220, 215, 255);
-  doc.text('Sistema de gestión deportiva · VeloClub', nameX, 27);
-
-  // ── 4. Etiqueta COMPROBANTE (derecha) ──────────────────────────────────────────
-  // Caja "COMPROBANTE"
-  doc.setFillColor(255, 255, 255, 0.15);
-  doc.roundedRect(148, 9, 48, 12, 2, 2, 'F');
-  doc.setTextColor(...WHITE);
-  doc.setFontSize(10);
-  doc.setFont('helvetica', 'bold');
-  doc.text('RECIBO', 172, 17, { align: 'center' });
-
-  // Fecha
-  doc.setFontSize(7.5);
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(220, 215, 255);
-  doc.text(
-    new Date().toLocaleDateString('es-CO', { day: 'numeric', month: 'long', year: 'numeric' }),
-    172, 25, { align: 'center' }
-  );
-
-  // ── 5. Título de la factura ────────────────────────────────────────────────
-  // Banda gris suave
-  doc.setFillColor(...BG);
-  doc.rect(0, 48, 210, 20, 'F');
-
+  let cy = LOGO_Y + LOGO_SIZE + 5;
   doc.setTextColor(...DARK);
-  doc.setFontSize(18);
+  doc.setFontSize(12);
   doc.setFont('helvetica', 'bold');
-  doc.text('Recibo de pago', 14, 60);
+  doc.text(clubName, CX, cy, { align: 'center' });
 
-  doc.setFontSize(9);
+  // ── 2. Línea divisora ─────────────────────────────────────────────────────
+  cy += 5;
+  doc.setDrawColor(...MUTED);
+  doc.setLineWidth(0.2);
+  doc.line(MX, cy, W - MX, cy);
+
+  // ── 3. Título del comprobante ─────────────────────────────────────────────
+  cy += 7;
+  doc.setFontSize(11);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(...DARK);
+  doc.text('Comprobante de pago', CX, cy, { align: 'center' });
+
+  cy += 5;
+  doc.setFontSize(7.5);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(...MUTED);
-  doc.text(`${MONTH_NAMES[payment.month - 1]} ${payment.year}`, 14, 66);
+  doc.text(`No. ${payment.id.slice(-10).toUpperCase()}`, CX, cy, { align: 'center' });
 
-  // ── 6. Tabla de detalle PRIMERO ───────────────────────────────────────────
-  const rows: [string, string][] = [
-    ['DEPORTISTA',    payment.memberName],
+  // ── 4. Línea divisora ─────────────────────────────────────────────────────
+  cy += 5;
+  doc.setDrawColor(...MUTED);
+  doc.setLineWidth(0.2);
+  doc.line(MX, cy, W - MX, cy);
+
+  // ── 5. Filas de detalle ───────────────────────────────────────────────────
+  const COL_LABEL = MX + 2;
+  const COL_VALUE = W - MX - 2;
+  const ROW_H     = 10;
+
+  const rows: [string, string, boolean][] = [
+    ['Estado del pago',  STATUS_ES[payment.status] ?? payment.status, payment.status === 'PAID'],
+    ['Deportista',       payment.memberName, false],
     ...(payment.docType || payment.docNumber
-      ? [[`${payment.docType ?? 'DOCUMENTO'}`, payment.docNumber ?? '—'] as [string, string]]
+      ? [[payment.docType ?? 'Documento', payment.docNumber ?? '—', false] as [string, string, boolean]]
       : []),
-    ['CONCEPTO',      `Mensualidad ${MONTH_NAMES[payment.month - 1]} ${payment.year}`],
-    ['PERÍODO',       `${MONTH_NAMES[payment.month - 1]} ${payment.year}`],
-    ['FECHA DE PAGO', payment.paidAt
+    ['Concepto',        `Mensualidad ${MONTH_NAMES[payment.month - 1]} ${payment.year}`, false],
+    ['Período',         `${MONTH_NAMES[payment.month - 1]} ${payment.year}`, false],
+    ['Fecha de pago',   payment.paidAt
       ? new Date(payment.paidAt).toLocaleDateString('es-CO', { day: 'numeric', month: 'long', year: 'numeric' })
-      : '—'],
+      : '—', false],
+    ...(payment.notes ? [['Notas', payment.notes, false] as [string, string, boolean]] : []),
   ];
-  if (payment.notes) rows.push(['NOTAS', payment.notes]);
 
-  const ROW_H   = 13;
-  const TABLE_X = 14;
-  const TABLE_W = 182;
-  const TABLE_Y = 74; // justo debajo del título
+  cy += 2;
+  rows.forEach(([label, value, highlight], i) => {
+    const rowY = cy + i * ROW_H;
+    // Fondo alternado suave
+    if (i % 2 === 0) {
+      doc.setFillColor(...BG);
+      doc.rect(MX, rowY, W - MX * 2, ROW_H, 'F');
+    }
+    const textY = rowY + ROW_H / 2 + 1.5;
 
-  // Cabecera de sección
-  doc.setFillColor(237, 233, 254);
-  doc.roundedRect(TABLE_X, TABLE_Y, TABLE_W, 9, 2, 2, 'F');
-  doc.setFontSize(7.5);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(...PURPLE);
-  doc.text('DETALLE DEL COBRO', TABLE_X + 8, TABLE_Y + 6);
+    doc.setFontSize(7.5);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(...MUTED);
+    doc.text(label, COL_LABEL, textY);
 
-  // Borde exterior (cabecera + filas)
-  doc.setDrawColor(...PURPLE);
-  doc.setLineWidth(0.3);
-  doc.roundedRect(TABLE_X, TABLE_Y, TABLE_W, 9 + rows.length * ROW_H, 2, 2, 'S');
+    if (highlight) {
+      // Estado "Pagado" en verde bold
+      doc.setFontSize(8.5);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(...GREEN);
+    } else {
+      doc.setFontSize(8.5);
+      doc.setFont('helvetica', label === 'Deportista' ? 'bold' : 'normal');
+      doc.setTextColor(...DARK);
+    }
+    doc.text(value, COL_VALUE, textY, { align: 'right' });
 
-  // Filas
-  rows.forEach(([label, value], i) => {
-    const rowTop = TABLE_Y + 9 + i * ROW_H;
-    doc.setFillColor(i % 2 === 0 ? 250 : 255, i % 2 === 0 ? 249 : 255, 255);
-    doc.rect(TABLE_X, rowTop, TABLE_W, ROW_H, 'F');
-
+    // Línea separadora (no en la última fila)
     if (i < rows.length - 1) {
       doc.setDrawColor(225, 220, 245);
-      doc.setLineWidth(0.15);
-      doc.line(TABLE_X, rowTop + ROW_H, TABLE_X + TABLE_W, rowTop + ROW_H);
+      doc.setLineWidth(0.1);
+      doc.line(MX, rowY + ROW_H, W - MX, rowY + ROW_H);
     }
-
-    const textY = rowTop + ROW_H / 2 + 1.5;
-    doc.setFontSize(7.5);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(...MUTED);
-    doc.text(label, TABLE_X + 8, textY);
-
-    doc.setFontSize(9.5);
-    doc.setFont('helvetica', label === 'DEPORTISTA' ? 'bold' : 'normal');
-    doc.setTextColor(...DARK);
-    doc.text(value, TABLE_X + 78, textY);
   });
 
-  // ── 7. Sello PAGADO — centrado sobre la tabla ─────────────────────────────
-  if (isPaid) {
-    const cx  = TABLE_X + TABLE_W - 44;
-    const cy  = TABLE_Y + 9 + (rows.length * ROW_H) / 2;
-    const DEG = 18;
-    const RAD = (DEG * Math.PI) / 180;
+  // ── 6. Caja total con gradiente — estilo Bancolombia ─────────────────────
+  const totalY = cy + rows.length * ROW_H + 6;
+  gradientRect(doc, MX, totalY, W - MX * 2, 18, 20);
+  doc.setTextColor(...WHITE);
+  doc.setFontSize(8);
+  doc.setFont('helvetica', 'normal');
+  doc.text('Total transferido:', MX + 6, totalY + 7);
+  doc.setFontSize(13);
+  doc.setFont('helvetica', 'bold');
+  doc.text(fmt.format(payment.amount), W - MX - 6, totalY + 13, { align: 'right' });
 
+  // ── 7. Sello PAGADO inclinado ─────────────────────────────────────────────
+  if (payment.status === 'PAID') {
+    const cx2  = W - MX - 28;
+    const cy2  = cy + rows.length * ROW_H / 2;
+    const DEG  = 18;
+    const RAD  = (DEG * Math.PI) / 180;
     function rotPt(px: number, py: number): [number, number] {
-      const dx = px - cx, dy = py - cy;
-      return [
-        cx + dx * Math.cos(-RAD) - dy * Math.sin(-RAD),
-        cy + dx * Math.sin(-RAD) + dy * Math.cos(-RAD),
-      ];
+      const dx = px - cx2, dy = py - cy2;
+      return [cx2 + dx * Math.cos(-RAD) - dy * Math.sin(-RAD), cy2 + dx * Math.sin(-RAD) + dy * Math.cos(-RAD)];
     }
     function rotRect(rx: number, ry: number, rw: number, rh: number) {
-      const corners: [number, number][] = [
-        rotPt(rx,      ry),      rotPt(rx + rw, ry),
-        rotPt(rx + rw, ry + rh), rotPt(rx,      ry + rh),
-      ];
-      for (let i = 0; i < 4; i++) {
-        const [x1, y1] = corners[i];
-        const [x2, y2] = corners[(i + 1) % 4];
-        doc.line(x1, y1, x2, y2);
-      }
+      const corners: [number,number][] = [rotPt(rx,ry),rotPt(rx+rw,ry),rotPt(rx+rw,ry+rh),rotPt(rx,ry+rh)];
+      for (let i=0;i<4;i++){const[x1,y1]=corners[i];const[x2,y2]=corners[(i+1)%4];doc.line(x1,y1,x2,y2);}
     }
-
     doc.setDrawColor(...GREEN);
-    doc.setLineWidth(1.8);
-    rotRect(cx - 32, cy - 10, 64, 20);
-    doc.setLineWidth(0.6);
-    rotRect(cx - 28, cy - 7,  56, 14);
-
-    // Offset +8: compensa el desplazamiento visual que genera angle en jsPDF
-    // (el anchor con angle positivo eleva visualmente el texto ~5mm)
+    doc.setLineWidth(1.4);
+    rotRect(cx2 - 22, cy2 - 7, 44, 14);
+    doc.setLineWidth(0.5);
+    rotRect(cx2 - 19, cy2 - 5, 38, 10);
     doc.setTextColor(...GREEN);
-    doc.setFontSize(16);
+    doc.setFontSize(12);
     doc.setFont('helvetica', 'bold');
-    doc.text('PAGADO', cx, cy + 5, { align: 'center', angle: DEG });
+    doc.text('PAGADO', cx2, cy2 + 4, { align: 'center', angle: DEG });
   }
 
-  // ── 8. Tarjeta MONTO TOTAL — debajo de la tabla ───────────────────────────
-  const montoY = TABLE_Y + 9 + rows.length * ROW_H + 8;
-  doc.setFillColor(...WHITE);
-  doc.setDrawColor(...PURPLE);
-  doc.setLineWidth(0.3);
-  doc.roundedRect(TABLE_X, montoY, TABLE_W, 28, 4, 4, 'FD');
-
-  doc.setFontSize(7);
-  doc.setFont('helvetica', 'bold');
+  // ── 8. Pie de página ──────────────────────────────────────────────────────
+  doc.setFontSize(6.5);
+  doc.setFont('helvetica', 'normal');
   doc.setTextColor(...MUTED);
-  doc.text('MONTO TOTAL', TABLE_X + 8, montoY + 9);
+  doc.text('Generado por VeloClub · Sistema de gestión deportiva', CX, H - 6, { align: 'center' });
 
-  doc.setFontSize(22);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(...PURPLE);
-  doc.text(fmt.format(payment.amount), TABLE_X + 8, montoY + 21);
-
-  // ── 9. Franja inferior de acento ──────────────────────────────────────────
-  gradientRect(doc, 0, 278, 210, 5);
-
-  footer(doc);
   doc.save(`recibo_${payment.memberName.replace(/\s+/g, '_')}_${MONTH_NAMES[payment.month - 1]}_${payment.year}.pdf`);
 }

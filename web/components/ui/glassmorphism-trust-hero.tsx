@@ -35,7 +35,7 @@ const StatItem = ({ value, label }: { value: string; label: string }) => (
 
 export default function GlassmorphismHero() {
   return (
-    <div className="w-full px-4 sm:px-6 lg:px-8 pt-24 pb-8 flex items-center justify-center min-h-screen bg-zinc-950">
+    <div className="relative w-full min-h-screen bg-zinc-950 overflow-hidden flex items-center">
       <style>{`
         @keyframes fadeSlideIn {
           from { opacity: 0; transform: translateY(16px); }
@@ -54,43 +54,40 @@ export default function GlassmorphismHero() {
         .d5 { animation-delay: 0.48s; }
       `}</style>
 
-      {/* Caja contenida */}
-      <div className="relative w-full max-w-5xl rounded-3xl overflow-hidden border border-white/10 shadow-2xl">
+      {/* ── FONDOS — full width ── */}
 
-        {/* ── FONDOS ── */}
+      {/* 1. Imagen silueta deportista de espalda */}
+      <div
+        className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat"
+        style={{
+          backgroundImage: "url(https://images.unsplash.com/photo-1551698618-1dfe5d97d256?w=1920&q=80)",
+          opacity: 0.55,
+          maskImage: 'linear-gradient(180deg, transparent, black 0%, black 70%, transparent)',
+          WebkitMaskImage: 'linear-gradient(180deg, transparent, black 0%, black 70%, transparent)',
+        }}
+      />
 
-        {/* 1. Imagen silueta deportista de espalda */}
-        <div
-          className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat"
-          style={{
-            backgroundImage: "url(https://images.unsplash.com/photo-1551698618-1dfe5d97d256?w=1920&q=80)",
-            opacity: 0.55,
-            maskImage: 'linear-gradient(180deg, transparent, black 0%, black 70%, transparent)',
-            WebkitMaskImage: 'linear-gradient(180deg, transparent, black 0%, black 70%, transparent)',
-          }}
-        />
+      {/* 2. Fondo oscuro base */}
+      <div className="absolute inset-0 z-[1] bg-zinc-950/80" />
 
-        {/* 2. Fondo oscuro base */}
-        <div className="absolute inset-0 z-[1] bg-zinc-950/80" />
+      {/* 3. Puerta violeta — radial glow */}
+      <div
+        className="absolute inset-0 z-[2] pointer-events-none"
+        style={{
+          background: 'radial-gradient(ellipse 320px 520px at 42% 62%, rgba(124,58,237,0.75) 0%, rgba(109,28,209,0.45) 35%, rgba(168,85,247,0.15) 60%, transparent 80%)',
+        }}
+      />
 
-        {/* 3. Puerta violeta — radial glow */}
-        <div
-          className="absolute inset-0 z-[2] pointer-events-none"
-          style={{
-            background: 'radial-gradient(ellipse 320px 520px at 42% 62%, rgba(124,58,237,0.75) 0%, rgba(109,28,209,0.45) 35%, rgba(168,85,247,0.15) 60%, transparent 80%)',
-          }}
-        />
+      {/* 4. Sombra lateral derecha para cards */}
+      <div
+        className="absolute inset-0 z-[2] pointer-events-none"
+        style={{
+          background: 'linear-gradient(to right, transparent 35%, rgba(9,4,20,0.55) 100%)',
+        }}
+      />
 
-        {/* 4. Sombra lateral derecha para cards */}
-        <div
-          className="absolute inset-0 z-[2] pointer-events-none"
-          style={{
-            background: 'linear-gradient(to right, transparent 35%, rgba(9,4,20,0.55) 100%)',
-          }}
-        />
-
-        {/* ── CONTENIDO ── */}
-        <div className="relative z-10 px-8 py-10 lg:px-12 lg:py-12">
+      {/* ── CONTENIDO — alineado al mismo max-w del nav ── */}
+      <div className="relative z-10 w-full max-w-5xl mx-auto px-5 py-28">
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:gap-6 items-center">
 
             {/* COLUMNA IZQUIERDA */}
@@ -233,3 +230,4 @@ export default function GlassmorphismHero() {
     </div>
   );
 }
+

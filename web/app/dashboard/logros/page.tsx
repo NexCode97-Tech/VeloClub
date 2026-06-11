@@ -16,6 +16,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select';
 import { DatePicker } from '@/components/ui/date-picker';
+import { LocationPicker } from '@/components/ui/location-picker';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 interface EventResult  { id: string; position?: number; member: { id: string; fullName: string; pictureUrl?: string | null } }
@@ -413,9 +414,11 @@ export default function LogrosPage() {
                   </SelectContent>
                 </Select>
               )}
-              <PlaceSearch
+              <LocationPicker
                 value={compForm.place}
                 hasCoords={!!(compForm.latitude && compForm.longitude)}
+                initialLat={compForm.latitude}
+                initialLng={compForm.longitude}
                 onSelect={(place, lat, lng) => setCompForm(f => ({ ...f, place, latitude: lat, longitude: lng }))}
                 onClear={() => setCompForm(f => ({ ...f, place: '', latitude: null, longitude: null }))}
               />
@@ -676,101 +679,6 @@ function TrainCard({ session: s, isStudent, myMemberId, canManage, deleting, onD
         </div>
       </div>
     </motion.div>
-  );
-}
-
-// ── PlaceSearch — buscador de lugares con geocodificación (Nominatim/OSM) ─────
-interface NominatimResult { place_id: number; display_name: string; lat: string; lon: string }
-
-function PlaceSearch({
-  value, hasCoords, onSelect, onClear,
-}: {
-  value: string;
-  hasCoords: boolean;
-  onSelect: (place: string, lat: number, lng: number) => void;
-  onClear: () => void;
-}) {
-  const [query, setQuery]       = useState(value);
-  const [results, setResults]   = useState<NominatimResult[]>([]);
-  const [searching, setSearching] = useState(false);
-  const [open, setOpen]         = useState(false);
-  const timerRef = useState<ReturnType<typeof setTimeout> | null>(null);
-
-  // Si el padre limpia el valor (cambio de sede), sincronizar
-  useEffect(() => { if (!value) setQuery(''); }, [value]);
-
-  function handleChange(q: string) {
-    setQuery(q);
-    if (timerRef[0]) clearTimeout(timerRef[0]);
-    if (q.trim().length < 3) { setResults([]); setOpen(false); return; }
-    timerRef[0] = setTimeout(async () => {
-      setSearching(true);
-      try {
-        const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=5&accept-language=es`;
-        const res = await fetch(url, { headers: { 'Accept-Language': 'es' } });
-        const data: NominatimResult[] = await res.json();
-        setResults(data);
-        setOpen(data.length > 0);
-      } catch { /* silencioso */ }
-      finally { setSearching(false); }
-    }, 500);
-  }
-
-  function handleSelect(r: NominatimResult) {
-    // Extraer nombre corto (primeros 2 segmentos del display_name)
-    const short = r.display_name.split(',').slice(0, 2).join(',').trim();
-    setQuery(short);
-    setOpen(false);
-    setResults([]);
-    onSelect(short, parseFloat(r.lat), parseFloat(r.lon));
-  }
-
-  function handleClear() {
-    setQuery('');
-    setResults([]);
-    setOpen(false);
-    onClear();
-  }
-
-  return (
-    <div className="relative">
-      <div className="relative flex items-center">
-        <MapPin className={`absolute left-3 w-4 h-4 pointer-events-none ${hasCoords ? 'text-emerald-500' : 'text-muted-foreground'}`} />
-        <input
-          value={query}
-          onChange={e => handleChange(e.target.value)}
-          onFocus={() => results.length > 0 && setOpen(true)}
-          placeholder="Buscar ciudad o lugar…"
-          className="w-full pl-9 pr-8 py-2 text-sm border border-input rounded-lg bg-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-        />
-        {searching && (
-          <div className="absolute right-3 w-3.5 h-3.5 rounded-full border-2 border-primary border-t-transparent animate-spin" />
-        )}
-        {!searching && query && (
-          <button onClick={handleClear} className="absolute right-3 text-muted-foreground hover:text-foreground transition-colors text-xs font-bold cursor-pointer">✕</button>
-        )}
-      </div>
-      {hasCoords && (
-        <p className="text-[11px] text-emerald-600 flex items-center gap-1 mt-1">
-          <MapPin className="w-3 h-3" />
-          Coordenadas guardadas · enlace Google Maps disponible para deportistas
-        </p>
-      )}
-      {open && results.length > 0 && (
-        <div className="absolute z-50 w-full mt-1 bg-white border border-border rounded-xl shadow-lg overflow-hidden">
-          {results.map(r => (
-            <button
-              key={r.place_id}
-              onClick={() => handleSelect(r)}
-              className="w-full flex items-start gap-2 px-3 py-2.5 hover:bg-secondary transition-colors text-left cursor-pointer"
-            >
-              <MapPin className="w-3.5 h-3.5 text-muted-foreground mt-0.5 shrink-0" />
-              <span className="text-[12px] text-foreground leading-snug line-clamp-2">{r.display_name}</span>
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
   );
 }
 

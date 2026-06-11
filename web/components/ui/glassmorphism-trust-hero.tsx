@@ -7,7 +7,7 @@ import { ArrowRight, Star } from 'lucide-react';
 
 export default function GlassmorphismHero() {
   return (
-    <div className="relative w-full min-h-dvh bg-zinc-950 overflow-hidden flex items-center">
+    <div className="relative w-full min-h-dvh bg-zinc-950 overflow-hidden flex items-center" style={{ WebkitTransform: 'translateZ(0)', transform: 'translateZ(0)' }}>
       <style>{`
         @keyframes fadeSlideIn {
           from { opacity: 0; transform: translateY(16px); }
@@ -34,6 +34,10 @@ export default function GlassmorphismHero() {
           opacity: 0.55,
           maskImage: 'linear-gradient(180deg, transparent, black 0%, black 70%, transparent)',
           WebkitMaskImage: 'linear-gradient(180deg, transparent, black 0%, black 70%, transparent)',
+          transform: 'translateZ(0)',
+          WebkitTransform: 'translateZ(0)',
+          backfaceVisibility: 'hidden',
+          WebkitBackfaceVisibility: 'hidden',
         }}
       />
 
@@ -101,7 +105,7 @@ export default function GlassmorphismHero() {
                 className="group inline-flex items-center justify-center gap-2 rounded-full w-full sm:w-auto px-8 py-3 text-sm font-bold text-white transition-all hover:scale-[1.02] active:scale-[0.98]"
                 style={{ background: 'linear-gradient(135deg, #7C3AED, #9333EA)' }}
               >
-                Empezar
+                Contáctanos
                 <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
               </a>
             </div>

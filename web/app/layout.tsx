@@ -20,7 +20,7 @@ export const metadata: Metadata = {
   description: "Plataforma para clubes de patinaje",
   icons: {
     icon: "/favicon.png",
-    apple: "/apple-touch-icon.png",
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
   },
 };
 
@@ -35,6 +35,9 @@ export default function RootLayout({
         lang="es"
         className={`${GeistSans.variable} ${GeistMono.variable} h-full antialiased`}
       >
+        <head>
+          <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+        </head>
         <body className="min-h-full flex flex-col">
           {/* Desregistra service workers viejos en todos los dispositivos */}
           <script dangerouslySetInnerHTML={{ __html: `

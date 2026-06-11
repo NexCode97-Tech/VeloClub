@@ -205,15 +205,17 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* App móvil preview — solo mobile (en desktop está en el hero) */}
-      <section className="lg:hidden px-5 pb-10 max-w-5xl mx-auto flex justify-center">
-        <Image
-          src="/version-movil.png"
-          alt="VeloClub versión móvil"
-          width={720}
-          height={400}
-          className="w-full max-w-2xl object-contain"
-        />
+      {/* App móvil preview — solo mobile/tablet (en desktop está en el hero) */}
+      <section className="lg:hidden w-full bg-white py-10">
+        <div className="max-w-5xl mx-auto px-5 flex justify-center">
+          <Image
+            src="/version-movil.png"
+            alt="VeloClub versión móvil"
+            width={720}
+            height={400}
+            className="w-full max-w-2xl object-contain"
+          />
+        </div>
       </section>
 
       {/* Benefits */}

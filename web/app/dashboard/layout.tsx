@@ -19,7 +19,7 @@ import {
   Bell,
   Search,
 } from 'lucide-react';
-import { IconHome, IconUsers, IconCalendar, IconStatistics, IconClub, IconFinanzas, IconUbicacion, IconAsistencias, IconResultados } from '@/components/ui/custom-icons';
+import { IconHome, IconUsers, IconCalendar, IconStatistics, IconClub, IconFinanzas, IconUbicacion, IconAsistencias, IconResultados, IconAjustes } from '@/components/ui/custom-icons';
 
 // ── Colores por rol (sidebar footer) ─────────────────────────────────────────
 const SIDEBAR_ROLE_LABEL: Record<string, string> = {
@@ -93,7 +93,7 @@ const ADMIN_NAV = [
   { href: '/dashboard/reportes',   label: 'Reportes',      icon: IconStatistics },
   { href: '/dashboard/club',       label: 'Club',          icon: IconClub },
   { href: '/dashboard/perfil',     label: 'Mi Perfil',     icon: UserCircle },
-  { href: '/dashboard/ajustes',    label: 'Ajustes',       icon: Settings },
+  { href: '/dashboard/ajustes',    label: 'Ajustes',       icon: IconAjustes},
 ];
 
 const COACH_NAV = [
@@ -105,7 +105,7 @@ const COACH_NAV = [
   { href: '/dashboard/calendario', label: 'Calendario',    icon: IconCalendar },
   { href: '/dashboard/club',       label: 'Club',          icon: IconClub },
   { href: '/dashboard/perfil',     label: 'Mi Perfil',     icon: UserCircle },
-  { href: '/dashboard/ajustes',    label: 'Ajustes',       icon: Settings },
+  { href: '/dashboard/ajustes',    label: 'Ajustes',       icon: IconAjustes},
 ];
 
 const STUDENT_NAV = [
@@ -115,7 +115,7 @@ const STUDENT_NAV = [
   { href: '/dashboard/sedes',      label: 'Sedes',         icon: IconUbicacion },
   { href: '/dashboard/pagos',      label: 'Mis Pagos',     icon: CreditCard },
   { href: '/dashboard/perfil',     label: 'Mi Perfil',     icon: UserCircle },
-  { href: '/dashboard/ajustes',    label: 'Ajustes',       icon: Settings },
+  { href: '/dashboard/ajustes',    label: 'Ajustes',       icon: IconAjustes},
 ];
 
 const ROLE_NAV: Record<string, typeof ADMIN_NAV> = {
@@ -431,7 +431,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               className="shrink-0 flex items-center justify-center transition-colors hover:bg-secondary rounded-lg"
               style={{ width: 26, height: 26, color: '#8E87A8' }}
             >
-              <Settings className="w-[14px] h-[14px]" />
+              <IconAjustes className="w-[14px] h-[14px]" />
             </Link>
           )}
         </div>

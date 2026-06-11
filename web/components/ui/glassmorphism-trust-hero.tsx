@@ -13,7 +13,7 @@ import {
   Waves,
   Dumbbell,
   Zap,
-  Dribbble,
+  CircleDot,
   Shield,
 } from 'lucide-react';
 
@@ -21,7 +21,7 @@ const SPORTS = [
   { name: 'Ciclismo',      icon: Bike },
   { name: 'Natación',      icon: Waves },
   { name: 'Atletismo',     icon: Zap },
-  { name: 'Fútbol',        icon: Dribbble },
+  { name: 'Fútbol',        icon: CircleDot },
   { name: 'Fitness',       icon: Dumbbell },
   { name: 'Multi-deporte', icon: Shield },
 ];

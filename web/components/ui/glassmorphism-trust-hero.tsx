@@ -4,10 +4,6 @@ import React from 'react';
 import Link from 'next/link';
 import {
   ArrowRight,
-  Users,
-  Trophy,
-  CalendarCheck,
-  CreditCard,
   Star,
   Bike,
   Waves,
@@ -25,13 +21,6 @@ const SPORTS = [
   { name: 'Fitness',       icon: Dumbbell },
   { name: 'Multi-deporte', icon: Shield },
 ];
-
-const StatItem = ({ value, label }: { value: string; label: string }) => (
-  <div className="flex flex-col items-center justify-center transition-transform hover:-translate-y-0.5 cursor-default">
-    <span className="text-base font-bold text-white">{value}</span>
-    <span className="text-[9px] uppercase tracking-wider text-zinc-500 font-medium">{label}</span>
-  </div>
-);
 
 export default function GlassmorphismHero() {
   return (
@@ -54,9 +43,7 @@ export default function GlassmorphismHero() {
         .d5 { animation-delay: 0.48s; }
       `}</style>
 
-      {/* ── FONDOS — full width ── */}
-
-      {/* 1. Imagen silueta deportista de espalda */}
+      {/* 1. Imagen de fondo */}
       <div
         className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat"
         style={{
@@ -70,7 +57,7 @@ export default function GlassmorphismHero() {
       {/* 2. Fondo oscuro base */}
       <div className="absolute inset-0 z-[1] bg-zinc-950/80" />
 
-      {/* 3. Puerta violeta — radial glow */}
+      {/* 3. Glow violeta */}
       <div
         className="absolute inset-0 z-[2] pointer-events-none"
         style={{
@@ -78,151 +65,87 @@ export default function GlassmorphismHero() {
         }}
       />
 
-      {/* 4. Sombra lateral derecha para cards */}
+      {/* 4. Sombra lateral derecha */}
       <div
-        className="absolute inset-0 z-[2] pointer-events-none"
-        style={{
-          background: 'linear-gradient(to right, transparent 35%, rgba(9,4,20,0.55) 100%)',
-        }}
+        className="absolute inset-0 z-[2] pointer-events-none hidden lg:block"
+        style={{ background: 'linear-gradient(to right, transparent 35%, rgba(9,4,20,0.55) 100%)' }}
       />
 
-      {/* ── CONTENIDO — alineado al mismo max-w del nav ── */}
-      <div className="relative z-10 w-full max-w-5xl mx-auto px-5 py-28">
-          <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:gap-6 items-center">
+      {/* CONTENIDO */}
+      <div className="relative z-10 w-full max-w-5xl mx-auto px-5 py-24 sm:py-28">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-6 items-center">
 
-            {/* COLUMNA IZQUIERDA */}
-            <div className="lg:col-span-7 flex flex-col justify-center space-y-5">
+          {/* COLUMNA IZQUIERDA — texto */}
+          <div className="lg:col-span-7 flex flex-col space-y-5">
 
-              {/* Badge */}
-              <div className="vc-fade d1">
-                <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 backdrop-blur-md transition-colors hover:bg-white/10">
-                  <span className="text-[10px] font-semibold uppercase tracking-wider text-zinc-300 flex items-center gap-1.5">
-                    Plataforma multi-deporte
-                    <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
-                  </span>
-                </div>
-              </div>
-
-              {/* Headline */}
-              <h1 className="vc-fade d2 text-4xl sm:text-5xl lg:text-[3.25rem] font-bold tracking-tighter leading-[0.92] text-white">
-                Gestiona tu club.<br />
-                <span className="bg-gradient-to-br from-white via-white to-[#A855F7] bg-clip-text text-transparent">
-                  Enfócate en
+            {/* Badge */}
+            <div className="vc-fade d1">
+              <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 backdrop-blur-md">
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-zinc-300 flex items-center gap-1.5">
+                  Plataforma multi-deporte
+                  <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
                 </span>
-                <br />el deporte.
-              </h1>
-
-              {/* Descripción */}
-              <p className="vc-fade d3 max-w-md text-sm text-zinc-400 leading-relaxed">
-                VeloClub es la plataforma todo-en-uno para gestionar miembros, asistencia,
-                pagos y competencias de tu club deportivo — desde un solo lugar.
-              </p>
-
-              {/* CTAs */}
-              <div className="vc-fade d4">
-                <a
-                  href="https://wa.me/573153171225"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group inline-flex items-center justify-center gap-2 rounded-full px-6 py-2.5 text-sm font-bold text-white transition-all hover:scale-[1.02] active:scale-[0.98]"
-                  style={{ background: 'linear-gradient(135deg, #7C3AED, #9333EA)' }}
-                >
-                  Empezar
-                  <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
-                </a>
               </div>
             </div>
 
-            {/* COLUMNA DERECHA */}
-            <div className="lg:col-span-5 flex flex-col gap-3">
+            {/* Headline */}
+            <h1 className="vc-fade d2 text-[2.6rem] sm:text-5xl lg:text-[3.25rem] font-bold tracking-tighter leading-[0.92] text-white">
+              Gestiona tu club.<br />
+              <span className="bg-gradient-to-br from-white via-white to-[#A855F7] bg-clip-text text-transparent">
+                Enfócate en
+              </span>
+              <br />el deporte.
+            </h1>
 
-              {/* Stats Card */}
-              <div className="vc-fade d5 relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-xl shadow-xl">
-                <div className="absolute top-0 right-0 -mr-10 -mt-10 h-40 w-40 rounded-full bg-[#7C3AED]/10 blur-2xl pointer-events-none" />
+            {/* Descripción */}
+            <p className="vc-fade d3 max-w-md text-sm text-zinc-400 leading-relaxed">
+              VeloClub es la plataforma todo-en-uno para gestionar miembros, asistencia,
+              pagos y competencias de tu club deportivo — desde un solo lugar.
+            </p>
 
-                <div className="relative z-10">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#7C3AED]/20 ring-1 ring-[#7C3AED]/30">
-                      <Users className="h-4 w-4 text-violet-300" />
-                    </div>
-                    <div>
-                      <div className="text-2xl font-bold tracking-tight text-white leading-none">500+</div>
-                      <div className="text-xs text-zinc-400 mt-0.5">Deportistas activos</div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-1.5 mb-4">
-                    <div className="flex justify-between text-xs">
-                      <span className="text-zinc-400">Asistencia promedio</span>
-                      <span className="text-white font-medium">92%</span>
-                    </div>
-                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-zinc-800/60">
-                      <div className="h-full w-[92%] rounded-full bg-gradient-to-r from-[#7C3AED] to-[#A855F7]" />
-                    </div>
-                  </div>
-
-                  <div className="h-px w-full bg-white/10 mb-3" />
-
-                  <div className="grid grid-cols-3 gap-3 text-center">
-                    <StatItem value="30+" label="Clubes" />
-                    <div className="w-px bg-white/10 mx-auto" />
-                    <StatItem value="8" label="Deportes" />
-                    <div className="w-px bg-white/10 mx-auto" />
-                    <StatItem value="4" label="Países" />
-                  </div>
-
-                  <div className="mt-3 flex flex-nowrap gap-1.5">
-                    <div className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[9px] font-medium tracking-wide text-zinc-300 whitespace-nowrap">
-                      <span className="relative flex h-1.5 w-1.5">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
-                        <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-green-500" />
-                      </span>
-                      EN PRODUCCIÓN
-                    </div>
-                    <div className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[9px] font-medium tracking-wide text-zinc-300 whitespace-nowrap">
-                      <Trophy className="w-2.5 h-2.5 text-yellow-500" />
-                      MULTI-DEPORTE
-                    </div>
-                    <div className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[9px] font-medium tracking-wide text-zinc-300 whitespace-nowrap">
-                      <CalendarCheck className="w-2.5 h-2.5 text-violet-400" />
-                      ASISTENCIA
-                    </div>
-                    <div className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[9px] font-medium tracking-wide text-zinc-300 whitespace-nowrap">
-                      <CreditCard className="w-2.5 h-2.5 text-[#06D6A0]" />
-                      PAGOS
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Marquee Card */}
-              <div className="vc-fade d5 relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 py-4 backdrop-blur-xl">
-                <h3 className="mb-3 px-5 text-[11px] font-medium text-zinc-400">Disciplinas compatibles</h3>
-                <div
-                  className="relative flex overflow-hidden"
-                  style={{
-                    maskImage: 'linear-gradient(to right, transparent, black 15%, black 85%, transparent)',
-                    WebkitMaskImage: 'linear-gradient(to right, transparent, black 15%, black 85%, transparent)',
-                  }}
-                >
-                  <div className="vc-marquee flex gap-8 whitespace-nowrap px-3">
-                    {[...SPORTS, ...SPORTS, ...SPORTS].map((sport, i) => (
-                      <div
-                        key={i}
-                        className="flex items-center gap-1.5 opacity-50 transition-all hover:opacity-100 hover:scale-105 cursor-default"
-                      >
-                        <sport.icon className="h-4 w-4 text-violet-400" />
-                        <span className="text-sm font-bold text-white tracking-tight">{sport.name}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
+            {/* CTA */}
+            <div className="vc-fade d4">
+              <a
+                href="https://wa.me/573153171225"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group inline-flex items-center gap-2 rounded-full px-6 py-2.5 text-sm font-bold text-white transition-all hover:scale-[1.02] active:scale-[0.98]"
+                style={{ background: 'linear-gradient(135deg, #7C3AED, #9333EA)' }}
+              >
+                Empezar
+                <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
+              </a>
             </div>
           </div>
+
+          {/* COLUMNA DERECHA — marquee */}
+          <div className="lg:col-span-5">
+            <div className="vc-fade d5 relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 py-4 backdrop-blur-xl">
+              <h3 className="mb-3 px-5 text-[11px] font-medium text-zinc-400">Disciplinas compatibles</h3>
+              <div
+                className="relative flex overflow-hidden"
+                style={{
+                  maskImage: 'linear-gradient(to right, transparent, black 15%, black 85%, transparent)',
+                  WebkitMaskImage: 'linear-gradient(to right, transparent, black 15%, black 85%, transparent)',
+                }}
+              >
+                <div className="vc-marquee flex gap-8 whitespace-nowrap px-3">
+                  {[...SPORTS, ...SPORTS, ...SPORTS].map((sport, i) => (
+                    <div
+                      key={i}
+                      className="flex items-center gap-1.5 opacity-50 transition-all hover:opacity-100 hover:scale-105 cursor-default"
+                    >
+                      <sport.icon className="h-4 w-4 text-violet-400" />
+                      <span className="text-sm font-bold text-white tracking-tight">{sport.name}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
       </div>
     </div>
   );
 }
-

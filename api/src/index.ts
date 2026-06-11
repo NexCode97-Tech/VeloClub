@@ -3,6 +3,7 @@ import * as Sentry from '@sentry/node';
 import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
+import compression from 'compression';
 import dotenv from 'dotenv';
 import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
 import meRouter from './routes/me';
@@ -22,6 +23,8 @@ import postsRouter from './routes/posts';
 import followsRouter from './routes/follows';
 import profilesRouter from './routes/profiles';
 import { startWorkers } from './workers';
+import { prisma } from './db/client';
+import { getRedis } from './lib/redis';
 
 dotenv.config();
 
@@ -30,6 +33,9 @@ const PORT = process.env.PORT || 4000;
 
 // Confiar en el proxy de Railway para leer X-Forwarded-For correctamente
 app.set('trust proxy', 1);
+
+// ── Compresión gzip/brotli ────────────────────────────────────────────────────
+app.use(compression());
 
 // ── Seguridad ─────────────────────────────────────────────────────────────────
 app.use(helmet());
@@ -76,9 +82,37 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   next();
 });
 
-// ── Health check ──────────────────────────────────────────────────────────────
-app.get('/health', (_req, res) => {
-  res.json({ status: 'ok', service: 'veloclub-api' });
+// ── Health check profundo ─────────────────────────────────────────────────────
+app.get('/health', async (_req, res) => {
+  const checks: Record<string, string> = {};
+
+  // DB check
+  try {
+    await prisma.$queryRaw`SELECT 1`;
+    checks.db = 'ok';
+  } catch {
+    checks.db = 'error';
+  }
+
+  // Redis check
+  try {
+    const redis = getRedis();
+    if (redis) {
+      await redis.ping();
+      checks.redis = 'ok';
+    } else {
+      checks.redis = 'disabled';
+    }
+  } catch {
+    checks.redis = 'error';
+  }
+
+  const allOk = Object.values(checks).every(v => v === 'ok' || v === 'disabled');
+  res.status(allOk ? 200 : 503).json({
+    status: allOk ? 'ok' : 'degraded',
+    service: 'veloclub-api',
+    checks,
+  });
 });
 
 // Rate limiting para /me: por usuario (header clerk), no por IP
@@ -123,7 +157,10 @@ app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
   res.status(500).json({ error: 'Error interno del servidor' });
 });
 
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`API en http://localhost:${PORT}`);
   startWorkers();
 });
+
+// Timeout de 30s — evita que requests colgados bloqueen el servidor indefinidamente
+server.timeout = 30_000;

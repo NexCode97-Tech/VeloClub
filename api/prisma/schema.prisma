@@ -120,6 +120,7 @@ model Member {
 
   @@index([clubId])
   @@index([email])
+  @@index([clubId, inviteStatus])
 }
 
 model MemberLocation {
@@ -175,6 +176,7 @@ model Payment {
   @@index([clubId])
   @@index([memberId])
   @@index([clubId, year, month])
+  @@index([clubId, status])
 }
 
 // ─── CashEntry (flujo de caja) ───────────────────────────────────────────────
@@ -386,6 +388,8 @@ model Notificacion {
   cuerpo    String
   leida     Boolean          @default(false)
   createdAt DateTime         @default(now())
+
+  @@index([leida, createdAt])
 }
 
 // ─── Follow (sistema de seguidores) ─────────────────────────────────────────

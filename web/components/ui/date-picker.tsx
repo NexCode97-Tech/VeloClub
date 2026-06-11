@@ -87,15 +87,16 @@ export function DatePicker({
   // Calcular posición fixed para escapar del overflow del modal
   function handleOpen() {
     if (triggerRef.current) {
-      const rect        = triggerRef.current.getBoundingClientRect();
-      const dropdownH   = 330;
-      const vhVisible   = window.visualViewport?.height ?? window.innerHeight;
-      const spaceBelow  = vhVisible - rect.bottom - 16; // 16px de margen seguro
-      const goUp        = spaceBelow < dropdownH;
+      const rect       = triggerRef.current.getBoundingClientRect();
+      const DROP_H     = 296; // altura real del dropdown días
+      const vh         = window.innerHeight;
+      const goUp       = (vh - rect.bottom) < DROP_H + 12;
+      const topDown    = rect.bottom + 6;
+      const topUp      = Math.max(8, rect.top - DROP_H - 6);
 
       setDropStyle(goUp
-        ? { position: 'fixed', bottom: vhVisible - rect.top + 6, left: rect.left, width: Math.max(rect.width, 240) }
-        : { position: 'fixed', top: rect.bottom + 6,              left: rect.left, width: Math.max(rect.width, 240) }
+        ? { position: 'fixed', top: topUp,   left: rect.left, width: Math.max(rect.width, 240) }
+        : { position: 'fixed', top: topDown, left: rect.left, width: Math.max(rect.width, 240) }
       );
     }
     setView('days');

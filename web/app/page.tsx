@@ -6,7 +6,7 @@ import { useAuth } from '@clerk/nextjs';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Users, CalendarCheck, CreditCard, Trophy, CheckCircle2, ChevronRight, Zap, Shield, Smartphone, Menu, X } from 'lucide-react';
-import Hero from '@/components/ui/animated-shader-hero';
+import HorizonHero from '@/components/ui/horizon-hero-section';
 
 const features = [
   {
@@ -169,22 +169,8 @@ export default function HomePage() {
         </div>
       </nav>
 
-      {/* Hero animado con shader */}
-      <Hero
-        trustBadge={{
-          text: 'Plataforma para clubes deportivos',
-          icons: ['✦'],
-        }}
-        headline={{
-          line1: 'Gestiona tu club',
-          line2: 'desde un solo lugar',
-        }}
-        subtitle="Todo lo que necesitas para administrar tu club: miembros, asistencia, pagos, resultados y calendario, sin complicaciones."
-        buttons={{
-          primary:   { text: 'Entrar a VeloClub', href: '/sign-in' },
-          secondary: { text: 'Ver funcionalidades', href: '#funcionalidades' },
-        }}
-      />
+      {/* Hero 3D con escenas y scroll-jacking */}
+      <HorizonHero />
 
       {/* Features */}
       <section id="funcionalidades" className="px-5 py-16 max-w-2xl mx-auto">

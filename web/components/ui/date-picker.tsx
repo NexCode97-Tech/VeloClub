@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import {
   format, addMonths, subMonths, startOfMonth, endOfMonth,
   startOfWeek, endOfWeek, addDays, isSameMonth, isSameDay, isAfter,
@@ -147,7 +148,7 @@ export function DatePicker({
         style={{ background: '#fff' }}
       >
         <CalendarDays className="w-4 h-4 shrink-0 text-muted-foreground" />
-        <span className={`flex-1 text-[12px] md:text-sm ${parsed ? 'text-foreground' : 'text-muted-foreground'}`}>
+        <span className={`flex-1 text-sm ${parsed ? 'text-foreground' : 'text-muted-foreground'}`}>
           {label}
         </span>
         {parsed && (
@@ -161,8 +162,8 @@ export function DatePicker({
         )}
       </button>
 
-      {/* ── Dropdown (fixed para escapar modal overflow) ── */}
-      {open && (
+      {/* ── Dropdown — Portal para escapar transforms del Dialog ── */}
+      {open && typeof document !== 'undefined' && createPortal(
         <div
           className="z-[9999] rounded-xl p-3"
           style={{
@@ -343,7 +344,8 @@ export function DatePicker({
               </div>
             </>
           )}
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

@@ -1,5 +1,6 @@
 import type { NextConfig } from "next";
 import withPWA from "@ducanh2912/next-pwa";
+import { withSentryConfig } from "@sentry/nextjs";
 
 const CSP = [
   "default-src 'self'",
@@ -12,7 +13,7 @@ const CSP = [
   // Fuentes: solo propio dominio + Google Maps
   "font-src 'self' data: https://fonts.gstatic.com",
   // Conexiones: propio dominio + API Railway + Clerk + Cloudinary + Google Maps + Nominatim (geocodificación)
-  "connect-src 'self' https://veloclub-production.up.railway.app https://clerk.veloclubtech.com https://*.clerk.accounts.dev https://api.cloudinary.com https://res.cloudinary.com https://maps.googleapis.com https://*.googleapis.com https://nominatim.openstreetmap.org",
+  "connect-src 'self' https://veloclub-production.up.railway.app https://clerk.veloclubtech.com https://*.clerk.accounts.dev https://api.cloudinary.com https://res.cloudinary.com https://maps.googleapis.com https://*.googleapis.com https://nominatim.openstreetmap.org https://*.sentry.io",
   // Frames: Clerk (UI embebida) + Google Maps (embeds)
   "frame-src https://clerk.veloclubtech.com https://*.clerk.accounts.dev https://maps.google.com https://www.google.com",
   // No permitir embeber la app en iframes externos
@@ -46,7 +47,7 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default withPWA({
+const pwaConfig = withPWA({
   dest: "public",
   reloadOnOnline: true,
   disable: process.env.NODE_ENV === "development",
@@ -101,3 +102,12 @@ export default withPWA({
     ],
   },
 })(nextConfig);
+
+export default withSentryConfig(pwaConfig, {
+  org: 'nexcode97',
+  project: 'veloclub-web',
+  silent: !process.env.CI,
+  widenClientFileUpload: true,
+  disableLogger: true,
+  automaticVercelMonitors: true,
+});

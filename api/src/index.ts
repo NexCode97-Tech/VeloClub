@@ -1,3 +1,5 @@
+import './instrument'; // Sentry — debe ser el primer import
+import * as Sentry from '@sentry/node';
 import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -111,8 +113,10 @@ app.use('/posts', postsRouter);
 app.use('/follows', followsRouter);
 app.use('/profiles', profilesRouter);
 
+// ── Sentry error handler (debe ir antes del error handler custom) ─────────────
+Sentry.setupExpressErrorHandler(app);
+
 // ── Manejador global de errores ───────────────────────────────────────────────
-// Evita que stack traces o mensajes internos lleguen al cliente
 app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
   console.error(JSON.stringify({ level: 'ERROR', msg: err.message }));
   res.status(500).json({ error: 'Error interno del servidor' });

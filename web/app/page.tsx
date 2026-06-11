@@ -6,7 +6,7 @@ import { useAuth } from '@clerk/nextjs';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Users, CalendarCheck, CreditCard, Trophy, CheckCircle2, ChevronRight, Zap, Shield, Smartphone, Menu, X } from 'lucide-react';
-import HorizonHero from '@/components/ui/horizon-hero-section';
+import GlassmorphismHero from '@/components/ui/glassmorphism-trust-hero';
 
 const features = [
   {
@@ -169,8 +169,8 @@ export default function HomePage() {
         </div>
       </nav>
 
-      {/* Hero 3D con escenas y scroll-jacking */}
-      <HorizonHero />
+      {/* Hero glassmorphism */}
+      <GlassmorphismHero />
 
       {/* Features */}
       <section id="funcionalidades" className="px-5 py-16 max-w-2xl mx-auto">

@@ -116,9 +116,9 @@ export default function GlassmorphismHero() {
             <Image
               src="/version-movil.png"
               alt="VeloClub versión móvil"
-              width={480}
-              height={340}
-              className="w-full max-w-md object-contain drop-shadow-2xl"
+              width={600}
+              height={420}
+              className="w-full max-w-lg object-contain drop-shadow-2xl"
             />
           </div>
 

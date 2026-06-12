@@ -117,14 +117,14 @@ export default function GlassmorphismHero() {
           </div>
 
           {/* Columna derecha — imagen solo desktop */}
-          <div className="hidden lg:flex lg:col-span-5 items-center justify-center">
+          <div className="hidden lg:flex lg:col-span-5 items-center justify-center overflow-visible">
             <Image
               src="/version-movil.webp"
               alt="VeloClub versión móvil"
-              width={600}
-              height={420}
+              width={780}
+              height={540}
               priority
-              className="w-full max-w-lg object-contain drop-shadow-2xl"
+              className="w-full max-w-2xl object-contain drop-shadow-2xl scale-110"
             />
           </div>
 

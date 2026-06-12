@@ -7,7 +7,7 @@ import { ArrowRight, Star } from 'lucide-react';
 
 export default function GlassmorphismHero() {
   return (
-    <div className="relative w-full min-h-dvh bg-zinc-950 overflow-hidden flex items-center" style={{ WebkitTransform: 'translateZ(0)', transform: 'translateZ(0)' }}>
+    <div className="relative w-full min-h-dvh bg-zinc-950 overflow-hidden flex items-center" style={{ WebkitTransform: 'translateZ(0)', transform: 'translateZ(0)', touchAction: 'pan-y', WebkitOverflowScrolling: 'auto' }}>
       <style>{`
         @keyframes fadeSlideIn {
           from { opacity: 0; transform: translateY(16px); }
@@ -42,7 +42,18 @@ export default function GlassmorphismHero() {
           fetchPriority="high"
           sizes="100vw"
           className="object-cover object-center opacity-55"
-          style={{ transform: 'translateZ(0)' }}
+          style={{
+            transform: 'translateZ(0)',
+            WebkitTransform: 'translateZ(0)',
+            willChange: 'transform',
+            backfaceVisibility: 'hidden',
+            WebkitBackfaceVisibility: 'hidden',
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+          }}
         />
       </div>
 

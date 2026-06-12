@@ -26,20 +26,25 @@ export default function GlassmorphismHero() {
         .d5 { animation-delay: 0.48s; }
       `}</style>
 
-      {/* 1. Imagen de fondo */}
+      {/* 1. Imagen de fondo — Next.js Image con priority para LCP */}
       <div
-        className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat"
+        className="absolute inset-0 z-0"
         style={{
-          backgroundImage: "url(/hero-bg.webp)",
-          opacity: 0.55,
           maskImage: 'linear-gradient(180deg, transparent, black 0%, black 70%, transparent)',
           WebkitMaskImage: 'linear-gradient(180deg, transparent, black 0%, black 70%, transparent)',
-          transform: 'translateZ(0)',
-          WebkitTransform: 'translateZ(0)',
-          backfaceVisibility: 'hidden',
-          WebkitBackfaceVisibility: 'hidden',
         }}
-      />
+      >
+        <Image
+          src="/hero-bg.webp"
+          alt=""
+          fill
+          priority
+          fetchPriority="high"
+          sizes="100vw"
+          className="object-cover object-center opacity-55"
+          style={{ transform: 'translateZ(0)' }}
+        />
+      </div>
 
       {/* 2. Fondo oscuro base */}
       <div className="absolute inset-0 z-[1] bg-zinc-950/80" />

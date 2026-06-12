@@ -209,7 +209,7 @@ export default function HomePage() {
       <section className="lg:hidden w-full bg-white py-10">
         <div className="max-w-5xl mx-auto px-5 flex justify-center">
           <Image
-            src="/version-movil.png"
+            src="/version-movil.webp"
             alt="VeloClub versión móvil"
             width={720}
             height={400}

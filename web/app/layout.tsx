@@ -37,6 +37,7 @@ export default function RootLayout({
       >
         <head>
           <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+          <link rel="preload" as="image" href="/hero-bg.webp" type="image/webp" />
         </head>
         <body className="min-h-full flex flex-col">
           {/* Desregistra service workers viejos en todos los dispositivos */}

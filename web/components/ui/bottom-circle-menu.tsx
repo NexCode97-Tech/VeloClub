@@ -22,9 +22,10 @@ interface BottomCircleMenuProps {
 
 // Arco hacia arriba — todos los ítems parten y regresan desde (0,0)
 function pointOnArc(i: number, n: number, r: number) {
-  // Ángulos más cerrados en la base para que los extremos no rocen el bar
-  const startDeg = n <= 1 ? -90 : n === 2 ? -115 : -140;
-  const endDeg   = n <= 1 ? -90 : n === 2 ?  -65 :  -40;
+  // Ángulos más cerrados en la base para que los extremos no rocen el bar.
+  // Con 5+ ítems se abre el arco para que no se solapen entre sí.
+  const startDeg = n <= 1 ? -90 : n === 2 ? -115 : n >= 5 ? -150 : -140;
+  const endDeg   = n <= 1 ? -90 : n === 2 ?  -65 : n >= 5 ?  -30 :  -40;
   const deg = n <= 1 ? -90 : startDeg + (endDeg - startDeg) * (i / (n - 1));
   const theta = deg * (Math.PI / 180);
   return {
@@ -33,7 +34,10 @@ function pointOnArc(i: number, n: number, r: number) {
   };
 }
 
-const RADIUS = 130;
+// El radio crece con la cantidad de ítems para mantener separación uniforme
+function radiusForCount(n: number) {
+  return n >= 5 ? 150 : 130;
+}
 
 export function BottomCircleMenu({ items, pathname, isOpen, onToggle, onClose }: BottomCircleMenuProps) {
   const router = useRouter();
@@ -57,7 +61,7 @@ export function BottomCircleMenu({ items, pathname, isOpen, onToggle, onClose }:
         {/* Ítems del arco */}
         <AnimatePresence>
           {isOpen && items.map((item, i) => {
-            const { x, y } = pointOnArc(i, items.length, RADIUS);
+            const { x, y } = pointOnArc(i, items.length, radiusForCount(items.length));
             const Icon = item.icon;
             return (
               <motion.button

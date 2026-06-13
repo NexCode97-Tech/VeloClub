@@ -4,6 +4,7 @@ import { useAuth } from '@clerk/nextjs';
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiFetch } from '@/lib/api-client';
+import { useNow } from '@/lib/use-now';
 import { motion, AnimatePresence, type Variants } from 'framer-motion';
 import { Trash2, ChevronDown, Check, MessageCircle } from 'lucide-react';
 
@@ -240,6 +241,10 @@ function getWhatsAppUrl(club: Club): string {
 export default function ClubsPage() {
   const { getToken, isLoaded, isSignedIn } = useAuth();
   const router = useRouter();
+
+  // Hora viva: re-renderiza cada 30s para que los días de prueba se descuenten
+  // en tiempo real sin que el superadmin tenga que refrescar la página.
+  const now = useNow(30_000);
 
   const [clubs,   setClubs]   = useState<Club[]>([]);
   const [loading, setLoading] = useState(true);
@@ -544,7 +549,6 @@ export default function ClubsPage() {
                       </p>
                       {/* Estado actual */}
                       {(() => {
-                        const now = new Date();
                         if (!club.trialEndsAt) return (
                           <p style={{ margin: '0 0 8px', fontSize: 11, color: '#8E87A8' }}>Sin período de prueba asignado</p>
                         );
@@ -618,7 +622,6 @@ export default function ClubsPage() {
                           </span>
                           {/* Badge de plan / trial */}
                           {(() => {
-                            const now = new Date();
                             if (club.suscripcion) {
                               const planLabel: Record<string, string> = { MENSUAL: 'Mensual', TRIMESTRAL: 'Trimestral', ANUAL: 'Anual' };
                               const planColor: Record<string, { color: string; bg: string }> = {

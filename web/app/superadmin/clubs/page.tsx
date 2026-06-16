@@ -2,6 +2,7 @@
 
 import { useAuth } from '@clerk/nextjs';
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { apiFetch } from '@/lib/api-client';
 import { useNow } from '@/lib/use-now';
@@ -64,27 +65,92 @@ const inp: React.CSSProperties = {
 const DEPORTES = ['Patinaje','Ciclismo','Fútbol','Natación','Atletismo','Baloncesto','Voleibol','Tenis','Natación artística','Otro'];
 
 // ── SportSelect — reemplaza native <select> de deporte ───────────────────────
+interface MenuCoords { left: number; width: number; top?: number; bottom?: number; maxHeight: number; openUp: boolean; }
+
 function SportSelect({ value, onChange, placeholder = 'Seleccionar deporte' }: {
   value: string;
   onChange: (v: string) => void;
   placeholder?: string;
 }) {
   const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
+  const [coords, setCoords] = useState<MenuCoords | null>(null);
+  const btnRef  = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
 
-  // Cerrar al hacer click fuera
+  // Calcula la posición del menú anclada al botón, con clamp al viewport.
+  // Si no cabe hacia abajo, abre hacia arriba; siempre limita la altura.
+  function recalc() {
+    const btn = btnRef.current;
+    if (!btn) return;
+    const r = btn.getBoundingClientRect();
+    const vh = window.visualViewport?.height ?? window.innerHeight;
+    const vw = window.innerWidth;
+    const GAP = 6;
+    const spaceBelow = vh - r.bottom;
+    const spaceAbove = r.top;
+    const openUp = spaceBelow < 220 && spaceAbove > spaceBelow;
+    const maxHeight = Math.max(140, (openUp ? spaceAbove : spaceBelow) - GAP - 10);
+    const left = Math.max(8, Math.min(r.left, vw - r.width - 8));
+    setCoords({
+      left, width: r.width, maxHeight, openUp,
+      top:    openUp ? undefined : r.bottom + GAP,
+      bottom: openUp ? vh - r.top + GAP : undefined,
+    });
+  }
+
+  // Recalcular al abrir y reposicionar en scroll/resize mientras está abierto
+  useEffect(() => {
+    if (!open) return;
+    recalc();
+    const onScroll = () => recalc();
+    window.addEventListener('scroll', onScroll, true);
+    window.addEventListener('resize', onScroll);
+    window.visualViewport?.addEventListener('resize', onScroll);
+    return () => {
+      window.removeEventListener('scroll', onScroll, true);
+      window.removeEventListener('resize', onScroll);
+      window.visualViewport?.removeEventListener('resize', onScroll);
+    };
+  }, [open]);
+
+  // Cerrar al hacer click fuera (botón + menú en portal)
   useEffect(() => {
     function handler(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+      const t = e.target as Node;
+      if (btnRef.current?.contains(t) || menuRef.current?.contains(t)) return;
+      setOpen(false);
     }
     if (open) document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
   }, [open]);
 
+  const optionBtn = (label: string, selected: boolean, onClick: () => void, borderTop: boolean) => (
+    <motion.button
+      type="button"
+      onClick={onClick}
+      whileHover={{ background: 'rgba(124,58,237,0.05)' }}
+      whileTap={{ scale: 0.98 }}
+      transition={{ duration: 0.10 }}
+      style={{
+        width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        padding: '10px 14px', border: 'none', cursor: 'pointer',
+        background: selected ? 'rgba(124,58,237,0.07)' : 'transparent',
+        borderTop: borderTop ? '1px solid rgba(120,80,200,0.06)' : 'none',
+        fontFamily: 'Open Sans, sans-serif',
+      }}
+    >
+      <span style={{ fontSize: 12, color: selected ? '#7C3AED' : '#1A1028', fontWeight: selected ? 700 : 500 }}>
+        {label}
+      </span>
+      {selected && <Check size={13} strokeWidth={2.5} color="#7C3AED" />}
+    </motion.button>
+  );
+
   return (
-    <div ref={ref} style={{ position: 'relative' }}>
+    <div style={{ position: 'relative' }}>
       {/* Trigger */}
       <motion.button
+        ref={btnRef}
         type="button"
         onClick={() => setOpen(v => !v)}
         whileTap={{ scale: 0.98 }}
@@ -110,72 +176,35 @@ function SportSelect({ value, onChange, placeholder = 'Seleccionar deporte' }: {
         </motion.span>
       </motion.button>
 
-      {/* Dropdown */}
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            initial={{ opacity: 0, y: -6, scale: 0.97 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -4, scale: 0.97 }}
-            transition={{ duration: 0.18, ease: EASE }}
-            style={{
-              position: 'absolute', top: 'calc(100% + 6px)', left: 0, right: 0,
-              background: '#fff', borderRadius: 14, zIndex: 50,
-              border: '1.5px solid rgba(124,58,237,0.15)',
-              boxShadow: '0 8px 32px rgba(80,40,180,0.13), 0 2px 8px rgba(0,0,0,0.06)',
-              overflow: 'hidden',
-            }}
-          >
-            {/* Opción vacía */}
-            <motion.button
-              type="button"
-              onClick={() => { onChange(''); setOpen(false); }}
-              whileHover={{ background: 'rgba(124,58,237,0.05)' }}
-              whileTap={{ scale: 0.98 }}
-              transition={{ duration: 0.10 }}
+      {/* Dropdown en portal — fixed + clamp al viewport para que no lo recorte el modal */}
+      {typeof document !== 'undefined' && createPortal(
+        <AnimatePresence>
+          {open && coords && (
+            <motion.div
+              ref={menuRef}
+              initial={{ opacity: 0, y: coords.openUp ? 6 : -6, scale: 0.97 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: coords.openUp ? 4 : -4, scale: 0.97 }}
+              transition={{ duration: 0.18, ease: EASE }}
               style={{
-                width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                padding: '10px 14px', border: 'none', cursor: 'pointer',
-                background: !value ? 'rgba(124,58,237,0.07)' : 'transparent',
-                borderBottom: '1px solid rgba(120,80,200,0.07)',
-                fontFamily: 'Open Sans, sans-serif',
+                position: 'fixed', left: coords.left, width: coords.width,
+                ...(coords.openUp ? { bottom: coords.bottom } : { top: coords.top }),
+                maxHeight: coords.maxHeight, overflowY: 'auto',
+                background: '#fff', borderRadius: 14, zIndex: 1000,
+                border: '1.5px solid rgba(124,58,237,0.15)',
+                boxShadow: '0 8px 32px rgba(80,40,180,0.13), 0 2px 8px rgba(0,0,0,0.06)',
+                WebkitOverflowScrolling: 'touch',
               }}
             >
-              <span style={{ fontSize: 12, color: !value ? '#7C3AED' : '#8E87A8', fontWeight: !value ? 700 : 400 }}>
-                Sin especificar
-              </span>
-              {!value && <Check size={13} strokeWidth={2.5} color="#7C3AED" />}
-            </motion.button>
-
-            {/* Opciones */}
-            {DEPORTES.map((d, i) => {
-              const selected = value === d;
-              return (
-                <motion.button
-                  key={d}
-                  type="button"
-                  onClick={() => { onChange(d); setOpen(false); }}
-                  whileHover={{ background: 'rgba(124,58,237,0.05)' }}
-                  whileTap={{ scale: 0.98 }}
-                  transition={{ duration: 0.10 }}
-                  style={{
-                    width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                    padding: '10px 14px', border: 'none', cursor: 'pointer',
-                    background: selected ? 'rgba(124,58,237,0.07)' : 'transparent',
-                    borderTop: i > 0 ? '1px solid rgba(120,80,200,0.06)' : 'none',
-                    fontFamily: 'Open Sans, sans-serif',
-                  }}
-                >
-                  <span style={{ fontSize: 12, color: selected ? '#7C3AED' : '#1A1028', fontWeight: selected ? 700 : 500 }}>
-                    {d}
-                  </span>
-                  {selected && <Check size={13} strokeWidth={2.5} color="#7C3AED" />}
-                </motion.button>
-              );
-            })}
-          </motion.div>
-        )}
-      </AnimatePresence>
+              {optionBtn('Sin especificar', !value, () => { onChange(''); setOpen(false); }, false)}
+              {DEPORTES.map((d, i) =>
+                optionBtn(d, value === d, () => { onChange(d); setOpen(false); }, i >= 0)
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
     </div>
   );
 }

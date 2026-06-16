@@ -5,6 +5,46 @@ Actualizar al final de cada sesión o cuando se complete un bloque de trabajo im
 
 ---
 
+## Sesión 2026-06-16
+
+**Modelo:** Claude Opus 4.8
+**Estado inicial:** Working tree limpio, rama `main`, app en producción
+
+### Completado esta sesión
+
+- [x] **Menú "Más" (móvil):** agregado módulo "Club" al menú radial del rol ADMIN
+  (antes solo COACH/STUDENT). Arco del `BottomCircleMenu` ahora es adaptativo:
+  con 5+ ítems abre a 120° y radio 150 para que los íconos no se solapen.
+- [x] **Fix tests backend:** vitest corría también los tests compilados en `dist/`
+  tras un build y fallaban. `tsconfig` excluye `src/tests` del build de producción
+  y vitest solo corre `src/**/*.test.ts`. 11/11 tests pasan.
+- [x] **Trial en tiempo real (superadmin):** nuevo hook `web/lib/use-now.ts`
+  (re-render cada 30s). El badge "Prueba · Nd" y el texto de días restantes en
+  `/superadmin/clubs` se descuentan solos sin recargar.
+- [x] **Registro Civil (RC):** agregado como tipo de documento en el formulario de
+  miembros y en la plantilla de Excel (`web/lib/excel.ts`, dropdown + notas).
+- [x] **Fix tarifa mensual:** al cambiar la tarifa de un miembro, los pagos
+  PENDING/OVERDUE ya generados conservaban el monto viejo. Backend
+  (`PUT /members/:id`) ahora hace `updateMany` de los pagos no pagados al nuevo
+  monto (los PAID no se tocan) y el front invalida las queries de pagos.
+- [x] **Dropdown de deporte (superadmin crear/editar club):** `SportSelect` se
+  recortaba dentro del modal en móvil. Reescrito con portal a `document.body`
+  + `position: fixed` + clamp al viewport (abre hacia arriba si no cabe).
+- [x] **Campo teléfono del admin con indicativo de país:** reutilizado el
+  componente `PhoneInput` en crear y editar club (opcional). Backend guarda
+  `phone` en el Member admin; `/clubs/:id/miembros` devuelve `phone` para pre-llenar.
+- [x] **Fix selector de país (`PhoneInput`):** mismo patrón de recorte que
+  `SportSelect`. Aplicado el fix de portal al componente compartido → beneficia
+  los 4 formularios que lo usan (ajustes, club, miembros, superadmin).
+
+### Notas técnicas
+- Patrón estándar para dropdowns dentro de modales con `overflow`: portal +
+  `fixed` + clamp al viewport + reposición en scroll/resize (respeta
+  `visualViewport` para teclado móvil). Aplicado en `SportSelect` y `PhoneInput`.
+- Typecheck y build de front y back verificados en cada paso.
+
+---
+
 ## Sesión 2026-04-29
 
 **Modelo:** Claude Sonnet 4.6

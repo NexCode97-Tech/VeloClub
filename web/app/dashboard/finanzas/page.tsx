@@ -507,6 +507,8 @@ export default function FinanzasPage() {
         body: JSON.stringify({ fullName, monthlyFee, paymentDueDay }),
       });
       qc.invalidateQueries({ queryKey: QK.members() });
+      // El backend ajusta los pagos pendientes al nuevo monto → refrescar pagos y flujo
+      invalidatePay(); invalidateFlow();
     } catch (e) {
       console.error('Error al guardar config:', e);
     } finally { setConfigSaving(null); }

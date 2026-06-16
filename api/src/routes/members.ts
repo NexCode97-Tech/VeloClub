@@ -193,6 +193,19 @@ router.put('/:id', requireAuth, async (req, res) => {
     include: { locations: { include: { location: true } } },
   });
 
+  // Si cambió la tarifa mensual, reflejarla en los pagos aún no pagados
+  // (PENDING / OVERDUE). Los pagos ya cobrados (PAID) no se tocan.
+  if (typeof rest.monthlyFee === 'number' && rest.monthlyFee > 0) {
+    await prisma.payment.updateMany({
+      where: {
+        memberId: id,
+        clubId: req.user.clubId ?? '',
+        status: { in: ['PENDING', 'OVERDUE'] },
+      },
+      data: { amount: rest.monthlyFee },
+    });
+  }
+
   // Sincronizar rol en User y revocar sesiones si el rol cambió
   if (rest.role && member.clerkId) {
     await prisma.user.updateMany({

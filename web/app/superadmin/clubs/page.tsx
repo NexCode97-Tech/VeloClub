@@ -6,6 +6,7 @@ import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { apiFetch } from '@/lib/api-client';
 import { useNow } from '@/lib/use-now';
+import { PhoneInput } from '@/components/ui/phone-input';
 import { motion, AnimatePresence, type Variants } from 'framer-motion';
 import { Trash2, ChevronDown, Check, MessageCircle } from 'lucide-react';
 
@@ -33,6 +34,7 @@ interface Member {
   id: string;
   fullName: string;
   email: string;
+  phone?: string | null;
   role: 'ADMIN' | 'COACH';
   inviteStatus: string;
 }
@@ -280,11 +282,11 @@ export default function ClubsPage() {
   const [error,   setError]   = useState<string | null>(null);
 
   const [showNew, setShowNew] = useState(false);
-  const [newForm, setNewForm] = useState({ clubName: '', adminEmail: '', adminName: '', deporte: '' });
+  const [newForm, setNewForm] = useState({ clubName: '', adminEmail: '', adminName: '', adminPhone: '', deporte: '' });
   const [saving,  setSaving]  = useState(false);
 
   const [editId,   setEditId]   = useState<string | null>(null);
-  const [editForm, setEditForm] = useState({ clubName: '', adminName: '', adminEmail: '', deporte: '', trialDays: '' });
+  const [editForm, setEditForm] = useState({ clubName: '', adminName: '', adminEmail: '', adminPhone: '', deporte: '', trialDays: '' });
 
   const [membersClubId,   setMembersClubId]   = useState<string | null>(null);
   const [members,         setMembers]         = useState<Member[]>([]);
@@ -317,7 +319,7 @@ export default function ClubsPage() {
       const token = await getToken();
       await apiFetch('/superadmin/clubs', { method: 'POST', token, body: JSON.stringify(newForm) });
       setShowNew(false);
-      setNewForm({ clubName: '', adminEmail: '', adminName: '', deporte: '' });
+      setNewForm({ clubName: '', adminEmail: '', adminName: '', adminPhone: '', deporte: '' });
       await load();
     } catch (e) { setError(e instanceof Error ? e.message : 'Error'); }
     finally { setSaving(false); }
@@ -334,6 +336,7 @@ export default function ClubsPage() {
         deporte:    editForm.deporte || null,
         adminName:  editForm.adminName || undefined,
         adminEmail: editForm.adminEmail || undefined,
+        adminPhone: editForm.adminPhone || '',
         ...(trialDays !== undefined ? { trialDays } : {}),
       }),
     });
@@ -471,6 +474,16 @@ export default function ClubsPage() {
               ))}
               <div style={{ marginBottom: 10 }}>
                 <p style={{ margin: '0 0 4px', fontSize: 9, fontWeight: 600, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                  Teléfono del admin <span style={{ textTransform: 'none', fontWeight: 400 }}>(opcional)</span>
+                </p>
+                <PhoneInput
+                  value={newForm.adminPhone}
+                  onChange={v => setNewForm(f => ({ ...f, adminPhone: v }))}
+                  placeholder="300 000 0000"
+                />
+              </div>
+              <div style={{ marginBottom: 10 }}>
+                <p style={{ margin: '0 0 4px', fontSize: 9, fontWeight: 600, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                   Deporte principal
                 </p>
                 <SportSelect
@@ -480,7 +493,7 @@ export default function ClubsPage() {
               </div>
               <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
                 <motion.button
-                  onClick={() => { setShowNew(false); setNewForm({ clubName: '', adminEmail: '', adminName: '', deporte: '' }); }}
+                  onClick={() => { setShowNew(false); setNewForm({ clubName: '', adminEmail: '', adminName: '', adminPhone: '', deporte: '' }); }}
                   whileTap={{ scale: 0.97 }}
                   transition={{ duration: 0.12 }}
                   style={{ flex: 1, padding: '11px 0', borderRadius: 12, border: '1.5px solid rgba(120,80,200,0.15)', background: 'transparent', color: '#8E87A8', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'Open Sans, sans-serif' }}
@@ -561,6 +574,16 @@ export default function ClubsPage() {
                         />
                       </div>
                     ))}
+                    <div style={{ marginBottom: 8 }}>
+                      <p style={{ margin: '0 0 3px', fontSize: 9, fontWeight: 600, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                        Teléfono del admin <span style={{ textTransform: 'none', fontWeight: 400 }}>(opcional)</span>
+                      </p>
+                      <PhoneInput
+                        value={editForm.adminPhone}
+                        onChange={v => setEditForm(f => ({ ...f, adminPhone: v }))}
+                        placeholder="300 000 0000"
+                      />
+                    </div>
                     <div style={{ marginBottom: 12 }}>
                       <p style={{ margin: '0 0 3px', fontSize: 9, fontWeight: 600, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                         Deporte principal
@@ -706,6 +729,7 @@ export default function ClubsPage() {
                           clubName:   club.name,
                           adminName:  admin?.fullName ?? '',
                           adminEmail: admin?.email ?? '',
+                          adminPhone: admin?.phone ?? '',
                           deporte:    club.deporte ?? '',
                           trialDays:  '',
                         });

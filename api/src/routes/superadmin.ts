@@ -32,6 +32,7 @@ const createClubSchema = z.object({
   clubName:   z.string().min(2).max(100),
   adminEmail: z.string().email(),
   adminName:  z.string().min(2).max(100),
+  adminPhone: z.string().max(30).optional(),
   deporte:    z.string().optional(),
 });
 
@@ -51,7 +52,7 @@ router.post('/clubs', requireAuth, requireSuperadmin, async (req, res) => {
   const parsed = createClubSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.issues });
 
-  const { clubName, adminEmail, adminName, deporte } = parsed.data;
+  const { clubName, adminEmail, adminName, adminPhone, deporte } = parsed.data;
 
   const existing = await prisma.member.findFirst({ where: { email: adminEmail } });
   if (existing) return res.status(400).json({ error: 'Este email ya está registrado en otro club' });
@@ -65,7 +66,7 @@ router.post('/clubs', requireAuth, requireSuperadmin, async (req, res) => {
       trialEndsAt,
       deporte: deporte || undefined,
       members: {
-        create: { fullName: adminName, email: adminEmail, role: 'ADMIN', inviteStatus: 'PENDING' },
+        create: { fullName: adminName, email: adminEmail, phone: adminPhone || undefined, role: 'ADMIN', inviteStatus: 'PENDING' },
       },
     },
     include: { _count: { select: { members: true } } },
@@ -105,6 +106,7 @@ const editClubSchema = z.object({
   deporte:    z.string().optional().nullable(),
   adminName:  z.string().min(2).max(100).optional(),
   adminEmail: z.string().email().optional(),
+  adminPhone: z.string().max(30).optional().nullable(),
   // trialDays: número de días desde hoy. 0 = limpiar trial. null = sin cambios.
   trialDays:  z.number().int().min(0).max(365).optional().nullable(),
 });
@@ -114,7 +116,7 @@ router.patch('/clubs/:id', requireAuth, requireSuperadmin, async (req, res) => {
   const parsed = editClubSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.issues });
 
-  const { name, deporte, adminName, adminEmail, trialDays } = parsed.data;
+  const { name, deporte, adminName, adminEmail, adminPhone, trialDays } = parsed.data;
 
   // Actualizar el club
   const clubData: Record<string, unknown> = {};
@@ -136,7 +138,7 @@ router.patch('/clubs/:id', requireAuth, requireSuperadmin, async (req, res) => {
   const club = await prisma.club.update({ where: { id }, data: clubData });
 
   // Actualizar al admin del club si se enviaron datos
-  if (adminName || adminEmail) {
+  if (adminName || adminEmail || adminPhone !== undefined) {
     const adminMember = await prisma.member.findFirst({
       where: { clubId: id, role: 'ADMIN' },
       orderBy: { createdAt: 'asc' },
@@ -144,6 +146,7 @@ router.patch('/clubs/:id', requireAuth, requireSuperadmin, async (req, res) => {
     if (adminMember) {
       const memberData: Record<string, unknown> = {};
       if (adminName)  memberData.fullName = adminName.trim();
+      if (adminPhone !== undefined) memberData.phone = adminPhone || null;
       if (adminEmail && adminEmail !== adminMember.email) {
         // Quitar email viejo del allowlist y agregar el nuevo
         if (adminMember.email) {
@@ -174,7 +177,7 @@ router.get('/clubs/:id/miembros', requireAuth, requireSuperadmin, async (req, re
   const id = String(req.params.id);
   const members = await prisma.member.findMany({
     where: { clubId: id, role: { in: ['ADMIN', 'COACH'] } },
-    select: { id: true, fullName: true, email: true, role: true, inviteStatus: true },
+    select: { id: true, fullName: true, email: true, phone: true, role: true, inviteStatus: true },
     orderBy: { createdAt: 'asc' },
   });
   res.json({ members });

@@ -17,7 +17,7 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   title: "VeloClub",
-  description: "Plataforma para clubes de patinaje",
+  description: "Plataforma integral para la gestión de clubes deportivos",
   icons: {
     icon: "/favicon.png",
     apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],

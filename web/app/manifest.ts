@@ -4,7 +4,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "VeloClub",
     short_name: "VeloClub",
-    description: "Plataforma para clubes de patinaje",
+    description: "Plataforma integral para la gestión de clubes deportivos",
     start_url: "/dashboard",
     display: "standalone",
     background_color: "#F7F7FB",

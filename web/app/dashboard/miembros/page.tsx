@@ -57,7 +57,7 @@ const ROLE_GRADIENT: Record<string, string> = {
 };
 
 // ── Empty form ─────────────────────────────────────────────────────────────────
-const DOC_TYPES = ['CC', 'TI', 'CE', 'PA', 'NIT', 'Otro'] as const;
+const DOC_TYPES = ['CC', 'TI', 'RC', 'CE', 'PA', 'NIT', 'Otro'] as const;
 
 const emptyForm = {
   fullName: '', email: '', phone: '', birthDate: '',

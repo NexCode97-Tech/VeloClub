@@ -11,7 +11,7 @@ export function downloadMembersTemplate(locations: LocationOption[] = []) {
   const NIVELES    = ['Escuela', 'Novatos', 'Intermedio', 'Avanzados', 'Federados'];
   const SEDES      = locations.map(l => l.name);
 
-  const DOC_TYPES = ['CC', 'TI', 'CE', 'Pasaporte', 'NIT', 'Otro'];
+  const DOC_TYPES = ['CC', 'TI', 'RC', 'CE', 'Pasaporte', 'NIT', 'Otro'];
 
   const headers = [
     'Nombre Completo *',
@@ -51,7 +51,7 @@ export function downloadMembersTemplate(locations: LocationOption[] = []) {
     '* Campos obligatorios',
     '* El correo debe ser único por deportista',
     '* Rol: ADMIN = Administrador, COACH = Entrenador, STUDENT = Deportista',
-    '* Tipo de documento: CC, TI, CE, Pasaporte, NIT u Otro',
+    '* Tipo de documento: CC, TI, RC (Registro Civil), CE, Pasaporte, NIT u Otro',
     '* Categoría y Nivel son opcionales (solo aplican a STUDENT)',
     '* Día de corte: número entre 1 y 31',
     '* Sede: selecciona de la lista desplegable (opcional)',
@@ -85,7 +85,7 @@ export function downloadMembersTemplate(locations: LocationOption[] = []) {
       formula1: `"${DOC_TYPES.join(',')}"`,
       showErrorMessage: true,
       errorTitle: 'Tipo de documento inválido',
-      error: 'Selecciona CC, TI, CE, Pasaporte, NIT u Otro',
+      error: 'Selecciona CC, TI, RC, CE, Pasaporte, NIT u Otro',
     },
     {
       sqref: 'L2:L1000',

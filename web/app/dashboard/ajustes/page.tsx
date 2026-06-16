@@ -212,11 +212,12 @@ export default function AjustesPage() {
   }
 
   async function handleSaveProfile() {
-    if (!memberMe?.id) return;
     setSavingProfile(true);
     try {
       const token = await getToken();
-      const res = await apiFetch<{ member: MemberMe }>(`/members/${memberMe.id}/contact`, {
+      // Endpoint self-resolving: el backend encuentra el miembro desde el token,
+      // así funciona aunque el cliente no tenga cargado memberMe.id.
+      const res = await apiFetch<{ member: MemberMe }>(`/members/me/contact`, {
         method: 'PATCH', token,
         body: JSON.stringify({ phone: phone || null }),
       });
@@ -296,7 +297,6 @@ export default function AjustesPage() {
   const avatarSrc = memberMe?.pictureUrl || user?.imageUrl || null;
   const displayName = memberMe?.fullName || user?.fullName || '';
   const displayEmail = memberMe?.email || user?.emailAddresses?.[0]?.emailAddress || '';
-  const phoneChanged = phone !== (memberMe?.phone ?? '');
 
   /* ── Tarjeta Mi Perfil ───────────────────────────────────────────────── */
   const perfilCard = (
@@ -357,7 +357,7 @@ export default function AjustesPage() {
         </div>
         <Button
           onClick={handleSaveProfile}
-          disabled={savingProfile || !phoneChanged}
+          disabled={savingProfile}
           className="w-full transition-all"
           style={savedProfile ? { background: '#06D6A0' } : {}}
         >

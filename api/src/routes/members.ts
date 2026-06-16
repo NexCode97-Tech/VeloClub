@@ -222,6 +222,28 @@ router.put('/:id', requireAuth, async (req, res) => {
   res.json({ member });
 });
 
+// PATCH /members/me/contact — el usuario actualiza su propio teléfono.
+// Resuelve el Member desde el token (no depende de un id enviado por el cliente).
+// IMPORTANTE: definir antes de '/:id/contact' para que no lo capture la ruta con :id.
+router.patch('/me/contact', requireAuth, async (req, res) => {
+  if (!req.user) return res.status(401).json({ error: 'No autenticado' });
+
+  const existing = await prisma.member.findFirst({
+    where: { clerkId: req.auth?.clerkId, clubId: req.user.clubId ?? '' },
+  });
+  if (!existing) return res.status(404).json({ error: 'No encontramos tu perfil de miembro' });
+
+  const phone = typeof req.body.phone === 'string' ? req.body.phone.trim() || null : null;
+
+  const member = await prisma.member.update({
+    where: { id: existing.id },
+    data: { phone },
+    select: { id: true, fullName: true, role: true, pictureUrl: true, phone: true, email: true, category: true, tipo: true, createdAt: true },
+  });
+
+  res.json({ member });
+});
+
 // PATCH /members/:id/contact — actualiza solo teléfono y correo (usado desde Mi Perfil)
 router.patch('/:id/contact', requireAuth, async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'No autenticado' });

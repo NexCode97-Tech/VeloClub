@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { ChevronDown, Search } from 'lucide-react';
 
 /* ─────────────────────────────────────────────────────────────
@@ -259,8 +260,47 @@ export function PhoneInput({ value, onChange, placeholder = 'Número de teléfon
   const [number, setNumber] = useState('');
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
+  const [coords, setCoords] = useState<{ left: number; width: number; top?: number; bottom?: number; maxHeight: number; openUp: boolean } | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
+
+  // Posiciona la lista de países anclada al botón, con clamp al viewport.
+  // Evita que el modal (overflow) recorte el dropdown — abre hacia arriba si no cabe.
+  function recalc() {
+    const el = dropdownRef.current;
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    const vh = window.visualViewport?.height ?? window.innerHeight;
+    const vw = window.innerWidth;
+    const GAP = 6;
+    const width = Math.min(260, vw - 16);
+    const spaceBelow = vh - r.bottom;
+    const spaceAbove = r.top;
+    const openUp = spaceBelow < 280 && spaceAbove > spaceBelow;
+    const maxHeight = Math.max(200, (openUp ? spaceAbove : spaceBelow) - GAP - 10);
+    const left = Math.max(8, Math.min(r.left, vw - width - 8));
+    setCoords({
+      left, width, maxHeight, openUp,
+      top:    openUp ? undefined : r.bottom + GAP,
+      bottom: openUp ? vh - r.top + GAP : undefined,
+    });
+  }
+
+  // Recalcular al abrir y reposicionar en scroll/resize (respeta teclado móvil)
+  useEffect(() => {
+    if (!open) return;
+    recalc();
+    const on = () => recalc();
+    window.addEventListener('scroll', on, true);
+    window.addEventListener('resize', on);
+    window.visualViewport?.addEventListener('resize', on);
+    return () => {
+      window.removeEventListener('scroll', on, true);
+      window.removeEventListener('resize', on);
+      window.visualViewport?.removeEventListener('resize', on);
+    };
+  }, [open]);
 
   // Sincronizar valor externo → estado interno al montar o cuando cambia
   useEffect(() => {
@@ -293,10 +333,10 @@ export function PhoneInput({ value, onChange, placeholder = 'Número de teléfon
   // Cerrar al hacer clic fuera
   useEffect(() => {
     function handler(e: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-        setOpen(false);
-        setSearch('');
-      }
+      const t = e.target as Node;
+      if (dropdownRef.current?.contains(t) || menuRef.current?.contains(t)) return;
+      setOpen(false);
+      setSearch('');
     }
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
@@ -325,10 +365,14 @@ export function PhoneInput({ value, onChange, placeholder = 'Número de teléfon
           <ChevronDown className={`w-3 h-3 text-muted-foreground transition-transform ${open ? 'rotate-180' : ''}`} />
         </button>
 
-        {open && (
+        {open && coords && typeof document !== 'undefined' && createPortal(
             <div
-              className="absolute left-0 top-full mt-1.5 z-[9999] bg-white border border-border rounded-2xl shadow-xl overflow-hidden"
-              style={{ width: 260 }}
+              ref={menuRef}
+              className="bg-white border border-border rounded-2xl shadow-xl overflow-hidden"
+              style={{
+                position: 'fixed', left: coords.left, width: coords.width, zIndex: 9999,
+                ...(coords.openUp ? { bottom: coords.bottom } : { top: coords.top }),
+              }}
             >
               <div className="p-2 border-b border-border">
                 <div className="relative">
@@ -343,7 +387,7 @@ export function PhoneInput({ value, onChange, placeholder = 'Número de teléfon
                   />
                 </div>
               </div>
-              <div className="overflow-y-auto" style={{ maxHeight: 220 }}>
+              <div className="overflow-y-auto" style={{ maxHeight: Math.max(140, coords.maxHeight - 56), WebkitOverflowScrolling: 'touch' }}>
                 {filtered.length === 0 ? (
                   <p className="text-[12px] text-muted-foreground text-center py-4">Sin resultados</p>
                 ) : filtered.map(c => (
@@ -359,7 +403,8 @@ export function PhoneInput({ value, onChange, placeholder = 'Número de teléfon
                   </button>
                 ))}
               </div>
-            </div>
+            </div>,
+            document.body
         )}
       </div>
 

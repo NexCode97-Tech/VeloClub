@@ -100,7 +100,13 @@ router.get('/birthdays', requireAuth, async (req, res) => {
 router.get('/me', requireAuth, async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'No autenticado' });
   const member = await prisma.member.findFirst({
-    where: { clerkId: req.auth?.clerkId, clubId: req.user.clubId ?? '' },
+    where: {
+      clubId: req.user.clubId ?? '',
+      OR: [
+        { clerkId: req.auth?.clerkId },
+        ...(req.auth?.email ? [{ email: { equals: req.auth.email, mode: 'insensitive' as const } }] : []),
+      ],
+    },
     select: { id: true, fullName: true, role: true, pictureUrl: true, phone: true, category: true, tipo: true, email: true, createdAt: true },
   });
   if (!member) return res.json({ member: null });
@@ -228,8 +234,16 @@ router.put('/:id', requireAuth, async (req, res) => {
 router.patch('/me/contact', requireAuth, async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'No autenticado' });
 
+  // Búsqueda resiliente: el miembro puede estar vinculado por clerkId o por email
+  // (los miembros creados por el superadmin arrancan sin clerkId hasta su primer login).
   const existing = await prisma.member.findFirst({
-    where: { clerkId: req.auth?.clerkId, clubId: req.user.clubId ?? '' },
+    where: {
+      clubId: req.user.clubId ?? '',
+      OR: [
+        { clerkId: req.auth?.clerkId },
+        ...(req.auth?.email ? [{ email: { equals: req.auth.email, mode: 'insensitive' as const } }] : []),
+      ],
+    },
   });
   if (!existing) return res.status(404).json({ error: 'No encontramos tu perfil de miembro' });
 
@@ -237,7 +251,8 @@ router.patch('/me/contact', requireAuth, async (req, res) => {
 
   const member = await prisma.member.update({
     where: { id: existing.id },
-    data: { phone },
+    // Auto-vincular el clerkId si aún no lo tenía (self-healing para futuros lookups)
+    data: { phone, ...(existing.clerkId ? {} : { clerkId: req.auth?.clerkId }) },
     select: { id: true, fullName: true, role: true, pictureUrl: true, phone: true, email: true, category: true, tipo: true, createdAt: true },
   });
 

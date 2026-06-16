@@ -15,12 +15,31 @@ export const viewport: Viewport = {
   userScalable: false,
 };
 
+const SITE_URL = "https://www.veloclubtech.com";
+const SITE_DESC = "Plataforma integral para la gestión de clubes deportivos";
+
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: "VeloClub",
-  description: "Plataforma integral para la gestión de clubes deportivos",
+  description: SITE_DESC,
   icons: {
     icon: "/favicon.png",
     apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
+  },
+  openGraph: {
+    type: "website",
+    url: SITE_URL,
+    siteName: "VeloClub",
+    title: "VeloClub",
+    description: SITE_DESC,
+    locale: "es_CO",
+    images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "VeloClub — gestión de clubes deportivos" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "VeloClub",
+    description: SITE_DESC,
+    images: ["/og-image.png"],
   },
 };
 

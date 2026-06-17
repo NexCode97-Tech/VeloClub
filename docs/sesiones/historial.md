@@ -36,11 +36,37 @@ Actualizar al final de cada sesión o cuando se complete un bloque de trabajo im
 - [x] **Fix selector de país (`PhoneInput`):** mismo patrón de recorte que
   `SportSelect`. Aplicado el fix de portal al componente compartido → beneficia
   los 4 formularios que lo usan (ajustes, club, miembros, superadmin).
+- [x] **Descripción + Open Graph profesional:** la meta description decía
+  "Plataforma para clubes de patinaje" (limitaba a un deporte). Cambiada a
+  "Plataforma integral para la gestión de clubes deportivos" en `layout.tsx` y
+  `manifest.ts`. Agregado bloque `openGraph` + `twitter` con `metadataBase` y una
+  imagen de marca dedicada `public/og-image.png` (1200×630, logo VC + tagline +
+  dominio) → el preview del enlace se ve grande y profesional al compartir.
+- [x] **Fix teléfono recortado en Ajustes → Mi perfil (móvil):** nombre y teléfono
+  estaban en `grid grid-cols-2`; en móvil el selector de país apretaba el número.
+  Cambiado a `grid-cols-1 sm:grid-cols-2` (apila en móvil, lado a lado en desktop).
+- [x] **Fix "Guardar cambios" del teléfono no hacía nada (Ajustes):** bug de 3 capas:
+  1. Front: `handleSaveProfile` salía en silencio en `if (!memberMe?.id) return`.
+  2. Back: el lookup del miembro propio era estricto por `clerkId`, pero los miembros
+     creados por el superadmin arrancan **sin clerkId** (vinculados por email) → 404.
+  3. Deploy: Railway se quedó en un commit anterior y no tomó el fix.
+  Solución: nuevo `PATCH /members/me/contact` self-resolving; `GET /members/me` y
+  ese endpoint ahora buscan por `OR: [{ clerkId }, { email }]` dentro del club (igual
+  que `me.ts`); el PATCH **auto-vincula el clerkId** si estaba null; front muestra
+  error si falla. Re-deploy de Railway forzado con commit vacío.
 
 ### Notas técnicas
 - Patrón estándar para dropdowns dentro de modales con `overflow`: portal +
   `fixed` + clamp al viewport + reposición en scroll/resize (respeta
   `visualViewport` para teclado móvil). Aplicado en `SportSelect` y `PhoneInput`.
+- **Resolver "el miembro propio" SIEMPRE por `OR: [{ clerkId }, { email }]`**, nunca
+  solo por `clerkId`: los miembros creados por el superadmin no tienen clerkId hasta
+  su primer login y pueden quedar vinculados solo por email.
+- **Deploy backend:** el API corre en **Railway** (no Vercel). El CI de GitHub Actions
+  (`security.yml`) solo audita/lintea, NO despliega. Si Railway se queda en un commit
+  viejo, forzar con `git commit --allow-empty` + push.
+- **CI en rojo (pendiente):** `npm audit --audit-level=high` falla por 3 vulns high
+  (esbuild/tsx, form-data). No bloquea el deploy de Railway, pero conviene `npm audit fix`.
 - Typecheck y build de front y back verificados en cada paso.
 
 ---

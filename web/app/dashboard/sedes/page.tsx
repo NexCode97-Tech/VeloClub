@@ -364,9 +364,9 @@ export default function SedesPage() {
             </button>
           </motion.div>
         ) : (
-          <div className="space-y-3">
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-4">
             {locations.map(loc => (
-              <motion.div variants={cardVariant} key={loc.id} className="bg-card border border-border rounded-xl overflow-hidden">
+              <motion.div variants={cardVariant} key={loc.id} className="bg-card border border-border rounded-xl overflow-hidden flex flex-col">
                 <div className="flex items-start justify-between px-4 py-4">
                   <div className="flex items-start gap-3 flex-1 min-w-0">
                     <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 mt-0.5" style={{ background: 'rgba(6,214,160,0.12)' }}>

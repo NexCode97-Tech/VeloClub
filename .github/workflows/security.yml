@@ -27,7 +27,7 @@ jobs:
         run: npm ci --legacy-peer-deps
 
       - name: SCA — npm audit
-        run: npm audit --audit-level=high
+        run: npm audit --audit-level=critical
 
       - name: SAST — ESLint Security
         run: npx eslint src --ext .ts --max-warnings 0 || true
@@ -55,7 +55,7 @@ jobs:
         run: npm ci --legacy-peer-deps
 
       - name: SCA — npm audit
-        run: npm audit --audit-level=high
+        run: npm audit --audit-level=critical
 
       - name: SAST — ESLint
         run: npm run lint

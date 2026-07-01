@@ -364,7 +364,7 @@ export default function SedesPage() {
             </button>
           </motion.div>
         ) : (
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-4">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
             {locations.map(loc => (
               <motion.div variants={cardVariant} key={loc.id} className="bg-card border border-border rounded-xl overflow-hidden flex flex-col">
                 <div className="flex items-start justify-between px-4 py-4">

@@ -651,9 +651,9 @@ export default function FinanzasPage() {
       <motion.div variants={pageStagger} initial="hidden" animate="show" className="px-4 pt-4 flex flex-col gap-4">
 
         {/* Tabs + filtros — una sola fila en desktop */}
-        <motion.div variants={pageCard} className="flex flex-col gap-2 md:flex-row md:items-center md:gap-3">
+        <motion.div variants={pageCard} className="flex flex-col gap-2 md:flex-row md:items-center md:gap-3 md:w-full">
           {/* Tabs */}
-          <div className="flex gap-1 bg-secondary rounded-xl p-1 md:w-56 md:shrink-0">
+          <div className="flex gap-1 bg-secondary rounded-xl p-1 md:flex-1">
             {([
               { key: 'mensualidades', label: 'Mensualidades' },
               { key: 'flujo',        label: 'Flujo de Caja' },

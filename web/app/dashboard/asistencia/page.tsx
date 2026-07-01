@@ -427,21 +427,22 @@ export default function AsistenciaPage() {
                   ))}
                 </motion.div>
 
-                {/* Barra de búsqueda */}
-                <motion.div variants={cardVariant} className="relative">
-                  <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: '#8E87A8' }} />
-                  <input
-                    className="w-full pl-10 pr-4 py-2.5 rounded-xl text-[13px] outline-none transition-all"
-                    style={{ background: '#fff', border: '1px solid rgba(120,80,200,0.12)', color: '#1A1028' }}
-                    placeholder="Buscar por nombre..."
-                    value={search}
-                    onChange={e => setSearch(e.target.value)}
-                  />
-                </motion.div>
+                {/* Barra de búsqueda + filtro de categoría — misma fila en desktop */}
+                <motion.div variants={cardVariant} className="flex flex-col gap-2 md:flex-row md:items-center md:gap-3">
+                  <div className="relative md:flex-1">
+                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: '#8E87A8' }} />
+                    <input
+                      className="w-full pl-10 pr-4 py-2.5 rounded-xl text-[13px] outline-none transition-all"
+                      style={{ background: '#fff', border: '1px solid rgba(120,80,200,0.12)', color: '#1A1028' }}
+                      placeholder="Buscar por nombre..."
+                      value={search}
+                      onChange={e => setSearch(e.target.value)}
+                    />
+                  </div>
 
                 {/* Filtro por categoría */}
                 {categories.length > 1 && (
-                  <motion.div variants={cardVariant}>
+                  <div>
                     {/* Dropdown — solo en móvil */}
                     <div className="sm:hidden">
                       <Select value={catFilter} onValueChange={(v) => { if (v) setCatFilter(v); }}>
@@ -493,8 +494,9 @@ export default function AsistenciaPage() {
                         </motion.button>
                       ))}
                     </div>
-                  </motion.div>
+                  </div>
                 )}
+                </motion.div>
 
 
                 {/* Grid de tarjetas compactas */}

@@ -402,33 +402,8 @@ export default function AsistenciaPage() {
                   ))}
                 </motion.div>
 
-                {/* Sede + búsqueda + categorías — misma fila en desktop */}
+                {/* Búsqueda + categorías + sede — misma fila en desktop */}
                 <motion.div variants={cardVariant} className="flex flex-col gap-2 md:flex-row md:items-center md:gap-3">
-                  {/* Sede */}
-                  {locations.length > 1 && (
-                    <div className="flex items-center gap-2 md:w-52 md:shrink-0">
-                      <MapPin className="w-4 h-4 text-muted-foreground shrink-0" />
-                      <Select value={selectedLoc} onValueChange={v => setSelectedLoc(v ?? selectedLoc)}>
-                        <SelectTrigger className="bg-white flex-1">
-                          <span className="text-sm font-semibold">
-                            {locations.find(l => l.id === selectedLoc)?.name ?? 'Seleccionar sede'}
-                          </span>
-                        </SelectTrigger>
-                        <SelectContent>
-                          {locations.map(l => (
-                            <SelectItem key={l.id} value={l.id}>{l.name}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  )}
-                  {locations.length === 1 && (
-                    <div className="flex items-center gap-2 px-3 py-2 bg-white border border-border rounded-xl md:shrink-0">
-                      <MapPin className="w-4 h-4 shrink-0" style={{ color: '#4361EE' }} />
-                      <span className="text-[13px] font-semibold text-foreground">{locations[0].name}</span>
-                    </div>
-                  )}
-                  <div className="hidden md:block w-px h-6 bg-border shrink-0" />
                   {/* Buscador */}
                   <div className="relative md:flex-1">
                     <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: '#8E87A8' }} />
@@ -497,6 +472,31 @@ export default function AsistenciaPage() {
                     </div>
                   </div>
                 )}
+                  {/* Sede — al final */}
+                  <div className="hidden md:block w-px h-6 bg-border shrink-0" />
+                  {locations.length > 1 && (
+                    <div className="flex items-center gap-2 md:w-52 md:shrink-0">
+                      <MapPin className="w-4 h-4 text-muted-foreground shrink-0" />
+                      <Select value={selectedLoc} onValueChange={v => setSelectedLoc(v ?? selectedLoc)}>
+                        <SelectTrigger className="bg-white flex-1">
+                          <span className="text-sm font-semibold">
+                            {locations.find(l => l.id === selectedLoc)?.name ?? 'Seleccionar sede'}
+                          </span>
+                        </SelectTrigger>
+                        <SelectContent>
+                          {locations.map(l => (
+                            <SelectItem key={l.id} value={l.id}>{l.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+                  {locations.length === 1 && (
+                    <div className="flex items-center gap-2 px-3 py-2 bg-white border border-border rounded-xl md:shrink-0">
+                      <MapPin className="w-4 h-4 shrink-0" style={{ color: '#4361EE' }} />
+                      <span className="text-[13px] font-semibold text-foreground">{locations[0].name}</span>
+                    </div>
+                  )}
                 </motion.div>
 
 

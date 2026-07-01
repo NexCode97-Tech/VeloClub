@@ -650,71 +650,75 @@ export default function FinanzasPage() {
 
       <motion.div variants={pageStagger} initial="hidden" animate="show" className="px-4 pt-4 flex flex-col gap-4">
 
-        {/* Tabs */}
-        <motion.div variants={pageCard} className="flex gap-1 bg-secondary rounded-xl p-1">
-          {([
-            { key: 'mensualidades', label: 'Mensualidades' },
-            { key: 'flujo',        label: 'Flujo de Caja' },
-          ] as const).map(({ key, label }) => (
-            <button
-              key={key}
-              onClick={() => setTab(key)}
-              className="flex-1 py-2 rounded-lg text-[12px] font-semibold transition-all cursor-pointer"
-              style={tab === key
-                ? { background: '#fff', color: '#1A1028', boxShadow: '0 1px 4px rgba(0,0,0,0.08)' }
-                : { color: '#8E87A8' }
-              }
-            >
-              {label}
-            </button>
-          ))}
-        </motion.div>
-
-        {/* Filtro mes/año + botón generar cobros */}
-        <motion.div variants={pageCard} className="flex gap-2 items-center">
-          <Select value={String(filterMonth)} onValueChange={v => { setFilterMonth(parseInt(v ?? '')); setStatusFilter('ALL'); }}>
-            <SelectTrigger className="w-36 bg-white">
-              <span className="text-sm">{MONTH_NAMES[filterMonth - 1]}</span>
-            </SelectTrigger>
-            <SelectContent>
-              {MONTH_NAMES.map((name, idx) => (
-                <SelectItem key={idx + 1} value={String(idx + 1)}>{name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={String(filterYear)} onValueChange={v => setFilterYear(parseInt(v ?? ''))}>
-            <SelectTrigger className="w-24 bg-white"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              {[2024, 2025, 2026, 2027].map(y => (
-                <SelectItem key={y} value={String(y)}>{y}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {tab === 'flujo' && (
-            <motion.button
-              whileTap={reducedMotion ? {} : { scale: 0.96 }}
-              transition={{ duration: 0.12, ease: EASE_OUT }}
-              onClick={() => { setFlowForm({ type: 'INCOME', amount: '', description: '', date: '' }); setFlowError(null); setFlowOpen(true); }}
-              className="flex items-center justify-center gap-1.5 px-3 h-9 rounded-xl text-[12px] font-bold cursor-pointer shrink-0"
-              style={{ background: 'rgba(6,214,160,0.08)', color: '#06D6A0', border: '1.5px dashed rgba(6,214,160,0.25)' }}
-            >
-              <Plus className="w-3.5 h-3.5" />
-              Nuevo
-            </motion.button>
-          )}
-          {tab === 'mensualidades' && (
-            <motion.button
-              whileTap={reducedMotion ? {} : { scale: 0.96 }}
-              transition={{ duration: 0.12, ease: EASE_OUT }}
-              onClick={handleGenerateMonth}
-              disabled={generatingMonth}
-              className="flex items-center justify-center gap-1.5 px-3 h-9 rounded-xl text-[12px] font-bold cursor-pointer transition-opacity disabled:opacity-60 shrink-0"
-              style={{ background: 'rgba(124,58,237,0.08)', color: '#7C3AED', border: '1.5px dashed rgba(124,58,237,0.25)' }}
-            >
-              <Zap className="w-3.5 h-3.5" />
-              {generatingMonth ? 'Generando...' : 'Generar cobros'}
-            </motion.button>
-          )}
+        {/* Tabs + filtros — una sola fila en desktop */}
+        <motion.div variants={pageCard} className="flex flex-col gap-2 md:flex-row md:items-center md:gap-3">
+          {/* Tabs */}
+          <div className="flex gap-1 bg-secondary rounded-xl p-1 md:w-56 md:shrink-0">
+            {([
+              { key: 'mensualidades', label: 'Mensualidades' },
+              { key: 'flujo',        label: 'Flujo de Caja' },
+            ] as const).map(({ key, label }) => (
+              <button
+                key={key}
+                onClick={() => setTab(key)}
+                className="flex-1 py-2 rounded-lg text-[12px] font-semibold transition-all cursor-pointer"
+                style={tab === key
+                  ? { background: '#fff', color: '#1A1028', boxShadow: '0 1px 4px rgba(0,0,0,0.08)' }
+                  : { color: '#8E87A8' }
+                }
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          {/* Separador visual solo en desktop */}
+          <div className="hidden md:block w-px h-6 bg-border shrink-0" />
+          {/* Filtros */}
+          <div className="flex gap-2 items-center">
+            <Select value={String(filterMonth)} onValueChange={v => { setFilterMonth(parseInt(v ?? '')); setStatusFilter('ALL'); }}>
+              <SelectTrigger className="w-36 bg-white">
+                <span className="text-sm">{MONTH_NAMES[filterMonth - 1]}</span>
+              </SelectTrigger>
+              <SelectContent>
+                {MONTH_NAMES.map((name, idx) => (
+                  <SelectItem key={idx + 1} value={String(idx + 1)}>{name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={String(filterYear)} onValueChange={v => setFilterYear(parseInt(v ?? ''))}>
+              <SelectTrigger className="w-24 bg-white"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {[2024, 2025, 2026, 2027].map(y => (
+                  <SelectItem key={y} value={String(y)}>{y}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {tab === 'flujo' && (
+              <motion.button
+                whileTap={reducedMotion ? {} : { scale: 0.96 }}
+                transition={{ duration: 0.12, ease: EASE_OUT }}
+                onClick={() => { setFlowForm({ type: 'INCOME', amount: '', description: '', date: '' }); setFlowError(null); setFlowOpen(true); }}
+                className="flex items-center justify-center gap-1.5 px-3 h-9 rounded-xl text-[12px] font-bold cursor-pointer shrink-0"
+                style={{ background: 'rgba(6,214,160,0.08)', color: '#06D6A0', border: '1.5px dashed rgba(6,214,160,0.25)' }}
+              >
+                <Plus className="w-3.5 h-3.5" />
+                Nuevo
+              </motion.button>
+            )}
+            {tab === 'mensualidades' && (
+              <motion.button
+                whileTap={reducedMotion ? {} : { scale: 0.96 }}
+                transition={{ duration: 0.12, ease: EASE_OUT }}
+                onClick={handleGenerateMonth}
+                disabled={generatingMonth}
+                className="flex items-center justify-center gap-1.5 px-3 h-9 rounded-xl text-[12px] font-bold cursor-pointer transition-opacity disabled:opacity-60 shrink-0"
+                style={{ background: 'rgba(124,58,237,0.08)', color: '#7C3AED', border: '1.5px dashed rgba(124,58,237,0.25)' }}
+              >
+                <Zap className="w-3.5 h-3.5" />
+                {generatingMonth ? 'Generando...' : 'Generar cobros'}
+              </motion.button>
+            )}
+          </div>
         </motion.div>
 
         {/* ── MENSUALIDADES ─────────────────────────────────────────────────── */}

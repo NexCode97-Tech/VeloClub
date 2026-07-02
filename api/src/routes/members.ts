@@ -6,6 +6,7 @@ import { requireAuth } from '../auth/middleware';
 import { prisma } from '../db/client';
 import { emitToClub } from '../lib/sse';
 import { addToAllowlist, removeFromAllowlist, revokeClerkAccess, revokeClerkSessions } from '../lib/clerk-allowlist';
+import { notifyClubStaff } from '../lib/notify';
 import { cacheGet, cacheSet, cacheDel } from '../lib/redis';
 
 cloudinary.config({
@@ -163,6 +164,12 @@ router.post('/', requireAuth, async (req, res) => {
 
   await cacheDel(`members:${req.user.clubId ?? ''}`);
   emitToClub(req.user.clubId ?? '', 'members');
+  await notifyClubStaff(req.user.clubId ?? '', {
+    tipo: 'NEW_MEMBER',
+    titulo: 'Nuevo miembro',
+    cuerpo: `${member.fullName} fue agregado al club.`,
+    link: '/dashboard/miembros',
+  }, req.auth?.clerkId);
   res.status(201).json({ member });
 });
 

@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { requireAuth } from '../auth/middleware';
 import { prisma } from '../db/client';
 import { emitToClub } from '../lib/sse';
+import { notifyClubStaff, notifyClubStudents } from '../lib/notify';
 
 const router = Router();
 
@@ -63,6 +64,15 @@ router.post('/', requireAuth, async (req, res) => {
   });
 
   emitToClub(req.user.clubId ?? '', 'competitions');
+  const clubId = req.user.clubId ?? '';
+  const compMsg = {
+    tipo: 'NEW_COMPETITION',
+    titulo: 'Nueva competencia',
+    cuerpo: `${competition.name}${competition.place ? ` · ${competition.place}` : ''} el ${new Date(competition.date).toLocaleDateString('es-CO', { day: 'numeric', month: 'long' })}.`,
+    link: '/dashboard/logros',
+  };
+  await notifyClubStaff(clubId, compMsg, req.auth?.clerkId);
+  await notifyClubStudents(clubId, compMsg);
   res.status(201).json({ competition });
 });
 

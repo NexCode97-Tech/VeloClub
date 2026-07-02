@@ -3,8 +3,11 @@ import { z } from 'zod';
 import { requireAuth } from '../auth/middleware';
 import { prisma } from '../db/client';
 import { emitToClub } from '../lib/sse';
+import { notifyClubStaff } from '../lib/notify';
 import { v2 as cloudinary } from 'cloudinary';
 import { createQueue } from '../lib/queue';
+
+const fmtCOP = (n: number) => `$${Math.round(n).toLocaleString('es-CO')}`;
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME?.trim(),
@@ -160,6 +163,12 @@ router.post('/', requireAuth, async (req, res) => {
 
   if (payment.status === 'PAID') {
     await createCashEntry(clubId, payment.id, payment.amount, payment.member.fullName, payment.month, payment.year, payment.paidAt);
+    await notifyClubStaff(clubId, {
+      tipo: 'PAYMENT_RECEIVED',
+      titulo: 'Pago recibido',
+      cuerpo: `${payment.member.fullName} pagó ${MONTH_NAMES[payment.month - 1]} (${fmtCOP(payment.amount)}).`,
+      link: '/dashboard/finanzas',
+    }, req.auth?.clerkId);
   }
 
   emitToClub(clubId, 'payments');
@@ -209,6 +218,15 @@ router.patch('/:id', requireAuth, async (req, res) => {
       payment.month, payment.year,
       payment.paidAt
     );
+    // Notificar solo cuando el pago pasa a PAID (no si ya lo estaba)
+    if (existing.status !== 'PAID') {
+      await notifyClubStaff(clubId, {
+        tipo: 'PAYMENT_RECEIVED',
+        titulo: 'Pago recibido',
+        cuerpo: `${existing.member.fullName} pagó ${MONTH_NAMES[payment.month - 1]} (${fmtCOP(payment.amount)}).`,
+        link: '/dashboard/finanzas',
+      }, req.auth?.clerkId);
+    }
   }
 
   emitToClub(clubId, 'payments');

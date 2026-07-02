@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { requireAuth } from '../auth/middleware';
 import { prisma } from '../db/client';
 import { emitToClub } from '../lib/sse';
+import { notifyClubStudents } from '../lib/notify';
 
 const router = Router();
 
@@ -107,6 +108,12 @@ router.post('/', requireAuth, async (req, res) => {
   });
 
   emitToClub(req.user.clubId ?? '', 'calendar');
+  await notifyClubStudents(req.user.clubId ?? '', {
+    tipo: 'NEW_EVENT',
+    titulo: 'Nuevo evento',
+    cuerpo: `${event.title} · ${new Date(event.startDate).toLocaleDateString('es-CO', { day: 'numeric', month: 'long' })}.`,
+    link: '/dashboard/calendario',
+  });
   res.status(201).json({ event });
 });
 

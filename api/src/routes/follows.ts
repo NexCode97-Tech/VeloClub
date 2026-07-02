@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { requireAuth } from '../auth/middleware';
 import { prisma } from '../db/client';
+import { notify, notifyClubStaff } from '../lib/notify';
 
 const router = Router();
 
@@ -24,6 +25,33 @@ router.post('/toggle/:targetClerkId', requireAuth, async (req, res) => {
   }
 
   await prisma.follow.create({ data: { followerClerkId, followingClerkId } });
+
+  // Notificar al seguido (club → staff · persona → esa persona)
+  const followerName = req.auth.name || 'Alguien';
+  if (followingClerkId.startsWith('club:')) {
+    const clubId = followingClerkId.slice(5);
+    await notifyClubStaff(clubId, {
+      tipo: 'NEW_FOLLOWER',
+      titulo: 'Nuevo seguidor',
+      cuerpo: `${followerName} empezó a seguir al club.`,
+      link: '/dashboard/club',
+    });
+  } else {
+    let targetClubId: string | null = null;
+    const u = await prisma.user.findUnique({ where: { clerkId: followingClerkId }, select: { clubId: true } });
+    if (u) targetClubId = u.clubId;
+    else {
+      const m = await prisma.member.findFirst({ where: { clerkId: followingClerkId }, select: { clubId: true } });
+      targetClubId = m?.clubId ?? null;
+    }
+    await notify(followingClerkId, targetClubId, {
+      tipo: 'NEW_FOLLOWER',
+      titulo: 'Nuevo seguidor',
+      cuerpo: `${followerName} empezó a seguirte.`,
+      link: `/dashboard/perfil/${followerClerkId}`,
+    });
+  }
+
   return res.json({ following: true });
 });
 

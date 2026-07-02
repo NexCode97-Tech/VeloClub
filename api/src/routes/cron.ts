@@ -15,8 +15,14 @@
 import { Router, Request, Response } from 'express';
 import { prisma } from '../db/client';
 import { emitToClub } from '../lib/sse';
+import { notify, notifyClubStaff } from '../lib/notify';
 
 const router = Router();
+
+const MONTH_NAMES = [
+  'Enero','Febrero','Marzo','Abril','Mayo','Junio',
+  'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre',
+];
 
 // ── Middleware de autenticación de cron ───────────────────────────────────────
 function requireCronSecret(req: Request, res: Response, next: () => void) {
@@ -100,7 +106,7 @@ router.post('/mark-overdue', requireCronSecret, async (_req, res) => {
       status:  'PENDING',
       dueDate: { lt: now },
     },
-    select: { id: true, clubId: true },
+    select: { id: true, clubId: true, month: true, member: { select: { clerkId: true } } },
   });
 
   if (overduePayments.length === 0) {
@@ -118,6 +124,27 @@ router.post('/mark-overdue', requireCronSecret, async (_req, res) => {
 
   for (const clubId of clubIds) {
     emitToClub(clubId, 'payments');
+  }
+
+  // Notificar: recordatorio individual al deportista + resumen al staff del club
+  for (const p of overduePayments) {
+    if (p.member?.clerkId) {
+      await notify(p.member.clerkId, p.clubId, {
+        tipo: 'PAYMENT_DUE',
+        titulo: 'Mensualidad vencida',
+        cuerpo: `Tu mensualidad de ${MONTH_NAMES[p.month - 1]} está vencida.`,
+        link: '/dashboard/pagos',
+      });
+    }
+  }
+  for (const clubId of clubIds) {
+    const n = overduePayments.filter(p => p.clubId === clubId).length;
+    await notifyClubStaff(clubId, {
+      tipo: 'PAYMENT_DUE',
+      titulo: 'Pagos vencidos',
+      cuerpo: n === 1 ? 'Una mensualidad quedó vencida.' : `${n} mensualidades quedaron vencidas.`,
+      link: '/dashboard/finanzas',
+    });
   }
 
   console.log(`[cron/mark-overdue] ${overduePayments.length} pagos marcados OVERDUE`);

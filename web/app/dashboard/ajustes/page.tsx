@@ -2,6 +2,7 @@
 
 import { useAuth, useUser, useClerk } from '@clerk/nextjs';
 import { useEffect, useRef, useState, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { apiFetch } from '@/lib/api-client';
 import {
@@ -528,9 +529,10 @@ export default function AjustesPage() {
         </h1>
       </div>
 
-      {/* Modal recorte de logo */}
-      {cropSrc && (
-        <div className="fixed inset-0 z-50 bg-black/70 flex flex-col items-end justify-end sm:items-center sm:justify-center">
+      {/* Modal recorte de logo — en portal a document.body para quedar por encima
+          del menú flotante inferior (que si no tapa los botones en móvil) */}
+      {cropSrc && typeof document !== 'undefined' && createPortal(
+        <div className="fixed inset-0 bg-black/70 flex flex-col items-end justify-end sm:items-center sm:justify-center" style={{ zIndex: 100 }}>
           <div className="bg-white rounded-t-2xl sm:rounded-2xl w-full sm:max-w-sm flex flex-col" style={{ maxHeight: '90dvh' }}>
             <div className="flex items-center justify-between px-4 py-3 border-b border-border shrink-0">
               <div className="flex items-center gap-2">
@@ -547,7 +549,10 @@ export default function AjustesPage() {
                 <img ref={imgRef} src={cropSrc} alt="Recortar" onLoad={onImageLoad} style={{ maxHeight: '55dvh', width: 'auto' }} />
               </ReactCrop>
             </div>
-            <div className="flex gap-2 px-4 py-4 shrink-0 border-t border-border">
+            <div
+              className="flex gap-2 px-4 pt-4 shrink-0 border-t border-border"
+              style={{ paddingBottom: 'calc(1rem + env(safe-area-inset-bottom))' }}
+            >
               <button onClick={() => setCropSrc(null)}
                 className="flex-1 py-2.5 rounded-xl border border-border text-[13px] font-semibold text-muted-foreground">
                 Cancelar
@@ -558,7 +563,8 @@ export default function AjustesPage() {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* ══ MOBILE (< lg) ══════════════════════════════════════════════════ */}

@@ -11,13 +11,13 @@ import { apiFetch } from '@/lib/api-client';
 import LoadingScreen from '@/components/ui/loading-screen';
 import { BottomCircleMenu } from '@/components/ui/bottom-circle-menu';
 import { SearchModal } from '@/components/ui/search-modal';
+import { NotificationsBell } from '@/components/ui/notifications-bell';
 import {
   Settings,
   UserCircle,
   RefreshCw,
   ChevronLeft,
   ChevronRight,
-  Bell,
   Search,
 } from 'lucide-react';
 import { IconHome, IconUsers, IconCalendar, IconStatistics, IconClub, IconFinanzas, IconUbicacion, IconAsistencias, IconResultados, IconAjustes, IconMisPagos } from '@/components/ui/custom-icons';
@@ -349,13 +349,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               >
                 <Search className="w-[14px] h-[14px]" />
               </button>
-              <button
-                className="relative flex items-center justify-center rounded-lg transition-colors hover:bg-secondary"
-                style={{ width: 28, height: 28, color: '#8E87A8' }}
-                title="Notificaciones"
-              >
-                <Bell className="w-[14px] h-[14px]" />
-              </button>
+              <NotificationsBell />
             </div>
           )}
         </div>

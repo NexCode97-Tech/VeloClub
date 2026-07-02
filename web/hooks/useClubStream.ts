@@ -7,7 +7,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
 
 const SSE_EVENTS = [
   'members', 'payments', 'attendance', 'cashflow',
-  'calendar', 'competitions', 'training', 'posts',
+  'calendar', 'competitions', 'training', 'posts', 'notifications',
 ] as const;
 
 export type SSEEvent = typeof SSE_EVENTS[number];

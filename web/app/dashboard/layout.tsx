@@ -357,8 +357,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           )}
           <div className="space-y-1 relative">
             {sideNavItems.map(({ href, label, icon: Icon }) => {
-              // Ajustes y Mi Perfil se ocultan cuando el sidebar está expandido (ya aparecen en el footer)
-              if (href === '/dashboard/ajustes' && !collapsed) return null;
+              // Ajustes y Mi Perfil viven en el footer (ícono de ajustes sobre el avatar)
+              if (href === '/dashboard/ajustes') return null;
               if (href === '/dashboard/perfil') return null;
               const active = isSideActive(href);
               return (
@@ -394,13 +394,42 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           className="flex items-center shrink-0"
           style={{
             borderTop: '1px solid rgba(0,0,0,0.06)',
-            padding: collapsed ? '10px 0' : '10px 12px',
-            gap: collapsed ? 0 : 10,
+            padding: collapsed ? '12px 0' : '10px 12px',
+            gap: collapsed ? 10 : 10,
+            flexDirection: collapsed ? 'column' : 'row',
             justifyContent: collapsed ? 'center' : undefined,
           }}
         >
+          {/* Ícono de ajustes — colapsado: encima del avatar */}
+          {collapsed && (() => {
+            const active = isSideActive('/dashboard/ajustes');
+            return (
+              <Link
+                href="/dashboard/ajustes"
+                className="shrink-0 flex items-center justify-center rounded-xl transition-colors"
+                style={{ width: 40, height: 40, color: active ? accentColor : '#8E87A8', background: active ? accentBg : undefined }}
+                onMouseEnter={(e) => {
+                  const r = e.currentTarget.getBoundingClientRect();
+                  setNavTip({ label: 'Ajustes', top: r.top + r.height / 2, left: r.right + 10 });
+                }}
+                onMouseLeave={() => setNavTip(null)}
+              >
+                <IconAjustes className="w-[18px] h-[18px]" strokeWidth={active ? 2.5 : 2} />
+              </Link>
+            );
+          })()}
+
           {/* Avatar — fuente: foto app > foto Google OAuth > imageUrl Clerk */}
-          <Link href="/dashboard/perfil" className="shrink-0" title="Mi Perfil">
+          <Link
+            href="/dashboard/perfil"
+            className="shrink-0"
+            title={collapsed ? undefined : 'Mi Perfil'}
+            onMouseEnter={collapsed ? (e) => {
+              const r = e.currentTarget.getBoundingClientRect();
+              setNavTip({ label: 'Mi Perfil', top: r.top + r.height / 2, left: r.right + 10 });
+            } : undefined}
+            onMouseLeave={collapsed ? () => setNavTip(null) : undefined}
+          >
             {(() => {
               const googlePhoto = clerkUser?.externalAccounts?.find(a => a.provider === 'google')?.imageUrl;
               const src = userPicture || googlePhoto || clerkUser?.imageUrl || null;

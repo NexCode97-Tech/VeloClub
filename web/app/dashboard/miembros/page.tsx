@@ -4,6 +4,7 @@ import { useAuth, useUser } from '@clerk/nextjs';
 import { useClubStream } from '@/hooks/useClubStream';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { stagger as pageStagger, cardVariant as pageCard } from '@/lib/page-animations';
 import { apiFetch } from '@/lib/api-client';
@@ -830,13 +831,15 @@ export default function MiembrosPage() {
           NUEVO PANEL — bottom sheet multi-paso
       ═══════════════════════════════════════════════════════════════════ */}
 
+      {typeof document !== 'undefined' && createPortal(
+      <>
       {/* Backdrop */}
       <AnimatePresence>
         {open && (
           <motion.div
             key="backdrop"
-            className="fixed inset-0 z-40"
-            style={{ background: 'rgba(15,10,30,0.52)', backdropFilter: 'blur(3px)', WebkitBackdropFilter: 'blur(3px)' }}
+            className="fixed inset-0"
+            style={{ background: 'rgba(15,10,30,0.52)', backdropFilter: 'blur(3px)', WebkitBackdropFilter: 'blur(3px)', zIndex: 100 }}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -851,8 +854,8 @@ export default function MiembrosPage() {
         {open && (
           <motion.div
             key="sheet"
-            className="fixed inset-0 z-50 flex items-center justify-center px-4"
-            style={{ pointerEvents: 'none' }}
+            className="fixed inset-0 flex items-center justify-center px-4"
+            style={{ pointerEvents: 'none', zIndex: 101 }}
           >
             <motion.div
               className="bg-white flex flex-col w-full"
@@ -1171,7 +1174,10 @@ export default function MiembrosPage() {
             </div>
 
             {/* ── Navigation ─────────────────────────────────────────── */}
-            <div className="px-6 py-4 flex gap-3 shrink-0 border-t border-border">
+            <div
+              className="px-6 pt-4 flex gap-3 shrink-0 border-t border-border"
+              style={{ paddingBottom: 'calc(1rem + env(safe-area-inset-bottom))' }}
+            >
               {step > 0 && (
                 <motion.button
                   whileTap={reducedMotion ? {} : { scale: 0.97 }}
@@ -1208,6 +1214,9 @@ export default function MiembrosPage() {
           </motion.div>
         )}
       </AnimatePresence>
+      </>,
+      document.body
+      )}
 
       {/* ── Modal Ver Deportista ────────────────────────────────────────── */}
       <div>

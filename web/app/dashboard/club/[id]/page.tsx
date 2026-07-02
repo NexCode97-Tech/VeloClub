@@ -35,6 +35,9 @@ export default function PublicClubPage() {
   const [data, setData] = useState<Payload | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const [following, setFollowing] = useState(false);
+  const [followers, setFollowers] = useState(0);
+  const [toggling, setToggling] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -42,6 +45,11 @@ export default function PublicClubPage() {
         const token = await getToken();
         const res = await apiFetch<Payload>(`/clubs/${id}/public`, { token });
         setData(res);
+        setFollowers(res.followersCount);
+        // Estado de seguimiento del usuario actual
+        apiFetch<{ isFollowing: boolean }>(`/follows/stats/club:${id}`, { token })
+          .then(r => setFollowing(r.isFollowing))
+          .catch(() => {});
       } catch {
         setNotFound(true);
       } finally {
@@ -49,6 +57,21 @@ export default function PublicClubPage() {
       }
     })();
   }, [id, getToken]);
+
+  async function toggleFollow() {
+    if (!data || toggling) return;
+    setToggling(true);
+    try {
+      const token = await getToken();
+      const res = await apiFetch<{ following: boolean }>(`/follows/toggle/club:${data.club.id}`, { token, method: 'POST' });
+      setFollowing(res.following);
+      setFollowers(prev => prev + (res.following ? 1 : -1));
+    } catch {
+      /* ignorar */
+    } finally {
+      setToggling(false);
+    }
+  }
 
   if (loading) {
     return (
@@ -67,7 +90,7 @@ export default function PublicClubPage() {
     );
   }
 
-  const { club, members, followersCount, mainLocation } = data;
+  const { club, members, mainLocation } = data;
   const meta = [club.deporte, club.city, club.department].filter(Boolean).join(' · ');
 
   return (
@@ -108,19 +131,33 @@ export default function PublicClubPage() {
           )}
         </div>
 
-        <div className="mt-3">
-          <div className="flex items-center gap-1.5">
-            <h1 className="text-[20px] font-bold text-foreground">{club.name}</h1>
-            {club.verified && <BadgeCheck className="w-5 h-5 shrink-0" style={{ color: '#4361EE' }} />}
+        <div className="mt-3 flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <div className="flex items-center gap-1.5">
+              <h1 className="text-[20px] font-bold text-foreground">{club.name}</h1>
+              {club.verified && <BadgeCheck className="w-5 h-5 shrink-0" style={{ color: '#4361EE' }} />}
+            </div>
+            {meta && <p className="text-[13px] text-muted-foreground mt-0.5">{meta}</p>}
           </div>
-          {meta && <p className="text-[13px] text-muted-foreground mt-0.5">{meta}</p>}
+          {/* Botón seguir */}
+          <button
+            onClick={toggleFollow}
+            disabled={toggling}
+            className="shrink-0 px-4 py-2 rounded-xl text-[13px] font-bold transition-all disabled:opacity-60"
+            style={following
+              ? { background: '#fff', color: '#7C3AED', border: '1.5px solid rgba(124,58,237,0.35)' }
+              : { background: 'linear-gradient(135deg,#7C3AED,#4361EE)', color: '#fff' }
+            }
+          >
+            {following ? 'Siguiendo' : 'Seguir'}
+          </button>
         </div>
 
         {/* Stats */}
         <div className="flex gap-5 mt-3">
           <div><span className="font-bold text-foreground">{club._count.members}</span>{' '}
             <span className="text-[13px] text-muted-foreground">miembros</span></div>
-          <div><span className="font-bold text-foreground">{followersCount}</span>{' '}
+          <div><span className="font-bold text-foreground">{followers}</span>{' '}
             <span className="text-[13px] text-muted-foreground">seguidores</span></div>
         </div>
 

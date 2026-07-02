@@ -64,10 +64,14 @@ function getWeekDates(): string[] {
 function WeekStrip({
   weekSaved,
   todayStr,
+  selectedDate,
+  onSelect,
   animatingToday,
 }: {
   weekSaved: Set<string>;
   todayStr: string;
+  selectedDate: string;
+  onSelect: (date: string) => void;
   animatingToday: boolean;
 }) {
   const weekDates = getWeekDates();
@@ -76,11 +80,13 @@ function WeekStrip({
   return (
     <div className="flex justify-between items-end px-1">
       {weekDates.map((date, i) => {
-        const isToday   = date === todayStr;
-        const isPast    = i < todayIdx;
-        const isFuture  = i > todayIdx;
-        const isSaved   = weekSaved.has(date);
+        const isToday    = date === todayStr;
+        const isFuture   = i > todayIdx;
+        const isSaved    = weekSaved.has(date);
+        const isSelected = date === selectedDate;
         const isAnimating = isToday && animatingToday;
+        // Seleccionables: desde el inicio de la semana hasta hoy (los futuros no)
+        const selectable = !isFuture;
 
         // Visual state
         // Saved (past or today): filled dark circle with check
@@ -108,13 +114,20 @@ function WeekStrip({
         }
 
         return (
-          <div key={date} className="flex flex-col items-center gap-1.5" style={{ opacity }}>
+          <button
+            key={date}
+            type="button"
+            onClick={selectable ? () => onSelect(date) : undefined}
+            disabled={!selectable}
+            className={`flex flex-col items-center gap-1.5 ${selectable ? 'cursor-pointer' : 'cursor-default'}`}
+            style={{ opacity }}
+          >
             <motion.div
               animate={isAnimating ? {
                 scale: [1, 0.82, 1.12, 1],
                 backgroundColor: ['transparent', '#06D6A0', '#06D6A0', '#06D6A0'],
               } : {
-                scale: 1,
+                scale: isSelected ? 1.08 : 1,
                 backgroundColor: bgColor,
               }}
               transition={isAnimating
@@ -125,6 +138,7 @@ function WeekStrip({
               style={{
                 border: `2px solid ${ringColor}`,
                 backgroundColor: bgColor,
+                boxShadow: isSelected ? '0 0 0 3px rgba(124,58,237,0.25)' : 'none',
               }}
             >
               <AnimatePresence>
@@ -162,11 +176,11 @@ function WeekStrip({
             </motion.div>
             <span
               className="text-[10px] font-semibold"
-              style={{ color: isToday ? '#7C3AED' : '#8E87A8' }}
+              style={{ color: (isToday || isSelected) ? '#7C3AED' : '#8E87A8' }}
             >
               {DAY_LABELS[i]}
             </span>
-          </div>
+          </button>
         );
       })}
     </div>
@@ -187,9 +201,14 @@ export default function AsistenciaPage() {
   // Week streak state
   const [animatingToday, setAnimating]  = useState(false);
 
-  const todayDay = new Date().getDay();
-  const isBlocked = noAttDays.includes(todayDay);
   const todayStr = todayISO();
+  // Día seleccionado en la tira semanal (por defecto hoy). Permite revisar/corregir
+  // la asistencia de días anteriores de la semana actual.
+  const [selectedDate, setSelectedDate] = useState<string>(todayStr);
+  const selectedDay = new Date(`${selectedDate}T00:00:00`).getDay();
+  const isBlocked = noAttDays.includes(selectedDay);
+  // Filtro por estado al tocar las tarjetas de resumen (Presentes/Tarde/Ausentes/Excusa)
+  const [statusFilter, setStatusFilter] = useState<Status | null>(null);
   const queryClient = useQueryClient();
 
   // ── Week strip con caché ─────────────────────────────────────────────────────
@@ -221,8 +240,8 @@ export default function AsistenciaPage() {
     queryFn: async () => { const token = await getToken(); return apiFetch<{ members: Member[] }>('/members', { token }); },
   });
   const { data: attData, isLoading: loadingAtt } = useQuery({
-    queryKey: QK.attendance(todayStr),
-    queryFn: async () => { const token = await getToken(); return apiFetch<{ records: AttRecord[] }>(`/attendance?date=${todayStr}`, { token }); },
+    queryKey: QK.attendance(selectedDate),
+    queryFn: async () => { const token = await getToken(); return apiFetch<{ records: AttRecord[] }>(`/attendance?date=${selectedDate}`, { token }); },
     staleTime: 0,
   });
 
@@ -275,16 +294,18 @@ export default function AsistenciaPage() {
       await apiFetch('/attendance/bulk', {
         method: 'POST', token,
         body: JSON.stringify({
-          date:       todayISO(),
+          date:       selectedDate,
           locationId: selectedLoc,
           records:    Object.entries(att).map(([memberId, status]) => ({ memberId, status })),
         }),
       });
       setSaved(true);
-      // Marcar hoy como guardado + lanzar animación
-      queryClient.setQueryData(['weekSaved', weekDates[0]], (old: Set<string> | undefined) => new Set([...(old ?? []), todayStr]));
-      setAnimating(true);
-      setTimeout(() => setAnimating(false), 800);
+      // Marcar el día guardado + lanzar animación (solo si es hoy)
+      queryClient.setQueryData(['weekSaved', weekDates[0]], (old: Set<string> | undefined) => new Set([...(old ?? []), selectedDate]));
+      if (selectedDate === todayStr) {
+        setAnimating(true);
+        setTimeout(() => setAnimating(false), 800);
+      }
       setTimeout(() => setSaved(false), 3000);
     } finally {
       setSaving(false);
@@ -299,6 +320,7 @@ export default function AsistenciaPage() {
   const categories = ['TODOS', ...Array.from(new Set(members.map(m => m.category).filter(Boolean) as string[])).sort()];
   const visibleMembers = members
     .filter(m => catFilter === 'TODOS' || m.category === catFilter)
+    .filter(m => !statusFilter || (att[m.id] ?? 'ABSENT') === statusFilter)
     .filter(m => !search.trim() || m.fullName.toLowerCase().includes(search.toLowerCase().trim()));
 
   // "MAYORES" → "Mayores"
@@ -345,19 +367,9 @@ export default function AsistenciaPage() {
               </div>
             ))}
           </div>
-        ) : isBlocked ? (
-          <div className="bg-white border border-border rounded-xl px-4 py-12 text-center">
-            <div className="w-14 h-14 rounded-2xl mx-auto mb-4 flex items-center justify-center" style={{ background: 'rgba(239,71,111,0.08)' }}>
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#EF476F" strokeWidth="2"/><path d="M6.5 6.5l11 11M17.5 6.5l-11 11" stroke="#EF476F" strokeWidth="2" strokeLinecap="round"/></svg>
-            </div>
-            <p className="text-[15px] font-bold text-foreground">No hay entrenamiento hoy</p>
-            <p className="text-[12px] text-muted-foreground mt-1 capitalize">
-              Los {DAY_NAMES[todayDay]}s no se registra asistencia
-            </p>
-          </div>
         ) : (
           <>
-            {/* ── Week streak strip ── */}
+            {/* ── Week streak strip (siempre visible para poder cambiar de día) ── */}
             <motion.div
               variants={cardVariant}
               className="bg-white border border-border rounded-2xl px-4 py-4"
@@ -366,11 +378,23 @@ export default function AsistenciaPage() {
               <WeekStrip
                 weekSaved={weekSaved}
                 todayStr={todayStr}
+                selectedDate={selectedDate}
+                onSelect={setSelectedDate}
                 animatingToday={animatingToday}
               />
             </motion.div>
 
-            {members.length === 0 ? (
+            {isBlocked ? (
+              <div className="bg-white border border-border rounded-xl px-4 py-12 text-center">
+                <div className="w-14 h-14 rounded-2xl mx-auto mb-4 flex items-center justify-center" style={{ background: 'rgba(239,71,111,0.08)' }}>
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#EF476F" strokeWidth="2"/><path d="M6.5 6.5l11 11M17.5 6.5l-11 11" stroke="#EF476F" strokeWidth="2" strokeLinecap="round"/></svg>
+                </div>
+                <p className="text-[15px] font-bold text-foreground">No hay entrenamiento este día</p>
+                <p className="text-[12px] text-muted-foreground mt-1 capitalize">
+                  Los {DAY_NAMES[selectedDay]}s no se registra asistencia
+                </p>
+              </div>
+            ) : members.length === 0 ? (
               <div className="bg-white border border-border rounded-xl px-4 py-10 text-center">
                 <Users className="w-10 h-10 mx-auto mb-3 text-muted-foreground/30" />
                 <p className="text-[13px] font-semibold text-muted-foreground">Sin deportistas en esta sede</p>
@@ -378,28 +402,36 @@ export default function AsistenciaPage() {
               </div>
             ) : (
               <>
-                {/* Resumen */}
+                {/* Resumen — tarjetas filtrables (tocar filtra la lista por ese estado) */}
                 <motion.div variants={cardVariant} className="grid grid-cols-4 gap-2 md:gap-3">
-                  {counts.map(({ s, n }) => (
-                    <div
-                      key={s}
-                      className="bg-white border border-border rounded-xl text-center flex flex-col items-center justify-center py-3 md:py-5 md:rounded-2xl"
-                      style={{ boxShadow: '0 1px 6px rgba(0,0,0,0.04)' }}
-                    >
-                      <div
-                        className="text-xl md:text-[36px] font-bold leading-none mb-1"
-                        style={{ color: STATUS_COLOR[s], fontFamily: 'inherit' }}
+                  {counts.map(({ s, n }) => {
+                    const active = statusFilter === s;
+                    return (
+                      <button
+                        key={s}
+                        onClick={() => setStatusFilter(active ? null : s)}
+                        className="bg-white border rounded-xl text-center flex flex-col items-center justify-center py-3 md:py-5 md:rounded-2xl transition-all cursor-pointer"
+                        style={{
+                          boxShadow: active ? `0 4px 14px ${STATUS_COLOR[s]}33` : '0 1px 6px rgba(0,0,0,0.04)',
+                          borderColor: active ? STATUS_COLOR[s] : 'var(--border)',
+                          borderWidth: active ? 2 : 1,
+                        }}
                       >
-                        {n}
-                      </div>
-                      <div className="text-[10px] md:text-[13px] font-semibold text-muted-foreground md:mt-0.5">
-                        {s === 'PRESENT' ? 'Presentes'
-                          : s === 'LATE' ? 'Tarde'
-                          : s === 'ABSENT' ? 'Ausentes'
-                          : 'Excusa Médica'}
-                      </div>
-                    </div>
-                  ))}
+                        <div
+                          className="text-xl md:text-[36px] font-bold leading-none mb-1"
+                          style={{ color: STATUS_COLOR[s], fontFamily: 'inherit' }}
+                        >
+                          {n}
+                        </div>
+                        <div className="text-[10px] md:text-[13px] font-semibold text-muted-foreground md:mt-0.5">
+                          {s === 'PRESENT' ? 'Presentes'
+                            : s === 'LATE' ? 'Tarde'
+                            : s === 'ABSENT' ? 'Ausentes'
+                            : 'Excusa Médica'}
+                        </div>
+                      </button>
+                    );
+                  })}
                 </motion.div>
 
                 {/* Búsqueda + categorías + sede — misma fila en desktop */}

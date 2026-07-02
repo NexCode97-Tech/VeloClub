@@ -30,9 +30,22 @@ const paymentSchema = z.object({
   notes: z.string().optional(),
 });
 
-async function createCashEntry(clubId: string, paymentId: string, amount: number, memberName: string, month: number, year: number) {
+async function createCashEntry(clubId: string, paymentId: string, amount: number, memberName: string, month: number, year: number, paidAt?: Date | null) {
   const existing = await prisma.cashEntry.findUnique({ where: { paymentId } });
-  if (existing) return;
+  if (existing) {
+    // Ya existe el ingreso: mantener el monto sincronizado si cambió la tarifa del pago.
+    if (existing.amount !== amount) {
+      await prisma.cashEntry.update({ where: { paymentId }, data: { amount } });
+    }
+    return;
+  }
+  // El ingreso se fecha en el mes/año de la mensualidad (contabilidad por devengo),
+  // para que "Cobrado {mes}" e "Ingresos {mes}" del flujo de caja coincidan.
+  // Si el pago se marcó dentro de ese mismo mes, se conserva la fecha real;
+  // si se pagó en otro mes (adelantado o atrasado), se usa el día 15 del mes de la cuota.
+  const ref = paidAt ?? new Date();
+  const inMonth = ref.getFullYear() === year && ref.getMonth() === month - 1;
+  const date = inMonth ? ref : new Date(year, month - 1, 15, 12, 0, 0);
   await prisma.cashEntry.create({
     data: {
       clubId,
@@ -40,6 +53,7 @@ async function createCashEntry(clubId: string, paymentId: string, amount: number
       amount,
       description: `Mensualidad ${memberName} — ${MONTH_NAMES[month - 1]} ${year}`,
       paymentId,
+      date,
     },
   });
 }
@@ -147,7 +161,7 @@ router.post('/', requireAuth, async (req, res) => {
   });
 
   if (payment.status === 'PAID') {
-    await createCashEntry(clubId, payment.id, payment.amount, payment.member.fullName, payment.month, payment.year);
+    await createCashEntry(clubId, payment.id, payment.amount, payment.member.fullName, payment.month, payment.year, payment.paidAt);
   }
 
   emitToClub(clubId, 'payments');
@@ -194,7 +208,8 @@ router.patch('/:id', requireAuth, async (req, res) => {
       clubId, payment.id,
       payment.amount,
       existing.member.fullName,
-      payment.month, payment.year
+      payment.month, payment.year,
+      payment.paidAt
     );
   }
 

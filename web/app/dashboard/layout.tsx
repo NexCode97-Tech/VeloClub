@@ -261,6 +261,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   function isSideActive(href: string) {
     if (href === '/dashboard') return pathname === '/dashboard';
+    // El módulo "Club" solo se activa en la ruta exacta; /dashboard/club/[id] es la
+    // vista pública de un club de la comunidad y no debe marcar el módulo.
+    if (href === '/dashboard/club') return pathname === '/dashboard/club';
     return pathname === href || pathname.startsWith(href + '/');
   }
 

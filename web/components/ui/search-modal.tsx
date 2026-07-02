@@ -5,7 +5,8 @@ import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@clerk/nextjs';
 import { apiFetch } from '@/lib/api-client';
-import { Search, X, Building2, Loader2, BadgeCheck } from 'lucide-react';
+import { Search, X, Loader2, BadgeCheck } from 'lucide-react';
+import { IconClub } from '@/components/ui/custom-icons';
 
 interface ClubHit {
   id: string; name: string; city?: string | null; department?: string | null;
@@ -82,14 +83,14 @@ export function SearchModal({ open, onClose }: { open: boolean; onClose: () => v
   const total = results.clubs.length + results.athletes.length + results.coaches.length;
   const showEmpty = q.trim().length >= 2 && !loading && total === 0;
 
-  const Avatar = ({ src, name, rounded }: { src?: string | null; name: string; rounded: string }) => (
+  const Avatar = ({ src, name, rounded, icon }: { src?: string | null; name: string; rounded: string; icon?: React.ReactNode }) => (
     src ? (
       // eslint-disable-next-line @next/next/no-img-element
       <img src={src} alt={name} className={`w-9 h-9 object-cover shrink-0 ${rounded}`} style={{ border: '1px solid rgba(0,0,0,0.06)' }} />
     ) : (
       <div className={`w-9 h-9 shrink-0 flex items-center justify-center text-[11px] font-bold text-white ${rounded}`}
         style={{ background: 'linear-gradient(135deg,#7C3AED,#4361EE)' }}>
-        {initials(name)}
+        {icon ?? initials(name)}
       </div>
     )
   );
@@ -140,7 +141,7 @@ export function SearchModal({ open, onClose }: { open: boolean; onClose: () => v
             <Group title="Clubes">
               {results.clubs.map(c => (
                 <button key={c.id} onClick={() => goClub(c)} className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-secondary/60 transition-colors text-left">
-                  <Avatar src={c.logoUrl} name={c.name} rounded="rounded-full" />
+                  <Avatar src={c.logoUrl} name={c.name} rounded="rounded-full" icon={<IconClub className="w-5 h-5" />} />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1">
                       <p className="text-[13px] font-semibold text-foreground truncate">{c.name}</p>
@@ -150,7 +151,7 @@ export function SearchModal({ open, onClose }: { open: boolean; onClose: () => v
                       {[c.deporte, c.city, c.department].filter(Boolean).join(' · ') || 'Club'}
                     </p>
                   </div>
-                  <Building2 className="w-4 h-4 shrink-0" style={{ color: '#C4BEDA' }} />
+                  <IconClub className="w-4 h-4 shrink-0" style={{ color: '#C4BEDA' }} />
                 </button>
               ))}
             </Group>

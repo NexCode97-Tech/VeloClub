@@ -121,10 +121,10 @@ export default function PublicClubPage() {
           {club.logoUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={club.logoUrl} alt={club.name}
-              className="w-20 h-20 rounded-2xl object-cover shrink-0"
+              className="w-20 h-20 rounded-full object-cover shrink-0"
               style={{ border: '3px solid #fff', boxShadow: '0 4px 16px rgba(0,0,0,0.12)' }} />
           ) : (
-            <div className="w-20 h-20 rounded-2xl shrink-0 flex items-center justify-center text-2xl font-bold text-white"
+            <div className="w-20 h-20 rounded-full shrink-0 flex items-center justify-center text-2xl font-bold text-white"
               style={{ background: 'linear-gradient(135deg,#7C3AED,#4361EE)', border: '3px solid #fff' }}>
               {initials(club.name)}
             </div>

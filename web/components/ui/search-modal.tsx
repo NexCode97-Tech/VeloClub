@@ -140,7 +140,7 @@ export function SearchModal({ open, onClose }: { open: boolean; onClose: () => v
             <Group title="Clubes">
               {results.clubs.map(c => (
                 <button key={c.id} onClick={() => goClub(c)} className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-secondary/60 transition-colors text-left">
-                  <Avatar src={c.logoUrl} name={c.name} rounded="rounded-lg" />
+                  <Avatar src={c.logoUrl} name={c.name} rounded="rounded-full" />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1">
                       <p className="text-[13px] font-semibold text-foreground truncate">{c.name}</p>

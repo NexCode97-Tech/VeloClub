@@ -47,7 +47,7 @@ export function NotificationsBell() {
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState<Notif[]>([]);
   const [unread, setUnread] = useState(0);
-  const [coords, setCoords] = useState<{ top: number; right: number } | null>(null);
+  const [coords, setCoords] = useState<{ top: number; left: number } | null>(null);
   const btnRef = useRef<HTMLButtonElement>(null);
 
   const load = useCallback(async () => {
@@ -80,7 +80,12 @@ export function NotificationsBell() {
   function toggleOpen() {
     if (!open && btnRef.current) {
       const r = btnRef.current.getBoundingClientRect();
-      setCoords({ top: r.bottom + 8, right: window.innerWidth - r.right });
+      const width = 340;
+      // Alinear a la izquierda del botón y clampear al viewport para que no se recorte
+      let left = r.left;
+      if (left + width > window.innerWidth - 8) left = window.innerWidth - width - 8;
+      if (left < 8) left = 8;
+      setCoords({ top: r.bottom + 8, left });
       load();
     }
     setOpen(o => !o);
@@ -128,7 +133,7 @@ export function NotificationsBell() {
           <div className="fixed inset-0" style={{ zIndex: 110 }} onClick={() => setOpen(false)} />
           <div
             className="fixed bg-white rounded-2xl overflow-hidden flex flex-col"
-            style={{ top: coords.top, right: coords.right, width: 340, maxHeight: '70dvh', zIndex: 111, boxShadow: '0 16px 50px rgba(0,0,0,0.22)' }}
+            style={{ top: coords.top, left: coords.left, width: 340, maxHeight: '70dvh', zIndex: 111, boxShadow: '0 16px 50px rgba(0,0,0,0.22)' }}
           >
             <div className="flex items-center justify-between px-4 py-3 border-b border-border shrink-0">
               <p className="text-[13px] font-bold text-foreground">Notificaciones</p>

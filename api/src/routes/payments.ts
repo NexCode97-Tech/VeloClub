@@ -39,13 +39,11 @@ async function createCashEntry(clubId: string, paymentId: string, amount: number
     }
     return;
   }
-  // El ingreso se fecha en el mes/año de la mensualidad (contabilidad por devengo),
-  // para que "Cobrado {mes}" e "Ingresos {mes}" del flujo de caja coincidan.
-  // Si el pago se marcó dentro de ese mismo mes, se conserva la fecha real;
-  // si se pagó en otro mes (adelantado o atrasado), se usa el día 15 del mes de la cuota.
-  const ref = paidAt ?? new Date();
-  const inMonth = ref.getFullYear() === year && ref.getMonth() === month - 1;
-  const date = inMonth ? ref : new Date(year, month - 1, 15, 12, 0, 0);
+  // La fecha del ingreso es el día real en que se marcó el pago (se muestra en el flujo
+  // de caja). El agrupamiento por mes lo hace el filtro usando el mes/año de la cuota
+  // (ver GET /cashflow), de modo que "Cobrado {mes}" e "Ingresos {mes}" coincidan aunque
+  // el pago se haya hecho adelantado o atrasado.
+  const date = paidAt ?? new Date();
   await prisma.cashEntry.create({
     data: {
       clubId,

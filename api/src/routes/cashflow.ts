@@ -23,10 +23,12 @@ router.get('/', requireAuth, async (req, res) => {
 
   const where: Record<string, unknown> = { clubId };
   if (month !== null && year !== null) {
-    where.date = {
-      gte: new Date(year, month - 1, 1),
-      lte: new Date(year, month, 0, 23, 59, 59),
-    };
+    // Los ingresos de mensualidad se agrupan por el mes/año de la CUOTA (no por su fecha),
+    // para que coincidan con "Cobrado {mes}". Las entradas manuales sí van por su fecha real.
+    where.OR = [
+      { paymentId: null, date: { gte: new Date(year, month - 1, 1), lte: new Date(year, month, 0, 23, 59, 59) } },
+      { payment: { is: { month, year } } },
+    ];
   }
 
   const entries = await prisma.cashEntry.findMany({

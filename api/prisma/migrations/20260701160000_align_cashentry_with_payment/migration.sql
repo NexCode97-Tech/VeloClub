@@ -1,21 +1,19 @@
--- Alinea los ingresos automáticos (CashEntry con paymentId) con su mensualidad:
+-- Alinea los ingresos automáticos (CashEntry con paymentId) con su mensualidad.
 --
--- 1) FECHA: el ingreso debe caer en el mes/año de la cuota (contabilidad por devengo),
---    para que "Cobrado {mes}" e "Ingresos {mes}" del flujo de caja coincidan.
---    Solo se re-fechan los desalineados; se usa el día 15 al mediodía del mes de la cuota.
+-- El agrupamiento por mes en el flujo de caja ahora usa el mes/año de la CUOTA
+-- (ver GET /cashflow), no la fecha del ingreso. Por eso aquí solo corregimos:
 --
--- 2) MONTO: el ingreso debe reflejar el monto actual del pago (si se cambió la tarifa
---    después de pagar, el ingreso podía haber quedado con el monto viejo).
+-- 1) FECHA: que el ingreso muestre el DÍA REAL en que se pagó (payment.paidAt),
+--    en vez de la fecha en que se creó el registro.
+-- 2) MONTO: que refleje el monto actual del pago (si se cambió la tarifa tras pagar).
 
--- 1) Re-fechar ingresos cuyo mes/año no coincide con el de la mensualidad
+-- 1) Restaurar el día real de pago en los ingresos que tengan paidAt
 UPDATE "CashEntry" ce
-SET "date" = make_timestamp(p."year", p."month", 15, 12, 0, 0)
+SET "date" = p."paidAt"
 FROM "Payment" p
 WHERE ce."paymentId" = p."id"
-  AND (
-    EXTRACT(YEAR  FROM ce."date") <> p."year"
-    OR EXTRACT(MONTH FROM ce."date") <> p."month"
-  );
+  AND p."paidAt" IS NOT NULL
+  AND ce."date" <> p."paidAt";
 
 -- 2) Sincronizar el monto del ingreso con el del pago
 UPDATE "CashEntry" ce

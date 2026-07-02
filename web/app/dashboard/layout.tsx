@@ -10,6 +10,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { apiFetch } from '@/lib/api-client';
 import LoadingScreen from '@/components/ui/loading-screen';
 import { BottomCircleMenu } from '@/components/ui/bottom-circle-menu';
+import { SearchModal } from '@/components/ui/search-modal';
 import {
   Settings,
   UserCircle,
@@ -145,6 +146,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [masMenuOpen, setMasMenuOpen] = useState(false);
   // Tooltip del sidebar colapsado (etiqueta con el nombre del módulo al hacer hover)
   const [navTip, setNavTip] = useState<{ label: string; top: number; left: number } | null>(null);
+  const [searchOpen, setSearchOpen] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [clubLogoUrl, setClubLogoUrl] = useState<string | null>(null);
   const [clubName, setClubName] = useState<string | null>(null);
@@ -159,6 +161,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   // Ocultar el tooltip si el sidebar deja de estar colapsado
   useEffect(() => { if (!collapsed) setNavTip(null); }, [collapsed]);
+
+  // Atajo de teclado para abrir el buscador (Ctrl/Cmd + K)
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setSearchOpen(true);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
 
   useEffect(() => {
     if (!isLoaded) return;
@@ -325,9 +339,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           {!collapsed && (
             <div className="flex items-center gap-1 ml-auto">
               <button
+                onClick={() => setSearchOpen(true)}
                 className="flex items-center justify-center rounded-lg transition-colors hover:bg-secondary"
                 style={{ width: 28, height: 28, color: '#8E87A8' }}
-                title="Buscar"
+                title="Buscar (Ctrl+K)"
               >
                 <Search className="w-[14px] h-[14px]" />
               </button>
@@ -472,6 +487,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           )}
         </div>
       </motion.aside>
+
+      {/* Buscador de comunidad (clubes / deportistas / entrenadores) */}
+      <SearchModal open={searchOpen} onClose={() => setSearchOpen(false)} />
 
       {/* Tooltip del sidebar colapsado — etiqueta con el nombre del módulo */}
       {navTip && typeof document !== 'undefined' && createPortal(

@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth, useSession, useUser } from '@clerk/nextjs';
 import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { apiFetch } from '@/lib/api-client';
 import LoadingScreen from '@/components/ui/loading-screen';
@@ -142,6 +143,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [role, setRole] = useState<string | null>(null);
   const [checking, setChecking] = useState(true);
   const [masMenuOpen, setMasMenuOpen] = useState(false);
+  // Tooltip del sidebar colapsado (etiqueta con el nombre del módulo al hacer hover)
+  const [navTip, setNavTip] = useState<{ label: string; top: number; left: number } | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [clubLogoUrl, setClubLogoUrl] = useState<string | null>(null);
   const [clubName, setClubName] = useState<string | null>(null);
@@ -153,6 +156,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     }
     return false;
   });
+
+  // Ocultar el tooltip si el sidebar deja de estar colapsado
+  useEffect(() => { if (!collapsed) setNavTip(null); }, [collapsed]);
 
   useEffect(() => {
     if (!isLoaded) return;
@@ -369,7 +375,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     justifyContent: collapsed ? 'center' : undefined,
                     background: collapsed && active ? accentBg : undefined,
                   }}
-                  title={collapsed ? label : undefined}
+                  onMouseEnter={collapsed ? (e) => {
+                    const r = e.currentTarget.getBoundingClientRect();
+                    setNavTip({ label, top: r.top + r.height / 2, left: r.right + 10 });
+                  } : undefined}
+                  onMouseLeave={collapsed ? () => setNavTip(null) : undefined}
                 >
                   <Icon className="w-[18px] h-[18px] shrink-0" strokeWidth={active ? 2.5 : 2} />
                   {!collapsed && <span>{label}</span>}
@@ -433,6 +443,29 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           )}
         </div>
       </motion.aside>
+
+      {/* Tooltip del sidebar colapsado — etiqueta con el nombre del módulo */}
+      {navTip && typeof document !== 'undefined' && createPortal(
+        <div
+          className="hidden md:block pointer-events-none"
+          style={{ position: 'fixed', top: navTip.top, left: navTip.left, transform: 'translateY(-50%)', zIndex: 60 }}
+        >
+          <div
+            className="relative text-white text-[12px] font-semibold rounded-lg whitespace-nowrap"
+            style={{ background: '#1A1028', padding: '6px 10px', boxShadow: '0 6px 20px rgba(0,0,0,0.22)' }}
+          >
+            {navTip.label}
+            {/* Flechita apuntando al ícono */}
+            <span
+              style={{
+                position: 'absolute', top: '50%', left: -4, transform: 'translateY(-50%) rotate(45deg)',
+                width: 8, height: 8, background: '#1A1028', borderRadius: 1,
+              }}
+            />
+          </div>
+        </div>,
+        document.body
+      )}
 
       {/* ── Main content ────────────────────────────────────────────────── */}
       <div className="flex-1 flex flex-col overflow-hidden min-w-0">

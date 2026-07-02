@@ -174,6 +174,42 @@ router.get('/profile', requireAuth, async (req, res) => {
   res.json(payload);
 });
 
+// GET /clubs/:id/public — perfil público de cualquier club (buscador de comunidad).
+// Solo datos públicos; no expone datos sensibles de miembros.
+router.get('/:id/public', requireAuth, async (req, res) => {
+  if (!req.auth) return res.status(401).json({ error: 'No autenticado' });
+  const id = String(req.params.id);
+
+  const club = await prisma.club.findFirst({
+    where: { id, active: true },
+    select: {
+      id: true, name: true, city: true, department: true, deporte: true,
+      logoUrl: true, coverUrl: true, verified: true, description: true, createdAt: true,
+      _count: { select: { members: true } },
+    },
+  });
+  if (!club) return res.status(404).json({ error: 'Club no encontrado' });
+
+  const members = await prisma.member.findMany({
+    where: { clubId: id, clerkId: { not: null } },
+    select: { id: true, fullName: true, pictureUrl: true, role: true, clerkId: true },
+    orderBy: { fullName: 'asc' },
+    take: 60,
+  });
+
+  const followersCount = await prisma.follow.count({
+    where: { followingClerkId: `club:${id}` },
+  });
+
+  const mainLocation = await prisma.location.findFirst({
+    where: { clubId: id },
+    select: { id: true, name: true, address: true },
+    orderBy: { createdAt: 'asc' },
+  });
+
+  res.json({ club, members, followersCount, mainLocation: mainLocation ?? null });
+});
+
 // PATCH /clubs/contact — actualizar info de contacto (solo ADMIN)
 router.patch('/contact', requireAuth, async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'No autenticado' });

@@ -22,6 +22,7 @@ import cronRouter from './routes/cron';
 import postsRouter from './routes/posts';
 import followsRouter from './routes/follows';
 import profilesRouter from './routes/profiles';
+import searchRouter from './routes/search';
 import { startWorkers } from './workers';
 import { prisma } from './db/client';
 import { getRedis } from './lib/redis';
@@ -147,6 +148,7 @@ app.use('/cron', cronRouter);
 app.use('/posts', postsRouter);
 app.use('/follows', followsRouter);
 app.use('/profiles', profilesRouter);
+app.use('/search', searchRouter);
 
 // ── Sentry error handler (debe ir antes del error handler custom) ─────────────
 Sentry.setupExpressErrorHandler(app);

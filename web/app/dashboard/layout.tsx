@@ -377,7 +377,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   }}
                   onMouseEnter={collapsed ? (e) => {
                     const r = e.currentTarget.getBoundingClientRect();
-                    setNavTip({ label, top: r.top + r.height / 2, left: r.right + 10 });
+                    setNavTip({ label, top: r.top + r.height / 2, left: r.right + 3 });
                   } : undefined}
                   onMouseLeave={collapsed ? () => setNavTip(null) : undefined}
                 >
@@ -410,7 +410,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 style={{ width: 40, height: 40, color: active ? accentColor : '#8E87A8', background: active ? accentBg : undefined }}
                 onMouseEnter={(e) => {
                   const r = e.currentTarget.getBoundingClientRect();
-                  setNavTip({ label: 'Ajustes', top: r.top + r.height / 2, left: r.right + 10 });
+                  setNavTip({ label: 'Ajustes', top: r.top + r.height / 2, left: r.right + 3 });
                 }}
                 onMouseLeave={() => setNavTip(null)}
               >
@@ -426,7 +426,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             title={collapsed ? undefined : 'Mi Perfil'}
             onMouseEnter={collapsed ? (e) => {
               const r = e.currentTarget.getBoundingClientRect();
-              setNavTip({ label: 'Mi Perfil', top: r.top + r.height / 2, left: r.right + 10 });
+              setNavTip({ label: 'Mi Perfil', top: r.top + r.height / 2, left: r.right + 3 });
             } : undefined}
             onMouseLeave={collapsed ? () => setNavTip(null) : undefined}
           >

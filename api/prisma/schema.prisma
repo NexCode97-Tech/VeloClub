@@ -392,6 +392,23 @@ model Notificacion {
   @@index([leida, createdAt])
 }
 
+// Notificaciones dirigidas a usuarios del club (staff o deportistas).
+// Una fila por destinatario. `tipo` es texto libre (PAYMENT_RECEIVED, PAYMENT_DUE,
+// NEW_MEMBER, NEW_FOLLOWER, NEW_COMPETITION, NEW_EVENT, ...).
+model Notification {
+  id               String   @id @default(cuid())
+  recipientClerkId String   // a quién va dirigida
+  clubId           String?  // contexto (para el refresco en vivo por SSE)
+  tipo             String
+  titulo           String
+  cuerpo           String
+  link             String?  // ruta interna a la que navega al hacer clic
+  leida            Boolean  @default(false)
+  createdAt        DateTime @default(now())
+
+  @@index([recipientClerkId, leida, createdAt])
+}
+
 // ─── Follow (sistema de seguidores) ─────────────────────────────────────────
 
 model Follow {

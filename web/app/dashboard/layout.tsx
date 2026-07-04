@@ -75,7 +75,7 @@ const ROLE_MAS_ITEMS: Record<string, { label: string; icon: React.ElementType; h
     { label: 'Resultados', icon: IconResultados,   href: '/dashboard/logros',     color: '#F59E0B' },
     { label: 'Calendario', icon: IconCalendar,     href: '/dashboard/calendario', color: '#EF476F' },
     { label: 'Sedes',      icon: IconUbicacion,    href: '/dashboard/sedes',      color: '#06D6A0' },
-    { label: 'Reportes',   icon: IconStatistics,   href: '/dashboard/reportes',   color: '#4361EE' },
+    { label: 'Analíticas', icon: IconStatistics,   href: '/dashboard/reportes',   color: '#4361EE' },
     { label: 'Club',       icon: IconClub,         href: '/dashboard/club',       color: '#7C3AED' },
   ],
   COACH: [
@@ -98,7 +98,7 @@ const ADMIN_NAV = [
   { href: '/dashboard/finanzas',   label: 'Finanzas',      icon: IconFinanzas },
   { href: '/dashboard/logros',     label: 'Resultados',    icon: IconResultados },
   { href: '/dashboard/calendario', label: 'Calendario',    icon: IconCalendar },
-  { href: '/dashboard/reportes',   label: 'Reportes',      icon: IconStatistics },
+  { href: '/dashboard/reportes',   label: 'Analíticas',    icon: IconStatistics },
   { href: '/dashboard/club',       label: 'Club',          icon: IconClub },
   { href: '/dashboard/perfil',     label: 'Mi Perfil',     icon: UserCircle },
   { href: '/dashboard/ajustes',    label: 'Ajustes',       icon: IconAjustes},

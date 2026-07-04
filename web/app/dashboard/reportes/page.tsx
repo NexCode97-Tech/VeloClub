@@ -245,7 +245,7 @@ export default function ReportesPage() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-[22px] font-semibold text-foreground" style={{ fontFamily: 'inherit', lineHeight: 1.1 }}>
-              Reportes
+              Analíticas
             </h1>
             <p className="text-[11px] text-muted-foreground mt-0.5 capitalize">{activeMonthLabel} {activeYear}</p>
           </div>

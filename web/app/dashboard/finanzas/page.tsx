@@ -355,6 +355,13 @@ export default function FinanzasPage() {
   const [savingEditFlow, setSavingEditFlow] = useState(false);
   const [editFlowError, setEditFlowError] = useState<string | null>(null);
 
+  // Tarifa general (configuración masiva de mensualidad + día)
+  const [bulkOpen, setBulkOpen]     = useState(false);
+  const [bulkFee, setBulkFee]       = useState('');
+  const [bulkDay, setBulkDay]       = useState('');
+  const [savingBulk, setSavingBulk] = useState(false);
+  const [bulkError, setBulkError]   = useState<string | null>(null);
+
   // ── Comprobantes de pago ──────────────────────────────────────────────────────
   const [receiptModal, setReceiptModal]         = useState<Payment | null>(null);
   const [receiptFile, setReceiptFile]           = useState<string | null>(null); // base64 preview
@@ -446,6 +453,8 @@ export default function FinanzasPage() {
   const countPaid    = studentRows.filter(r => r.payment?.status === 'PAID').length;
   const countPending = studentRows.filter(r => r.payment && r.payment.status !== 'PAID').length;
   const countNone    = studentRows.filter(r => !r.payment && r.configured).length;
+  // Deportistas sin tarifa configurada (destino de "Tarifa general")
+  const bulkTargetCount = allMembers.filter(m => m.role === 'STUDENT' && !m.monthlyFee).length;
 
   // ── Acciones de mensualidades ────────────────────────────────────────────────
   async function handleGenerateMonth() {
@@ -462,6 +471,31 @@ export default function FinanzasPage() {
       alert(e instanceof Error ? e.message : 'Error al generar cobros');
     } finally {
       setGeneratingMonth(false);
+    }
+  }
+
+  async function handleBulkFee() {
+    const fee = Number(bulkFee.replace(/\D/g, ''));
+    const day = Number(bulkDay);
+    if (!fee || fee <= 0) { setBulkError('Ingresa un valor de mensualidad válido'); return; }
+    if (!day || day < 1 || day > 31) { setBulkError('El día de cobro debe estar entre 1 y 31'); return; }
+    setSavingBulk(true); setBulkError(null);
+    try {
+      const token = await getToken();
+      const res = await apiFetch<{ updated: number }>('/members/bulk-fee', {
+        method: 'PATCH', token,
+        body: JSON.stringify({ monthlyFee: fee, paymentDueDay: day }),
+      });
+      qc.invalidateQueries({ queryKey: QK.members() });
+      invalidatePay();
+      setBulkOpen(false);
+      alert(res.updated > 0
+        ? `Tarifa configurada para ${res.updated} deportista${res.updated === 1 ? '' : 's'}.`
+        : 'Todos los deportistas ya tenían tarifa configurada.');
+    } catch (e) {
+      setBulkError(e instanceof Error ? e.message : 'Error al aplicar la tarifa');
+    } finally {
+      setSavingBulk(false);
     }
   }
 
@@ -706,6 +740,17 @@ export default function FinanzasPage() {
               </motion.button>
             )}
             {tab === 'mensualidades' && (
+              <>
+              <motion.button
+                whileTap={reducedMotion ? {} : { scale: 0.96 }}
+                transition={{ duration: 0.12, ease: EASE_OUT }}
+                onClick={() => { setBulkFee(''); setBulkDay(''); setBulkError(null); setBulkOpen(true); }}
+                className="flex items-center justify-center gap-1.5 px-3 h-9 rounded-xl text-[12px] font-bold cursor-pointer transition-opacity shrink-0"
+                style={{ background: 'rgba(6,214,160,0.08)', color: '#06D6A0', border: '1.5px dashed rgba(6,214,160,0.25)' }}
+              >
+                <Wallet className="w-3.5 h-3.5" />
+                Tarifa general
+              </motion.button>
               <motion.button
                 whileTap={reducedMotion ? {} : { scale: 0.96 }}
                 transition={{ duration: 0.12, ease: EASE_OUT }}
@@ -717,6 +762,7 @@ export default function FinanzasPage() {
                 <Zap className="w-3.5 h-3.5" />
                 {generatingMonth ? 'Generando...' : 'Generar cobros'}
               </motion.button>
+              </>
             )}
           </div>
         </motion.div>
@@ -1007,6 +1053,45 @@ export default function FinanzasPage() {
       </motion.div>
 
       {/* Modal registrar cobro manual */}
+      {/* Modal Tarifa general */}
+      <Dialog open={bulkOpen} onOpenChange={setBulkOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader><DialogTitle>Tarifa general</DialogTitle></DialogHeader>
+          <div className="space-y-4 mt-2">
+            <p className="text-[12px] text-muted-foreground">
+              Se aplicará a los deportistas <b>sin tarifa configurada</b>. No modifica a quienes ya tienen una.
+            </p>
+            <div className="space-y-2">
+              <Label>Valor de la mensualidad *</Label>
+              <Input
+                inputMode="numeric"
+                placeholder="$ 150.000"
+                value={bulkFee ? `$ ${Number(bulkFee.replace(/\D/g, '')).toLocaleString('es-CO')}` : ''}
+                onChange={e => setBulkFee(e.target.value.replace(/\D/g, ''))}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Día de cobro (1–31) *</Label>
+              <Input
+                inputMode="numeric"
+                placeholder="5"
+                value={bulkDay}
+                onChange={e => setBulkDay(e.target.value.replace(/\D/g, '').slice(0, 2))}
+              />
+            </div>
+            <div className="rounded-xl px-3 py-2.5 text-[12px]" style={{ background: 'rgba(6,214,160,0.08)', color: '#0a8f6f' }}>
+              {bulkTargetCount > 0
+                ? <>Se configurará a <b>{bulkTargetCount}</b> deportista{bulkTargetCount === 1 ? '' : 's'} sin tarifa.</>
+                : 'Todos los deportistas ya tienen tarifa configurada.'}
+            </div>
+            {bulkError && <p className="text-[12px] font-semibold" style={{ color: '#EF476F' }}>{bulkError}</p>}
+            <Button onClick={handleBulkFee} disabled={savingBulk || bulkTargetCount === 0} className="w-full">
+              {savingBulk ? 'Aplicando...' : 'Aplicar tarifa'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={payOpen} onOpenChange={setPayOpen}>
         <DialogContent className="max-w-sm">
           <DialogHeader><DialogTitle>Registrar cobro</DialogTitle></DialogHeader>

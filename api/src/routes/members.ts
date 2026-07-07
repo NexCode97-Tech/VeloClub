@@ -173,6 +173,47 @@ router.post('/', requireAuth, async (req, res) => {
   res.status(201).json({ member });
 });
 
+// PATCH /members/bulk-fee — configura tarifa + día de cobro de forma masiva.
+// Solo aplica a los deportistas (STUDENT) que aún NO tienen tarifa (no pisa
+// tarifas individuales). Actualiza también los cobros pendientes de esos miembros.
+router.patch('/bulk-fee', requireAuth, async (req, res) => {
+  if (!req.user) return res.status(401).json({ error: 'No autenticado' });
+  if (req.user.role !== 'ADMIN') return res.status(403).json({ error: 'Sin permisos' });
+
+  const parsed = z.object({
+    monthlyFee:    z.number().positive(),
+    paymentDueDay: z.number().int().min(1).max(31),
+  }).safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: parsed.error.issues });
+
+  const { monthlyFee, paymentDueDay } = parsed.data;
+  const clubId = req.user.clubId ?? '';
+
+  // Solo los deportistas sin tarifa configurada
+  const targets = await prisma.member.findMany({
+    where: { clubId, role: 'STUDENT', monthlyFee: null },
+    select: { id: true },
+  });
+  const ids = targets.map(t => t.id);
+  if (ids.length === 0) return res.json({ updated: 0 });
+
+  await prisma.member.updateMany({
+    where: { id: { in: ids } },
+    data: { monthlyFee, paymentDueDay },
+  });
+
+  // Reflejar el valor en cobros aún no pagados de esos miembros (los PAID no se tocan)
+  await prisma.payment.updateMany({
+    where: { memberId: { in: ids }, clubId, status: { in: ['PENDING', 'OVERDUE'] } },
+    data: { amount: monthlyFee },
+  });
+
+  await cacheDel(`members:${clubId}`);
+  emitToClub(clubId, 'members');
+  emitToClub(clubId, 'payments');
+  res.json({ updated: ids.length });
+});
+
 // PUT /members/:id
 router.put('/:id', requireAuth, async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'No autenticado' });

@@ -7,18 +7,19 @@ import { apiFetch, ApiError } from '@/lib/api-client';
 import LoadingScreen from '@/components/ui/loading-screen';
 import Link from 'next/link';
 import Image from 'next/image';
-import { LayoutDashboard, Building2 } from 'lucide-react';
+import { LayoutDashboard, Building2, Settings2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-// Config fue fusionado con Perfil (UserButton) — 3 tabs + UserButton = 4 slots
 const TABS = [
   { href: '/superadmin',          label: 'Inicio',    exact: true,  Icon: LayoutDashboard  },
   { href: '/superadmin/clubs',    label: 'Clubs',     exact: false, Icon: Building2        },
+  { href: '/superadmin/ajustes',  label: 'Ajustes',   exact: false, Icon: Settings2        },
 ];
 
 const SCREEN_LABELS: Record<string, string> = {
   '/superadmin':          'Inicio',
   '/superadmin/clubs':    'Clubs',
+  '/superadmin/ajustes':  'Ajustes',
 };
 
 // Ícono SVG por tipo de notificación — sin emojis

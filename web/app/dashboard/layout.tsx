@@ -377,7 +377,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 <Link
                   key={href}
                   href={href}
-                  className="flex items-center rounded-xl text-sm font-semibold transition-colors relative z-10"
+                  className={`flex items-center rounded-xl text-sm font-semibold transition-colors relative z-10 ${active ? '' : 'hover:bg-secondary'}`}
                   style={{
                     height: 44,
                     color: active ? accentColor : '#8E87A8',

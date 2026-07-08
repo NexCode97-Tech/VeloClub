@@ -402,22 +402,17 @@ export default function FinanzasPage() {
 
             return (
               <motion.div key={c.id} variants={fadeUp}
-                whileHover={{ y: -2, boxShadow: '0 10px 32px rgba(124,58,237,0.12)', transition: { duration: 0.22, ease: EASE } }}
-                style={{ background: '#fff', border: '1px solid rgba(120,80,200,0.09)', borderRadius: 22, overflow: 'hidden', boxShadow: '0 2px 12px rgba(124,58,237,0.05)', gridColumn: (editPlanId === c.id || abonoOpen === c.id) ? '1 / -1' : undefined }}
+                whileHover={{ y: -2, boxShadow: '0 10px 28px rgba(124,58,237,0.10)', transition: { duration: 0.22, ease: EASE } }}
+                style={{ background: '#fff', border: '1px solid rgba(120,80,200,0.10)', borderRadius: 18, overflow: 'hidden', boxShadow: '0 1px 8px rgba(0,0,0,0.04)', gridColumn: (editPlanId === c.id || abonoOpen === c.id) ? '1 / -1' : undefined }}
               >
-                {/* ── Cabecera con gradiente según plan ── */}
+                {/* ── Cabecera limpia ── */}
                 <div style={{
-                  padding: '14px 14px 12px',
-                  background: sus
-                    ? `linear-gradient(135deg, ${pb.bg} 0%, rgba(255,255,255,0) 60%)`
-                    : trial
-                      ? `linear-gradient(135deg, ${trial.bg} 0%, rgba(255,255,255,0) 60%)`
-                      : 'rgba(142,135,168,0.05)',
+                  padding: '16px 16px 14px',
                   borderBottom: '1px solid rgba(120,80,200,0.07)',
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                     {/* Avatar */}
-                    <div style={{ width: 48, height: 48, borderRadius: '50%', background: sus ? pb.bg : trial ? trial.bg : 'rgba(142,135,168,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 800, color: sus ? pb.color : trial ? trial.color : '#8E87A8', fontFamily: 'inherit', flexShrink: 0, overflow: 'hidden' }}>
+                    <div style={{ width: 44, height: 44, borderRadius: '50%', background: sus ? pb.bg : trial ? trial.bg : 'rgba(142,135,168,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 700, color: sus ? pb.color : trial ? trial.color : '#8E87A8', fontFamily: 'inherit', flexShrink: 0, overflow: 'hidden' }}>
                       {c.logoUrl
                         ? <img src={c.logoUrl} alt={c.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                         : c.name.charAt(0).toUpperCase()
@@ -495,11 +490,11 @@ export default function FinanzasPage() {
                     )}
                   </div>
 
-                  {/* Barra de progreso — plan pagado */}
+                  {/* Barra de vigencia — plan pagado */}
                   {sus && (
                     <div style={{ marginTop: 12, height: 6, borderRadius: 99, background: 'rgba(120,80,200,0.08)', overflow: 'hidden' }}>
                       <motion.div
-                        style={{ height: '100%', borderRadius: 99, background: `linear-gradient(90deg, ${pctColor}, ${pct >= 100 ? '#7C3AED' : pct > 50 ? '#FB8500' : '#F72585'})` }}
+                        style={{ height: '100%', borderRadius: 99, background: pctColor }}
                         initial={{ width: 0 }}
                         animate={{ width: `${pct}%` }}
                         transition={{ duration: 0.8, ease: EASE, delay: 0.2 }}

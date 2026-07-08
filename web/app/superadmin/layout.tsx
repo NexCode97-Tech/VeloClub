@@ -78,6 +78,17 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
   const [panelOpen, setPanelOpen]     = useState(false);
   const [notifs, setNotifs]           = useState<Notif[]>([]);
   const [notifsLoading, setNotifsLoading] = useState(false);
+  const [collapsed, setCollapsed]     = useState(() =>
+    typeof window !== 'undefined' && localStorage.getItem('superadmin-sidebar-collapsed') === 'true'
+  );
+
+  function toggleCollapsed() {
+    setCollapsed(c => {
+      const next = !c;
+      if (typeof window !== 'undefined') localStorage.setItem('superadmin-sidebar-collapsed', String(next));
+      return next;
+    });
+  }
 
   // Auth check — stale flag evita condición de carrera al cambiar sesión activa
   useEffect(() => {
@@ -142,38 +153,50 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
   const noLeidas = notifs.filter(n => !n.leida).length;
 
   return (
-    <div className="flex h-dvh overflow-hidden" style={{ background: '#F7F7FB', fontFamily: 'Open Sans, sans-serif' }}>
+    <div className="flex h-dvh overflow-hidden" style={{ background: '#F7F7FB', fontFamily: 'inherit' }}>
 
       {/* ── Sidebar — solo escritorio/tablet ── */}
-      <aside className="hidden md:flex flex-col shrink-0" style={{ width: 240, background: '#fff', borderRight: '1px solid rgba(0,0,0,0.07)' }}>
+      <aside className="hidden md:flex flex-col shrink-0 relative" style={{ width: collapsed ? 68 : 240, background: '#fff', borderRight: '1px solid rgba(0,0,0,0.07)', transition: 'width 0.22s ease' }}>
         {/* Logo */}
-        <div className="flex items-center shrink-0" style={{ borderBottom: '1px solid rgba(0,0,0,0.06)', minHeight: 58, padding: '0 14px', gap: 9 }}>
+        <div className="flex items-center shrink-0" style={{ borderBottom: '1px solid rgba(0,0,0,0.06)', minHeight: 58, padding: '0 14px', gap: 9, justifyContent: collapsed ? 'center' : undefined }}>
           <Image src="/logo.png" alt="VeloClub" width={28} height={28} className="object-contain shrink-0" style={{ borderRadius: 7 }} />
-          <span className="text-[15px] font-bold" style={{ color: '#1A1028' }}>VeloClub</span>
-          <span className="ml-auto text-[9px] font-bold px-2 py-0.5 rounded-full tracking-widest" style={{ background: 'rgba(239,71,111,0.10)', color: '#EF476F' }}>ADMIN</span>
+          {!collapsed && <span className="text-[15px] font-bold" style={{ color: '#1A1028' }}>VeloClub</span>}
+          {!collapsed && <span className="ml-auto text-[9px] font-bold px-2 py-0.5 rounded-full tracking-widest" style={{ background: 'rgba(239,71,111,0.10)', color: '#EF476F' }}>ADMIN</span>}
         </div>
+        {/* Botón contraer/expandir */}
+        <button onClick={toggleCollapsed}
+          className="absolute z-20 flex items-center justify-center rounded-full"
+          style={{ top: 62, right: -12, width: 24, height: 24, background: '#fff', border: '1px solid rgba(0,0,0,0.10)', boxShadow: '0 2px 8px rgba(0,0,0,0.10)', color: ACCENT }}
+          title={collapsed ? 'Expandir' : 'Contraer'}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ transform: collapsed ? 'rotate(180deg)' : 'none' }}>
+            <polyline points="15 18 9 12 15 6" />
+          </svg>
+        </button>
         {/* Nav */}
         <nav className="flex-1 px-2 py-2 space-y-1 overflow-y-auto">
           {TABS.map(tab => {
             const active = tab.exact ? pathname === tab.href : pathname.startsWith(tab.href);
             return (
               <Link key={tab.href} href={tab.href}
+                title={collapsed ? tab.label : undefined}
                 className={`flex items-center gap-3 rounded-xl text-sm font-semibold transition-colors ${active ? '' : 'hover:bg-secondary'}`}
-                style={{ height: 44, padding: '0 12px', color: active ? ACCENT : '#8E87A8', background: active ? 'rgba(124,58,237,0.10)' : undefined }}
+                style={{ height: 44, padding: collapsed ? 0 : '0 12px', justifyContent: collapsed ? 'center' : undefined, color: active ? ACCENT : '#8E87A8', background: active ? 'rgba(124,58,237,0.10)' : undefined }}
               >
                 <tab.Icon size={18} strokeWidth={active ? 2.5 : 2} />
-                <span>{tab.label}</span>
+                {!collapsed && <span>{tab.label}</span>}
               </Link>
             );
           })}
         </nav>
         {/* Footer — usuario */}
-        <div className="flex items-center gap-2.5 shrink-0" style={{ borderTop: '1px solid rgba(0,0,0,0.06)', padding: '10px 14px' }}>
+        <div className="flex items-center gap-2.5 shrink-0" style={{ borderTop: '1px solid rgba(0,0,0,0.06)', padding: '10px 14px', justifyContent: collapsed ? 'center' : undefined }}>
           <UserButton appearance={{ elements: { avatarBox: { width: 34, height: 34, borderRadius: '50%' } } }} />
-          <div className="min-w-0">
-            <p className="text-[12px] font-bold m-0 truncate" style={{ color: '#1A1028' }}>Superadmin</p>
-            <p className="text-[9px] font-bold m-0 tracking-wide" style={{ color: '#EF476F' }}>PANEL GLOBAL</p>
-          </div>
+          {!collapsed && (
+            <div className="min-w-0">
+              <p className="text-[12px] font-bold m-0 truncate" style={{ color: '#1A1028' }}>Superadmin</p>
+              <p className="text-[9px] font-bold m-0 tracking-wide" style={{ color: '#EF476F' }}>PANEL GLOBAL</p>
+            </div>
+          )}
         </div>
       </aside>
 
@@ -182,7 +205,7 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
 
       {/* Global Header */}
       <div className="flex items-center gap-2 shrink-0" style={{ padding: '12px 16px 10px', background: '#F7F7FB', borderBottom: '1px solid rgba(120,80,200,0.10)' }}>
-        <h2 className="flex-1 m-0 text-[17px] font-bold" style={{ fontFamily: 'Open Sans, sans-serif', color: '#1A1028' }}>
+        <h2 className="flex-1 m-0 text-[17px] font-bold" style={{ fontFamily: 'inherit', color: '#1A1028' }}>
           {title}
         </h2>
         {/* Refresh */}
@@ -252,7 +275,7 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
                   </svg>
                 </div>
                 <div style={{ flex: 1 }}>
-                  <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: '#1A1028', fontFamily: 'Open Sans, sans-serif', lineHeight: 1.2 }}>
+                  <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: '#1A1028', fontFamily: 'inherit', lineHeight: 1.2 }}>
                     Notificaciones
                   </h3>
                   {noLeidas > 0 && (
@@ -266,7 +289,7 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
                     onClick={marcarTodas}
                     whileTap={{ scale: 0.95 }}
                     transition={{ duration: 0.12 }}
-                    style={{ padding: '5px 10px', borderRadius: 8, background: 'rgba(124,58,237,0.08)', border: '1px solid rgba(124,58,237,0.18)', color: '#7C3AED', fontSize: 10, fontWeight: 700, cursor: 'pointer', fontFamily: 'Open Sans, sans-serif' }}
+                    style={{ padding: '5px 10px', borderRadius: 8, background: 'rgba(124,58,237,0.08)', border: '1px solid rgba(124,58,237,0.18)', color: '#7C3AED', fontSize: 10, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
                   >
                     Marcar todas
                   </motion.button>

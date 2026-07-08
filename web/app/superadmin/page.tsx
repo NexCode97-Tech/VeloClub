@@ -194,7 +194,7 @@ export default function SuperadminDashboard() {
           {todayLabel()}
         </p>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <h1 style={{ margin: 0, fontSize: 24, fontWeight: 800, color: '#1A1028', lineHeight: 1.1, fontFamily: 'Open Sans, sans-serif' }}>
+          <h1 style={{ margin: 0, fontSize: 24, fontWeight: 800, color: '#1A1028', lineHeight: 1.1, fontFamily: 'inherit' }}>
             Panel Global
           </h1>
           <span style={{ fontSize: 10, fontWeight: 700, padding: '3px 10px', borderRadius: 99, background: 'rgba(239,71,111,0.10)', color: '#EF476F', letterSpacing: '0.07em' }}>
@@ -225,11 +225,11 @@ export default function SuperadminDashboard() {
             </motion.div>
           </div>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 2, marginBottom: 6 }}>
-            <span style={{ fontSize: 48, fontWeight: 800, color: '#1A1028', fontFamily: 'Open Sans, sans-serif', lineHeight: 1 }}>
+            <span style={{ fontSize: 48, fontWeight: 800, color: '#1A1028', fontFamily: 'inherit', lineHeight: 1 }}>
               {heroFmt.main}
             </span>
             {heroFmt.suffix && (
-              <span style={{ fontSize: 36, fontWeight: 700, color: '#C4BFD8', fontFamily: 'Open Sans, sans-serif', lineHeight: 1 }}>
+              <span style={{ fontSize: 36, fontWeight: 700, color: '#C4BFD8', fontFamily: 'inherit', lineHeight: 1 }}>
                 {heroFmt.suffix}
               </span>
             )}
@@ -250,14 +250,14 @@ export default function SuperadminDashboard() {
         >
           <div style={{ background: '#fff', borderRadius: 20, padding: '16px 14px', border: '1px solid rgba(120,80,200,0.10)', boxShadow: '0 2px 12px rgba(124,58,237,0.05)' }}>
             <p style={{ margin: '0 0 10px', fontSize: 9, fontWeight: 700, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.10em' }}>Clubs activos</p>
-            <p style={{ margin: '0 0 4px', fontSize: 44, fontWeight: 800, color: '#1A1028', fontFamily: 'Open Sans, sans-serif', lineHeight: 1 }}>
+            <p style={{ margin: '0 0 4px', fontSize: 44, fontWeight: 800, color: '#1A1028', fontFamily: 'inherit', lineHeight: 1 }}>
               {String(activos).padStart(2, '0')}
             </p>
             <p style={{ margin: 0, fontSize: 11, color: '#8E87A8' }}>de {total} totales</p>
           </div>
           <div style={{ background: '#fff', borderRadius: 20, padding: '16px 14px', border: '1px solid rgba(120,80,200,0.10)', boxShadow: '0 2px 12px rgba(124,58,237,0.05)' }}>
             <p style={{ margin: '0 0 10px', fontSize: 9, fontWeight: 700, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.10em' }}>En prueba</p>
-            <p style={{ margin: '0 0 4px', fontSize: 44, fontWeight: 800, color: '#1A1028', fontFamily: 'Open Sans, sans-serif', lineHeight: 1 }}>
+            <p style={{ margin: '0 0 4px', fontSize: 44, fontWeight: 800, color: '#1A1028', fontFamily: 'inherit', lineHeight: 1 }}>
               {String(enPrueba).padStart(2, '0')}
             </p>
             {enPrueba > 0
@@ -282,7 +282,7 @@ export default function SuperadminDashboard() {
                 <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: '#1A1028' }}>{s.label}</p>
                 <p style={{ margin: '1px 0 0', fontSize: 10, color: '#8E87A8' }}>{s.sub}</p>
               </div>
-              <p style={{ margin: 0, fontSize: 22, fontWeight: 800, color: s.color, fontFamily: 'Open Sans, sans-serif', lineHeight: 1 }}>{s.value}</p>
+              <p style={{ margin: 0, fontSize: 22, fontWeight: 800, color: s.color, fontFamily: 'inherit', lineHeight: 1 }}>{s.value}</p>
             </div>
           ))}
         </motion.div>
@@ -294,7 +294,7 @@ export default function SuperadminDashboard() {
             style={{ background: '#fff', border: '1px solid rgba(120,80,200,0.10)', borderRadius: 20, overflow: 'hidden', marginBottom: 20 }}
           >
             <div style={{ padding: '16px 16px 0' }}>
-              <p style={{ margin: '0 0 1px', fontSize: 13, fontWeight: 700, color: '#1A1028', fontFamily: 'Open Sans, sans-serif' }}>Ingresos por mes</p>
+              <p style={{ margin: '0 0 1px', fontSize: 13, fontWeight: 700, color: '#1A1028', fontFamily: 'inherit' }}>Ingresos por mes</p>
               <p style={{ margin: '0 0 12px', fontSize: 10, color: '#8E87A8' }}>{currentYear}</p>
             </div>
             <ResponsiveContainer width="100%" height={150}>
@@ -344,7 +344,7 @@ export default function SuperadminDashboard() {
                 return (
                   <Link key={club.id} href="/superadmin/clubs" style={{ textDecoration: 'none' }}>
                     <div style={{ background: '#fff', border: '1px solid rgba(120,80,200,0.10)', borderRadius: 16, display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', cursor: 'pointer' }}>
-                      <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'rgba(124,58,237,0.10)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 800, color: '#7C3AED', fontFamily: 'Open Sans, sans-serif', flexShrink: 0, overflow: 'hidden' }}>
+                      <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'rgba(124,58,237,0.10)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 800, color: '#7C3AED', fontFamily: 'inherit', flexShrink: 0, overflow: 'hidden' }}>
                         {club.logoUrl
                           ? <img src={club.logoUrl} alt={club.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                           : club.name.charAt(0).toUpperCase()

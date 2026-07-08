@@ -831,10 +831,11 @@ export default function ClubDetail({ club, suscripcion, onBack, onReload, onDele
           <>
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}
               onClick={() => { setReceiptModal(null); setReceiptFile(null); setReceiptError(null); }}
-              style={{ position: 'fixed', inset: 0, background: 'rgba(26,16,40,0.55)', zIndex: 100, backdropFilter: 'blur(4px)' }} />
-            <motion.div initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 30 }} transition={{ duration: 0.28, ease: EASE }}
-              style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 101, background: '#fff', borderRadius: '20px 20px 0 0', padding: '20px 16px 40px', boxShadow: '0 -8px 40px rgba(80,40,180,0.16)', maxWidth: 480, margin: '0 auto' }}>
-              <div style={{ width: 36, height: 4, borderRadius: 99, background: 'rgba(120,80,200,0.18)', margin: '0 auto 16px' }} />
+              style={{ position: 'fixed', inset: 0, background: 'rgba(26,16,40,0.55)', zIndex: 100, backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+            <motion.div onClick={e => e.stopPropagation()}
+              initial={{ opacity: 0, scale: 0.96, y: 16 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.97, y: 10 }}
+              transition={{ duration: 0.24, ease: EASE }}
+              style={{ width: '100%', maxWidth: 440, maxHeight: '85vh', overflowY: 'auto', background: '#fff', borderRadius: 20, padding: '22px 20px', boxShadow: '0 20px 60px rgba(80,40,180,0.25)' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
                 <div>
                   <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: '#1A1028', fontFamily: 'inherit' }}>Comprobante de pago</p>
@@ -877,6 +878,7 @@ export default function ClubDetail({ club, suscripcion, onBack, onReload, onDele
                     style={{ width: '100%', padding: '11px 0', borderRadius: 12, border: '1.5px solid rgba(239,71,111,0.22)', background: 'rgba(239,71,111,0.06)', color: '#EF476F', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>{deletingReceipt ? 'Eliminando...' : 'Eliminar comprobante'}</motion.button>
                 )}
               </div>
+            </motion.div>
             </motion.div>
           </>
         )}

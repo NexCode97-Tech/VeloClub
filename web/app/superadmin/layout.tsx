@@ -6,6 +6,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { apiFetch, ApiError } from '@/lib/api-client';
 import LoadingScreen from '@/components/ui/loading-screen';
 import Link from 'next/link';
+import Image from 'next/image';
 import { LayoutDashboard, Building2, CircleDollarSign } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -141,7 +142,43 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
   const noLeidas = notifs.filter(n => !n.leida).length;
 
   return (
-    <div className="flex flex-col h-dvh overflow-hidden" style={{ background: '#F7F7FB', fontFamily: 'Open Sans, sans-serif' }}>
+    <div className="flex h-dvh overflow-hidden" style={{ background: '#F7F7FB', fontFamily: 'Open Sans, sans-serif' }}>
+
+      {/* ── Sidebar — solo escritorio/tablet ── */}
+      <aside className="hidden md:flex flex-col shrink-0" style={{ width: 240, background: '#fff', borderRight: '1px solid rgba(0,0,0,0.07)' }}>
+        {/* Logo */}
+        <div className="flex items-center shrink-0" style={{ borderBottom: '1px solid rgba(0,0,0,0.06)', minHeight: 58, padding: '0 14px', gap: 9 }}>
+          <Image src="/logo.png" alt="VeloClub" width={28} height={28} className="object-contain shrink-0" style={{ borderRadius: 7 }} />
+          <span className="text-[15px] font-bold" style={{ color: '#1A1028' }}>VeloClub</span>
+          <span className="ml-auto text-[9px] font-bold px-2 py-0.5 rounded-full tracking-widest" style={{ background: 'rgba(239,71,111,0.10)', color: '#EF476F' }}>ADMIN</span>
+        </div>
+        {/* Nav */}
+        <nav className="flex-1 px-2 py-2 space-y-1 overflow-y-auto">
+          {TABS.map(tab => {
+            const active = tab.exact ? pathname === tab.href : pathname.startsWith(tab.href);
+            return (
+              <Link key={tab.href} href={tab.href}
+                className={`flex items-center gap-3 rounded-xl text-sm font-semibold transition-colors ${active ? '' : 'hover:bg-secondary'}`}
+                style={{ height: 44, padding: '0 12px', color: active ? ACCENT : '#8E87A8', background: active ? 'rgba(124,58,237,0.10)' : undefined }}
+              >
+                <tab.Icon size={18} strokeWidth={active ? 2.5 : 2} />
+                <span>{tab.label}</span>
+              </Link>
+            );
+          })}
+        </nav>
+        {/* Footer — usuario */}
+        <div className="flex items-center gap-2.5 shrink-0" style={{ borderTop: '1px solid rgba(0,0,0,0.06)', padding: '10px 14px' }}>
+          <UserButton appearance={{ elements: { avatarBox: { width: 34, height: 34, borderRadius: '50%' } } }} />
+          <div className="min-w-0">
+            <p className="text-[12px] font-bold m-0 truncate" style={{ color: '#1A1028' }}>Superadmin</p>
+            <p className="text-[9px] font-bold m-0 tracking-wide" style={{ color: '#EF476F' }}>PANEL GLOBAL</p>
+          </div>
+        </div>
+      </aside>
+
+      {/* ── Columna de contenido ── */}
+      <div className="flex-1 flex flex-col overflow-hidden">
 
       {/* Global Header */}
       <div className="flex items-center gap-2 shrink-0" style={{ padding: '12px 16px 10px', background: '#F7F7FB', borderBottom: '1px solid rgba(120,80,200,0.10)' }}>
@@ -315,8 +352,8 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
       </main>
 
 
-      {/* Bottom Tab Nav — glassmorphism, ancho completo */}
-      <div className="shrink-0 flex justify-center" style={{ padding: '10px 16px 20px', background: 'transparent' }}>
+      {/* Bottom Tab Nav — glassmorphism, solo móvil */}
+      <div className="md:hidden shrink-0 flex justify-center" style={{ padding: '10px 16px 20px', background: 'transparent' }}>
         {(() => {
           const activeIdx = TABS.findIndex(t => t.exact ? pathname === t.href : pathname.startsWith(t.href));
           return (
@@ -404,6 +441,7 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
           );
         })()}
       </div>
+      </div>{/* fin columna de contenido */}
     </div>
   );
 }

@@ -190,15 +190,15 @@ export default function SuperadminDashboard() {
 
       {/* ── Header ─────────────────────────────────────────────────────────── */}
       <div style={{ padding: '20px 20px 14px' }}>
-        <p style={{ margin: '0 0 2px', fontSize: 11, fontWeight: 600, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+        <p style={{ margin: '0 0 2px', fontSize: 11, fontWeight: 600, color: '#8E87A8', letterSpacing: '0.02em' }}>
           {todayLabel()}
         </p>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <h1 style={{ margin: 0, fontSize: 24, fontWeight: 800, color: '#1A1028', lineHeight: 1.1, fontFamily: 'inherit' }}>
             Panel global
           </h1>
-          <span style={{ fontSize: 10, fontWeight: 700, padding: '3px 10px', borderRadius: 99, background: 'rgba(239,71,111,0.10)', color: '#EF476F', letterSpacing: '0.07em' }}>
-            SUPERADMIN
+          <span style={{ fontSize: 10, fontWeight: 700, padding: '3px 10px', borderRadius: 99, background: 'rgba(239,71,111,0.10)', color: '#EF476F', letterSpacing: '0.02em' }}>
+            Superadmin
           </span>
         </div>
       </div>
@@ -215,8 +215,8 @@ export default function SuperadminDashboard() {
           style={{ background: '#fff', borderRadius: 24, padding: '20px 20px 18px', marginBottom: 10, border: '1px solid rgba(120,80,200,0.10)', boxShadow: '0 2px 20px rgba(124,58,237,0.06)', position: 'relative', overflow: 'hidden' }}
         >
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 10 }}>
-            <p style={{ margin: 0, fontSize: 10, fontWeight: 700, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.10em' }}>
-              Recaudado · Este mes
+            <p style={{ margin: 0, fontSize: 10, fontWeight: 700, color: '#8E87A8', letterSpacing: '0.02em' }}>
+              Recaudado · este mes
             </p>
             <motion.div whileTap={{ scale: shouldReduceMotion ? 1 : 0.88 }} transition={{ duration: 0.12, ease: EASE }}>
               <Link href="/superadmin/finanzas" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', width: 34, height: 34, borderRadius: '50%', background: '#7C3AED', boxShadow: '0 4px 14px rgba(124,58,237,0.38)' }}>
@@ -249,14 +249,14 @@ export default function SuperadminDashboard() {
           style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 20 }}
         >
           <div style={{ background: '#fff', borderRadius: 20, padding: '16px 14px', border: '1px solid rgba(120,80,200,0.10)', boxShadow: '0 2px 12px rgba(124,58,237,0.05)' }}>
-            <p style={{ margin: '0 0 10px', fontSize: 9, fontWeight: 700, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.10em' }}>Clubs activos</p>
+            <p style={{ margin: '0 0 10px', fontSize: 9, fontWeight: 700, color: '#8E87A8', letterSpacing: '0.02em' }}>Clubs activos</p>
             <p style={{ margin: '0 0 4px', fontSize: 44, fontWeight: 800, color: '#1A1028', fontFamily: 'inherit', lineHeight: 1 }}>
               {String(activos).padStart(2, '0')}
             </p>
             <p style={{ margin: 0, fontSize: 11, color: '#8E87A8' }}>De {total} totales</p>
           </div>
           <div style={{ background: '#fff', borderRadius: 20, padding: '16px 14px', border: '1px solid rgba(120,80,200,0.10)', boxShadow: '0 2px 12px rgba(124,58,237,0.05)' }}>
-            <p style={{ margin: '0 0 10px', fontSize: 9, fontWeight: 700, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.10em' }}>En prueba</p>
+            <p style={{ margin: '0 0 10px', fontSize: 9, fontWeight: 700, color: '#8E87A8', letterSpacing: '0.02em' }}>En prueba</p>
             <p style={{ margin: '0 0 4px', fontSize: 44, fontWeight: 800, color: '#1A1028', fontFamily: 'inherit', lineHeight: 1 }}>
               {String(enPrueba).padStart(2, '0')}
             </p>
@@ -325,7 +325,7 @@ export default function SuperadminDashboard() {
         {/* ── Lista rápida de clubs ────────────────────────────────────────── */}
         <motion.div variants={cardVariant}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-            <p style={{ margin: 0, fontSize: 10, fontWeight: 700, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+            <p style={{ margin: 0, fontSize: 10, fontWeight: 700, color: '#8E87A8', letterSpacing: '0.02em' }}>
               Clubs registrados
             </p>
             <Link href="/superadmin/clubs" style={{ fontSize: 11, fontWeight: 700, color: '#7C3AED', textDecoration: 'none' }}>

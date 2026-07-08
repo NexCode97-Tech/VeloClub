@@ -159,7 +159,7 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
         <div className="flex items-center shrink-0" style={{ borderBottom: '1px solid rgba(0,0,0,0.06)', minHeight: 58, padding: '0 14px', gap: 9, justifyContent: collapsed ? 'center' : undefined }}>
           <Image src="/logo.png" alt="VeloClub" width={28} height={28} className="object-contain shrink-0" style={{ borderRadius: 7 }} />
           {!collapsed && <span className="text-[15px] font-bold" style={{ color: '#1A1028' }}>VeloClub</span>}
-          {!collapsed && <span className="ml-auto text-[9px] font-bold px-2 py-0.5 rounded-full tracking-widest" style={{ background: 'rgba(239,71,111,0.10)', color: '#EF476F' }}>ADMIN</span>}
+          {!collapsed && <span className="ml-auto text-[9px] font-bold px-2 py-0.5 rounded-full" style={{ background: 'rgba(239,71,111,0.10)', color: '#EF476F', letterSpacing: '0.02em' }}>Admin</span>}
         </div>
         {/* Botón contraer/expandir */}
         <button onClick={toggleCollapsed}
@@ -192,7 +192,7 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
           {!collapsed && (
             <div className="min-w-0">
               <p className="text-[12px] font-bold m-0 truncate" style={{ color: '#1A1028' }}>Superadmin</p>
-              <p className="text-[9px] font-bold m-0 tracking-wide" style={{ color: '#EF476F' }}>PANEL GLOBAL</p>
+              <p className="text-[9px] font-bold m-0" style={{ color: '#EF476F', letterSpacing: '0.02em' }}>Panel global</p>
             </div>
           )}
         </div>

@@ -30,7 +30,7 @@ type Status = 'PRESENT' | 'LATE' | 'ABSENT' | 'MEDICAL_EXCUSE';
 const CYCLE: Status[] = ['PRESENT', 'LATE', 'ABSENT', 'MEDICAL_EXCUSE'];
 const STATUS_LABEL: Record<Status, string> = { PRESENT: 'P', LATE: 'T', ABSENT: 'A', MEDICAL_EXCUSE: 'M' };
 const STATUS_COLOR: Record<Status, string> = { PRESENT: '#06D6A0', LATE: '#FFB703', ABSENT: '#EF476F', MEDICAL_EXCUSE: '#8B8FA8' };
-const STATUS_NAME: Record<Status, string>  = { PRESENT: 'Presente', LATE: 'Tarde', ABSENT: 'Ausente', MEDICAL_EXCUSE: 'Excusa Médica' };
+const STATUS_NAME: Record<Status, string>  = { PRESENT: 'Presente', LATE: 'Tarde', ABSENT: 'Ausente', MEDICAL_EXCUSE: 'Excusa médica' };
 const ROLE_BG: Record<string, string> = {
   COACH: 'linear-gradient(135deg,#06D6A0,#0CB68D)',
   ADMIN: 'linear-gradient(135deg,#FFB703,#FB8500)',
@@ -427,7 +427,7 @@ export default function AsistenciaPage() {
                           {s === 'PRESENT' ? 'Presentes'
                             : s === 'LATE' ? 'Tarde'
                             : s === 'ABSENT' ? 'Ausentes'
-                            : 'Excusa Médica'}
+                            : 'Excusa médica'}
                         </div>
                       </button>
                     );

@@ -65,7 +65,7 @@ const ROLE_TABS: Record<string, { href: string; label: string; icon: React.Eleme
     { href: '/dashboard/logros',      label: 'Rendimiento',  icon: IconResultados },
     { href: '/dashboard/mas',         label: 'Más',         icon: IconHome}, // reemplazado por CircleMenu
     { href: '/dashboard/calendario',  label: 'Calendario',  icon: IconCalendar },
-    { href: '/dashboard/pagos',       label: 'Mis Pagos',   icon: IconMisPagos},
+    { href: '/dashboard/pagos',       label: 'Mis pagos',   icon: IconMisPagos},
   ],
 };
 
@@ -100,7 +100,7 @@ const ADMIN_NAV = [
   { href: '/dashboard/calendario', label: 'Calendario',    icon: IconCalendar },
   { href: '/dashboard/reportes',   label: 'Analíticas',    icon: IconStatistics },
   { href: '/dashboard/club',       label: 'Club',          icon: IconClub },
-  { href: '/dashboard/perfil',     label: 'Mi Perfil',     icon: UserCircle },
+  { href: '/dashboard/perfil',     label: 'Mi perfil',     icon: UserCircle },
   { href: '/dashboard/ajustes',    label: 'Ajustes',       icon: IconAjustes},
 ];
 
@@ -112,7 +112,7 @@ const COACH_NAV = [
   { href: '/dashboard/logros',     label: 'Rendimiento',    icon: IconResultados },
   { href: '/dashboard/calendario', label: 'Calendario',    icon: IconCalendar },
   { href: '/dashboard/club',       label: 'Club',          icon: IconClub },
-  { href: '/dashboard/perfil',     label: 'Mi Perfil',     icon: UserCircle },
+  { href: '/dashboard/perfil',     label: 'Mi perfil',     icon: UserCircle },
   { href: '/dashboard/ajustes',    label: 'Ajustes',       icon: IconAjustes},
 ];
 
@@ -122,8 +122,8 @@ const STUDENT_NAV = [
   { href: '/dashboard/calendario', label: 'Calendario',    icon: IconCalendar },
   { href: '/dashboard/sedes',      label: 'Sedes',         icon: IconUbicacion },
   { href: '/dashboard/club',       label: 'Club',          icon: IconClub },
-  { href: '/dashboard/pagos',      label: 'Mis Pagos',     icon: IconMisPagos},
-  { href: '/dashboard/perfil',     label: 'Mi Perfil',     icon: UserCircle },
+  { href: '/dashboard/pagos',      label: 'Mis pagos',     icon: IconMisPagos},
+  { href: '/dashboard/perfil',     label: 'Mi perfil',     icon: UserCircle },
   { href: '/dashboard/ajustes',    label: 'Ajustes',       icon: IconAjustes},
 ];
 
@@ -435,10 +435,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <Link
             href="/dashboard/perfil"
             className="shrink-0"
-            title={collapsed ? undefined : 'Mi Perfil'}
+            title={collapsed ? undefined : 'Mi perfil'}
             onMouseEnter={collapsed ? (e) => {
               const r = e.currentTarget.getBoundingClientRect();
-              setNavTip({ label: 'Mi Perfil', top: r.top + r.height / 2, left: r.right + 3 });
+              setNavTip({ label: 'Mi perfil', top: r.top + r.height / 2, left: r.right + 3 });
             } : undefined}
             onMouseLeave={collapsed ? () => setNavTip(null) : undefined}
           >

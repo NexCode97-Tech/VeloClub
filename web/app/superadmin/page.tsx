@@ -195,7 +195,7 @@ export default function SuperadminDashboard() {
         </p>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <h1 style={{ margin: 0, fontSize: 24, fontWeight: 800, color: '#1A1028', lineHeight: 1.1, fontFamily: 'inherit' }}>
-            Panel Global
+            Panel global
           </h1>
           <span style={{ fontSize: 10, fontWeight: 700, padding: '3px 10px', borderRadius: 99, background: 'rgba(239,71,111,0.10)', color: '#EF476F', letterSpacing: '0.07em' }}>
             SUPERADMIN

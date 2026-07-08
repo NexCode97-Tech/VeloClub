@@ -164,7 +164,7 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
         {/* Botón contraer/expandir */}
         <button onClick={toggleCollapsed}
           className="absolute z-20 flex items-center justify-center rounded-full"
-          style={{ top: 62, right: -12, width: 24, height: 24, background: '#fff', border: '1px solid rgba(0,0,0,0.10)', boxShadow: '0 2px 8px rgba(0,0,0,0.10)', color: ACCENT }}
+          style={{ top: '50%', transform: 'translateY(-50%)', right: -12, width: 24, height: 24, background: '#fff', border: '1px solid rgba(0,0,0,0.10)', boxShadow: '0 2px 8px rgba(0,0,0,0.10)', color: ACCENT }}
           title={collapsed ? 'Expandir' : 'Contraer'}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ transform: collapsed ? 'rotate(180deg)' : 'none' }}>
             <polyline points="15 18 9 12 15 6" />

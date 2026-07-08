@@ -226,7 +226,7 @@ export default function PagosPage() {
         {/* Header */}
         <div className="px-5 py-3 bg-background">
           <h1 className="text-[17px] font-bold text-foreground" style={{ fontFamily: 'inherit' }}>
-            Mis Pagos
+            Mis pagos
           </h1>
         </div>
 

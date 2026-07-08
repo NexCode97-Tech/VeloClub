@@ -58,7 +58,7 @@ interface FollowStats {
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 const roleLabels: Record<string, string> = {
-  SUPERADMIN: 'Super Admin',
+  SUPERADMIN: 'Super admin',
   ADMIN:      'Administrador',
   COACH:      'Entrenador',
   STUDENT:    'Deportista',

@@ -59,7 +59,7 @@ type FeedScope = 'public' | 'private';
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 const roleLabels: Record<string, string> = {
-  SUPERADMIN: 'Super Admin',
+  SUPERADMIN: 'Super admin',
   ADMIN:      'Administrador',
   COACH:      'Entrenador',
   STUDENT:    'Deportista',
@@ -98,7 +98,7 @@ const ADS = [
   {
     image: '/foto-equipamiento.jpg',
     label: 'Equipamiento',
-    title: 'Nueva Colección Deportiva 2025',
+    title: 'Nueva colección deportiva 2025',
     description: 'Descubre la línea de ropa técnica diseñada para ciclistas de alto rendimiento. Tejidos transpirables, corte aerodinámico y protección UV para cada etapa.',
     url: '#',
     color: '#7C3AED',
@@ -106,7 +106,7 @@ const ADS = [
   {
     image: '/foto-academia.jpg',
     label: 'Academia',
-    title: 'Academia de Alto Rendimiento',
+    title: 'Academia de alto rendimiento',
     description: 'Programas de entrenamiento personalizados con los mejores coaches del país. Metodología basada en datos, seguimiento semanal y planes adaptados a tu nivel.',
     url: '#',
     color: '#4361EE',
@@ -114,7 +114,7 @@ const ADS = [
   {
     image: '/foto-nutricion.png',
     label: 'Nutrición',
-    title: 'Plan Nutricional para Deportistas',
+    title: 'Plan nutricional para deportistas',
     description: 'Optimiza tu rendimiento con planes de alimentación diseñados para atletas. Incluye recetas, guías de hidratación y suplementación estratégica por fase de entrenamiento.',
     url: '#',
     color: '#06D6A0',
@@ -122,7 +122,7 @@ const ADS = [
   {
     image: '/foto-bicicleta.jpg',
     label: 'Ciclismo',
-    title: 'Trek & Specialized — Tienda Oficial',
+    title: 'Trek & Specialized — tienda oficial',
     description: 'Las marcas líderes del ciclismo mundial en un solo lugar. Bicicletas de ruta, MTB, accesorios y componentes con garantía oficial y asesoría especializada.',
     url: '#',
     color: '#EF476F',
@@ -130,7 +130,7 @@ const ADS = [
   {
     image: '/foto-hidratacion.png',
     label: 'Hidratación',
-    title: 'Hidratación Profesional Deportiva',
+    title: 'Hidratación profesional deportiva',
     description: 'Isotónicos, geles energéticos y suplementos formulados para resistencia y recuperación. Soluciones probadas por atletas de élite para antes, durante y después del esfuerzo.',
     url: '#',
     color: '#FFB703',
@@ -822,7 +822,7 @@ export default function DashboardPage() {
   const [posts, setPosts]           = useState<Post[]>([]);
   const [postsLoading, setPostsLoading] = useState(false);
 
-  // Widgets — Próximos Eventos y Cumpleaños
+  // Widgets — Próximos eventos y Cumpleaños
   const [upcomingEvents, setUpcomingEvents] = useState<{
     id: string; title: string; type: string; startDate: string; allDay: boolean;
     location?: { name: string } | null;
@@ -1076,7 +1076,7 @@ export default function DashboardPage() {
       >
         {/* ── Widgets móvil — grid 2 cols, encima de los tabs ─────────────── */}
         <motion.div variants={cardVariant} className="sm:hidden grid grid-cols-2 gap-3">
-          {/* Próximos Eventos */}
+          {/* Próximos eventos */}
           <div className="rounded-2xl bg-white border border-border overflow-hidden"
             style={{ boxShadow: '0 1px 8px rgba(0,0,0,0.06)' }}>
             <div className="flex items-center gap-2 px-3 pt-3 pb-2">
@@ -1084,7 +1084,7 @@ export default function DashboardPage() {
                 style={{ background: 'linear-gradient(135deg,#4361EE,#7C3AED)' }}>
                 <CalendarDays className="w-3 h-3 text-white" />
               </div>
-              <p className="text-[11px] font-bold text-foreground truncate">Próximos Eventos</p>
+              <p className="text-[11px] font-bold text-foreground truncate">Próximos eventos</p>
             </div>
             {widgetsLoading ? (
               <div className="px-3 pb-3 flex flex-col gap-1.5">
@@ -1187,7 +1187,7 @@ export default function DashboardPage() {
           >
             {([
               { key: 'public'  as FeedScope, label: 'Público',  icon: Globe, desc: 'Todos los clubes' },
-              { key: 'private' as FeedScope, label: 'Mi Club',   icon: Lock,  desc: 'Solo interno' },
+              { key: 'private' as FeedScope, label: 'Mi club',   icon: Lock,  desc: 'Solo interno' },
             ] as const).map(tab => {
               const active = feedScope === tab.key;
               const Icon = tab.icon;
@@ -1289,7 +1289,7 @@ export default function DashboardPage() {
       {/* Columna derecha — Widgets sticky */}
       <div className="hidden sm:flex sm:flex-col sm:w-1/2 sm:pr-6 gap-4 sm:sticky sm:top-4 sm:self-start">
 
-        {/* Widget — Próximos Eventos */}
+        {/* Widget — Próximos eventos */}
         <div className="rounded-2xl bg-white border border-border overflow-hidden"
           style={{ boxShadow: '0 1px 8px rgba(0,0,0,0.06)' }}>
           <div className="flex items-center justify-between px-4 pt-4 pb-2">
@@ -1298,7 +1298,7 @@ export default function DashboardPage() {
                 style={{ background: 'linear-gradient(135deg,#4361EE,#7C3AED)' }}>
                 <CalendarDays className="w-3.5 h-3.5 text-white" />
               </div>
-              <p className="text-[13px] font-bold text-foreground">Próximos Eventos</p>
+              <p className="text-[13px] font-bold text-foreground">Próximos eventos</p>
             </div>
             <Link href="/dashboard/calendario"
               className="text-[11px] font-semibold text-purple-600 hover:underline cursor-pointer">

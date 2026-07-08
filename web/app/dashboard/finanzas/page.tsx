@@ -697,7 +697,7 @@ export default function FinanzasPage() {
           <div className="flex gap-1 bg-secondary rounded-xl p-1 md:flex-1">
             {([
               { key: 'mensualidades', label: 'Mensualidades' },
-              { key: 'flujo',        label: 'Flujo de Caja' },
+              { key: 'flujo',        label: 'Flujo de caja' },
             ] as const).map(({ key, label }) => (
               <button
                 key={key}

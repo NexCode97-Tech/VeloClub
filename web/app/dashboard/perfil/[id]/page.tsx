@@ -9,7 +9,7 @@ import { MemberAvatar } from '@/components/ui/member-avatar';
 import { MapPin, CalendarDays, Users, ImagePlus, UserPlus, UserCheck } from 'lucide-react';
 
 const roleLabels: Record<string, string> = {
-  SUPERADMIN: 'Super Admin', ADMIN: 'Administrador',
+  SUPERADMIN: 'Super admin', ADMIN: 'Administrador',
   COACH: 'Entrenador',      STUDENT: 'Deportista',
 };
 const roleColors: Record<string, { text: string; bg: string }> = {

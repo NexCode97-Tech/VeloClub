@@ -206,14 +206,21 @@ function StudentRow({
           <Download className="w-3.5 h-3.5" />
         </button>
       )}
-      {payment && (
-        <button onClick={() => onOpenReceipt(payment)}
-          title={payment.receiptUrl ? 'Ver comprobante' : 'Subir comprobante'}
-          className="w-7 h-7 rounded-lg flex items-center justify-center cursor-pointer transition-colors"
-          style={{ background: payment.receiptUrl ? 'rgba(6,214,160,0.12)' : 'rgba(120,80,200,0.08)' }}>
-          <Receipt className="w-3.5 h-3.5" style={{ color: payment.receiptUrl ? '#06D6A0' : '#8E87A8' }} />
-        </button>
-      )}
+      {payment && (() => {
+        // "Por verificar": el deportista subió comprobante y el pago aún no está pagado
+        const toVerify = !!payment.receiptUrl && payment.status !== 'PAID';
+        const iconColor = toVerify ? '#FFB703' : payment.receiptUrl ? '#06D6A0' : '#8E87A8';
+        const iconBg = toVerify ? 'rgba(255,183,3,0.14)' : payment.receiptUrl ? 'rgba(6,214,160,0.12)' : 'rgba(120,80,200,0.08)';
+        return (
+          <button onClick={() => onOpenReceipt(payment)}
+            title={toVerify ? 'Comprobante por verificar' : payment.receiptUrl ? 'Ver comprobante' : 'Subir comprobante'}
+            className="relative w-7 h-7 rounded-lg flex items-center justify-center cursor-pointer transition-colors"
+            style={{ background: iconBg }}>
+            <Receipt className="w-3.5 h-3.5" style={{ color: iconColor }} />
+            {toVerify && <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full border border-white" style={{ background: '#FFB703' }} />}
+          </button>
+        );
+      })()}
       {payment && (
         <button onClick={() => onDeletePay(payment.id)} disabled={deleting}
           className="w-7 h-7 rounded-lg bg-red-50 flex items-center justify-center text-red-400 cursor-pointer disabled:opacity-50">

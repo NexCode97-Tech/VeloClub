@@ -7,7 +7,7 @@ import { useAuth } from '@clerk/nextjs';
 import { apiFetch } from '@/lib/api-client';
 import { useClubStream } from '@/hooks/useClubStream';
 import {
-  Bell, CheckCheck, DollarSign, UserPlus, Users, Trophy, CalendarDays, Bell as BellIcon,
+  Bell, CheckCheck, DollarSign, UserPlus, Users, Trophy, CalendarDays, Receipt, Bell as BellIcon,
 } from 'lucide-react';
 
 interface Notif {
@@ -22,6 +22,7 @@ const ICON_BY_TYPE: Record<string, React.ElementType> = {
   NEW_FOLLOWER:     UserPlus,
   NEW_COMPETITION:  Trophy,
   NEW_EVENT:        CalendarDays,
+  RECEIPT_UPLOADED: Receipt,
 };
 const COLOR_BY_TYPE: Record<string, string> = {
   PAYMENT_RECEIVED: '#06D6A0',
@@ -30,6 +31,7 @@ const COLOR_BY_TYPE: Record<string, string> = {
   NEW_FOLLOWER:     '#7C3AED',
   NEW_COMPETITION:  '#F59E0B',
   NEW_EVENT:        '#4361EE',
+  RECEIPT_UPLOADED: '#FFB703',
 };
 
 function timeAgo(iso: string): string {

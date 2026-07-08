@@ -288,6 +288,62 @@ router.post('/:id/receipt', requireAuth, async (req, res) => {
   }
 });
 
+// POST /payments/:id/my-receipt — el deportista sube el comprobante de SU pago.
+// El pago queda "en revisión" (no se marca pagado); se notifica al staff.
+router.post('/:id/my-receipt', requireAuth, async (req, res) => {
+  if (!req.auth) return res.status(401).json({ error: 'No autenticado' });
+
+  const id = String(req.params.id);
+  const { base64 } = req.body as { base64: string };
+  if (!base64) return res.status(400).json({ error: 'base64 requerido' });
+
+  // Resolver el miembro del deportista (los STUDENT no tienen req.user)
+  const member = await prisma.member.findFirst({
+    where: {
+      OR: [
+        { clerkId: req.auth.clerkId },
+        ...(req.auth.email ? [{ email: { equals: req.auth.email, mode: 'insensitive' as const } }] : []),
+      ],
+    },
+    select: { id: true, fullName: true, clubId: true },
+  });
+  if (!member) return res.status(404).json({ error: 'No encontramos tu perfil de miembro' });
+
+  // El pago debe pertenecer a este miembro y no estar ya pagado
+  const existing = await prisma.payment.findFirst({ where: { id, memberId: member.id } });
+  if (!existing) return res.status(404).json({ error: 'Pago no encontrado' });
+  if (existing.status === 'PAID') return res.status(400).json({ error: 'Este pago ya está registrado como pagado' });
+
+  try {
+    if (existing.receiptPublicId) {
+      await cloudinary.uploader.destroy(existing.receiptPublicId).catch(() => {});
+    }
+    const result = await cloudinary.uploader.upload(base64, {
+      folder:    'veloclub/receipts',
+      public_id: `receipt_${id}`,
+      overwrite: true,
+    });
+    const payment = await prisma.payment.update({
+      where: { id },
+      data:  { receiptUrl: result.secure_url, receiptPublicId: result.public_id },
+      select: { id: true, receiptUrl: true },
+    });
+
+    emitToClub(member.clubId, 'payments');
+    await notifyClubStaff(member.clubId, {
+      tipo: 'RECEIPT_UPLOADED',
+      titulo: 'Comprobante por verificar',
+      cuerpo: `${member.fullName} subió el comprobante de ${MONTH_NAMES[existing.month - 1]}.`,
+      link: '/dashboard/finanzas',
+    });
+    res.json({ payment });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : JSON.stringify(err);
+    console.error('[my-receipt upload]', msg);
+    res.status(500).json({ error: msg });
+  }
+});
+
 // DELETE /payments/:id/receipt — eliminar comprobante
 router.delete('/:id/receipt', requireAuth, async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'No autenticado' });

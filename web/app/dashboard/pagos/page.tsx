@@ -3,7 +3,7 @@
 import { useAuth } from '@clerk/nextjs';
 import { useEffect, useState } from 'react';
 import { apiFetch } from '@/lib/api-client';
-import { Plus, Trash2, CheckCircle2, Clock, AlertCircle, CalendarDays, TrendingUp } from 'lucide-react';
+import { Plus, Trash2, CheckCircle2, Clock, AlertCircle, CalendarDays, TrendingUp, Upload } from 'lucide-react';
 import { IconMisPagos } from '@/components/ui/custom-icons';
 import { motion } from 'framer-motion';
 import { stagger, cardVariant } from '@/lib/page-animations';
@@ -47,6 +47,7 @@ interface Payment {
   id: string; memberId: string; amount: number;
   month: number; year: number; status: string;
   paidAt?: string; dueDate?: string; notes?: string;
+  receiptUrl?: string | null;
   member: PaymentMember;
 }
 interface Member { id: string; fullName: string; email?: string }
@@ -72,8 +73,32 @@ export default function PagosPage() {
   const [saving, setSaving]       = useState(false);
   const [error, setError]         = useState<string | null>(null);
   const [deleting, setDeleting]   = useState<string | null>(null);
+  const [uploadingReceipt, setUploadingReceipt] = useState<string | null>(null);
 
   const canManage = role === 'ADMIN' || role === 'COACH';
+
+  async function handleUploadReceipt(paymentId: string, file: File) {
+    if (uploadingReceipt) return;
+    if (file.size > 8 * 1024 * 1024) { alert('El archivo supera 8MB'); return; }
+    setUploadingReceipt(paymentId);
+    try {
+      const base64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+      const token = await getToken();
+      await apiFetch(`/payments/${paymentId}/my-receipt`, {
+        method: 'POST', token, body: JSON.stringify({ base64 }),
+      });
+      await loadPayments(myMemberId);
+    } catch (e) {
+      alert(e instanceof Error ? e.message : 'Error al subir el comprobante');
+    } finally {
+      setUploadingReceipt(null);
+    }
+  }
 
   async function loadPayments(memberId?: string | null) {
     const token = await getToken();
@@ -296,34 +321,63 @@ export default function PagosPage() {
                       return (
                         <motion.div variants={cardVariant}
                           key={p.id}
-                          className="bg-white border rounded-xl px-4 py-3.5 flex items-center gap-3"
+                          className="bg-white border rounded-xl px-4 py-3.5 flex flex-col gap-3"
                           style={{ borderColor: sc.text + '33' }}
                         >
-                          <div
-                            className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-                            style={{ background: sc.bg }}
-                          >
-                            <StatusIcon className="w-5 h-5" style={{ color: sc.text }} />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-[13px] font-bold text-foreground">
-                              {MONTH_NAMES[p.month - 1]} {p.year}
-                            </p>
-                            {p.notes && (
-                              <p className="text-[11px] text-muted-foreground truncate">{p.notes}</p>
-                            )}
-                          </div>
-                          <div className="text-right shrink-0">
-                            <p className="text-[14px] font-bold" style={{ color: sc.text, fontFamily: 'inherit' }}>
-                              {fmt.format(p.amount)}
-                            </p>
-                            <span
-                              className="text-[10px] font-bold px-1.5 py-0.5 rounded-full"
-                              style={{ background: sc.bg, color: sc.text }}
+                          <div className="flex items-center gap-3">
+                            <div
+                              className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                              style={{ background: sc.bg }}
                             >
-                              {STATUS_LABELS[p.status]}
-                            </span>
+                              <StatusIcon className="w-5 h-5" style={{ color: sc.text }} />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-[13px] font-bold text-foreground">
+                                {MONTH_NAMES[p.month - 1]} {p.year}
+                              </p>
+                              {p.notes && (
+                                <p className="text-[11px] text-muted-foreground truncate">{p.notes}</p>
+                              )}
+                            </div>
+                            <div className="text-right shrink-0">
+                              <p className="text-[14px] font-bold" style={{ color: sc.text, fontFamily: 'inherit' }}>
+                                {fmt.format(p.amount)}
+                              </p>
+                              <span
+                                className="text-[10px] font-bold px-1.5 py-0.5 rounded-full"
+                                style={{ background: sc.bg, color: sc.text }}
+                              >
+                                {STATUS_LABELS[p.status]}
+                              </span>
+                            </div>
                           </div>
+
+                          {/* Comprobante — solo el deportista (no admin/coach) */}
+                          {!canManage && (
+                            p.receiptUrl ? (
+                              <div className="flex items-center justify-between gap-2 rounded-lg px-3 py-2"
+                                style={{ background: 'rgba(255,183,3,0.10)' }}>
+                                <span className="text-[11px] font-semibold" style={{ color: '#B8860B' }}>
+                                  ⏳ Comprobante en revisión
+                                </span>
+                                <label className="text-[11px] font-bold cursor-pointer" style={{ color: '#7C3AED' }}>
+                                  {uploadingReceipt === p.id ? 'Subiendo…' : 'Reemplazar'}
+                                  <input type="file" accept="image/*,application/pdf" className="hidden"
+                                    disabled={!!uploadingReceipt}
+                                    onChange={e => { const f = e.target.files?.[0]; if (f) handleUploadReceipt(p.id, f); e.target.value = ''; }} />
+                                </label>
+                              </div>
+                            ) : (
+                              <label className="flex items-center justify-center gap-1.5 rounded-lg px-3 py-2.5 text-[12px] font-bold cursor-pointer transition-colors"
+                                style={{ background: 'rgba(124,58,237,0.08)', color: '#7C3AED', border: '1.5px dashed rgba(124,58,237,0.25)' }}>
+                                <Upload className="w-3.5 h-3.5" />
+                                {uploadingReceipt === p.id ? 'Subiendo…' : 'Subir comprobante'}
+                                <input type="file" accept="image/*,application/pdf" className="hidden"
+                                  disabled={!!uploadingReceipt}
+                                  onChange={e => { const f = e.target.files?.[0]; if (f) handleUploadReceipt(p.id, f); e.target.value = ''; }} />
+                              </label>
+                            )
+                          )}
                         </motion.div>
                       );
                     })}

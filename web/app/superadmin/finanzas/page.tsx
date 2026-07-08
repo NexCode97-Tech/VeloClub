@@ -42,7 +42,10 @@ const PLAN_OPTIONS: { value: TipoPlan; label: string; sub: string; multiplier: n
   { value: 'ANUAL',      label: 'Anual',      sub: 'único',    multiplier: 1  },
 ];
 function planMeta(monto: number, tipo: TipoPlan) {
-  return monto * (PLAN_OPTIONS.find(p => p.value === tipo)?.multiplier ?? 12);
+  // La meta es el valor del plan del período contratado (no anualizado):
+  // pagar el valor del plan mensual/trimestral/anual = 100%.
+  void tipo;
+  return monto;
 }
 function planSuffix(tipo: TipoPlan) {
   return tipo === 'MENSUAL' ? '/mes' : tipo === 'TRIMESTRAL' ? '/trim.' : '/año';

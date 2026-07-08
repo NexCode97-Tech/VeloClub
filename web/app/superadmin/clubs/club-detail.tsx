@@ -694,22 +694,22 @@ export default function ClubDetail({ club, suscripcion, onBack, onReload, onDele
           </div>
 
           {/* Historial de abonos */}
-          <div style={{ background: '#fff', border: '1px solid rgba(120,80,200,0.10)', borderRadius: 18, overflow: 'hidden' }}>
-            <p style={{ margin: 0, padding: '12px 14px', fontSize: 12, fontWeight: 700, color: '#7C3AED', textTransform: 'uppercase', letterSpacing: '0.06em', borderBottom: pagos.length > 0 ? '1px solid rgba(120,80,200,0.08)' : 'none' }}>
+          <div style={{ background: '#fff', border: '1px solid rgba(120,80,200,0.10)', borderRadius: 18, padding: '16px', boxShadow: '0 1px 8px rgba(0,0,0,0.04)' }}>
+            <p style={{ margin: '0 0 12px', fontSize: 12, fontWeight: 700, color: '#7C3AED', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
               Historial de abonos
             </p>
             {pagos.length === 0 ? (
-              <p style={{ textAlign: 'center', padding: '20px 0', margin: 0, fontSize: 12, color: '#8E87A8' }}>Sin abonos registrados aún</p>
+              <p style={{ textAlign: 'center', padding: '16px 0', margin: 0, fontSize: 12, color: '#8E87A8' }}>Sin abonos registrados aún</p>
             ) : (
               <motion.div variants={stagger} initial="hidden" animate="show" style={{ display: 'flex', flexDirection: 'column' }}>
-                {pagos.map(p => {
+                {pagos.map((p, i) => {
                   const st = ESTADO[p.estado];
                   return (
                     <motion.div key={p.id} variants={fadeUp}>
                       <AnimatePresence mode="wait">
                         {editPagoId === p.id ? (
                           <motion.div key="edit" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.2, ease: EASE }}
-                            style={{ background: '#F7F5FF', border: '1.5px solid rgba(124,58,237,0.15)', borderRadius: 14, padding: 14, margin: '8px 10px' }}>
+                            style={{ background: '#F7F5FF', border: '1.5px solid rgba(124,58,237,0.15)', borderRadius: 14, padding: 14, margin: i > 0 ? '10px 0 0' : 0 }}>
                             <p style={{ margin: '0 0 12px', fontSize: 11, fontWeight: 700, color: '#7C3AED' }}>Editar abono</p>
                             <div style={{ marginBottom: 10 }}>
                               <p style={{ margin: '0 0 4px', fontSize: 9, fontWeight: 600, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Concepto</p>
@@ -737,7 +737,8 @@ export default function ClubDetail({ club, suscripcion, onBack, onReload, onDele
                           </motion.div>
                         ) : (
                           <motion.div key="row" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }}
-                            style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', borderLeft: `3px solid ${st.color}`, background: `${st.color}07` }}>
+                            style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 0', borderTop: i > 0 ? '1px solid rgba(120,80,200,0.08)' : 'none' }}>
+                            <div style={{ width: 8, height: 8, borderRadius: '50%', background: st.color, flexShrink: 0 }} />
                             <div style={{ flex: 1, minWidth: 0 }}>
                               <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: '#1A1028', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.concepto}</p>
                               <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 2 }}>

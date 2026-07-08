@@ -658,7 +658,7 @@ export default function ClubsPage() {
                 ) : (
                   <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 10 }}>
                     {/* Identidad */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 1, minWidth: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, flex: 1, minWidth: 0 }}>
                       <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'rgba(124,58,237,0.10)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 800, color: '#7C3AED', fontFamily: 'inherit', flexShrink: 0, overflow: 'hidden' }}>
                         {club.logoUrl
                           ? <img src={club.logoUrl} alt={club.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -666,10 +666,10 @@ export default function ClubsPage() {
                         }
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
-                          <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: '#1A1028', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                            {club.name}
-                          </p>
+                        <p style={{ margin: '0 0 4px', fontSize: 14, fontWeight: 700, color: '#1A1028', lineHeight: 1.25, wordBreak: 'break-word' }}>
+                          {club.name}
+                        </p>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 6, marginBottom: 2 }}>
                           <span style={{ flexShrink: 0, fontSize: 9, fontWeight: 700, padding: '2px 7px', borderRadius: 99, background: club.active ? 'rgba(6,214,160,0.12)' : 'rgba(239,71,111,0.12)', color: club.active ? '#06D6A0' : '#EF476F' }}>
                             {club.active ? 'Activo' : 'Inactivo'}
                           </span>
@@ -752,14 +752,14 @@ export default function ClubsPage() {
                   <motion.button
                     onClick={() => openMembers(club.id)}
                     whileTap={{ scale: 0.96 }} transition={{ duration: 0.12, ease: EASE }}
-                    style={{ flex: 1, padding: '8px 0', borderRadius: 10, border: `1px solid ${membersClubId === club.id ? 'rgba(124,58,237,0.40)' : 'rgba(124,58,237,0.18)'}`, background: membersClubId === club.id ? 'rgba(124,58,237,0.10)' : 'transparent', color: '#7C3AED', fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s' }}
+                    style={{ flex: 1, padding: '8px 0', borderRadius: 10, border: 'none', background: membersClubId === club.id ? 'rgba(124,58,237,0.12)' : '#7C3AED', color: membersClubId === club.id ? '#7C3AED' : '#fff', fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s' }}
                   >
                     {membersClubId === club.id ? 'Cerrar' : 'Miembros'}
                   </motion.button>
                   <motion.button
                     onClick={() => handleToggle(club.id)}
                     whileTap={{ scale: 0.96 }} transition={{ duration: 0.12, ease: EASE }}
-                    style={{ flex: 1, padding: '8px 0', borderRadius: 10, border: `1px solid ${club.active ? 'rgba(255,183,3,0.28)' : 'rgba(6,214,160,0.28)'}`, background: club.active ? 'rgba(255,183,3,0.07)' : 'rgba(6,214,160,0.07)', color: club.active ? '#FFB703' : '#06D6A0', fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s' }}
+                    style={{ flex: 1, padding: '8px 0', borderRadius: 10, border: '1px solid rgba(120,80,200,0.14)', background: 'transparent', color: '#6B6580', fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s' }}
                   >
                     {club.active ? 'Desactivar' : 'Activar'}
                   </motion.button>
@@ -769,14 +769,14 @@ export default function ClubsPage() {
                     target="_blank"
                     rel="noopener noreferrer"
                     whileTap={{ scale: 0.88 }} transition={{ duration: 0.12, ease: EASE }}
-                    style={{ width: 36, borderRadius: 10, border: '1px solid rgba(37,211,102,0.30)', background: 'rgba(37,211,102,0.08)', color: '#25D366', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none' }}
+                    style={{ width: 36, borderRadius: 10, border: '1px solid rgba(120,80,200,0.14)', background: 'transparent', color: '#8E87A8', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none' }}
                   >
                     <MessageCircle size={14} />
                   </motion.a>
                   <motion.button
                     onClick={() => handleDelete(club.id)}
                     whileTap={{ scale: 0.88 }} transition={{ duration: 0.12, ease: EASE }}
-                    style={{ width: 36, borderRadius: 10, border: '1px solid rgba(239,71,111,0.22)', background: 'rgba(239,71,111,0.07)', color: '#EF476F', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                    style={{ width: 36, borderRadius: 10, border: '1px solid rgba(120,80,200,0.14)', background: 'transparent', color: '#B9889A', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                   >
                     <Trash2 size={14} />
                   </motion.button>

@@ -41,11 +41,21 @@ const PLAN_OPTIONS: { value: TipoPlan; label: string; sub: string; multiplier: n
   { value: 'TRIMESTRAL', label: 'Trimestral', sub: '×4/año',   multiplier: 4  },
   { value: 'ANUAL',      label: 'Anual',      sub: 'único',    multiplier: 1  },
 ];
-function planMeta(monto: number, tipo: TipoPlan) {
-  // La meta es el valor del plan del período contratado (no anualizado):
-  // pagar el valor del plan mensual/trimestral/anual = 100%.
-  void tipo;
-  return monto;
+// Duración del período de cada plan (días)
+const PLAN_DAYS: Record<TipoPlan, number> = { MENSUAL: 30, TRIMESTRAL: 90, ANUAL: 365 };
+
+// Vigencia del pago: 100% el día que se paga, baja con los días hasta 0% al
+// cumplirse el período del plan (desde el último pago registrado).
+function vigencia(pagos: { estado: string; fecha?: string | null }[], tipo: TipoPlan) {
+  const dur = PLAN_DAYS[tipo] ?? 30;
+  const pagados = pagos.filter(p => p.estado === 'PAID' && p.fecha);
+  if (pagados.length === 0) return null;
+  const ultimo = pagados.reduce((a, b) => (new Date(a.fecha!) > new Date(b.fecha!) ? a : b));
+  const inicio = new Date(ultimo.fecha!);
+  const diasPasados   = Math.floor((Date.now() - inicio.getTime()) / 86_400_000);
+  const diasRestantes = Math.max(0, dur - diasPasados);
+  const pct = Math.max(0, Math.min(100, Math.round((diasRestantes / dur) * 100)));
+  return { pct, diasRestantes, vencido: diasRestantes <= 0 };
 }
 function planSuffix(tipo: TipoPlan) {
   return tipo === 'MENSUAL' ? '/mes' : tipo === 'TRIMESTRAL' ? '/trim.' : '/año';
@@ -380,12 +390,13 @@ export default function FinanzasPage() {
           {clubs.map(c => {
             const sus     = c.suscripcion;
             const pagos   = sus?.pagos ?? [];
-            const rec     = pagos.filter(p => p.estado === 'PAID').reduce((a, p) => a + p.monto, 0);
             const monto   = sus?.planMonto ?? 0;
             const tipo    = sus?.tipoPlan ?? 'MENSUAL';
-            const meta    = planMeta(monto, tipo);
-            const pct     = meta > 0 ? Math.min(100, Math.round(rec / meta * 100)) : 0;
-            const pctColor = pct >= 100 ? '#06D6A0' : pct > 50 ? '#FFB703' : '#EF476F';
+            // Vigencia del pago (100% al pagar, baja con los días hasta 0% al vencer)
+            const vig     = sus ? vigencia(pagos, tipo) : null;
+            const pct     = vig?.pct ?? 0;
+            const vencido = vig?.vencido ?? false;
+            const pctColor = vencido ? '#EF476F' : pct >= 50 ? '#06D6A0' : pct >= 20 ? '#FFB703' : '#EF476F';
             const pb       = PLAN_BADGE[tipo];
             const trial    = !sus ? trialInfo(c.createdAt, c.trialEndsAt) : null;
 
@@ -465,11 +476,13 @@ export default function FinanzasPage() {
                       )}
                     </div>
 
-                    {/* % recaudado (plan activo) */}
+                    {/* Vigencia del pago (plan activo) */}
                     {sus && (
                       <div style={{ textAlign: 'center', flexShrink: 0 }}>
                         <p style={{ margin: 0, fontSize: 24, fontWeight: 800, color: pctColor, fontFamily: 'inherit', lineHeight: 1 }}>{pct}%</p>
-                        <p style={{ margin: '2px 0 0', fontSize: 9, color: '#8E87A8', whiteSpace: 'nowrap' }}>{fmt.format(rec)}</p>
+                        <p style={{ margin: '2px 0 0', fontSize: 9, fontWeight: 700, color: pctColor, whiteSpace: 'nowrap' }}>
+                          {vencido ? 'Vencido' : vig ? `${vig.diasRestantes}d` : ''}
+                        </p>
                       </div>
                     )}
 

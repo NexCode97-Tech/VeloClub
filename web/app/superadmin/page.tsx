@@ -269,21 +269,21 @@ export default function SuperadminDashboard() {
 
         {/* ── Stats secundarias ────────────────────────────────────────────── */}
         <motion.div
-          variants={cardVariant}
-          style={{ background: '#fff', borderRadius: 20, border: '1px solid rgba(120,80,200,0.10)', overflow: 'hidden', marginBottom: 20 }}
+          variants={stagger}
+          className="grid grid-cols-1 sm:grid-cols-3 gap-3"
+          style={{ marginBottom: 20 }}
         >
           {[
             { label: 'Total recaudado', value: totalRecaudado > 0 ? fmtHero(totalRecaudado).main + fmtHero(totalRecaudado).suffix : '$0', color: '#06D6A0', sub: 'Histórico' },
             { label: 'Total miembros',  value: String(totalMiembros), color: '#7C3AED', sub: 'En todos los clubs' },
             { label: 'Total clubs',     value: String(total),         color: '#FFB703', sub: `${activos} activos` },
-          ].map((s, i) => (
-            <div key={s.label} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', borderBottom: i < 2 ? '1px solid rgba(120,80,200,0.07)' : 'none' }}>
-              <div>
-                <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: '#1A1028' }}>{s.label}</p>
-                <p style={{ margin: '1px 0 0', fontSize: 10, color: '#8E87A8' }}>{s.sub}</p>
-              </div>
-              <p style={{ margin: 0, fontSize: 22, fontWeight: 800, color: s.color, fontFamily: 'inherit', lineHeight: 1 }}>{s.value}</p>
-            </div>
+          ].map(s => (
+            <motion.div key={s.label} variants={cardVariant}
+              style={{ background: '#fff', borderRadius: 18, border: '1px solid rgba(120,80,200,0.10)', boxShadow: '0 2px 12px rgba(124,58,237,0.05)', padding: '16px' }}>
+              <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: '#1A1028' }}>{s.label}</p>
+              <p style={{ margin: '1px 0 10px', fontSize: 10, color: '#8E87A8' }}>{s.sub}</p>
+              <p style={{ margin: 0, fontSize: 26, fontWeight: 800, color: s.color, fontFamily: 'inherit', lineHeight: 1 }}>{s.value}</p>
+            </motion.div>
           ))}
         </motion.div>
 

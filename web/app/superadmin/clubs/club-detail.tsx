@@ -463,7 +463,7 @@ export default function ClubDetail({ club, suscripcion, onBack, onReload, onDele
           {/* Datos / edición */}
           <div style={{ background: '#fff', border: '1px solid rgba(120,80,200,0.10)', borderRadius: 18, padding: '16px' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-              <p style={{ margin: 0, fontSize: 12, fontWeight: 700, color: '#7C3AED', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Datos del club</p>
+              <p style={{ margin: 0, fontSize: 12, fontWeight: 700, color: '#7C3AED', letterSpacing: '0.02em' }}>Datos del club</p>
               {!editing && (
                 <motion.button onClick={startEdit} whileTap={{ scale: 0.94 }}
                   style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '5px 12px', borderRadius: 10, background: 'rgba(124,58,237,0.07)', border: '1px solid rgba(124,58,237,0.15)', color: '#7C3AED', fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
@@ -495,7 +495,7 @@ export default function ClubDetail({ club, suscripcion, onBack, onReload, onDele
                 </div>
                 {/* Período de prueba */}
                 <div style={{ marginBottom: 12, padding: '10px 12px', borderRadius: 12, background: 'rgba(255,183,3,0.07)', border: '1px solid rgba(255,183,3,0.20)' }}>
-                  <p style={{ margin: '0 0 6px', fontSize: 9, fontWeight: 700, color: '#B88A00', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Período de prueba</p>
+                  <p style={{ margin: '0 0 6px', fontSize: 9, fontWeight: 700, color: '#B88A00', letterSpacing: '0.02em' }}>Período de prueba</p>
                   {(() => {
                     if (!club.trialEndsAt) return <p style={{ margin: '0 0 8px', fontSize: 11, color: '#8E87A8' }}>Sin período de prueba asignado</p>;
                     const ends = new Date(club.trialEndsAt);
@@ -543,7 +543,7 @@ export default function ClubDetail({ club, suscripcion, onBack, onReload, onDele
           {/* Miembros */}
           <div style={{ background: '#fff', border: '1px solid rgba(120,80,200,0.10)', borderRadius: 18, overflow: 'hidden' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 14px', borderBottom: '1px solid rgba(120,80,200,0.08)' }}>
-              <p style={{ margin: 0, fontSize: 12, fontWeight: 700, color: '#7C3AED', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Admins y entrenadores</p>
+              <p style={{ margin: 0, fontSize: 12, fontWeight: 700, color: '#7C3AED', letterSpacing: '0.02em' }}>Admins y entrenadores</p>
               <motion.button onClick={() => { setShowAddMember(v => !v); setMemberError(null); }} whileTap={{ scale: 0.94 }}
                 style={{ padding: '5px 12px', borderRadius: 10, background: showAddMember ? 'rgba(239,71,111,0.10)' : '#7C3AED', border: showAddMember ? '1px solid rgba(239,71,111,0.25)' : 'none', color: showAddMember ? '#EF476F' : '#fff', fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
                 {showAddMember ? '✕ Cerrar' : '+ Agregar'}
@@ -635,7 +635,7 @@ export default function ClubDetail({ club, suscripcion, onBack, onReload, onDele
           <div style={{ background: '#fff', border: '1px solid rgba(120,80,200,0.10)', borderRadius: 18, padding: '16px', boxShadow: '0 1px 8px rgba(0,0,0,0.04)' }}>
             <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <p style={{ margin: '0 0 8px', fontSize: 12, fontWeight: 700, color: '#7C3AED', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Plan de suscripción</p>
+                <p style={{ margin: '0 0 8px', fontSize: 12, fontWeight: 700, color: '#7C3AED', letterSpacing: '0.02em' }}>Plan de suscripción</p>
                 {editPlan ? (
                   <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                     <PlanSelector value={editTipoPlan} onChange={setEditTipoPlan} />
@@ -695,7 +695,7 @@ export default function ClubDetail({ club, suscripcion, onBack, onReload, onDele
 
           {/* Historial de abonos */}
           <div style={{ background: '#fff', border: '1px solid rgba(120,80,200,0.10)', borderRadius: 18, padding: '16px', boxShadow: '0 1px 8px rgba(0,0,0,0.04)' }}>
-            <p style={{ margin: '0 0 12px', fontSize: 12, fontWeight: 700, color: '#7C3AED', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+            <p style={{ margin: '0 0 12px', fontSize: 12, fontWeight: 700, color: '#7C3AED', letterSpacing: '0.02em' }}>
               Historial de abonos
             </p>
             {pagos.length === 0 ? (

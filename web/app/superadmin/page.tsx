@@ -253,7 +253,7 @@ export default function SuperadminDashboard() {
             <p style={{ margin: '0 0 4px', fontSize: 44, fontWeight: 800, color: '#1A1028', fontFamily: 'inherit', lineHeight: 1 }}>
               {String(activos).padStart(2, '0')}
             </p>
-            <p style={{ margin: 0, fontSize: 11, color: '#8E87A8' }}>de {total} totales</p>
+            <p style={{ margin: 0, fontSize: 11, color: '#8E87A8' }}>De {total} totales</p>
           </div>
           <div style={{ background: '#fff', borderRadius: 20, padding: '16px 14px', border: '1px solid rgba(120,80,200,0.10)', boxShadow: '0 2px 12px rgba(124,58,237,0.05)' }}>
             <p style={{ margin: '0 0 10px', fontSize: 9, fontWeight: 700, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.10em' }}>En prueba</p>
@@ -262,7 +262,7 @@ export default function SuperadminDashboard() {
             </p>
             {enPrueba > 0
               ? <p style={{ margin: 0, fontSize: 11, fontWeight: 700, color: '#B88A00' }}>Trial {maxTrialDays}d</p>
-              : <p style={{ margin: 0, fontSize: 11, color: '#8E87A8' }}>sin trials activos</p>
+              : <p style={{ margin: 0, fontSize: 11, color: '#8E87A8' }}>Sin trials activos</p>
             }
           </div>
         </motion.div>
@@ -273,8 +273,8 @@ export default function SuperadminDashboard() {
           style={{ background: '#fff', borderRadius: 20, border: '1px solid rgba(120,80,200,0.10)', overflow: 'hidden', marginBottom: 20 }}
         >
           {[
-            { label: 'Total recaudado', value: totalRecaudado > 0 ? fmtHero(totalRecaudado).main + fmtHero(totalRecaudado).suffix : '$0', color: '#06D6A0', sub: 'histórico' },
-            { label: 'Total miembros',  value: String(totalMiembros), color: '#7C3AED', sub: 'en todos los clubs' },
+            { label: 'Total recaudado', value: totalRecaudado > 0 ? fmtHero(totalRecaudado).main + fmtHero(totalRecaudado).suffix : '$0', color: '#06D6A0', sub: 'Histórico' },
+            { label: 'Total miembros',  value: String(totalMiembros), color: '#7C3AED', sub: 'En todos los clubs' },
             { label: 'Total clubs',     value: String(total),         color: '#FFB703', sub: `${activos} activos` },
           ].map((s, i) => (
             <div key={s.label} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', borderBottom: i < 2 ? '1px solid rgba(120,80,200,0.07)' : 'none' }}>

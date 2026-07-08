@@ -58,11 +58,11 @@ const ROLE_TABS: Record<string, { href: string; label: string; icon: React.Eleme
     { href: '/dashboard/miembros',    label: 'Miembros',    icon: IconUsers },
     { href: '/dashboard/mas',         label: 'Más',         icon: IconHome}, // reemplazado por CircleMenu
     { href: '/dashboard/asistencia',  label: 'Asistencia',  icon: IconAsistencias },
-    { href: '/dashboard/logros',      label: 'Resultados',  icon: IconResultados },
+    { href: '/dashboard/logros',      label: 'Rendimiento',  icon: IconResultados },
   ],
   STUDENT: [
     { href: '/dashboard',             label: 'Inicio',      icon: IconHome},
-    { href: '/dashboard/logros',      label: 'Resultados',  icon: IconResultados },
+    { href: '/dashboard/logros',      label: 'Rendimiento',  icon: IconResultados },
     { href: '/dashboard/mas',         label: 'Más',         icon: IconHome}, // reemplazado por CircleMenu
     { href: '/dashboard/calendario',  label: 'Calendario',  icon: IconCalendar },
     { href: '/dashboard/pagos',       label: 'Mis Pagos',   icon: IconMisPagos},
@@ -72,14 +72,14 @@ const ROLE_TABS: Record<string, { href: string; label: string; icon: React.Eleme
 // Ítems del CircleMenu por rol
 const ROLE_MAS_ITEMS: Record<string, { label: string; icon: React.ElementType; href: string; color: string }[]> = {
   ADMIN: [
-    { label: 'Resultados', icon: IconResultados,   href: '/dashboard/logros',     color: '#F59E0B' },
+    { label: 'Rendimiento', icon: IconResultados,   href: '/dashboard/logros',     color: '#F59E0B' },
     { label: 'Calendario', icon: IconCalendar,     href: '/dashboard/calendario', color: '#EF476F' },
     { label: 'Sedes',      icon: IconUbicacion,    href: '/dashboard/sedes',      color: '#06D6A0' },
     { label: 'Analíticas', icon: IconStatistics,   href: '/dashboard/reportes',   color: '#4361EE' },
     { label: 'Club',       icon: IconClub,         href: '/dashboard/club',       color: '#7C3AED' },
   ],
   COACH: [
-    { label: 'Resultados', icon: IconResultados,   href: '/dashboard/logros',     color: '#F59E0B' },
+    { label: 'Rendimiento', icon: IconResultados,   href: '/dashboard/logros',     color: '#F59E0B' },
     { label: 'Calendario', icon: IconCalendar,     href: '/dashboard/calendario', color: '#EF476F' },
     { label: 'Sedes',      icon: IconUbicacion,    href: '/dashboard/sedes',      color: '#06D6A0' },
     { label: 'Club',       icon: IconClub,         href: '/dashboard/club',       color: '#7C3AED' },
@@ -96,7 +96,7 @@ const ADMIN_NAV = [
   { href: '/dashboard/sedes',      label: 'Sedes',         icon: IconUbicacion },
   { href: '/dashboard/asistencia', label: 'Asistencia',    icon: IconAsistencias },
   { href: '/dashboard/finanzas',   label: 'Finanzas',      icon: IconFinanzas },
-  { href: '/dashboard/logros',     label: 'Resultados',    icon: IconResultados },
+  { href: '/dashboard/logros',     label: 'Rendimiento',    icon: IconResultados },
   { href: '/dashboard/calendario', label: 'Calendario',    icon: IconCalendar },
   { href: '/dashboard/reportes',   label: 'Analíticas',    icon: IconStatistics },
   { href: '/dashboard/club',       label: 'Club',          icon: IconClub },
@@ -109,7 +109,7 @@ const COACH_NAV = [
   { href: '/dashboard/miembros',   label: 'Miembros',      icon: IconUsers },
   { href: '/dashboard/sedes',      label: 'Sedes',         icon: IconUbicacion },
   { href: '/dashboard/asistencia', label: 'Asistencia',    icon: IconAsistencias },
-  { href: '/dashboard/logros',     label: 'Resultados',    icon: IconResultados },
+  { href: '/dashboard/logros',     label: 'Rendimiento',    icon: IconResultados },
   { href: '/dashboard/calendario', label: 'Calendario',    icon: IconCalendar },
   { href: '/dashboard/club',       label: 'Club',          icon: IconClub },
   { href: '/dashboard/perfil',     label: 'Mi Perfil',     icon: UserCircle },
@@ -118,7 +118,7 @@ const COACH_NAV = [
 
 const STUDENT_NAV = [
   { href: '/dashboard',            label: 'Inicio',        icon: IconHome},
-  { href: '/dashboard/logros',     label: 'Resultados',    icon: IconResultados },
+  { href: '/dashboard/logros',     label: 'Rendimiento',    icon: IconResultados },
   { href: '/dashboard/calendario', label: 'Calendario',    icon: IconCalendar },
   { href: '/dashboard/sedes',      label: 'Sedes',         icon: IconUbicacion },
   { href: '/dashboard/club',       label: 'Club',          icon: IconClub },

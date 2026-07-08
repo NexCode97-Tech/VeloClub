@@ -32,7 +32,7 @@ const features = [
   },
   {
     icon: Trophy,
-    label: 'Resultados',
+    label: 'Rendimiento',
     desc: 'Historial de competencias y entrenamientos por deportista y prueba.',
     color: '#FFB703',
     bg: 'rgba(255,183,3,0.10)',

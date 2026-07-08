@@ -251,7 +251,7 @@ export default function LogrosPage() {
         <div className="flex items-start justify-between gap-2 mb-4">
           <div>
             <h1 className="text-[22px] font-semibold text-foreground" style={{ fontFamily: 'inherit', lineHeight: 1.1 }}>
-              Resultados
+              Rendimiento
             </h1>
             <p className="text-[12px] text-muted-foreground mt-0.5">
               Competencias y entrenamientos del club

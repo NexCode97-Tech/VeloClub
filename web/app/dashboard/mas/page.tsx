@@ -13,7 +13,7 @@ const EASE_OUT: [number, number, number, number] = [0.23, 1, 0.32, 1];
 
 const ITEMS_BY_ROLE: Record<string, { label: string; icon: React.ElementType; color: string; href: string }[]> = {
   ADMIN: [
-    { label: 'Resultados', icon: Trophy,            color: '#F59E0B', href: '/dashboard/logros' },
+    { label: 'Rendimiento', icon: Trophy,            color: '#F59E0B', href: '/dashboard/logros' },
     { label: 'Calendario', icon: CalendarDays,      color: '#EF476F', href: '/dashboard/calendario' },
     { label: 'Sedes',      icon: MapPin,            color: '#06D6A0', href: '/dashboard/sedes' },
     { label: 'Analíticas',   icon: BarChart2,         color: '#4361EE', href: '/dashboard/reportes' },
@@ -21,7 +21,7 @@ const ITEMS_BY_ROLE: Record<string, { label: string; icon: React.ElementType; co
     { label: 'Ayuda',      icon: HelpCircle,        color: '#8E87A8', href: '/dashboard/ajustes/ayuda' },
   ],
   COACH: [
-    { label: 'Resultados', icon: Trophy,        color: '#F59E0B', href: '/dashboard/logros' },
+    { label: 'Rendimiento', icon: Trophy,        color: '#F59E0B', href: '/dashboard/logros' },
     { label: 'Calendario', icon: CalendarDays,  color: '#EF476F', href: '/dashboard/calendario' },
     { label: 'Sedes',      icon: MapPin,        color: '#06D6A0', href: '/dashboard/sedes' },
     { label: 'Club',       icon: Building2,     color: '#7C3AED', href: '/dashboard/club' },

@@ -458,8 +458,10 @@ export default function ClubDetail({ club, suscripcion, onBack, onReload, onDele
       {tab === 'info' && (
         <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.22, ease: EASE }}>
 
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
+
           {/* Datos / edición */}
-          <div style={{ background: '#fff', border: '1px solid rgba(120,80,200,0.10)', borderRadius: 18, padding: '16px', marginBottom: 14 }}>
+          <div style={{ background: '#fff', border: '1px solid rgba(120,80,200,0.10)', borderRadius: 18, padding: '16px' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
               <p style={{ margin: 0, fontSize: 12, fontWeight: 700, color: '#7C3AED', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Datos del club</p>
               {!editing && (
@@ -539,7 +541,7 @@ export default function ClubDetail({ club, suscripcion, onBack, onReload, onDele
           </div>
 
           {/* Miembros */}
-          <div style={{ background: '#fff', border: '1px solid rgba(120,80,200,0.10)', borderRadius: 18, overflow: 'hidden', marginBottom: 14 }}>
+          <div style={{ background: '#fff', border: '1px solid rgba(120,80,200,0.10)', borderRadius: 18, overflow: 'hidden' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 14px', borderBottom: '1px solid rgba(120,80,200,0.08)' }}>
               <p style={{ margin: 0, fontSize: 12, fontWeight: 700, color: '#7C3AED', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Admins y entrenadores</p>
               <motion.button onClick={() => { setShowAddMember(v => !v); setMemberError(null); }} whileTap={{ scale: 0.94 }}
@@ -601,8 +603,10 @@ export default function ClubDetail({ club, suscripcion, onBack, onReload, onDele
             )}
           </div>
 
+          </div>
+
           {/* Acciones del club */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 14 }}>
             <motion.a href={getWhatsAppUrl(club)} target="_blank" rel="noopener noreferrer" whileTap={{ scale: 0.98 }}
               style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px 0', borderRadius: 12, background: 'rgba(37,211,102,0.08)', border: '1px solid rgba(37,211,102,0.28)', color: '#1BA147', textDecoration: 'none', fontSize: 12, fontWeight: 700, fontFamily: 'inherit' }}>
               <MessageCircle size={15} /> Enviar recordatorio por WhatsApp
@@ -625,8 +629,10 @@ export default function ClubDetail({ club, suscripcion, onBack, onReload, onDele
       {tab === 'finanzas' && (
         <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.22, ease: EASE }}>
 
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
+
           {/* Plan y vigencia */}
-          <div style={{ background: '#fff', border: '1px solid rgba(120,80,200,0.10)', borderRadius: 18, padding: '16px', marginBottom: 14, boxShadow: '0 1px 8px rgba(0,0,0,0.04)' }}>
+          <div style={{ background: '#fff', border: '1px solid rgba(120,80,200,0.10)', borderRadius: 18, padding: '16px', boxShadow: '0 1px 8px rgba(0,0,0,0.04)' }}>
             <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <p style={{ margin: '0 0 8px', fontSize: 12, fontWeight: 700, color: '#7C3AED', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Plan de suscripción</p>
@@ -688,7 +694,7 @@ export default function ClubDetail({ club, suscripcion, onBack, onReload, onDele
           </div>
 
           {/* Historial de abonos */}
-          <div style={{ background: '#fff', border: '1px solid rgba(120,80,200,0.10)', borderRadius: 18, overflow: 'hidden', marginBottom: 14 }}>
+          <div style={{ background: '#fff', border: '1px solid rgba(120,80,200,0.10)', borderRadius: 18, overflow: 'hidden' }}>
             <p style={{ margin: 0, padding: '12px 14px', fontSize: 12, fontWeight: 700, color: '#7C3AED', textTransform: 'uppercase', letterSpacing: '0.06em', borderBottom: pagos.length > 0 ? '1px solid rgba(120,80,200,0.08)' : 'none' }}>
               Historial de abonos
             </p>
@@ -765,7 +771,10 @@ export default function ClubDetail({ club, suscripcion, onBack, onReload, onDele
             )}
           </div>
 
+          </div>
+
           {/* Registrar abono */}
+          <div style={{ marginTop: 14 }} />
           <AnimatePresence mode="wait">
             {abonoOpen ? (
               <motion.div key="form" variants={expandY} initial="hidden" animate="show" exit="exit"

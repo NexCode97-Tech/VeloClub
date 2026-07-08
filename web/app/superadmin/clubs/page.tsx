@@ -97,7 +97,7 @@ export default function ClubsPage() {
   if (detailClub) {
     return (
       <div style={{ background: '#F7F7FB', minHeight: '100%' }}>
-        <div style={{ padding: '12px 16px 80px', maxWidth: 640, margin: '0 auto' }}>
+        <div style={{ padding: '12px 16px 80px', maxWidth: 1100, margin: '0 auto' }}>
           <ClubDetail
             club={detailClub}
             suscripcion={susMap[detailClub.id] ?? null}

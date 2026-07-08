@@ -338,7 +338,7 @@ export default function LogrosPage() {
                   onCta={() => { setCompForm(emptyComp); setCompError(null); setCompOpen(true); }}
                 />
               ) : (
-                <motion.div variants={listVariants} initial="hidden" animate="show" className="flex flex-col gap-3">
+                <motion.div variants={listVariants} initial="hidden" animate="show" className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-4">
                   {visibleComps.map(c => <CompCard key={c.id} comp={c} isStudent={isStudent} myMemberId={myMemberId} canManage={canManage} deleting={deletingComp === c.id} onDelete={handleDeleteComp} />)}
                 </motion.div>
               )}
@@ -355,7 +355,7 @@ export default function LogrosPage() {
                   onCta={() => { setSessionForm(emptySession); setSessionError(null); setSessionOpen(true); }}
                 />
               ) : (
-                <motion.div variants={listVariants} initial="hidden" animate="show" className="flex flex-col gap-3">
+                <motion.div variants={listVariants} initial="hidden" animate="show" className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-4">
                   {visibleSessions.map(s => <TrainCard key={s.id} session={s} isStudent={isStudent} myMemberId={myMemberId} canManage={canManage} deleting={deletingSession === s.id} onDelete={handleDeleteSession} />)}
                 </motion.div>
               )}

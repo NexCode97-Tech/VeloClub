@@ -54,6 +54,7 @@ model User {
   bio             String?
   role            Role     @default(ADMIN)
   profileComplete Boolean  @default(false)
+  termsAcceptedAt DateTime?
   clubId          String?
   club            Club?    @relation(fields: [clubId], references: [id], onDelete: Cascade)
   createdAt       DateTime @default(now())

@@ -12,6 +12,7 @@ import LoadingScreen from '@/components/ui/loading-screen';
 import { BottomCircleMenu } from '@/components/ui/bottom-circle-menu';
 import { SearchModal } from '@/components/ui/search-modal';
 import { NotificationsBell } from '@/components/ui/notifications-bell';
+import TermsGateModal from '@/components/ui/terms-gate-modal';
 import {
   Settings,
   UserCircle,
@@ -152,6 +153,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [clubName, setClubName] = useState<string | null>(null);
   const [userName, setUserName] = useState<string | null>(null);
   const [userPicture, setUserPicture] = useState<string | null>(null);
+  const [termsAccepted, setTermsAccepted] = useState(true);
   const [collapsed, setCollapsed] = useState(() => {
     if (typeof window !== 'undefined') {
       return localStorage.getItem('sidebar-collapsed') === 'true';
@@ -188,11 +190,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         const token = await session?.getToken({ skipCache: true });
         if (stale) return;
 
-        let res: { status: string; user?: { role: string; name?: string; picture?: string | null; club?: { name?: string; logoUrl?: string } } } | null = null;
+        let res: { status: string; user?: { role: string; name?: string; picture?: string | null; club?: { name?: string; logoUrl?: string }; termsAcceptedAt?: string | null } } | null = null;
         let attempts = 0;
         while (attempts < 3) {
           try {
-            res = await apiFetch<{ status: string; user?: { role: string; name?: string; picture?: string | null; club?: { name?: string; logoUrl?: string } } }>('/me', { token });
+            res = await apiFetch<{ status: string; user?: { role: string; name?: string; picture?: string | null; club?: { name?: string; logoUrl?: string }; termsAcceptedAt?: string | null } }>('/me', { token });
             break;
           } catch (err) {
             const { ApiError } = await import('@/lib/api-client');
@@ -216,6 +218,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         setClubName(res.user?.club?.name ?? null);
         setUserName(res.user?.name ?? null);
         setUserPicture(res.user?.picture ?? null);
+        setTermsAccepted(!!res.user?.termsAcceptedAt);
 
         if (userRole === 'STUDENT') {
           const STUDENT_ALLOWED = ['/dashboard', '/dashboard/logros', '/dashboard/calendario', '/dashboard/sedes', '/dashboard/club', '/dashboard/pagos', '/dashboard/mas', '/dashboard/perfil', '/dashboard/ajustes'];
@@ -247,6 +250,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }, [isLoaded, isSignedIn, userId, sessionId]);
 
   if (checking) return <LoadingScreen />;
+
+  async function handleAcceptTerms() {
+    const token = await session?.getToken();
+    await apiFetch('/me/accept-terms', { method: 'PATCH', token });
+    setTermsAccepted(true);
+  }
 
   const tabItems   = role ? (ROLE_TABS[role] ?? ROLE_TABS.ADMIN) : ROLE_TABS.ADMIN;
   const sideNavItems = (ROLE_NAV[role ?? 'ADMIN'] ?? ADMIN_NAV);
@@ -487,6 +496,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
       {/* Buscador de comunidad (clubes / deportistas / entrenadores) */}
       <SearchModal open={searchOpen} onClose={() => setSearchOpen(false)} />
+
+      {/* Bloqueo de aceptación de Términos y Política de Datos */}
+      <TermsGateModal open={!termsAccepted} onAccept={handleAcceptTerms} />
 
       {/* Tooltip del sidebar colapsado — etiqueta con el nombre del módulo */}
       {navTip && typeof document !== 'undefined' && createPortal(

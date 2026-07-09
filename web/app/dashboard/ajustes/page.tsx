@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import { apiFetch } from '@/lib/api-client';
 import {
   CheckCircle2, Camera, Building2, ChevronDown, X, Crop,
-  ChevronRight, HelpCircle, User, Settings2, LogOut, Lock, UserCog,
+  ChevronRight, HelpCircle, User, Settings2, LogOut, Lock, UserCog, Trash2, AlertTriangle,
 } from 'lucide-react';
 import { PhoneInput } from '@/components/ui/phone-input';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -165,6 +165,12 @@ export default function AjustesPage() {
   const [crop, setCrop]                   = useState<CropType>();
   const imgRef                            = useRef<HTMLImageElement>(null);
 
+  // Eliminar cuenta
+  const [deleteOpen, setDeleteOpen]       = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState('');
+  const [deleting, setDeleting]           = useState(false);
+  const [deleteError, setDeleteError]     = useState<string | null>(null);
+
   const cityOptions = department ? (COLOMBIA[department] ?? []).sort() : [];
 
   useEffect(() => {
@@ -287,6 +293,23 @@ export default function AjustesPage() {
     }
   }
 
+  async function handleDeleteAccount() {
+    setDeleting(true); setDeleteError(null);
+    try {
+      const token = await getToken();
+      await apiFetch('/me', { method: 'DELETE', token });
+      await signOut({ redirectUrl: '/sign-in' });
+    } catch (err) {
+      const { ApiError } = await import('@/lib/api-client');
+      if (err instanceof ApiError && err.status === 409) {
+        setDeleteError('Eres el único administrador de este club. Agrega otro administrador desde Miembros, o elimina el club, antes de eliminar tu cuenta.');
+      } else {
+        setDeleteError('No pudimos eliminar tu cuenta. Intenta de nuevo.');
+      }
+      setDeleting(false);
+    }
+  }
+
   if (loading) return (
     <div className="flex justify-center py-20">
       <div className="w-6 h-6 rounded-full border-2 border-primary border-t-transparent animate-spin" />
@@ -405,6 +428,25 @@ export default function AjustesPage() {
       >
         <LogOut className="w-4 h-4 shrink-0" style={{ color: '#EF476F' }} />
         <span className="flex-1 text-[13px] font-semibold" style={{ color: '#EF476F' }}>Cerrar sesión</span>
+      </button>
+    </div>
+  );
+
+  /* ── Tarjeta Zona de peligro — eliminar cuenta ─────────────────────────── */
+  const dangerCard = (
+    <div className="rounded-2xl p-5" style={{ background: 'rgba(239,71,111,0.04)', border: '1px solid rgba(239,71,111,0.18)' }}>
+      <p className="text-[11px] font-bold uppercase tracking-wide mb-1" style={{ color: '#EF476F' }}>Zona de peligro</p>
+      <p className="text-[12px] text-muted-foreground mb-4">
+        Al eliminar tu cuenta perderás el acceso de inmediato. Tus datos personales se eliminan; los registros de pagos y asistencia se conservan de forma anónima por obligaciones contables del club.
+      </p>
+      <button
+        type="button"
+        onClick={() => { setDeleteOpen(true); setDeleteConfirm(''); setDeleteError(null); }}
+        className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-[13px] font-semibold transition-colors"
+        style={{ background: 'rgba(239,71,111,0.10)', color: '#EF476F', border: '1px solid rgba(239,71,111,0.25)' }}
+      >
+        <Trash2 className="w-4 h-4" />
+        Eliminar mi cuenta
       </button>
     </div>
   );
@@ -567,6 +609,65 @@ export default function AjustesPage() {
         document.body
       )}
 
+      {/* Modal de confirmación — eliminar cuenta */}
+      {typeof document !== 'undefined' && createPortal(
+        <AnimatePresence>
+          {deleteOpen && (
+            <motion.div
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="fixed inset-0 flex items-center justify-center p-4"
+              style={{ zIndex: 200, background: 'rgba(15,5,30,0.55)', backdropFilter: 'blur(6px)' }}
+              onClick={() => !deleting && setDeleteOpen(false)}
+            >
+              <motion.div
+                initial={{ opacity: 0, scale: 0.96, y: 16 }} animate={{ opacity: 1, scale: 1, y: 0 }}
+                transition={{ duration: 0.24, ease: [0.23, 1, 0.32, 1] }}
+                onClick={e => e.stopPropagation()}
+                className="w-full bg-white rounded-2xl p-6"
+                style={{ maxWidth: 420, boxShadow: '0 24px 70px rgba(80,40,180,0.25)' }}
+              >
+                <div className="w-11 h-11 rounded-xl flex items-center justify-center mb-3" style={{ background: 'rgba(239,71,111,0.10)' }}>
+                  <AlertTriangle className="w-5 h-5" style={{ color: '#EF476F' }} />
+                </div>
+                <h2 className="text-[16px] font-bold text-foreground mb-1">Eliminar tu cuenta</h2>
+                <p className="text-[12.5px] text-muted-foreground leading-relaxed mb-4">
+                  Esta acción es irreversible. Perderás el acceso de inmediato, tus datos personales se eliminarán y no podrás volver a iniciar sesión con este correo. Para confirmar, escribe <strong className="text-foreground">ELIMINAR</strong> abajo.
+                </p>
+                <Input
+                  value={deleteConfirm}
+                  onChange={e => setDeleteConfirm(e.target.value)}
+                  placeholder="ELIMINAR"
+                  className="mb-3 text-sm h-11"
+                  autoFocus
+                />
+                {deleteError && <p className="text-[12px] mb-3" style={{ color: '#EF476F' }}>{deleteError}</p>}
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setDeleteOpen(false)}
+                    disabled={deleting}
+                    className="flex-1 py-2.5 rounded-xl border border-border text-[13px] font-semibold text-muted-foreground"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleDeleteAccount}
+                    disabled={deleteConfirm !== 'ELIMINAR' || deleting}
+                    className="flex-1 py-2.5 rounded-xl text-[13px] font-semibold text-white transition-opacity"
+                    style={{ background: '#EF476F', opacity: deleteConfirm !== 'ELIMINAR' || deleting ? 0.5 : 1 }}
+                  >
+                    {deleting ? 'Eliminando...' : 'Eliminar cuenta'}
+                  </button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
+
       {/* ══ MOBILE (< lg) ══════════════════════════════════════════════════ */}
       <div className="lg:hidden">
         {isAdmin && (
@@ -603,8 +704,9 @@ export default function AjustesPage() {
             <motion.div key="perfil"
               initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
               transition={{ duration: 0.2, ease: [0.23, 1, 0.32, 1] }}
-              className="px-4 pb-28">
+              className="px-4 pb-28 space-y-4">
               {perfilCard}
+              {dangerCard}
             </motion.div>
           )}
           {isAdmin && tab === 'club' && (
@@ -621,9 +723,10 @@ export default function AjustesPage() {
       {/* ══ DESKTOP (>= lg) — columna centrada ═══════════════════════════ */}
       <div className="hidden lg:block px-6 pb-8">
         <div className="max-w-2xl mx-auto space-y-6">
-          <div>
+          <div className="space-y-4">
             <SectionHeader label="Mi perfil" icon={User} />
             {perfilCard}
+            {dangerCard}
           </div>
           {isAdmin && (
             <div>

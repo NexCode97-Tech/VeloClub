@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { requireAuth } from '../auth/middleware';
 import { prisma } from '../db/client';
 import { v2 as cloudinary } from 'cloudinary';
+import { removeFromAllowlist, revokeClerkAccess } from '../lib/clerk-allowlist';
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME?.trim(),
@@ -269,6 +270,78 @@ router.patch('/profile', requireAuth, async (req, res) => {
   }
 
   res.json({ status: 'ok', user });
+});
+
+// DELETE /me — el propio usuario elimina su cuenta (Admin, Entrenador o Deportista).
+// El Member se anonimiza (no se borra) para conservar pagos/asistencia por
+// obligaciones contables del club; el acceso a Clerk queda revocado.
+router.delete('/', requireAuth, async (req, res) => {
+  if (!req.auth || !req.user) return res.status(401).json({ error: 'No autenticado' });
+
+  const member = await prisma.member.findFirst({
+    where: {
+      OR: [
+        { clerkId: req.auth.clerkId },
+        ...(req.auth.email ? [{ email: { equals: req.auth.email, mode: 'insensitive' as const } }] : []),
+      ],
+    },
+  });
+
+  // No permitir que el único admin de un club activo elimine su cuenta —
+  // dejaría el club sin nadie que lo administre.
+  if (member?.role === 'ADMIN') {
+    const otherAdmins = await prisma.member.count({
+      where: { clubId: member.clubId, role: 'ADMIN', id: { not: member.id } },
+    });
+    if (otherAdmins === 0) {
+      return res.status(409).json({
+        error: 'unique_admin',
+        message: 'Eres el único administrador de este club. Agrega otro administrador desde Miembros, o elimina el club, antes de eliminar tu cuenta.',
+      });
+    }
+  }
+
+  // Revocar acceso Clerk (banea + revoca sesiones) y quitar del allowlist
+  if (req.auth.email) {
+    try { await removeFromAllowlist(req.auth.email); } catch { /* ignorar */ }
+  }
+  await revokeClerkAccess(req.auth.clerkId);
+
+  // Anonimizar el Member — conserva pagos/asistencia, borra datos personales
+  if (member) {
+    const publicIds = [member.picturePublicId, member.docFilePublicId, member.insurancePublicId].filter(Boolean) as string[];
+    await Promise.all(publicIds.map(id => cloudinary.uploader.destroy(id).catch(() => {})));
+
+    await prisma.member.update({
+      where: { id: member.id },
+      data: {
+        fullName: 'Usuario eliminado',
+        email: null,
+        phone: null,
+        pictureUrl: null,
+        picturePublicId: null,
+        docType: null,
+        docNumber: null,
+        docFileUrl: null,
+        docFilePublicId: null,
+        insuranceFileUrl: null,
+        insurancePublicId: null,
+        emergencyContact: null,
+        emergencyPhone: null,
+        eps: null,
+        clerkId: null,
+      },
+    });
+  }
+
+  // Borrar el registro de autenticación/perfil
+  const currentUser = await prisma.user.findUnique({ where: { id: req.user.id }, select: { coverPublicId: true } });
+  if (currentUser?.coverPublicId) {
+    await cloudinary.uploader.destroy(currentUser.coverPublicId).catch(() => {});
+  }
+  await prisma.user.delete({ where: { id: req.user.id } }).catch(() => {});
+
+  res.json({ ok: true });
 });
 
 // PATCH /me/accept-terms — el usuario acepta la Política de Tratamiento de Datos

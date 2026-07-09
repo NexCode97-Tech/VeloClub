@@ -23,6 +23,10 @@ import {
 } from 'lucide-react';
 import { IconHome, IconUsers, IconCalendar, IconStatistics, IconClub, IconFinanzas, IconUbicacion, IconAsistencias, IconResultados, IconAjustes, IconMisPagos } from '@/components/ui/custom-icons';
 
+// Modal de aceptación de Términos y Política de Datos — desactivado hasta
+// completar razón social/NIT en docs/legal. Cambiar a true para publicar.
+const TERMS_GATE_ENABLED = false;
+
 // ── Colores por rol (sidebar footer) ─────────────────────────────────────────
 const SIDEBAR_ROLE_LABEL: Record<string, string> = {
   SUPERADMIN: 'Superadmin',
@@ -497,8 +501,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       {/* Buscador de comunidad (clubes / deportistas / entrenadores) */}
       <SearchModal open={searchOpen} onClose={() => setSearchOpen(false)} />
 
-      {/* Bloqueo de aceptación de Términos y Política de Datos */}
-      <TermsGateModal open={!termsAccepted} onAccept={handleAcceptTerms} />
+      {/* Bloqueo de aceptación de Términos y Política de Datos —
+          desactivado temporalmente hasta completar razón social/NIT en los
+          documentos legales. Reactivar cambiando TERMS_GATE_ENABLED a true. */}
+      <TermsGateModal open={TERMS_GATE_ENABLED && !termsAccepted} onAccept={handleAcceptTerms} />
 
       {/* Tooltip del sidebar colapsado — etiqueta con el nombre del módulo */}
       {navTip && typeof document !== 'undefined' && createPortal(

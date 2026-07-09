@@ -95,7 +95,7 @@ VeloClub podrá modificar estos Términos en cualquier momento. Las modificacion
 
 ## 13. Contacto
 
-- **Correo electrónico:** [correo@veloclubtech.com]
+- **Correo electrónico:** veloclub.tech@gmail.com
 - **Formulario de contacto dentro de la Plataforma**, en el módulo de Ajustes / Centro de ayuda.
 
 ## 14. Ley aplicable y jurisdicción

@@ -143,7 +143,7 @@ VeloClub podrá modificar estos Términos y Condiciones en cualquier momento, pa
 
 Para consultas relacionadas con estos Términos y Condiciones, el Usuario puede comunicarse a través de:
 
-- **Correo electrónico:** [correo@veloclubtech.com]
+- **Correo electrónico:** veloclub.tech@gmail.com
 - **Formulario de contacto dentro de la Plataforma**, en el módulo de Ajustes / Centro de ayuda.
 
 ---

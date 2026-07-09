@@ -130,7 +130,7 @@ Como Titular de datos personales, usted tiene derecho a:
 
 Para ejercer cualquiera de los derechos anteriores, el Titular (o su acudiente, en el caso de menores) puede enviar su solicitud a través de:
 
-- **Correo electrónico:** [correo@veloclubtech.com]
+- **Correo electrónico:** veloclub.tech@gmail.com
 - **Formulario de contacto dentro de la Plataforma**, en el módulo de Ajustes / Centro de ayuda.
 
 La solicitud deberá contener, como mínimo: nombre completo del Titular, descripción clara del derecho que desea ejercer, y los documentos que permitan identificarlo. VeloClub dará respuesta dentro de los términos establecidos en el artículo 14 de la Ley 1581 de 2012 (15 días hábiles para consultas y 10 días hábiles para reclamos, prorrogable por 5 días hábiles adicionales).

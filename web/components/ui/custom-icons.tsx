@@ -104,10 +104,10 @@ export function IconMisPagos({ className, style, ...props }: IconProps) {
 
 export function IconPerfil({ className, style, ...props }: IconProps) {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="currentColor"
       className={className} style={style} {...props}>
-      <circle cx="12" cy="9" r="2.25"/>
-      <path d="m12 1.25a10.75 10.75 0 1 0 10.75 10.75 10.762 10.762 0 0 0 -10.75-10.75zm0 4a3.75 3.75 0 1 1 -3.75 3.75 3.755 3.755 0 0 1 3.75-3.75zm5.237 12.462a.787.787 0 0 1 -.237.038.751.751 0 0 1 -.712-.513l-.544-1.637a1.248 1.248 0 0 0 -1.185-.854h-5.118a1.25 1.25 0 0 0 -1.186.854l-.543 1.633a.75.75 0 1 1 -1.424-.474l.544-1.633a2.749 2.749 0 0 1 2.609-1.88h5.118a2.747 2.747 0 0 1 2.608 1.88l.545 1.633a.751.751 0 0 1 -.475.953z"/>
+      <path d="m426.6 512c39 0 66.3-38.2 53.9-75.2-31.4-93.8-120-161.5-224.5-161.5s-193.1 67.7-224.5 161.5c-12.4 36.9 15 75.2 53.9 75.2z"/>
+      <circle cx="256" cy="116" r="116"/>
     </svg>
   );
 }

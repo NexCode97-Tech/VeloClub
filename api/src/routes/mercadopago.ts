@@ -35,7 +35,7 @@ router.get('/mi-suscripcion', requireAuth, async (req, res) => {
     prisma.member.count({ where: { clubId, role: 'STUDENT' } }),
   ]);
 
-  const precio = calcularPrecioPlan(cantidadDeportistas, suscripcion.tipoPlan as TipoPlan);
+  const precio = calcularPrecioPlan(cantidadDeportistas, suscripcion.tipoPlan as TipoPlan, suscripcion.autoRenew);
   const vig = vigencia(suscripcion.pagos, suscripcion.tipoPlan as TipoPlan);
 
   res.json({
@@ -43,6 +43,39 @@ router.get('/mi-suscripcion', requireAuth, async (req, res) => {
     cantidadDeportistas,
     vigencia: vig,
   });
+});
+
+// ── GET /mercadopago/planes — precios de los 3 planes para elegir ───────────
+router.get('/planes', requireAuth, async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  const clubId = req.user!.clubId ?? '';
+
+  const cantidadDeportistas = await prisma.member.count({ where: { clubId, role: 'STUDENT' } });
+  const planes = (['MENSUAL', 'TRIMESTRAL', 'ANUAL'] as TipoPlan[]).map(tipoPlan => ({
+    tipoPlan,
+    precio: calcularPrecioPlan(cantidadDeportistas, tipoPlan),
+    precioConAutoRenew: calcularPrecioPlan(cantidadDeportistas, tipoPlan, true),
+  }));
+
+  res.json({ cantidadDeportistas, planes });
+});
+
+// ── POST /mercadopago/set-plan — elegir el tipo de plan antes de pagar ──────
+router.post('/set-plan', requireAuth, async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  const clubId = req.user!.clubId ?? '';
+  const { tipoPlan } = req.body as { tipoPlan?: string };
+  if (!tipoPlan || !['MENSUAL', 'TRIMESTRAL', 'ANUAL'].includes(tipoPlan)) {
+    return res.status(400).json({ error: 'tipoPlan inválido' });
+  }
+
+  const suscripcion = await suscripcionDelClub(clubId);
+  await prisma.clubSuscripcion.update({
+    where: { id: suscripcion.id },
+    data: { tipoPlan: tipoPlan as TipoPlan },
+  });
+
+  res.json({ ok: true });
 });
 
 // ── POST /mercadopago/checkout — pago único ──────────────────────────────────
@@ -56,7 +89,7 @@ router.post('/checkout', requireAuth, async (req, res) => {
     prisma.club.findUnique({ where: { id: clubId }, select: { name: true, email: true } }),
   ]);
 
-  const monto = calcularPrecioPlan(cantidadDeportistas, suscripcion.tipoPlan as TipoPlan);
+  const monto = calcularPrecioPlan(cantidadDeportistas, suscripcion.tipoPlan as TipoPlan, suscripcion.autoRenew);
   const payerEmail = req.auth?.email || club?.email || 'sin-correo@veloclubtech.com';
 
   try {
@@ -87,7 +120,7 @@ router.post('/subscribe', requireAuth, async (req, res) => {
     prisma.club.findUnique({ where: { id: clubId }, select: { name: true, email: true } }),
   ]);
 
-  const monto = calcularPrecioPlan(cantidadDeportistas, suscripcion.tipoPlan as TipoPlan);
+  const monto = calcularPrecioPlan(cantidadDeportistas, suscripcion.tipoPlan as TipoPlan, true);
   const payerEmail = req.auth?.email || club?.email || 'sin-correo@veloclubtech.com';
   const meses = suscripcion.tipoPlan === 'MENSUAL' ? 1 : suscripcion.tipoPlan === 'TRIMESTRAL' ? 3 : 12;
 

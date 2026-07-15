@@ -10,6 +10,10 @@ const fmt = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP',
 
 type TipoPlan = 'MENSUAL' | 'TRIMESTRAL' | 'ANUAL';
 const PLAN_LABEL: Record<TipoPlan, string> = { MENSUAL: 'Mensual', TRIMESTRAL: 'Trimestral', ANUAL: 'Anual' };
+const PLAN_DESCUENTO_LABEL: Record<TipoPlan, string> = { MENSUAL: 'Sin descuento', TRIMESTRAL: '10% de descuento', ANUAL: '20% de descuento' };
+const MESES_POR_PLAN: Record<TipoPlan, number> = { MENSUAL: 1, TRIMESTRAL: 3, ANUAL: 12 };
+
+interface PlanOpcion { tipoPlan: TipoPlan; precio: number; precioConAutoRenew: number }
 
 interface Suscripcion {
   id: string;
@@ -48,6 +52,33 @@ export default function SuscripcionCard() {
 
   const [card, setCard] = useState({ number: '', name: '', month: '', year: '', cvv: '', docNumber: '' });
 
+  // Selección de plan — se muestra mientras el club no tenga ningún pago registrado
+  const [pickedPlan, setPickedPlan] = useState(false);
+  const [planes, setPlanes] = useState<PlanOpcion[] | null>(null);
+  const [loadingPlanes, setLoadingPlanes] = useState(false);
+  const [settingPlan, setSettingPlan] = useState<TipoPlan | null>(null);
+
+  async function loadPlanes() {
+    setLoadingPlanes(true);
+    try {
+      const token = await getToken();
+      const res = await apiFetch<{ cantidadDeportistas: number; planes: PlanOpcion[] }>('/mercadopago/planes', { token });
+      setPlanes(res.planes);
+    } catch (e) { setError(e instanceof Error ? e.message : 'Error al cargar los planes'); }
+    finally { setLoadingPlanes(false); }
+  }
+
+  async function handleElegirPlan(tipoPlan: TipoPlan) {
+    setSettingPlan(tipoPlan); setError(null);
+    try {
+      const token = await getToken();
+      await apiFetch('/mercadopago/set-plan', { method: 'POST', token, body: JSON.stringify({ tipoPlan }) });
+      setPickedPlan(true);
+      await load();
+    } catch (e) { setError(e instanceof Error ? e.message : 'No se pudo elegir el plan'); }
+    finally { setSettingPlan(null); }
+  }
+
   async function load() {
     setLoading(true);
     try {
@@ -59,6 +90,12 @@ export default function SuscripcionCard() {
   }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { load(); }, []);
+
+  // Sin pagos registrados aún y sin elegir plan en esta sesión → cargar precios de los 3 planes
+  useEffect(() => {
+    if (data && !data.vigencia && !pickedPlan && !planes && !loadingPlanes) loadPlanes();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data, pickedPlan]);
 
   async function handlePagar() {
     setPaying(true); setError(null);
@@ -124,6 +161,64 @@ export default function SuscripcionCard() {
   );
   if (!data) return <p className="text-sm text-muted-foreground text-center py-10">No se pudo cargar tu suscripción.</p>;
 
+  // Sin pagos registrados y sin elegir plan aún en esta sesión → mostrar selector
+  if (!data.vigencia && !pickedPlan) {
+    return (
+      <div className="bg-white border border-border rounded-2xl p-5">
+        <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1">Sin plan activo · {data.cantidadDeportistas} deportistas</p>
+        <p className="text-[15px] font-bold text-foreground mb-4">Elige tu plan</p>
+
+        {error && <p className="text-[12px] text-red-500 mb-3">{error}</p>}
+
+        {loadingPlanes || !planes ? (
+          <div className="flex justify-center py-10">
+            <div className="w-5 h-5 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+          </div>
+        ) : (
+          <div className="space-y-2.5">
+            {planes.map(p => {
+              const destacado = p.tipoPlan === 'TRIMESTRAL';
+              const precioMes = Math.round(p.precio / MESES_POR_PLAN[p.tipoPlan]);
+              return (
+                <button
+                  key={p.tipoPlan}
+                  onClick={() => handleElegirPlan(p.tipoPlan)}
+                  disabled={settingPlan !== null}
+                  className="w-full text-left rounded-xl p-4 transition-colors disabled:opacity-60"
+                  style={{ border: destacado ? '2px solid #7C3AED' : '1px solid var(--border, rgba(0,0,0,0.10))', background: '#fff' }}
+                >
+                  {destacado && (
+                    <span className="inline-block text-[11px] font-semibold px-2.5 py-0.5 rounded-md mb-2" style={{ background: 'rgba(124,58,237,0.10)', color: '#7C3AED' }}>
+                      Más popular
+                    </span>
+                  )}
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-[14px] font-semibold text-foreground">{PLAN_LABEL[p.tipoPlan]}</p>
+                      <p className="text-[12px] mt-0.5" style={{ color: p.tipoPlan === 'MENSUAL' ? 'var(--muted-foreground, #8E87A8)' : '#06D6A0' }}>
+                        {PLAN_DESCUENTO_LABEL[p.tipoPlan]}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-[18px] font-bold text-foreground">{settingPlan === p.tipoPlan ? '...' : fmt.format(p.precio)}</p>
+                      {p.tipoPlan !== 'MENSUAL' && (
+                        <p className="text-[11px] text-muted-foreground">{fmt.format(precioMes)} / mes</p>
+                      )}
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        <p className="text-[11px] text-muted-foreground text-center mt-4">
+          Activa la renovación automática en cualquier plan y suma 5% adicional
+        </p>
+      </div>
+    );
+  }
+
   const { suscripcion, cantidadDeportistas, vigencia } = data;
   const pctColor = !vigencia ? '#8E87A8' : vigencia.vencido ? '#EF476F' : vigencia.pct >= 50 ? '#06D6A0' : vigencia.pct >= 20 ? '#FFB703' : '#EF476F';
 
@@ -159,8 +254,15 @@ export default function SuscripcionCard() {
           <div className="flex items-center gap-2">
             {suscripcion.autoRenew ? <CheckCircle2 className="w-4 h-4 text-emerald-500" /> : <XCircle className="w-4 h-4 text-muted-foreground" />}
             <div>
-              <p className="text-[13px] font-semibold text-foreground">Renovación automática</p>
-              <p className="text-[11px] text-muted-foreground">{suscripcion.autoRenew ? 'Se cobra sola cuando vence' : 'Debes pagar manualmente cada vez'}</p>
+              <p className="text-[13px] font-semibold text-foreground flex items-center gap-1.5">
+                Renovación automática
+                {suscripcion.autoRenew && (
+                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(6,214,160,0.12)', color: '#06D6A0' }}>-5%</span>
+                )}
+              </p>
+              <p className="text-[11px] text-muted-foreground">
+                {suscripcion.autoRenew ? 'Se cobra sola cuando vence, con 5% de descuento' : 'Actívala y obtén 5% de descuento adicional'}
+              </p>
             </div>
           </div>
           {suscripcion.autoRenew ? (

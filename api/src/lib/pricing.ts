@@ -16,15 +16,20 @@ const TRAMOS: Tramo[] = [
 const MESES_POR_PLAN: Record<TipoPlan, number> = { MENSUAL: 1, TRIMESTRAL: 3, ANUAL: 12 };
 const DESCUENTO_POR_PLAN: Record<TipoPlan, number> = { MENSUAL: 0, TRIMESTRAL: 0.10, ANUAL: 0.20 };
 
+// Descuento adicional por activar la renovación automática — se suma (no
+// reemplaza) al descuento propio del plan.
+export const DESCUENTO_AUTO_RENOVACION = 0.05;
+
 export function tarifaMensualPorDeportistas(cantidadDeportistas: number): number {
   const tramo = TRAMOS.find(t => cantidadDeportistas <= t.max) ?? TRAMOS[TRAMOS.length - 1];
   return tramo.mensual;
 }
 
-/** Precio total del período (no el "por mes"), ya con el descuento aplicado. */
-export function calcularPrecioPlan(cantidadDeportistas: number, tipoPlan: TipoPlan): number {
+/** Precio total del período (no el "por mes"), ya con los descuentos aplicados. */
+export function calcularPrecioPlan(cantidadDeportistas: number, tipoPlan: TipoPlan, autoRenew = false): number {
   const base = tarifaMensualPorDeportistas(cantidadDeportistas) * MESES_POR_PLAN[tipoPlan];
-  return Math.round(base * (1 - DESCUENTO_POR_PLAN[tipoPlan]));
+  const descuento = DESCUENTO_POR_PLAN[tipoPlan] + (autoRenew ? DESCUENTO_AUTO_RENOVACION : 0);
+  return Math.round(base * (1 - descuento));
 }
 
 export function mesesDelPlan(tipoPlan: TipoPlan): number {

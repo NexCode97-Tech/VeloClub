@@ -170,7 +170,7 @@ router.post('/sync-suscripciones-monto', requireCronSecret, async (_req, res) =>
       const cantidadDeportistas = await prisma.member.count({
         where: { clubId: s.clubId, role: 'STUDENT' },
       });
-      const montoActual = calcularPrecioPlan(cantidadDeportistas, s.tipoPlan as TipoPlan);
+      const montoActual = calcularPrecioPlan(cantidadDeportistas, s.tipoPlan as TipoPlan, true);
 
       if (montoActual !== s.ultimoMontoSincronizado) {
         await actualizarMontoPreapproval(s.mpPreapprovalId!, montoActual);

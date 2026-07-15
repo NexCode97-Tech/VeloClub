@@ -302,11 +302,13 @@ export default function SuscripcionCard() {
           </div>
         )}
 
-        <button onClick={handlePagar} disabled={paying}
-          className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-primary text-white text-[13px] font-semibold disabled:opacity-60">
-          <RotateCcw className="w-4 h-4" />
-          {paying ? 'Redirigiendo...' : 'Pagar suscripción ahora'}
-        </button>
+        {(!vigencia || vigencia.vencido) && (
+          <button onClick={handlePagar} disabled={paying}
+            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-primary text-white text-[13px] font-semibold disabled:opacity-60">
+            <RotateCcw className="w-4 h-4" />
+            {paying ? 'Redirigiendo...' : 'Pagar suscripción ahora'}
+          </button>
+        )}
       </div>
     </>
   );

@@ -301,15 +301,22 @@ model CalendarEvent {
 // ─── ClubSuscripcion (cobros de plataforma por club) ─────────────────────────
 
 model ClubSuscripcion {
-  id        String              @id @default(cuid())
-  clubId    String              @unique
-  club      Club                @relation(fields: [clubId], references: [id], onDelete: Cascade)
-  planMonto Float               @default(450000)
-  tipoPlan  TipoPlan            @default(MENSUAL)
-  año       Int
-  pagos     SuscripcionPago[]
-  createdAt DateTime            @default(now())
-  updatedAt DateTime            @updatedAt
+  id                     String              @id @default(cuid())
+  clubId                 String              @unique
+  club                   Club                @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  planMonto              Float               @default(450000)
+  tipoPlan               TipoPlan            @default(MENSUAL)
+  año                    Int
+  pagos                  SuscripcionPago[]
+  // Mercado Pago — renovación automática
+  autoRenew              Boolean             @default(false)
+  mpPreapprovalId        String?
+  mpPayerEmail           String?
+  ultimoMontoSincronizado Float?
+  intentosFallidos       Int                 @default(0)
+  ultimoIntentoFallidoAt DateTime?
+  createdAt              DateTime            @default(now())
+  updatedAt              DateTime            @updatedAt
 
   @@index([clubId])
 }
@@ -324,6 +331,7 @@ model SuscripcionPago {
   estado          PaymentStatus   @default(PENDING)
   receiptUrl      String?
   receiptPublicId String?
+  mpPaymentId     String?         @unique
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
 

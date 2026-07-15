@@ -1,14 +1,15 @@
 'use client';
 
 import { useAuth, useUser, useClerk } from '@clerk/nextjs';
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback, Suspense } from 'react';
 import { createPortal } from 'react-dom';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { apiFetch } from '@/lib/api-client';
 import {
   CheckCircle2, Camera, Building2, ChevronDown, X, Crop,
-  ChevronRight, HelpCircle, User, Settings2, LogOut, Lock, UserCog, Trash2, AlertTriangle,
+  ChevronRight, HelpCircle, User, Settings2, LogOut, Lock, UserCog, Trash2, AlertTriangle, CreditCard,
 } from 'lucide-react';
+import SuscripcionCard from '@/components/ajustes/suscripcion-card';
 import { PhoneInput } from '@/components/ui/phone-input';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -131,16 +132,27 @@ const ROLE_LABELS: Record<string, string> = {
   SUPERADMIN: 'Superadmin',
 };
 
-type Tab = 'perfil' | 'club';
+type Tab = 'perfil' | 'club' | 'suscripcion';
 
 export default function AjustesPage() {
+  return (
+    <Suspense fallback={null}>
+      <AjustesPageContent />
+    </Suspense>
+  );
+}
+
+function AjustesPageContent() {
   const { getToken, signOut } = useAuth();
   const { user } = useUser();
   const clerk = useClerk();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const [tab, setTab]               = useState<Tab>('perfil');
+  const tabParam = searchParams.get('tab');
+  const validTab: Tab = tabParam === 'club' || tabParam === 'suscripcion' ? tabParam : 'perfil';
+  const [tab, setTab]               = useState<Tab>(validTab);
   const [role, setRole]             = useState<string | null>(null);
   const [memberMe, setMemberMe]     = useState<MemberMe | null>(null);
   const [club, setClub]             = useState<Club | null>(null);
@@ -172,6 +184,10 @@ export default function AjustesPage() {
   const [deleteError, setDeleteError]     = useState<string | null>(null);
 
   const cityOptions = department ? (COLOMBIA[department] ?? []).sort() : [];
+
+  // Sincroniza el tab si cambia el query param (clic en el sub-menú del sidebar
+  // estando ya en esta página, sin remount del componente).
+  useEffect(() => { setTab(validTab); }, [validTab]);
 
   useEffect(() => {
     (async () => {
@@ -677,8 +693,9 @@ export default function AjustesPage() {
               style={{ background: '#FFFFFF', boxShadow: '0 1px 4px rgba(0,0,0,0.08), inset 0 0 0 1px rgba(0,0,0,0.06)' }}
             >
               {([
-                { key: 'perfil' as Tab, label: 'Mi perfil', icon: User },
-                { key: 'club'   as Tab, label: 'Mi club',   icon: Settings2 },
+                { key: 'perfil'      as Tab, label: 'Mi perfil',      icon: User },
+                { key: 'club'        as Tab, label: 'Mi club',        icon: Settings2 },
+                { key: 'suscripcion' as Tab, label: 'Mi suscripción', icon: CreditCard },
               ]).map(({ key, label, icon: Icon }) => {
                 const active = tab === key;
                 return (
@@ -717,21 +734,37 @@ export default function AjustesPage() {
               {clubCard}
             </motion.div>
           )}
+          {isAdmin && tab === 'suscripcion' && (
+            <motion.div key="suscripcion"
+              initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.2, ease: [0.23, 1, 0.32, 1] }}
+              className="px-4 pb-28">
+              <SuscripcionCard />
+            </motion.div>
+          )}
         </AnimatePresence>
       </div>
 
-      {/* ══ DESKTOP (>= lg) — columna centrada ═══════════════════════════ */}
+      {/* ══ DESKTOP (>= lg) — columna centrada, una sección a la vez ═══════ */}
       <div className="hidden lg:block px-6 pb-8">
-        <div className="max-w-2xl mx-auto space-y-6">
-          <div className="space-y-4">
-            <SectionHeader label="Mi perfil" icon={User} />
-            {perfilCard}
-            {dangerCard}
-          </div>
-          {isAdmin && (
+        <div className="max-w-2xl mx-auto">
+          {(!isAdmin || tab === 'perfil') && (
+            <div className="space-y-4">
+              <SectionHeader label="Mi perfil" icon={User} />
+              {perfilCard}
+              {dangerCard}
+            </div>
+          )}
+          {isAdmin && tab === 'club' && (
             <div>
               <SectionHeader label="Mi club" icon={Settings2} />
               {clubCard}
+            </div>
+          )}
+          {isAdmin && tab === 'suscripcion' && (
+            <div>
+              <SectionHeader label="Mi suscripción" icon={CreditCard} />
+              <SuscripcionCard />
             </div>
           )}
         </div>

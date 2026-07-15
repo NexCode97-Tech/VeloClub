@@ -2,9 +2,9 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useAuth, useSession, useUser } from '@clerk/nextjs';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { createPortal } from 'react-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { apiFetch } from '@/lib/api-client';
@@ -20,6 +20,9 @@ import {
   ChevronLeft,
   ChevronRight,
   Search,
+  ArrowLeft,
+  Building2,
+  CreditCard,
 } from 'lucide-react';
 import { IconHome, IconUsers, IconCalendar, IconStatistics, IconClub, IconFinanzas, IconUbicacion, IconAsistencias, IconResultados, IconAjustes, IconMisPagos } from '@/components/ui/custom-icons';
 
@@ -280,6 +283,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     return pathname === href || pathname.startsWith(href + '/');
   }
 
+  // Sub-menú de Ajustes en el sidebar expandido — reemplaza la nav principal
+  // mientras se está dentro de /dashboard/ajustes (Mi perfil / Mi club / Mi suscripción).
+  const onAjustes = pathname.startsWith('/dashboard/ajustes');
+  const isAdmin = role === 'ADMIN';
+  const AJUSTES_SUBNAV = [
+    { key: 'perfil',      label: 'Mi perfil',      icon: UserCircle, adminOnly: false },
+    { key: 'club',        label: 'Mi club',        icon: Building2,  adminOnly: true },
+    { key: 'suscripcion', label: 'Mi suscripción', icon: CreditCard, adminOnly: true },
+  ].filter(item => !item.adminOnly || isAdmin);
+
   // Índice activo para el pill deslizante del bottom bar
   const activeTabIndex = tabItems.findIndex(t => isTabActive(t.href));
   // Cuando el sidebar está expandido, Ajustes está oculto — no mostrar su pill activo
@@ -369,49 +382,67 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
         {/* Nav items */}
         <nav className="flex-1 px-2 py-2 overflow-y-auto relative">
-          {!collapsed && activeSideIndex >= 0 && (
-            <div
-              className="absolute left-2 right-2 rounded-xl pointer-events-none"
-              style={{
-                height: 44,
-                top: `calc(${activeSideIndex} * 48px + 8px)`,
-                background: accentBg,
-                transition: 'top 0.25s cubic-bezier(0.34,1.2,0.64,1)',
-              }}
-            />
-          )}
-          <div className="space-y-1 relative">
-            {sideNavItems.map(({ href, label, icon: Icon }) => {
-              // Ajustes y Mi Perfil viven en el footer (ícono de ajustes sobre el avatar)
-              if (href === '/dashboard/ajustes') return null;
-              if (href === '/dashboard/perfil') return null;
-              const active = isSideActive(href);
-              return (
-                <Link
-                  key={href}
-                  href={href}
-                  className={`flex items-center rounded-xl text-sm font-semibold transition-colors relative z-10 ${active ? '' : 'hover:bg-secondary'}`}
+          {!collapsed && onAjustes ? (
+            <div className="space-y-1 relative">
+              <Link
+                href="/dashboard"
+                className="flex items-center gap-3 rounded-xl text-sm font-semibold transition-colors hover:bg-secondary mb-2"
+                style={{ height: 40, paddingLeft: 12, paddingRight: 12, color: '#8E87A8' }}
+              >
+                <ArrowLeft className="w-[16px] h-[16px] shrink-0" />
+                <span>Volver</span>
+              </Link>
+              <Suspense fallback={null}>
+                <AjustesSubNavLinks items={AJUSTES_SUBNAV} accentColor={accentColor} accentBg={accentBg} />
+              </Suspense>
+            </div>
+          ) : (
+            <>
+              {!collapsed && activeSideIndex >= 0 && (
+                <div
+                  className="absolute left-2 right-2 rounded-xl pointer-events-none"
                   style={{
                     height: 44,
-                    color: active ? accentColor : '#8E87A8',
-                    gap: collapsed ? 0 : 12,
-                    paddingLeft: collapsed ? 0 : 12,
-                    paddingRight: collapsed ? 0 : 12,
-                    justifyContent: collapsed ? 'center' : undefined,
-                    background: collapsed && active ? accentBg : undefined,
+                    top: `calc(${activeSideIndex} * 48px + 8px)`,
+                    background: accentBg,
+                    transition: 'top 0.25s cubic-bezier(0.34,1.2,0.64,1)',
                   }}
-                  onMouseEnter={collapsed ? (e) => {
-                    const r = e.currentTarget.getBoundingClientRect();
-                    setNavTip({ label, top: r.top + r.height / 2, left: r.right + 3 });
-                  } : undefined}
-                  onMouseLeave={collapsed ? () => setNavTip(null) : undefined}
-                >
-                  <Icon className="w-[18px] h-[18px] shrink-0" strokeWidth={active ? 2.5 : 2} />
-                  {!collapsed && <span>{label}</span>}
-                </Link>
-              );
-            })}
-          </div>
+                />
+              )}
+              <div className="space-y-1 relative">
+                {sideNavItems.map(({ href, label, icon: Icon }) => {
+                  // Ajustes y Mi Perfil viven en el footer (ícono de ajustes sobre el avatar)
+                  if (href === '/dashboard/ajustes') return null;
+                  if (href === '/dashboard/perfil') return null;
+                  const active = isSideActive(href);
+                  return (
+                    <Link
+                      key={href}
+                      href={href}
+                      className={`flex items-center rounded-xl text-sm font-semibold transition-colors relative z-10 ${active ? '' : 'hover:bg-secondary'}`}
+                      style={{
+                        height: 44,
+                        color: active ? accentColor : '#8E87A8',
+                        gap: collapsed ? 0 : 12,
+                        paddingLeft: collapsed ? 0 : 12,
+                        paddingRight: collapsed ? 0 : 12,
+                        justifyContent: collapsed ? 'center' : undefined,
+                        background: collapsed && active ? accentBg : undefined,
+                      }}
+                      onMouseEnter={collapsed ? (e) => {
+                        const r = e.currentTarget.getBoundingClientRect();
+                        setNavTip({ label, top: r.top + r.height / 2, left: r.right + 3 });
+                      } : undefined}
+                      onMouseLeave={collapsed ? () => setNavTip(null) : undefined}
+                    >
+                      <Icon className="w-[18px] h-[18px] shrink-0" strokeWidth={active ? 2.5 : 2} />
+                      {!collapsed && <span>{label}</span>}
+                    </Link>
+                  );
+                })}
+              </div>
+            </>
+          )}
         </nav>
 
         {/* Footer — usuario */}
@@ -742,5 +773,36 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </nav>
       </div>
     </div>
+  );
+}
+
+// Lee el tab activo (?tab=) para resaltar el link correcto del sub-menú de
+// Ajustes. Aislado en su propio componente porque useSearchParams() exige un
+// límite <Suspense> alrededor cuando se usa dentro de un layout.
+function AjustesSubNavLinks({ items, accentColor, accentBg }: {
+  items: { key: string; label: string; icon: React.ElementType }[];
+  accentColor: string;
+  accentBg: string;
+}) {
+  const searchParams = useSearchParams();
+  const ajustesTab = searchParams.get('tab') ?? 'perfil';
+
+  return (
+    <>
+      {items.map(({ key, label, icon: Icon }) => {
+        const active = ajustesTab === key;
+        return (
+          <Link
+            key={key}
+            href={`/dashboard/ajustes?tab=${key}`}
+            className={`flex items-center gap-3 rounded-xl text-sm font-semibold transition-colors relative z-10 ${active ? '' : 'hover:bg-secondary'}`}
+            style={{ height: 44, paddingLeft: 12, paddingRight: 12, color: active ? accentColor : '#8E87A8', background: active ? accentBg : undefined }}
+          >
+            <Icon className="w-[18px] h-[18px] shrink-0" strokeWidth={active ? 2.5 : 2} />
+            <span>{label}</span>
+          </Link>
+        );
+      })}
+    </>
   );
 }

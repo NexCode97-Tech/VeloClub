@@ -15,15 +15,13 @@ import { NotificationsBell } from '@/components/ui/notifications-bell';
 import TermsGateModal from '@/components/ui/terms-gate-modal';
 import {
   Settings,
-  UserCircle,
   RefreshCw,
   ChevronLeft,
   ChevronRight,
   Search,
   ArrowLeft,
-  CreditCard,
 } from 'lucide-react';
-import { IconHome, IconUsers, IconCalendar, IconStatistics, IconClub, IconFinanzas, IconUbicacion, IconAsistencias, IconResultados, IconAjustes, IconMisPagos } from '@/components/ui/custom-icons';
+import { IconHome, IconUsers, IconCalendar, IconStatistics, IconClub, IconFinanzas, IconUbicacion, IconAsistencias, IconResultados, IconAjustes, IconMisPagos, IconPerfil, IconSuscripcion } from '@/components/ui/custom-icons';
 
 // Modal de aceptación de Términos y Política de Datos — desactivado hasta
 // completar razón social/NIT en docs/legal. Cambiar a true para publicar.
@@ -107,7 +105,7 @@ const ADMIN_NAV = [
   { href: '/dashboard/calendario', label: 'Calendario',    icon: IconCalendar },
   { href: '/dashboard/reportes',   label: 'Analíticas',    icon: IconStatistics },
   { href: '/dashboard/club',       label: 'Club',          icon: IconClub },
-  { href: '/dashboard/perfil',     label: 'Mi perfil',     icon: UserCircle },
+  { href: '/dashboard/perfil',     label: 'Mi perfil',     icon: IconPerfil },
   { href: '/dashboard/ajustes',    label: 'Ajustes',       icon: IconAjustes},
 ];
 
@@ -119,7 +117,7 @@ const COACH_NAV = [
   { href: '/dashboard/logros',     label: 'Rendimiento',    icon: IconResultados },
   { href: '/dashboard/calendario', label: 'Calendario',    icon: IconCalendar },
   { href: '/dashboard/club',       label: 'Club',          icon: IconClub },
-  { href: '/dashboard/perfil',     label: 'Mi perfil',     icon: UserCircle },
+  { href: '/dashboard/perfil',     label: 'Mi perfil',     icon: IconPerfil },
   { href: '/dashboard/ajustes',    label: 'Ajustes',       icon: IconAjustes},
 ];
 
@@ -130,7 +128,7 @@ const STUDENT_NAV = [
   { href: '/dashboard/sedes',      label: 'Sedes',         icon: IconUbicacion },
   { href: '/dashboard/club',       label: 'Club',          icon: IconClub },
   { href: '/dashboard/pagos',      label: 'Mis pagos',     icon: IconMisPagos},
-  { href: '/dashboard/perfil',     label: 'Mi perfil',     icon: UserCircle },
+  { href: '/dashboard/perfil',     label: 'Mi perfil',     icon: IconPerfil },
   { href: '/dashboard/ajustes',    label: 'Ajustes',       icon: IconAjustes},
 ];
 
@@ -287,9 +285,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const onAjustes = pathname.startsWith('/dashboard/ajustes');
   const isAdmin = role === 'ADMIN';
   const AJUSTES_SUBNAV = [
-    { key: 'perfil',      label: 'Mi perfil',      icon: UserCircle, adminOnly: false },
+    { key: 'perfil',      label: 'Mi perfil',      icon: IconPerfil, adminOnly: false },
     { key: 'club',        label: 'Mi club',        icon: IconClub,   adminOnly: true },
-    { key: 'suscripcion', label: 'Mi suscripción', icon: CreditCard, adminOnly: true },
+    { key: 'suscripcion', label: 'Mi suscripción', icon: IconSuscripcion, adminOnly: true },
   ].filter(item => !item.adminOnly || isAdmin);
 
   // Índice activo para el pill deslizante del bottom bar
@@ -382,7 +380,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         {/* Nav items */}
         <nav className="flex-1 px-2 py-2 overflow-y-auto relative">
           {!collapsed && onAjustes ? (
-            <div className="space-y-1 relative">
+            <div>
               <Link
                 href="/dashboard"
                 className="flex items-center gap-3 rounded-xl text-sm font-semibold transition-colors hover:bg-secondary mb-2"
@@ -617,7 +615,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               className="w-9 h-9 flex items-center justify-center rounded-full transition-colors"
               style={{ color: '#8E87A8', background: '#fff', boxShadow: '0 1px 4px rgba(0,0,0,0.08), inset 0 0 0 1px rgba(0,0,0,0.06)' }}
             >
-              <UserCircle size={22} strokeWidth={1.8} />
+              <IconPerfil className="w-[20px] h-[20px]" />
             </Link>
             <Link
               href="/dashboard/ajustes"
@@ -785,9 +783,21 @@ function AjustesSubNavLinks({ items, accentColor, accentBg }: {
 }) {
   const searchParams = useSearchParams();
   const ajustesTab = searchParams.get('tab') ?? 'perfil';
+  const activeIndex = items.findIndex(item => item.key === ajustesTab);
 
   return (
-    <>
+    <div className="space-y-1 relative">
+      {activeIndex >= 0 && (
+        <div
+          className="absolute left-0 right-0 rounded-xl pointer-events-none"
+          style={{
+            height: 44,
+            top: `calc(${activeIndex} * 48px)`,
+            background: accentBg,
+            transition: 'top 0.25s cubic-bezier(0.34,1.2,0.64,1)',
+          }}
+        />
+      )}
       {items.map(({ key, label, icon: Icon }) => {
         const active = ajustesTab === key;
         return (
@@ -795,13 +805,13 @@ function AjustesSubNavLinks({ items, accentColor, accentBg }: {
             key={key}
             href={`/dashboard/ajustes?tab=${key}`}
             className={`flex items-center gap-3 rounded-xl text-sm font-semibold transition-colors relative z-10 ${active ? '' : 'hover:bg-secondary'}`}
-            style={{ height: 44, paddingLeft: 12, paddingRight: 12, color: active ? accentColor : '#8E87A8', background: active ? accentBg : undefined }}
+            style={{ height: 44, paddingLeft: 12, paddingRight: 12, color: active ? accentColor : '#8E87A8' }}
           >
             <Icon className="w-[18px] h-[18px] shrink-0" strokeWidth={active ? 2.5 : 2} />
             <span>{label}</span>
           </Link>
         );
       })}
-    </>
+    </div>
   );
 }

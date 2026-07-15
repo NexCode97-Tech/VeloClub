@@ -165,7 +165,7 @@ export default function SuscripcionCard() {
   if (!data.vigencia && !pickedPlan) {
     return (
       <div className="bg-white border border-border rounded-2xl p-5">
-        <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1">Sin plan activo · {data.cantidadDeportistas} deportistas</p>
+        <p className="text-[11px] font-semibold text-muted-foreground tracking-wide mb-1">Sin plan activo · {data.cantidadDeportistas} deportistas</p>
         <p className="text-[15px] font-bold text-foreground mb-4">Elige tu plan</p>
 
         {error && <p className="text-[12px] text-red-500 mb-3">{error}</p>}
@@ -229,7 +229,7 @@ export default function SuscripcionCard() {
       <div className="bg-white border border-border rounded-2xl p-5 space-y-5">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">Plan {PLAN_LABEL[suscripcion.tipoPlan]}</p>
+            <p className="text-[11px] font-semibold text-muted-foreground tracking-wide">Plan {PLAN_LABEL[suscripcion.tipoPlan]}</p>
             <p className="text-[22px] font-extrabold text-foreground">{fmt.format(suscripcion.planMonto)}</p>
             <p className="text-[11px] text-muted-foreground mt-0.5">{cantidadDeportistas} deportista{cantidadDeportistas !== 1 ? 's' : ''} registrados</p>
           </div>

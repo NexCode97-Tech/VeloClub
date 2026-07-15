@@ -7,9 +7,9 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { apiFetch } from '@/lib/api-client';
 import {
   CheckCircle2, Camera, Building2, ChevronDown, X, Crop,
-  ChevronRight, HelpCircle, User, LogOut, Lock, UserCog, Trash2, AlertTriangle, CreditCard,
+  ChevronRight, HelpCircle, User, LogOut, Lock, UserCog, Trash2, AlertTriangle,
 } from 'lucide-react';
-import { IconClub } from '@/components/ui/custom-icons';
+import { IconClub, IconPerfil, IconSuscripcion } from '@/components/ui/custom-icons';
 import SuscripcionCard from '@/components/ajustes/suscripcion-card';
 import { PhoneInput } from '@/components/ui/phone-input';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -694,9 +694,9 @@ function AjustesPageContent() {
               style={{ background: '#FFFFFF', boxShadow: '0 1px 4px rgba(0,0,0,0.08), inset 0 0 0 1px rgba(0,0,0,0.06)' }}
             >
               {([
-                { key: 'perfil'      as Tab, label: 'Mi perfil',      icon: User },
+                { key: 'perfil'      as Tab, label: 'Mi perfil',      icon: IconPerfil },
                 { key: 'club'        as Tab, label: 'Mi club',        icon: IconClub },
-                { key: 'suscripcion' as Tab, label: 'Mi suscripción', icon: CreditCard },
+                { key: 'suscripcion' as Tab, label: 'Mi suscripción', icon: IconSuscripcion },
               ]).map(({ key, label, icon: Icon }) => {
                 const active = tab === key;
                 return (
@@ -751,7 +751,7 @@ function AjustesPageContent() {
         <div className="max-w-2xl mx-auto">
           {(!isAdmin || tab === 'perfil') && (
             <div className="space-y-4">
-              <SectionHeader label="Mi perfil" icon={User} />
+              <SectionHeader label="Mi perfil" icon={IconPerfil} />
               {perfilCard}
               {dangerCard}
             </div>
@@ -764,7 +764,7 @@ function AjustesPageContent() {
           )}
           {isAdmin && tab === 'suscripcion' && (
             <div>
-              <SectionHeader label="Mi suscripción" icon={CreditCard} />
+              <SectionHeader label="Mi suscripción" icon={IconSuscripcion} />
               <SuscripcionCard />
             </div>
           )}

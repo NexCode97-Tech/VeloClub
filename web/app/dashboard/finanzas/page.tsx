@@ -165,9 +165,13 @@ function StudentRow({
     </span>
   ) : isPendingOrOverdue ? (
     <button onClick={() => !marking && onMarkPaid(payment!.id)} disabled={marking}
-      className="px-2.5 py-1 rounded-lg text-[10px] font-bold cursor-pointer disabled:opacity-50 shrink-0"
+      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-bold cursor-pointer disabled:opacity-50 shrink-0"
       style={{ background: 'rgba(6,214,160,0.15)', color: '#06D6A0' }}>
-      {marking ? '...' : 'Pagado'}
+      {marking
+        ? <Check className="w-3 h-3" />
+        : <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: '#06D6A0' }} />
+      }
+      Pagado
     </button>
   ) : configured && !payment ? (
     <button onClick={() => !generating && onGenerate(m.id, m.monthlyFee!)} disabled={generating}
@@ -715,9 +719,9 @@ export default function FinanzasPage() {
           {/* Separador visual solo en desktop */}
           <div className="hidden md:block w-px h-6 bg-border shrink-0" />
           {/* Filtros */}
-          <div className="flex gap-2 items-center">
+          <div className="flex gap-2 items-center w-full md:w-auto">
             <Select value={String(filterMonth)} onValueChange={v => { setFilterMonth(parseInt(v ?? '')); setStatusFilter('ALL'); }}>
-              <SelectTrigger className="w-36 bg-white">
+              <SelectTrigger className="flex-1 md:flex-none md:w-36 bg-white">
                 <span className="text-sm">{MONTH_NAMES[filterMonth - 1]}</span>
               </SelectTrigger>
               <SelectContent>
@@ -727,7 +731,7 @@ export default function FinanzasPage() {
               </SelectContent>
             </Select>
             <Select value={String(filterYear)} onValueChange={v => setFilterYear(parseInt(v ?? ''))}>
-              <SelectTrigger className="w-24 bg-white"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="w-24 shrink-0 bg-white"><SelectValue /></SelectTrigger>
               <SelectContent>
                 {[2024, 2025, 2026, 2027].map(y => (
                   <SelectItem key={y} value={String(y)}>{y}</SelectItem>
@@ -752,22 +756,24 @@ export default function FinanzasPage() {
                 whileTap={reducedMotion ? {} : { scale: 0.96 }}
                 transition={{ duration: 0.12, ease: EASE_OUT }}
                 onClick={() => { setBulkFee(''); setBulkDay(''); setBulkError(null); setBulkOpen(true); }}
-                className="flex items-center justify-center gap-1.5 px-3 h-9 rounded-xl text-[12px] font-bold cursor-pointer transition-opacity shrink-0"
+                title="Tarifa general"
+                className="flex items-center justify-center gap-1.5 w-9 md:w-auto px-0 md:px-3 h-9 rounded-xl text-[12px] font-bold cursor-pointer transition-opacity shrink-0"
                 style={{ background: 'rgba(6,214,160,0.08)', color: '#06D6A0', border: '1.5px dashed rgba(6,214,160,0.25)' }}
               >
-                <Wallet className="w-3.5 h-3.5" />
-                Tarifa general
+                <Wallet className="w-3.5 h-3.5 shrink-0" />
+                <span className="hidden md:inline">Tarifa general</span>
               </motion.button>
               <motion.button
                 whileTap={reducedMotion ? {} : { scale: 0.96 }}
                 transition={{ duration: 0.12, ease: EASE_OUT }}
                 onClick={handleGenerateMonth}
                 disabled={generatingMonth}
-                className="flex items-center justify-center gap-1.5 px-3 h-9 rounded-xl text-[12px] font-bold cursor-pointer transition-opacity disabled:opacity-60 shrink-0"
+                title={generatingMonth ? 'Generando...' : 'Generar cobros'}
+                className="flex items-center justify-center gap-1.5 w-9 md:w-auto px-0 md:px-3 h-9 rounded-xl text-[12px] font-bold cursor-pointer transition-opacity disabled:opacity-60 shrink-0"
                 style={{ background: 'rgba(124,58,237,0.08)', color: '#7C3AED', border: '1.5px dashed rgba(124,58,237,0.25)' }}
               >
-                <Zap className="w-3.5 h-3.5" />
-                {generatingMonth ? 'Generando...' : 'Generar cobros'}
+                <Zap className="w-3.5 h-3.5 shrink-0" />
+                <span className="hidden md:inline">{generatingMonth ? 'Generando...' : 'Generar cobros'}</span>
               </motion.button>
               </>
             )}

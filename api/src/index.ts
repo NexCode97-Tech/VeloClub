@@ -28,6 +28,7 @@ import mercadopagoRouter from './routes/mercadopago';
 import { startWorkers } from './workers';
 import { prisma } from './db/client';
 import { getRedis } from './lib/redis';
+import { sincronizarMontosSuscripciones } from './lib/sync-suscripciones';
 
 dotenv.config();
 
@@ -166,6 +167,16 @@ app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
 const server = app.listen(PORT, () => {
   console.log(`API en http://localhost:${PORT}`);
   startWorkers();
+
+  // Sincroniza el monto de las suscripciones con renovación automática una
+  // vez al día — no depende de un cron externo, corre sola mientras la API
+  // esté viva. Primer chequeo a los 2 minutos de arrancar, luego cada 24h.
+  setTimeout(() => {
+    sincronizarMontosSuscripciones().catch(err => console.error('[sync-suscripciones-monto:boot]', err));
+    setInterval(() => {
+      sincronizarMontosSuscripciones().catch(err => console.error('[sync-suscripciones-monto:interval]', err));
+    }, 24 * 60 * 60 * 1000);
+  }, 2 * 60 * 1000);
 });
 
 // Timeout de 30s — evita que requests colgados bloqueen el servidor indefinidamente

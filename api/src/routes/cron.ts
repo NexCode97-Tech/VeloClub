@@ -16,8 +16,7 @@ import { Router, Request, Response } from 'express';
 import { prisma } from '../db/client';
 import { emitToClub } from '../lib/sse';
 import { notify, notifyClubStaff } from '../lib/notify';
-import { calcularPrecioPlan, type TipoPlan } from '../lib/pricing';
-import { actualizarMontoPreapproval } from '../lib/mercadopago';
+import { sincronizarMontosSuscripciones } from '../lib/sync-suscripciones';
 
 const router = Router();
 
@@ -158,36 +157,8 @@ router.post('/mark-overdue', requireCronSecret, async (_req, res) => {
 // cambió de tramo de deportistas, actualiza el monto en Mercado Pago antes de
 // que se dispare el próximo cobro automático (que MP gestiona por su cuenta).
 router.post('/sync-suscripciones-monto', requireCronSecret, async (_req, res) => {
-  const suscripciones = await prisma.clubSuscripcion.findMany({
-    where: { autoRenew: true, mpPreapprovalId: { not: null } },
-  });
-
-  let actualizadas = 0;
-  const fallidas: string[] = [];
-
-  for (const s of suscripciones) {
-    try {
-      const cantidadDeportistas = await prisma.member.count({
-        where: { clubId: s.clubId, role: 'STUDENT' },
-      });
-      const montoActual = calcularPrecioPlan(cantidadDeportistas, s.tipoPlan as TipoPlan, true);
-
-      if (montoActual !== s.ultimoMontoSincronizado) {
-        await actualizarMontoPreapproval(s.mpPreapprovalId!, montoActual);
-        await prisma.clubSuscripcion.update({
-          where: { id: s.id },
-          data: { ultimoMontoSincronizado: montoActual },
-        });
-        actualizadas++;
-      }
-    } catch (err) {
-      console.error(`[cron/sync-suscripciones-monto] club ${s.clubId}:`, err instanceof Error ? err.message : err);
-      fallidas.push(s.clubId);
-    }
-  }
-
-  console.log(`[cron/sync-suscripciones-monto] ${actualizadas} suscripciones actualizadas`);
-  res.json({ ok: true, revisadas: suscripciones.length, actualizadas, fallidas });
+  const resultado = await sincronizarMontosSuscripciones();
+  res.json({ ok: true, ...resultado });
 });
 
 export default router;

@@ -21,7 +21,6 @@ import {
   ChevronRight,
   Search,
   ArrowLeft,
-  Building2,
   CreditCard,
 } from 'lucide-react';
 import { IconHome, IconUsers, IconCalendar, IconStatistics, IconClub, IconFinanzas, IconUbicacion, IconAsistencias, IconResultados, IconAjustes, IconMisPagos } from '@/components/ui/custom-icons';
@@ -289,7 +288,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const isAdmin = role === 'ADMIN';
   const AJUSTES_SUBNAV = [
     { key: 'perfil',      label: 'Mi perfil',      icon: UserCircle, adminOnly: false },
-    { key: 'club',        label: 'Mi club',        icon: Building2,  adminOnly: true },
+    { key: 'club',        label: 'Mi club',        icon: IconClub,   adminOnly: true },
     { key: 'suscripcion', label: 'Mi suscripción', icon: CreditCard, adminOnly: true },
   ].filter(item => !item.adminOnly || isAdmin);
 

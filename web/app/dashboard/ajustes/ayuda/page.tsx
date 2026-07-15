@@ -49,23 +49,23 @@ function HelpCard({ guide }: { guide: typeof HELP_GUIDES[0] }) {
 
   return (
     <div
-      className="bg-white rounded-2xl overflow-hidden"
+      className="bg-white rounded-2xl overflow-hidden h-fit"
       style={{ border: '1px solid rgba(120,80,200,0.10)' }}
     >
       <button
-        className="w-full flex items-center gap-3 px-4 py-4 text-left"
+        className="w-full flex items-center gap-3 px-4 py-4 lg:px-5 text-left"
         onClick={() => setOpen(o => !o)}
       >
         <div
-          className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+          className="w-9 h-9 lg:w-10 lg:h-10 rounded-xl flex items-center justify-center shrink-0"
           style={{ background: `${guide.color}18` }}
         >
-          <span className="text-[13px] font-extrabold" style={{ color: guide.color }}>
+          <span className="text-[13px] lg:text-[14px] font-extrabold" style={{ color: guide.color }}>
             {guide.title[0]}
           </span>
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-[13px] font-bold" style={{ color: '#1A1523' }}>{guide.title}</p>
+          <p className="text-[13px] lg:text-[14px] font-bold" style={{ color: '#1A1523' }}>{guide.title}</p>
           <p className="text-[11px] mt-0.5" style={{ color: '#8E87A8' }}>{guide.subtitle}</p>
         </div>
         <ChevronDown
@@ -76,7 +76,7 @@ function HelpCard({ guide }: { guide: typeof HELP_GUIDES[0] }) {
 
       {open && (
         <div
-          className="px-4 pb-5 pt-4 space-y-4"
+          className="px-4 pb-5 pt-4 lg:px-5 space-y-4"
           style={{ borderTop: '1px solid rgba(120,80,200,0.08)' }}
         >
           {guide.steps.map(s => (
@@ -105,7 +105,7 @@ export default function AyudaPage() {
   return (
     <div className="min-h-full bg-background">
       {/* Header */}
-      <div className="px-5 py-3 bg-background flex items-center gap-3">
+      <div className="px-5 py-3 lg:px-8 lg:py-5 bg-background flex items-center gap-3 max-w-4xl mx-auto">
         <button
           onClick={() => router.back()}
           className="w-8 h-8 rounded-xl flex items-center justify-center hover:bg-secondary transition-colors"
@@ -113,7 +113,7 @@ export default function AyudaPage() {
           <ArrowLeft className="w-4 h-4 text-foreground" />
         </button>
         <h1
-          className="text-[17px] font-bold text-foreground"
+          className="text-[17px] lg:text-[20px] font-bold text-foreground"
           style={{ fontFamily: 'inherit' }}
         >
           Centro de ayuda
@@ -121,13 +121,15 @@ export default function AyudaPage() {
       </div>
 
       {/* Content */}
-      <div className="px-4 pt-5 pb-28 space-y-2 max-w-lg">
-        <p className="text-[12px] px-1 mb-4" style={{ color: '#8E87A8' }}>
+      <div className="px-4 pt-5 pb-28 lg:px-8 lg:pt-6 lg:pb-10 max-w-4xl mx-auto">
+        <p className="text-[12px] px-1 mb-4 lg:text-[13px] lg:mb-6" style={{ color: '#8E87A8' }}>
           Guía rápida para cada módulo de VeloClub. Toca cualquier sección para ver los pasos.
         </p>
-        {HELP_GUIDES.map(g => (
-          <HelpCard key={g.id} guide={g} />
-        ))}
+        <div className="space-y-2 md:grid md:grid-cols-2 md:gap-3 md:space-y-0">
+          {HELP_GUIDES.map(g => (
+            <HelpCard key={g.id} guide={g} />
+          ))}
+        </div>
       </div>
     </div>
   );

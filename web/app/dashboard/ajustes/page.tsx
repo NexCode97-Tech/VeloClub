@@ -7,8 +7,9 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { apiFetch } from '@/lib/api-client';
 import {
   CheckCircle2, Camera, Building2, ChevronDown, X, Crop,
-  ChevronRight, HelpCircle, User, Settings2, LogOut, Lock, UserCog, Trash2, AlertTriangle, CreditCard,
+  ChevronRight, HelpCircle, User, LogOut, Lock, UserCog, Trash2, AlertTriangle, CreditCard,
 } from 'lucide-react';
+import { IconClub } from '@/components/ui/custom-icons';
 import SuscripcionCard from '@/components/ajustes/suscripcion-card';
 import { PhoneInput } from '@/components/ui/phone-input';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -694,7 +695,7 @@ function AjustesPageContent() {
             >
               {([
                 { key: 'perfil'      as Tab, label: 'Mi perfil',      icon: User },
-                { key: 'club'        as Tab, label: 'Mi club',        icon: Settings2 },
+                { key: 'club'        as Tab, label: 'Mi club',        icon: IconClub },
                 { key: 'suscripcion' as Tab, label: 'Mi suscripción', icon: CreditCard },
               ]).map(({ key, label, icon: Icon }) => {
                 const active = tab === key;
@@ -757,7 +758,7 @@ function AjustesPageContent() {
           )}
           {isAdmin && tab === 'club' && (
             <div>
-              <SectionHeader label="Mi club" icon={Settings2} />
+              <SectionHeader label="Mi club" icon={IconClub} />
               {clubCard}
             </div>
           )}

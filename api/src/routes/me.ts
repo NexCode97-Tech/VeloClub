@@ -3,6 +3,7 @@ import { requireAuth } from '../auth/middleware';
 import { prisma } from '../db/client';
 import { v2 as cloudinary } from 'cloudinary';
 import { removeFromAllowlist, revokeClerkAccess } from '../lib/clerk-allowlist';
+import { verificarYDesactivarSiVencido } from '../lib/sync-suscripciones';
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME?.trim(),
@@ -123,6 +124,13 @@ if (superadminEmails.includes(email.toLowerCase())) {
     const trial = trialDaysLeft !== null
       ? { daysLeft: trialDaysLeft, endsAt: trialEndsAt!.toISOString() }
       : null;
+
+    // Ya pasó el trial (o nunca lo tuvo) — verificar que el plan pagado siga
+    // vigente y desactivar al instante si venció, sin esperar al cron diario.
+    if (user.clubId && trialEndsAt === null) {
+      const vencido = await verificarYDesactivarSiVencido(user.clubId);
+      if (vencido) return res.json({ status: 'inactive', role: user.role });
+    }
 
     if (!user.profileComplete) {
       return res.json({ status: 'complete_profile', user });

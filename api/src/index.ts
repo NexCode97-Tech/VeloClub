@@ -28,7 +28,7 @@ import mercadopagoRouter from './routes/mercadopago';
 import { startWorkers } from './workers';
 import { prisma } from './db/client';
 import { getRedis } from './lib/redis';
-import { sincronizarMontosSuscripciones, recordarVencimientosProximos } from './lib/sync-suscripciones';
+import { sincronizarMontosSuscripciones, recordarVencimientosProximos, desactivarClubesVencidos } from './lib/sync-suscripciones';
 
 dotenv.config();
 
@@ -175,9 +175,11 @@ const server = app.listen(PORT, () => {
   setTimeout(() => {
     sincronizarMontosSuscripciones().catch(err => console.error('[sync-suscripciones-monto:boot]', err));
     recordarVencimientosProximos().catch(err => console.error('[recordar-vencimientos:boot]', err));
+    desactivarClubesVencidos().catch(err => console.error('[desactivar-vencidos:boot]', err));
     setInterval(() => {
       sincronizarMontosSuscripciones().catch(err => console.error('[sync-suscripciones-monto:interval]', err));
       recordarVencimientosProximos().catch(err => console.error('[recordar-vencimientos:interval]', err));
+      desactivarClubesVencidos().catch(err => console.error('[desactivar-vencidos:interval]', err));
     }, 24 * 60 * 60 * 1000);
   }, 2 * 60 * 1000);
 });

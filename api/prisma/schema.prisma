@@ -20,6 +20,10 @@ model Club {
   coverPublicId     String?         // public_id de Cloudinary
   verified          Boolean         @default(false)  // club verificado
   active            Boolean         @default(true)
+  // true solo cuando NOSOTROS desactivamos el club por falta de pago — permite
+  // reactivarlo automaticamente al pagar sin pisar una desactivacion manual
+  // hecha por el superadmin por otro motivo (abuso, etc.)
+  desactivadoPorVencimiento Boolean @default(false)
   trialEndsAt       DateTime?
   deporte           String?
   description       String?

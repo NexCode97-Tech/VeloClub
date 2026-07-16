@@ -82,3 +82,67 @@ export async function recordarVencimientosProximos(): Promise<{ avisados: number
   console.log(`[recordar-vencimientos] ${avisados} clubes avisados`);
   return { avisados };
 }
+
+// Corre tras cualquier pago aprobado (checkout, renovacion automatica, webhook).
+// Limpia el trial y, si el club estaba desactivado por NOSOTROS por falta de
+// pago, lo reactiva — nunca revierte una desactivacion manual del superadmin
+// por otro motivo (esa siempre tiene desactivadoPorVencimiento en false).
+export async function activarClubTrasPago(clubId: string): Promise<void> {
+  const club = await prisma.club.findUnique({ where: { id: clubId }, select: { desactivadoPorVencimiento: true } });
+  await prisma.club.update({
+    where: { id: clubId },
+    data: {
+      trialEndsAt: null,
+      ...(club?.desactivadoPorVencimiento ? { active: true, desactivadoPorVencimiento: false } : {}),
+    },
+  });
+}
+
+// Revisa un solo club y lo desactiva si su plan ya venció — usada tanto en
+// el login (/me, para bloquear al instante) como en el cron de respaldo
+// (por si un club vencido nunca vuelve a intentar entrar).
+export async function verificarYDesactivarSiVencido(clubId: string): Promise<boolean> {
+  const suscripcion = await prisma.clubSuscripcion.findUnique({
+    where: { clubId },
+    include: { pagos: true },
+  });
+  if (!suscripcion) return false;
+
+  const vig = vigencia(suscripcion.pagos, suscripcion.tipoPlan as TipoPlan);
+  if (!vig || !vig.vencido) return false;
+
+  await prisma.club.update({
+    where: { id: clubId },
+    data: { active: false, desactivadoPorVencimiento: true },
+  });
+  await notifyClubStaff(clubId, {
+    tipo: 'CLUB_DESACTIVADO_POR_VENCIMIENTO',
+    titulo: 'Tu club fue desactivado',
+    cuerpo: 'Tu plan venció y no se recibió un nuevo pago. VeloClub queda pausado hasta que actives un plan de nuevo.',
+    link: '/dashboard/ajustes?tab=suscripcion',
+  });
+  return true;
+}
+
+// Desactiva automaticamente los clubes cuyo plan vencio (vigencia en 0%) y que
+// siguen activos — respaldo diario por si un club vencido nunca vuelve a
+// intentar iniciar sesion (verificarYDesactivarSiVencido cubre el caso comun).
+export async function desactivarClubesVencidos(): Promise<{ desactivados: number }> {
+  const clubesActivos = await prisma.club.findMany({
+    where: { active: true, suscripcion: { isNot: null } },
+    select: { id: true },
+  });
+
+  let desactivados = 0;
+  for (const c of clubesActivos) {
+    try {
+      if (await verificarYDesactivarSiVencido(c.id)) desactivados++;
+    } catch (err) {
+      console.error(`[desactivar-vencidos] club ${c.id}:`, err instanceof Error ? err.message : err);
+      Sentry.captureException(err, { tags: { route: 'desactivar-vencidos' }, extra: { clubId: c.id } });
+    }
+  }
+
+  console.log(`[desactivar-vencidos] ${desactivados} clubes desactivados`);
+  return { desactivados };
+}

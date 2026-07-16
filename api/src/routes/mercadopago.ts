@@ -9,6 +9,7 @@ import {
   obtenerPago, obtenerPreapproval, verificarFirmaWebhook, buscarPagoPorReferencia,
   listarMediosPago, crearPagoDirecto, type MedioPago,
 } from '../lib/mercadopago';
+import { activarClubTrasPago } from '../lib/sync-suscripciones';
 
 const router = Router();
 
@@ -228,8 +229,8 @@ router.post('/pagar', requireAuth, async (req, res) => {
           },
         });
       }
-      // El pago activa el club: si estaba en período de prueba, deja de aplicar
-      await prisma.club.update({ where: { id: clubId }, data: { trialEndsAt: null } });
+      // El pago activa el club: limpia el trial y reactiva si estaba desactivado por vencimiento
+      await activarClubTrasPago(clubId);
       return res.json({ status: 'approved' });
     }
 
@@ -342,8 +343,8 @@ router.post('/subscribe', requireAuth, async (req, res) => {
             },
           });
         }
-        // El pago activa el club: si estaba en período de prueba, deja de aplicar
-        await prisma.club.update({ where: { id: clubId }, data: { trialEndsAt: null } });
+        // El pago activa el club: limpia el trial y reactiva si estaba desactivado por vencimiento
+        await activarClubTrasPago(clubId);
       }
     } catch (err) {
       console.error('[mercadopago/subscribe] no se pudo confirmar el primer cobro de inmediato', err instanceof Error ? err.message : err);
@@ -475,8 +476,8 @@ router.post('/webhook', async (req, res) => {
       data: { intentosFallidos: 0 },
     });
 
-    // El pago activa el club: si estaba en período de prueba, deja de aplicar
-    await prisma.club.update({ where: { id: suscripcion.clubId }, data: { trialEndsAt: null } });
+    // El pago activa el club: limpia el trial y reactiva si estaba desactivado por vencimiento
+    await activarClubTrasPago(suscripcion.clubId);
 
     await notifyClubStaff(suscripcion.clubId, {
       tipo: 'PAGO_REGISTRADO',

@@ -286,7 +286,7 @@ export default function SuscripcionCard() {
                 )}
               </p>
               <p className="text-[11px] text-muted-foreground">
-                {suscripcion.autoRenew ? 'Se cobra sola cuando vence, con 5% de descuento' : 'Actívala y obtén 5% de descuento adicional'}
+                {suscripcion.autoRenew ? 'Se cobra sola cuando vence, con 5% de descuento' : 'Se cobra de una vez y luego se renueva sola, con 5% de descuento'}
               </p>
             </div>
           </div>
@@ -322,7 +322,7 @@ export default function SuscripcionCard() {
             </div>
             <button onClick={handleActivarAutoRenew} disabled={activating || !sdkReady}
               className="w-full py-2.5 rounded-xl bg-primary text-white text-[13px] font-semibold disabled:opacity-60">
-              {activating ? 'Activando...' : 'Guardar tarjeta y activar'}
+              {activating ? 'Procesando pago...' : 'Pagar y activar renovación automática'}
             </button>
           </div>
         )}

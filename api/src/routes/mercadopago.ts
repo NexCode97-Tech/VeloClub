@@ -5,7 +5,7 @@ import { notifyClubStaff } from '../lib/notify';
 import { calcularPrecioPlan, vigencia, type TipoPlan } from '../lib/pricing';
 import {
   crearPreferenciaCheckout, crearPreapproval, cancelarPreapproval,
-  obtenerPago, obtenerPreapproval, verificarFirmaWebhook,
+  obtenerPago, obtenerPreapproval, verificarFirmaWebhook, buscarPagoPorReferencia,
 } from '../lib/mercadopago';
 
 const router = Router();
@@ -145,6 +145,30 @@ router.post('/subscribe', requireAuth, async (req, res) => {
         intentosFallidos: 0,
       },
     });
+
+    // El Preapproval cobra el primer período de inmediato — intentamos confirmarlo
+    // ya mismo (en vez de esperar solo al webhook) para que el front no siga
+    // mostrando "Pagar suscripción ahora" mientras el webhook llega.
+    try {
+      const pago = await buscarPagoPorReferencia(suscripcion.id);
+      if (pago && pago.status === 'approved') {
+        const yaRegistrado = await prisma.suscripcionPago.findUnique({ where: { mpPaymentId: String(pago.id) } });
+        if (!yaRegistrado) {
+          await prisma.suscripcionPago.create({
+            data: {
+              suscripcionId: suscripcion.id,
+              concepto: 'Renovación automática',
+              monto: pago.transaction_amount,
+              fecha: new Date(),
+              estado: 'PAID',
+              mpPaymentId: String(pago.id),
+            },
+          });
+        }
+      }
+    } catch (err) {
+      console.error('[mercadopago/subscribe] no se pudo confirmar el primer cobro de inmediato', err instanceof Error ? err.message : err);
+    }
 
     res.json({ ok: true });
   } catch (err) {

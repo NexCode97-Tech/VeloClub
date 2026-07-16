@@ -108,6 +108,18 @@ export async function obtenerPago(paymentId: string): Promise<{
   return mpFetch(`/v1/payments/${paymentId}`, { method: 'GET' });
 }
 
+// ── Buscar el pago más reciente por external_reference — usado para confirmar
+// el primer cobro de un Preapproval de forma síncrona, sin esperar al webhook ─
+export async function buscarPagoPorReferencia(reference: string): Promise<{
+  id: number; status: string; transaction_amount: number;
+} | null> {
+  const res = await mpFetch<{ results: Array<{ id: number; status: string; transaction_amount: number }> }>(
+    `/v1/payments/search?external_reference=${encodeURIComponent(reference)}&sort=date_created&criteria=desc`,
+    { method: 'GET' }
+  );
+  return res.results?.[0] ?? null;
+}
+
 // ── Verificación de firma del webhook (x-signature: ts=...,v1=...) ──────────
 export function verificarFirmaWebhook(params: {
   xSignature: string | undefined;

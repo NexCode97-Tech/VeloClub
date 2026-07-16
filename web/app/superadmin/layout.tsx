@@ -154,16 +154,22 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
     <div className="flex h-dvh overflow-hidden" style={{ background: '#F7F7FB', fontFamily: 'inherit' }}>
 
       {/* ── Sidebar — solo escritorio/tablet ──
-          El texto (labels, nombre, footer) queda siempre montado en el DOM;
-          solo se anima su opacidad/ancho vía CSS. Antes se montaba/desmontaba
-          con {!collapsed && ...} justo a mitad de la transición del ancho del
-          aside, forzando reflows extra que se sentían como traqueteo. */}
-      <aside className="hidden md:flex flex-col shrink-0 relative" style={{ width: collapsed ? 68 : 240, background: '#fff', borderRight: '1px solid rgba(0,0,0,0.07)', transition: 'width 0.2s ease', willChange: 'width', contain: 'layout style' }}>
+          Mismo mecanismo de animación que el sidebar del dashboard normal
+          (motion.aside + animate width con Framer Motion), que ya es fluido.
+          La transición CSS plana (transition: 'width ...') se sentía más
+          lenta/entrecortada que el driver de Framer Motion para esta misma
+          propiedad. */}
+      <motion.aside
+        animate={{ width: collapsed ? 68 : 240 }}
+        transition={{ duration: 0.25, ease: [0.23, 1, 0.32, 1] }}
+        className="hidden md:flex flex-col shrink-0 relative"
+        style={{ background: '#fff', borderRight: '1px solid rgba(0,0,0,0.07)', overflow: 'visible' }}
+      >
         {/* Logo */}
-        <div className="flex items-center shrink-0" style={{ borderBottom: '1px solid rgba(0,0,0,0.06)', minHeight: 58, padding: '0 14px', gap: 9 }}>
+        <div className="flex items-center shrink-0" style={{ borderBottom: '1px solid rgba(0,0,0,0.06)', minHeight: 58, padding: '0 14px', gap: 9, justifyContent: collapsed ? 'center' : undefined }}>
           <Image src="/logo.png" alt="VeloClub" width={28} height={28} className="object-contain shrink-0" style={{ borderRadius: 7 }} />
-          <span className="text-[15px] font-semibold whitespace-nowrap overflow-hidden" style={{ color: '#1A1028', maxWidth: collapsed ? 0 : 120, opacity: collapsed ? 0 : 1, transition: 'max-width 0.2s ease, opacity 0.15s ease' }}>VeloClub</span>
-          <span className="ml-auto text-[9px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap overflow-hidden" style={{ background: 'rgba(239,71,111,0.10)', color: '#EF476F', letterSpacing: '0.02em', maxWidth: collapsed ? 0 : 60, opacity: collapsed ? 0 : 1, transition: 'max-width 0.2s ease, opacity 0.15s ease' }}>Admin</span>
+          {!collapsed && <span className="text-[15px] font-semibold" style={{ color: '#1A1028' }}>VeloClub</span>}
+          {!collapsed && <span className="ml-auto text-[9px] font-semibold px-2 py-0.5 rounded-full" style={{ background: 'rgba(239,71,111,0.10)', color: '#EF476F', letterSpacing: '0.02em' }}>Admin</span>}
         </div>
         {/* Botón contraer/expandir */}
         <button onClick={toggleCollapsed}
@@ -182,26 +188,28 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
               <Link key={tab.href} href={tab.href}
                 title={collapsed ? tab.label : undefined}
                 className={`flex items-center gap-3 rounded-xl text-sm font-semibold transition-colors ${active ? '' : 'hover:bg-secondary'}`}
-                style={{ height: 44, padding: '0 12px', color: active ? ACCENT : '#8E87A8', background: active ? 'rgba(124,58,237,0.10)' : undefined }}
+                style={{ height: 44, padding: collapsed ? 0 : '0 12px', justifyContent: collapsed ? 'center' : undefined, color: active ? ACCENT : '#8E87A8', background: active ? 'rgba(124,58,237,0.10)' : undefined }}
               >
                 <tab.Icon size={18} strokeWidth={active ? 2.5 : 2} className="shrink-0" />
-                <span className="whitespace-nowrap overflow-hidden" style={{ maxWidth: collapsed ? 0 : 160, opacity: collapsed ? 0 : 1, transition: 'max-width 0.2s ease, opacity 0.15s ease' }}>{tab.label}</span>
+                {!collapsed && <span>{tab.label}</span>}
               </Link>
             );
           })}
         </nav>
         {/* Footer — usuario */}
-        <div className="flex items-center gap-2.5 shrink-0" style={{ borderTop: '1px solid rgba(0,0,0,0.06)', padding: '10px 14px' }}>
+        <div className="flex items-center gap-2.5 shrink-0" style={{ borderTop: '1px solid rgba(0,0,0,0.06)', padding: '10px 14px', justifyContent: collapsed ? 'center' : undefined }}>
           <UserButton appearance={{ elements: { avatarBox: { width: 34, height: 34, borderRadius: '50%' } } }} />
-          <div className="min-w-0 overflow-hidden" style={{ maxWidth: collapsed ? 0 : 160, opacity: collapsed ? 0 : 1, transition: 'max-width 0.2s ease, opacity 0.15s ease' }}>
-            <p className="text-[12px] font-semibold m-0 truncate" style={{ color: '#1A1028' }}>Superadmin</p>
-            <p className="text-[9px] font-semibold m-0 whitespace-nowrap" style={{ color: '#EF476F', letterSpacing: '0.02em' }}>Panel global</p>
-          </div>
+          {!collapsed && (
+            <div className="min-w-0">
+              <p className="text-[12px] font-semibold m-0 truncate" style={{ color: '#1A1028' }}>Superadmin</p>
+              <p className="text-[9px] font-semibold m-0" style={{ color: '#EF476F', letterSpacing: '0.02em' }}>Panel global</p>
+            </div>
+          )}
         </div>
-      </aside>
+      </motion.aside>
 
       {/* ── Columna de contenido ── */}
-      <div className="flex-1 flex flex-col overflow-hidden" style={{ contain: 'layout style' }}>
+      <div className="flex-1 flex flex-col overflow-hidden">
 
       {/* Global Header */}
       <div className="flex items-center gap-2 shrink-0" style={{ padding: '12px 16px 10px', background: '#F7F7FB', borderBottom: '1px solid rgba(120,80,200,0.10)' }}>

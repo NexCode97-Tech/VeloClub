@@ -49,8 +49,8 @@ export default function OnboardingPage() {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 px-5 py-10">
-      <div className="mb-8">
-        <Image src="/logo.png" alt="VeloClub" width={130} height={38} className="object-contain" />
+      <div className="mb-6">
+        <Image src="/logo.png" alt="VeloClub" width={80} height={80} className="object-contain" style={{ width: 56, height: 'auto' }} />
       </div>
 
       <div className="w-full max-w-md">

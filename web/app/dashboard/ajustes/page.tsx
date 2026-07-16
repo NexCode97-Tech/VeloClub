@@ -700,17 +700,14 @@ function AjustesPageContent() {
               ]).map(({ key, label, icon: Icon }) => {
                 const active = tab === key;
                 return (
-                  <button key={key} onClick={() => setTab(key)}
-                    className="relative flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl z-10">
+                  <button key={key} onClick={() => setTab(key)} aria-label={label}
+                    className="relative flex-1 flex items-center justify-center py-2.5 rounded-xl z-10">
                     {active && (
                       <motion.div layoutId="ajustes-tab-pill" className="absolute inset-0 rounded-xl"
                         style={{ background: 'linear-gradient(135deg, #7C3AED 0%, #4361EE 100%)', boxShadow: '0 4px 20px rgba(124,58,237,0.40)' }}
                         transition={{ type: 'spring', stiffness: 500, damping: 35 }} />
                     )}
-                    <Icon className="relative w-3.5 h-3.5 z-10" style={{ color: active ? '#fff' : '#8E87A8' }} />
-                    <p className="relative text-[12px] font-bold leading-none z-10" style={{ color: active ? '#fff' : '#8E87A8' }}>
-                      {label}
-                    </p>
+                    <Icon className="relative w-4 h-4 z-10" style={{ color: active ? '#fff' : '#8E87A8' }} />
                   </button>
                 );
               })}

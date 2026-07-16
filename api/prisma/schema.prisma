@@ -18,7 +18,12 @@ model Club {
   logoPublicId      String?
   coverUrl          String?         // portada del club
   coverPublicId     String?         // public_id de Cloudinary
-  verified          Boolean         @default(false)  // club verificado
+  verified          Boolean         @default(false)  // club verificado (sello) — espejo de verificationStatus == VERIFIED
+  verificationStatus ClubVerification @default(PENDING) // estado de revisión del club auto-registrado
+  nameFlagged       Boolean         @default(false)  // el nombre chocó con uno existente → priorizar en la cola
+  memberCountApprox Int?                             // # aprox de miembros declarado al registrarse
+  rejectionReason   String?                          // motivo si el superadmin lo rechaza
+  reviewedAt        DateTime?                        // cuándo se verificó/rechazó
   active            Boolean         @default(true)
   // true solo cuando NOSOTROS desactivamos el club por falta de pago — permite
   // reactivarlo automaticamente al pagar sin pisar una desactivacion manual
@@ -493,6 +498,37 @@ enum NotificacionTipo {
   CLUB_DESACTIVADO
   PAGO_VENCIDO
   PAGO_REGISTRADO
+}
+
+enum ClubVerification {
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  CONVERTED
+  DISCARDED
+}
+
+// Solicitud "Contáctenos" — venta asistida. No está ligada a un Club: es un
+// lead que el superadmin revisa y luego convierte creando el club.
+model ClubLead {
+  id                String     @id @default(cuid())
+  clubName          String
+  deporte           String?
+  city              String?
+  department        String?
+  contactName       String
+  contactPhone      String
+  contactEmail      String?
+  memberCountApprox Int?
+  message           String?
+  status            LeadStatus @default(NEW)
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
 }
 
 enum TipoPlan {

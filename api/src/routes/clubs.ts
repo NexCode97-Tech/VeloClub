@@ -4,6 +4,59 @@ import { prisma } from '../db/client';
 import { z } from 'zod';
 import { v2 as cloudinary } from 'cloudinary';
 import { cacheGet, cacheSet, cacheDel } from '../lib/redis';
+import { addToAllowlist } from '../lib/clerk-allowlist';
+
+// ── Normalización y similitud de nombres de club (anti-suplantación) ──────────
+// Quita tildes, pasa a minúsculas y colapsa espacios/puntuación para comparar
+// nombres sin importar mayúsculas, acentos ni símbolos.
+function normalizeName(s: string): string {
+  return s
+    .normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim();
+}
+
+function levenshtein(a: string, b: string): number {
+  const m = a.length, n = b.length;
+  if (!m) return n; if (!n) return m;
+  const dp = Array.from({ length: m + 1 }, (_, i) => [i, ...Array(n).fill(0)]);
+  for (let j = 0; j <= n; j++) dp[0][j] = j;
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      dp[i][j] = Math.min(dp[i - 1][j] + 1, dp[i][j - 1] + 1, dp[i - 1][j - 1] + cost);
+    }
+  }
+  return dp[m][n];
+}
+
+// Devuelve el nivel de colisión de un nombre contra los clubes existentes.
+// - 'taken'   : coincide (normalizado) con un club YA VERIFICADO → hay que diferenciar.
+// - 'similar' : muy parecido a alguno (verificado o no) → se permite pero se marca.
+// - 'ok'      : libre.
+async function checkNameCollision(rawName: string): Promise<'taken' | 'similar' | 'ok'> {
+  const target = normalizeName(rawName);
+  if (!target) return 'ok';
+  const clubs = await prisma.club.findMany({ select: { name: true, verificationStatus: true } });
+  let similar = false;
+  for (const c of clubs) {
+    const other = normalizeName(c.name);
+    if (!other) continue;
+    if (other === target) {
+      if (c.verificationStatus === 'VERIFIED') return 'taken';
+      similar = true;
+      continue;
+    }
+    // Muy parecido: distancia pequeña relativa a la longitud, o uno contiene al otro
+    const dist = levenshtein(target, other);
+    const maxLen = Math.max(target.length, other.length);
+    if (maxLen >= 4 && (dist <= 2 || (dist / maxLen) <= 0.2 || other.includes(target) || target.includes(other))) {
+      similar = true;
+    }
+  }
+  return similar ? 'similar' : 'ok';
+}
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME?.trim(),
@@ -15,7 +68,12 @@ cloudinary.config({
 const router = Router();
 
 const createClubSchema = z.object({
-  clubName: z.string().min(2).max(100),
+  clubName:          z.string().min(2).max(100),
+  deporte:           z.string().max(50).optional(),
+  department:        z.string().max(100).optional(),
+  city:              z.string().max(100).optional(),
+  phone:             z.string().max(30).optional(),
+  memberCountApprox: z.number().int().min(0).max(100000).optional(),
 });
 
 const settingsSchema = z.object({
@@ -180,8 +238,9 @@ router.get('/:id/public', requireAuth, async (req, res) => {
   if (!req.auth) return res.status(401).json({ error: 'No autenticado' });
   const id = String(req.params.id);
 
+  // Solo clubes verificados son visibles públicamente (anti-suplantación).
   const club = await prisma.club.findFirst({
-    where: { id, active: true },
+    where: { id, active: true, verificationStatus: 'VERIFIED' },
     select: {
       id: true, name: true, city: true, department: true, deporte: true,
       logoUrl: true, coverUrl: true, verified: true, description: true, createdAt: true,
@@ -292,7 +351,55 @@ router.delete('/cover', requireAuth, async (req, res) => {
   res.json({ ok: true });
 });
 
-// POST /clubs  — crear club
+// POST /clubs/lead  — solicitud "Contáctenos" (venta asistida). El superadmin
+// la revisa y luego crea el club manualmente.
+const leadSchema = z.object({
+  clubName:          z.string().min(2).max(100),
+  deporte:           z.string().max(50).optional(),
+  department:        z.string().max(100).optional(),
+  city:              z.string().max(100).optional(),
+  contactName:       z.string().min(2).max(100),
+  contactPhone:      z.string().min(5).max(30),
+  contactEmail:      z.string().email().optional(),
+  memberCountApprox: z.number().int().min(0).max(100000).optional(),
+  message:           z.string().max(1000).optional(),
+});
+
+router.post('/lead', requireAuth, async (req, res) => {
+  if (!req.auth) return res.status(401).json({ error: 'No autenticado' });
+  const parsed = leadSchema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: 'Datos inválidos', issues: parsed.error.issues });
+
+  const lead = await prisma.clubLead.create({
+    data: {
+      ...parsed.data,
+      contactEmail: parsed.data.contactEmail || req.auth.email || undefined,
+    },
+  });
+
+  await prisma.notificacion.create({
+    data: {
+      tipo:   'CLUB_CREADO',
+      titulo: 'Nueva solicitud de club (Contáctenos)',
+      cuerpo: `${parsed.data.clubName} — ${parsed.data.contactName} · ${parsed.data.contactPhone}.`,
+    },
+  });
+
+  res.status(201).json({ lead });
+});
+
+// GET /clubs/name-availability?name=  — chequeo en vivo del nombre al escribir
+router.get('/name-availability', requireAuth, async (req, res) => {
+  if (!req.auth) return res.status(401).json({ error: 'No autenticado' });
+  const name = String(req.query.name ?? '').trim();
+  if (name.length < 2) return res.json({ status: 'ok' });
+  const collision = await checkNameCollision(name);
+  res.json({ status: collision });
+});
+
+// POST /clubs  — auto-registro de club (self-serve). El usuario ya está
+// autenticado en Clerk (correo/teléfono verificados). Crea el club en estado
+// PENDING con trial de 15 días y al usuario como ADMIN (User + Member).
 router.post('/', requireAuth, async (req, res) => {
   if (!req.auth) return res.status(401).json({ error: 'No autenticado' });
 
@@ -302,20 +409,65 @@ router.post('/', requireAuth, async (req, res) => {
   const parsed = createClubSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: 'Datos inválidos', issues: parsed.error.issues });
 
+  const { clubName, deporte, department, city, phone, memberCountApprox } = parsed.data;
+
+  // Anti-suplantación: no permitir duplicar el nombre de un club verificado.
+  const collision = await checkNameCollision(clubName);
+  if (collision === 'taken') {
+    return res.status(409).json({
+      error: 'name_taken',
+      message: 'Ya existe un club verificado con ese nombre. Diferéncialo con tu ciudad o un distintivo.',
+    });
+  }
+
+  const trialEndsAt = new Date();
+  trialEndsAt.setDate(trialEndsAt.getDate() + 15);
+
   const club = await prisma.club.create({
     data: {
-      name: parsed.data.clubName,
+      name:              clubName.trim(),
+      deporte:           deporte || undefined,
+      department:        department || undefined,
+      city:              city || undefined,
+      phone:             phone || undefined,
+      memberCountApprox: memberCountApprox ?? undefined,
+      trialEndsAt,
+      verificationStatus: 'PENDING',
+      nameFlagged:       collision === 'similar',
       users: {
         create: {
-          clerkId: req.auth.clerkId,
-          email:   req.auth.email,
-          name:    req.auth.name,
-          picture: req.auth.picture,
-          role:    'ADMIN',
+          clerkId:         req.auth.clerkId,
+          email:           req.auth.email,
+          name:            req.auth.name,
+          picture:         req.auth.picture,
+          role:            'ADMIN',
+          profileComplete: true,
+        },
+      },
+      members: {
+        create: {
+          fullName:     req.auth.name || 'Administrador',
+          email:        req.auth.email,
+          phone:        phone || undefined,
+          role:         'ADMIN',
+          clerkId:      req.auth.clerkId,
+          inviteStatus: 'ACCEPTED',
         },
       },
     },
     include: { users: true },
+  });
+
+  // Mantener el correo en el allowlist (consistencia con clubes creados por superadmin)
+  try { await addToAllowlist(req.auth.email); } catch { /* ignorar */ }
+
+  // Avisar al superadmin que hay un club nuevo por verificar
+  await prisma.notificacion.create({
+    data: {
+      tipo:   'CLUB_CREADO',
+      titulo: 'Nuevo club por verificar',
+      cuerpo: `${clubName.trim()} se auto-registró${collision === 'similar' ? ' (nombre parecido a otro, revisar)' : ''}. Admin: ${req.auth.name || req.auth.email}.`,
+    },
   });
 
   res.status(201).json({ club });

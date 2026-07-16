@@ -120,6 +120,44 @@ router.patch('/clubs/:id/toggle', requireAuth, requireSuperadmin, async (req, re
   res.json({ club: updated });
 });
 
+// PATCH /superadmin/clubs/:id/verificar — otorgar el sello (cola de verificación)
+router.patch('/clubs/:id/verificar', requireAuth, requireSuperadmin, async (req, res) => {
+  const id = String(req.params.id);
+  const club = await prisma.club.update({
+    where: { id },
+    data: { verificationStatus: 'VERIFIED', verified: true, nameFlagged: false, rejectionReason: null, reviewedAt: new Date() },
+  });
+  res.json({ club });
+});
+
+// PATCH /superadmin/clubs/:id/rechazar — rechazar el club (queda no público)
+router.patch('/clubs/:id/rechazar', requireAuth, requireSuperadmin, async (req, res) => {
+  const id = String(req.params.id);
+  const { reason } = req.body as { reason?: string };
+  const club = await prisma.club.update({
+    where: { id },
+    data: { verificationStatus: 'REJECTED', verified: false, rejectionReason: reason?.trim() || null, reviewedAt: new Date() },
+  });
+  res.json({ club });
+});
+
+// ─── Leads (solicitudes "Contáctenos") ────────────────────────────────────────
+
+router.get('/leads', requireAuth, requireSuperadmin, async (_req, res) => {
+  const leads = await prisma.clubLead.findMany({ orderBy: { createdAt: 'desc' } });
+  res.json({ leads });
+});
+
+router.patch('/leads/:id', requireAuth, requireSuperadmin, async (req, res) => {
+  const id = String(req.params.id);
+  const { status } = req.body as { status?: string };
+  if (!['NEW', 'CONTACTED', 'CONVERTED', 'DISCARDED'].includes(status ?? '')) {
+    return res.status(400).json({ error: 'Estado inválido' });
+  }
+  const lead = await prisma.clubLead.update({ where: { id }, data: { status: status as any } });
+  res.json({ lead });
+});
+
 // PATCH /superadmin/clubs/:id — editar info del club
 const editClubSchema = z.object({
   name:       z.string().min(2).max(100).optional(),

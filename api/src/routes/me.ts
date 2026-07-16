@@ -146,7 +146,9 @@ if (superadminEmails.includes(email.toLowerCase())) {
   });
 
   if (!member) {
-    return res.json({ status: 'no_access' });
+    // Usuario autenticado sin club ni invitación previa → puede auto-registrar
+    // su club (self-serve) o contactarnos. El onboarding decide.
+    return res.json({ status: 'needs_onboarding' });
   }
 
   if (!member.club.active) {

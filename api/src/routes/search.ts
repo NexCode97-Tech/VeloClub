@@ -15,7 +15,8 @@ router.get('/', requireAuth, async (req, res) => {
 
   const [clubs, members] = await Promise.all([
     prisma.club.findMany({
-      where: { active: true, name: { contains: q, mode: 'insensitive' } },
+      // Solo clubes verificados aparecen en el buscador de comunidad
+      where: { active: true, verificationStatus: 'VERIFIED', name: { contains: q, mode: 'insensitive' } },
       select: {
         id: true, name: true, city: true, department: true,
         logoUrl: true, verified: true, deporte: true,

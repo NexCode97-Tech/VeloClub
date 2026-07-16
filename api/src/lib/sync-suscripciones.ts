@@ -89,12 +89,17 @@ export async function recordarVencimientosProximos(): Promise<{ avisados: number
 // pago, lo reactiva — nunca revierte una desactivacion manual del superadmin
 // por otro motivo (esa siempre tiene desactivadoPorVencimiento en false).
 export async function activarClubTrasPago(clubId: string): Promise<void> {
-  const club = await prisma.club.findUnique({ where: { id: clubId }, select: { desactivadoPorVencimiento: true } });
+  const club = await prisma.club.findUnique({ where: { id: clubId }, select: { desactivadoPorVencimiento: true, verificationStatus: true } });
   await prisma.club.update({
     where: { id: clubId },
     data: {
       trialEndsAt: null,
       ...(club?.desactivadoPorVencimiento ? { active: true, desactivadoPorVencimiento: false } : {}),
+      // Un pago real valida al responsable: si el club estaba sin verificar,
+      // se auto-verifica (obtiene el sello y visibilidad pública).
+      ...(club?.verificationStatus === 'PENDING'
+        ? { verificationStatus: 'VERIFIED', verified: true, reviewedAt: new Date() }
+        : {}),
     },
   });
   // Un nuevo pago reactiva una suscripción que estaba cancelada

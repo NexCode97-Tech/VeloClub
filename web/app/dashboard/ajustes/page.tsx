@@ -753,7 +753,7 @@ function AjustesPageContent() {
 
       {/* ══ DESKTOP (>= lg) — columna centrada, una sección a la vez ═══════ */}
       <div className="hidden lg:block px-6 pb-8">
-        <div className={tab === 'suscripcion' ? 'max-w-5xl mx-auto' : 'max-w-2xl mx-auto'}>
+        <div className="max-w-5xl mx-auto">
           {(!isAdmin || tab === 'perfil') && (
             <div className="space-y-4">
               <SectionHeader label="Mi perfil" icon={IconPerfil} />

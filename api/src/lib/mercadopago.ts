@@ -110,8 +110,12 @@ export async function obtenerPago(paymentId: string): Promise<{
 
 // Reembolso total de un pago — usado cuando se cancela una suscripción cuyo
 // período pagado todavía no había empezado a correr (pago hecho en el trial).
+// X-Idempotency-Key es obligatorio en este endpoint (igual que en /v1/payments).
 export async function reembolsarPago(paymentId: string): Promise<void> {
-  await mpFetch(`/v1/payments/${paymentId}/refunds`, { method: 'POST' });
+  await mpFetch(`/v1/payments/${paymentId}/refunds`, {
+    method: 'POST',
+    headers: { 'X-Idempotency-Key': crypto.randomUUID() },
+  });
 }
 
 // ── Checkout API (transparente) — medios de pago dentro de la app ───────────

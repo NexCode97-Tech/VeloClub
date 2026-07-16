@@ -192,6 +192,16 @@ function AjustesPageContent() {
   const [deleting, setDeleting]           = useState(false);
   const [deleteError, setDeleteError]     = useState<string | null>(null);
 
+  // Cerrar sesión
+  const [signingOut, setSigningOut]       = useState(false);
+  async function handleSignOut() {
+    if (signingOut) return;
+    setSigningOut(true);
+    try { await signOut(); } catch { /* ignorar */ }
+    // Redirección dura: garantiza que la sesión cerrada se refleje sin refrescar
+    window.location.href = '/sign-in';
+  }
+
   const cityOptions = department ? (COLOMBIA[department] ?? []).sort() : [];
 
   // Sincroniza el tab si cambia el query param (clic en el sub-menú del sidebar
@@ -323,7 +333,8 @@ function AjustesPageContent() {
     try {
       const token = await getToken();
       await apiFetch('/me', { method: 'DELETE', token });
-      await signOut({ redirectUrl: '/sign-in' });
+      try { await signOut(); } catch { /* ignorar */ }
+      window.location.href = '/sign-in';
     } catch (err) {
       const { ApiError } = await import('@/lib/api-client');
       if (err instanceof ApiError && err.status === 409) {
@@ -448,11 +459,14 @@ function AjustesPageContent() {
       {/* Cerrar sesión */}
       <button
         type="button"
-        onClick={() => signOut({ redirectUrl: '/sign-in' })}
-        className="w-full flex items-center gap-3 px-5 py-3.5 text-left hover:bg-red-50 active:bg-red-100 transition-colors"
+        onClick={handleSignOut}
+        disabled={signingOut}
+        className="w-full flex items-center gap-3 px-5 py-3.5 text-left hover:bg-red-50 active:bg-red-100 transition-colors disabled:opacity-60"
       >
         <LogOut className="w-4 h-4 shrink-0" style={{ color: '#EF476F' }} />
-        <span className="flex-1 text-[13px] font-semibold" style={{ color: '#EF476F' }}>Cerrar sesión</span>
+        <span className="flex-1 text-[13px] font-semibold" style={{ color: '#EF476F' }}>
+          {signingOut ? 'Cerrando sesión...' : 'Cerrar sesión'}
+        </span>
       </button>
     </div>
   );

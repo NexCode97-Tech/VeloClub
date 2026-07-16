@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { apiFetch } from '@/lib/api-client';
-import { MapPin, Camera, Pencil, Trash2, ImagePlus, BadgeCheck, Lock, CalendarDays, Phone, Mail, Building2, Check, X, UserPlus, UserCheck, ExternalLink } from 'lucide-react';
+import { MapPin, Camera, Pencil, Trash2, ImagePlus, BadgeCheck, Lock, CalendarDays, Phone, Mail, Building2, Check, X, UserPlus, UserCheck } from 'lucide-react';
 import { PostCard, Post, PostComment } from '@/components/ui/post-card';
 import { PhoneInput } from '@/components/ui/phone-input';
 
@@ -692,14 +692,6 @@ export default function ClubProfilePage() {
                   style={{ border: 0, display: 'block' }}
                   src={`https://maps.google.com/maps?q=${query}&output=embed&z=13`}
                 />
-                <a
-                  href={`https://www.google.com/maps/search/?api=1&query=${query}`}
-                  target="_blank" rel="noopener noreferrer"
-                  className="absolute top-3 left-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-bold text-white"
-                  style={{ background: 'linear-gradient(135deg,#4361EE,#7C3AED)', boxShadow: '0 2px 8px rgba(0,0,0,0.2)' }}
-                >
-                  Abrir en Maps <ExternalLink className="w-3.5 h-3.5" />
-                </a>
               </div>
             );
           })()}

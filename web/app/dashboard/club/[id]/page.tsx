@@ -8,7 +8,7 @@ import { apiFetch } from '@/lib/api-client';
 import { IconClub } from '@/components/ui/custom-icons';
 import {
   ArrowLeft, BadgeCheck, MapPin, CalendarDays, UserPlus, UserCheck,
-  Phone, Mail, Building2, Lock, ExternalLink,
+  Phone, Mail, Building2, Lock,
 } from 'lucide-react';
 
 interface PublicClub {
@@ -323,14 +323,6 @@ function ContactCard({ club, mainLocation }: { club: PublicClub; mainLocation: M
             width="100%" height="180" loading="lazy" style={{ border: 0, display: 'block' }}
             src={`https://maps.google.com/maps?q=${mapsQuery}&z=13&output=embed`}
           />
-          <a
-            href={`https://www.google.com/maps/search/?api=1&query=${mapsQuery}`}
-            target="_blank" rel="noopener noreferrer"
-            className="absolute top-3 left-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-bold text-white"
-            style={{ background: 'linear-gradient(135deg,#4361EE,#7C3AED)', boxShadow: '0 2px 8px rgba(0,0,0,0.2)' }}
-          >
-            Abrir en Maps <ExternalLink className="w-3.5 h-3.5" />
-          </a>
         </div>
       )}
     </div>

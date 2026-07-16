@@ -268,16 +268,30 @@ function LogrosPageInner() {
       </div>
 
       <div className="px-5 pt-4 lg:pt-6">
-        {/* Botón dentro del contenido, debajo del separador */}
-        {role !== 'STUDENT' && (
-          <div className="flex justify-end mb-4">
+        {/* Encabezado de sección (escritorio) + botón — misma lógica que Ajustes:
+            muestra el ícono y el título de la pestaña activa, como "Mi perfil". */}
+        <div className="flex items-center mb-4">
+          {/* Sección activa: ícono en cuadrito con degradado + título */}
+          <div className="hidden lg:flex items-center gap-2">
+            <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
+              style={{ background: 'linear-gradient(135deg, #7C3AED 0%, #4361EE 100%)' }}>
+              {tab === 'comp'
+                ? <Trophy className="w-3.5 h-3.5 text-white" />
+                : <Dumbbell className="w-3.5 h-3.5 text-white" />}
+            </div>
+            <h2 className="text-[15px] font-semibold text-foreground">
+              {tab === 'comp' ? 'Competencias' : 'Entrenamientos'}
+            </h2>
+          </div>
+          {/* Botón de acción, empujado a la derecha */}
+          {role !== 'STUDENT' && (
             <motion.button
               whileTap={{ scale: 0.93 }}
               onClick={() => {
                 if (tab === 'comp') { setCompForm(emptyComp); setCompError(null); setCompOpen(true); }
                 else { setSessionForm(emptySession); setSessionError(null); setSessionOpen(true); }
               }}
-              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[13px] font-semibold text-white shadow-sm shrink-0 cursor-pointer"
+              className="ml-auto flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[13px] font-semibold text-white shadow-sm shrink-0 cursor-pointer"
               style={{
                 background: 'linear-gradient(135deg, #7C3AED 0%, #4361EE 100%)',
                 opacity: canManage ? 1 : 0,
@@ -288,8 +302,8 @@ function LogrosPageInner() {
               <Plus className="w-4 h-4" />
               <span className="hidden sm:inline">{tab === 'comp' ? 'Competencia' : 'Entrenamiento'}</span>
             </motion.button>
-          </div>
-        )}
+          )}
+        </div>
 
         {/* Stats strip — siempre ocupa espacio para evitar layout shift */}
         <div className="flex gap-2 mb-4 w-full" style={{ opacity: loading ? 0 : 1, transition: 'opacity 0.2s ease' }}>

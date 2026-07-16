@@ -225,6 +225,7 @@ export default function SuscripcionCard() {
   const [unsubscribing, setUnsubscribing] = useState(false);
   const [canceling, setCanceling] = useState(false);
   const [confirmarCancelar, setConfirmarCancelar] = useState(false);
+  const [reactivating, setReactivating] = useState(false);
   const [sdkReady, setSdkReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -478,6 +479,16 @@ export default function SuscripcionCard() {
     finally { setCanceling(false); }
   }
 
+  async function handleReactivar() {
+    setReactivating(true); setError(null);
+    try {
+      const token = await getToken();
+      await apiFetch('/mercadopago/reactivar', { method: 'POST', token });
+      await load();
+    } catch (e) { setError(e instanceof Error ? e.message : 'No se pudo reactivar la suscripción'); }
+    finally { setReactivating(false); }
+  }
+
   if (loading) return (
     <div className="flex justify-center py-16">
       <div className="w-6 h-6 rounded-full border-2 border-primary border-t-transparent animate-spin" />
@@ -677,15 +688,27 @@ export default function SuscripcionCard() {
         {planActivo && (
           <>
           {estaCancelada && (
-            <div className="rounded-xl p-3 flex items-start gap-2.5"
+            <div className="rounded-xl p-3 space-y-3"
               style={{ background: 'rgba(239,71,111,0.06)', border: '1px solid rgba(239,71,111,0.20)' }}>
-              <XCircle className="w-4 h-4 shrink-0 mt-0.5" style={{ color: '#EF476F' }} />
-              <div>
-                <p className="text-[13px] font-semibold text-foreground">Suscripción cancelada</p>
-                <p className="text-[11px] text-muted-foreground">
-                  Tu club sigue activo hasta el {fechaVencimiento} y no se harán nuevos cobros. Puedes reactivar cuando quieras activando la renovación automática abajo.
-                </p>
+              <div className="flex items-start gap-2.5">
+                <XCircle className="w-4 h-4 shrink-0 mt-0.5" style={{ color: '#EF476F' }} />
+                <div>
+                  <p className="text-[13px] font-semibold text-foreground">Suscripción cancelada</p>
+                  <p className="text-[11px] text-muted-foreground">
+                    Tu club sigue activo hasta el {fechaVencimiento} y no se harán nuevos cobros. Tu plan ya está pagado: puedes retomarlo sin volver a pagar.
+                  </p>
+                </div>
               </div>
+              <motion.button
+                onClick={handleReactivar}
+                disabled={reactivating}
+                whileTap={reduce ? {} : { scale: 0.98 }}
+                transition={{ duration: 0.12, ease: EASE }}
+                className="w-full py-2 rounded-lg text-white text-[12px] font-semibold disabled:opacity-60"
+                style={{ background: '#06D6A0' }}
+              >
+                {reactivating ? 'Reactivando...' : 'Reactivar suscripción'}
+              </motion.button>
             </div>
           )}
           <div className="rounded-xl bg-secondary/40 p-3 space-y-3">

@@ -443,6 +443,32 @@ router.post('/cancelar', requireAuth, async (req, res) => {
   res.json({ ok: true, diasRestantes: vig.diasRestantes });
 });
 
+// ── POST /mercadopago/reactivar — deshacer una cancelación ──────────────────
+// El plan sigue pagado y vigente; reactivar solo quita la marca de cancelada,
+// sin cobrar de nuevo. Si ya venció, hay que pagar (no aplica aquí).
+router.post('/reactivar', requireAuth, async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  const clubId = req.user!.clubId ?? '';
+
+  const suscripcion = await prisma.clubSuscripcion.findUnique({
+    where: { clubId },
+    include: { pagos: true },
+  });
+  if (!suscripcion) return res.status(404).json({ error: 'Suscripción no encontrada' });
+
+  const vig = vigencia(suscripcion.pagos, suscripcion.tipoPlan as TipoPlan);
+  if (!vig || vig.vencido) {
+    return res.status(400).json({ error: 'Tu plan ya venció. Debes pagar de nuevo para reactivar.' });
+  }
+
+  await prisma.clubSuscripcion.update({
+    where: { id: suscripcion.id },
+    data: { canceladaAt: null },
+  });
+
+  res.json({ ok: true });
+});
+
 // ── POST /mercadopago/webhook — notificaciones de pago (publico, verificado) ─
 router.post('/webhook', async (req, res) => {
   // Responder rápido siempre — Mercado Pago reintenta si no recibe 2xx

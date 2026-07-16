@@ -84,12 +84,42 @@ function formatearNumeroTarjeta(raw: string, brand: CardBrand): string {
   return digits.match(/.{1,4}/g)?.join(' ') ?? digits;
 }
 
-const BRAND_LABEL: Record<Exclude<CardBrand, null>, string> = {
-  visa: 'Visa', mastercard: 'Mastercard', amex: 'American Express', diners: 'Diners Club',
-};
-const BRAND_COLOR: Record<Exclude<CardBrand, null>, string> = {
-  visa: '#1A1F71', mastercard: '#EB001B', amex: '#2E77BC', diners: '#0079BE',
-};
+// Logos reales de cada franquicia (SVG en línea, sin dependencias externas)
+function BrandLogo({ brand }: { brand: Exclude<CardBrand, null> }) {
+  if (brand === 'mastercard') {
+    return (
+      <svg viewBox="0 0 32 20" height="20" role="img" aria-label="Mastercard">
+        <circle cx="12" cy="10" r="9" fill="#EB001B" />
+        <circle cx="20" cy="10" r="9" fill="#F79E1B" />
+        <path d="M16 3.15a8.98 8.98 0 0 0 0 13.7 8.98 8.98 0 0 0 0-13.7z" fill="#FF5F00" />
+      </svg>
+    );
+  }
+  if (brand === 'visa') {
+    return (
+      <svg viewBox="0 0 48 16" height="14" role="img" aria-label="Visa">
+        <text x="0" y="13" fontFamily="Arial, Helvetica, sans-serif" fontSize="16"
+          fontWeight="700" fontStyle="italic" letterSpacing="-0.5" fill="#1434CB">VISA</text>
+      </svg>
+    );
+  }
+  if (brand === 'amex') {
+    return (
+      <svg viewBox="0 0 44 24" height="20" role="img" aria-label="American Express">
+        <rect width="44" height="24" rx="3" fill="#2E77BC" />
+        <text x="22" y="16" textAnchor="middle" fontFamily="Arial, Helvetica, sans-serif"
+          fontSize="9" fontWeight="700" letterSpacing="0.3" fill="#fff">AMEX</text>
+      </svg>
+    );
+  }
+  // Diners Club
+  return (
+    <svg viewBox="0 0 24 24" height="20" role="img" aria-label="Diners Club">
+      <circle cx="12" cy="12" r="11" fill="#0079BE" />
+      <circle cx="12" cy="12" r="5.5" fill="#fff" />
+    </svg>
+  );
+}
 
 function CardBrandBadge({ brand }: { brand: CardBrand }) {
   const reduce = useReducedMotion();
@@ -102,10 +132,10 @@ function CardBrandBadge({ brand }: { brand: CardBrand }) {
           animate={{ opacity: 1, scale: 1 }}
           exit={reduce ? { opacity: 0 } : { opacity: 0, scale: 0.9 }}
           transition={{ duration: 0.15, ease: EASE }}
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-[11px] font-bold px-2 py-0.5 rounded-md pointer-events-none"
-          style={{ background: `${BRAND_COLOR[brand]}14`, color: BRAND_COLOR[brand] }}
+          className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center bg-white rounded-md pointer-events-none"
+          style={{ height: 28, padding: '0 7px', boxShadow: '0 0 0 1px rgba(0,0,0,0.08)' }}
         >
-          {BRAND_LABEL[brand]}
+          <BrandLogo brand={brand} />
         </motion.span>
       )}
     </AnimatePresence>
@@ -531,7 +561,7 @@ export default function SuscripcionCard() {
           placeholder="Número de tarjeta" value={card.number}
           onChange={e => handleCardNumberChange(e.target.value)}
           className="w-full px-3 py-2 rounded-lg border border-input text-sm"
-          style={{ paddingRight: cardBrand ? 110 : undefined }}
+          style={{ paddingRight: cardBrand ? 72 : undefined }}
           inputMode="numeric" autoComplete="cc-number"
         />
         <CardBrandBadge brand={cardBrand} />

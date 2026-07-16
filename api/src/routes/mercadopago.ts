@@ -335,6 +335,7 @@ router.post('/subscribe', requireAuth, async (req, res) => {
         mpPayerEmail: payerEmail,
         ultimoMontoSincronizado: monto,
         intentosFallidos: 0,
+        canceladaAt: null,
         consentimientoRecurrenteAt: new Date(),
       },
     });
@@ -396,6 +397,50 @@ router.post('/unsubscribe', requireAuth, async (req, res) => {
   });
 
   res.json({ ok: true });
+});
+
+// ── POST /mercadopago/cancelar — cancelar la suscripción ────────────────────
+// A diferencia del toggle de renovación automática, esto es un "me voy": apaga
+// la renovación, marca la suscripción como cancelada (sin más recordatorios de
+// renovación) pero NO desactiva el club — sigue activo hasta que venza la
+// vigencia ya pagada. La desactivación al vencer la maneja el cron existente.
+router.post('/cancelar', requireAuth, async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  const clubId = req.user!.clubId ?? '';
+
+  const suscripcion = await prisma.clubSuscripcion.findUnique({
+    where: { clubId },
+    include: { pagos: true },
+  });
+  if (!suscripcion) return res.status(404).json({ error: 'Suscripción no encontrada' });
+
+  const vig = vigencia(suscripcion.pagos, suscripcion.tipoPlan as TipoPlan);
+  if (!vig || vig.vencido) {
+    return res.status(400).json({ error: 'No tienes una suscripción activa para cancelar' });
+  }
+
+  // Cancelar el cobro recurrente en Mercado Pago si estaba activo
+  if (suscripcion.mpPreapprovalId) {
+    try { await cancelarPreapproval(suscripcion.mpPreapprovalId); }
+    catch (err) {
+      console.error('[mercadopago/cancelar]', err instanceof Error ? err.message : err);
+      Sentry.captureException(err, { tags: { route: 'mercadopago/cancelar' }, extra: { clubId, preapprovalId: suscripcion.mpPreapprovalId } });
+    }
+  }
+
+  await prisma.clubSuscripcion.update({
+    where: { id: suscripcion.id },
+    data: { autoRenew: false, mpPreapprovalId: null, intentosFallidos: 0, canceladaAt: new Date() },
+  });
+
+  await notifyClubStaff(clubId, {
+    tipo: 'SUSCRIPCION_CANCELADA',
+    titulo: 'Suscripción cancelada',
+    cuerpo: `Cancelaste tu suscripción. Tu club sigue activo ${vig.diasRestantes} día${vig.diasRestantes !== 1 ? 's' : ''} más y no se harán nuevos cobros. Puedes reactivar cuando quieras.`,
+    link: '/dashboard/ajustes?tab=suscripcion',
+  });
+
+  res.json({ ok: true, diasRestantes: vig.diasRestantes });
 });
 
 // ── POST /mercadopago/webhook — notificaciones de pago (publico, verificado) ─

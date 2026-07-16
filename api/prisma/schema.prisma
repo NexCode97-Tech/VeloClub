@@ -319,6 +319,9 @@ model ClubSuscripcion {
   ultimoMontoSincronizado Float?
   intentosFallidos       Int                 @default(0)
   ultimoIntentoFallidoAt DateTime?
+  // Cancelación explícita del admin: se apaga la renovación pero el club sigue
+  // activo hasta que venza la vigencia. Se limpia al registrar un nuevo pago.
+  canceladaAt            DateTime?
   // Consentimientos legales (Ley 1480 de 2011 — Estatuto del Consumidor)
   consentimientoPagoAt       DateTime?
   consentimientoRecurrenteAt DateTime?

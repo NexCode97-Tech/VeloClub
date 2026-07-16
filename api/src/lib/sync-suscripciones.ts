@@ -49,8 +49,9 @@ const DIAS_AVISO = 3;
 // días — un solo aviso por vencimiento (guardado en ultimoIntentoFallidoAt para
 // no repetirlo cada día hasta el próximo ciclo de pago).
 export async function recordarVencimientosProximos(): Promise<{ avisados: number }> {
+  // Solo clubes sin renovación automática y que NO cancelaron a propósito
   const suscripciones = await prisma.clubSuscripcion.findMany({
-    where: { autoRenew: false },
+    where: { autoRenew: false, canceladaAt: null },
     include: { pagos: true },
   });
 
@@ -95,6 +96,11 @@ export async function activarClubTrasPago(clubId: string): Promise<void> {
       trialEndsAt: null,
       ...(club?.desactivadoPorVencimiento ? { active: true, desactivadoPorVencimiento: false } : {}),
     },
+  });
+  // Un nuevo pago reactiva una suscripción que estaba cancelada
+  await prisma.clubSuscripcion.updateMany({
+    where: { clubId, canceladaAt: { not: null } },
+    data: { canceladaAt: null },
   });
 }
 

@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import Script from 'next/script';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { apiFetch } from '@/lib/api-client';
-import { CreditCard, ArrowLeft, Landmark, Banknote, Clock, RefreshCw } from 'lucide-react';
+import { CreditCard, ArrowLeft, Landmark, Banknote, Clock, RefreshCw, XCircle } from 'lucide-react';
 
 const fmt = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 });
 const EASE = [0.23, 1, 0.32, 1] as const;
@@ -24,6 +24,7 @@ interface Suscripcion {
   planMontoSinAutoRenew: number;
   planMontoConAutoRenew: number;
   autoRenew: boolean;
+  canceladaAt: string | null;
 }
 interface MiSuscripcionResponse {
   suscripcion: Suscripcion;
@@ -222,6 +223,8 @@ export default function SuscripcionCard() {
   const [paying, setPaying] = useState(false);
   const [activating, setActivating] = useState(false);
   const [unsubscribing, setUnsubscribing] = useState(false);
+  const [canceling, setCanceling] = useState(false);
+  const [confirmarCancelar, setConfirmarCancelar] = useState(false);
   const [sdkReady, setSdkReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -464,6 +467,17 @@ export default function SuscripcionCard() {
     finally { setUnsubscribing(false); }
   }
 
+  async function handleCancelar() {
+    setCanceling(true); setError(null);
+    try {
+      const token = await getToken();
+      await apiFetch('/mercadopago/cancelar', { method: 'POST', token });
+      setConfirmarCancelar(false);
+      await load();
+    } catch (e) { setError(e instanceof Error ? e.message : 'No se pudo cancelar la suscripción'); }
+    finally { setCanceling(false); }
+  }
+
   if (loading) return (
     <div className="flex justify-center py-16">
       <div className="w-6 h-6 rounded-full border-2 border-primary border-t-transparent animate-spin" />
@@ -552,6 +566,10 @@ export default function SuscripcionCard() {
   const planActivo = !!vigencia && !vigencia.vencido;
   const pctColor = !vigencia ? '#8E87A8' : vigencia.vencido ? '#EF476F' : vigencia.pct >= 50 ? '#06D6A0' : vigencia.pct >= 20 ? '#FFB703' : '#EF476F';
   const precioAPagar = activarAutoRenovacion ? suscripcion.planMontoConAutoRenew : suscripcion.planMontoSinAutoRenew;
+  const estaCancelada = planActivo && !!suscripcion.canceladaAt;
+  const fechaVencimiento = planActivo && vigencia
+    ? new Date(Date.now() + vigencia.diasRestantes * 86400000).toLocaleDateString('es-CO', { day: '2-digit', month: 'long', year: 'numeric' })
+    : null;
 
   // Campos de tarjeta reutilizables
   const cardFields = (
@@ -657,6 +675,19 @@ export default function SuscripcionCard() {
 
         {/* ══ CASO A: plan activo — gestionar renovación automática ══════════ */}
         {planActivo && (
+          <>
+          {estaCancelada && (
+            <div className="rounded-xl p-3 flex items-start gap-2.5"
+              style={{ background: 'rgba(239,71,111,0.06)', border: '1px solid rgba(239,71,111,0.20)' }}>
+              <XCircle className="w-4 h-4 shrink-0 mt-0.5" style={{ color: '#EF476F' }} />
+              <div>
+                <p className="text-[13px] font-semibold text-foreground">Suscripción cancelada</p>
+                <p className="text-[11px] text-muted-foreground">
+                  Tu club sigue activo hasta el {fechaVencimiento} y no se harán nuevos cobros. Puedes reactivar cuando quieras activando la renovación automática abajo.
+                </p>
+              </div>
+            </div>
+          )}
           <div className="rounded-xl bg-secondary/40 p-3 space-y-3">
             <div className="flex items-center justify-between gap-3">
               <div>
@@ -698,6 +729,45 @@ export default function SuscripcionCard() {
               </div>
             </Expand>
           </div>
+
+          {!estaCancelada && (
+            <div>
+              {!confirmarCancelar ? (
+                <button
+                  onClick={() => { setConfirmarCancelar(true); setError(null); }}
+                  className="text-[12px] font-semibold text-muted-foreground hover:text-red-500 transition-colors cursor-pointer"
+                >
+                  Cancelar suscripción
+                </button>
+              ) : (
+                <div className="rounded-xl p-3 space-y-2.5" style={{ background: 'rgba(239,71,111,0.05)', border: '1px solid rgba(239,71,111,0.18)' }}>
+                  <p className="text-[12px] text-foreground">
+                    ¿Seguro que quieres cancelar? Tu club seguirá activo hasta el <span className="font-semibold">{fechaVencimiento}</span> y no se harán más cobros. Podrás reactivar cuando quieras.
+                  </p>
+                  <div className="flex gap-2">
+                    <motion.button
+                      onClick={handleCancelar}
+                      disabled={canceling}
+                      whileTap={reduce ? {} : { scale: 0.98 }}
+                      transition={{ duration: 0.12, ease: EASE }}
+                      className="flex-1 py-2 rounded-lg text-white text-[12px] font-semibold disabled:opacity-60"
+                      style={{ background: '#EF476F' }}
+                    >
+                      {canceling ? 'Cancelando...' : 'Sí, cancelar'}
+                    </motion.button>
+                    <button
+                      onClick={() => setConfirmarCancelar(false)}
+                      disabled={canceling}
+                      className="flex-1 py-2 rounded-lg text-[12px] font-semibold text-muted-foreground border border-input disabled:opacity-60 cursor-pointer"
+                    >
+                      No, volver
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+          </>
         )}
 
         {/* ══ CASO B: sin plan / vencido — pago con todos los medios ════════ */}

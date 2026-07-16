@@ -696,7 +696,7 @@ export default function FinanzasPage() {
         </h1>
       </div>
 
-      <motion.div variants={pageStagger} initial="hidden" animate="show" className="px-4 pt-4 flex flex-col gap-4">
+      <motion.div variants={pageStagger} initial="hidden" animate="show" className="px-4 pt-4 lg:pt-6 flex flex-col gap-4">
 
         {/* Tabs + filtros — una sola fila en desktop */}
         <motion.div variants={pageCard} className="flex flex-col gap-2 md:flex-row md:items-center md:gap-3 md:w-full">

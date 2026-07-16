@@ -126,11 +126,10 @@ export default function CalendarioPage() {
         <h1 className="text-[22px] font-semibold text-foreground" style={{ fontFamily: 'inherit', lineHeight: 1.1 }}>
           Calendario
         </h1>
-        <p className="text-[12px] text-muted-foreground mt-0.5">{MONTH_NAMES[month]} {year}</p>
       </div>
 
       {/* Layout: columna única en móvil, dos columnas en desktop */}
-      <div className="flex flex-col md:flex-row gap-5 md:items-start px-4 pb-5">
+      <div className="flex flex-col md:flex-row gap-5 md:items-start px-4 pt-4 lg:pt-6 pb-5">
 
         {/* ── Columna izquierda — Calendario ── */}
         <div className="flex flex-col gap-4 md:w-[420px] shrink-0">

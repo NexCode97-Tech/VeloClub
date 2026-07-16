@@ -352,16 +352,13 @@ export default function MiembrosPage() {
             <h1 className="text-[22px] font-semibold" style={{ color: '#1A1028', fontFamily: 'inherit', lineHeight: 1.1 }}>
               Miembros
             </h1>
-            <p className="text-xs mt-0.5" style={{ color: '#8E87A8' }}>
-              Gestiona deportistas, entrenadores y administradores del club
-            </p>
           </div>
 
           {/* ── Stats strip ── */}
           <motion.div
             variants={{ hidden: {}, show: { transition: { staggerChildren: 0.07 } } }}
             initial="hidden" animate="show"
-            className="grid grid-cols-4 gap-3 mb-6"
+            className="grid grid-cols-4 gap-3 mb-6 lg:mt-3"
           >
             {statsDesktop.map(s => {
               const active = roleFilter === s.filter;

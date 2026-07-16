@@ -43,9 +43,6 @@ function todayISO() {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 }
-function todayLabel() {
-  return new Date().toLocaleDateString('es-CO', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
-}
 function avatarBg(role: string) { return ROLE_BG[role] ?? 'linear-gradient(135deg,#7C3AED,#A855F7)'; }
 
 /** ISO strings para cada día de la semana actual (Dom→Sáb) */
@@ -337,7 +334,6 @@ export default function AsistenciaPage() {
           <h1 className="text-[22px] font-semibold text-foreground" style={{ fontFamily: 'inherit', lineHeight: 1.1 }}>
             Asistencia
           </h1>
-          <p className="text-xs text-muted-foreground mt-0.5 capitalize">{todayLabel()}</p>
         </div>
         {canManage && !isBlocked && members.length > 0 && (
           <motion.button
@@ -353,7 +349,7 @@ export default function AsistenciaPage() {
         )}
       </div>
 
-      <motion.div variants={stagger} initial="hidden" animate="show" className="px-4 pt-4 space-y-3">
+      <motion.div variants={stagger} initial="hidden" animate="show" className="px-4 pt-4 lg:pt-6 space-y-3">
         {loading ? (
           <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 sm:gap-3">
             {[...Array(12)].map((_, i) => (

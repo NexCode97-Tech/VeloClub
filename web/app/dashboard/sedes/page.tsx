@@ -197,7 +197,6 @@ export default function SedesPage() {
           <h1 className="text-[22px] font-semibold text-foreground" style={{ fontFamily: 'inherit', lineHeight: 1.1 }}>
             Sedes
           </h1>
-          <p className="text-xs text-muted-foreground mt-0.5">Lugares de entrenamiento del club</p>
         </div>
         {canManage && (
           <button
@@ -350,7 +349,7 @@ export default function SedesPage() {
       </Dialog>
 
       {/* Lista de sedes */}
-      <motion.div variants={stagger} initial="hidden" animate="show" className="px-4 pt-4 pb-4">
+      <motion.div variants={stagger} initial="hidden" animate="show" className="px-4 pt-4 lg:pt-6 pb-4">
         {loading ? (
           <div className="flex justify-center py-10">
             <div className="w-6 h-6 rounded-full border-2 border-primary border-t-transparent animate-spin" />

@@ -253,9 +253,6 @@ export default function LogrosPage() {
             <h1 className="text-[22px] font-semibold text-foreground" style={{ fontFamily: 'inherit', lineHeight: 1.1 }}>
               Rendimiento
             </h1>
-            <p className="text-[12px] text-muted-foreground mt-0.5">
-              Competencias y entrenamientos del club
-            </p>
           </div>
           {/* Reservar espacio del botón mientras role carga para evitar shift */}
           {role !== 'STUDENT' && (
@@ -280,7 +277,7 @@ export default function LogrosPage() {
         </div>
 
         {/* Stats strip — siempre ocupa espacio para evitar layout shift */}
-        <div className="flex gap-2 mb-4 w-full" style={{ opacity: loading ? 0 : 1, transition: 'opacity 0.2s ease' }}>
+        <div className="flex gap-2 mb-4 w-full lg:mt-3" style={{ opacity: loading ? 0 : 1, transition: 'opacity 0.2s ease' }}>
           {tab === 'comp' ? (
             <>
               <StatPill value={loading ? 0 : visibleComps.length} label="Competencias" color="#4361EE" />

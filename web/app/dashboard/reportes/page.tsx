@@ -247,7 +247,6 @@ export default function ReportesPage() {
             <h1 className="text-[22px] font-semibold text-foreground" style={{ fontFamily: 'inherit', lineHeight: 1.1 }}>
               Analíticas
             </h1>
-            <p className="text-[11px] text-muted-foreground mt-0.5 capitalize">{activeMonthLabel} {activeYear}</p>
           </div>
           {/* MonthPicker */}
           <MonthPicker
@@ -260,7 +259,7 @@ export default function ReportesPage() {
         </div>
       </div>
 
-      <motion.div variants={stagger} initial="hidden" animate="show" className="flex flex-col gap-4 px-4 py-4">
+      <motion.div variants={stagger} initial="hidden" animate="show" className="flex flex-col gap-4 px-4 py-4 lg:pt-6">
 
         {/* KPIs */}
         <motion.div variants={cardVariant} className="grid grid-cols-2 sm:grid-cols-3 gap-3">

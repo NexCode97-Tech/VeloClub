@@ -32,7 +32,7 @@ function MoneyInput({ value, onChange, placeholder, style }: {
 
 // ── Tipos ───────────────────────────────────────────────────────────────────
 export type TipoPlan = 'MENSUAL' | 'TRIMESTRAL' | 'ANUAL';
-type EstadoPago = 'PAID' | 'PENDING' | 'OVERDUE';
+type EstadoPago = 'PAID' | 'PENDING' | 'OVERDUE' | 'REFUNDED';
 
 export interface Pago { id: string; concepto: string; monto: number; fecha: string | null; estado: EstadoPago; receiptUrl?: string | null; receiptPublicId?: string | null; }
 export interface Suscripcion { id: string; planMonto: number; tipoPlan: TipoPlan; año: number; pagos: Pago[]; }
@@ -76,6 +76,7 @@ const ESTADO: Record<EstadoPago, { label: string; color: string; bg: string; bor
   PAID:    { label: 'Pagado',    color: '#06D6A0', bg: 'rgba(6,214,160,0.10)',  border: 'rgba(6,214,160,0.25)'  },
   PENDING: { label: 'Pendiente', color: '#FFB703', bg: 'rgba(255,183,3,0.10)',  border: 'rgba(255,183,3,0.25)'  },
   OVERDUE: { label: 'Vencido',   color: '#EF476F', bg: 'rgba(239,71,111,0.10)', border: 'rgba(239,71,111,0.25)' },
+  REFUNDED:{ label: 'Reembolsado', color: '#8E87A8', bg: 'rgba(142,135,168,0.10)', border: 'rgba(142,135,168,0.25)' },
 };
 const PLAN_BADGE: Record<TipoPlan, { label: string; color: string; bg: string }> = {
   MENSUAL:    { label: 'Mensual',    color: '#7C3AED', bg: 'rgba(124,58,237,0.12)' },

@@ -4,7 +4,7 @@ import { useAuth } from '@clerk/nextjs';
 import { useEffect, useState } from 'react';
 import Script from 'next/script';
 import { apiFetch } from '@/lib/api-client';
-import { CreditCard, RotateCcw, CheckCircle2, XCircle } from 'lucide-react';
+import { CreditCard, RotateCcw, CheckCircle2, XCircle, ArrowLeft } from 'lucide-react';
 
 const fmt = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 });
 
@@ -244,6 +244,14 @@ export default function SuscripcionCard() {
       <Script src="https://sdk.mercadopago.com/js/v2" strategy="afterInteractive" onLoad={() => setSdkReady(true)} />
 
       <div className="bg-white border border-border rounded-2xl p-5 space-y-5">
+        {!vigencia && (
+          <button
+            onClick={() => { setPickedPlan(false); setPlanes(null); }}
+            className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" /> Cambiar plan
+          </button>
+        )}
         <div className="flex items-center justify-between">
           <div>
             <p className="text-[11px] font-semibold text-muted-foreground tracking-wide">Plan {PLAN_LABEL[suscripcion.tipoPlan]}</p>

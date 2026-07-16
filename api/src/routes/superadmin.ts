@@ -304,6 +304,7 @@ router.get('/suscripciones', requireAuth, requireSuperadmin, async (_req, res) =
   const clubs = await prisma.club.findMany({
     select: {
       id: true, name: true, active: true, createdAt: true, logoUrl: true, trialEndsAt: true,
+      verificationStatus: true, nameFlagged: true,
       _count: { select: { members: true } },
       suscripcion: { include: { pagos: { orderBy: { createdAt: 'asc' } } } },
       members: { where: { role: 'ADMIN' }, select: { phone: true }, take: 1 },

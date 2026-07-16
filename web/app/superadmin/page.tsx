@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiFetch } from '@/lib/api-client';
 import Link from 'next/link';
-import { Users, Building2, CircleDollarSign, ChevronRight, ArrowUpRight } from 'lucide-react';
+import { Users, Building2, CircleDollarSign, ChevronRight, ArrowUpRight, BadgeAlert } from 'lucide-react';
 import { motion, type Variants, useReducedMotion } from 'framer-motion';
 import { stagger, cardVariant } from '@/lib/page-animations';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
@@ -42,6 +42,8 @@ interface Club {
   id: string; name: string; active: boolean;
   createdAt: string; trialEndsAt?: string | null;
   logoUrl?: string | null;
+  verificationStatus?: 'PENDING' | 'VERIFIED' | 'REJECTED';
+  nameFlagged?: boolean;
   _count: { members: number };
   suscripcion?: Suscripcion | null;
 }
@@ -112,6 +114,7 @@ export default function SuperadminDashboard() {
   const activos         = clubs.filter(c => c.active).length;
   const totalMiembros   = clubs.reduce((s, c) => s + (c._count?.members ?? 0), 0);
   const allPagos        = clubs.flatMap(c => c.suscripcion?.pagos ?? []);
+  const porVerificar    = clubs.filter(c => c.verificationStatus === 'PENDING');
 
   // Recaudado este mes vs mes anterior
   const recaudadoEsteMes = allPagos
@@ -209,6 +212,32 @@ export default function SuperadminDashboard() {
         animate="show"
         style={{ padding: '0 16px 100px' }}
       >
+        {/* ── Banner: clubes por verificar (auto-registro self-serve) ──────── */}
+        {porVerificar.length > 0 && (
+          <motion.div variants={cardVariant}>
+            <Link href="/superadmin/clubs" style={{ textDecoration: 'none' }}>
+              <div style={{
+                display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px',
+                borderRadius: 18, marginBottom: 10, cursor: 'pointer',
+                background: 'rgba(255,183,3,0.10)', border: '1px solid rgba(255,183,3,0.30)',
+              }}>
+                <div style={{ width: 38, height: 38, borderRadius: 12, background: 'rgba(255,183,3,0.20)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <BadgeAlert size={18} color="#B88A00" />
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <p style={{ margin: '0 0 1px', fontSize: 13, fontWeight: 700, color: '#1A1028' }}>
+                    {porVerificar.length} club{porVerificar.length !== 1 ? 's' : ''} por verificar
+                  </p>
+                  <p style={{ margin: 0, fontSize: 11, color: '#8E87A8' }}>
+                    Se auto-registraron y esperan revisión{porVerificar.some(c => c.nameFlagged) ? ' · alguno con nombre parecido a otro' : ''}
+                  </p>
+                </div>
+                <ChevronRight size={16} style={{ color: '#B88A00', flexShrink: 0 }} />
+              </div>
+            </Link>
+          </motion.div>
+        )}
+
         {/* ── Hero card — RECAUDADO ESTE MES ─────────────────────────────── */}
         <motion.div
           variants={cardVariant}

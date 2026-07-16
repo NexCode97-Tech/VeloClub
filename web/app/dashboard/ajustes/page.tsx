@@ -753,7 +753,7 @@ function AjustesPageContent() {
       </div>
 
       {/* ══ DESKTOP (>= lg) — columna centrada, una sección a la vez ═══════ */}
-      <div className="hidden lg:block px-6 pb-8">
+      <div className="hidden lg:block px-6 pt-6 pb-8">
         <div className="max-w-5xl mx-auto">
           {(!isAdmin || tab === 'perfil') && (
             <div className="space-y-4">

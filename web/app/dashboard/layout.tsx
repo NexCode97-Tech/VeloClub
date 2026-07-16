@@ -181,7 +181,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   // Rastrea la profundidad de navegación del sidebar (0 = nav principal,
   // 1 = sub-menú de un módulo) para animar la dirección del deslizamiento.
   // Debe declararse antes de cualquier return temprano (reglas de hooks).
-  const navDepthNow = (!collapsed && (pathname.startsWith('/dashboard/ajustes') || pathname.startsWith('/dashboard/logros'))) ? 1 : 0;
+  // Depende solo de la ruta (no de collapsed) — expandir/contraer el sidebar
+  // nunca debe disparar la animación de deslizamiento del sub-menú.
+  const navDepthNow = (pathname.startsWith('/dashboard/ajustes') || pathname.startsWith('/dashboard/logros')) ? 1 : 0;
   const prevNavDepthRef = useRef(navDepthNow);
   useEffect(() => { prevNavDepthRef.current = navDepthNow; }, [navDepthNow]);
 

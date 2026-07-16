@@ -330,7 +330,9 @@ export default function SuperadminDashboard() {
               <p style={{ margin: '0 0 1px', fontSize: 13, fontWeight: 600, color: '#1A1028', fontFamily: 'inherit' }}>Ingresos por mes</p>
               <p style={{ margin: '0 0 12px', fontSize: 10, color: '#8E87A8' }}>{currentYear}</p>
             </div>
-            <ResponsiveContainer width="100%" height={150}>
+            {/* debounce evita que el ResizeObserver redibuje la gráfica en cada
+                frame mientras el sidebar se expande/contrae (causaba jank) */}
+            <ResponsiveContainer width="100%" height={150} debounce={150}>
               <AreaChart data={monthlyIncome} margin={{ top: 4, right: 16, left: -10, bottom: 0 }}>
                 <defs>
                   <linearGradient id="incomeGrad" x1="0" y1="0" x2="0" y2="1">

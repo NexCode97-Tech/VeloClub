@@ -575,7 +575,7 @@ export default function SuscripcionCard() {
                       className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-0.5 rounded-md mb-2 md:absolute md:-top-3 md:left-1/2 md:-translate-x-1/2 md:mb-0"
                       style={{ background: '#7C3AED', color: '#fff' }}
                     >
-                      <Star className="w-3 h-3" fill="currentColor" />
+                      <Star className="w-3 h-3" style={{ color: '#FFD60A' }} fill="#FFD60A" />
                       Más popular
                     </span>
                   )}

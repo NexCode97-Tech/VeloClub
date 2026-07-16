@@ -1039,21 +1039,23 @@ export default function DashboardPage() {
                 border: `1px solid ${trial.daysLeft <= 3 ? 'rgba(239,71,111,0.20)' : 'rgba(255,183,3,0.25)'}`,
               }}
             >
-              <div className="flex items-center justify-center gap-2">
-                <span className="text-[16px] leading-none">⏳</span>
-                <p className="text-[12px] font-semibold" style={{ color: trial.daysLeft <= 3 ? '#EF476F' : '#B88A00' }}>
-                  {trial.daysLeft === 0
-                    ? 'Tu período de prueba vence hoy'
-                    : `Período de prueba · ${trial.daysLeft} día${trial.daysLeft !== 1 ? 's' : ''} restante${trial.daysLeft !== 1 ? 's' : ''}`}
-                </p>
+              <div className="flex flex-col items-center justify-center gap-2 lg:flex-row lg:gap-4">
+                <div className="flex items-center justify-center gap-2">
+                  <span className="text-[16px] leading-none">⏳</span>
+                  <p className="text-[12px] font-semibold" style={{ color: trial.daysLeft <= 3 ? '#EF476F' : '#B88A00' }}>
+                    {trial.daysLeft === 0
+                      ? 'Tu período de prueba vence hoy'
+                      : `Período de prueba · ${trial.daysLeft} día${trial.daysLeft !== 1 ? 's' : ''} restante${trial.daysLeft !== 1 ? 's' : ''}`}
+                  </p>
+                </div>
+                <Link
+                  href="/dashboard/ajustes?tab=suscripcion"
+                  className="block w-fit px-4 py-1.5 rounded-lg text-[12px] font-semibold text-white transition-opacity hover:opacity-90"
+                  style={{ background: trial.daysLeft <= 3 ? '#EF476F' : '#B88A00' }}
+                >
+                  {trial.daysLeft <= 3 ? 'Activar plan ahora y no perder el acceso' : 'Activar plan ahora'}
+                </Link>
               </div>
-              <Link
-                href="/dashboard/ajustes?tab=suscripcion"
-                className="block w-fit mx-auto mt-2 px-4 py-1.5 rounded-lg text-[12px] font-semibold text-white transition-opacity hover:opacity-90"
-                style={{ background: trial.daysLeft <= 3 ? '#EF476F' : '#B88A00' }}
-              >
-                {trial.daysLeft <= 3 ? 'Activar plan ahora y no perder el acceso' : 'Activar plan ahora'}
-              </Link>
             </div>
           </motion.div>
         )}

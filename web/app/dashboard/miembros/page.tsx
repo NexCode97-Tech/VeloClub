@@ -348,7 +348,7 @@ export default function MiembrosPage() {
           transition={{ duration: 0.28, ease: EASE_OUT }}
           className="px-5 py-3 pb-0"
         >
-          <div className="mb-6 lg:pb-3 lg:border-b" style={{ borderColor: 'rgba(0,0,0,0.07)' }}>
+          <div className="flex items-center mb-6 lg:pb-3 lg:border-b" style={{ minHeight: 58, borderColor: 'rgba(0,0,0,0.07)' }}>
             <h1 className="text-[22px] font-semibold" style={{ color: '#1A1028', fontFamily: 'inherit', lineHeight: 1.1 }}>
               Miembros
             </h1>

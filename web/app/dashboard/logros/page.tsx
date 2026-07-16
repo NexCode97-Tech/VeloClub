@@ -248,7 +248,7 @@ export default function LogrosPage() {
 
       {/* ── Header ─────────────────────────────────────────────────────────── */}
       <div className="px-5 py-3">
-        <div className="flex items-start justify-between gap-2 mb-4 lg:pb-3 lg:border-b" style={{ borderColor: 'rgba(0,0,0,0.07)' }}>
+        <div className="flex items-center justify-between gap-2 mb-4 lg:pb-3 lg:border-b" style={{ minHeight: 58, borderColor: 'rgba(0,0,0,0.07)' }}>
           <div>
             <h1 className="text-[22px] font-semibold text-foreground" style={{ fontFamily: 'inherit', lineHeight: 1.1 }}>
               Rendimiento

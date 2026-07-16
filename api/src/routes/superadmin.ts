@@ -57,6 +57,11 @@ router.post('/clubs', requireAuth, requireSuperadmin, async (req, res) => {
   const existing = await prisma.member.findFirst({ where: { email: adminEmail } });
   if (existing) return res.status(400).json({ error: 'Este email ya está registrado en otro club' });
 
+  // Si ese correo ya tiene una cuenta de login (User) de un club anterior, la
+  // reutilizamos y la re-vinculamos ya mismo — si no, queda un User "fantasma"
+  // apuntando al club viejo y el GET /me resuelve el club equivocado.
+  const existingUser = await prisma.user.findFirst({ where: { email: { equals: adminEmail, mode: 'insensitive' } } });
+
   const trialEndsAt = new Date();
   trialEndsAt.setDate(trialEndsAt.getDate() + 15);
 
@@ -66,11 +71,23 @@ router.post('/clubs', requireAuth, requireSuperadmin, async (req, res) => {
       trialEndsAt,
       deporte: deporte || undefined,
       members: {
-        create: { fullName: adminName, email: adminEmail, phone: adminPhone || undefined, role: 'ADMIN', inviteStatus: 'PENDING' },
+        create: {
+          fullName: adminName, email: adminEmail, phone: adminPhone || undefined, role: 'ADMIN',
+          ...(existingUser
+            ? { clerkId: existingUser.clerkId, inviteStatus: 'ACCEPTED' }
+            : { inviteStatus: 'PENDING' }),
+        },
       },
     },
     include: { _count: { select: { members: true } } },
   });
+
+  if (existingUser) {
+    await prisma.user.update({
+      where: { id: existingUser.id },
+      data: { clubId: club.id, role: 'ADMIN' },
+    });
+  }
 
   await addToAllowlist(adminEmail);
   await crearNotificacion('CLUB_CREADO', 'Nuevo club registrado', `${clubName} fue creado con admin ${adminName}.`);

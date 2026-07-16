@@ -348,6 +348,21 @@ router.delete('/:id', requireAuth, async (req, res) => {
   }
 
   await prisma.member.delete({ where: { id } });
+
+  // Desvincular el User (cuenta de login) si seguía apuntando a este club — si no se
+  // limpia, un correo reutilizado en otro club queda con el login "fantasma" del club
+  // viejo (el GET /me lo resuelve por User antes que por Member).
+  await prisma.user.updateMany({
+    where: {
+      clubId: req.user.clubId ?? '',
+      OR: [
+        ...(existing.clerkId ? [{ clerkId: existing.clerkId }] : []),
+        ...(existing.email ? [{ email: existing.email }] : []),
+      ],
+    },
+    data: { clubId: null },
+  });
+
   await cacheDel(`members:${req.user.clubId ?? ''}`);
   emitToClub(req.user.clubId ?? '', 'members');
   res.json({ ok: true });

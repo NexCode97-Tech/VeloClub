@@ -21,7 +21,7 @@ const DEPORTES = [
 ];
 
 // Número de contacto del equipo VeloClub para el flujo "Contáctenos".
-const WHATSAPP = '573164134212';
+const WHATSAPP = '573006359008';
 
 type NameStatus = 'idle' | 'checking' | 'ok' | 'similar' | 'taken';
 type Mode = 'choice' | 'create' | 'contact' | 'contact_done';

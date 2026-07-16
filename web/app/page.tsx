@@ -110,13 +110,20 @@ export default function HomePage() {
           />
 
           {/* Desktop — derecha */}
-          <div className="hidden sm:flex items-center">
+          <div className="hidden sm:flex items-center gap-4">
             <Link
               href="/sign-in"
               className="flex items-center gap-1.5 text-sm font-semibold text-white/90 hover:text-white transition-colors"
             >
               Iniciar sesión
               <ChevronRight className="w-4 h-4" />
+            </Link>
+            <Link
+              href="/sign-up"
+              className="inline-flex items-center gap-1.5 text-sm font-semibold text-white px-4 py-2 rounded-full transition-all hover:scale-[1.03] active:scale-95"
+              style={{ background: 'linear-gradient(135deg, #7C3AED, #9333EA)' }}
+            >
+              Crear mi club
             </Link>
           </div>
 
@@ -160,13 +167,23 @@ export default function HomePage() {
             <Link
               href="/sign-in"
               onClick={() => setMenuOpen(false)}
-              className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-semibold text-white transition-colors mt-1"
+              className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-semibold text-white/90 hover:bg-white/10 transition-colors mt-1"
+            >
+              <div className="w-7 h-7 rounded-lg bg-white/10 flex items-center justify-center shrink-0">
+                <ChevronRight className="w-3.5 h-3.5 text-white" />
+              </div>
+              Iniciar sesión
+            </Link>
+            <Link
+              href="/sign-up"
+              onClick={() => setMenuOpen(false)}
+              className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-semibold text-white transition-colors"
               style={{ background: 'linear-gradient(135deg, #7C3AED, #9333EA)' }}
             >
               <div className="w-7 h-7 rounded-lg bg-white/20 flex items-center justify-center shrink-0">
                 <ChevronRight className="w-3.5 h-3.5 text-white" />
               </div>
-              Iniciar sesión
+              Crear mi club
             </Link>
           </div>
         </div>
@@ -257,15 +274,23 @@ export default function HomePage() {
             ¿Listo para empezar?
           </h2>
           <p className="text-purple-200 text-sm mb-7 relative">
-            Ingresa a tu club y empieza a gestionar todo desde hoy.
+            Crea tu club gratis y empieza a gestionar todo desde hoy. 15 días de prueba.
           </p>
-          <Link
-            href="/sign-in"
-            className="inline-flex items-center gap-2 px-7 py-3 bg-white text-[#7C3AED] font-semibold text-sm rounded-xl shadow-lg transition-all hover:-translate-y-0.5 active:scale-95 relative"
-          >
-            Iniciar sesión
-            <ChevronRight className="w-4 h-4" />
-          </Link>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 relative">
+            <Link
+              href="/sign-up"
+              className="inline-flex items-center gap-2 px-7 py-3 bg-white text-[#7C3AED] font-semibold text-sm rounded-xl shadow-lg transition-all hover:-translate-y-0.5 active:scale-95 w-full sm:w-auto justify-center"
+            >
+              Crear mi club gratis
+              <ChevronRight className="w-4 h-4" />
+            </Link>
+            <Link
+              href="/sign-in"
+              className="inline-flex items-center gap-2 px-7 py-3 text-white font-semibold text-sm rounded-xl border border-white/40 hover:bg-white/10 transition-all active:scale-95 w-full sm:w-auto justify-center"
+            >
+              Ya tengo cuenta
+            </Link>
+          </div>
         </div>
       </section>
 

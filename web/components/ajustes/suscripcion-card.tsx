@@ -175,7 +175,7 @@ export default function SuscripcionCard() {
             <div className="w-5 h-5 rounded-full border-2 border-primary border-t-transparent animate-spin" />
           </div>
         ) : (
-          <div className="space-y-2.5">
+          <div className="space-y-2.5 md:space-y-0 md:grid md:grid-cols-3 md:gap-4 md:items-stretch">
             {planes.map(p => {
               const destacado = p.tipoPlan === 'TRIMESTRAL';
               const precioMes = Math.round(p.precio / MESES_POR_PLAN[p.tipoPlan]);
@@ -184,27 +184,44 @@ export default function SuscripcionCard() {
                   key={p.tipoPlan}
                   onClick={() => handleElegirPlan(p.tipoPlan)}
                   disabled={settingPlan !== null}
-                  className="w-full text-left rounded-xl p-4 transition-colors disabled:opacity-60"
+                  className="w-full text-left rounded-xl p-4 transition-colors disabled:opacity-60 md:relative md:flex md:flex-col md:text-center md:p-5"
                   style={{ border: destacado ? '2px solid #7C3AED' : '1px solid var(--border, rgba(0,0,0,0.10))', background: '#fff' }}
                 >
                   {destacado && (
-                    <span className="inline-block text-[11px] font-semibold px-2.5 py-0.5 rounded-md mb-2" style={{ background: 'rgba(124,58,237,0.10)', color: '#7C3AED' }}>
+                    <span
+                      className="inline-block text-[11px] font-semibold px-2.5 py-0.5 rounded-md mb-2 md:absolute md:-top-3 md:left-1/2 md:-translate-x-1/2 md:mb-0"
+                      style={{ background: '#7C3AED', color: '#fff' }}
+                    >
                       Más popular
                     </span>
                   )}
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-[14px] font-semibold text-foreground">{PLAN_LABEL[p.tipoPlan]}</p>
-                      <p className="text-[12px] mt-0.5" style={{ color: p.tipoPlan === 'MENSUAL' ? 'var(--muted-foreground, #8E87A8)' : '#06D6A0' }}>
+                  <div className="flex items-center justify-between md:flex-col md:items-center md:gap-1 md:mt-1">
+                    <div className="md:order-1">
+                      <p className="text-[14px] font-semibold text-foreground md:text-[12px] md:font-semibold md:tracking-wide md:text-muted-foreground">{PLAN_LABEL[p.tipoPlan]}</p>
+                      <p className="text-[12px] mt-0.5 md:hidden" style={{ color: p.tipoPlan === 'MENSUAL' ? 'var(--muted-foreground, #8E87A8)' : '#06D6A0' }}>
                         {PLAN_DESCUENTO_LABEL[p.tipoPlan]}
                       </p>
                     </div>
-                    <div className="text-right">
-                      <p className="text-[18px] font-bold text-foreground">{settingPlan === p.tipoPlan ? '...' : fmt.format(p.precio)}</p>
+                    <div className="text-right md:text-center md:order-2 md:mt-2">
+                      <p className="text-[18px] font-bold text-foreground md:text-[26px]">{settingPlan === p.tipoPlan ? '...' : fmt.format(p.precio)}</p>
                       {p.tipoPlan !== 'MENSUAL' && (
                         <p className="text-[11px] text-muted-foreground">{fmt.format(precioMes)} / mes</p>
                       )}
                     </div>
+                  </div>
+                  <p
+                    className="hidden md:block text-[12px] font-semibold mt-1"
+                    style={{ color: p.tipoPlan === 'MENSUAL' ? 'var(--muted-foreground, #8E87A8)' : '#06D6A0' }}
+                  >
+                    {PLAN_DESCUENTO_LABEL[p.tipoPlan]}
+                  </p>
+                  <div className="hidden md:flex md:flex-1 md:items-end md:pt-4 md:mt-4" style={{ borderTop: '1px solid rgba(0,0,0,0.06)' }}>
+                    <span
+                      className="text-[13px] font-semibold px-4 py-2 rounded-lg w-full text-center"
+                      style={{ background: destacado ? '#7C3AED' : 'rgba(67,97,238,0.08)', color: destacado ? '#fff' : '#4361EE' }}
+                    >
+                      {settingPlan === p.tipoPlan ? 'Guardando...' : 'Elegir este plan'}
+                    </span>
                   </div>
                 </button>
               );

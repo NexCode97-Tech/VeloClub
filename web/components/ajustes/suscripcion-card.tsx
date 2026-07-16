@@ -36,12 +36,23 @@ interface MpCardTokenParams {
   cardExpirationMonth: string; cardExpirationYear: string;
   securityCode: string; identificationType: string; identificationNumber: string;
 }
+interface PayerCost {
+  installments: number;
+  installment_rate: number;
+  recommended_message: string;
+}
+interface MpInstallmentsResult {
+  payment_method_id: string;
+  payment_type_id: 'credit_card' | 'debit_card' | string;
+  payer_costs: PayerCost[];
+}
 interface MpInstance {
   createCardToken: (params: MpCardTokenParams) => Promise<{ id: string }>;
   getPaymentMethods: (params: { bin: string }) => Promise<{ results: Array<{ id: string }> }>;
+  getInstallments: (params: { bin: string; amount: string }) => Promise<MpInstallmentsResult[]>;
 }
 declare global {
-  interface Window { MercadoPago?: new (publicKey: string) => MpInstance }
+  interface Window { MercadoPago?: new (publicKey: string) => MpInstance; MP_DEVICE_SESSION_ID?: string }
 }
 
 type MetodoPago = 'CARD' | 'PSE' | 'EFECTY';
@@ -189,13 +200,52 @@ export default function SuscripcionCard() {
   // Formulario para activar recurrencia sobre un plan ya activo
   const [showActivarForm, setShowActivarForm] = useState(false);
 
-  const [card, setCard] = useState({ number: '', name: '', month: '', year: '', cvv: '', docNumber: '' });
+  const [card, setCard] = useState({ number: '', name: '', expiry: '', cvv: '', docNumber: '' });
   const cardBrand = detectarMarca(card.number.replace(/\D/g, ''));
 
   function handleCardNumberChange(raw: string) {
     const brand = detectarMarca(raw.replace(/\D/g, ''));
     setCard(c => ({ ...c, number: formatearNumeroTarjeta(raw, brand) }));
   }
+
+  function formatearVencimiento(raw: string): string {
+    const digits = raw.replace(/\D/g, '').slice(0, 4);
+    return digits.length > 2 ? `${digits.slice(0, 2)}/${digits.slice(2)}` : digits;
+  }
+
+  // Tipo de tarjeta (débito/crédito) y cuotas disponibles — se consultan a Mercado
+  // Pago apenas se completa el BIN (primeros 6 dígitos), antes de tokenizar.
+  const [cardTipo, setCardTipo] = useState<'credit_card' | 'debit_card' | null>(null);
+  const [cuotas, setCuotas] = useState<PayerCost[]>([]);
+  const [cuotasSeleccionadas, setCuotasSeleccionadas] = useState(1);
+  const [loadingCuotas, setLoadingCuotas] = useState(false);
+
+  const bin = card.number.replace(/\D/g, '').slice(0, 6);
+  const montoParaCuotas = data
+    ? (activarAutoRenovacion ? data.suscripcion.planMontoConAutoRenew : data.suscripcion.planMontoSinAutoRenew)
+    : 0;
+
+  useEffect(() => {
+    setCardTipo(null); setCuotas([]); setCuotasSeleccionadas(1);
+    if (bin.length !== 6 || !sdkReady || !window.MercadoPago || !montoParaCuotas) return;
+    const publicKey = process.env.NEXT_PUBLIC_MP_PUBLIC_KEY;
+    if (!publicKey) return;
+
+    let cancelado = false;
+    setLoadingCuotas(true);
+    const mp = new window.MercadoPago(publicKey);
+    mp.getInstallments({ bin, amount: String(montoParaCuotas) })
+      .then(results => {
+        if (cancelado || !results?.[0]) return;
+        setCardTipo(results[0].payment_type_id === 'debit_card' ? 'debit_card' : 'credit_card');
+        setCuotas(results[0].payer_costs ?? []);
+      })
+      .catch(() => { /* si falla, se sigue con 1 cuota por defecto */ })
+      .finally(() => { if (!cancelado) setLoadingCuotas(false); });
+
+    return () => { cancelado = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bin, sdkReady, montoParaCuotas]);
 
   // Pago dentro de la app (Checkout API) — medios y datos
   const [metodos, setMetodos] = useState<MetodosDisponibles | null>(null);
@@ -276,21 +326,25 @@ export default function SuscripcionCard() {
     const publicKey = process.env.NEXT_PUBLIC_MP_PUBLIC_KEY;
     if (!publicKey) throw new Error('Falta configurar la llave pública de Mercado Pago');
     const mp = new window.MercadoPago(publicKey);
+    const [mes, año] = card.expiry.split('/');
     const tokenResult = await mp.createCardToken({
       cardNumber: card.number.replace(/\s/g, ''),
       cardholderName: card.name,
-      cardExpirationMonth: card.month,
-      cardExpirationYear: card.year,
+      cardExpirationMonth: mes,
+      cardExpirationYear: año?.length === 2 ? `20${año}` : año,
       securityCode: card.cvv,
       identificationType: 'CC',
       identificationNumber: card.docNumber,
     });
-    const bin = card.number.replace(/\s/g, '').slice(0, 6);
-    const pm = await mp.getPaymentMethods({ bin });
+    const binTarjeta = card.number.replace(/\s/g, '').slice(0, 6);
+    const pm = await mp.getPaymentMethods({ bin: binTarjeta });
     return { tokenId: tokenResult.id, paymentMethodId: pm.results?.[0]?.id };
   }
 
-  function resetCard() { setCard({ number: '', name: '', month: '', year: '', cvv: '', docNumber: '' }); }
+  function resetCard() {
+    setCard({ number: '', name: '', expiry: '', cvv: '', docNumber: '' });
+    setCardTipo(null); setCuotas([]); setCuotasSeleccionadas(1);
+  }
 
   // Flujo de pago del caso "sin plan / vencido"
   async function handlePagar() {
@@ -317,7 +371,10 @@ export default function SuscripcionCard() {
       if (metodo === 'CARD') {
         const { tokenId, paymentMethodId } = await tokenizarTarjeta();
         if (!paymentMethodId) throw new Error('No reconocimos la tarjeta. Verifica el número.');
-        Object.assign(body, { cardTokenId: tokenId, paymentMethodId, docType: 'CC', docNumber: card.docNumber });
+        Object.assign(body, {
+          cardTokenId: tokenId, paymentMethodId, docType: 'CC', docNumber: card.docNumber,
+          installments: cardTipo === 'credit_card' ? cuotasSeleccionadas : 1,
+        });
       } else if (metodo === 'PSE') {
         Object.assign(body, { bancoId: pse.bancoId, personType: pse.personType, docType: pse.docType, docNumber: pse.docNumber });
       } else {
@@ -481,16 +538,32 @@ export default function SuscripcionCard() {
       </div>
       <input placeholder="Nombre del titular" value={card.name} onChange={e => setCard(c => ({ ...c, name: e.target.value }))}
         className="w-full px-3 py-2 rounded-lg border border-input text-sm" autoComplete="cc-name" />
-      <div className="grid grid-cols-4 gap-2">
-        <input placeholder="MM" value={card.month} onChange={e => setCard(c => ({ ...c, month: e.target.value.replace(/\D/g, '') }))}
-          className="px-3 py-2 rounded-lg border border-input text-sm" inputMode="numeric" maxLength={2} autoComplete="cc-exp-month" />
-        <input placeholder="AAAA" value={card.year} onChange={e => setCard(c => ({ ...c, year: e.target.value.replace(/\D/g, '') }))}
-          className="px-3 py-2 rounded-lg border border-input text-sm" inputMode="numeric" maxLength={4} autoComplete="cc-exp-year" />
+      <div className="grid grid-cols-3 gap-2">
+        <input placeholder="MM/AA" value={card.expiry} onChange={e => setCard(c => ({ ...c, expiry: formatearVencimiento(e.target.value) }))}
+          className="px-3 py-2 rounded-lg border border-input text-sm" inputMode="numeric" maxLength={5} autoComplete="cc-exp" />
         <input placeholder="CVV" value={card.cvv} onChange={e => setCard(c => ({ ...c, cvv: e.target.value.replace(/\D/g, '') }))}
           className="px-3 py-2 rounded-lg border border-input text-sm" inputMode="numeric" maxLength={cardBrand === 'amex' ? 4 : 3} autoComplete="cc-csc" />
         <input placeholder="Cédula" value={card.docNumber} onChange={e => setCard(c => ({ ...c, docNumber: e.target.value.replace(/\D/g, '') }))}
           className="px-3 py-2 rounded-lg border border-input text-sm" inputMode="numeric" />
       </div>
+
+      {loadingCuotas && (
+        <p className="text-[11px] text-muted-foreground">Consultando cuotas disponibles...</p>
+      )}
+      {!loadingCuotas && cardTipo === 'debit_card' && (
+        <p className="text-[11px] text-muted-foreground">Tarjeta débito detectada — el pago se hace en 1 solo cobro.</p>
+      )}
+      {!loadingCuotas && cardTipo === 'credit_card' && cuotas.length > 1 && (
+        <select
+          value={cuotasSeleccionadas}
+          onChange={e => setCuotasSeleccionadas(Number(e.target.value))}
+          className="w-full px-3 py-2 rounded-lg border border-input text-sm bg-white"
+        >
+          {cuotas.map(c => (
+            <option key={c.installments} value={c.installments}>{c.recommended_message}</option>
+          ))}
+        </select>
+      )}
     </div>
   );
 

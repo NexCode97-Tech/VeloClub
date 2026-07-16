@@ -133,13 +133,15 @@ router.post('/pagar', requireAuth, async (req, res) => {
 
   const {
     metodo, aceptaTerminos, cardTokenId, paymentMethodId,
-    docType, docNumber, personType, bancoId, deviceId,
+    docType, docNumber, personType, bancoId, deviceId, installments,
   } = req.body as {
     metodo?: 'CARD' | 'PSE' | 'EFECTY'; aceptaTerminos?: boolean;
     cardTokenId?: string; paymentMethodId?: string;
     docType?: string; docNumber?: string; personType?: string; bancoId?: string;
-    deviceId?: string;
+    deviceId?: string; installments?: number;
   };
+
+  const cuotas = Number.isInteger(installments) && installments! >= 1 && installments! <= 36 ? installments! : 1;
 
   if (aceptaTerminos !== true) {
     return res.status(400).json({ error: 'Debes aceptar los términos y condiciones para continuar' });
@@ -181,7 +183,7 @@ router.post('/pagar', requireAuth, async (req, res) => {
     payload = {
       transaction_amount: monto,
       token: cardTokenId,
-      installments: 1,
+      installments: cuotas,
       payment_method_id: paymentMethodId,
       description,
       external_reference: reference,

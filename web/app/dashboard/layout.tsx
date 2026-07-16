@@ -178,6 +178,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   // Ocultar el tooltip si el sidebar deja de estar colapsado
   useEffect(() => { if (!collapsed) setNavTip(null); }, [collapsed]);
 
+  // Rastrea la profundidad de navegación del sidebar (0 = nav principal,
+  // 1 = sub-menú de un módulo) para animar la dirección del deslizamiento.
+  // Debe declararse antes de cualquier return temprano (reglas de hooks).
+  const navDepthNow = (!collapsed && (pathname.startsWith('/dashboard/ajustes') || pathname.startsWith('/dashboard/logros'))) ? 1 : 0;
+  const prevNavDepthRef = useRef(navDepthNow);
+  useEffect(() => { prevNavDepthRef.current = navDepthNow; }, [navDepthNow]);
+
   // Atajo de teclado para abrir el buscador (Ctrl/Cmd + K)
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -309,13 +316,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   ];
 
   // Vista actual del sidebar y dirección del deslizamiento (main → sub-menú
-  // desliza hacia adentro; Volver desliza de regreso).
+  // desliza hacia adentro; Volver desliza de regreso). El ref y el efecto que
+  // rastrean la dirección viven arriba (antes del return temprano) para no
+  // romper el orden de los hooks.
   const navView: 'ajustes' | 'logros' | 'main' =
     (!collapsed && onAjustes) ? 'ajustes' : (!collapsed && onLogros) ? 'logros' : 'main';
   const navDepth = navView === 'main' ? 0 : 1;
-  const prevNavDepthRef = useRef(navDepth);
   const navDir = navDepth >= prevNavDepthRef.current ? 1 : -1;
-  useEffect(() => { prevNavDepthRef.current = navDepth; }, [navDepth]);
 
   // Índice activo para el pill deslizante del bottom bar
   const activeTabIndex = tabItems.findIndex(t => isTabActive(t.href));

@@ -885,6 +885,9 @@ export default function SuscripcionCard() {
                           )}
                           <Icon className="w-4 h-4 relative z-10" />
                           <span className="relative z-10">{label}</span>
+                          {key === 'CARD' && (
+                            <span className="relative z-10 text-[9px] font-medium opacity-70 -mt-0.5">Débito/Crédito</span>
+                          )}
                         </button>
                       );
                     })}

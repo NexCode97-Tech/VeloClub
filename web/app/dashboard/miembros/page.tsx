@@ -341,24 +341,25 @@ export default function MiembrosPage() {
       ══════════════════════════════════════════════════════════════════ */}
       <div className="hidden md:flex flex-col h-full">
 
-        {/* ── Desktop Header ── */}
+        {/* ── Desktop Header — full-bleed, alineado con la fila del logo en el sidebar ── */}
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.28, ease: EASE_OUT }}
-          className="px-5 py-3 pb-0"
+          className="px-5 py-3 bg-background flex items-center lg:border-b"
+          style={{ minHeight: 58, borderColor: 'rgba(0,0,0,0.07)' }}
         >
-          <div className="flex items-center mb-6 lg:pb-3 lg:border-b" style={{ minHeight: 58, borderColor: 'rgba(0,0,0,0.07)' }}>
-            <h1 className="text-[22px] font-semibold" style={{ color: '#1A1028', fontFamily: 'inherit', lineHeight: 1.1 }}>
-              Miembros
-            </h1>
-          </div>
+          <h1 className="text-[22px] font-semibold" style={{ color: '#1A1028', fontFamily: 'inherit', lineHeight: 1.1 }}>
+            Miembros
+          </h1>
+        </motion.div>
 
+        <div className="px-5 pt-6">
           {/* ── Stats strip ── */}
           <motion.div
             variants={{ hidden: {}, show: { transition: { staggerChildren: 0.07 } } }}
             initial="hidden" animate="show"
-            className="grid grid-cols-4 gap-3 mb-6 lg:mt-3"
+            className="grid grid-cols-4 gap-3 mb-6"
           >
             {statsDesktop.map(s => {
               const active = roleFilter === s.filter;
@@ -485,7 +486,7 @@ export default function MiembrosPage() {
               </motion.button>
             </div>
           </motion.div>
-        </motion.div>
+        </div>
 
         {/* ── Grid de tarjetas ── */}
         <div className="px-8 pb-8">

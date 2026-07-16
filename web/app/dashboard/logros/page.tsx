@@ -248,14 +248,15 @@ export default function LogrosPage() {
 
       {/* ── Header ─────────────────────────────────────────────────────────── */}
       <div className="px-5 py-3">
-        <div className="flex items-center justify-between gap-2 mb-4 lg:pb-3 lg:border-b" style={{ minHeight: 58, borderColor: 'rgba(0,0,0,0.07)' }}>
-          <div>
-            <h1 className="text-[22px] font-semibold text-foreground" style={{ fontFamily: 'inherit', lineHeight: 1.1 }}>
-              Rendimiento
-            </h1>
-          </div>
-          {/* Reservar espacio del botón mientras role carga para evitar shift */}
-          {role !== 'STUDENT' && (
+        <div className="flex items-center mb-4 lg:pb-3 lg:border-b" style={{ minHeight: 58, borderColor: 'rgba(0,0,0,0.07)' }}>
+          <h1 className="text-[22px] font-semibold text-foreground" style={{ fontFamily: 'inherit', lineHeight: 1.1 }}>
+            Rendimiento
+          </h1>
+        </div>
+
+        {/* Botón dentro del contenido, debajo del separador */}
+        {role !== 'STUDENT' && (
+          <div className="flex justify-end mb-4 lg:mt-3">
             <motion.button
               whileTap={{ scale: 0.93 }}
               onClick={() => {
@@ -273,11 +274,11 @@ export default function LogrosPage() {
               <Plus className="w-4 h-4" />
               <span className="hidden sm:inline">{tab === 'comp' ? 'Competencia' : 'Entrenamiento'}</span>
             </motion.button>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* Stats strip — siempre ocupa espacio para evitar layout shift */}
-        <div className="flex gap-2 mb-4 w-full lg:mt-3" style={{ opacity: loading ? 0 : 1, transition: 'opacity 0.2s ease' }}>
+        <div className="flex gap-2 mb-4 w-full" style={{ opacity: loading ? 0 : 1, transition: 'opacity 0.2s ease' }}>
           {tab === 'comp' ? (
             <>
               <StatPill value={loading ? 0 : visibleComps.length} label="Competencias" color="#4361EE" />

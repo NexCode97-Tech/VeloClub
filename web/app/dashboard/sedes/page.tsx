@@ -201,7 +201,7 @@ export default function SedesPage() {
         {canManage && (
           <button
             onClick={openNew}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold text-white"
+            className="hidden lg:flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold text-white"
             style={{ background: 'linear-gradient(135deg, #7C3AED 0%, #4361EE 100%)' }}
           >
             <Plus className="w-4 h-4" />
@@ -350,6 +350,18 @@ export default function SedesPage() {
 
       {/* Lista de sedes */}
       <motion.div variants={stagger} initial="hidden" animate="show" className="px-4 pt-4 lg:pt-6 pb-4">
+        {canManage && (
+          <div className="hidden lg:flex justify-end mb-4">
+            <button
+              onClick={openNew}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold text-white"
+              style={{ background: 'linear-gradient(135deg, #7C3AED 0%, #4361EE 100%)' }}
+            >
+              <Plus className="w-4 h-4" />
+              <span>Nueva sede</span>
+            </button>
+          </div>
+        )}
         {loading ? (
           <div className="flex justify-center py-10">
             <div className="w-6 h-6 rounded-full border-2 border-primary border-t-transparent animate-spin" />

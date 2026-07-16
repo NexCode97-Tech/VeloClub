@@ -3,10 +3,12 @@
 import { useAuth } from '@clerk/nextjs';
 import { useEffect, useState } from 'react';
 import Script from 'next/script';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { apiFetch } from '@/lib/api-client';
-import { CreditCard, CheckCircle2, XCircle, ArrowLeft, Landmark, Banknote, Clock } from 'lucide-react';
+import { CreditCard, ArrowLeft, Landmark, Banknote, Clock, RefreshCw } from 'lucide-react';
 
 const fmt = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 });
+const EASE = [0.23, 1, 0.32, 1] as const;
 
 type TipoPlan = 'MENSUAL' | 'TRIMESTRAL' | 'ANUAL';
 const PLAN_LABEL: Record<TipoPlan, string> = { MENSUAL: 'Mensual', TRIMESTRAL: 'Trimestral', ANUAL: 'Anual' };
@@ -19,6 +21,8 @@ interface Suscripcion {
   id: string;
   tipoPlan: TipoPlan;
   planMonto: number;
+  planMontoSinAutoRenew: number;
+  planMontoConAutoRenew: number;
   autoRenew: boolean;
 }
 interface MiSuscripcionResponse {
@@ -48,27 +52,103 @@ interface MetodosDisponibles {
 }
 const DOC_TYPES = ['CC', 'CE', 'NIT', 'TI', 'PAS'];
 
+// ── Toggle deslizante estilo iOS ─────────────────────────────────────────────
+function SlideToggle({ checked, onChange, disabled }: { checked: boolean; onChange: (v: boolean) => void; disabled?: boolean }) {
+  const reduce = useReducedMotion();
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      aria-label="Renovación automática"
+      disabled={disabled}
+      onClick={() => onChange(!checked)}
+      className="relative shrink-0 flex items-center"
+      style={{
+        width: 46, height: 26, borderRadius: 999, padding: 3,
+        justifyContent: checked ? 'flex-end' : 'flex-start',
+        background: checked ? '#06D6A0' : 'rgba(120,80,200,0.22)',
+        transition: 'background 0.22s cubic-bezier(0.23,1,0.32,1)',
+        cursor: disabled ? 'not-allowed' : 'pointer',
+        opacity: disabled ? 0.5 : 1,
+      }}
+    >
+      <motion.span
+        layout
+        transition={reduce ? { duration: 0 } : { type: 'spring', stiffness: 520, damping: 34 }}
+        style={{ width: 20, height: 20, borderRadius: '50%', background: '#fff', boxShadow: '0 1px 3px rgba(0,0,0,0.28)', display: 'block' }}
+      />
+    </button>
+  );
+}
+
+// ── Precio con animación al cambiar (descuento) ──────────────────────────────
+function PrecioAnimado({ valor, className }: { valor: number; className?: string }) {
+  const reduce = useReducedMotion();
+  return (
+    <span className="relative inline-block" style={{ minWidth: 1 }}>
+      <AnimatePresence mode="popLayout" initial={false}>
+        <motion.span
+          key={valor}
+          className={className}
+          initial={reduce ? { opacity: 0 } : { opacity: 0, y: 8, filter: 'blur(4px)' }}
+          animate={reduce ? { opacity: 1 } : { opacity: 1, y: 0, filter: 'blur(0px)' }}
+          exit={reduce ? { opacity: 0 } : { opacity: 0, y: -8, filter: 'blur(4px)' }}
+          transition={{ duration: 0.22, ease: EASE }}
+          style={{ display: 'inline-block' }}
+        >
+          {fmt.format(valor)}
+        </motion.span>
+      </AnimatePresence>
+    </span>
+  );
+}
+
+// ── Contenedor que expande su altura con animación ───────────────────────────
+function Expand({ show, children }: { show: boolean; children: React.ReactNode }) {
+  const reduce = useReducedMotion();
+  return (
+    <AnimatePresence initial={false}>
+      {show && (
+        <motion.div
+          initial={{ height: 0, opacity: 0 }}
+          animate={{ height: 'auto', opacity: 1 }}
+          exit={{ height: 0, opacity: 0 }}
+          transition={reduce ? { duration: 0 } : { duration: 0.28, ease: EASE }}
+          style={{ overflow: 'hidden' }}
+        >
+          {children}
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}
+
 export default function SuscripcionCard() {
   const { getToken } = useAuth();
+  const reduce = useReducedMotion();
   const [data, setData] = useState<MiSuscripcionResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [paying, setPaying] = useState(false);
-  const [unsubscribing, setUnsubscribing] = useState(false);
-  const [showCardForm, setShowCardForm] = useState(false);
-  const [sdkReady, setSdkReady] = useState(false);
   const [activating, setActivating] = useState(false);
+  const [unsubscribing, setUnsubscribing] = useState(false);
+  const [sdkReady, setSdkReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Intención de renovación automática en el flujo de pago (caso: sin plan / vencido)
+  const [activarAutoRenovacion, setActivarAutoRenovacion] = useState(false);
+  // Formulario para activar recurrencia sobre un plan ya activo
+  const [showActivarForm, setShowActivarForm] = useState(false);
 
   const [card, setCard] = useState({ number: '', name: '', month: '', year: '', cvv: '', docNumber: '' });
 
-  // Pago dentro de la app (Checkout API) — medios, formularios y consentimientos
+  // Pago dentro de la app (Checkout API) — medios y datos
   const [metodos, setMetodos] = useState<MetodosDisponibles | null>(null);
   const [loadingMetodos, setLoadingMetodos] = useState(false);
   const [metodo, setMetodo] = useState<MetodoPago>('CARD');
   const [pse, setPse] = useState({ bancoId: '', personType: 'natural', docType: 'CC', docNumber: '' });
   const [efecty, setEfecty] = useState({ docType: 'CC', docNumber: '' });
   const [aceptaTerminos, setAceptaTerminos] = useState(false);
-  const [aceptaRecurrente, setAceptaRecurrente] = useState(false);
   const [payPending, setPayPending] = useState(false);
   const [voucherUrl, setVoucherUrl] = useState<string | null>(null);
 
@@ -128,38 +208,57 @@ export default function SuscripcionCard() {
     finally { setLoadingMetodos(false); }
   }
 
-  // Cargar los medios de pago cuando hay algo por pagar (sin vigencia o vencido)
+  // Cargar los medios de pago cuando hay algo por pagar
   useEffect(() => {
     const debePagar = data && ((!data.vigencia && pickedPlan) || data.vigencia?.vencido);
     if (debePagar && !metodos && !loadingMetodos) loadMetodos();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data, pickedPlan]);
 
-  async function handlePagarDirecto() {
+  // Tokeniza la tarjeta en el navegador (nunca toca nuestro backend) y detecta el tipo
+  async function tokenizarTarjeta(): Promise<{ tokenId: string; paymentMethodId?: string }> {
+    if (!window.MercadoPago) throw new Error('El pago aún está cargando, intenta de nuevo en unos segundos.');
+    const publicKey = process.env.NEXT_PUBLIC_MP_PUBLIC_KEY;
+    if (!publicKey) throw new Error('Falta configurar la llave pública de Mercado Pago');
+    const mp = new window.MercadoPago(publicKey);
+    const tokenResult = await mp.createCardToken({
+      cardNumber: card.number.replace(/\s/g, ''),
+      cardholderName: card.name,
+      cardExpirationMonth: card.month,
+      cardExpirationYear: card.year,
+      securityCode: card.cvv,
+      identificationType: 'CC',
+      identificationNumber: card.docNumber,
+    });
+    const bin = card.number.replace(/\s/g, '').slice(0, 6);
+    const pm = await mp.getPaymentMethods({ bin });
+    return { tokenId: tokenResult.id, paymentMethodId: pm.results?.[0]?.id };
+  }
+
+  function resetCard() { setCard({ number: '', name: '', month: '', year: '', cvv: '', docNumber: '' }); }
+
+  // Flujo de pago del caso "sin plan / vencido"
+  async function handlePagar() {
     setPaying(true); setError(null);
     try {
-      const body: Record<string, unknown> = { metodo, aceptaTerminos };
-
-      if (metodo === 'CARD') {
-        if (!window.MercadoPago) throw new Error('El pago aún está cargando, intenta de nuevo en unos segundos.');
-        const publicKey = process.env.NEXT_PUBLIC_MP_PUBLIC_KEY;
-        if (!publicKey) throw new Error('Falta configurar la llave pública de Mercado Pago');
-        const mp = new window.MercadoPago(publicKey);
-
-        const tokenResult = await mp.createCardToken({
-          cardNumber: card.number.replace(/\s/g, ''),
-          cardholderName: card.name,
-          cardExpirationMonth: card.month,
-          cardExpirationYear: card.year,
-          securityCode: card.cvv,
-          identificationType: 'CC',
-          identificationNumber: card.docNumber,
+      // Con renovación automática → suscripción recurrente (cobra ya + guarda tarjeta)
+      if (activarAutoRenovacion) {
+        const { tokenId } = await tokenizarTarjeta();
+        const token = await getToken();
+        await apiFetch('/mercadopago/subscribe', {
+          method: 'POST', token, body: JSON.stringify({ cardTokenId: tokenId, aceptaTerminos }),
         });
-        const bin = card.number.replace(/\s/g, '').slice(0, 6);
-        const pm = await mp.getPaymentMethods({ bin });
-        const paymentMethodId = pm.results?.[0]?.id;
+        resetCard();
+        await load();
+        return;
+      }
+
+      // Sin renovación automática → pago único (tarjeta / PSE / Efecty)
+      const body: Record<string, unknown> = { metodo, aceptaTerminos };
+      if (metodo === 'CARD') {
+        const { tokenId, paymentMethodId } = await tokenizarTarjeta();
         if (!paymentMethodId) throw new Error('No reconocimos la tarjeta. Verifica el número.');
-        Object.assign(body, { cardTokenId: tokenResult.id, paymentMethodId, docType: 'CC', docNumber: card.docNumber });
+        Object.assign(body, { cardTokenId: tokenId, paymentMethodId, docType: 'CC', docNumber: card.docNumber });
       } else if (metodo === 'PSE') {
         Object.assign(body, { bancoId: pse.bancoId, personType: pse.personType, docType: pse.docType, docNumber: pse.docNumber });
       } else {
@@ -172,11 +271,10 @@ export default function SuscripcionCard() {
       });
 
       if (res.status === 'approved') {
-        setCard({ number: '', name: '', month: '', year: '', cvv: '', docNumber: '' });
+        resetCard();
         await load();
       } else if (res.status === 'pending') {
         if (metodo === 'PSE' && res.redirectUrl) {
-          // PSE: el banco es quien autoriza la transferencia — redirección obligatoria
           window.location.href = res.redirectUrl;
           return;
         }
@@ -190,32 +288,17 @@ export default function SuscripcionCard() {
     }
   }
 
-  async function handleActivarAutoRenew() {
-    if (!window.MercadoPago) { setError('El pago aún está cargando, intenta de nuevo en unos segundos.'); return; }
+  // Activar recurrencia sobre un plan YA activo (requiere tarjeta)
+  async function handleActivarRecurrente() {
     setActivating(true); setError(null);
     try {
-      const publicKey = process.env.NEXT_PUBLIC_MP_PUBLIC_KEY;
-      if (!publicKey) throw new Error('Falta configurar la llave pública de Mercado Pago');
-      const mp = new window.MercadoPago(publicKey);
-
-      const tokenResult = await mp.createCardToken({
-        cardNumber: card.number.replace(/\s/g, ''),
-        cardholderName: card.name,
-        cardExpirationMonth: card.month,
-        cardExpirationYear: card.year,
-        securityCode: card.cvv,
-        identificationType: 'CC',
-        identificationNumber: card.docNumber,
-      });
-
+      const { tokenId } = await tokenizarTarjeta();
       const token = await getToken();
       await apiFetch('/mercadopago/subscribe', {
-        method: 'POST', token,
-        body: JSON.stringify({ cardTokenId: tokenResult.id, aceptaTerminos: aceptaRecurrente }),
+        method: 'POST', token, body: JSON.stringify({ cardTokenId: tokenId, aceptaTerminos: true }),
       });
-
-      setShowCardForm(false);
-      setCard({ number: '', name: '', month: '', year: '', cvv: '', docNumber: '' });
+      setShowActivarForm(false);
+      resetCard();
       await load();
     } catch (e) {
       setError(e instanceof Error ? e.message : 'No se pudo activar la renovación automática. Revisa los datos de la tarjeta.');
@@ -242,7 +325,7 @@ export default function SuscripcionCard() {
   );
   if (!data) return <p className="text-sm text-muted-foreground text-center py-10">No se pudo cargar tu suscripción.</p>;
 
-  // Sin pagos registrados y sin elegir plan aún en esta sesión → mostrar selector
+  // ══ SELECTOR DE PLAN — sin pagos registrados y sin elegir plan aún ══════════
   if (!data.vigencia && !pickedPlan) {
     return (
       <div className="bg-white border border-border rounded-2xl p-5">
@@ -261,10 +344,12 @@ export default function SuscripcionCard() {
               const destacado = p.tipoPlan === 'TRIMESTRAL';
               const precioMes = Math.round(p.precio / MESES_POR_PLAN[p.tipoPlan]);
               return (
-                <button
+                <motion.button
                   key={p.tipoPlan}
                   onClick={() => handleElegirPlan(p.tipoPlan)}
                   disabled={settingPlan !== null}
+                  whileTap={reduce ? {} : { scale: 0.98 }}
+                  transition={{ duration: 0.12, ease: EASE }}
                   className="w-full text-left rounded-xl p-4 transition-colors disabled:opacity-60 md:relative md:flex md:flex-col md:text-center md:p-5"
                   style={{ border: destacado ? '2px solid #7C3AED' : '1px solid var(--border, rgba(0,0,0,0.10))', background: '#fff' }}
                 >
@@ -304,21 +389,43 @@ export default function SuscripcionCard() {
                       {settingPlan === p.tipoPlan ? 'Guardando...' : 'Elegir este plan'}
                     </span>
                   </div>
-                </button>
+                </motion.button>
               );
             })}
           </div>
         )}
 
         <p className="text-[11px] text-muted-foreground text-center mt-4">
-          Activa la renovación automática en cualquier plan y suma 5% adicional
+          Activa la renovación automática al pagar y suma 5% de descuento adicional
         </p>
       </div>
     );
   }
 
   const { suscripcion, cantidadDeportistas, vigencia } = data;
+  const planActivo = !!vigencia && !vigencia.vencido;
   const pctColor = !vigencia ? '#8E87A8' : vigencia.vencido ? '#EF476F' : vigencia.pct >= 50 ? '#06D6A0' : vigencia.pct >= 20 ? '#FFB703' : '#EF476F';
+  const precioAPagar = activarAutoRenovacion ? suscripcion.planMontoConAutoRenew : suscripcion.planMontoSinAutoRenew;
+
+  // Campos de tarjeta reutilizables
+  const cardFields = (
+    <div className="space-y-2.5">
+      <input placeholder="Número de tarjeta" value={card.number} onChange={e => setCard(c => ({ ...c, number: e.target.value }))}
+        className="w-full px-3 py-2 rounded-lg border border-input text-sm" inputMode="numeric" />
+      <input placeholder="Nombre del titular" value={card.name} onChange={e => setCard(c => ({ ...c, name: e.target.value }))}
+        className="w-full px-3 py-2 rounded-lg border border-input text-sm" />
+      <div className="grid grid-cols-4 gap-2">
+        <input placeholder="MM" value={card.month} onChange={e => setCard(c => ({ ...c, month: e.target.value }))}
+          className="px-3 py-2 rounded-lg border border-input text-sm" inputMode="numeric" maxLength={2} />
+        <input placeholder="AAAA" value={card.year} onChange={e => setCard(c => ({ ...c, year: e.target.value }))}
+          className="px-3 py-2 rounded-lg border border-input text-sm" inputMode="numeric" maxLength={4} />
+        <input placeholder="CVV" value={card.cvv} onChange={e => setCard(c => ({ ...c, cvv: e.target.value }))}
+          className="px-3 py-2 rounded-lg border border-input text-sm" inputMode="numeric" maxLength={4} />
+        <input placeholder="Cédula" value={card.docNumber} onChange={e => setCard(c => ({ ...c, docNumber: e.target.value }))}
+          className="px-3 py-2 rounded-lg border border-input text-sm" inputMode="numeric" />
+      </div>
+    </div>
+  );
 
   return (
     <>
@@ -327,16 +434,33 @@ export default function SuscripcionCard() {
       <div className="bg-white border border-border rounded-2xl p-5 space-y-5">
         {!vigencia && (
           <button
-            onClick={() => { setPickedPlan(false); setPlanes(null); }}
+            onClick={() => { setPickedPlan(false); setPlanes(null); setActivarAutoRenovacion(false); }}
             className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
           >
             <ArrowLeft className="w-3.5 h-3.5" /> Cambiar plan
           </button>
         )}
+
+        {/* ── Encabezado con precio ──────────────────────────────────────── */}
         <div className="flex items-center justify-between">
           <div>
             <p className="text-[11px] font-semibold text-muted-foreground tracking-wide">Plan {PLAN_LABEL[suscripcion.tipoPlan]}</p>
-            <p className="text-[22px] font-extrabold text-foreground">{fmt.format(suscripcion.planMonto)}</p>
+            <div className="flex items-baseline gap-2">
+              <PrecioAnimado valor={planActivo ? suscripcion.planMonto : precioAPagar} className="text-[22px] font-extrabold text-foreground" />
+              <AnimatePresence>
+                {!planActivo && activarAutoRenovacion && (
+                  <motion.span
+                    initial={reduce ? { opacity: 0 } : { opacity: 0, x: -4 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={reduce ? { opacity: 0 } : { opacity: 0, x: -4 }}
+                    transition={{ duration: 0.2, ease: EASE }}
+                    className="text-[13px] font-semibold text-muted-foreground line-through"
+                  >
+                    {fmt.format(suscripcion.planMontoSinAutoRenew)}
+                  </motion.span>
+                )}
+              </AnimatePresence>
+            </div>
             <p className="text-[11px] text-muted-foreground mt-0.5">{cantidadDeportistas} deportista{cantidadDeportistas !== 1 ? 's' : ''} registrados</p>
           </div>
           {vigencia && (
@@ -349,82 +473,66 @@ export default function SuscripcionCard() {
 
         {vigencia && (
           <div className="h-2 rounded-full bg-secondary overflow-hidden">
-            <div className="h-full rounded-full transition-all" style={{ width: `${vigencia.pct}%`, background: pctColor }} />
+            <motion.div
+              className="h-full rounded-full"
+              style={{ background: pctColor }}
+              initial={{ width: 0 }}
+              animate={{ width: `${vigencia.pct}%` }}
+              transition={reduce ? { duration: 0 } : { duration: 0.6, ease: EASE }}
+            />
           </div>
         )}
 
         {error && <p className="text-[12px] text-red-500">{error}</p>}
 
-        {/* Renovación automática */}
-        <div className="flex items-center justify-between p-3 rounded-xl bg-secondary/40">
-          <div className="flex items-center gap-2">
-            {suscripcion.autoRenew ? <CheckCircle2 className="w-4 h-4 text-emerald-500" /> : <XCircle className="w-4 h-4 text-muted-foreground" />}
-            <div>
-              <p className="text-[13px] font-semibold text-foreground flex items-center gap-1.5">
-                Renovación automática
-                {suscripcion.autoRenew && (
+        {/* ══ CASO A: plan activo — gestionar renovación automática ══════════ */}
+        {planActivo && (
+          <div className="rounded-xl bg-secondary/40 p-3 space-y-3">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-[13px] font-semibold text-foreground flex items-center gap-1.5">
+                  Renovación automática
                   <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(6,214,160,0.12)', color: '#06D6A0' }}>-5%</span>
-                )}
-              </p>
-              <p className="text-[11px] text-muted-foreground">
-                {suscripcion.autoRenew ? 'Se cobra sola cuando vence, con 5% de descuento' : 'Se cobra de una vez y luego se renueva sola, con 5% de descuento'}
-              </p>
+                </p>
+                <p className="text-[11px] text-muted-foreground">
+                  {suscripcion.autoRenew ? 'Se cobra sola cuando vence, con 5% de descuento' : 'Actívala y ahorra 5% en cada renovación'}
+                </p>
+              </div>
+              <SlideToggle
+                checked={suscripcion.autoRenew || showActivarForm}
+                disabled={unsubscribing || activating}
+                onChange={(next) => {
+                  if (suscripcion.autoRenew) { if (!next) handleDesactivarAutoRenew(); return; }
+                  setShowActivarForm(next);
+                  setError(null);
+                }}
+              />
             </div>
-          </div>
-          {suscripcion.autoRenew ? (
-            <button onClick={handleDesactivarAutoRenew} disabled={unsubscribing}
-              className="text-[12px] font-semibold text-red-500 hover:opacity-70 transition-colors shrink-0">
-              {unsubscribing ? '...' : 'Desactivar'}
-            </button>
-          ) : (
-            <button onClick={() => setShowCardForm(v => !v)}
-              className="text-[12px] font-semibold text-primary hover:opacity-70 transition-colors shrink-0">
-              {showCardForm ? 'Cancelar' : 'Activar'}
-            </button>
-          )}
-        </div>
 
-        {showCardForm && !suscripcion.autoRenew && (
-          <div className="space-y-3 p-4 rounded-xl border border-border">
-            <p className="text-[12px] font-semibold text-foreground flex items-center gap-2"><CreditCard className="w-3.5 h-3.5" /> Datos de la tarjeta</p>
-            <p className="text-[11px] text-muted-foreground -mt-1">
-              La renovación automática solo admite tarjeta de crédito o débito — es el único medio que se puede volver a cobrar sin que estés presente. Para pagar con PSE o Efecty, usa la sección de pago manual cada vez que venza tu plan.
-            </p>
-            <input placeholder="Número de tarjeta" value={card.number} onChange={e => setCard(c => ({ ...c, number: e.target.value }))}
-              className="w-full px-3 py-2 rounded-lg border border-input text-sm" inputMode="numeric" />
-            <input placeholder="Nombre del titular" value={card.name} onChange={e => setCard(c => ({ ...c, name: e.target.value }))}
-              className="w-full px-3 py-2 rounded-lg border border-input text-sm" />
-            <div className="grid grid-cols-4 gap-2">
-              <input placeholder="MM" value={card.month} onChange={e => setCard(c => ({ ...c, month: e.target.value }))}
-                className="px-3 py-2 rounded-lg border border-input text-sm" inputMode="numeric" maxLength={2} />
-              <input placeholder="AAAA" value={card.year} onChange={e => setCard(c => ({ ...c, year: e.target.value }))}
-                className="px-3 py-2 rounded-lg border border-input text-sm" inputMode="numeric" maxLength={4} />
-              <input placeholder="CVV" value={card.cvv} onChange={e => setCard(c => ({ ...c, cvv: e.target.value }))}
-                className="px-3 py-2 rounded-lg border border-input text-sm" inputMode="numeric" maxLength={4} />
-              <input placeholder="Cédula" value={card.docNumber} onChange={e => setCard(c => ({ ...c, docNumber: e.target.value }))}
-                className="px-3 py-2 rounded-lg border border-input text-sm" inputMode="numeric" />
-            </div>
-            <label className="flex items-start gap-2 cursor-pointer">
-              <input type="checkbox" checked={aceptaRecurrente} onChange={e => setAceptaRecurrente(e.target.checked)} className="mt-0.5 shrink-0" />
-              <span className="text-[11px] text-muted-foreground leading-relaxed">
-                Autorizo de forma expresa este pago y los cobros automáticos recurrentes a esta tarjeta al inicio de cada período, según los{' '}
-                <a href="/legal/terminos" target="_blank" rel="noopener noreferrer" className="underline text-primary">Términos y Condiciones</a> y la{' '}
-                <a href="/legal/politica-datos" target="_blank" rel="noopener noreferrer" className="underline text-primary">Política de Tratamiento de Datos</a>.
-                Puedo desactivar la renovación automática en cualquier momento desde esta pantalla, sin penalidades (Ley 1480 de 2011).
-              </span>
-            </label>
-            <button onClick={handleActivarAutoRenew} disabled={activating || !sdkReady || !aceptaRecurrente}
-              className="w-full py-2.5 rounded-xl bg-primary text-white text-[13px] font-semibold disabled:opacity-60">
-              {activating ? 'Procesando pago...' : 'Pagar y activar renovación automática'}
-            </button>
+            <Expand show={showActivarForm && !suscripcion.autoRenew}>
+              <div className="pt-1 space-y-3">
+                <p className="text-[12px] font-semibold text-foreground flex items-center gap-2"><CreditCard className="w-3.5 h-3.5" /> Datos de la tarjeta</p>
+                <p className="text-[11px] text-muted-foreground">
+                  La renovación automática solo funciona con tarjeta de crédito o débito. Puedes desactivarla cuando quieras, sin penalidades.
+                </p>
+                {cardFields}
+                <motion.button
+                  onClick={handleActivarRecurrente}
+                  disabled={activating || !sdkReady}
+                  whileTap={reduce ? {} : { scale: 0.98 }}
+                  transition={{ duration: 0.12, ease: EASE }}
+                  className="w-full py-2.5 rounded-xl bg-primary text-white text-[13px] font-semibold disabled:opacity-60"
+                >
+                  {activating ? 'Activando...' : 'Activar renovación automática'}
+                </motion.button>
+              </div>
+            </Expand>
           </div>
         )}
 
-        {/* ── Pago único dentro de la app — todos los medios de Mercado Pago ── */}
-        {(!vigencia || vigencia.vencido) && !showCardForm && (
-          <div className="space-y-3 pt-1" style={{ borderTop: '1px solid rgba(0,0,0,0.06)', paddingTop: 16 }}>
-            <p className="text-[13px] font-semibold text-foreground">Paga tu suscripción</p>
-
+        {/* ══ CASO B: sin plan / vencido — pago con todos los medios ════════ */}
+        {!planActivo && (
+          <div className="space-y-4 pt-1" style={{ borderTop: '1px solid rgba(0,0,0,0.06)', paddingTop: 16 }}>
             {payPending ? (
               <div className="p-4 rounded-xl space-y-2" style={{ background: 'rgba(255,183,3,0.08)', border: '1px solid rgba(255,183,3,0.30)' }}>
                 <p className="text-[13px] font-semibold flex items-center gap-1.5" style={{ color: '#B26A00' }}>
@@ -436,8 +544,7 @@ export default function SuscripcionCard() {
                     : 'Cuando el pago se confirme, tu plan se activará automáticamente.'}
                 </p>
                 {voucherUrl && (
-                  <a href={voucherUrl} target="_blank" rel="noopener noreferrer"
-                    className="inline-block text-[13px] font-semibold text-primary underline">
+                  <a href={voucherUrl} target="_blank" rel="noopener noreferrer" className="inline-block text-[13px] font-semibold text-primary underline">
                     Abrir cupón de pago
                   </a>
                 )}
@@ -452,56 +559,78 @@ export default function SuscripcionCard() {
               </div>
             ) : (
               <>
-                {/* Selector de medio de pago */}
-                <div className="grid grid-cols-3 gap-2">
-                  {([
-                    { key: 'CARD'   as MetodoPago, label: 'Tarjeta', icon: CreditCard, disponible: metodos?.tarjeta ?? true },
-                    { key: 'PSE'    as MetodoPago, label: 'PSE',     icon: Landmark,   disponible: metodos?.pse.disponible ?? false },
-                    { key: 'EFECTY' as MetodoPago, label: 'Efecty',  icon: Banknote,   disponible: metodos?.efecty ?? false },
-                  ]).filter(m => m.disponible).map(({ key, label, icon: Icon }) => {
-                    const active = metodo === key;
-                    return (
-                      <button key={key} onClick={() => { setMetodo(key); setError(null); }}
-                        className="flex flex-col items-center gap-1 py-2.5 rounded-xl text-[12px] font-semibold transition-colors cursor-pointer"
-                        style={active
-                          ? { border: '2px solid #7C3AED', color: '#7C3AED', background: 'rgba(124,58,237,0.05)' }
-                          : { border: '1px solid rgba(0,0,0,0.10)', color: '#8E87A8', background: '#fff' }}
-                      >
-                        <Icon className="w-4 h-4" />
-                        {label}
-                      </button>
-                    );
-                  })}
-                </div>
-
-                {/* Formulario según el medio */}
-                {metodo === 'CARD' && (
-                  <div className="space-y-2.5">
-                    <input placeholder="Número de tarjeta" value={card.number} onChange={e => setCard(c => ({ ...c, number: e.target.value }))}
-                      className="w-full px-3 py-2 rounded-lg border border-input text-sm" inputMode="numeric" />
-                    <input placeholder="Nombre del titular" value={card.name} onChange={e => setCard(c => ({ ...c, name: e.target.value }))}
-                      className="w-full px-3 py-2 rounded-lg border border-input text-sm" />
-                    <div className="grid grid-cols-4 gap-2">
-                      <input placeholder="MM" value={card.month} onChange={e => setCard(c => ({ ...c, month: e.target.value }))}
-                        className="px-3 py-2 rounded-lg border border-input text-sm" inputMode="numeric" maxLength={2} />
-                      <input placeholder="AAAA" value={card.year} onChange={e => setCard(c => ({ ...c, year: e.target.value }))}
-                        className="px-3 py-2 rounded-lg border border-input text-sm" inputMode="numeric" maxLength={4} />
-                      <input placeholder="CVV" value={card.cvv} onChange={e => setCard(c => ({ ...c, cvv: e.target.value }))}
-                        className="px-3 py-2 rounded-lg border border-input text-sm" inputMode="numeric" maxLength={4} />
-                      <input placeholder="Cédula" value={card.docNumber} onChange={e => setCard(c => ({ ...c, docNumber: e.target.value }))}
-                        className="px-3 py-2 rounded-lg border border-input text-sm" inputMode="numeric" />
+                {/* Toggle de renovación automática como descuento */}
+                <div className="rounded-xl p-3 flex items-center justify-between gap-3"
+                  style={{ background: activarAutoRenovacion ? 'rgba(6,214,160,0.08)' : 'rgba(120,80,200,0.05)', transition: 'background 0.25s cubic-bezier(0.23,1,0.32,1)' }}>
+                  <div className="flex items-center gap-2.5">
+                    <RefreshCw className="w-4 h-4 shrink-0" style={{ color: activarAutoRenovacion ? '#06D6A0' : '#8E87A8' }} />
+                    <div>
+                      <p className="text-[13px] font-semibold text-foreground flex items-center gap-1.5">
+                        Renovación automática
+                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(6,214,160,0.14)', color: '#06D6A0' }}>-5%</span>
+                      </p>
+                      <p className="text-[11px] text-muted-foreground">Se renueva sola al vencer y ahorras 5%</p>
                     </div>
                   </div>
+                  <SlideToggle
+                    checked={activarAutoRenovacion}
+                    onChange={(next) => {
+                      setActivarAutoRenovacion(next);
+                      if (next) setMetodo('CARD');
+                      setError(null);
+                    }}
+                  />
+                </div>
+
+                <p className="text-[13px] font-semibold text-foreground">Paga tu suscripción</p>
+
+                {/* Selector de medio — oculto cuando la renovación automática está activa (solo tarjeta) */}
+                <Expand show={!activarAutoRenovacion}>
+                  <div className="grid grid-cols-3 gap-2 pb-0.5">
+                    {([
+                      { key: 'CARD'   as MetodoPago, label: 'Tarjeta', icon: CreditCard, disponible: metodos?.tarjeta ?? true },
+                      { key: 'PSE'    as MetodoPago, label: 'PSE',     icon: Landmark,   disponible: metodos?.pse.disponible ?? false },
+                      { key: 'EFECTY' as MetodoPago, label: 'Efecty',  icon: Banknote,   disponible: metodos?.efecty ?? false },
+                    ]).filter(m => m.disponible).map(({ key, label, icon: Icon }) => {
+                      const active = metodo === key;
+                      return (
+                        <button key={key} onClick={() => { setMetodo(key); setError(null); }}
+                          className="relative flex flex-col items-center gap-1 py-2.5 rounded-xl text-[12px] font-semibold transition-colors cursor-pointer"
+                          style={active
+                            ? { color: '#7C3AED', background: 'rgba(124,58,237,0.05)' }
+                            : { border: '1px solid rgba(0,0,0,0.10)', color: '#8E87A8', background: '#fff' }}
+                        >
+                          {active && (
+                            <motion.span layoutId="metodo-activo" className="absolute inset-0 rounded-xl pointer-events-none"
+                              style={{ border: '2px solid #7C3AED' }}
+                              transition={reduce ? { duration: 0 } : { type: 'spring', stiffness: 500, damping: 34 }} />
+                          )}
+                          <Icon className="w-4 h-4 relative z-10" />
+                          <span className="relative z-10">{label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </Expand>
+
+                {/* Formularios según medio (o tarjeta forzada si auto-renovación) */}
+                {(activarAutoRenovacion || metodo === 'CARD') && (
+                  <motion.div
+                    initial={reduce ? false : { opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.2, ease: EASE }}
+                    key="form-card"
+                  >
+                    {cardFields}
+                  </motion.div>
                 )}
 
-                {metodo === 'PSE' && (
-                  <div className="space-y-2.5">
+                {!activarAutoRenovacion && metodo === 'PSE' && (
+                  <motion.div initial={reduce ? false : { opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2, ease: EASE }} key="form-pse" className="space-y-2.5">
                     <select value={pse.bancoId} onChange={e => setPse(p => ({ ...p, bancoId: e.target.value }))}
                       className="w-full px-3 py-2 rounded-lg border border-input text-sm bg-white">
                       <option value="">Selecciona tu banco</option>
-                      {(metodos?.pse.bancos ?? []).map(b => (
-                        <option key={b.id} value={b.id}>{b.description}</option>
-                      ))}
+                      {(metodos?.pse.bancos ?? []).map(b => (<option key={b.id} value={b.id}>{b.description}</option>))}
                     </select>
                     <div className="grid grid-cols-2 gap-2">
                       <select value={pse.personType} onChange={e => setPse(p => ({ ...p, personType: e.target.value }))}
@@ -517,11 +646,11 @@ export default function SuscripcionCard() {
                     <input placeholder="Número de documento" value={pse.docNumber} onChange={e => setPse(p => ({ ...p, docNumber: e.target.value }))}
                       className="w-full px-3 py-2 rounded-lg border border-input text-sm" inputMode="numeric" />
                     <p className="text-[11px] text-muted-foreground">Serás dirigido a tu banco para autorizar la transferencia. Al completarla, volverás a VeloClub.</p>
-                  </div>
+                  </motion.div>
                 )}
 
-                {metodo === 'EFECTY' && (
-                  <div className="space-y-2.5">
+                {!activarAutoRenovacion && metodo === 'EFECTY' && (
+                  <motion.div initial={reduce ? false : { opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2, ease: EASE }} key="form-efecty" className="space-y-2.5">
                     <div className="grid grid-cols-2 gap-2">
                       <select value={efecty.docType} onChange={e => setEfecty(p => ({ ...p, docType: e.target.value }))}
                         className="px-3 py-2 rounded-lg border border-input text-sm bg-white">
@@ -531,25 +660,31 @@ export default function SuscripcionCard() {
                         className="px-3 py-2 rounded-lg border border-input text-sm" inputMode="numeric" />
                     </div>
                     <p className="text-[11px] text-muted-foreground">Generaremos un cupón para que pagues en efectivo en cualquier punto Efecty. Tu plan se activa cuando pagues.</p>
-                  </div>
+                  </motion.div>
                 )}
 
-                {/* Aceptación de términos — obligatoria (Ley 1480 de 2011) */}
+                {/* Términos — el texto cambia si activa renovación automática */}
                 <label className="flex items-start gap-2 cursor-pointer">
                   <input type="checkbox" checked={aceptaTerminos} onChange={e => setAceptaTerminos(e.target.checked)} className="mt-0.5 shrink-0" />
                   <span className="text-[11px] text-muted-foreground leading-relaxed">
-                    Acepto los <a href="/legal/terminos" target="_blank" rel="noopener noreferrer" className="underline text-primary">Términos y Condiciones</a> y
+                    {activarAutoRenovacion
+                      ? <>Autorizo este pago y los cobros automáticos recurrentes a esta tarjeta al inicio de cada período. </>
+                      : <>Acepto </>}
+                    Los <a href="/legal/terminos" target="_blank" rel="noopener noreferrer" className="underline text-primary">Términos y Condiciones</a> y
                     la <a href="/legal/politica-datos" target="_blank" rel="noopener noreferrer" className="underline text-primary">Política de Tratamiento de Datos</a> de VeloClub.
+                    {activarAutoRenovacion && ' Puedo desactivar la renovación automática cuando quiera, sin penalidades (Ley 1480 de 2011).'}
                   </span>
                 </label>
 
-                <button
-                  onClick={handlePagarDirecto}
-                  disabled={paying || !aceptaTerminos || (metodo === 'CARD' && !sdkReady)}
+                <motion.button
+                  onClick={handlePagar}
+                  disabled={paying || !aceptaTerminos || ((activarAutoRenovacion || metodo === 'CARD') && !sdkReady)}
+                  whileTap={reduce ? {} : { scale: 0.98 }}
+                  transition={{ duration: 0.12, ease: EASE }}
                   className="w-full py-3 rounded-xl bg-primary text-white text-[13px] font-semibold disabled:opacity-60"
                 >
-                  {paying ? 'Procesando pago...' : `Pagar ${fmt.format(suscripcion.planMonto)}`}
-                </button>
+                  {paying ? 'Procesando pago...' : <>Pagar <PrecioAnimado valor={precioAPagar} /></>}
+                </motion.button>
                 <p className="text-[10px] text-muted-foreground text-center">
                   Pago procesado de forma segura por Mercado Pago. Tus datos nunca se guardan en VeloClub.
                 </p>

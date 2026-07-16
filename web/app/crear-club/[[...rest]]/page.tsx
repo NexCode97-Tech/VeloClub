@@ -38,7 +38,6 @@ export default function CrearClubPage() {
 
       {/* Columna izquierda — contexto de marca (solo desktop) */}
       <div className="hidden lg:flex flex-col justify-center flex-1 px-16 relative z-10">
-        <Image src="/logo.png" alt="VeloClub" width={44} height={44} className="object-contain mb-8" style={{ borderRadius: 10 }} />
         <h1 className="text-[34px] font-semibold text-white leading-tight mb-3" style={{ fontFamily: 'inherit' }}>
           Crea tu club<br />en un minuto.
         </h1>

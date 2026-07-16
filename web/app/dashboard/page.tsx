@@ -1047,11 +1047,13 @@ export default function DashboardPage() {
                     : `Período de prueba · ${trial.daysLeft} día${trial.daysLeft !== 1 ? 's' : ''} restante${trial.daysLeft !== 1 ? 's' : ''}`}
                 </p>
               </div>
-              {trial.daysLeft <= 3 && (
-                <p className="text-[11px] text-center mt-1" style={{ color: '#EF476F', opacity: 0.8 }}>
-                  Contacta a NexCode97 para activar tu plan
-                </p>
-              )}
+              <Link
+                href="/dashboard/ajustes?tab=suscripcion"
+                className="block w-fit mx-auto mt-2 px-4 py-1.5 rounded-lg text-[12px] font-bold text-white transition-opacity hover:opacity-90"
+                style={{ background: trial.daysLeft <= 3 ? '#EF476F' : '#B88A00' }}
+              >
+                {trial.daysLeft <= 3 ? 'Activar plan ahora y no perder el acceso' : 'Activar plan ahora'}
+              </Link>
             </div>
           </motion.div>
         )}

@@ -224,6 +224,8 @@ router.post('/pagar', requireAuth, async (req, res) => {
           },
         });
       }
+      // El pago activa el club: si estaba en período de prueba, deja de aplicar
+      await prisma.club.update({ where: { id: clubId }, data: { trialEndsAt: null } });
       return res.json({ status: 'approved' });
     }
 
@@ -334,6 +336,8 @@ router.post('/subscribe', requireAuth, async (req, res) => {
             },
           });
         }
+        // El pago activa el club: si estaba en período de prueba, deja de aplicar
+        await prisma.club.update({ where: { id: clubId }, data: { trialEndsAt: null } });
       }
     } catch (err) {
       console.error('[mercadopago/subscribe] no se pudo confirmar el primer cobro de inmediato', err instanceof Error ? err.message : err);
@@ -438,6 +442,9 @@ router.post('/webhook', async (req, res) => {
       where: { id: suscripcion.id },
       data: { intentosFallidos: 0 },
     });
+
+    // El pago activa el club: si estaba en período de prueba, deja de aplicar
+    await prisma.club.update({ where: { id: suscripcion.clubId }, data: { trialEndsAt: null } });
 
     await notifyClubStaff(suscripcion.clubId, {
       tipo: 'PAGO_REGISTRADO',

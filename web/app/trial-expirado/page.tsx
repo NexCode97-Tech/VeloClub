@@ -1,12 +1,91 @@
 'use client';
 
-import { useClerk } from '@clerk/nextjs';
+import { useAuth, useClerk } from '@clerk/nextjs';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { apiFetch } from '@/lib/api-client';
 import { Button } from '@/components/ui/button';
-import { Timer } from 'lucide-react';
+import { Timer, ShieldCheck, Database, ArrowRight } from 'lucide-react';
+import SuscripcionCard from '@/components/ajustes/suscripcion-card';
 
 export default function TrialExpiradoPage() {
   const { signOut } = useClerk();
+  const { getToken } = useAuth();
+  const router = useRouter();
+  const [role, setRole] = useState<string | null>(null);
+  const [checking, setChecking] = useState(true);
 
+  useEffect(() => {
+    (async () => {
+      try {
+        const token = await getToken();
+        const res = await apiFetch<{ status: string; role?: string }>('/me', { token });
+        // Si ya no está vencido (pagó, o el superadmin lo reactivó), volver al panel
+        if (res.status === 'ok' || res.status === 'complete_profile') {
+          router.replace('/dashboard');
+          return;
+        }
+        setRole(res.role ?? null);
+      } catch { /* se muestra la vista genérica */ }
+      finally { setChecking(false); }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  if (checking) return (
+    <div className="min-h-screen flex items-center justify-center bg-slate-50">
+      <div className="w-6 h-6 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+    </div>
+  );
+
+  // ── Admin: pantalla de activación con pago dentro de la página ─────────────
+  if (role === 'ADMIN') {
+    return (
+      <div className="min-h-screen bg-slate-50 py-10 px-4">
+        <div className="max-w-2xl mx-auto">
+          <div className="text-center mb-6">
+            <div className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-3"
+              style={{ background: 'rgba(255,183,3,0.12)' }}>
+              <Timer className="w-7 h-7" style={{ color: '#FFB703' }} />
+            </div>
+            <h1 className="text-2xl font-bold text-slate-900 mb-1">
+              Tu prueba terminó, pero tu club sigue aquí
+            </h1>
+            <p className="text-slate-500 text-sm">
+              Activa tu plan y retoma exactamente donde quedaste.
+            </p>
+          </div>
+
+          <div className="flex justify-center gap-5 mb-6">
+            <div className="flex items-center gap-1.5 text-[12px] font-semibold text-slate-600">
+              <Database className="w-3.5 h-3.5" style={{ color: '#06D6A0' }} />
+              Tus datos están intactos
+            </div>
+            <div className="flex items-center gap-1.5 text-[12px] font-semibold text-slate-600">
+              <ShieldCheck className="w-3.5 h-3.5" style={{ color: '#06D6A0' }} />
+              Pago seguro con Mercado Pago
+            </div>
+          </div>
+
+          <SuscripcionCard />
+
+          <div className="flex items-center justify-center gap-4 mt-6">
+            <Button variant="outline" onClick={() => router.push('/dashboard')} className="gap-1.5">
+              Ya activé mi plan — entrar al panel <ArrowRight className="w-3.5 h-3.5" />
+            </Button>
+            <button
+              onClick={() => signOut({ redirectUrl: '/' })}
+              className="text-[13px] font-semibold text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
+            >
+              Cerrar sesión
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Coach / deportista: no pueden pagar — avisar al admin ──────────────────
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-50">
       <div className="text-center max-w-md px-6">
@@ -17,20 +96,8 @@ export default function TrialExpiradoPage() {
         <h1 className="text-2xl font-bold text-slate-900 mb-2">
           Período de prueba vencido
         </h1>
-        <p className="text-slate-500 mb-2">
-          Tu período de prueba de 15 días ha terminado.
-        </p>
         <p className="text-slate-500 mb-6">
-          Contacta a{' '}
-          <a
-            href="https://nexcode97.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="font-semibold text-violet-600 hover:underline"
-          >
-            NexCode97
-          </a>{' '}
-          para activar tu plan y continuar usando VeloClub.
+          El período de prueba de tu club terminó. Pídele al administrador que active el plan para seguir usando VeloClub.
         </p>
         <Button variant="outline" onClick={() => signOut({ redirectUrl: '/' })}>
           Cerrar sesión

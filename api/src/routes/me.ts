@@ -115,7 +115,7 @@ if (superadminEmails.includes(email.toLowerCase())) {
     const now = new Date();
     const trialEndsAt = user.club?.trialEndsAt ?? null;
     if (trialEndsAt && trialEndsAt < now) {
-      return res.json({ status: 'trial_expired' });
+      return res.json({ status: 'trial_expired', role: user.role });
     }
     const trialDaysLeft = trialEndsAt
       ? Math.max(0, Math.ceil((trialEndsAt.getTime() - now.getTime()) / 86_400_000))
@@ -148,7 +148,7 @@ if (superadminEmails.includes(email.toLowerCase())) {
   // Check trial para nuevo usuario
   const nowNew = new Date();
   if (member.club.trialEndsAt && member.club.trialEndsAt < nowNew) {
-    return res.json({ status: 'trial_expired' });
+    return res.json({ status: 'trial_expired', role: member.role });
   }
 
   // Create user record linked to this member's club

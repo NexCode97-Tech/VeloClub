@@ -752,7 +752,7 @@ export default function SuscripcionCard() {
                   La renovación automática solo funciona con tarjeta de crédito o débito. Puedes desactivarla cuando quieras, sin penalidades.
                 </p>
                 <p className="text-[11px] text-muted-foreground rounded-lg p-2" style={{ background: 'rgba(255,183,3,0.08)' }}>
-                  Mercado Pago hará un cobro de validación de <strong>$1.600</strong> para confirmar que tu tarjeta funciona — no es parte del pago de tu plan y <strong>te lo devuelven automáticamente</strong> en los días siguientes.
+                  Mercado Pago hará un cobro de validación de <strong>$1.600</strong> para confirmar que tu tarjeta funciona. No es parte del pago de tu plan y <strong>te lo devuelven automáticamente</strong> en las siguientes horas.
                 </p>
                 {cardFields}
                 <motion.button
@@ -904,7 +904,7 @@ export default function SuscripcionCard() {
                   >
                     {activarAutoRenovacion && (
                       <p className="text-[11px] text-muted-foreground rounded-lg p-2 mb-2.5" style={{ background: 'rgba(255,183,3,0.08)' }}>
-                        Mercado Pago hará un cobro de validación de <strong>$1.600</strong> para confirmar que tu tarjeta funciona — no es parte del pago de tu plan y <strong>te lo devuelven automáticamente</strong> en los días siguientes.
+                        Mercado Pago hará un cobro de validación de <strong>$1.600</strong> para confirmar que tu tarjeta funciona. No es parte del pago de tu plan y <strong>te lo devuelven automáticamente</strong> en las siguientes horas.
                       </p>
                     )}
                     {cardFields}

@@ -187,7 +187,10 @@ router.post('/pagar', requireAuth, async (req, res) => {
     prisma.club.findUnique({ where: { id: clubId }, select: { name: true, email: true } }),
   ]);
 
-  const monto = calcularPrecioPlan(cantidadDeportistas, suscripcion.tipoPlan as TipoPlan, suscripcion.autoRenew);
+  // El 5% de descuento es un incentivo por pagar con tarjeta (el único medio que
+  // habilita la renovación automática) — un pago manual por PSE o Efecty no lo
+  // recibe, aunque la suscripción ya tenga autoRenew activo de antes.
+  const monto = calcularPrecioPlan(cantidadDeportistas, suscripcion.tipoPlan as TipoPlan, metodo === 'CARD');
   const payerEmail = resolverPayerEmail(req, club?.email);
   const reference = `sub-${suscripcion.id}-${Date.now()}`;
   const description = `Suscripción VeloClub — ${club?.name ?? 'Club'}`;

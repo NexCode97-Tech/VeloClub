@@ -673,7 +673,8 @@ function AjustesPageContent() {
                     type="button"
                     onClick={() => setDeleteOpen(false)}
                     disabled={deleting}
-                    className="flex-1 py-2.5 rounded-xl border border-border text-[13px] font-semibold text-muted-foreground"
+                    className="flex-1 py-2.5 rounded-xl text-[13px] font-semibold text-white"
+                    style={{ background: '#EF476F' }}
                   >
                     Cancelar
                   </button>
@@ -681,8 +682,8 @@ function AjustesPageContent() {
                     type="button"
                     onClick={handleDeleteAccount}
                     disabled={deleteConfirm !== 'ELIMINAR' || deleting}
-                    className="flex-1 py-2.5 rounded-xl text-[13px] font-semibold text-white transition-opacity"
-                    style={{ background: '#EF476F', opacity: deleteConfirm !== 'ELIMINAR' || deleting ? 0.5 : 1 }}
+                    className="flex-1 py-2.5 rounded-xl border border-border text-[13px] font-semibold text-muted-foreground transition-opacity"
+                    style={{ opacity: deleteConfirm !== 'ELIMINAR' || deleting ? 0.5 : 1 }}
                   >
                     {deleting ? 'Eliminando...' : 'Eliminar cuenta'}
                   </button>

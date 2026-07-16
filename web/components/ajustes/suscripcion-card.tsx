@@ -30,6 +30,7 @@ interface MiSuscripcionResponse {
   suscripcion: Suscripcion;
   cantidadDeportistas: number;
   vigencia: { pct: number; diasRestantes: number; vencido: boolean } | null;
+  enTrial: boolean;
 }
 
 interface MpCardTokenParams {
@@ -592,7 +593,7 @@ export default function SuscripcionCard() {
     );
   }
 
-  const { suscripcion, cantidadDeportistas, vigencia } = data;
+  const { suscripcion, cantidadDeportistas, vigencia, enTrial } = data;
   const planActivo = !!vigencia && !vigencia.vencido;
   const pctColor = !vigencia ? '#8E87A8' : vigencia.vencido ? '#EF476F' : vigencia.pct >= 50 ? '#06D6A0' : vigencia.pct >= 20 ? '#FFB703' : '#EF476F';
   const precioAPagar = activarAutoRenovacion ? suscripcion.planMontoConAutoRenew : suscripcion.planMontoSinAutoRenew;
@@ -787,7 +788,9 @@ export default function SuscripcionCard() {
               ) : (
                 <div className="rounded-xl p-3 space-y-2.5" style={{ background: 'rgba(239,71,111,0.05)', border: '1px solid rgba(239,71,111,0.18)' }}>
                   <p className="text-[12px] text-foreground">
-                    ¿Seguro que quieres cancelar? Tu club seguirá activo hasta el <span className="font-semibold">{fechaVencimiento}</span> y no se harán más cobros. Podrás reactivar cuando quieras.
+                    {enTrial
+                      ? 'Todavía estás en tu período de prueba gratis. Si cancelas ahora, te devolvemos el pago completo a tu tarjeta.'
+                      : <>¿Seguro que quieres cancelar? Tu club seguirá activo hasta el <span className="font-semibold">{fechaVencimiento}</span> y no se harán más cobros. Podrás reactivar cuando quieras.</>}
                   </p>
                   <div className="flex gap-2">
                     <motion.button
@@ -866,6 +869,12 @@ export default function SuscripcionCard() {
                     }}
                   />
                 </div>
+
+                {enTrial && (
+                  <p className="text-[11px] text-muted-foreground rounded-lg p-2.5" style={{ background: 'rgba(67,97,238,0.06)' }}>
+                    Todavía estás en tu período de prueba gratis. Si pagas ahora, tu plan pagado empieza a correr cuando termine la prueba, para que aproveches tus días gratis completos. Si cancelas antes de esa fecha, te devolvemos el pago completo.
+                  </p>
+                )}
 
                 <p className="text-[13px] font-semibold text-foreground">Paga tu suscripción</p>
 

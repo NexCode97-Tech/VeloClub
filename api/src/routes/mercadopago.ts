@@ -54,20 +54,23 @@ router.get('/mi-suscripcion', requireAuth, async (req, res) => {
   if (!requireAdmin(req, res)) return;
   const clubId = req.user!.clubId ?? '';
 
-  const [suscripcion, cantidadDeportistas] = await Promise.all([
+  const [suscripcion, cantidadDeportistas, club] = await Promise.all([
     suscripcionDelClub(clubId),
     prisma.member.count({ where: { clubId, role: 'STUDENT' } }),
+    prisma.club.findUnique({ where: { id: clubId }, select: { trialEndsAt: true } }),
   ]);
 
   const precioSinAutoRenew = calcularPrecioPlan(cantidadDeportistas, suscripcion.tipoPlan as TipoPlan, false);
   const precioConAutoRenew = calcularPrecioPlan(cantidadDeportistas, suscripcion.tipoPlan as TipoPlan, true);
   const precio = suscripcion.autoRenew ? precioConAutoRenew : precioSinAutoRenew;
   const vig = vigencia(suscripcion.pagos, suscripcion.tipoPlan as TipoPlan);
+  const enTrial = !!club?.trialEndsAt && club.trialEndsAt > new Date();
 
   res.json({
     suscripcion: { ...suscripcion, planMonto: precio, planMontoSinAutoRenew: precioSinAutoRenew, planMontoConAutoRenew: precioConAutoRenew },
     cantidadDeportistas,
     vigencia: vig,
+    enTrial,
   });
 });
 

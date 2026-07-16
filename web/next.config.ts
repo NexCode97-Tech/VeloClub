@@ -4,18 +4,18 @@ import { withSentryConfig } from "@sentry/nextjs";
 
 const CSP = [
   "default-src 'self'",
-  // Scripts: propio dominio + Clerk + Mercado Pago (SDK de tokenización de tarjeta)
-  "script-src 'self' 'unsafe-inline' https://clerk.veloclubtech.com https://*.clerk.accounts.dev https://maps.googleapis.com https://*.googleapis.com https://sdk.mercadopago.com https://http2.mlstatic.com",
+  // Scripts: propio dominio + Clerk + Mercado Pago (SDK de tokenización de tarjeta) + Cloudflare (CAPTCHA anti-bot de Clerk)
+  "script-src 'self' 'unsafe-inline' https://clerk.veloclubtech.com https://*.clerk.accounts.dev https://challenges.cloudflare.com https://maps.googleapis.com https://*.googleapis.com https://sdk.mercadopago.com https://http2.mlstatic.com",
   // Estilos: propio dominio + inline (Tailwind/shadcn lo requieren)
   "style-src 'self' 'unsafe-inline'",
   // Imágenes: propio dominio + Clerk + Cloudinary + Google Maps + Google User Content (fotos de perfil OAuth)
   "img-src 'self' data: blob: https://img.clerk.com https://images.clerk.dev https://res.cloudinary.com https://maps.gstatic.com https://maps.googleapis.com https://*.googleapis.com https://*.googleusercontent.com https://purecatamphetamine.github.io https://http2.mlstatic.com https://www.mercadolibre.com https://www.mercadolivre.com",
   // Fuentes: solo propio dominio + Google Maps
   "font-src 'self' data: https://fonts.gstatic.com",
-  // Conexiones: propio dominio + API Railway + Clerk + Cloudinary + Google Maps + Nominatim (geocodificación) + Mercado Pago (tokenización de tarjeta y fingerprint anti-fraude desde el navegador)
-  "connect-src 'self' https://veloclub-production.up.railway.app https://clerk.veloclubtech.com https://*.clerk.accounts.dev https://api.cloudinary.com https://res.cloudinary.com https://maps.googleapis.com https://*.googleapis.com https://nominatim.openstreetmap.org https://*.sentry.io https://api.mercadopago.com https://sdk.mercadopago.com https://http2.mlstatic.com https://events.mercadopago.com https://www.mercadolibre.com https://www.mercadolivre.com",
-  // Frames: Clerk (UI embebida) + Google Maps (embeds) + Mercado Pago (iframe de fingerprint anti-fraude)
-  "frame-src https://clerk.veloclubtech.com https://*.clerk.accounts.dev https://maps.google.com https://www.google.com https://www.mercadolibre.com https://www.mercadolivre.com",
+  // Conexiones: propio dominio + API Railway + Clerk + Cloudflare (CAPTCHA anti-bot) + Cloudinary + Google Maps + Nominatim (geocodificación) + Mercado Pago (tokenización de tarjeta y fingerprint anti-fraude desde el navegador)
+  "connect-src 'self' https://veloclub-production.up.railway.app https://clerk.veloclubtech.com https://*.clerk.accounts.dev https://challenges.cloudflare.com https://api.cloudinary.com https://res.cloudinary.com https://maps.googleapis.com https://*.googleapis.com https://nominatim.openstreetmap.org https://*.sentry.io https://api.mercadopago.com https://sdk.mercadopago.com https://http2.mlstatic.com https://events.mercadopago.com https://www.mercadolibre.com https://www.mercadolivre.com",
+  // Frames: Clerk (UI embebida) + Cloudflare (CAPTCHA anti-bot) + Google Maps (embeds) + Mercado Pago (iframe de fingerprint anti-fraude)
+  "frame-src https://clerk.veloclubtech.com https://*.clerk.accounts.dev https://challenges.cloudflare.com https://maps.google.com https://www.google.com https://www.mercadolibre.com https://www.mercadolivre.com",
   // No permitir embeber la app en iframes externos
   "frame-ancestors 'none'",
   // Workers: PWA service worker ('self') + Clerk web workers (blob:)

@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import * as Sentry from '@sentry/node';
 import { requireAuth } from '../auth/middleware';
 import { prisma } from '../db/client';
 import { notifyClubStaff } from '../lib/notify';
@@ -36,11 +37,13 @@ router.get('/mi-suscripcion', requireAuth, async (req, res) => {
     prisma.member.count({ where: { clubId, role: 'STUDENT' } }),
   ]);
 
-  const precio = calcularPrecioPlan(cantidadDeportistas, suscripcion.tipoPlan as TipoPlan, suscripcion.autoRenew);
+  const precioSinAutoRenew = calcularPrecioPlan(cantidadDeportistas, suscripcion.tipoPlan as TipoPlan, false);
+  const precioConAutoRenew = calcularPrecioPlan(cantidadDeportistas, suscripcion.tipoPlan as TipoPlan, true);
+  const precio = suscripcion.autoRenew ? precioConAutoRenew : precioSinAutoRenew;
   const vig = vigencia(suscripcion.pagos, suscripcion.tipoPlan as TipoPlan);
 
   res.json({
-    suscripcion: { ...suscripcion, planMonto: precio },
+    suscripcion: { ...suscripcion, planMonto: precio, planMontoSinAutoRenew: precioSinAutoRenew, planMontoConAutoRenew: precioConAutoRenew },
     cantidadDeportistas,
     vigencia: vig,
   });
@@ -103,6 +106,7 @@ router.get('/metodos-pago', requireAuth, async (req, res) => {
     });
   } catch (err) {
     console.error('[mercadopago/metodos-pago]', err instanceof Error ? err.message : err);
+    Sentry.captureException(err, { tags: { route: 'mercadopago/metodos-pago' } });
     res.status(500).json({ error: 'No se pudieron cargar los medios de pago' });
   }
 });
@@ -241,6 +245,7 @@ router.post('/pagar', requireAuth, async (req, res) => {
     return res.status(402).json({ error: msg });
   } catch (err) {
     console.error('[mercadopago/pagar]', err instanceof Error ? err.message : err);
+    Sentry.captureException(err, { tags: { route: 'mercadopago/pagar', metodo }, extra: { clubId } });
     res.status(500).json({ error: 'No se pudo procesar el pago. Intenta de nuevo.' });
   }
 });
@@ -270,6 +275,7 @@ router.post('/checkout', requireAuth, async (req, res) => {
     res.json({ initPoint: pref.init_point });
   } catch (err) {
     console.error('[mercadopago/checkout]', err instanceof Error ? err.message : err);
+    Sentry.captureException(err, { tags: { route: 'mercadopago/checkout' }, extra: { clubId } });
     res.status(500).json({ error: 'No se pudo iniciar el pago' });
   }
 });
@@ -341,11 +347,13 @@ router.post('/subscribe', requireAuth, async (req, res) => {
       }
     } catch (err) {
       console.error('[mercadopago/subscribe] no se pudo confirmar el primer cobro de inmediato', err instanceof Error ? err.message : err);
+      Sentry.captureException(err, { tags: { route: 'mercadopago/subscribe:confirmar-primer-cobro' }, extra: { clubId, preapprovalId: preapproval.id } });
     }
 
     res.json({ ok: true });
   } catch (err) {
     console.error('[mercadopago/subscribe]', err instanceof Error ? err.message : err);
+    Sentry.captureException(err, { tags: { route: 'mercadopago/subscribe' }, extra: { clubId } });
     res.status(500).json({ error: 'No se pudo activar la renovación automática' });
   }
 });
@@ -360,7 +368,10 @@ router.post('/unsubscribe', requireAuth, async (req, res) => {
 
   if (suscripcion.mpPreapprovalId) {
     try { await cancelarPreapproval(suscripcion.mpPreapprovalId); }
-    catch (err) { console.error('[mercadopago/unsubscribe]', err instanceof Error ? err.message : err); }
+    catch (err) {
+      console.error('[mercadopago/unsubscribe]', err instanceof Error ? err.message : err);
+      Sentry.captureException(err, { tags: { route: 'mercadopago/unsubscribe' }, extra: { clubId, preapprovalId: suscripcion.mpPreapprovalId } });
+    }
   }
 
   await prisma.clubSuscripcion.update({
@@ -388,10 +399,15 @@ router.post('/webhook', async (req, res) => {
     });
     if (!firmaValida) {
       console.error('[mercadopago/webhook] firma invalida, ignorando evento', dataId);
+      Sentry.captureMessage('Webhook de Mercado Pago con firma inválida', { level: 'warning', tags: { route: 'mercadopago/webhook' }, extra: { dataId, topic } });
       return;
     }
 
     // ── Cambios de estado de la suscripcion (cancelada, pausada, etc.) ────────
+    // Dunning: Mercado Pago reintenta un cobro recurrente fallido internamente y
+    // pone el preapproval en "paused" mientras lo hace — solo cuando finalmente
+    // lo cancela ("cancelled") debemos desactivar la renovación automática. Tratar
+    // "paused" igual que "cancelled" cortaría el acceso en el primer reintento.
     if (topic === 'subscription_preapproval') {
       const preapproval = await obtenerPreapproval(String(dataId));
       if (preapproval.status === 'authorized') return; // sigue activa, nada que hacer
@@ -399,14 +415,30 @@ router.post('/webhook', async (req, res) => {
       const suscripcion = await prisma.clubSuscripcion.findFirst({ where: { mpPreapprovalId: preapproval.id } });
       if (!suscripcion || !suscripcion.autoRenew) return;
 
+      if (preapproval.status === 'paused') {
+        const intentos = suscripcion.intentosFallidos + 1;
+        await prisma.clubSuscripcion.update({
+          where: { id: suscripcion.id },
+          data: { intentosFallidos: intentos, ultimoIntentoFallidoAt: new Date() },
+        });
+        await notifyClubStaff(suscripcion.clubId, {
+          tipo: 'PAGO_VENCIDO',
+          titulo: 'No pudimos cobrar tu renovación automática',
+          cuerpo: `Mercado Pago va a reintentar el cobro. Verifica que tu tarjeta tenga fondos o actualízala desde Ajustes (intento ${intentos}).`,
+          link: '/dashboard/ajustes',
+        });
+        return;
+      }
+
+      // "cancelled" u otro estado final — Mercado Pago agotó los reintentos
       await prisma.clubSuscripcion.update({
         where: { id: suscripcion.id },
-        data: { autoRenew: false, mpPreapprovalId: null },
+        data: { autoRenew: false, mpPreapprovalId: null, intentosFallidos: 0 },
       });
       await notifyClubStaff(suscripcion.clubId, {
         tipo: 'PAGO_VENCIDO',
         titulo: 'Renovación automática desactivada',
-        cuerpo: 'Mercado Pago canceló la renovación automática de tu suscripción. Actívala de nuevo o paga manualmente desde Ajustes.',
+        cuerpo: 'Mercado Pago canceló la renovación automática de tu suscripción tras varios intentos fallidos. Actívala de nuevo o paga manualmente desde Ajustes.',
         link: '/dashboard/ajustes',
       });
       return;
@@ -454,6 +486,7 @@ router.post('/webhook', async (req, res) => {
     });
   } catch (err) {
     console.error('[mercadopago/webhook]', err instanceof Error ? err.message : err);
+    Sentry.captureException(err, { tags: { route: 'mercadopago/webhook' } });
   }
 });
 

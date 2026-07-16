@@ -28,7 +28,7 @@ import mercadopagoRouter from './routes/mercadopago';
 import { startWorkers } from './workers';
 import { prisma } from './db/client';
 import { getRedis } from './lib/redis';
-import { sincronizarMontosSuscripciones } from './lib/sync-suscripciones';
+import { sincronizarMontosSuscripciones, recordarVencimientosProximos } from './lib/sync-suscripciones';
 
 dotenv.config();
 
@@ -168,13 +168,16 @@ const server = app.listen(PORT, () => {
   console.log(`API en http://localhost:${PORT}`);
   startWorkers();
 
-  // Sincroniza el monto de las suscripciones con renovación automática una
-  // vez al día — no depende de un cron externo, corre sola mientras la API
-  // esté viva. Primer chequeo a los 2 minutos de arrancar, luego cada 24h.
+  // Sincroniza el monto de las suscripciones con renovación automática y avisa
+  // a los clubes sin ella que están por vencer (dunning) una vez al día — no
+  // depende de un cron externo, corre sola mientras la API esté viva. Primer
+  // chequeo a los 2 minutos de arrancar, luego cada 24h.
   setTimeout(() => {
     sincronizarMontosSuscripciones().catch(err => console.error('[sync-suscripciones-monto:boot]', err));
+    recordarVencimientosProximos().catch(err => console.error('[recordar-vencimientos:boot]', err));
     setInterval(() => {
       sincronizarMontosSuscripciones().catch(err => console.error('[sync-suscripciones-monto:interval]', err));
+      recordarVencimientosProximos().catch(err => console.error('[recordar-vencimientos:interval]', err));
     }, 24 * 60 * 60 * 1000);
   }, 2 * 60 * 1000);
 });

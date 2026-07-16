@@ -146,11 +146,16 @@ router.post('/pagar', requireAuth, async (req, res) => {
   const {
     metodo, aceptaTerminos, cardTokenId, paymentMethodId,
     docType, docNumber, personType, bancoId, deviceId, installments,
+    nombres, apellidos, telefono,
+    direccion, numeroDireccion, codigoPostal, barrio, ciudad,
   } = req.body as {
     metodo?: 'CARD' | 'PSE' | 'EFECTY'; aceptaTerminos?: boolean;
     cardTokenId?: string; paymentMethodId?: string;
     docType?: string; docNumber?: string; personType?: string; bancoId?: string;
     deviceId?: string; installments?: number;
+    // Requeridos por la nueva versión de PSE de Mercado Pago
+    nombres?: string; apellidos?: string; telefono?: string;
+    direccion?: string; numeroDireccion?: string; codigoPostal?: string; barrio?: string; ciudad?: string;
   };
 
   const cuotas = Number.isInteger(installments) && installments! >= 1 && installments! <= 36 ? installments! : 1;
@@ -167,8 +172,13 @@ router.post('/pagar', requireAuth, async (req, res) => {
   if (metodo === 'CARD' && (!cardTokenId || !paymentMethodId)) {
     return res.status(400).json({ error: 'Faltan los datos de la tarjeta' });
   }
-  if (metodo === 'PSE' && !bancoId) {
-    return res.status(400).json({ error: 'Selecciona tu banco' });
+  if (metodo === 'PSE') {
+    if (!bancoId) return res.status(400).json({ error: 'Selecciona tu banco' });
+    if (!nombres || !apellidos) return res.status(400).json({ error: 'Faltan tus nombres y apellidos' });
+    if (!telefono) return res.status(400).json({ error: 'Falta tu número de teléfono' });
+    if (!direccion || !numeroDireccion || !codigoPostal || !barrio || !ciudad) {
+      return res.status(400).json({ error: 'Falta la dirección completa (dirección, número, código postal, barrio y ciudad)' });
+    }
   }
 
   const [suscripcion, cantidadDeportistas, club] = await Promise.all([
@@ -211,6 +221,16 @@ router.post('/pagar', requireAuth, async (req, res) => {
         email: payerEmail,
         entity_type: personType === 'juridica' ? 'association' : 'individual',
         identification,
+        first_name: nombres,
+        last_name: apellidos,
+        phone: { area_code: '57', number: telefono },
+        address: {
+          zip_code: codigoPostal,
+          street_name: direccion,
+          street_number: Number(numeroDireccion) || numeroDireccion,
+          neighborhood: barrio,
+          city: ciudad,
+        },
       },
       transaction_details: { financial_institution: bancoId },
       callback_url: `${process.env.WEB_ORIGIN}/dashboard/ajustes?tab=suscripcion`,

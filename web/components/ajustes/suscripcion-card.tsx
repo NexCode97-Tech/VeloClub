@@ -277,7 +277,11 @@ export default function SuscripcionCard() {
   const [metodos, setMetodos] = useState<MetodosDisponibles | null>(null);
   const [loadingMetodos, setLoadingMetodos] = useState(false);
   const [metodo, setMetodo] = useState<MetodoPago>('CARD');
-  const [pse, setPse] = useState({ bancoId: '', personType: 'natural', docType: 'CC', docNumber: '' });
+  const [pse, setPse] = useState({
+    bancoId: '', personType: 'natural', docType: 'CC', docNumber: '',
+    nombres: '', apellidos: '', telefono: '',
+    direccion: '', numeroDireccion: '', codigoPostal: '', barrio: '', ciudad: '',
+  });
   const [efecty, setEfecty] = useState({ docType: 'CC', docNumber: '' });
   const [aceptaTerminos, setAceptaTerminos] = useState(false);
   const [payPending, setPayPending] = useState(false);
@@ -413,7 +417,12 @@ export default function SuscripcionCard() {
           installments: cardTipo === 'credit_card' ? cuotasSeleccionadas : 1,
         });
       } else if (metodo === 'PSE') {
-        Object.assign(body, { bancoId: pse.bancoId, personType: pse.personType, docType: pse.docType, docNumber: pse.docNumber });
+        Object.assign(body, {
+          bancoId: pse.bancoId, personType: pse.personType, docType: pse.docType, docNumber: pse.docNumber,
+          nombres: pse.nombres, apellidos: pse.apellidos, telefono: pse.telefono,
+          direccion: pse.direccion, numeroDireccion: pse.numeroDireccion,
+          codigoPostal: pse.codigoPostal, barrio: pse.barrio, ciudad: pse.ciudad,
+        });
       } else {
         Object.assign(body, { docType: efecty.docType, docNumber: efecty.docNumber });
       }
@@ -911,6 +920,28 @@ export default function SuscripcionCard() {
                     </div>
                     <input placeholder="Número de documento" value={pse.docNumber} onChange={e => setPse(p => ({ ...p, docNumber: e.target.value }))}
                       className="w-full px-3 py-2 rounded-lg border border-input text-sm" inputMode="numeric" />
+                    <div className="grid grid-cols-2 gap-2">
+                      <input placeholder="Nombres" value={pse.nombres} onChange={e => setPse(p => ({ ...p, nombres: e.target.value }))}
+                        className="px-3 py-2 rounded-lg border border-input text-sm" autoComplete="given-name" />
+                      <input placeholder="Apellidos" value={pse.apellidos} onChange={e => setPse(p => ({ ...p, apellidos: e.target.value }))}
+                        className="px-3 py-2 rounded-lg border border-input text-sm" autoComplete="family-name" />
+                    </div>
+                    <input placeholder="Teléfono (sin indicativo)" value={pse.telefono} onChange={e => setPse(p => ({ ...p, telefono: e.target.value.replace(/\D/g, '') }))}
+                      className="w-full px-3 py-2 rounded-lg border border-input text-sm" inputMode="numeric" autoComplete="tel-national" />
+                    <div className="grid grid-cols-3 gap-2">
+                      <input placeholder="Dirección" value={pse.direccion} onChange={e => setPse(p => ({ ...p, direccion: e.target.value }))}
+                        className="col-span-2 px-3 py-2 rounded-lg border border-input text-sm" autoComplete="address-line1" />
+                      <input placeholder="Número" value={pse.numeroDireccion} onChange={e => setPse(p => ({ ...p, numeroDireccion: e.target.value }))}
+                        className="px-3 py-2 rounded-lg border border-input text-sm" />
+                    </div>
+                    <div className="grid grid-cols-3 gap-2">
+                      <input placeholder="Barrio" value={pse.barrio} onChange={e => setPse(p => ({ ...p, barrio: e.target.value }))}
+                        className="px-3 py-2 rounded-lg border border-input text-sm" />
+                      <input placeholder="Ciudad" value={pse.ciudad} onChange={e => setPse(p => ({ ...p, ciudad: e.target.value }))}
+                        className="px-3 py-2 rounded-lg border border-input text-sm" autoComplete="address-level2" />
+                      <input placeholder="Cód. postal" value={pse.codigoPostal} onChange={e => setPse(p => ({ ...p, codigoPostal: e.target.value.replace(/\D/g, '') }))}
+                        className="px-3 py-2 rounded-lg border border-input text-sm" inputMode="numeric" autoComplete="postal-code" />
+                    </div>
                     <p className="text-[11px] text-muted-foreground">Serás dirigido a tu banco para autorizar la transferencia. Al completarla, volverás a VeloClub.</p>
                   </motion.div>
                 )}

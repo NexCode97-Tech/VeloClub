@@ -85,24 +85,16 @@ function formatearNumeroTarjeta(raw: string, brand: CardBrand): string {
   return digits.match(/.{1,4}/g)?.join(' ') ?? digits;
 }
 
-// Logos reales de cada franquicia (SVG en línea, sin dependencias externas)
+// Logos reales de cada franquicia. Mastercard y Visa usan los SVG oficiales
+// (public/card-brands); Amex y Diners quedan como respaldo dibujado en línea.
 function BrandLogo({ brand }: { brand: Exclude<CardBrand, null> }) {
   if (brand === 'mastercard') {
-    return (
-      <svg viewBox="0 0 32 20" height="20" role="img" aria-label="Mastercard">
-        <circle cx="12" cy="10" r="9" fill="#EB001B" />
-        <circle cx="20" cy="10" r="9" fill="#F79E1B" />
-        <path d="M16 3.15a8.98 8.98 0 0 0 0 13.7 8.98 8.98 0 0 0 0-13.7z" fill="#FF5F00" />
-      </svg>
-    );
+    // eslint-disable-next-line @next/next/no-img-element
+    return <img src="/card-brands/mastercard.svg" alt="Mastercard" style={{ height: 22, width: 'auto' }} />;
   }
   if (brand === 'visa') {
-    return (
-      <svg viewBox="0 0 48 16" height="14" role="img" aria-label="Visa">
-        <text x="0" y="13" fontFamily="Arial, Helvetica, sans-serif" fontSize="16"
-          fontWeight="700" fontStyle="italic" letterSpacing="-0.5" fill="#1434CB">VISA</text>
-      </svg>
-    );
+    // eslint-disable-next-line @next/next/no-img-element
+    return <img src="/card-brands/visa.svg" alt="Visa" style={{ height: 15, width: 'auto' }} />;
   }
   if (brand === 'amex') {
     return (

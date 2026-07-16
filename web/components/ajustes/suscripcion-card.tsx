@@ -52,6 +52,55 @@ interface MetodosDisponibles {
 }
 const DOC_TYPES = ['CC', 'CE', 'NIT', 'TI', 'PAS'];
 
+// ── Detección de marca + formato del número de tarjeta ───────────────────────
+type CardBrand = 'visa' | 'mastercard' | 'amex' | 'diners' | null;
+
+function detectarMarca(digits: string): CardBrand {
+  if (/^4/.test(digits)) return 'visa';
+  if (/^(5[1-5]|2(2[2-9]|[3-6]\d|7[01]|720))/.test(digits)) return 'mastercard';
+  if (/^3[47]/.test(digits)) return 'amex';
+  if (/^3(0[0-5]|[68])/.test(digits)) return 'diners';
+  return null;
+}
+
+function formatearNumeroTarjeta(raw: string, brand: CardBrand): string {
+  const digits = raw.replace(/\D/g, '').slice(0, brand === 'amex' ? 15 : 19);
+  if (brand === 'amex') {
+    // Amex: 4-6-5
+    return [digits.slice(0, 4), digits.slice(4, 10), digits.slice(10, 15)].filter(Boolean).join(' ');
+  }
+  // Resto: grupos de 4
+  return digits.match(/.{1,4}/g)?.join(' ') ?? digits;
+}
+
+const BRAND_LABEL: Record<Exclude<CardBrand, null>, string> = {
+  visa: 'Visa', mastercard: 'Mastercard', amex: 'American Express', diners: 'Diners Club',
+};
+const BRAND_COLOR: Record<Exclude<CardBrand, null>, string> = {
+  visa: '#1A1F71', mastercard: '#EB001B', amex: '#2E77BC', diners: '#0079BE',
+};
+
+function CardBrandBadge({ brand }: { brand: CardBrand }) {
+  const reduce = useReducedMotion();
+  return (
+    <AnimatePresence>
+      {brand && (
+        <motion.span
+          key={brand}
+          initial={reduce ? { opacity: 0 } : { opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={reduce ? { opacity: 0 } : { opacity: 0, scale: 0.9 }}
+          transition={{ duration: 0.15, ease: EASE }}
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-[11px] font-bold px-2 py-0.5 rounded-md pointer-events-none"
+          style={{ background: `${BRAND_COLOR[brand]}14`, color: BRAND_COLOR[brand] }}
+        >
+          {BRAND_LABEL[brand]}
+        </motion.span>
+      )}
+    </AnimatePresence>
+  );
+}
+
 // ── Toggle deslizante estilo iOS ─────────────────────────────────────────────
 function SlideToggle({ checked, onChange, disabled }: { checked: boolean; onChange: (v: boolean) => void; disabled?: boolean }) {
   const reduce = useReducedMotion();
@@ -141,6 +190,12 @@ export default function SuscripcionCard() {
   const [showActivarForm, setShowActivarForm] = useState(false);
 
   const [card, setCard] = useState({ number: '', name: '', month: '', year: '', cvv: '', docNumber: '' });
+  const cardBrand = detectarMarca(card.number.replace(/\D/g, ''));
+
+  function handleCardNumberChange(raw: string) {
+    const brand = detectarMarca(raw.replace(/\D/g, ''));
+    setCard(c => ({ ...c, number: formatearNumeroTarjeta(raw, brand) }));
+  }
 
   // Pago dentro de la app (Checkout API) — medios y datos
   const [metodos, setMetodos] = useState<MetodosDisponibles | null>(null);
@@ -410,18 +465,26 @@ export default function SuscripcionCard() {
   // Campos de tarjeta reutilizables
   const cardFields = (
     <div className="space-y-2.5">
-      <input placeholder="Número de tarjeta" value={card.number} onChange={e => setCard(c => ({ ...c, number: e.target.value }))}
-        className="w-full px-3 py-2 rounded-lg border border-input text-sm" inputMode="numeric" />
+      <div className="relative">
+        <input
+          placeholder="Número de tarjeta" value={card.number}
+          onChange={e => handleCardNumberChange(e.target.value)}
+          className="w-full px-3 py-2 rounded-lg border border-input text-sm"
+          style={{ paddingRight: cardBrand ? 110 : undefined }}
+          inputMode="numeric" autoComplete="cc-number"
+        />
+        <CardBrandBadge brand={cardBrand} />
+      </div>
       <input placeholder="Nombre del titular" value={card.name} onChange={e => setCard(c => ({ ...c, name: e.target.value }))}
-        className="w-full px-3 py-2 rounded-lg border border-input text-sm" />
+        className="w-full px-3 py-2 rounded-lg border border-input text-sm" autoComplete="cc-name" />
       <div className="grid grid-cols-4 gap-2">
-        <input placeholder="MM" value={card.month} onChange={e => setCard(c => ({ ...c, month: e.target.value }))}
-          className="px-3 py-2 rounded-lg border border-input text-sm" inputMode="numeric" maxLength={2} />
-        <input placeholder="AAAA" value={card.year} onChange={e => setCard(c => ({ ...c, year: e.target.value }))}
-          className="px-3 py-2 rounded-lg border border-input text-sm" inputMode="numeric" maxLength={4} />
-        <input placeholder="CVV" value={card.cvv} onChange={e => setCard(c => ({ ...c, cvv: e.target.value }))}
-          className="px-3 py-2 rounded-lg border border-input text-sm" inputMode="numeric" maxLength={4} />
-        <input placeholder="Cédula" value={card.docNumber} onChange={e => setCard(c => ({ ...c, docNumber: e.target.value }))}
+        <input placeholder="MM" value={card.month} onChange={e => setCard(c => ({ ...c, month: e.target.value.replace(/\D/g, '') }))}
+          className="px-3 py-2 rounded-lg border border-input text-sm" inputMode="numeric" maxLength={2} autoComplete="cc-exp-month" />
+        <input placeholder="AAAA" value={card.year} onChange={e => setCard(c => ({ ...c, year: e.target.value.replace(/\D/g, '') }))}
+          className="px-3 py-2 rounded-lg border border-input text-sm" inputMode="numeric" maxLength={4} autoComplete="cc-exp-year" />
+        <input placeholder="CVV" value={card.cvv} onChange={e => setCard(c => ({ ...c, cvv: e.target.value.replace(/\D/g, '') }))}
+          className="px-3 py-2 rounded-lg border border-input text-sm" inputMode="numeric" maxLength={cardBrand === 'amex' ? 4 : 3} autoComplete="cc-csc" />
+        <input placeholder="Cédula" value={card.docNumber} onChange={e => setCard(c => ({ ...c, docNumber: e.target.value.replace(/\D/g, '') }))}
           className="px-3 py-2 rounded-lg border border-input text-sm" inputMode="numeric" />
       </div>
     </div>

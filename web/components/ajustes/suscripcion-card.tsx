@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from 'react';
 import Script from 'next/script';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { apiFetch } from '@/lib/api-client';
-import { CreditCard, ArrowLeft, Landmark, Banknote, Clock, RefreshCw, XCircle, Check } from 'lucide-react';
+import { CreditCard, ArrowLeft, Landmark, Banknote, Clock, RefreshCw, XCircle, Check, Star } from 'lucide-react';
 
 const fmt = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 });
 const EASE = [0.23, 1, 0.32, 1] as const;
@@ -566,9 +566,10 @@ export default function SuscripcionCard() {
                 >
                   {destacado && (
                     <span
-                      className="inline-block text-[11px] font-semibold px-2.5 py-0.5 rounded-md mb-2 md:absolute md:-top-3 md:left-1/2 md:-translate-x-1/2 md:mb-0"
+                      className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-0.5 rounded-md mb-2 md:absolute md:-top-3 md:left-1/2 md:-translate-x-1/2 md:mb-0"
                       style={{ background: '#7C3AED', color: '#fff' }}
                     >
+                      <Star className="w-3 h-3" fill="currentColor" />
                       Más popular
                     </span>
                   )}

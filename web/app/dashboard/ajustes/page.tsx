@@ -595,6 +595,7 @@ function AjustesPageContent() {
           Ajustes
         </h1>
       </div>
+      <div className="hidden lg:block" style={{ borderTop: '1px solid rgba(0,0,0,0.07)' }} />
 
       {/* Modal recorte de logo — en portal a document.body para quedar por encima
           del menú flotante inferior (que si no tapa los botones en móvil) */}

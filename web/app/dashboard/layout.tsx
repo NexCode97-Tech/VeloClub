@@ -20,6 +20,8 @@ import {
   ChevronRight,
   Search,
   ArrowLeft,
+  Trophy,
+  Dumbbell,
 } from 'lucide-react';
 import { IconHome, IconUsers, IconCalendar, IconStatistics, IconClub, IconFinanzas, IconUbicacion, IconAsistencias, IconResultados, IconAjustes, IconMisPagos, IconPerfil, IconSuscripcion } from '@/components/ui/custom-icons';
 
@@ -290,6 +292,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     { key: 'suscripcion', label: 'Mi suscripción', icon: IconSuscripcion, adminOnly: true },
   ].filter(item => !item.adminOnly || isAdmin);
 
+  // Sub-menú de Rendimiento en el sidebar expandido — igual que Ajustes.
+  // Dentro de /dashboard/logros muestra Competencias / Entrenamientos (?tab=).
+  const onLogros = pathname.startsWith('/dashboard/logros');
+  const LOGROS_SUBNAV = [
+    { key: 'comp',  label: 'Competencias',   icon: Trophy },
+    { key: 'train', label: 'Entrenamientos', icon: Dumbbell },
+  ];
+
   // Índice activo para el pill deslizante del bottom bar
   const activeTabIndex = tabItems.findIndex(t => isTabActive(t.href));
   // Cuando el sidebar está expandido, Ajustes está oculto — no mostrar su pill activo
@@ -393,6 +403,20 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 <AjustesSubNavLinks items={AJUSTES_SUBNAV} accentColor={accentColor} accentBg={accentBg} />
               </Suspense>
             </div>
+          ) : !collapsed && onLogros ? (
+            <div>
+              <Link
+                href="/dashboard"
+                className="flex items-center gap-3 rounded-xl text-sm font-semibold transition-colors hover:bg-secondary mb-2"
+                style={{ height: 40, paddingLeft: 12, paddingRight: 12, color: '#8E87A8' }}
+              >
+                <ArrowLeft className="w-[16px] h-[16px] shrink-0" />
+                <span>Volver</span>
+              </Link>
+              <Suspense fallback={null}>
+                <LogrosSubNavLinks items={LOGROS_SUBNAV} accentColor={accentColor} accentBg={accentBg} />
+              </Suspense>
+            </div>
           ) : (
             <>
               {!collapsed && activeSideIndex >= 0 && (
@@ -434,6 +458,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     >
                       <Icon className="w-[18px] h-[18px] shrink-0" strokeWidth={active ? 2.5 : 2} />
                       {!collapsed && <span>{label}</span>}
+                      {!collapsed && href === '/dashboard/logros' && (
+                        <ChevronRight className="w-4 h-4 ml-auto shrink-0" style={{ opacity: 0.7 }} />
+                      )}
                     </Link>
                   );
                 })}
@@ -804,6 +831,48 @@ function AjustesSubNavLinks({ items, accentColor, accentBg }: {
           <Link
             key={key}
             href={`/dashboard/ajustes?tab=${key}`}
+            className={`flex items-center gap-3 rounded-xl text-sm font-semibold transition-colors relative z-10 ${active ? '' : 'hover:bg-secondary'}`}
+            style={{ height: 44, paddingLeft: 12, paddingRight: 12, color: active ? accentColor : '#8E87A8' }}
+          >
+            <Icon className="w-[18px] h-[18px] shrink-0" strokeWidth={active ? 2.5 : 2} />
+            <span>{label}</span>
+          </Link>
+        );
+      })}
+    </div>
+  );
+}
+
+// Sub-menú de Rendimiento (Competencias / Entrenamientos) para el sidebar
+// expandido. Lee ?tab= para resaltar el link activo, igual que Ajustes.
+function LogrosSubNavLinks({ items, accentColor, accentBg }: {
+  items: { key: string; label: string; icon: React.ElementType }[];
+  accentColor: string;
+  accentBg: string;
+}) {
+  const searchParams = useSearchParams();
+  const logrosTab = searchParams.get('tab') ?? 'comp';
+  const activeIndex = items.findIndex(item => item.key === logrosTab);
+
+  return (
+    <div className="space-y-1 relative">
+      {activeIndex >= 0 && (
+        <div
+          className="absolute left-0 right-0 rounded-xl pointer-events-none"
+          style={{
+            height: 44,
+            top: `calc(${activeIndex} * 48px)`,
+            background: accentBg,
+            transition: 'top 0.25s cubic-bezier(0.34,1.2,0.64,1)',
+          }}
+        />
+      )}
+      {items.map(({ key, label, icon: Icon }) => {
+        const active = logrosTab === key;
+        return (
+          <Link
+            key={key}
+            href={`/dashboard/logros?tab=${key}`}
             className={`flex items-center gap-3 rounded-xl text-sm font-semibold transition-colors relative z-10 ${active ? '' : 'hover:bg-secondary'}`}
             style={{ height: 44, paddingLeft: 12, paddingRight: 12, color: active ? accentColor : '#8E87A8' }}
           >

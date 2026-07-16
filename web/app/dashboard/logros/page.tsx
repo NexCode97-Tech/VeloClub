@@ -1,7 +1,8 @@
 'use client';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@clerk/nextjs';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { apiFetch } from '@/lib/api-client';
 import { parseLocalDate, toSentenceCase } from '@/lib/utils';
 import { useCompetitions, useTraining, useLocations } from '@/hooks/useVeloQuery';
@@ -127,8 +128,21 @@ const itemVariant = {
 };
 
 export default function LogrosPage() {
+  return (
+    <Suspense fallback={null}>
+      <LogrosPageInner />
+    </Suspense>
+  );
+}
+
+function LogrosPageInner() {
   const { getToken } = useAuth();
-  const [tab, setTab]               = useState<'comp' | 'train'>('comp');
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  // Tab controlado por la URL (?tab=comp|train) para sincronizar con el sub-menú
+  // del sidebar, igual que el módulo de Ajustes.
+  const tab: 'comp' | 'train' = searchParams.get('tab') === 'train' ? 'train' : 'comp';
+  const setTab = (t: 'comp' | 'train') => router.replace(`/dashboard/logros?tab=${t}`, { scroll: false });
   const [role, setRole]             = useState('');
   const [myMemberId, setMyMemberId] = useState<string | null>(null);
 

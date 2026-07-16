@@ -503,10 +503,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           {/* Nombre + rol (solo expandido) */}
           {!collapsed && (
             <Link href="/dashboard/perfil" className="flex-1 min-w-0">
-              <div className="text-[12px] font-bold truncate" style={{ color: '#1a1028' }}>
+              <div className="text-[12px] font-semibold truncate" style={{ color: '#1a1028' }}>
                 {userName ?? 'Usuario'}
               </div>
-              <div className="text-[9px] font-bold tracking-wide" style={{ color: SIDEBAR_ROLE_COLOR[role ?? 'ADMIN'] ?? '#8E87A8' }}>
+              <div className="text-[9px] font-semibold tracking-wide" style={{ color: SIDEBAR_ROLE_COLOR[role ?? 'ADMIN'] ?? '#8E87A8' }}>
                 {SIDEBAR_ROLE_LABEL[role ?? 'ADMIN'] ?? role}
               </div>
             </Link>

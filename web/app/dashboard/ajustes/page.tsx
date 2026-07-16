@@ -133,6 +133,14 @@ const ROLE_LABELS: Record<string, string> = {
   SUPERADMIN: 'Superadmin',
 };
 
+// Mismos colores por rol que el footer del sidebar (SIDEBAR_ROLE_COLOR en layout.tsx)
+const PROFILE_ROLE_COLOR: Record<string, string> = {
+  SUPERADMIN: '#EF476F',
+  ADMIN: '#FFB703',
+  COACH: '#06D6A0',
+  STUDENT: '#7C3AED',
+};
+
 type Tab = 'perfil' | 'club' | 'suscripcion';
 
 export default function AjustesPage() {
@@ -353,10 +361,10 @@ function AjustesPageContent() {
             }
           </div>
           <div className="min-w-0">
-            <p className="text-[16px] font-bold text-foreground truncate">{displayName}</p>
+            <p className="text-[16px] font-semibold text-foreground truncate">{displayName}</p>
             <span
-              className="inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide mt-1"
-              style={{ background: 'rgba(124,58,237,0.10)', color: '#7C3AED' }}
+              className="inline-flex px-2 py-0.5 rounded-full text-[10px] font-semibold tracking-wide mt-1"
+              style={{ background: `${PROFILE_ROLE_COLOR[role ?? ''] ?? '#7C3AED'}1A`, color: PROFILE_ROLE_COLOR[role ?? ''] ?? '#7C3AED' }}
             >
               {ROLE_LABELS[role ?? ''] ?? role}
             </span>

@@ -307,8 +307,8 @@ function LogrosPageInner() {
           )}
         </div>
 
-        {/* Tabs */}
-        <div className="relative flex bg-secondary rounded-2xl p-1">
+        {/* Tabs — solo móvil; en escritorio viven en el sidebar */}
+        <div className="md:hidden relative flex bg-secondary rounded-2xl p-1">
           {/* Sliding indicator */}
           <motion.div
             className="absolute top-1 bottom-1 rounded-xl bg-white shadow-sm"

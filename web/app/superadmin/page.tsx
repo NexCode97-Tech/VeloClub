@@ -96,14 +96,19 @@ export default function SuperadminDashboard() {
   useEffect(() => {
     if (!isLoaded) return;
     if (!isSignedIn) { router.push('/sign-in'); return; }
-    (async () => {
+    async function load() {
       try {
         const token = await getToken();
         const res = await apiFetch<{ clubs: Club[] }>('/superadmin/suscripciones', { token });
         setClubs(res.clubs);
       } catch (e) { console.error(e); }
       finally { setLoading(false); }
-    })();
+    }
+    load();
+    // Refresco silencioso — banner de "por verificar" y métricas quedan en
+    // tiempo real sin que el superadmin tenga que recargar la página.
+    const interval = setInterval(load, 15_000);
+    return () => clearInterval(interval);
   }, [isLoaded, isSignedIn]);
 
   // ── Métricas ──────────────────────────────────────────────────────────────
@@ -133,18 +138,17 @@ export default function SuperadminDashboard() {
     ? Math.round(((recaudadoEsteMes - recaudadoMesAnterior) / recaudadoMesAnterior) * 100)
     : recaudadoEsteMes > 0 ? 100 : 0;
 
-  // Clubs en prueba — usa trialEndsAt si existe, si no asume createdAt+15d
+  // Clubs en prueba — trialEndsAt es la fuente de verdad de "sin pago confirmado
+  // todavía" (un club puede tener un plan SELECCIONADO sin haber pagado nunca;
+  // solo el pago real limpia trialEndsAt, ver activarClubTrasPago)
   const enPrueba = clubs.filter(c => {
-    if (c.suscripcion) return false; // ya tiene plan pagado
-    const end = c.trialEndsAt
-      ? new Date(c.trialEndsAt)
-      : (() => { const d = new Date(c.createdAt); d.setDate(d.getDate() + 15); return d; })();
-    return end >= now;
+    if (!c.trialEndsAt) return false; // ya pagó (trial limpiado)
+    return new Date(c.trialEndsAt) >= now;
   }).length;
 
   // Días de trial restante
   const trialDays = clubs
-    .filter(c => !c.suscripcion)
+    .filter(c => !!c.trialEndsAt)
     .map(c => {
       const end = c.trialEndsAt
         ? new Date(c.trialEndsAt)

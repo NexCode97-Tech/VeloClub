@@ -388,7 +388,7 @@ export default function SuscripcionCard() {
           <div className="space-y-3 p-4 rounded-xl border border-border">
             <p className="text-[12px] font-semibold text-foreground flex items-center gap-2"><CreditCard className="w-3.5 h-3.5" /> Datos de la tarjeta</p>
             <p className="text-[11px] text-muted-foreground -mt-1">
-              La renovación automática solo admite tarjeta de crédito o débito — es el único medio que se puede volver a cobrar sin que estés presente. Para pagar con PSE, Nequi u otro medio, usa "Pagar suscripción ahora" cada vez que venza.
+              La renovación automática solo admite tarjeta de crédito o débito — es el único medio que se puede volver a cobrar sin que estés presente. Para pagar con PSE o Efecty, usa la sección de pago manual cada vez que venza tu plan.
             </p>
             <input placeholder="Número de tarjeta" value={card.number} onChange={e => setCard(c => ({ ...c, number: e.target.value }))}
               className="w-full px-3 py-2 rounded-lg border border-input text-sm" inputMode="numeric" />

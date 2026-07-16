@@ -347,6 +347,12 @@ router.post('/subscribe', requireAuth, async (req, res) => {
     prisma.club.findUnique({ where: { id: clubId }, select: { name: true, email: true, trialEndsAt: true } }),
   ]);
 
+  // Evita crear una segunda suscripción recurrente (con doble cobro) si ya hay
+  // una activa — protege contra doble clic, doble pestaña o cualquier reintento.
+  if (suscripcion.autoRenew && suscripcion.mpPreapprovalId) {
+    return res.status(409).json({ error: 'Ya tienes la renovación automática activa. Desactívala antes de volver a activarla.' });
+  }
+
   const monto = calcularPrecioPlan(cantidadDeportistas, suscripcion.tipoPlan as TipoPlan, true);
   const payerEmail = resolverPayerEmail(req, club?.email);
   const meses = suscripcion.tipoPlan === 'MENSUAL' ? 1 : suscripcion.tipoPlan === 'TRIMESTRAL' ? 3 : 12;

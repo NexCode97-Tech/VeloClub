@@ -115,7 +115,7 @@ export default function GlassmorphismHero() {
             {/* CTA */}
             <div className="vc-fade d4 flex flex-col sm:flex-row items-stretch sm:items-center justify-center lg:justify-start gap-3">
               <Link
-                href="/sign-up"
+                href="/crear-club"
                 className="group inline-flex items-center justify-center gap-2 rounded-full w-full sm:w-auto px-8 py-3 text-sm font-semibold transition-all hover:scale-[1.02] active:scale-[0.98]"
                 style={{ background: 'linear-gradient(135deg, #7C3AED, #9333EA)', color: '#fff' }}
               >

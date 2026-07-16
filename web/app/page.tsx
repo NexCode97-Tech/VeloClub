@@ -119,7 +119,7 @@ export default function HomePage() {
               <ChevronRight className="w-4 h-4" />
             </Link>
             <Link
-              href="/sign-up"
+              href="/crear-club"
               className="inline-flex items-center gap-1.5 text-sm font-semibold text-white px-4 py-2 rounded-full transition-all hover:scale-[1.03] active:scale-95"
               style={{ background: 'linear-gradient(135deg, #7C3AED, #9333EA)' }}
             >
@@ -175,7 +175,7 @@ export default function HomePage() {
               Iniciar sesión
             </Link>
             <Link
-              href="/sign-up"
+              href="/crear-club"
               onClick={() => setMenuOpen(false)}
               className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-semibold text-white transition-colors"
               style={{ background: 'linear-gradient(135deg, #7C3AED, #9333EA)' }}
@@ -278,7 +278,7 @@ export default function HomePage() {
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 relative">
             <Link
-              href="/sign-up"
+              href="/crear-club"
               className="inline-flex items-center gap-2 px-7 py-3 bg-white text-[#7C3AED] font-semibold text-sm rounded-xl shadow-lg transition-all hover:-translate-y-0.5 active:scale-95 w-full sm:w-auto justify-center"
             >
               Crear mi club gratis

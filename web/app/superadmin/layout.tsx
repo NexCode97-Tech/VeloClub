@@ -13,12 +13,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 // Config fue fusionado con Perfil (UserButton) — 3 tabs + UserButton = 4 slots
 const TABS = [
   { href: '/superadmin',          label: 'Inicio',    exact: true,  Icon: LayoutDashboard  },
-  { href: '/superadmin/clubs',    label: 'Clubs',     exact: false, Icon: Building2        },
+  { href: '/superadmin/clubs',    label: 'Clubes',    exact: false, Icon: Building2        },
 ];
 
 const SCREEN_LABELS: Record<string, string> = {
   '/superadmin':          'Inicio',
-  '/superadmin/clubs':    'Clubs',
+  '/superadmin/clubs':    'Clubes',
 };
 
 // Ícono SVG por tipo de notificación — sin emojis

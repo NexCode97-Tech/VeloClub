@@ -282,7 +282,7 @@ export default function SuperadminDashboard() {
           style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 20 }}
         >
           <div style={{ background: '#fff', borderRadius: 20, padding: '16px 14px', border: '1px solid rgba(120,80,200,0.10)', boxShadow: '0 2px 12px rgba(124,58,237,0.05)' }}>
-            <p style={{ margin: '0 0 10px', fontSize: 9, fontWeight: 600, color: '#8E87A8', letterSpacing: '0.02em' }}>Clubs activos</p>
+            <p style={{ margin: '0 0 10px', fontSize: 9, fontWeight: 600, color: '#8E87A8', letterSpacing: '0.02em' }}>Clubes activos</p>
             <p style={{ margin: '0 0 4px', fontSize: 44, fontWeight: 800, color: '#1A1028', fontFamily: 'inherit', lineHeight: 1 }}>
               {String(activos).padStart(2, '0')}
             </p>
@@ -309,7 +309,7 @@ export default function SuperadminDashboard() {
           {[
             { label: 'Total recaudado', value: totalRecaudado > 0 ? fmtHero(totalRecaudado).main + fmtHero(totalRecaudado).suffix : '$0', color: '#06D6A0', sub: 'Histórico' },
             { label: 'Total miembros',  value: String(totalMiembros), color: '#7C3AED', sub: 'En todos los clubs' },
-            { label: 'Total clubs',     value: String(total),         color: '#FFB703', sub: `${activos} activos` },
+            { label: 'Total clubes',    value: String(total),         color: '#FFB703', sub: `${activos} activos` },
           ].map(s => (
             <motion.div key={s.label} variants={cardVariant}
               style={{ background: '#fff', borderRadius: 18, border: '1px solid rgba(120,80,200,0.10)', boxShadow: '0 2px 12px rgba(124,58,237,0.05)', padding: '16px' }}>
@@ -361,7 +361,7 @@ export default function SuperadminDashboard() {
         <motion.div variants={cardVariant}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
             <p style={{ margin: 0, fontSize: 10, fontWeight: 600, color: '#8E87A8', letterSpacing: '0.02em' }}>
-              Clubs registrados
+              Clubes registrados
             </p>
             <Link href="/superadmin/clubs" style={{ fontSize: 11, fontWeight: 600, color: '#7C3AED', textDecoration: 'none' }}>
               Gestionar →
@@ -370,7 +370,7 @@ export default function SuperadminDashboard() {
           {clubs.length === 0 ? (
             <div style={{ background: '#fff', border: '1px solid rgba(120,80,200,0.10)', borderRadius: 20, padding: '32px 16px', textAlign: 'center' }}>
               <Building2 size={28} style={{ color: 'rgba(142,135,168,0.30)', margin: '0 auto 8px', display: 'block' }} />
-              <p style={{ margin: 0, fontSize: 12, color: '#8E87A8' }}>No hay clubs registrados aún</p>
+              <p style={{ margin: 0, fontSize: 12, color: '#8E87A8' }}>No hay clubes registrados aún</p>
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>

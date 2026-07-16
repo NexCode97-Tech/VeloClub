@@ -1,7 +1,7 @@
 'use client';
 
 import { useAuth } from '@clerk/nextjs';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiFetch } from '@/lib/api-client';
 import { useNow } from '@/lib/use-now';
@@ -75,6 +75,40 @@ function verificationBadge(club: Club) {
   return { label: 'Verificado', color: '#06D6A0', bg: 'rgba(6,214,160,0.12)' };
 }
 
+// Categoría de plan para el filtro (misma prioridad que planBadge, sin formato visual)
+type PlanCategory = 'PRUEBA' | 'MENSUAL' | 'TRIMESTRAL' | 'ANUAL' | 'SIN_PLAN';
+function planCategory(club: Club): PlanCategory {
+  if (club.trialEndsAt) return 'PRUEBA';
+  if (club.suscripcion) return (club.suscripcion.tipoPlan as PlanCategory) ?? 'SIN_PLAN';
+  return 'SIN_PLAN';
+}
+const PLAN_FILTER_LABEL: Record<PlanCategory, string> = {
+  PRUEBA: 'Prueba', MENSUAL: 'Mensual', TRIMESTRAL: 'Trimestral', ANUAL: 'Anual', SIN_PLAN: 'Sin plan',
+};
+
+// Select nativo estilizado, consistente con el resto del panel
+function FilterSelect({ value, onChange, options, placeholder }: {
+  value: string; onChange: (v: string) => void;
+  options: { value: string; label: string }[]; placeholder: string;
+}) {
+  return (
+    <select
+      value={value}
+      onChange={e => onChange(e.target.value)}
+      style={{
+        appearance: 'none', padding: '7px 26px 7px 10px', borderRadius: 10,
+        border: '1px solid rgba(120,80,200,0.16)', background: '#fff', color: value === 'ALL' ? '#8E87A8' : '#1A1028',
+        fontSize: 11, fontWeight: 600, fontFamily: 'inherit', cursor: 'pointer', outline: 'none',
+        backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%238E87A8' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E\")",
+        backgroundRepeat: 'no-repeat', backgroundPosition: 'right 8px center',
+      }}
+    >
+      <option value="ALL">{placeholder}</option>
+      {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+    </select>
+  );
+}
+
 // ── Componente principal ───────────────────────────────────────────────────────
 export default function ClubsPage() {
   const { getToken, isLoaded, isSignedIn } = useAuth();
@@ -90,6 +124,12 @@ export default function ClubsPage() {
 
   const [detailId, setDetailId] = useState<string | null>(null);
   const [view, setView] = useState<'table' | 'cards'>('table');
+
+  // Filtros de columnas
+  const [filterEstado, setFilterEstado] = useState('ALL');
+  const [filterPlan,   setFilterPlan]   = useState('ALL');
+  const [filterVerif,  setFilterVerif]  = useState('ALL');
+  const [filterDeporte, setFilterDeporte] = useState('ALL');
 
   const [showNew, setShowNew] = useState(false);
   const [newForm, setNewForm] = useState({ clubName: '', adminEmail: '', adminName: '', adminPhone: '', deporte: '' });
@@ -120,6 +160,25 @@ export default function ClubsPage() {
     const interval = setInterval(() => load(true), 15_000);
     return () => clearInterval(interval);
   }, [isLoaded, isSignedIn]);
+
+  // Opciones de deporte disponibles, derivadas de los clubes cargados
+  const deporteOptions = useMemo(() => {
+    const set = new Set<string>();
+    for (const c of clubs) if (c.deporte) set.add(c.deporte);
+    return Array.from(set).sort().map(d => ({ value: d, label: d }));
+  }, [clubs]);
+
+  const filteredClubs = useMemo(() => {
+    return clubs.filter(c => {
+      if (filterEstado !== 'ALL' && (filterEstado === 'ACTIVE') !== c.active) return false;
+      if (filterPlan !== 'ALL' && planCategory(c) !== filterPlan) return false;
+      if (filterVerif !== 'ALL' && (c.verificationStatus ?? 'VERIFIED') !== filterVerif) return false;
+      if (filterDeporte !== 'ALL' && c.deporte !== filterDeporte) return false;
+      return true;
+    });
+  }, [clubs, filterEstado, filterPlan, filterVerif, filterDeporte]);
+
+  const filtersActive = filterEstado !== 'ALL' || filterPlan !== 'ALL' || filterVerif !== 'ALL' || filterDeporte !== 'ALL';
 
   async function handleCreate() {
     if (!newForm.clubName || !newForm.adminEmail || !newForm.adminName) return;
@@ -159,7 +218,10 @@ export default function ClubsPage() {
         {/* Header: contador + toggle vista + botón nuevo */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, gap: 8, flexWrap: 'wrap' }}>
           <p style={{ margin: 0, fontSize: 12, color: '#8E87A8', fontWeight: 500 }}>
-            {clubs.length} club{clubs.length !== 1 ? 's' : ''} registrado{clubs.length !== 1 ? 's' : ''}
+            {filtersActive
+              ? <>{filteredClubs.length} de {clubs.length} {clubs.length === 1 ? 'club' : 'clubes'}</>
+              : <>{clubs.length} {clubs.length === 1 ? 'club' : 'clubes'} registrado{clubs.length !== 1 ? 's' : ''}</>
+            }
           </p>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <div style={{ display: 'flex', background: '#fff', border: '1px solid rgba(120,80,200,0.14)', borderRadius: 10, padding: 2 }}>
@@ -235,6 +297,27 @@ export default function ClubsPage() {
           )}
         </AnimatePresence>
 
+        {/* Filtros de columnas */}
+        {!loading && clubs.length > 0 && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 12 }}>
+            <FilterSelect value={filterEstado} onChange={setFilterEstado} placeholder="Estado"
+              options={[{ value: 'ACTIVE', label: 'Activo' }, { value: 'INACTIVE', label: 'Inactivo' }]} />
+            <FilterSelect value={filterPlan} onChange={setFilterPlan} placeholder="Plan"
+              options={(['PRUEBA', 'MENSUAL', 'TRIMESTRAL', 'ANUAL', 'SIN_PLAN'] as PlanCategory[]).map(p => ({ value: p, label: PLAN_FILTER_LABEL[p] }))} />
+            <FilterSelect value={filterVerif} onChange={setFilterVerif} placeholder="Verificación"
+              options={[{ value: 'VERIFIED', label: 'Verificado' }, { value: 'PENDING', label: 'Por verificar' }, { value: 'REJECTED', label: 'Rechazado' }]} />
+            {deporteOptions.length > 0 && (
+              <FilterSelect value={filterDeporte} onChange={setFilterDeporte} placeholder="Deporte" options={deporteOptions} />
+            )}
+            {filtersActive && (
+              <button onClick={() => { setFilterEstado('ALL'); setFilterPlan('ALL'); setFilterVerif('ALL'); setFilterDeporte('ALL'); }}
+                style={{ fontSize: 11, fontWeight: 600, color: '#7C3AED', background: 'none', border: 'none', cursor: 'pointer', padding: '6px 4px' }}>
+                Limpiar filtros
+              </button>
+            )}
+          </div>
+        )}
+
         {/* Lista */}
         {loading ? (
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 160 }}>
@@ -248,8 +331,14 @@ export default function ClubsPage() {
                 <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
               </svg>
             </div>
-            <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: '#8E87A8' }}>Sin clubs registrados</p>
+            <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: '#8E87A8' }}>Sin clubes registrados</p>
             <p style={{ margin: '4px 0 0', fontSize: 11, color: '#C4BFD8' }}>Crea el primero con el botón de arriba</p>
+          </motion.div>
+        ) : filteredClubs.length === 0 ? (
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.28, ease: EASE }}
+            style={{ background: '#fff', border: '1px solid rgba(120,80,200,0.10)', borderRadius: 20, padding: '40px 16px', textAlign: 'center' }}>
+            <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: '#8E87A8' }}>Sin resultados con estos filtros</p>
+            <p style={{ margin: '4px 0 0', fontSize: 11, color: '#C4BFD8' }}>Prueba ajustando o limpiando los filtros</p>
           </motion.div>
         ) : view === 'table' ? (
           <motion.div variants={cardVariant} initial="hidden" animate="show"
@@ -267,7 +356,7 @@ export default function ClubsPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {clubs.map(club => {
+                  {filteredClubs.map(club => {
                     const badge = planBadge(club, now);
                     const verif = verificationBadge(club);
                     return (
@@ -314,7 +403,7 @@ export default function ClubsPage() {
           </motion.div>
         ) : (
           <motion.div variants={stagger} initial="hidden" animate="show" className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 sm:gap-4">
-            {clubs.map(club => {
+            {filteredClubs.map(club => {
               const badge = planBadge(club, now);
               const verif = verificationBadge(club);
 

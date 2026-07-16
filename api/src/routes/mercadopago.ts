@@ -19,6 +19,18 @@ function requireAdmin(req: import('express').Request, res: import('express').Res
   return true;
 }
 
+// Con credenciales de prueba, Mercado Pago rechaza el pago ("Invalid users
+// involved" / "Unauthorized use of live credentials") si el comprador es una
+// cuenta real de Mercado Pago (p. ej. el correo real del admin, si coincide con
+// una cuenta MP existente) pagándole a un vendedor de prueba. Mientras la app
+// use credenciales sandbox (MP_SANDBOX_PAYER_EMAIL configurado en Railway), se
+// usa un correo de prueba fijo en vez del correo real. Quitar esa variable de
+// entorno en cuanto se activen las credenciales de producción.
+function resolverPayerEmail(req: import('express').Request, clubEmail: string | null | undefined): string {
+  if (process.env.MP_SANDBOX_PAYER_EMAIL) return process.env.MP_SANDBOX_PAYER_EMAIL;
+  return req.auth?.email || clubEmail || 'sin-correo@veloclubtech.com';
+}
+
 async function suscripcionDelClub(clubId: string) {
   return prisma.clubSuscripcion.upsert({
     where: { clubId },
@@ -166,7 +178,7 @@ router.post('/pagar', requireAuth, async (req, res) => {
   ]);
 
   const monto = calcularPrecioPlan(cantidadDeportistas, suscripcion.tipoPlan as TipoPlan, suscripcion.autoRenew);
-  const payerEmail = req.auth?.email || club?.email || 'sin-correo@veloclubtech.com';
+  const payerEmail = resolverPayerEmail(req, club?.email);
   const reference = `sub-${suscripcion.id}-${Date.now()}`;
   const description = `Suscripción VeloClub — ${club?.name ?? 'Club'}`;
 
@@ -266,7 +278,7 @@ router.post('/checkout', requireAuth, async (req, res) => {
   ]);
 
   const monto = calcularPrecioPlan(cantidadDeportistas, suscripcion.tipoPlan as TipoPlan, suscripcion.autoRenew);
-  const payerEmail = req.auth?.email || club?.email || 'sin-correo@veloclubtech.com';
+  const payerEmail = resolverPayerEmail(req, club?.email);
 
   try {
     const pref = await crearPreferenciaCheckout({
@@ -301,7 +313,7 @@ router.post('/subscribe', requireAuth, async (req, res) => {
   ]);
 
   const monto = calcularPrecioPlan(cantidadDeportistas, suscripcion.tipoPlan as TipoPlan, true);
-  const payerEmail = req.auth?.email || club?.email || 'sin-correo@veloclubtech.com';
+  const payerEmail = resolverPayerEmail(req, club?.email);
   const meses = suscripcion.tipoPlan === 'MENSUAL' ? 1 : suscripcion.tipoPlan === 'TRIMESTRAL' ? 3 : 12;
 
   try {

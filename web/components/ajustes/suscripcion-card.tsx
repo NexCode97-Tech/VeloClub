@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from 'react';
 import Script from 'next/script';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { apiFetch } from '@/lib/api-client';
-import { CreditCard, ArrowLeft, Landmark, Banknote, Clock, RefreshCw, XCircle } from 'lucide-react';
+import { CreditCard, ArrowLeft, Landmark, Banknote, Clock, RefreshCw, XCircle, Check } from 'lucide-react';
 
 const fmt = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 });
 const EASE = [0.23, 1, 0.32, 1] as const;
@@ -22,6 +22,8 @@ type TipoPlan = 'MENSUAL' | 'TRIMESTRAL' | 'ANUAL';
 const PLAN_LABEL: Record<TipoPlan, string> = { MENSUAL: 'Mensual', TRIMESTRAL: 'Trimestral', ANUAL: 'Anual' };
 const PLAN_DESCUENTO_LABEL: Record<TipoPlan, string> = { MENSUAL: 'Sin descuento', TRIMESTRAL: '10% de descuento', ANUAL: '20% de descuento' };
 const MESES_POR_PLAN: Record<TipoPlan, number> = { MENSUAL: 1, TRIMESTRAL: 3, ANUAL: 12 };
+// Todos los planes incluyen lo mismo — la lista solo refuerza el valor en la tarjeta
+const BENEFICIOS_PLAN = ['Gestión de miembros y asistencia QR', 'Pagos y finanzas del club', 'Resultados y competencias'];
 
 interface PlanOpcion { tipoPlan: TipoPlan; precio: number; precioConAutoRenew: number }
 
@@ -548,9 +550,10 @@ export default function SuscripcionCard() {
           </div>
         ) : (
           <div className="space-y-2.5 md:space-y-0 md:grid md:grid-cols-3 md:gap-4 md:items-stretch">
-            {planes.map(p => {
+            {(() => { const precioMensualBase = planes.find(x => x.tipoPlan === 'MENSUAL')?.precio ?? 0; return planes.map(p => {
               const destacado = p.tipoPlan === 'TRIMESTRAL';
               const precioMes = Math.round(p.precio / MESES_POR_PLAN[p.tipoPlan]);
+              const ahorroPesos = precioMensualBase * MESES_POR_PLAN[p.tipoPlan] - p.precio;
               return (
                 <motion.button
                   key={p.tipoPlan}
@@ -573,7 +576,7 @@ export default function SuscripcionCard() {
                     <div className="md:order-1">
                       <p className="text-[14px] font-semibold text-foreground md:text-[12px] md:font-semibold md:tracking-wide md:text-muted-foreground">{PLAN_LABEL[p.tipoPlan]}</p>
                       <p className="text-[12px] mt-0.5 md:hidden" style={{ color: p.tipoPlan === 'MENSUAL' ? 'var(--muted-foreground, #8E87A8)' : '#06D6A0' }}>
-                        {PLAN_DESCUENTO_LABEL[p.tipoPlan]}
+                        {ahorroPesos > 0 ? `${PLAN_DESCUENTO_LABEL[p.tipoPlan]} · Ahorras ${fmt.format(ahorroPesos)}` : PLAN_DESCUENTO_LABEL[p.tipoPlan]}
                       </p>
                     </div>
                     <div className="text-right md:text-center md:order-2 md:mt-2">
@@ -589,7 +592,20 @@ export default function SuscripcionCard() {
                   >
                     {PLAN_DESCUENTO_LABEL[p.tipoPlan]}
                   </p>
-                  <div className="hidden md:flex md:flex-1 md:items-end md:pt-4 md:mt-4" style={{ borderTop: '1px solid rgba(0,0,0,0.06)' }}>
+                  {ahorroPesos > 0 && (
+                    <p className="hidden md:block text-[11px] text-muted-foreground mt-0.5">
+                      Ahorras {fmt.format(ahorroPesos)} en total
+                    </p>
+                  )}
+                  <ul className="hidden md:flex md:flex-1 md:flex-col md:gap-1.5 text-left mt-4">
+                    {BENEFICIOS_PLAN.map(b => (
+                      <li key={b} className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                        <Check className="w-3 h-3 shrink-0" style={{ color: '#06D6A0' }} />
+                        {b}
+                      </li>
+                    ))}
+                  </ul>
+                  <div className="hidden md:flex md:items-end md:pt-4 md:mt-4" style={{ borderTop: '1px solid rgba(0,0,0,0.06)' }}>
                     <span
                       className="text-[13px] font-semibold px-4 py-2 rounded-lg w-full text-center"
                       style={{ background: destacado ? '#7C3AED' : 'rgba(67,97,238,0.08)', color: destacado ? '#fff' : '#4361EE' }}
@@ -599,7 +615,7 @@ export default function SuscripcionCard() {
                   </div>
                 </motion.button>
               );
-            })}
+            }); })()}
           </div>
         )}
 

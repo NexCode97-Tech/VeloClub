@@ -83,7 +83,7 @@ function MedalIcon({ position }: { position: number }) {
   if (!c) return null;
   return (
     <span
-      className="inline-flex items-center justify-center w-5 h-5 rounded-full text-[9px] font-black"
+      className="inline-flex items-center justify-center w-5 h-5 rounded-full text-[9px] font-semibold"
       style={{ background: c.bg, border: `1.5px solid ${c.ring}`, color: c.text }}
     >
       {position}
@@ -95,7 +95,7 @@ function MedalIcon({ position }: { position: number }) {
 function StatPill({ value, label, color }: { value: number; label: string; color: string }) {
   return (
     <div className="flex-1 flex flex-col items-center gap-1 py-3 rounded-2xl" style={{ background: `${color}12` }}>
-      <span className="text-[26px] font-black leading-none" style={{ color, fontFamily: 'inherit' }}>{value}</span>
+      <span className="text-[26px] font-semibold leading-none" style={{ color, fontFamily: 'inherit' }}>{value}</span>
       <span className="text-[11px] font-semibold text-muted-foreground leading-none">{label}</span>
     </div>
   );
@@ -265,7 +265,7 @@ export default function LogrosPage() {
                 if (tab === 'comp') { setCompForm(emptyComp); setCompError(null); setCompOpen(true); }
                 else { setSessionForm(emptySession); setSessionError(null); setSessionOpen(true); }
               }}
-              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[13px] font-bold text-white shadow-sm shrink-0 cursor-pointer"
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[13px] font-semibold text-white shadow-sm shrink-0 cursor-pointer"
               style={{
                 background: 'linear-gradient(135deg, #7C3AED 0%, #4361EE 100%)',
                 opacity: canManage ? 1 : 0,
@@ -307,7 +307,7 @@ export default function LogrosPage() {
             <button
               key={t}
               onClick={() => setTab(t)}
-              className="relative z-10 flex-1 py-2.5 rounded-xl text-[12px] font-bold transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+              className="relative z-10 flex-1 py-2.5 rounded-xl text-[12px] font-semibold transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
               style={{ color: tab === t ? '#1A1028' : '#8E87A8' }}
             >
               {t === 'comp'
@@ -523,7 +523,7 @@ function CompCard({ comp: c, isStudent, myMemberId, canManage, deleting, onDelet
 
         {/* Info central */}
         <div className="flex-1 min-w-0">
-          <p className="text-[15px] font-bold text-foreground leading-tight truncate" style={{ fontFamily: 'inherit' }}>
+          <p className="text-[15px] font-semibold text-foreground leading-tight truncate" style={{ fontFamily: 'inherit' }}>
             {c.name.charAt(0).toUpperCase() + c.name.slice(1).toLowerCase()}
           </p>
           <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1">
@@ -573,7 +573,7 @@ function CompCard({ comp: c, isStudent, myMemberId, canManage, deleting, onDelet
       {podium.length > 0 && (
         <div className="mx-4 mb-4 rounded-2xl overflow-hidden" style={{ background: 'rgba(247,245,255,0.8)', border: '1px solid rgba(124,58,237,0.08)' }}>
           <div className="flex items-center justify-between px-3 py-2 border-b" style={{ borderColor: 'rgba(124,58,237,0.08)' }}>
-            <span className="text-[10px] font-black uppercase tracking-widest" style={{ color: '#7C3AED' }}>Pódio</span>
+            <span className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: '#7C3AED' }}>Pódio</span>
             <Trophy className="w-3 h-3" style={{ color: '#7C3AED', opacity: 0.5 }} />
           </div>
           <div className="flex divide-x" style={{ '--tw-divide-opacity': 1, borderColor: 'rgba(124,58,237,0.06)' } as React.CSSProperties}>
@@ -586,13 +586,13 @@ function CompCard({ comp: c, isStudent, myMemberId, canManage, deleting, onDelet
                   <div className="relative">
                     <Medal className="w-9 h-9" style={{ color: m.ring }} strokeWidth={1.4} />
                     <span
-                      className="absolute bottom-[6px] left-1/2 -translate-x-1/2 text-[9px] font-black leading-none"
+                      className="absolute bottom-[6px] left-1/2 -translate-x-1/2 text-[9px] font-semibold leading-none"
                       style={{ color: m.text }}
                     >
                       {pos}
                     </span>
                   </div>
-                  <span className="text-[11px] font-bold text-foreground text-center leading-tight truncate w-full">
+                  <span className="text-[11px] font-semibold text-foreground text-center leading-tight truncate w-full">
                     {r.member.fullName.split(' ')[0]}
                   </span>
                 </div>
@@ -636,7 +636,7 @@ function TrainCard({ session: s, isStudent, myMemberId, canManage, deleting, onD
 
         {/* Info */}
         <div className="flex-1 min-w-0">
-          <p className="text-[15px] font-bold text-foreground leading-tight truncate" style={{ fontFamily: 'inherit' }}>{toSentenceCase(s.title)}</p>
+          <p className="text-[15px] font-semibold text-foreground leading-tight truncate" style={{ fontFamily: 'inherit' }}>{toSentenceCase(s.title)}</p>
           <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1">
             {s.location && (
               <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
@@ -696,13 +696,13 @@ function EmptyState({ icon, color, title, desc, cta, onCta }: {
       <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4" style={{ background: `${color}12` }}>
         {icon}
       </div>
-      <p className="text-[15px] font-bold text-foreground mb-1">{title}</p>
+      <p className="text-[15px] font-semibold text-foreground mb-1">{title}</p>
       <p className="text-[12px] text-muted-foreground max-w-[240px] leading-relaxed">{desc}</p>
       {cta && onCta && (
         <motion.button
           whileTap={{ scale: 0.95 }}
           onClick={onCta}
-          className="mt-5 px-5 py-2.5 rounded-xl text-[13px] font-bold text-white shadow-sm cursor-pointer"
+          className="mt-5 px-5 py-2.5 rounded-xl text-[13px] font-semibold text-white shadow-sm cursor-pointer"
           style={{ background: color }}
         >
           {cta}

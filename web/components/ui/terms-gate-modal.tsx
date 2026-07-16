@@ -85,7 +85,7 @@ export default function TermsGateModal({ open, onAccept }: { open: boolean; onAc
               style={{
                 width: '100%', padding: '13px 0', borderRadius: 14, border: 'none',
                 background: !checked ? 'rgba(120,80,200,0.15)' : saving ? '#A855F7' : '#7C3AED',
-                color: !checked ? '#A79ECC' : '#fff', fontSize: 13, fontWeight: 700, fontFamily: 'inherit',
+                color: !checked ? '#A79ECC' : '#fff', fontSize: 13, fontWeight: 600, fontFamily: 'inherit',
                 cursor: !checked || saving ? 'default' : 'pointer',
                 boxShadow: checked && !saving ? '0 4px 16px rgba(124,58,237,0.30)' : 'none',
                 transition: 'all 0.15s',

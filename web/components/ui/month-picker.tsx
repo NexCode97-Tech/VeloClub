@@ -161,7 +161,7 @@ export function MonthPicker({
                 >
                   <ChevronLeft className="w-4 h-4" />
                 </button>
-                <span className="text-[13px] font-bold text-foreground">{viewYear}</span>
+                <span className="text-[13px] font-semibold text-foreground">{viewYear}</span>
                 <button
                   onClick={() => setViewYear(y => y + 1)}
                   disabled={viewYear >= new Date().getFullYear()}
@@ -222,7 +222,7 @@ export function MonthPicker({
                 >
                   <ChevronLeft className="w-4 h-4" />
                 </button>
-                <span className="text-[13px] font-bold text-foreground capitalize">
+                <span className="text-[13px] font-semibold text-foreground capitalize">
                   {format(calBase, 'MMMM yyyy', { locale: es })}
                 </span>
                 <div className="flex gap-0.5">
@@ -238,7 +238,7 @@ export function MonthPicker({
               {/* Días de semana */}
               <div className="grid grid-cols-7 text-center mb-1">
                 {WEEKDAYS.map(d => (
-                  <div key={d} className="text-[10px] font-bold text-muted-foreground uppercase">{d}</div>
+                  <div key={d} className="text-[10px] font-semibold text-muted-foreground uppercase">{d}</div>
                 ))}
               </div>
 
@@ -297,7 +297,7 @@ export function MonthPicker({
                   {rangeStart && rangeEnd && (
                     <button
                       onClick={() => setOpen(false)}
-                      className="text-[11px] font-bold px-2.5 py-1 rounded-lg text-white cursor-pointer"
+                      className="text-[11px] font-semibold px-2.5 py-1 rounded-lg text-white cursor-pointer"
                       style={{ background: '#7C3AED' }}
                     >
                       Aplicar

@@ -22,7 +22,7 @@ export default function OfflinePage() {
       </p>
       <button
         onClick={() => window.location.reload()}
-        style={{ padding: '12px 28px', borderRadius: 14, border: 'none', background: '#7C3AED', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'Open Sans, sans-serif' }}
+        style={{ padding: '12px 28px', borderRadius: 14, border: 'none', background: '#7C3AED', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'Open Sans, sans-serif' }}
       >
         Reintentar
       </button>

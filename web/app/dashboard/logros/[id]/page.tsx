@@ -93,7 +93,7 @@ function PodiumVisual({ results }: { results: EventResult[] }) {
             {/* Avatar */}
             <div className="relative mb-2">
               <div
-                className="w-12 h-12 rounded-full overflow-hidden flex items-center justify-center text-[14px] font-black text-white shadow-md"
+                className="w-12 h-12 rounded-full overflow-hidden flex items-center justify-center text-[14px] font-semibold text-white shadow-md"
                 style={{ background: `linear-gradient(135deg, ${m.bg}CC, ${m.bg})`, border: `2.5px solid ${m.bg}` }}
               >
                 {r.member.pictureUrl
@@ -110,7 +110,7 @@ function PodiumVisual({ results }: { results: EventResult[] }) {
             </div>
 
             {/* Nombre */}
-            <p className="text-[10px] font-bold text-foreground text-center leading-tight mb-1 max-w-[72px] truncate">{short}</p>
+            <p className="text-[10px] font-semibold text-foreground text-center leading-tight mb-1 max-w-[72px] truncate">{short}</p>
 
             {/* Score / observación */}
             {r.observations && (
@@ -122,7 +122,7 @@ function PodiumVisual({ results }: { results: EventResult[] }) {
               className="w-full rounded-t-xl flex items-start justify-center pt-2"
               style={{ height: m.colH, background: m.bg, opacity: 0.85 }}
             >
-              <span className="text-[22px] font-black text-white" style={{ lineHeight: 1 }}>{pos}</span>
+              <span className="text-[22px] font-semibold text-white" style={{ lineHeight: 1 }}>{pos}</span>
             </div>
           </div>
         );
@@ -321,7 +321,7 @@ export default function CompetitionDetailPage() {
         </button>
         <div className="flex items-start justify-between">
           <div>
-            <h1 className="text-[17px] font-bold text-foreground leading-tight" style={{ fontFamily: 'inherit' }}>
+            <h1 className="text-[17px] font-semibold text-foreground leading-tight" style={{ fontFamily: 'inherit' }}>
               {toSentenceCase(competition.name)}
             </h1>
             <div className="flex flex-wrap gap-3 mt-1">
@@ -427,7 +427,7 @@ export default function CompetitionDetailPage() {
               {/* Cabecera prueba */}
               <div className="flex items-center justify-between px-4 py-3 border-b border-border/50">
                 <div>
-                  <p className="text-[13px] font-bold text-foreground">{toSentenceCase(ev.name)}</p>
+                  <p className="text-[13px] font-semibold text-foreground">{toSentenceCase(ev.name)}</p>
                   <p className="text-[10px] text-muted-foreground mt-0.5">
                     {ev.results.length} resultado{ev.results.length !== 1 ? 's' : ''}
                   </p>
@@ -468,13 +468,13 @@ export default function CompetitionDetailPage() {
                       <div className="w-8 text-center">
                         {r.position && r.position <= 3 ? (
                           <span
-                            className="inline-flex items-center justify-center w-6 h-6 rounded-full text-[11px] font-black text-white"
+                            className="inline-flex items-center justify-center w-6 h-6 rounded-full text-[11px] font-semibold text-white"
                             style={{ background: MEDAL_COLORS[r.position]?.bg ?? '#8E87A8' }}
                           >
                             {r.position}
                           </span>
                         ) : r.position
-                          ? <span className="text-[12px] font-bold text-muted-foreground">{r.position}°</span>
+                          ? <span className="text-[12px] font-semibold text-muted-foreground">{r.position}°</span>
                           : <span className="text-[12px] text-muted-foreground">—</span>
                         }
                       </div>

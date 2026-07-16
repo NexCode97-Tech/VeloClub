@@ -493,7 +493,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 />
               );
               return (
-                <div style={{ width: 32, height: 32, borderRadius: '50%', background: SIDEBAR_ROLE_GRADIENT[role ?? 'ADMIN'] ?? SIDEBAR_ROLE_GRADIENT.ADMIN, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: '#fff', border: '2px solid #fff', boxShadow: '0 2px 8px rgba(0,0,0,0.12)', flexShrink: 0 }}>
+                <div style={{ width: 32, height: 32, borderRadius: '50%', background: SIDEBAR_ROLE_GRADIENT[role ?? 'ADMIN'] ?? SIDEBAR_ROLE_GRADIENT.ADMIN, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 600, color: '#fff', border: '2px solid #fff', boxShadow: '0 2px 8px rgba(0,0,0,0.12)', flexShrink: 0 }}>
                   {userName?.charAt(0)?.toUpperCase() ?? 'U'}
                 </div>
               );
@@ -576,7 +576,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               </div>
             ) : (
               <div
-                className="w-9 h-9 rounded-full shrink-0 flex items-center justify-center text-sm font-bold"
+                className="w-9 h-9 rounded-full shrink-0 flex items-center justify-center text-sm font-semibold"
                 style={{ background: 'rgba(124,58,237,0.10)', color: '#7C3AED' }}
               >
                 {clubName?.charAt(0)?.toUpperCase() ?? 'V'}
@@ -586,7 +586,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <p className="text-[10px] font-semibold uppercase tracking-widest truncate" style={{ color: '#8E87A8' }}>
                 Bienvenido
               </p>
-              <p className="text-[13px] font-bold leading-tight truncate" style={{ color: '#1A1028', fontFamily: 'inherit' }}>
+              <p className="text-[13px] font-semibold leading-tight truncate" style={{ color: '#1A1028', fontFamily: 'inherit' }}>
                 {userName ?? clubName ?? 'VeloClub'}
               </p>
             </div>

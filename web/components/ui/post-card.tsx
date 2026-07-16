@@ -120,7 +120,7 @@ export function PostCard({ post, currentUserId, onLike, onComment, canDelete, on
           <div>
             <div className="flex items-center gap-2">
               <p
-                className={`text-[14px] font-bold text-foreground ${post.authorClerkId ? 'cursor-pointer hover:underline' : ''}`}
+                className={`text-[14px] font-semibold text-foreground ${post.authorClerkId ? 'cursor-pointer hover:underline' : ''}`}
                 onClick={() => post.authorClerkId && router.push(`/dashboard/perfil/${post.authorClerkId}`)}
               >{post.authorName}</p>
               {post.scope === 'PUBLIC'
@@ -179,7 +179,7 @@ export function PostCard({ post, currentUserId, onLike, onComment, canDelete, on
                   <p className="px-4 pt-3 pb-1 text-[11px] text-muted-foreground">¿Eliminar publicación?</p>
                   <div className="flex gap-2 px-3 pb-3 pt-1">
                     <button onClick={() => { onDelete(post.id); setConfirmDel(false); }}
-                      className="flex-1 text-[11px] font-bold py-1.5 rounded-lg bg-red-500 text-white cursor-pointer active:scale-95 transition-transform">
+                      className="flex-1 text-[11px] font-semibold py-1.5 rounded-lg bg-red-500 text-white cursor-pointer active:scale-95 transition-transform">
                       Eliminar
                     </button>
                     <button onClick={() => setConfirmDel(false)}
@@ -300,7 +300,7 @@ export function PostCard({ post, currentUserId, onLike, onComment, canDelete, on
                   </button>
                   <div className="rounded-2xl rounded-tl-sm px-3 py-2 flex-1"
                     style={{ background: '#fff', border: '1px solid rgba(124,58,237,0.08)' }}>
-                    <p className="text-[11px] font-bold text-foreground mb-0.5">{c.authorName}</p>
+                    <p className="text-[11px] font-semibold text-foreground mb-0.5">{c.authorName}</p>
                     <p className="text-[13px] text-foreground leading-snug">{c.content}</p>
                   </div>
                 </div>

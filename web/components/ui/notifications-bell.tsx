@@ -138,7 +138,7 @@ export function NotificationsBell() {
             style={{ top: coords.top, left: coords.left, width: 340, maxHeight: '70dvh', zIndex: 111, boxShadow: '0 16px 50px rgba(0,0,0,0.22)' }}
           >
             <div className="flex items-center justify-between px-4 py-3 border-b border-border shrink-0">
-              <p className="text-[13px] font-bold text-foreground">Notificaciones</p>
+              <p className="text-[13px] font-semibold text-foreground">Notificaciones</p>
               {unread > 0 && (
                 <button onClick={markAll} className="flex items-center gap-1 text-[11px] font-semibold text-primary hover:opacity-80">
                   <CheckCheck className="w-3.5 h-3.5" /> Marcar leídas

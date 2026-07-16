@@ -158,8 +158,8 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
         {/* Logo */}
         <div className="flex items-center shrink-0" style={{ borderBottom: '1px solid rgba(0,0,0,0.06)', minHeight: 58, padding: '0 14px', gap: 9, justifyContent: collapsed ? 'center' : undefined }}>
           <Image src="/logo.png" alt="VeloClub" width={28} height={28} className="object-contain shrink-0" style={{ borderRadius: 7 }} />
-          {!collapsed && <span className="text-[15px] font-bold" style={{ color: '#1A1028' }}>VeloClub</span>}
-          {!collapsed && <span className="ml-auto text-[9px] font-bold px-2 py-0.5 rounded-full" style={{ background: 'rgba(239,71,111,0.10)', color: '#EF476F', letterSpacing: '0.02em' }}>Admin</span>}
+          {!collapsed && <span className="text-[15px] font-semibold" style={{ color: '#1A1028' }}>VeloClub</span>}
+          {!collapsed && <span className="ml-auto text-[9px] font-semibold px-2 py-0.5 rounded-full" style={{ background: 'rgba(239,71,111,0.10)', color: '#EF476F', letterSpacing: '0.02em' }}>Admin</span>}
         </div>
         {/* Botón contraer/expandir */}
         <button onClick={toggleCollapsed}
@@ -191,8 +191,8 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
           <UserButton appearance={{ elements: { avatarBox: { width: 34, height: 34, borderRadius: '50%' } } }} />
           {!collapsed && (
             <div className="min-w-0">
-              <p className="text-[12px] font-bold m-0 truncate" style={{ color: '#1A1028' }}>Superadmin</p>
-              <p className="text-[9px] font-bold m-0" style={{ color: '#EF476F', letterSpacing: '0.02em' }}>Panel global</p>
+              <p className="text-[12px] font-semibold m-0 truncate" style={{ color: '#1A1028' }}>Superadmin</p>
+              <p className="text-[9px] font-semibold m-0" style={{ color: '#EF476F', letterSpacing: '0.02em' }}>Panel global</p>
             </div>
           )}
         </div>
@@ -203,7 +203,7 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
 
       {/* Global Header */}
       <div className="flex items-center gap-2 shrink-0" style={{ padding: '12px 16px 10px', background: '#F7F7FB', borderBottom: '1px solid rgba(120,80,200,0.10)' }}>
-        <h2 className="flex-1 m-0 text-[17px] font-bold" style={{ fontFamily: 'inherit', color: '#1A1028' }}>
+        <h2 className="flex-1 m-0 text-[17px] font-semibold" style={{ fontFamily: 'inherit', color: '#1A1028' }}>
           {title}
         </h2>
         {/* Refresh */}
@@ -231,7 +231,7 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
             <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
           </svg>
           {noLeidas > 0 && (
-            <div className="absolute flex items-center justify-center" style={{ top: 5, right: 5, minWidth: 14, height: 14, borderRadius: 7, background: '#EF476F', border: '1.5px solid #F7F7FB', fontSize: 8, fontWeight: 700, color: '#fff', padding: '0 3px' }}>
+            <div className="absolute flex items-center justify-center" style={{ top: 5, right: 5, minWidth: 14, height: 14, borderRadius: 7, background: '#EF476F', border: '1.5px solid #F7F7FB', fontSize: 8, fontWeight: 600, color: '#fff', padding: '0 3px' }}>
               {noLeidas > 9 ? '9+' : noLeidas}
             </div>
           )}
@@ -273,7 +273,7 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
                   </svg>
                 </div>
                 <div style={{ flex: 1 }}>
-                  <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: '#1A1028', fontFamily: 'inherit', lineHeight: 1.2 }}>
+                  <h3 style={{ margin: 0, fontSize: 15, fontWeight: 600, color: '#1A1028', fontFamily: 'inherit', lineHeight: 1.2 }}>
                     Notificaciones
                   </h3>
                   {noLeidas > 0 && (
@@ -287,7 +287,7 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
                     onClick={marcarTodas}
                     whileTap={{ scale: 0.95 }}
                     transition={{ duration: 0.12 }}
-                    style={{ padding: '5px 10px', borderRadius: 8, background: 'rgba(124,58,237,0.08)', border: '1px solid rgba(124,58,237,0.18)', color: '#7C3AED', fontSize: 10, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
+                    style={{ padding: '5px 10px', borderRadius: 8, background: 'rgba(124,58,237,0.08)', border: '1px solid rgba(124,58,237,0.18)', color: '#7C3AED', fontSize: 10, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
                   >
                     Marcar todas
                   </motion.button>
@@ -345,7 +345,7 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
                       <TipoIcono tipo={n.tipo} />
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
-                          <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: '#1A1028', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
+                          <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: '#1A1028', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
                             {n.titulo}
                           </p>
                           {!n.leida && (

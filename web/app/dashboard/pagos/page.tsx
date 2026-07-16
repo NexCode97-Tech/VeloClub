@@ -225,7 +225,7 @@ export default function PagosPage() {
       <div className="min-h-full bg-background">
         {/* Header */}
         <div className="px-5 py-3 bg-background">
-          <h1 className="text-[17px] font-bold text-foreground" style={{ fontFamily: 'inherit' }}>
+          <h1 className="text-[17px] font-semibold text-foreground" style={{ fontFamily: 'inherit' }}>
             Mis pagos
           </h1>
         </div>
@@ -259,7 +259,7 @@ export default function PagosPage() {
                   ) : (
                     <CheckCircle2 className="w-4 h-4" />
                   )}
-                  <p className="text-[11px] font-bold tracking-widest uppercase">
+                  <p className="text-[11px] font-semibold tracking-widest uppercase">
                     {hasOverdue ? 'Pago vencido' : pending.length > 0 ? 'Pago pendiente' : 'Al día'}
                   </p>
                 </div>
@@ -267,7 +267,7 @@ export default function PagosPage() {
                 {pending.length > 0 ? (
                   <>
                     <p className="text-[11px] opacity-75 uppercase tracking-wide mb-1">Por pagar</p>
-                    <p className="text-4xl font-bold mb-1" style={{ fontFamily: 'inherit' }}>
+                    <p className="text-4xl font-semibold mb-1" style={{ fontFamily: 'inherit' }}>
                       {fmt.format(totalOwed)}
                     </p>
                     <p className="text-[11px] opacity-70">
@@ -276,7 +276,7 @@ export default function PagosPage() {
                   </>
                 ) : (
                   <>
-                    <p className="text-3xl font-bold mb-1" style={{ fontFamily: 'inherit' }}>
+                    <p className="text-3xl font-semibold mb-1" style={{ fontFamily: 'inherit' }}>
                       ¡Todo pagado!
                     </p>
                     <p className="text-[11px] opacity-75">No tienes pagos pendientes</p>
@@ -291,7 +291,7 @@ export default function PagosPage() {
                     <TrendingUp className="w-3.5 h-3.5" style={{ color: '#06D6A0' }} />
                     <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Total pagado</p>
                   </div>
-                  <p className="text-[18px] font-bold text-foreground" style={{ fontFamily: 'inherit' }}>
+                  <p className="text-[18px] font-semibold text-foreground" style={{ fontFamily: 'inherit' }}>
                     {fmt.format(totalPaidStudent)}
                   </p>
                   <p className="text-[10px] text-muted-foreground">{paid.length} {paid.length === 1 ? 'pago' : 'pagos'}</p>
@@ -301,7 +301,7 @@ export default function PagosPage() {
                     <CalendarDays className="w-3.5 h-3.5" style={{ color: '#4361EE' }} />
                     <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Historial</p>
                   </div>
-                  <p className="text-[18px] font-bold text-foreground" style={{ fontFamily: 'inherit' }}>
+                  <p className="text-[18px] font-semibold text-foreground" style={{ fontFamily: 'inherit' }}>
                     {payments.length}
                   </p>
                   <p className="text-[10px] text-muted-foreground">registros totales</p>
@@ -311,7 +311,7 @@ export default function PagosPage() {
               {/* Pendientes / vencidos primero */}
               {pending.length > 0 && (
                 <div>
-                  <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground mb-2 px-1">
+                  <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground mb-2 px-1">
                     Pendientes
                   </p>
                   <div className="space-y-2">
@@ -332,7 +332,7 @@ export default function PagosPage() {
                               <StatusIcon className="w-5 h-5" style={{ color: sc.text }} />
                             </div>
                             <div className="flex-1 min-w-0">
-                              <p className="text-[13px] font-bold text-foreground">
+                              <p className="text-[13px] font-semibold text-foreground">
                                 {MONTH_NAMES[p.month - 1]} {p.year}
                               </p>
                               {p.notes && (
@@ -340,11 +340,11 @@ export default function PagosPage() {
                               )}
                             </div>
                             <div className="text-right shrink-0">
-                              <p className="text-[14px] font-bold" style={{ color: sc.text, fontFamily: 'inherit' }}>
+                              <p className="text-[14px] font-semibold" style={{ color: sc.text, fontFamily: 'inherit' }}>
                                 {fmt.format(p.amount)}
                               </p>
                               <span
-                                className="text-[10px] font-bold px-1.5 py-0.5 rounded-full"
+                                className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full"
                                 style={{ background: sc.bg, color: sc.text }}
                               >
                                 {STATUS_LABELS[p.status]}
@@ -360,7 +360,7 @@ export default function PagosPage() {
                                 <span className="text-[11px] font-semibold" style={{ color: '#B8860B' }}>
                                   ⏳ Comprobante en revisión
                                 </span>
-                                <label className="text-[11px] font-bold cursor-pointer" style={{ color: '#7C3AED' }}>
+                                <label className="text-[11px] font-semibold cursor-pointer" style={{ color: '#7C3AED' }}>
                                   {uploadingReceipt === p.id ? 'Subiendo…' : 'Reemplazar'}
                                   <input type="file" accept="image/*,application/pdf" className="hidden"
                                     disabled={!!uploadingReceipt}
@@ -368,7 +368,7 @@ export default function PagosPage() {
                                 </label>
                               </div>
                             ) : (
-                              <label className="flex items-center justify-center gap-1.5 rounded-lg px-3 py-2.5 text-[12px] font-bold cursor-pointer transition-colors"
+                              <label className="flex items-center justify-center gap-1.5 rounded-lg px-3 py-2.5 text-[12px] font-semibold cursor-pointer transition-colors"
                                 style={{ background: 'rgba(124,58,237,0.08)', color: '#7C3AED', border: '1.5px dashed rgba(124,58,237,0.25)' }}>
                                 <Upload className="w-3.5 h-3.5" />
                                 {uploadingReceipt === p.id ? 'Subiendo…' : 'Subir comprobante'}
@@ -388,7 +388,7 @@ export default function PagosPage() {
               {/* Historial de pagados */}
               {paid.length > 0 && (
                 <div>
-                  <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground mb-2 px-1">
+                  <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground mb-2 px-1">
                     Historial
                   </p>
                   <div className="space-y-2">
@@ -398,7 +398,7 @@ export default function PagosPage() {
                           <CheckCircle2 className="w-5 h-5" style={{ color: '#06D6A0' }} />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-[13px] font-bold text-foreground">
+                          <p className="text-[13px] font-semibold text-foreground">
                             {MONTH_NAMES[p.month - 1]} {p.year}
                           </p>
                           {p.paidAt && (
@@ -407,7 +407,7 @@ export default function PagosPage() {
                             </p>
                           )}
                         </div>
-                        <p className="text-[14px] font-bold text-foreground shrink-0" style={{ fontFamily: 'inherit' }}>
+                        <p className="text-[14px] font-semibold text-foreground shrink-0" style={{ fontFamily: 'inherit' }}>
                           {fmt.format(p.amount)}
                         </p>
                       </motion.div>
@@ -435,7 +435,7 @@ export default function PagosPage() {
     <div className="min-h-full bg-background">
       {/* Encabezado */}
       <div className="px-5 py-3 bg-background flex items-center justify-between">
-        <h1 className="text-[17px] font-bold text-foreground" style={{ fontFamily: 'inherit' }}>
+        <h1 className="text-[17px] font-semibold text-foreground" style={{ fontFamily: 'inherit' }}>
           Pagos
         </h1>
         {canManage && (
@@ -484,19 +484,19 @@ export default function PagosPage() {
           <p className="text-[10px] font-semibold tracking-widest opacity-80 uppercase mb-1">
             Cobrado — {MONTH_NAMES[filterMonth - 1]} {filterYear}
           </p>
-          <p className="text-4xl font-bold mb-3" style={{ fontFamily: 'inherit' }}>
+          <p className="text-4xl font-semibold mb-3" style={{ fontFamily: 'inherit' }}>
             {fmt.format(totalPaid)}
           </p>
           <div className="flex gap-6">
             <div>
               <p className="text-[10px] opacity-70 uppercase tracking-wide">Total pagado</p>
-              <p className="text-base font-bold" style={{ fontFamily: 'inherit' }}>
+              <p className="text-base font-semibold" style={{ fontFamily: 'inherit' }}>
                 {fmt.format(totalPaid)}
               </p>
             </div>
             <div>
               <p className="text-[10px] opacity-70 uppercase tracking-wide">Pendiente</p>
-              <p className="text-base font-bold" style={{ fontFamily: 'inherit', color: '#FFB703' }}>
+              <p className="text-base font-semibold" style={{ fontFamily: 'inherit', color: '#FFB703' }}>
                 {fmt.format(totalPending)}
               </p>
             </div>
@@ -541,9 +541,9 @@ export default function PagosPage() {
                 <div key={p.id} className="bg-white border border-border rounded-xl px-4 py-3 flex items-center gap-3">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-0.5">
-                      <p className="text-[13px] font-bold text-foreground truncate">{p.member.fullName}</p>
+                      <p className="text-[13px] font-semibold text-foreground truncate">{p.member.fullName}</p>
                       <span
-                        className="text-[10px] font-bold px-1.5 py-0.5 rounded-full shrink-0 flex items-center gap-1"
+                        className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full shrink-0 flex items-center gap-1"
                         style={{ background: sc.bg, color: sc.text }}
                       >
                         <StatusIcon className="w-2.5 h-2.5" />

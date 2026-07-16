@@ -172,7 +172,7 @@ export default function PublicProfilePage() {
                 whileTap={{ scale: 0.97 }}
                 onClick={handleFollow}
                 disabled={toggling}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-[13px] font-bold transition-all cursor-pointer disabled:opacity-60"
+                className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-[13px] font-semibold transition-all cursor-pointer disabled:opacity-60"
                 style={following
                   ? { background: 'rgba(124,58,237,0.10)', color: '#7C3AED', border: '1.5px solid rgba(124,58,237,0.25)' }
                   : { background: 'linear-gradient(135deg,#7C3AED,#4361EE)', color: '#fff', border: 'none' }
@@ -188,10 +188,10 @@ export default function PublicProfilePage() {
 
           {/* Nombre + badge de rol en la misma línea */}
           <div className="mt-3 flex items-center gap-2 flex-wrap">
-            <h1 className="text-[22px] font-bold text-foreground leading-tight">
+            <h1 className="text-[22px] font-semibold text-foreground leading-tight">
               {profile.name}
             </h1>
-            <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full tracking-widest"
+            <span className="text-[10px] font-semibold px-2.5 py-0.5 rounded-full tracking-widest"
               style={{ background: rc.bg, color: rc.text }}>
               {roleLabels[role] ?? role}
             </span>
@@ -240,15 +240,15 @@ export default function PublicProfilePage() {
           {/* Stats: Publicaciones · Seguidores · Siguiendo */}
           <div className="flex items-center gap-6 mt-4">
             <div className="text-center">
-              <p className="text-[18px] font-bold text-foreground leading-none">{profile.postImages.length}</p>
+              <p className="text-[18px] font-semibold text-foreground leading-none">{profile.postImages.length}</p>
               <p style={{ fontSize: 11, fontWeight: 600, color: '#8E87A8', marginTop: 2 }}>Publicaciones</p>
             </div>
             <div className="text-center">
-              <p className="text-[18px] font-bold text-foreground leading-none">{profile.followersCount}</p>
+              <p className="text-[18px] font-semibold text-foreground leading-none">{profile.followersCount}</p>
               <p style={{ fontSize: 11, fontWeight: 600, color: '#8E87A8', marginTop: 2 }}>Seguidores</p>
             </div>
             <div className="text-center">
-              <p className="text-[18px] font-bold text-foreground leading-none">{profile.followingCount}</p>
+              <p className="text-[18px] font-semibold text-foreground leading-none">{profile.followingCount}</p>
               <p style={{ fontSize: 11, fontWeight: 600, color: '#8E87A8', marginTop: 2 }}>Siguiendo</p>
             </div>
           </div>
@@ -260,7 +260,7 @@ export default function PublicProfilePage() {
       <div className="sm:w-1/2">
       {/* Galería de fotos */}
       <div className="px-4 sm:px-6 py-4">
-        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-3">Fotos</p>
+        <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-3">Fotos</p>
         {profile.postImages.length === 0 ? (
           <div className="rounded-2xl px-6 py-8 flex flex-col items-center text-center"
             style={{ background: 'rgba(124,58,237,0.03)', border: '1px solid rgba(124,58,237,0.08)' }}>
@@ -282,7 +282,7 @@ export default function PublicProfilePage() {
                   {isLast && (
                     <div className="absolute inset-0 flex items-center justify-center"
                       style={{ background: 'rgba(0,0,0,0.52)' }}>
-                      <span className="text-white font-bold text-[22px]">+{remaining}</span>
+                      <span className="text-white font-semibold text-[22px]">+{remaining}</span>
                     </div>
                   )}
                 </div>

@@ -20,7 +20,7 @@ export default function NoAccessPage() {
           <ShieldX className="w-8 h-8 text-red-500" />
         </div>
 
-        <h1 className="text-2xl font-bold text-slate-900 mb-2">Acceso restringido</h1>
+        <h1 className="text-2xl font-semibold text-slate-900 mb-2">Acceso restringido</h1>
         <p className="text-slate-500 text-sm leading-relaxed mb-8">
           Tu correo electrónico no está registrado en ningún club de VeloClub.
           Si crees que es un error, contacta al administrador de tu club para que te agregue.

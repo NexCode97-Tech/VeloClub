@@ -137,7 +137,7 @@ function PlanSelector({ value, onChange }: { value: TipoPlan; onChange: (v: Tipo
             style={{ flex: 1, padding: '7px 4px', border: 'none', borderRadius: 10, cursor: 'pointer',
               background: active ? '#7C3AED' : 'transparent',
               boxShadow: active ? '0 2px 10px rgba(124,58,237,0.28)' : 'none' }}>
-            <p style={{ margin: 0, fontSize: 11, fontWeight: 700, color: active ? '#fff' : '#8E87A8', fontFamily: 'inherit' }}>{opt.label}</p>
+            <p style={{ margin: 0, fontSize: 11, fontWeight: 600, color: active ? '#fff' : '#8E87A8', fontFamily: 'inherit' }}>{opt.label}</p>
             <p style={{ margin: 0, fontSize: 9, fontWeight: 500, color: active ? 'rgba(255,255,255,0.70)' : 'rgba(142,135,168,0.70)' }}>{opt.sub}</p>
           </motion.button>
         );
@@ -156,7 +156,7 @@ function RoleToggle({ value, onChange }: { value: 'ADMIN' | 'COACH'; onChange: (
           <motion.button key={r} onClick={() => onChange(r)} whileTap={{ scale: 0.96 }} transition={{ duration: 0.12, ease: EASE }}
             style={{ flex: 1, padding: '5px 8px', border: 'none', borderRadius: 8, cursor: 'pointer',
               background: active ? '#fff' : 'transparent', boxShadow: active ? '0 1px 4px rgba(0,0,0,0.10)' : 'none' }}>
-            <p style={{ margin: 0, fontSize: 10, fontWeight: 700, color: active ? ROLE_COLOR[r] : '#8E87A8', fontFamily: 'inherit' }}>{ROLE_LABEL[r]}</p>
+            <p style={{ margin: 0, fontSize: 10, fontWeight: 600, color: active ? ROLE_COLOR[r] : '#8E87A8', fontFamily: 'inherit' }}>{ROLE_LABEL[r]}</p>
           </motion.button>
         );
       })}
@@ -414,7 +414,7 @@ export default function ClubDetail({ club, suscripcion, onBack, onReload, onDele
     <motion.div initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.28, ease: EASE }}>
       {/* ── Botón volver ── */}
       <motion.button onClick={onBack} whileTap={{ scale: 0.96 }}
-        style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', color: '#7C3AED', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', padding: '0 0 12px' }}>
+        style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', color: '#7C3AED', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', padding: '0 0 12px' }}>
         <ArrowLeft size={16} /> Volver a clubs
       </motion.button>
 
@@ -425,13 +425,13 @@ export default function ClubDetail({ club, suscripcion, onBack, onReload, onDele
             {club.logoUrl ? <img src={club.logoUrl} alt={club.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : club.name.charAt(0).toUpperCase()}
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <p style={{ margin: '0 0 5px', fontSize: 18, fontWeight: 700, color: '#1A1028', fontFamily: 'inherit', lineHeight: 1.2, wordBreak: 'break-word' }}>{club.name}</p>
+            <p style={{ margin: '0 0 5px', fontSize: 18, fontWeight: 600, color: '#1A1028', fontFamily: 'inherit', lineHeight: 1.2, wordBreak: 'break-word' }}>{club.name}</p>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-              <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 8px', borderRadius: 99, background: club.active ? 'rgba(6,214,160,0.12)' : 'rgba(239,71,111,0.12)', color: club.active ? '#06D6A0' : '#EF476F' }}>
+              <span style={{ fontSize: 9, fontWeight: 600, padding: '2px 8px', borderRadius: 99, background: club.active ? 'rgba(6,214,160,0.12)' : 'rgba(239,71,111,0.12)', color: club.active ? '#06D6A0' : '#EF476F' }}>
                 {club.active ? 'Activo' : 'Inactivo'}
               </span>
-              {suscripcion && <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 8px', borderRadius: 99, background: pb.bg, color: pb.color }}>{pb.label}</span>}
-              {trial && <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 8px', borderRadius: 99, background: trial.bg, color: trial.color }}>{trial.label}</span>}
+              {suscripcion && <span style={{ fontSize: 9, fontWeight: 600, padding: '2px 8px', borderRadius: 99, background: pb.bg, color: pb.color }}>{pb.label}</span>}
+              {trial && <span style={{ fontSize: 9, fontWeight: 600, padding: '2px 8px', borderRadius: 99, background: trial.bg, color: trial.color }}>{trial.label}</span>}
             </div>
           </div>
         </div>
@@ -446,7 +446,7 @@ export default function ClubDetail({ club, suscripcion, onBack, onReload, onDele
           const active = tab === t.id;
           return (
             <motion.button key={t.id} onClick={() => setTab(t.id)} whileTap={{ scale: 0.98 }} transition={{ duration: 0.12 }}
-              style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, padding: '9px 0', borderRadius: 10, border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13, fontWeight: 700,
+              style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, padding: '9px 0', borderRadius: 10, border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13, fontWeight: 600,
                 background: active ? '#fff' : 'transparent', color: active ? '#7C3AED' : '#8E87A8',
                 boxShadow: active ? '0 2px 8px rgba(124,58,237,0.12)' : 'none', transition: 'color 0.15s' }}>
               <t.Icon size={15} /> {t.label}
@@ -464,10 +464,10 @@ export default function ClubDetail({ club, suscripcion, onBack, onReload, onDele
           {/* Datos / edición */}
           <div style={{ background: '#fff', border: '1px solid rgba(120,80,200,0.10)', borderRadius: 18, padding: '16px' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-              <p style={{ margin: 0, fontSize: 12, fontWeight: 700, color: '#7C3AED', letterSpacing: '0.02em' }}>Datos del club</p>
+              <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: '#7C3AED', letterSpacing: '0.02em' }}>Datos del club</p>
               {!editing && (
                 <motion.button onClick={startEdit} whileTap={{ scale: 0.94 }}
-                  style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '5px 12px', borderRadius: 10, background: 'rgba(124,58,237,0.07)', border: '1px solid rgba(124,58,237,0.15)', color: '#7C3AED', fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+                  style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '5px 12px', borderRadius: 10, background: 'rgba(124,58,237,0.07)', border: '1px solid rgba(124,58,237,0.15)', color: '#7C3AED', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
                   <Pencil size={11} /> Editar
                 </motion.button>
               )}
@@ -496,7 +496,7 @@ export default function ClubDetail({ club, suscripcion, onBack, onReload, onDele
                 </div>
                 {/* Período de prueba */}
                 <div style={{ marginBottom: 12, padding: '10px 12px', borderRadius: 12, background: 'rgba(255,183,3,0.07)', border: '1px solid rgba(255,183,3,0.20)' }}>
-                  <p style={{ margin: '0 0 6px', fontSize: 9, fontWeight: 700, color: '#B88A00', letterSpacing: '0.02em' }}>Período de prueba</p>
+                  <p style={{ margin: '0 0 6px', fontSize: 9, fontWeight: 600, color: '#B88A00', letterSpacing: '0.02em' }}>Período de prueba</p>
                   {(() => {
                     if (!club.trialEndsAt) return <p style={{ margin: '0 0 8px', fontSize: 11, color: '#8E87A8' }}>Sin período de prueba asignado</p>;
                     const ends = new Date(club.trialEndsAt);
@@ -507,10 +507,10 @@ export default function ClubDetail({ club, suscripcion, onBack, onReload, onDele
                   <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                     {[15, 30, 60].map(d => (
                       <motion.button key={d} onClick={() => setEditForm(f => ({ ...f, trialDays: String(d) }))} whileTap={{ scale: 0.95 }}
-                        style={{ padding: '4px 10px', borderRadius: 99, fontSize: 10, fontWeight: 700, cursor: 'pointer', border: editForm.trialDays === String(d) ? 'none' : '1px solid rgba(255,183,3,0.30)', background: editForm.trialDays === String(d) ? '#FFB703' : 'transparent', color: editForm.trialDays === String(d) ? '#fff' : '#B88A00', fontFamily: 'inherit' }}>+{d} días</motion.button>
+                        style={{ padding: '4px 10px', borderRadius: 99, fontSize: 10, fontWeight: 600, cursor: 'pointer', border: editForm.trialDays === String(d) ? 'none' : '1px solid rgba(255,183,3,0.30)', background: editForm.trialDays === String(d) ? '#FFB703' : 'transparent', color: editForm.trialDays === String(d) ? '#fff' : '#B88A00', fontFamily: 'inherit' }}>+{d} días</motion.button>
                     ))}
                     <motion.button onClick={() => setEditForm(f => ({ ...f, trialDays: '0' }))} whileTap={{ scale: 0.95 }}
-                      style={{ padding: '4px 10px', borderRadius: 99, fontSize: 10, fontWeight: 700, cursor: 'pointer', border: editForm.trialDays === '0' ? 'none' : '1px solid rgba(239,71,111,0.25)', background: editForm.trialDays === '0' ? '#EF476F' : 'transparent', color: editForm.trialDays === '0' ? '#fff' : '#EF476F', fontFamily: 'inherit' }}>Limpiar trial</motion.button>
+                      style={{ padding: '4px 10px', borderRadius: 99, fontSize: 10, fontWeight: 600, cursor: 'pointer', border: editForm.trialDays === '0' ? 'none' : '1px solid rgba(239,71,111,0.25)', background: editForm.trialDays === '0' ? '#EF476F' : 'transparent', color: editForm.trialDays === '0' ? '#fff' : '#EF476F', fontFamily: 'inherit' }}>Limpiar trial</motion.button>
                   </div>
                   {editForm.trialDays !== '' && (
                     <p style={{ margin: '6px 0 0', fontSize: 10, color: '#8E87A8' }}>{editForm.trialDays === '0' ? 'Se eliminará el período de prueba al guardar' : `Se asignarán ${editForm.trialDays} días desde hoy al guardar`}</p>
@@ -520,7 +520,7 @@ export default function ClubDetail({ club, suscripcion, onBack, onReload, onDele
                   <motion.button onClick={() => setEditing(false)} whileTap={{ scale: 0.97 }}
                     style={{ flex: 1, padding: '10px 0', borderRadius: 12, border: '1.5px solid rgba(120,80,200,0.15)', background: 'transparent', color: '#8E87A8', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Cancelar</motion.button>
                   <motion.button onClick={saveEdit} disabled={!editForm.clubName.trim()} whileTap={{ scale: 0.97 }}
-                    style={{ flex: 2, padding: '10px 0', borderRadius: 12, border: 'none', background: '#7C3AED', color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 3px 14px rgba(124,58,237,0.28)', opacity: !editForm.clubName.trim() ? 0.6 : 1 }}>Guardar cambios</motion.button>
+                    style={{ flex: 2, padding: '10px 0', borderRadius: 12, border: 'none', background: '#7C3AED', color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 3px 14px rgba(124,58,237,0.28)', opacity: !editForm.clubName.trim() ? 0.6 : 1 }}>Guardar cambios</motion.button>
                 </div>
               </motion.div>
             ) : (
@@ -544,9 +544,9 @@ export default function ClubDetail({ club, suscripcion, onBack, onReload, onDele
           {/* Miembros */}
           <div style={{ background: '#fff', border: '1px solid rgba(120,80,200,0.10)', borderRadius: 18, overflow: 'hidden' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 14px', borderBottom: '1px solid rgba(120,80,200,0.08)' }}>
-              <p style={{ margin: 0, fontSize: 12, fontWeight: 700, color: '#7C3AED', letterSpacing: '0.02em' }}>Admins y entrenadores</p>
+              <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: '#7C3AED', letterSpacing: '0.02em' }}>Admins y entrenadores</p>
               <motion.button onClick={() => { setShowAddMember(v => !v); setMemberError(null); }} whileTap={{ scale: 0.94 }}
-                style={{ padding: '5px 12px', borderRadius: 10, background: showAddMember ? 'rgba(239,71,111,0.10)' : '#7C3AED', border: showAddMember ? '1px solid rgba(239,71,111,0.25)' : 'none', color: showAddMember ? '#EF476F' : '#fff', fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+                style={{ padding: '5px 12px', borderRadius: 10, background: showAddMember ? 'rgba(239,71,111,0.10)' : '#7C3AED', border: showAddMember ? '1px solid rgba(239,71,111,0.25)' : 'none', color: showAddMember ? '#EF476F' : '#fff', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
                 {showAddMember ? '✕ Cerrar' : '+ Agregar'}
               </motion.button>
             </div>
@@ -572,7 +572,7 @@ export default function ClubDetail({ club, suscripcion, onBack, onReload, onDele
                     <motion.button onClick={() => { setShowAddMember(false); setMemberError(null); }} whileTap={{ scale: 0.97 }}
                       style={{ flex: 1, padding: '9px 0', borderRadius: 10, border: '1.5px solid rgba(120,80,200,0.15)', background: 'transparent', color: '#8E87A8', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Cancelar</motion.button>
                     <motion.button onClick={addMember} disabled={memberSaving || !memberForm.fullName || !memberForm.email} whileTap={{ scale: 0.97 }}
-                      style={{ flex: 2, padding: '9px 0', borderRadius: 10, border: 'none', background: memberSaving ? '#A855F7' : '#7C3AED', color: '#fff', fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 2px 10px rgba(124,58,237,0.25)' }}>{memberSaving ? 'Guardando...' : 'Agregar y dar acceso'}</motion.button>
+                      style={{ flex: 2, padding: '9px 0', borderRadius: 10, border: 'none', background: memberSaving ? '#A855F7' : '#7C3AED', color: '#fff', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 2px 10px rgba(124,58,237,0.25)' }}>{memberSaving ? 'Guardando...' : 'Agregar y dar acceso'}</motion.button>
                   </div>
                 </motion.div>
               )}
@@ -609,16 +609,16 @@ export default function ClubDetail({ club, suscripcion, onBack, onReload, onDele
           {/* Acciones del club */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 14 }}>
             <motion.a href={getWhatsAppUrl(club)} target="_blank" rel="noopener noreferrer" whileTap={{ scale: 0.98 }}
-              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px 0', borderRadius: 12, background: 'rgba(37,211,102,0.08)', border: '1px solid rgba(37,211,102,0.28)', color: '#1BA147', textDecoration: 'none', fontSize: 12, fontWeight: 700, fontFamily: 'inherit' }}>
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px 0', borderRadius: 12, background: 'rgba(37,211,102,0.08)', border: '1px solid rgba(37,211,102,0.28)', color: '#1BA147', textDecoration: 'none', fontSize: 12, fontWeight: 600, fontFamily: 'inherit' }}>
               <MessageCircle size={15} /> Enviar recordatorio por WhatsApp
             </motion.a>
             <div style={{ display: 'flex', gap: 8 }}>
               <motion.button onClick={toggleActive} whileTap={{ scale: 0.97 }}
-                style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, padding: '11px 0', borderRadius: 12, border: '1px solid rgba(120,80,200,0.14)', background: 'transparent', color: '#6B6580', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+                style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, padding: '11px 0', borderRadius: 12, border: '1px solid rgba(120,80,200,0.14)', background: 'transparent', color: '#6B6580', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
                 <Power size={14} /> {club.active ? 'Desactivar' : 'Activar'}
               </motion.button>
               <motion.button onClick={deleteClub} whileTap={{ scale: 0.97 }}
-                style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, padding: '11px 0', borderRadius: 12, border: '1px solid rgba(239,71,111,0.20)', background: 'rgba(239,71,111,0.05)', color: '#EF476F', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+                style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, padding: '11px 0', borderRadius: 12, border: '1px solid rgba(239,71,111,0.20)', background: 'rgba(239,71,111,0.05)', color: '#EF476F', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
                 <Trash2 size={14} /> Eliminar club
               </motion.button>
             </div>
@@ -636,7 +636,7 @@ export default function ClubDetail({ club, suscripcion, onBack, onReload, onDele
           <div style={{ background: '#fff', border: '1px solid rgba(120,80,200,0.10)', borderRadius: 18, padding: '16px', boxShadow: '0 1px 8px rgba(0,0,0,0.04)' }}>
             <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <p style={{ margin: '0 0 8px', fontSize: 12, fontWeight: 700, color: '#7C3AED', letterSpacing: '0.02em' }}>Plan de suscripción</p>
+                <p style={{ margin: '0 0 8px', fontSize: 12, fontWeight: 600, color: '#7C3AED', letterSpacing: '0.02em' }}>Plan de suscripción</p>
                 {editPlan ? (
                   <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                     <PlanSelector value={editTipoPlan} onChange={setEditTipoPlan} />
@@ -667,7 +667,7 @@ export default function ClubDetail({ club, suscripcion, onBack, onReload, onDele
               {suscripcion && (
                 <div style={{ textAlign: 'center', flexShrink: 0 }}>
                   <p style={{ margin: 0, fontSize: 28, fontWeight: 800, color: pctColor, fontFamily: 'inherit', lineHeight: 1 }}>{pct}%</p>
-                  <p style={{ margin: '2px 0 0', fontSize: 9, fontWeight: 700, color: pctColor, whiteSpace: 'nowrap' }}>{vencido ? 'Vencido' : vig ? `${vig.diasRestantes}d restantes` : ''}</p>
+                  <p style={{ margin: '2px 0 0', fontSize: 9, fontWeight: 600, color: pctColor, whiteSpace: 'nowrap' }}>{vencido ? 'Vencido' : vig ? `${vig.diasRestantes}d restantes` : ''}</p>
                 </div>
               )}
             </div>
@@ -696,7 +696,7 @@ export default function ClubDetail({ club, suscripcion, onBack, onReload, onDele
 
           {/* Historial de abonos */}
           <div style={{ background: '#fff', border: '1px solid rgba(120,80,200,0.10)', borderRadius: 18, padding: '16px', boxShadow: '0 1px 8px rgba(0,0,0,0.04)' }}>
-            <p style={{ margin: '0 0 12px', fontSize: 12, fontWeight: 700, color: '#7C3AED', letterSpacing: '0.02em' }}>
+            <p style={{ margin: '0 0 12px', fontSize: 12, fontWeight: 600, color: '#7C3AED', letterSpacing: '0.02em' }}>
               Historial de abonos
             </p>
             {pagos.length === 0 ? (
@@ -711,7 +711,7 @@ export default function ClubDetail({ club, suscripcion, onBack, onReload, onDele
                         {editPagoId === p.id ? (
                           <motion.div key="edit" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.2, ease: EASE }}
                             style={{ background: '#F7F5FF', border: '1.5px solid rgba(124,58,237,0.15)', borderRadius: 14, padding: 14, margin: i > 0 ? '10px 0 0' : 0 }}>
-                            <p style={{ margin: '0 0 12px', fontSize: 11, fontWeight: 700, color: '#7C3AED' }}>Editar abono</p>
+                            <p style={{ margin: '0 0 12px', fontSize: 11, fontWeight: 600, color: '#7C3AED' }}>Editar abono</p>
                             <div style={{ marginBottom: 10 }}>
                               <p style={{ margin: '0 0 4px', fontSize: 9, fontWeight: 600, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Concepto</p>
                               <input type="text" value={editPagoForm.concepto} onChange={e => setEditPagoForm(f => ({ ...f, concepto: e.target.value }))} style={inp} />
@@ -733,7 +733,7 @@ export default function ClubDetail({ club, suscripcion, onBack, onReload, onDele
                               <motion.button onClick={() => setEditPagoId(null)} whileTap={{ scale: 0.97 }}
                                 style={{ flex: 1, padding: '10px 0', borderRadius: 12, border: '1.5px solid rgba(120,80,200,0.15)', background: 'transparent', color: '#8E87A8', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Cancelar</motion.button>
                               <motion.button onClick={saveEditPago} disabled={savingEdit} whileTap={{ scale: 0.97 }}
-                                style={{ flex: 2, padding: '10px 0', borderRadius: 12, border: 'none', background: '#7C3AED', color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 3px 12px rgba(124,58,237,0.28)' }}>{savingEdit ? 'Guardando...' : 'Guardar cambios'}</motion.button>
+                                style={{ flex: 2, padding: '10px 0', borderRadius: 12, border: 'none', background: '#7C3AED', color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 3px 12px rgba(124,58,237,0.28)' }}>{savingEdit ? 'Guardando...' : 'Guardar cambios'}</motion.button>
                             </div>
                           </motion.div>
                         ) : (
@@ -741,7 +741,7 @@ export default function ClubDetail({ club, suscripcion, onBack, onReload, onDele
                             style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 0', borderTop: i > 0 ? '1px solid rgba(120,80,200,0.08)' : 'none' }}>
                             <div style={{ width: 8, height: 8, borderRadius: '50%', background: st.color, flexShrink: 0 }} />
                             <div style={{ flex: 1, minWidth: 0 }}>
-                              <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: '#1A1028', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.concepto}</p>
+                              <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: '#1A1028', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.concepto}</p>
                               <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 2 }}>
                                 <CalendarClock size={9} color="#8E87A8" />
                                 <span style={{ fontSize: 10, color: '#8E87A8' }}>{p.fecha ? new Date(p.fecha).toLocaleDateString('es-CO', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Sin fecha'}</span>
@@ -750,7 +750,7 @@ export default function ClubDetail({ club, suscripcion, onBack, onReload, onDele
                             <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
                               <div style={{ textAlign: 'right' }}>
                                 <p style={{ margin: 0, fontSize: 14, fontWeight: 800, color: st.color, fontFamily: 'inherit', lineHeight: 1 }}>{fmt.format(p.monto)}</p>
-                                <span style={{ display: 'inline-block', marginTop: 3, fontSize: 9, fontWeight: 700, padding: '2px 7px', borderRadius: 99, background: st.bg, color: st.color }}>{st.label}</span>
+                                <span style={{ display: 'inline-block', marginTop: 3, fontSize: 9, fontWeight: 600, padding: '2px 7px', borderRadius: 99, background: st.bg, color: st.color }}>{st.label}</span>
                               </div>
                               <div style={{ display: 'flex', gap: 4 }}>
                                 <motion.button onClick={() => { setReceiptModal(p); setReceiptFile(null); setReceiptError(null); }} whileTap={{ scale: 0.88 }} title={p.receiptUrl ? 'Ver comprobante' : 'Subir comprobante'}
@@ -781,7 +781,7 @@ export default function ClubDetail({ club, suscripcion, onBack, onReload, onDele
             {abonoOpen ? (
               <motion.div key="form" variants={expandY} initial="hidden" animate="show" exit="exit"
                 style={{ background: '#F7F5FF', border: '1.5px solid rgba(124,58,237,0.15)', borderRadius: 16, padding: 16 }}>
-                <p style={{ margin: '0 0 14px', fontSize: 13, fontWeight: 700, color: '#1A1028', fontFamily: 'inherit' }}>Registrar abono</p>
+                <p style={{ margin: '0 0 14px', fontSize: 13, fontWeight: 600, color: '#1A1028', fontFamily: 'inherit' }}>Registrar abono</p>
                 <div style={{ marginBottom: 10 }}>
                   <p style={{ margin: '0 0 4px', fontSize: 9, fontWeight: 600, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Concepto</p>
                   <input type="text" placeholder="Ej: Cuota Mayo" value={abonoForm.concepto} onChange={e => setAbonoForm(f => ({ ...f, concepto: e.target.value }))} style={inp} />
@@ -804,7 +804,7 @@ export default function ClubDetail({ club, suscripcion, onBack, onReload, onDele
                     style={{ flex: 1, padding: '11px 0', borderRadius: 12, border: '1.5px solid rgba(120,80,200,0.15)', background: 'transparent', color: '#8E87A8', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Cancelar</motion.button>
                   <motion.button onClick={registrarAbono} disabled={saving || saveSuccess} whileTap={saveSuccess ? {} : { scale: 0.95 }}
                     animate={saveSuccess ? { scale: [1, 1.06, 1], transition: { duration: 0.35 } } : {}}
-                    style={{ flex: 2, padding: '11px 0', borderRadius: 12, border: 'none', cursor: saving || saveSuccess ? 'default' : 'pointer', fontFamily: 'inherit', fontWeight: 700, fontSize: 12, color: '#fff', boxShadow: saveSuccess ? '0 4px 14px rgba(6,214,160,0.40)' : '0 4px 14px rgba(124,58,237,0.32)', background: saveSuccess ? '#06D6A0' : 'linear-gradient(135deg,#7C3AED,#4361EE)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                    style={{ flex: 2, padding: '11px 0', borderRadius: 12, border: 'none', cursor: saving || saveSuccess ? 'default' : 'pointer', fontFamily: 'inherit', fontWeight: 600, fontSize: 12, color: '#fff', boxShadow: saveSuccess ? '0 4px 14px rgba(6,214,160,0.40)' : '0 4px 14px rgba(124,58,237,0.32)', background: saveSuccess ? '#06D6A0' : 'linear-gradient(135deg,#7C3AED,#4361EE)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
                     <AnimatePresence mode="wait" initial={false}>
                       {saveSuccess ? (
                         <motion.span key="ok" initial={{ opacity: 0, scale: 0.6 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.6 }} transition={{ duration: 0.2 }} style={{ display: 'flex', alignItems: 'center', gap: 5 }}><Check size={14} /> ¡Registrado!</motion.span>
@@ -819,7 +819,7 @@ export default function ClubDetail({ club, suscripcion, onBack, onReload, onDele
               </motion.div>
             ) : (
               <motion.button key="btn" onClick={() => setAbonoOpen(true)} whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.97 }} transition={{ duration: 0.14, ease: EASE }}
-                style={{ width: '100%', padding: '13px 0', borderRadius: 14, border: 'none', background: 'linear-gradient(135deg,#7C3AED,#4361EE)', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 16px rgba(124,58,237,0.28)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                style={{ width: '100%', padding: '13px 0', borderRadius: 14, border: 'none', background: 'linear-gradient(135deg,#7C3AED,#4361EE)', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 16px rgba(124,58,237,0.28)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
                 <TrendingUp size={14} /> Registrar abono
               </motion.button>
             )}
@@ -840,7 +840,7 @@ export default function ClubDetail({ club, suscripcion, onBack, onReload, onDele
               style={{ width: '100%', maxWidth: 440, maxHeight: '85vh', overflowY: 'auto', background: '#fff', borderRadius: 20, padding: '22px 20px', boxShadow: '0 20px 60px rgba(80,40,180,0.25)' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
                 <div>
-                  <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: '#1A1028', fontFamily: 'inherit' }}>Comprobante de pago</p>
+                  <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: '#1A1028', fontFamily: 'inherit' }}>Comprobante de pago</p>
                   <p style={{ margin: '2px 0 0', fontSize: 11, color: '#8E87A8' }}>{receiptModal.concepto}</p>
                 </div>
                 <motion.button onClick={() => { setReceiptModal(null); setReceiptFile(null); setReceiptError(null); }} whileTap={{ scale: 0.90 }}
@@ -862,22 +862,22 @@ export default function ClubDetail({ club, suscripcion, onBack, onReload, onDele
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <label style={{ display: 'block', cursor: 'pointer' }}>
                   <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handleReceiptFileChange} />
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px 0', borderRadius: 12, border: '1.5px solid rgba(124,58,237,0.25)', background: 'rgba(124,58,237,0.05)', color: '#7C3AED', fontSize: 12, fontWeight: 700, fontFamily: 'inherit' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px 0', borderRadius: 12, border: '1.5px solid rgba(124,58,237,0.25)', background: 'rgba(124,58,237,0.05)', color: '#7C3AED', fontSize: 12, fontWeight: 600, fontFamily: 'inherit' }}>
                     {receiptModal.receiptUrl ? <RotateCcw size={14} /> : <Upload size={14} />}
                     {receiptModal.receiptUrl ? 'Reemplazar comprobante' : 'Seleccionar imagen'}
                   </div>
                 </label>
                 {receiptFile && (
                   <motion.button onClick={handleUploadReceipt} disabled={uploadingReceipt} whileTap={{ scale: 0.97 }}
-                    style={{ width: '100%', padding: '12px 0', borderRadius: 12, border: 'none', background: uploadingReceipt ? '#A855F7' : '#7C3AED', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 3px 14px rgba(124,58,237,0.30)' }}>{uploadingReceipt ? 'Subiendo...' : 'Confirmar y guardar'}</motion.button>
+                    style={{ width: '100%', padding: '12px 0', borderRadius: 12, border: 'none', background: uploadingReceipt ? '#A855F7' : '#7C3AED', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 3px 14px rgba(124,58,237,0.30)' }}>{uploadingReceipt ? 'Subiendo...' : 'Confirmar y guardar'}</motion.button>
                 )}
                 {receiptModal.receiptUrl && !receiptFile && (
                   <motion.button onClick={() => window.open(receiptModal.receiptUrl!, '_blank')} whileTap={{ scale: 0.97 }}
-                    style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '11px 0', borderRadius: 12, border: '1.5px solid rgba(6,214,160,0.30)', background: 'rgba(6,214,160,0.07)', color: '#06D6A0', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}><Eye size={14} /> Ver comprobante completo</motion.button>
+                    style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '11px 0', borderRadius: 12, border: '1.5px solid rgba(6,214,160,0.30)', background: 'rgba(6,214,160,0.07)', color: '#06D6A0', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}><Eye size={14} /> Ver comprobante completo</motion.button>
                 )}
                 {receiptModal.receiptUrl && !receiptFile && (
                   <motion.button onClick={handleDeleteReceipt} disabled={deletingReceipt} whileTap={{ scale: 0.97 }}
-                    style={{ width: '100%', padding: '11px 0', borderRadius: 12, border: '1.5px solid rgba(239,71,111,0.22)', background: 'rgba(239,71,111,0.06)', color: '#EF476F', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>{deletingReceipt ? 'Eliminando...' : 'Eliminar comprobante'}</motion.button>
+                    style={{ width: '100%', padding: '11px 0', borderRadius: 12, border: '1.5px solid rgba(239,71,111,0.22)', background: 'rgba(239,71,111,0.06)', color: '#EF476F', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>{deletingReceipt ? 'Eliminando...' : 'Eliminar comprobante'}</motion.button>
                 )}
               </div>
             </motion.div>

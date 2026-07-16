@@ -140,7 +140,7 @@ export default function CalendarioPage() {
               <button onClick={prevMonth} className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-secondary transition-colors">
                 <ChevronLeft size={16} className="text-muted-foreground" />
               </button>
-              <p className="text-[16px] font-bold text-foreground" style={{ fontFamily: 'inherit' }}>
+              <p className="text-[16px] font-semibold text-foreground" style={{ fontFamily: 'inherit' }}>
                 {MONTH_NAMES[month]} {year}
               </p>
               <button onClick={nextMonth} className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-secondary transition-colors">
@@ -205,7 +205,7 @@ export default function CalendarioPage() {
           {/* Eventos del día */}
           <div className="bg-white border border-border rounded-xl p-4">
             <div className="flex items-center justify-between mb-3">
-              <p className="text-[13px] font-bold text-foreground" style={{ fontFamily: 'inherit' }}>
+              <p className="text-[13px] font-semibold text-foreground" style={{ fontFamily: 'inherit' }}>
                 {selectedDay} de {MONTH_NAMES[month]}
               </p>
               <span
@@ -235,7 +235,7 @@ export default function CalendarioPage() {
           {/* Todos los eventos del mes */}
           <div className="bg-white border border-border rounded-xl p-4">
             <div className="flex items-center justify-between mb-3">
-              <p className="text-[13px] font-bold text-foreground" style={{ fontFamily: 'inherit' }}>
+              <p className="text-[13px] font-semibold text-foreground" style={{ fontFamily: 'inherit' }}>
                 Todo el mes
               </p>
               <span
@@ -285,7 +285,7 @@ function EventCard({ event }: { event: CalEvent }) {
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-0.5">
           <span
-            className="text-[10px] font-bold px-1.5 py-0.5 rounded-full"
+            className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full"
             style={{ background: `${color}1A`, color }}
           >
             {TYPE_LABEL[event.type]}

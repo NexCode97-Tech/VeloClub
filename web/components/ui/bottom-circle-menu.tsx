@@ -108,7 +108,7 @@ export function BottomCircleMenu({ items, pathname, isOpen, onToggle, onClose }:
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 4, transition: { duration: 0.1 } }}
                   transition={{ delay: i * 0.04 + 0.07, duration: 0.16, ease: [0.23, 1, 0.32, 1] as [number, number, number, number] }}
-                  className="mt-1.5 whitespace-nowrap font-bold"
+                  className="mt-1.5 whitespace-nowrap font-semibold"
                   style={{
                     fontSize: 10,
                     color: '#FFFFFF',

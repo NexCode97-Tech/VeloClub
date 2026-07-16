@@ -45,7 +45,7 @@ function LegalContent({ markdown }: { markdown: string }) {
 
     if (line === '' ) { flushList(key); return; }
     if (line === '---') { flushList(key); blocks.push(<div key={key} style={{ height: 1, background: 'rgba(120,80,200,0.10)', margin: '20px 0' }} />); return; }
-    if (line.startsWith('### ')) { flushList(key); blocks.push(<h3 key={key} style={{ margin: '18px 0 8px', fontSize: 15, fontWeight: 700, color: '#1A1028' }}>{line.slice(4)}</h3>); return; }
+    if (line.startsWith('### ')) { flushList(key); blocks.push(<h3 key={key} style={{ margin: '18px 0 8px', fontSize: 15, fontWeight: 600, color: '#1A1028' }}>{line.slice(4)}</h3>); return; }
     if (line.startsWith('## ')) { flushList(key); blocks.push(<h2 key={key} style={{ margin: '26px 0 10px', fontSize: 18, fontWeight: 800, color: '#7C3AED' }}>{line.slice(3)}</h2>); return; }
     if (line.startsWith('# ')) { flushList(key); return; } // el H1 ya se muestra en el header de la página
     if (line.startsWith('> ')) { flushList(key); blocks.push(
@@ -78,7 +78,7 @@ export default function LegalDoc({ title, subtitle, updatedAt, markdown }: {
       </div>
 
       <div style={{ maxWidth: 760, margin: '0 auto', padding: '24px 20px 80px' }}>
-        <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700, color: '#7C3AED', textDecoration: 'none', marginBottom: 18 }}>
+        <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 600, color: '#7C3AED', textDecoration: 'none', marginBottom: 18 }}>
           <ArrowLeft size={15} /> Volver
         </Link>
 

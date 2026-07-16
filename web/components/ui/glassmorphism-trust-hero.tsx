@@ -98,7 +98,7 @@ export default function GlassmorphismHero() {
             </div>
 
             {/* Headline */}
-            <h1 className="vc-fade d2 text-[2.4rem] sm:text-5xl lg:text-[3.25rem] font-bold tracking-tighter leading-[0.92] text-white">
+            <h1 className="vc-fade d2 text-[2.4rem] sm:text-5xl lg:text-[3.25rem] font-semibold tracking-tighter leading-[0.92] text-white">
               Gestiona tu club.<br />
               <span className="bg-gradient-to-br from-white via-white to-[#A855F7] bg-clip-text text-transparent">
                 Enfócate en
@@ -118,7 +118,7 @@ export default function GlassmorphismHero() {
                 href="https://wa.me/573153171225"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group inline-flex items-center justify-center gap-2 rounded-full w-full sm:w-auto px-8 py-3 text-sm font-bold text-white transition-all hover:scale-[1.02] active:scale-[0.98]"
+                className="group inline-flex items-center justify-center gap-2 rounded-full w-full sm:w-auto px-8 py-3 text-sm font-semibold text-white transition-all hover:scale-[1.02] active:scale-[0.98]"
                 style={{ background: 'linear-gradient(135deg, #7C3AED, #9333EA)' }}
               >
                 Contáctanos

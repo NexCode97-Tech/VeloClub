@@ -52,7 +52,7 @@ export default function ConfiguracionPage() {
       <motion.div variants={cardVariant}>
       <button
         onClick={() => signOut(() => router.push('/sign-in'))}
-        className="w-full mt-3 py-3 rounded-xl text-[13px] font-bold"
+        className="w-full mt-3 py-3 rounded-xl text-[13px] font-semibold"
         style={{ background: 'rgba(239,71,111,0.08)', border: '1px solid rgba(239,71,111,0.25)', color: '#EF476F', cursor: 'pointer' }}
       >
         Cerrar sesión

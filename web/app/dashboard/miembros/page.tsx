@@ -350,7 +350,7 @@ export default function MiembrosPage() {
         >
           <div className="flex items-start justify-between mb-6">
             <div>
-              <h1 className="text-[22px] font-bold" style={{ color: '#1A1028', fontFamily: 'inherit', lineHeight: 1.1 }}>
+              <h1 className="text-[22px] font-semibold" style={{ color: '#1A1028', fontFamily: 'inherit', lineHeight: 1.1 }}>
                 Miembros
               </h1>
               <p className="text-xs mt-0.5" style={{ color: '#8E87A8' }}>
@@ -377,7 +377,7 @@ export default function MiembrosPage() {
                 whileHover={reducedMotion ? {} : { scale: 1.02 }}
                 whileTap={reducedMotion ? {} : { scale: 0.97 }}
                 transition={{ duration: 0.14, ease: EASE_OUT }}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-[13px] font-bold text-white cursor-pointer"
+                className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-[13px] font-semibold text-white cursor-pointer"
                 style={{ background: 'linear-gradient(135deg, #7C3AED 0%, #4361EE 100%)', boxShadow: '0 4px 16px rgba(124,58,237,0.30)' }}>
                 <Plus className="w-4 h-4" /> Nuevo miembro
               </motion.button>
@@ -405,7 +405,7 @@ export default function MiembrosPage() {
                     boxShadow: active ? `0 4px 16px ${s.color}20` : '0 1px 6px rgba(0,0,0,0.04)',
                   }}
                 >
-                  <p className="text-xl md:text-[36px] font-bold leading-none mb-1" style={{ color: active ? s.color : '#1A1028', fontFamily: 'inherit' }}>{s.value}</p>
+                  <p className="text-xl md:text-[36px] font-semibold leading-none mb-1" style={{ color: active ? s.color : '#1A1028', fontFamily: 'inherit' }}>{s.value}</p>
                   <p className="text-[10px] md:text-[13px] font-semibold md:mt-0.5" style={{ color: active ? s.color : '#8E87A8' }}>{s.label}</p>
                 </motion.button>
               );
@@ -523,7 +523,7 @@ export default function MiembrosPage() {
               <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4" style={{ background: 'rgba(124,58,237,0.08)' }}>
                 <Users className="w-8 h-8" style={{ color: '#7C3AED' }} />
               </div>
-              <p className="text-[17px] font-bold mb-1.5" style={{ color: '#1A1028', fontFamily: 'inherit' }}>
+              <p className="text-[17px] font-semibold mb-1.5" style={{ color: '#1A1028', fontFamily: 'inherit' }}>
                 {search ? 'Sin resultados' : 'Sin miembros aún'}
               </p>
               <p className="text-[13px] mb-6" style={{ color: '#8E87A8' }}>
@@ -532,7 +532,7 @@ export default function MiembrosPage() {
               {!search && (
                 <motion.button onClick={openNew}
                   whileTap={reducedMotion ? {} : { scale: 0.97 }} transition={{ duration: 0.12 }}
-                  className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-[13px] font-bold text-white cursor-pointer"
+                  className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-[13px] font-semibold text-white cursor-pointer"
                   style={{ background: 'linear-gradient(135deg,#7C3AED,#4361EE)' }}>
                   <Plus className="w-4 h-4" /> Agregar miembro
                 </motion.button>
@@ -572,14 +572,14 @@ export default function MiembrosPage() {
                         />
                         <div className="min-w-0 flex-1">
                           <h3
-                            className="text-white font-bold text-[15px] leading-snug truncate"
+                            className="text-white font-semibold text-[15px] leading-snug truncate"
                             style={{ fontFamily: 'inherit', textShadow: '0 1px 4px rgba(0,0,0,0.12)' }}
                           >
                             {m.fullName}
                           </h3>
                           <div className="flex items-center gap-1.5 mt-1 flex-wrap">
                             <span
-                              className="text-[10px] font-bold px-2 py-0.5 rounded-full"
+                              className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
                               style={{ background: 'rgba(255,255,255,0.22)', color: '#fff' }}
                             >
                               {ROLES[m.role]}
@@ -692,7 +692,7 @@ export default function MiembrosPage() {
                         whileHover={reducedMotion ? {} : { scale: 1.02 }}
                         whileTap={reducedMotion ? {} : { scale: 0.97 }}
                         transition={{ duration: 0.12, ease: EASE_OUT }}
-                        className="flex-1 py-2.5 rounded-xl text-[12px] font-bold text-white flex items-center justify-center gap-1.5 cursor-pointer"
+                        className="flex-1 py-2.5 rounded-xl text-[12px] font-semibold text-white flex items-center justify-center gap-1.5 cursor-pointer"
                         style={{ background: 'linear-gradient(135deg,#7C3AED,#4361EE)', boxShadow: '0 3px 12px rgba(124,58,237,0.22)' }}
                       >
                         <Pencil className="w-3.5 h-3.5" /> Editar
@@ -747,7 +747,7 @@ export default function MiembrosPage() {
                   boxShadow: '0 1px 6px rgba(0,0,0,0.04)',
                 }}
               >
-                <p className="text-xl font-bold leading-none mb-1" style={{ color: active ? s.color : '#1A1028', fontFamily: 'inherit' }}>{s.value}</p>
+                <p className="text-xl font-semibold leading-none mb-1" style={{ color: active ? s.color : '#1A1028', fontFamily: 'inherit' }}>{s.value}</p>
                 <p className="text-[10px] font-semibold text-center leading-tight" style={{ color: active ? s.color : '#8E87A8' }}>{s.label}</p>
               </button>
             );
@@ -797,8 +797,8 @@ export default function MiembrosPage() {
                   />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5 mb-0.5">
-                      <p className="text-[13px] font-bold text-foreground truncate">{m.fullName}</p>
-                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full shrink-0" style={{ color: rc.text, background: rc.bg }}>{ROLES[m.role]}</span>
+                      <p className="text-[13px] font-semibold text-foreground truncate">{m.fullName}</p>
+                      <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full shrink-0" style={{ color: rc.text, background: rc.bg }}>{ROLES[m.role]}</span>
                     </div>
                     <p className="text-[11px] text-muted-foreground truncate lowercase">{m.email ?? '—'}</p>
                     {m.role === 'STUDENT' && (
@@ -878,7 +878,7 @@ export default function MiembrosPage() {
                 <p className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: '#7C3AED' }}>
                   {editing ? 'Editar miembro' : 'Nuevo miembro'}
                 </p>
-                <h2 className="text-[22px] font-bold text-foreground leading-tight mt-0.5" style={{ fontFamily: 'inherit' }}>
+                <h2 className="text-[22px] font-semibold text-foreground leading-tight mt-0.5" style={{ fontFamily: 'inherit' }}>
                   {steps[step]?.label}
                 </h2>
               </div>
@@ -942,13 +942,13 @@ export default function MiembrosPage() {
                             style={{ background: 'rgba(124,58,237,0.06)' }}
                           >
                             <div
-                              className="w-11 h-11 rounded-full flex items-center justify-center text-sm font-bold text-white shrink-0"
+                              className="w-11 h-11 rounded-full flex items-center justify-center text-sm font-semibold text-white shrink-0"
                               style={{ background: ROLE_GRADIENT[form.role] ?? ROLE_GRADIENT.STUDENT }}
                             >
                               {initials(form.fullName)}
                             </div>
                             <div>
-                              <p className="font-bold text-foreground text-[14px]">{form.fullName}</p>
+                              <p className="font-semibold text-foreground text-[14px]">{form.fullName}</p>
                               <p className="text-[11px]" style={{ color: '#7C3AED' }}>{ROLES[form.role]}</p>
                             </div>
                           </motion.div>
@@ -979,7 +979,7 @@ export default function MiembrosPage() {
                               whileTap={reducedMotion ? {} : { scale: 0.96 }}
                               transition={{ duration: 0.1 }}
                               onClick={() => { setForm(f => ({ ...f, role: val })); }}
-                              className="py-3 rounded-2xl text-[13px] font-bold border-2 transition-all"
+                              className="py-3 rounded-2xl text-[13px] font-semibold border-2 transition-all"
                               style={form.role === val
                                 ? { background: '#7C3AED', color: '#fff', borderColor: '#7C3AED' }
                                 : { background: '#fff', color: '#8E87A8', borderColor: 'rgba(124,58,237,0.15)' }
@@ -1004,7 +1004,7 @@ export default function MiembrosPage() {
                                 key={t}
                                 type="button"
                                 onClick={() => setForm(f => ({ ...f, docType: f.docType === t ? '' : t }))}
-                                className="h-9 px-2.5 rounded-lg text-[11px] font-bold border-2 transition-all"
+                                className="h-9 px-2.5 rounded-lg text-[11px] font-semibold border-2 transition-all"
                                 style={form.docType === t
                                   ? { background: '#7C3AED', color: '#fff', borderColor: '#7C3AED' }
                                   : { background: '#fff', color: '#8E87A8', borderColor: 'rgba(124,58,237,0.15)' }
@@ -1183,7 +1183,7 @@ export default function MiembrosPage() {
                   whileTap={reducedMotion ? {} : { scale: 0.97 }}
                   transition={{ duration: 0.12, ease: EASE_OUT }}
                   onClick={prevStep}
-                  className="flex-1 py-3.5 rounded-2xl font-bold text-[14px] border-2 transition-colors"
+                  className="flex-1 py-3.5 rounded-2xl font-semibold text-[14px] border-2 transition-colors"
                   style={{ borderColor: 'rgba(124,58,237,0.18)', color: '#7C3AED' }}
                 >
                   Atrás
@@ -1194,7 +1194,7 @@ export default function MiembrosPage() {
                 transition={{ duration: 0.12, ease: EASE_OUT }}
                 onClick={step < steps.length - 1 ? nextStep : handleSave}
                 disabled={saving || (step === 0 && !form.fullName.trim())}
-                className="flex-[2] py-3.5 rounded-2xl font-bold text-[14px] text-white flex items-center justify-center gap-2 transition-opacity disabled:opacity-50"
+                className="flex-[2] py-3.5 rounded-2xl font-semibold text-[14px] text-white flex items-center justify-center gap-2 transition-opacity disabled:opacity-50"
                 style={{ background: 'linear-gradient(135deg, #7C3AED, #4361EE)' }}
               >
                 {saving ? (
@@ -1260,7 +1260,7 @@ export default function MiembrosPage() {
                     <X className="w-4 h-4 text-white" />
                   </button>
                   <div className="flex items-center gap-4">
-                    <div className="w-16 h-16 rounded-full flex items-center justify-center text-xl font-bold text-white shrink-0"
+                    <div className="w-16 h-16 rounded-full flex items-center justify-center text-xl font-semibold text-white shrink-0"
                       style={{ background: 'rgba(255,255,255,0.2)' }}>
                       {initials(viewMember.fullName)}
                     </div>
@@ -1268,7 +1268,7 @@ export default function MiembrosPage() {
                       <p className="text-white/70 text-[11px] font-semibold uppercase tracking-widest mb-0.5">
                         {ROLES[viewMember.role]}
                       </p>
-                      <h2 className="text-white font-bold text-[18px] leading-tight" style={{ fontFamily: 'inherit' }}>
+                      <h2 className="text-white font-semibold text-[18px] leading-tight" style={{ fontFamily: 'inherit' }}>
                         {viewMember.fullName}
                       </h2>
                       {viewMember.category && (
@@ -1284,7 +1284,7 @@ export default function MiembrosPage() {
                   {/* 1. Documento */}
                   {(viewMember.docType || viewMember.docNumber) && (
                     <div>
-                      <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-3">Documento</p>
+                      <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-3">Documento</p>
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(124,58,237,0.08)' }}>
                           <CreditCard className="w-3.5 h-3.5" style={{ color: '#7C3AED' }} />
@@ -1303,7 +1303,7 @@ export default function MiembrosPage() {
 
                   {/* 2. Contacto */}
                   <div>
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-3">Contacto</p>
+                    <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-3">Contacto</p>
                     <div className="space-y-2.5">
                       {viewMember.phone && (() => {
                         const { iso2, dialCode, number } = parsePhoneDisplay(viewMember.phone);
@@ -1355,7 +1355,7 @@ export default function MiembrosPage() {
                   {/* 3. Acudiente */}
                   {(viewMember.emergencyContact || viewMember.emergencyPhone) && (
                     <div>
-                      <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-3">Acudiente</p>
+                      <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-3">Acudiente</p>
                       <div className="space-y-2.5">
                         {viewMember.emergencyContact && (
                           <div className="flex items-center gap-3">
@@ -1395,7 +1395,7 @@ export default function MiembrosPage() {
                   {/* 4. Salud */}
                   {viewMember.eps && (
                     <div>
-                      <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-3">Salud</p>
+                      <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-3">Salud</p>
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(6,214,160,0.08)' }}>
                           <Heart className="w-3.5 h-3.5" style={{ color: '#06D6A0' }} />
@@ -1411,7 +1411,7 @@ export default function MiembrosPage() {
                   {/* Sedes */}
                   {viewMember.locations.length > 0 && (
                     <div>
-                      <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-3">Sedes</p>
+                      <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-3">Sedes</p>
                       <div className="flex flex-wrap gap-2">
                         {viewMember.locations.map(l => (
                           <div key={l.location.id} className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl" style={{ background: 'rgba(124,58,237,0.08)' }}>
@@ -1430,7 +1430,7 @@ export default function MiembrosPage() {
                     whileTap={reducedMotion ? {} : { scale: 0.97 }}
                     transition={{ duration: 0.12, ease: EASE_OUT }}
                     onClick={() => { setViewMember(null); openEdit(viewMember); }}
-                    className="w-full py-3.5 rounded-2xl font-bold text-[14px] text-white flex items-center justify-center gap-2"
+                    className="w-full py-3.5 rounded-2xl font-semibold text-[14px] text-white flex items-center justify-center gap-2"
                     style={{ background: 'linear-gradient(135deg, #7C3AED, #4361EE)' }}
                   >
                     <Pencil className="w-4 h-4" />

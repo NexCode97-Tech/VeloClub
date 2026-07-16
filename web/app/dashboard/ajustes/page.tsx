@@ -113,7 +113,7 @@ function SectionHeader({ label, icon: Icon }: { label: string; icon: React.Eleme
         style={{ background: 'linear-gradient(135deg, #7C3AED 0%, #4361EE 100%)' }}>
         <Icon className="w-3.5 h-3.5 text-white" />
       </div>
-      <h2 className="text-[15px] font-bold text-foreground">{label}</h2>
+      <h2 className="text-[15px] font-semibold text-foreground">{label}</h2>
     </div>
   );
 }
@@ -460,7 +460,7 @@ function AjustesPageContent() {
   /* ── Tarjeta Zona de peligro — eliminar cuenta ─────────────────────────── */
   const dangerCard = (
     <div className="rounded-2xl p-5" style={{ background: 'rgba(239,71,111,0.04)', border: '1px solid rgba(239,71,111,0.18)' }}>
-      <p className="text-[11px] font-bold uppercase tracking-wide mb-1" style={{ color: '#EF476F' }}>Zona de peligro</p>
+      <p className="text-[11px] font-semibold uppercase tracking-wide mb-1" style={{ color: '#EF476F' }}>Zona de peligro</p>
       <p className="text-[12px] text-muted-foreground mb-4">
         Al eliminar tu cuenta perderás el acceso de inmediato. Tus datos personales se eliminan; los registros de pagos y asistencia se conservan de forma anónima por obligaciones contables del club.
       </p>
@@ -560,7 +560,7 @@ function AjustesPageContent() {
                 key={value}
                 type="button"
                 onClick={() => toggleDay(value)}
-                className="w-10 h-10 rounded-full text-[12px] font-bold border-2 transition-all flex items-center justify-center"
+                className="w-10 h-10 rounded-full text-[12px] font-semibold border-2 transition-all flex items-center justify-center"
                 style={active
                   ? { background: 'rgba(239,71,111,0.08)', borderColor: '#EF476F', color: '#EF476F' }
                   : { background: '#fff', borderColor: 'rgba(120,80,200,0.15)', color: '#8E87A8' }
@@ -604,7 +604,7 @@ function AjustesPageContent() {
             <div className="flex items-center justify-between px-4 py-3 border-b border-border shrink-0">
               <div className="flex items-center gap-2">
                 <Crop className="w-4 h-4 text-primary" />
-                <p className="text-[13px] font-bold text-foreground">Recortar logo</p>
+                <p className="text-[13px] font-semibold text-foreground">Recortar logo</p>
               </div>
               <button onClick={() => setCropSrc(null)} className="text-muted-foreground hover:text-foreground">
                 <X className="w-4 h-4" />
@@ -655,7 +655,7 @@ function AjustesPageContent() {
                 <div className="w-11 h-11 rounded-xl flex items-center justify-center mb-3" style={{ background: 'rgba(239,71,111,0.10)' }}>
                   <AlertTriangle className="w-5 h-5" style={{ color: '#EF476F' }} />
                 </div>
-                <h2 className="text-[16px] font-bold text-foreground mb-1">Eliminar tu cuenta</h2>
+                <h2 className="text-[16px] font-semibold text-foreground mb-1">Eliminar tu cuenta</h2>
                 <p className="text-[12.5px] text-muted-foreground leading-relaxed mb-4">
                   Esta acción es irreversible. Perderás el acceso de inmediato, tus datos personales se eliminarán y no podrás volver a iniciar sesión con este correo. Para confirmar, escribe <strong className="text-foreground">ELIMINAR</strong> abajo.
                 </p>

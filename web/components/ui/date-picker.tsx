@@ -197,7 +197,7 @@ export function DatePicker({
                 <button
                   type="button"
                   onClick={() => setView('months')}
-                  className="text-[12px] font-bold text-foreground capitalize hover:text-purple-600 transition-colors px-2 py-0.5 rounded-md hover:bg-secondary"
+                  className="text-[12px] font-semibold text-foreground capitalize hover:text-purple-600 transition-colors px-2 py-0.5 rounded-md hover:bg-secondary"
                 >
                   {format(base, 'MMMM yyyy', { locale: es })}
                 </button>
@@ -213,7 +213,7 @@ export function DatePicker({
               {/* Días de semana */}
               <div className="grid grid-cols-7 mb-0.5">
                 {WEEKDAYS.map(d => (
-                  <div key={d} className="text-center text-[9px] font-bold text-muted-foreground uppercase py-0.5">
+                  <div key={d} className="text-center text-[9px] font-semibold text-muted-foreground uppercase py-0.5">
                     {d}
                   </div>
                 ))}
@@ -238,11 +238,11 @@ export function DatePicker({
                       className="h-7 w-full flex items-center justify-center rounded-md text-[11px] font-medium transition-all"
                       style={
                         isSel
-                          ? { background: '#7C3AED', color: '#fff', fontWeight: 700,
+                          ? { background: '#7C3AED', color: '#fff', fontWeight: 600,
                               boxShadow: '0 1px 4px rgba(124,58,237,0.35)' }
                           : isToday && !isSel
                           ? { background: 'rgba(124,58,237,0.10)', color: '#7C3AED',
-                              fontWeight: 700, border: '1px solid rgba(124,58,237,0.30)' }
+                              fontWeight: 600, border: '1px solid rgba(124,58,237,0.30)' }
                           : disabled
                           ? { color: '#D1D0D8', cursor: 'default' }
                           : { color: '#1A1028' }
@@ -271,7 +271,7 @@ export function DatePicker({
                 <button
                   type="button"
                   onClick={() => { setDecadeStart(Math.floor(base.getFullYear() / 12) * 12); setView('years'); }}
-                  className="text-[12px] font-bold text-foreground hover:text-purple-600 transition-colors px-2 py-0.5 rounded-md hover:bg-secondary"
+                  className="text-[12px] font-semibold text-foreground hover:text-purple-600 transition-colors px-2 py-0.5 rounded-md hover:bg-secondary"
                 >
                   {base.getFullYear()}
                 </button>
@@ -318,7 +318,7 @@ export function DatePicker({
                 >
                   <ChevronLeft className="w-3.5 h-3.5" />
                 </button>
-                <span className="text-[12px] font-bold text-foreground">
+                <span className="text-[12px] font-semibold text-foreground">
                   {decadeStart} – {decadeStart + 11}
                 </span>
                 <button

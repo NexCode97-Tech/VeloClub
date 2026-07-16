@@ -52,14 +52,14 @@ function SlideCard({ slide, priority }: { slide: SlideshowSlide; priority?: bool
             padding: '4px 10px',
           }}
         >
-          <span className="text-[10px] font-bold text-white/90 tracking-wide uppercase leading-none">
+          <span className="text-[10px] font-semibold text-white/90 tracking-wide uppercase leading-none">
             {slide.label}
           </span>
         </div>
       )}
       <div className="absolute bottom-0 left-0 right-0 px-4 pb-5 pt-10">
         <h2
-          className="text-white font-bold leading-tight mb-1.5"
+          className="text-white font-semibold leading-tight mb-1.5"
           style={{ fontSize: 15, textShadow: '0 1px 6px rgba(0,0,0,0.5)' }}
         >
           {slide.title}
@@ -146,14 +146,14 @@ export function Slideshow({ slides, autoPlayMs = 5000, className = '' }: Slidesh
                   padding: '4px 10px',
                 }}
               >
-                <span className="text-[10px] font-bold text-white/90 tracking-wide uppercase leading-none">
+                <span className="text-[10px] font-semibold text-white/90 tracking-wide uppercase leading-none">
                   {mobileSlide.label}
                 </span>
               </div>
             )}
             <div className="absolute bottom-0 left-0 right-0 px-4 pb-5 pt-10">
               <h2
-                className="text-white font-bold leading-tight mb-1.5"
+                className="text-white font-semibold leading-tight mb-1.5"
                 style={{ fontSize: 16, textShadow: '0 1px 6px rgba(0,0,0,0.5)' }}
               >
                 {mobileSlide.title}

@@ -51,7 +51,7 @@ function ContactCard({ isAdmin, phone, email, phoneDraft, emailDraft, editingCon
       style={{ background: 'white', border: '1px solid rgba(67,97,238,0.10)', boxShadow: '0 1px 12px rgba(0,0,0,0.06)' }}>
       {/* Header */}
       <div className="flex items-center justify-between px-5 py-4 border-b border-border/50">
-        <p className="text-[11px] font-bold uppercase tracking-widest" style={{ color: '#8E87A8' }}>
+        <p className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: '#8E87A8' }}>
           Información de contacto
         </p>
         {isAdmin && !editingContact && (
@@ -64,7 +64,7 @@ function ContactCard({ isAdmin, phone, email, phoneDraft, emailDraft, editingCon
         {isAdmin && editingContact && (
           <div className="flex items-center gap-1.5">
             <motion.button whileTap={{ scale: 0.96 }} onClick={onSave} disabled={savingContact}
-              className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-[11px] font-bold text-white cursor-pointer disabled:opacity-60"
+              className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-[11px] font-semibold text-white cursor-pointer disabled:opacity-60"
               style={{ background: 'linear-gradient(135deg,#4361EE,#7C3AED)' }}>
               <Check className="w-3 h-3" /> {savingContact ? 'Guardando…' : 'Guardar'}
             </motion.button>
@@ -83,7 +83,7 @@ function ContactCard({ isAdmin, phone, email, phoneDraft, emailDraft, editingCon
             <Phone className="w-4 h-4" style={{ color: '#4361EE' }} />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-[10px] font-bold uppercase tracking-widest mb-0.5" style={{ color: '#8E87A8' }}>Teléfono</p>
+            <p className="text-[10px] font-semibold uppercase tracking-widest mb-0.5" style={{ color: '#8E87A8' }}>Teléfono</p>
             {editingContact ? (
               <PhoneInput value={phoneDraft} onChange={onPhoneChange} placeholder="+57 300 000 0000" />
             ) : (
@@ -99,7 +99,7 @@ function ContactCard({ isAdmin, phone, email, phoneDraft, emailDraft, editingCon
             <Mail className="w-4 h-4" style={{ color: '#4361EE' }} />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-[10px] font-bold uppercase tracking-widest mb-0.5" style={{ color: '#8E87A8' }}>Correo electrónico</p>
+            <p className="text-[10px] font-semibold uppercase tracking-widest mb-0.5" style={{ color: '#8E87A8' }}>Correo electrónico</p>
             {editingContact ? (
               <input value={emailDraft} onChange={e => onEmailChange(e.target.value)} placeholder="club@ejemplo.com" type="email"
                 className="w-full text-[13px] font-medium outline-none bg-transparent border-b border-dashed pb-0.5"
@@ -117,7 +117,7 @@ function ContactCard({ isAdmin, phone, email, phoneDraft, emailDraft, editingCon
             <Building2 className="w-4 h-4" style={{ color: '#4361EE' }} />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-[10px] font-bold uppercase tracking-widest mb-0.5" style={{ color: '#8E87A8' }}>Sede principal</p>
+            <p className="text-[10px] font-semibold uppercase tracking-widest mb-0.5" style={{ color: '#8E87A8' }}>Sede principal</p>
             {mainLocation ? (
               <>
                 <p className="text-[13px] font-semibold text-foreground">{mainLocation.name}</p>
@@ -135,7 +135,7 @@ function ContactCard({ isAdmin, phone, email, phoneDraft, emailDraft, editingCon
               <MapPin className="w-4 h-4" style={{ color: '#4361EE' }} />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-[10px] font-bold uppercase tracking-widest mb-0.5" style={{ color: '#8E87A8' }}>Ubicación</p>
+              <p className="text-[10px] font-semibold uppercase tracking-widest mb-0.5" style={{ color: '#8E87A8' }}>Ubicación</p>
               <p className="text-[13px] font-medium text-foreground">
                 {[clubCity, clubDept].filter(Boolean).join(', ')}
               </p>
@@ -432,7 +432,7 @@ export default function ClubProfilePage() {
                   // eslint-disable-next-line @next/next/no-img-element
                   ? <img src={club.logoUrl} alt={club.name} className="w-full h-full object-cover" />
                   : (
-                    <div className="w-full h-full flex items-center justify-center text-white font-bold"
+                    <div className="w-full h-full flex items-center justify-center text-white font-semibold"
                       style={{ fontSize: 44 }}>
                       {club.name.charAt(0).toUpperCase()}
                     </div>
@@ -453,7 +453,7 @@ export default function ClubProfilePage() {
               whileTap={{ scale: 0.97 }}
               onClick={handleFollow}
               disabled={toggling}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-[13px] font-bold transition-all cursor-pointer disabled:opacity-60"
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-[13px] font-semibold transition-all cursor-pointer disabled:opacity-60"
               style={following
                 ? { background: 'rgba(67,97,238,0.10)', color: '#4361EE', border: '1.5px solid rgba(67,97,238,0.25)' }
                 : { background: 'linear-gradient(135deg,#4361EE,#7C3AED)', color: '#fff', border: 'none' }
@@ -468,11 +468,11 @@ export default function ClubProfilePage() {
 
           {/* Nombre + badge de deporte en la misma línea */}
           <div className="mt-3 flex items-center gap-2 flex-wrap">
-            <h1 className="text-[22px] font-bold text-foreground leading-tight">
+            <h1 className="text-[22px] font-semibold text-foreground leading-tight">
               {club.name}
             </h1>
             {club.deporte && (
-              <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full tracking-widest"
+              <span className="text-[10px] font-semibold px-2.5 py-0.5 rounded-full tracking-widest"
                 style={{ background: 'rgba(67,97,238,0.10)', color: '#4361EE' }}>
                 {club.deporte}
               </span>
@@ -499,7 +499,7 @@ export default function ClubProfilePage() {
                     whileTap={{ scale: 0.96 }}
                     onClick={saveDescription}
                     disabled={savingDesc}
-                    className="px-4 py-1.5 rounded-lg text-[12px] font-bold text-white disabled:opacity-60 cursor-pointer"
+                    className="px-4 py-1.5 rounded-lg text-[12px] font-semibold text-white disabled:opacity-60 cursor-pointer"
                     style={{ background: 'linear-gradient(135deg,#4361EE,#7C3AED)' }}>
                     {savingDesc ? 'Guardando…' : 'Guardar'}
                   </motion.button>
@@ -553,15 +553,15 @@ export default function ClubProfilePage() {
           {/* Stats: Publicaciones · Seguidores · Miembros */}
           <div className="flex items-center gap-6 mt-4">
             <div className="text-center">
-              <p className="text-[18px] font-bold text-foreground leading-none">{posts.length}</p>
+              <p className="text-[18px] font-semibold text-foreground leading-none">{posts.length}</p>
               <p style={{ fontSize: 11, fontWeight: 600, color: '#8E87A8', marginTop: 2 }}>Publicaciones</p>
             </div>
             <div className="text-center">
-              <p className="text-[18px] font-bold text-foreground leading-none">{followersCount}</p>
+              <p className="text-[18px] font-semibold text-foreground leading-none">{followersCount}</p>
               <p style={{ fontSize: 11, fontWeight: 600, color: '#8E87A8', marginTop: 2 }}>Seguidores</p>
             </div>
             <div className="text-center">
-              <p className="text-[18px] font-bold text-foreground leading-none">{club._count.members}</p>
+              <p className="text-[18px] font-semibold text-foreground leading-none">{club._count.members}</p>
               <p style={{ fontSize: 11, fontWeight: 600, color: '#8E87A8', marginTop: 2 }}>Miembros</p>
             </div>
           </div>
@@ -578,7 +578,7 @@ export default function ClubProfilePage() {
               onClick={() => setActiveTab(tab)}
               // "Contacto" solo visible en móvil — en desktop siempre está en la columna derecha
               className={`flex-1 py-3.5 relative transition-colors${tab === 'Contacto' ? ' sm:hidden' : ''}`}
-              style={{ fontSize: 12, fontWeight: 700, color: activeTab === tab ? '#4361EE' : '#8E87A8' }}
+              style={{ fontSize: 12, fontWeight: 600, color: activeTab === tab ? '#4361EE' : '#8E87A8' }}
             >
               {tab}
               {activeTab === tab && (
@@ -592,7 +592,7 @@ export default function ClubProfilePage() {
         {/* Label Contacto centrado en la columna derecha (desktop) */}
         <div className="hidden sm:flex sm:w-1/2 items-center justify-center">
           <div className="relative py-3.5">
-            <span style={{ fontSize: 12, fontWeight: 700, color: '#8E87A8' }}>Contacto</span>
+            <span style={{ fontSize: 12, fontWeight: 600, color: '#8E87A8' }}>Contacto</span>
           </div>
         </div>
         </div>
@@ -611,7 +611,7 @@ export default function ClubProfilePage() {
                 className="px-4 sm:px-6 py-4">
                 <div className="flex items-center gap-2 mb-3">
                   <Lock className="w-3.5 h-3.5" style={{ color: '#8E87A8' }} />
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Solo visibles para el club</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Solo visibles para el club</p>
                 </div>
                 {posts.length === 0 ? (
                   <div className="rounded-2xl px-6 py-10 flex flex-col items-center text-center"
@@ -620,7 +620,7 @@ export default function ClubProfilePage() {
                       style={{ background: 'linear-gradient(135deg,#4361EE,#7C3AED)' }}>
                       <Lock className="w-6 h-6 text-white" />
                     </div>
-                    <p className="text-[14px] font-bold text-foreground mb-1">Sin publicaciones del club aún</p>
+                    <p className="text-[14px] font-semibold text-foreground mb-1">Sin publicaciones del club aún</p>
                     <p className="text-[12px] text-muted-foreground">Las publicaciones privadas del club aparecerán aquí.</p>
                   </div>
                 ) : (

@@ -132,12 +132,12 @@ function HelpCard({ guide }: { guide: typeof HELP_GUIDES[0] }) {
           className="w-9 h-9 lg:w-10 lg:h-10 rounded-xl flex items-center justify-center shrink-0"
           style={{ background: `${guide.color}18` }}
         >
-          <span className="text-[13px] lg:text-[14px] font-extrabold" style={{ color: guide.color }}>
+          <span className="text-[13px] lg:text-[14px] font-semibold" style={{ color: guide.color }}>
             {guide.title[0]}
           </span>
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-[13px] lg:text-[14px] font-bold" style={{ color: '#1A1523' }}>{guide.title}</p>
+          <p className="text-[13px] lg:text-[14px] font-semibold" style={{ color: '#1A1523' }}>{guide.title}</p>
           <p className="text-[11px] mt-0.5" style={{ color: '#8E87A8' }}>{guide.subtitle}</p>
         </div>
         <ChevronDown
@@ -154,13 +154,13 @@ function HelpCard({ guide }: { guide: typeof HELP_GUIDES[0] }) {
           {guide.steps.map(s => (
             <div key={s.n} className="flex gap-3">
               <div
-                className="w-6 h-6 rounded-full flex items-center justify-center text-white text-[11px] font-bold shrink-0 mt-0.5"
+                className="w-6 h-6 rounded-full flex items-center justify-center text-white text-[11px] font-semibold shrink-0 mt-0.5"
                 style={{ background: guide.color }}
               >
                 {s.n}
               </div>
               <div>
-                <p className="text-[12px] font-bold" style={{ color: '#1A1523' }}>{s.t}</p>
+                <p className="text-[12px] font-semibold" style={{ color: '#1A1523' }}>{s.t}</p>
                 <p className="text-[11px] leading-relaxed mt-0.5" style={{ color: '#8E87A8' }}>{s.d}</p>
               </div>
             </div>
@@ -199,7 +199,7 @@ export default function AyudaPage() {
           <ArrowLeft className="w-4 h-4 text-foreground" />
         </button>
         <h1
-          className="text-[17px] lg:text-[20px] font-bold text-foreground"
+          className="text-[17px] lg:text-[20px] font-semibold text-foreground"
           style={{ fontFamily: 'inherit' }}
         >
           Centro de ayuda

@@ -389,7 +389,7 @@ export default function AsistenciaPage() {
                 <div className="w-14 h-14 rounded-2xl mx-auto mb-4 flex items-center justify-center" style={{ background: 'rgba(239,71,111,0.08)' }}>
                   <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#EF476F" strokeWidth="2"/><path d="M6.5 6.5l11 11M17.5 6.5l-11 11" stroke="#EF476F" strokeWidth="2" strokeLinecap="round"/></svg>
                 </div>
-                <p className="text-[15px] font-bold text-foreground">No hay entrenamiento este día</p>
+                <p className="text-[15px] font-semibold text-foreground">No hay entrenamiento este día</p>
                 <p className="text-[12px] text-muted-foreground mt-1 capitalize">
                   Los {DAY_NAMES[selectedDay]}s no se registra asistencia
                 </p>
@@ -418,7 +418,7 @@ export default function AsistenciaPage() {
                         }}
                       >
                         <div
-                          className="text-xl md:text-[36px] font-bold leading-none mb-1"
+                          className="text-xl md:text-[36px] font-semibold leading-none mb-1"
                           style={{ color: STATUS_COLOR[s], fontFamily: 'inherit' }}
                         >
                           {n}
@@ -454,7 +454,7 @@ export default function AsistenciaPage() {
                     {/* Dropdown — solo en móvil */}
                     <div className="sm:hidden">
                       <Select value={catFilter} onValueChange={(v) => { if (v) setCatFilter(v); }}>
-                        <SelectTrigger className="w-full h-9 text-[12px] font-bold rounded-xl" style={{ borderColor: 'rgba(124,58,237,0.25)', color: '#7C3AED' }}>
+                        <SelectTrigger className="w-full h-9 text-[12px] font-semibold rounded-xl" style={{ borderColor: 'rgba(124,58,237,0.25)', color: '#7C3AED' }}>
                           <span>
                             {toLabel(catFilter)}
                             {catFilter !== 'TODOS' && (
@@ -487,7 +487,7 @@ export default function AsistenciaPage() {
                           onClick={() => setCatFilter(cat)}
                           whileTap={reducedMotion ? {} : { scale: 0.95 }}
                           transition={{ duration: 0.1 }}
-                          className="shrink-0 px-3 py-1.5 rounded-full text-[11px] font-bold transition-all cursor-pointer"
+                          className="shrink-0 px-3 py-1.5 rounded-full text-[11px] font-semibold transition-all cursor-pointer"
                           style={catFilter === cat
                             ? { background: '#7C3AED', color: '#fff', boxShadow: '0 2px 8px rgba(124,58,237,0.30)' }
                             : { background: '#fff', color: '#8E87A8', border: '1px solid rgba(120,80,200,0.15)' }
@@ -556,7 +556,7 @@ export default function AsistenciaPage() {
                             photoUrl={m.pictureUrl}
                             gradient={avatarBg(m.role)}
                           />
-                          <p className="text-[11px] font-bold text-center mt-2 leading-tight line-clamp-2 w-full px-1"
+                          <p className="text-[11px] font-semibold text-center mt-2 leading-tight line-clamp-2 w-full px-1"
                             style={{ color: '#1A1028' }}>
                             {m.fullName}
                           </p>
@@ -571,7 +571,7 @@ export default function AsistenciaPage() {
                         {canManage ? (
                           <button
                             onClick={() => toggle(m.id)}
-                            className="mt-auto w-full py-2 text-[11px] font-bold tracking-wide transition-all active:scale-95 flex items-center justify-center gap-1"
+                            className="mt-auto w-full py-2 text-[11px] font-semibold tracking-wide transition-all active:scale-95 flex items-center justify-center gap-1"
                             style={{
                               background: `${color}18`,
                               color,
@@ -582,7 +582,7 @@ export default function AsistenciaPage() {
                           </button>
                         ) : (
                           <div
-                            className="mt-auto w-full py-2 text-[11px] font-bold tracking-wide flex items-center justify-center gap-1"
+                            className="mt-auto w-full py-2 text-[11px] font-semibold tracking-wide flex items-center justify-center gap-1"
                             style={{
                               background: `${color}18`,
                               color,

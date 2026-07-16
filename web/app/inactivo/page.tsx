@@ -48,7 +48,7 @@ export default function InactivoPage() {
               style={{ background: 'rgba(239,71,111,0.10)' }}>
               <PauseCircle className="w-7 h-7" style={{ color: '#EF476F' }} />
             </div>
-            <h1 className="text-2xl font-bold text-slate-900 mb-1">
+            <h1 className="text-2xl font-semibold text-slate-900 mb-1">
               Tu club está pausado
             </h1>
             <p className="text-slate-500 text-sm">
@@ -93,7 +93,7 @@ export default function InactivoPage() {
           style={{ background: 'rgba(239,71,111,0.10)' }}>
           <PauseCircle className="w-8 h-8" style={{ color: '#EF476F' }} />
         </div>
-        <h1 className="text-2xl font-bold text-slate-900 mb-2">Suscripción inactiva</h1>
+        <h1 className="text-2xl font-semibold text-slate-900 mb-2">Suscripción inactiva</h1>
         <p className="text-slate-500 mb-6">
           El acceso de tu club está temporalmente suspendido. Pídele al administrador que active el plan desde Ajustes para seguir usando VeloClub.
         </p>

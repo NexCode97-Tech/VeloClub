@@ -373,7 +373,7 @@ export default function SedesPage() {
                       <MapPin className="w-5 h-5" style={{ color: '#06D6A0' }} />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-bold text-foreground">{loc.name}</p>
+                      <p className="font-semibold text-foreground">{loc.name}</p>
                       {loc.address && (
                         <p className="text-xs text-muted-foreground mt-0.5">
                           {loc.address}{clubDepartment ? `, ${clubDepartment}` : ''}

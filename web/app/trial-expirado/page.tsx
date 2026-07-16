@@ -48,7 +48,7 @@ export default function TrialExpiradoPage() {
               style={{ background: 'rgba(255,183,3,0.12)' }}>
               <Timer className="w-7 h-7" style={{ color: '#FFB703' }} />
             </div>
-            <h1 className="text-2xl font-bold text-slate-900 mb-1">
+            <h1 className="text-2xl font-semibold text-slate-900 mb-1">
               Tu prueba terminó, pero tu club sigue aquí
             </h1>
             <p className="text-slate-500 text-sm">
@@ -93,7 +93,7 @@ export default function TrialExpiradoPage() {
           style={{ background: 'rgba(255,183,3,0.12)' }}>
           <Timer className="w-8 h-8" style={{ color: '#FFB703' }} />
         </div>
-        <h1 className="text-2xl font-bold text-slate-900 mb-2">
+        <h1 className="text-2xl font-semibold text-slate-900 mb-2">
           Período de prueba vencido
         </h1>
         <p className="text-slate-500 mb-6">

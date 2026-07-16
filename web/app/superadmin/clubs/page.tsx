@@ -128,7 +128,7 @@ export default function ClubsPage() {
               border: showNew ? '1.5px solid rgba(239,71,111,0.25)' : 'none',
               borderRadius: 12, padding: '7px 16px', cursor: 'pointer',
               color: showNew ? '#EF476F' : '#fff',
-              fontSize: 12, fontWeight: 700, fontFamily: 'inherit',
+              fontSize: 12, fontWeight: 600, fontFamily: 'inherit',
               transition: 'background 0.18s, color 0.18s',
             }}
           >
@@ -143,7 +143,7 @@ export default function ClubsPage() {
           {showNew && (
             <motion.div key="new-form" variants={expandY} initial="hidden" animate="show" exit="exit"
               style={{ background: '#fff', border: '1.5px solid rgba(124,58,237,0.25)', borderRadius: 20, padding: '16px 14px', marginBottom: 12 }}>
-              <p style={{ margin: '0 0 14px', fontSize: 13, fontWeight: 700, color: '#1A1028', fontFamily: 'inherit' }}>Nuevo club</p>
+              <p style={{ margin: '0 0 14px', fontSize: 13, fontWeight: 600, color: '#1A1028', fontFamily: 'inherit' }}>Nuevo club</p>
               {[
                 { label: 'Nombre del club',  key: 'clubName',   type: 'text',  placeholder: 'Ej: Club Patinaje Norte' },
                 { label: 'Nombre del admin', key: 'adminName',  type: 'text',  placeholder: 'Nombre completo' },
@@ -173,7 +173,7 @@ export default function ClubsPage() {
                 </motion.button>
                 <motion.button onClick={handleCreate} disabled={saving || !newForm.clubName || !newForm.adminEmail || !newForm.adminName}
                   whileTap={{ scale: 0.97 }} transition={{ duration: 0.12 }}
-                  style={{ flex: 2, padding: '11px 0', borderRadius: 12, border: 'none', background: saving ? '#A855F7' : '#7C3AED', color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 3px 14px rgba(124,58,237,0.28)', opacity: (!newForm.clubName || !newForm.adminEmail || !newForm.adminName) ? 0.6 : 1 }}>
+                  style={{ flex: 2, padding: '11px 0', borderRadius: 12, border: 'none', background: saving ? '#A855F7' : '#7C3AED', color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 3px 14px rgba(124,58,237,0.28)', opacity: (!newForm.clubName || !newForm.adminEmail || !newForm.adminName) ? 0.6 : 1 }}>
                   {saving ? 'Creando...' : 'Crear club'}
                 </motion.button>
               </div>
@@ -240,12 +240,12 @@ export default function ClubsPage() {
                   </div>
                   {/* Info */}
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <p style={{ margin: '0 0 5px', fontSize: 14, fontWeight: 700, color: '#1A1028', lineHeight: 1.25, wordBreak: 'break-word' }}>{club.name}</p>
+                    <p style={{ margin: '0 0 5px', fontSize: 14, fontWeight: 600, color: '#1A1028', lineHeight: 1.25, wordBreak: 'break-word' }}>{club.name}</p>
                     <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-                      <span style={{ flexShrink: 0, fontSize: 9, fontWeight: 700, padding: '2px 7px', borderRadius: 99, background: club.active ? 'rgba(6,214,160,0.12)' : 'rgba(239,71,111,0.12)', color: club.active ? '#06D6A0' : '#EF476F' }}>
+                      <span style={{ flexShrink: 0, fontSize: 9, fontWeight: 600, padding: '2px 7px', borderRadius: 99, background: club.active ? 'rgba(6,214,160,0.12)' : 'rgba(239,71,111,0.12)', color: club.active ? '#06D6A0' : '#EF476F' }}>
                         {club.active ? 'Activo' : 'Inactivo'}
                       </span>
-                      <span style={{ flexShrink: 0, fontSize: 9, fontWeight: 700, padding: '2px 7px', borderRadius: 99, background: badge.bg, color: badge.color }}>{badge.label}</span>
+                      <span style={{ flexShrink: 0, fontSize: 9, fontWeight: 600, padding: '2px 7px', borderRadius: 99, background: badge.bg, color: badge.color }}>{badge.label}</span>
                     </div>
                     <p style={{ margin: 0, fontSize: 11, color: '#8E87A8' }}>
                       {club._count.members} miembro{club._count.members !== 1 ? 's' : ''}{club.deporte ? ` · ${club.deporte}` : ''}

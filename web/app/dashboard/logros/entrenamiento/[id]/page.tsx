@@ -110,7 +110,7 @@ export default function TrainingDetailPage() {
           <ArrowLeft className="w-4 h-4 text-muted-foreground" />
         </Link>
         <div className="flex-1 min-w-0">
-          <h1 className="text-[15px] font-bold text-foreground truncate" style={{ fontFamily: 'inherit' }}>
+          <h1 className="text-[15px] font-semibold text-foreground truncate" style={{ fontFamily: 'inherit' }}>
             {toSentenceCase(session.title)}
           </h1>
           <p className="text-[11px] text-muted-foreground capitalize">{dateStr}</p>
@@ -141,7 +141,7 @@ export default function TrainingDetailPage() {
         </div>
 
         {/* Resultados */}
-        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest px-1">
+        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest px-1">
           Resultados por deportista
         </p>
 
@@ -155,12 +155,12 @@ export default function TrainingDetailPage() {
           <div className="space-y-2">
             {session.results.map((r, idx) => (
               <div key={r.id} className="bg-white border border-border rounded-xl px-4 py-3 flex items-center gap-3">
-                <div className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold text-white shrink-0"
+                <div className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-semibold text-white shrink-0"
                   style={{ background: 'linear-gradient(135deg,#4361EE,#7209B7)' }}>
                   {idx + 1}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-[13px] font-bold text-foreground">{r.member.fullName}</p>
+                  <p className="text-[13px] font-semibold text-foreground">{r.member.fullName}</p>
                   <div className="flex flex-wrap gap-3 mt-0.5">
                     {r.time && (
                       <span className="flex items-center gap-1 text-[11px] text-muted-foreground">

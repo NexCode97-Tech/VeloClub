@@ -274,7 +274,7 @@ export default function ReportesPage() {
                   </div>
                   {loading && <div className="w-3 h-3 rounded-full border border-t-transparent animate-spin" style={{ borderColor: k.color, borderTopColor: 'transparent' }} />}
                 </div>
-                <p className="text-2xl font-bold mt-1.5" style={{ fontFamily: 'inherit', color: k.color }}>
+                <p className="text-2xl font-semibold mt-1.5" style={{ fontFamily: 'inherit', color: k.color }}>
                   {loading ? '—' : k.value}
                 </p>
                 <p className="text-[12px] font-semibold text-foreground leading-tight">{k.label}</p>
@@ -322,7 +322,7 @@ export default function ReportesPage() {
                 />
                 <Tooltip
                   contentStyle={{ borderRadius: 12, border: '1px solid #E8E6F0', fontSize: 13, padding: '8px 14px', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}
-                  labelStyle={{ fontWeight: 700, color: '#1A1028', marginBottom: 2 }}
+                  labelStyle={{ fontWeight: 600, color: '#1A1028', marginBottom: 2 }}
                   formatter={(v) => [`$${Number(v ?? 0).toLocaleString('es-CO')}`, 'Total facturado']}
                   cursor={{ stroke: ACCENT, strokeWidth: 1, strokeDasharray: '4 2' }}
                 />
@@ -396,7 +396,7 @@ export default function ReportesPage() {
                         <div key={d.name}>
                           <div className="flex items-center justify-between mb-1">
                             <span className="text-[11px] font-semibold" style={{ color: d.color }}>{d.name}</span>
-                            <span className="text-[11px] font-bold" style={{ color: d.color }}>{d.value} · {pct}%</span>
+                            <span className="text-[11px] font-semibold" style={{ color: d.color }}>{d.value} · {pct}%</span>
                           </div>
                           <div className="w-full rounded-full overflow-hidden" style={{ height: 7, background: `${d.color}18` }}>
                             <div

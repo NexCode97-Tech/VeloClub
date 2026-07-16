@@ -197,7 +197,7 @@ export default function SuperadminDashboard() {
           <h1 style={{ margin: 0, fontSize: 24, fontWeight: 800, color: '#1A1028', lineHeight: 1.1, fontFamily: 'inherit' }}>
             Panel global
           </h1>
-          <span style={{ fontSize: 10, fontWeight: 700, padding: '3px 10px', borderRadius: 99, background: 'rgba(239,71,111,0.10)', color: '#EF476F', letterSpacing: '0.02em' }}>
+          <span style={{ fontSize: 10, fontWeight: 600, padding: '3px 10px', borderRadius: 99, background: 'rgba(239,71,111,0.10)', color: '#EF476F', letterSpacing: '0.02em' }}>
             Superadmin
           </span>
         </div>
@@ -215,7 +215,7 @@ export default function SuperadminDashboard() {
           style={{ background: '#fff', borderRadius: 24, padding: '20px 20px 18px', marginBottom: 10, border: '1px solid rgba(120,80,200,0.10)', boxShadow: '0 2px 20px rgba(124,58,237,0.06)', position: 'relative', overflow: 'hidden' }}
         >
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 10 }}>
-            <p style={{ margin: 0, fontSize: 10, fontWeight: 700, color: '#8E87A8', letterSpacing: '0.02em' }}>
+            <p style={{ margin: 0, fontSize: 10, fontWeight: 600, color: '#8E87A8', letterSpacing: '0.02em' }}>
               Recaudado · este mes
             </p>
             <motion.div whileTap={{ scale: shouldReduceMotion ? 1 : 0.88 }} transition={{ duration: 0.12, ease: EASE }}>
@@ -229,13 +229,13 @@ export default function SuperadminDashboard() {
               {heroFmt.main}
             </span>
             {heroFmt.suffix && (
-              <span style={{ fontSize: 36, fontWeight: 700, color: '#C4BFD8', fontFamily: 'inherit', lineHeight: 1 }}>
+              <span style={{ fontSize: 36, fontWeight: 600, color: '#C4BFD8', fontFamily: 'inherit', lineHeight: 1 }}>
                 {heroFmt.suffix}
               </span>
             )}
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 16 }}>
-            <span style={{ fontSize: 12, fontWeight: 700, color: isPositive ? '#06D6A0' : '#EF476F' }}>
+            <span style={{ fontSize: 12, fontWeight: 600, color: isPositive ? '#06D6A0' : '#EF476F' }}>
               {isPositive ? '+' : ''}{pctCambio}%
             </span>
             <span style={{ fontSize: 11, color: '#8E87A8' }}>vs mes anterior</span>
@@ -249,19 +249,19 @@ export default function SuperadminDashboard() {
           style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 20 }}
         >
           <div style={{ background: '#fff', borderRadius: 20, padding: '16px 14px', border: '1px solid rgba(120,80,200,0.10)', boxShadow: '0 2px 12px rgba(124,58,237,0.05)' }}>
-            <p style={{ margin: '0 0 10px', fontSize: 9, fontWeight: 700, color: '#8E87A8', letterSpacing: '0.02em' }}>Clubs activos</p>
+            <p style={{ margin: '0 0 10px', fontSize: 9, fontWeight: 600, color: '#8E87A8', letterSpacing: '0.02em' }}>Clubs activos</p>
             <p style={{ margin: '0 0 4px', fontSize: 44, fontWeight: 800, color: '#1A1028', fontFamily: 'inherit', lineHeight: 1 }}>
               {String(activos).padStart(2, '0')}
             </p>
             <p style={{ margin: 0, fontSize: 11, color: '#8E87A8' }}>De {total} totales</p>
           </div>
           <div style={{ background: '#fff', borderRadius: 20, padding: '16px 14px', border: '1px solid rgba(120,80,200,0.10)', boxShadow: '0 2px 12px rgba(124,58,237,0.05)' }}>
-            <p style={{ margin: '0 0 10px', fontSize: 9, fontWeight: 700, color: '#8E87A8', letterSpacing: '0.02em' }}>En prueba</p>
+            <p style={{ margin: '0 0 10px', fontSize: 9, fontWeight: 600, color: '#8E87A8', letterSpacing: '0.02em' }}>En prueba</p>
             <p style={{ margin: '0 0 4px', fontSize: 44, fontWeight: 800, color: '#1A1028', fontFamily: 'inherit', lineHeight: 1 }}>
               {String(enPrueba).padStart(2, '0')}
             </p>
             {enPrueba > 0
-              ? <p style={{ margin: 0, fontSize: 11, fontWeight: 700, color: '#B88A00' }}>Trial {maxTrialDays}d</p>
+              ? <p style={{ margin: 0, fontSize: 11, fontWeight: 600, color: '#B88A00' }}>Trial {maxTrialDays}d</p>
               : <p style={{ margin: 0, fontSize: 11, color: '#8E87A8' }}>Sin trials activos</p>
             }
           </div>
@@ -294,7 +294,7 @@ export default function SuperadminDashboard() {
             style={{ background: '#fff', border: '1px solid rgba(120,80,200,0.10)', borderRadius: 20, overflow: 'hidden', marginBottom: 20 }}
           >
             <div style={{ padding: '16px 16px 0' }}>
-              <p style={{ margin: '0 0 1px', fontSize: 13, fontWeight: 700, color: '#1A1028', fontFamily: 'inherit' }}>Ingresos por mes</p>
+              <p style={{ margin: '0 0 1px', fontSize: 13, fontWeight: 600, color: '#1A1028', fontFamily: 'inherit' }}>Ingresos por mes</p>
               <p style={{ margin: '0 0 12px', fontSize: 10, color: '#8E87A8' }}>{currentYear}</p>
             </div>
             <ResponsiveContainer width="100%" height={150}>
@@ -312,7 +312,7 @@ export default function SuperadminDashboard() {
                 <Tooltip
                   contentStyle={{ borderRadius: 12, border: '1px solid rgba(120,80,200,0.15)', fontSize: 12, padding: '8px 14px', boxShadow: '0 6px 20px rgba(0,0,0,0.08)' }}
                   formatter={(v) => [fmt.format(Number(v ?? 0)), 'Recaudado']}
-                  labelStyle={{ fontWeight: 700, color: '#1A1028' }}
+                  labelStyle={{ fontWeight: 600, color: '#1A1028' }}
                 />
                 <Area type="monotone" dataKey="total" stroke="#7C3AED" strokeWidth={2.4}
                   fill="url(#incomeGrad)" dot={false}
@@ -325,10 +325,10 @@ export default function SuperadminDashboard() {
         {/* ── Lista rápida de clubs ────────────────────────────────────────── */}
         <motion.div variants={cardVariant}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-            <p style={{ margin: 0, fontSize: 10, fontWeight: 700, color: '#8E87A8', letterSpacing: '0.02em' }}>
+            <p style={{ margin: 0, fontSize: 10, fontWeight: 600, color: '#8E87A8', letterSpacing: '0.02em' }}>
               Clubs registrados
             </p>
-            <Link href="/superadmin/clubs" style={{ fontSize: 11, fontWeight: 700, color: '#7C3AED', textDecoration: 'none' }}>
+            <Link href="/superadmin/clubs" style={{ fontSize: 11, fontWeight: 600, color: '#7C3AED', textDecoration: 'none' }}>
               Gestionar →
             </Link>
           </div>
@@ -352,10 +352,10 @@ export default function SuperadminDashboard() {
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
-                          <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: '#1A1028', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: '#1A1028', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                             {club.name}
                           </p>
-                          <span style={{ flexShrink: 0, fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 99, background: club.active ? 'rgba(6,214,160,0.12)' : 'rgba(239,71,111,0.12)', color: club.active ? '#06D6A0' : '#EF476F' }}>
+                          <span style={{ flexShrink: 0, fontSize: 9, fontWeight: 600, padding: '2px 6px', borderRadius: 99, background: club.active ? 'rgba(6,214,160,0.12)' : 'rgba(239,71,111,0.12)', color: club.active ? '#06D6A0' : '#EF476F' }}>
                             {club.active ? 'Activo' : 'Inactivo'}
                           </span>
                         </div>

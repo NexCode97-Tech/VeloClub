@@ -560,7 +560,7 @@ export const HorizonHeroSection: React.FC = () => {
               >
                 <h1
                   ref={idx === 0 ? heroTitleRef : null}
-                  className="text-6xl sm:text-7xl md:text-8xl lg:text-9xl font-extrabold tracking-tight leading-none bg-clip-text text-transparent"
+                  className="text-6xl sm:text-7xl md:text-8xl lg:text-9xl font-semibold tracking-tight leading-none bg-clip-text text-transparent"
                   style={{
                     backgroundImage: 'linear-gradient(135deg, #F5F3FF 0%, #C4B5FD 45%, #A855F7 75%, #7C3AED 100%)',
                   }}

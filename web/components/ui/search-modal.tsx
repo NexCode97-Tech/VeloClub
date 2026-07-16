@@ -88,7 +88,7 @@ export function SearchModal({ open, onClose }: { open: boolean; onClose: () => v
       // eslint-disable-next-line @next/next/no-img-element
       <img src={src} alt={name} className={`w-9 h-9 object-cover shrink-0 ${rounded}`} style={{ border: '1px solid rgba(0,0,0,0.06)' }} />
     ) : (
-      <div className={`w-9 h-9 shrink-0 flex items-center justify-center text-[11px] font-bold text-white ${rounded}`}
+      <div className={`w-9 h-9 shrink-0 flex items-center justify-center text-[11px] font-semibold text-white ${rounded}`}
         style={{ background: 'linear-gradient(135deg,#7C3AED,#4361EE)' }}>
         {icon ?? initials(name)}
       </div>
@@ -178,7 +178,7 @@ export function SearchModal({ open, onClose }: { open: boolean; onClose: () => v
 function Group({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="py-1.5">
-      <p className="px-4 py-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{title}</p>
+      <p className="px-4 py-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{title}</p>
       {children}
     </div>
   );

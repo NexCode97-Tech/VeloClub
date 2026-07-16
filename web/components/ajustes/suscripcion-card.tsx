@@ -118,7 +118,7 @@ function BrandLogo({ brand }: { brand: Exclude<CardBrand, null> }) {
       <svg viewBox="0 0 44 24" height="20" role="img" aria-label="American Express">
         <rect width="44" height="24" rx="3" fill="#2E77BC" />
         <text x="22" y="16" textAnchor="middle" fontFamily="Arial, Helvetica, sans-serif"
-          fontSize="9" fontWeight="700" letterSpacing="0.3" fill="#fff">AMEX</text>
+          fontSize="9" fontWeight="600" letterSpacing="0.3" fill="#fff">AMEX</text>
       </svg>
     );
   }
@@ -541,7 +541,7 @@ export default function SuscripcionCard() {
     return (
       <div className="bg-white border border-border rounded-2xl p-5">
         <p className="text-[11px] font-semibold text-muted-foreground tracking-wide mb-1">Sin plan activo · {data.cantidadDeportistas} deportistas</p>
-        <p className="text-[15px] font-bold text-foreground mb-4">Elige tu plan</p>
+        <p className="text-[15px] font-semibold text-foreground mb-4">Elige tu plan</p>
 
         {avisoReembolso && (
           <p className="text-[12px] rounded-lg p-2.5 mb-3" style={{ background: 'rgba(6,214,160,0.08)', color: '#06D6A0' }}>
@@ -587,7 +587,7 @@ export default function SuscripcionCard() {
                       </p>
                     </div>
                     <div className="text-right md:text-center md:order-2 md:mt-2">
-                      <p className="text-[18px] font-bold text-foreground md:text-[26px]">{settingPlan === p.tipoPlan ? '...' : fmt.format(p.precio)}</p>
+                      <p className="text-[18px] font-semibold text-foreground md:text-[26px]">{settingPlan === p.tipoPlan ? '...' : fmt.format(p.precio)}</p>
                       {p.tipoPlan !== 'MENSUAL' && (
                         <p className="text-[11px] text-muted-foreground">{fmt.format(precioMes)} / mes</p>
                       )}
@@ -705,7 +705,7 @@ export default function SuscripcionCard() {
           <div>
             <p className="text-[11px] font-semibold text-muted-foreground tracking-wide">Plan {PLAN_LABEL[suscripcion.tipoPlan]}</p>
             <div className="flex items-baseline gap-2">
-              <PrecioAnimado valor={planActivo ? suscripcion.planMonto : precioAPagar} className="text-[22px] font-extrabold text-foreground" />
+              <PrecioAnimado valor={planActivo ? suscripcion.planMonto : precioAPagar} className="text-[22px] font-semibold text-foreground" />
               <AnimatePresence>
                 {!planActivo && activarAutoRenovacion && (
                   <motion.span
@@ -724,8 +724,8 @@ export default function SuscripcionCard() {
           </div>
           {vigencia && (
             <div className="text-right">
-              <p className="text-[26px] font-extrabold" style={{ color: pctColor }}>{vigencia.pct}%</p>
-              <p className="text-[10px] font-bold" style={{ color: pctColor }}>{vigencia.vencido ? 'Vencido' : `${vigencia.diasRestantes}d restantes`}</p>
+              <p className="text-[26px] font-semibold" style={{ color: pctColor }}>{vigencia.pct}%</p>
+              <p className="text-[10px] font-semibold" style={{ color: pctColor }}>{vigencia.vencido ? 'Vencido' : `${vigencia.diasRestantes}d restantes`}</p>
             </div>
           )}
         </div>
@@ -776,7 +776,7 @@ export default function SuscripcionCard() {
               <div>
                 <p className="text-[13px] font-semibold text-foreground flex items-center gap-1.5">
                   Renovación automática
-                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(6,214,160,0.12)', color: '#06D6A0' }}>-5%</span>
+                  <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(6,214,160,0.12)', color: '#06D6A0' }}>-5%</span>
                 </p>
                 <p className="text-[11px] text-muted-foreground">
                   {suscripcion.autoRenew ? 'Se cobra sola cuando vence, con 5% de descuento' : 'Actívala y ahorra 5% en cada renovación'}
@@ -895,7 +895,7 @@ export default function SuscripcionCard() {
                     <div>
                       <p className="text-[13px] font-semibold text-foreground flex items-center gap-1.5">
                         Renovación automática
-                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(6,214,160,0.14)', color: '#06D6A0' }}>-5%</span>
+                        <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(6,214,160,0.14)', color: '#06D6A0' }}>-5%</span>
                       </p>
                       <p className="text-[11px] text-muted-foreground">Se renueva sola al vencer y ahorras 5%</p>
                     </div>

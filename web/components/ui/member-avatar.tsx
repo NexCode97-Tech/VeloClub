@@ -52,7 +52,7 @@ export function MemberAvatar({
         alignItems: 'center',
         justifyContent: 'center',
         fontSize,
-        fontWeight: 700,
+        fontWeight: 600,
         color: '#fff',
         letterSpacing: '0.02em',
         userSelect: 'none',

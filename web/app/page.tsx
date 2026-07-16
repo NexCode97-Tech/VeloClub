@@ -177,9 +177,9 @@ export default function HomePage() {
 
       {/* Features */}
       <section id="funcionalidades" className="px-5 py-16 max-w-5xl mx-auto">
-        <p className="text-xs font-bold uppercase tracking-widest text-[#8E87A8] text-center mb-3">Funcionalidades</p>
+        <p className="text-xs font-semibold uppercase tracking-widest text-[#8E87A8] text-center mb-3">Funcionalidades</p>
         <h2
-          className="text-2xl sm:text-3xl font-extrabold text-[#1A1028] text-center mb-10 tracking-tight"
+          className="text-2xl sm:text-3xl font-semibold text-[#1A1028] text-center mb-10 tracking-tight"
           style={{ fontFamily: 'Open Sans, sans-serif' }}
         >
           Todo lo que necesitas
@@ -196,7 +196,7 @@ export default function HomePage() {
               >
                 <Icon className="w-5 h-5" style={{ color }} />
               </div>
-              <p className="font-bold text-[#1A1028] text-sm mb-1" style={{ fontFamily: 'Open Sans, sans-serif' }}>
+              <p className="font-semibold text-[#1A1028] text-sm mb-1" style={{ fontFamily: 'Open Sans, sans-serif' }}>
                 {label}
               </p>
               <p className="text-xs text-[#8E87A8] leading-relaxed">{desc}</p>
@@ -221,9 +221,9 @@ export default function HomePage() {
       {/* Benefits */}
       <section id="por-que" className="px-5 py-16 max-w-5xl mx-auto">
         <div className="bg-white rounded-3xl border border-[rgba(120,80,200,0.08)] shadow-sm p-7 sm:p-10">
-          <p className="text-xs font-bold uppercase tracking-widest text-[#8E87A8] mb-3">¿Por qué VeloClub?</p>
+          <p className="text-xs font-semibold uppercase tracking-widest text-[#8E87A8] mb-3">¿Por qué VeloClub?</p>
           <h2
-            className="text-2xl font-extrabold text-[#1A1028] mb-8 tracking-tight"
+            className="text-2xl font-semibold text-[#1A1028] mb-8 tracking-tight"
             style={{ fontFamily: 'Open Sans, sans-serif' }}
           >
             Diseñado para clubes reales
@@ -251,7 +251,7 @@ export default function HomePage() {
             style={{ backgroundImage: 'radial-gradient(circle at 80% 20%, #fff 0%, transparent 50%)' }}
           />
           <h2
-            className="text-2xl sm:text-3xl font-extrabold mb-3 tracking-tight relative"
+            className="text-2xl sm:text-3xl font-semibold mb-3 tracking-tight relative"
             style={{ fontFamily: 'Open Sans, sans-serif' }}
           >
             ¿Listo para empezar?
@@ -261,7 +261,7 @@ export default function HomePage() {
           </p>
           <Link
             href="/sign-in"
-            className="inline-flex items-center gap-2 px-7 py-3 bg-white text-[#7C3AED] font-bold text-sm rounded-xl shadow-lg transition-all hover:-translate-y-0.5 active:scale-95 relative"
+            className="inline-flex items-center gap-2 px-7 py-3 bg-white text-[#7C3AED] font-semibold text-sm rounded-xl shadow-lg transition-all hover:-translate-y-0.5 active:scale-95 relative"
           >
             Iniciar sesión
             <ChevronRight className="w-4 h-4" />

@@ -143,7 +143,7 @@ function StudentRow({
 
   // ── Chip de estado ──────────────────────────────────────────────────────────
   const statusChip = payment && sc && StatusIcon ? (
-    <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-full whitespace-nowrap" style={{ background: sc.bg, color: sc.text }}>
+    <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-1 rounded-full whitespace-nowrap" style={{ background: sc.bg, color: sc.text }}>
       <StatusIcon className="w-2.5 h-2.5 shrink-0" />
       {STATUS_LABELS[payment.status]} · {fmt.format(payment.amount)}
     </span>
@@ -159,13 +159,13 @@ function StudentRow({
 
   // ── Botón de acción principal ────────────────────────────────────────────────
   const mainAction = payment?.status === 'PAID' ? (
-    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-bold shrink-0"
+    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-semibold shrink-0"
       style={{ background: 'rgba(6,214,160,0.15)', color: '#06D6A0' }}>
       <Check className="w-3 h-3" /> Pagado
     </span>
   ) : isPendingOrOverdue ? (
     <button onClick={() => !marking && onMarkPaid(payment!.id)} disabled={marking}
-      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-bold cursor-pointer disabled:opacity-50 shrink-0"
+      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-semibold cursor-pointer disabled:opacity-50 shrink-0"
       style={{ background: 'rgba(6,214,160,0.15)', color: '#06D6A0' }}>
       {marking ? (
         <span className="w-3 h-3 rounded-full flex items-center justify-center shrink-0" style={{ background: '#06D6A0' }}>
@@ -178,7 +178,7 @@ function StudentRow({
     </button>
   ) : configured && !payment ? (
     <button onClick={() => !generating && onGenerate(m.id, m.monthlyFee!)} disabled={generating}
-      className="px-2.5 py-1 rounded-lg text-[10px] font-bold cursor-pointer disabled:opacity-50 shrink-0"
+      className="px-2.5 py-1 rounded-lg text-[10px] font-semibold cursor-pointer disabled:opacity-50 shrink-0"
       style={{ background: 'rgba(67,97,238,0.15)', color: '#4361EE' }}>
       {generating ? '...' : 'Cobrar'}
     </button>
@@ -253,7 +253,7 @@ function StudentRow({
             <div className="flex-1 min-w-[120px]">
               <label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground block mb-1">Tarifa mensual</label>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[12px] font-bold" style={{ color: '#7C3AED' }}>$</span>
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[12px] font-semibold" style={{ color: '#7C3AED' }}>$</span>
                 <input className="w-full pl-6 pr-3 h-9 rounded-lg border border-border text-[13px] bg-white focus:outline-none focus:ring-2 focus:ring-purple-300"
                   placeholder="0"
                   value={feeInput ? Number(feeInput).toLocaleString('es-CO') : ''}
@@ -267,7 +267,7 @@ function StudentRow({
                 placeholder="ej. 5" value={dayInput} onChange={e => setDayInput(e.target.value)} />
             </div>
             <button onClick={handleSaveConfig} disabled={configSaving || !feeInput || !dayInput}
-              className="h-9 px-4 rounded-lg text-[12px] font-bold text-white cursor-pointer disabled:opacity-50"
+              className="h-9 px-4 rounded-lg text-[12px] font-semibold text-white cursor-pointer disabled:opacity-50"
               style={{ background: 'linear-gradient(135deg,#7C3AED,#4361EE)' }}>
               {configSaving ? '...' : 'Guardar'}
             </button>
@@ -291,12 +291,12 @@ function StudentRow({
         {/* Cabecera */}
         <div className="px-4 pt-4 pb-3 flex items-center gap-3 relative"
           style={{ borderBottom: '1px solid rgba(120,80,200,0.07)' }}>
-          <div className="flex items-center justify-center text-white font-bold text-[15px] shrink-0"
+          <div className="flex items-center justify-center text-white font-semibold text-[15px] shrink-0"
             style={{ width: 48, height: 48, borderRadius: '50%', background: sc ? sc.text : '#8E87A8', boxShadow: `0 3px 10px ${sc ? sc.text : '#8E87A8'}40` }}>
             {getInitials(m.fullName)}
           </div>
           <div className="flex-1 min-w-0 pr-7">
-            <p className="text-[13px] font-bold truncate" style={{ color: '#1A1028' }}>{m.fullName}</p>
+            <p className="text-[13px] font-semibold truncate" style={{ color: '#1A1028' }}>{m.fullName}</p>
             {configured && m.paymentDueDay && (
               <p className="text-[10px] font-medium" style={{ color: '#8E87A8' }}>Cobro el día {m.paymentDueDay}</p>
             )}
@@ -746,7 +746,7 @@ export default function FinanzasPage() {
                 whileTap={reducedMotion ? {} : { scale: 0.96 }}
                 transition={{ duration: 0.12, ease: EASE_OUT }}
                 onClick={() => { setFlowForm({ type: 'INCOME', amount: '', description: '', date: '' }); setFlowError(null); setFlowOpen(true); }}
-                className="flex items-center justify-center gap-1.5 px-3 h-9 rounded-xl text-[12px] font-bold cursor-pointer shrink-0"
+                className="flex items-center justify-center gap-1.5 px-3 h-9 rounded-xl text-[12px] font-semibold cursor-pointer shrink-0"
                 style={{ background: 'rgba(6,214,160,0.08)', color: '#06D6A0', border: '1.5px dashed rgba(6,214,160,0.25)' }}
               >
                 <Plus className="w-3.5 h-3.5" />
@@ -760,7 +760,7 @@ export default function FinanzasPage() {
                 transition={{ duration: 0.12, ease: EASE_OUT }}
                 onClick={() => { setBulkFee(''); setBulkDay(''); setBulkError(null); setBulkOpen(true); }}
                 title="Tarifa general"
-                className="flex items-center justify-center gap-1.5 w-9 md:w-auto px-0 md:px-3 h-9 rounded-xl text-[12px] font-bold cursor-pointer transition-opacity shrink-0"
+                className="flex items-center justify-center gap-1.5 w-9 md:w-auto px-0 md:px-3 h-9 rounded-xl text-[12px] font-semibold cursor-pointer transition-opacity shrink-0"
                 style={{ background: 'rgba(6,214,160,0.08)', color: '#06D6A0', border: '1.5px dashed rgba(6,214,160,0.25)' }}
               >
                 <Wallet className="w-3.5 h-3.5 shrink-0" />
@@ -772,7 +772,7 @@ export default function FinanzasPage() {
                 onClick={handleGenerateMonth}
                 disabled={generatingMonth}
                 title={generatingMonth ? 'Generando...' : 'Generar cobros'}
-                className="flex items-center justify-center gap-1.5 w-9 md:w-auto px-0 md:px-3 h-9 rounded-xl text-[12px] font-bold cursor-pointer transition-opacity disabled:opacity-60 shrink-0"
+                className="flex items-center justify-center gap-1.5 w-9 md:w-auto px-0 md:px-3 h-9 rounded-xl text-[12px] font-semibold cursor-pointer transition-opacity disabled:opacity-60 shrink-0"
                 style={{ background: 'rgba(124,58,237,0.08)', color: '#7C3AED', border: '1.5px dashed rgba(124,58,237,0.25)' }}
               >
                 <Zap className="w-3.5 h-3.5 shrink-0" />
@@ -811,7 +811,7 @@ export default function FinanzasPage() {
               <div className="relative h-full flex flex-col justify-between p-5">
                 {/* Fila superior: nombre del club + chip */}
                 <div className="flex items-center justify-between">
-                  <p className="text-[11px] font-bold tracking-[0.15em] uppercase opacity-90"
+                  <p className="text-[11px] font-semibold tracking-[0.15em] uppercase opacity-90"
                     style={{ fontFamily: 'inherit' }}>
                     {clubName}
                   </p>
@@ -828,7 +828,7 @@ export default function FinanzasPage() {
                   <p className="text-[10px] font-semibold tracking-widest uppercase opacity-60 mb-1">
                     Cobrado {MONTH_NAMES[filterMonth - 1]} {filterYear}
                   </p>
-                  <p className="text-[32px] font-bold leading-none tracking-tight"
+                  <p className="text-[32px] font-semibold leading-none tracking-tight"
                     style={{ fontFamily: 'inherit', textShadow: '0 2px 8px rgba(0,0,0,0.2)' }}>
                     {fmt.format(totalPaid)}
                   </p>
@@ -852,7 +852,7 @@ export default function FinanzasPage() {
                       return (
                         <>
                           <p className="text-[8px] opacity-50 uppercase tracking-widest mb-0.5">Plan {planLabel}</p>
-                          <p className="text-[12px] font-bold opacity-90" style={{ fontFamily: 'inherit' }}>
+                          <p className="text-[12px] font-semibold opacity-90" style={{ fontFamily: 'inherit' }}>
                             Vence {venceStr}
                           </p>
                         </>
@@ -860,7 +860,7 @@ export default function FinanzasPage() {
                     })() : (
                       <>
                         <p className="text-[8px] opacity-50 uppercase tracking-widest mb-0.5">Plan</p>
-                        <p className="text-[12px] font-bold opacity-60">Sin plan asignado</p>
+                        <p className="text-[12px] font-semibold opacity-60">Sin plan asignado</p>
                       </>
                     )}
                   </div>
@@ -899,7 +899,7 @@ export default function FinanzasPage() {
                       boxShadow: active ? `0 0 0 1px ${color}22` : '0 1px 3px rgba(0,0,0,0.06)',
                     }}
                   >
-                    <p className="text-[22px] md:text-[48px] font-bold leading-none" style={{ fontFamily: 'inherit', color }}>{value}</p>
+                    <p className="text-[22px] md:text-[48px] font-semibold leading-none" style={{ fontFamily: 'inherit', color }}>{value}</p>
                     <p className="text-[10px] md:text-[13px] font-semibold mt-0.5" style={{ color: active ? color : '#8E87A8' }}>{label}</p>
                   </motion.button>
                 );
@@ -990,7 +990,7 @@ export default function FinanzasPage() {
               ].map(({ label, value, color, icon: Icon }) => (
                 <div key={label} className="bg-white border border-border rounded-xl p-3 text-center">
                   <Icon className="w-4 h-4 mx-auto mb-1" style={{ color }} />
-                  <p className="text-[11px] font-bold text-foreground" style={{ fontFamily: 'inherit' }}>
+                  <p className="text-[11px] font-semibold text-foreground" style={{ fontFamily: 'inherit' }}>
                     {fmt.format(value)}
                   </p>
                   <p className="text-[9px] text-muted-foreground mt-0.5">{label}</p>
@@ -1026,7 +1026,7 @@ export default function FinanzasPage() {
                       <div className="flex-1 min-w-0">
                         <p className="text-[13px] font-semibold text-foreground truncate">{e.description}</p>
                         <div className="flex items-center gap-2 mt-0.5">
-                          <p className="text-[11px] font-bold" style={{ color: isIncome ? '#06D6A0' : '#EF476F' }}>
+                          <p className="text-[11px] font-semibold" style={{ color: isIncome ? '#06D6A0' : '#EF476F' }}>
                             {isIncome ? '+' : '-'}{fmt.format(e.amount)}
                           </p>
                           <p className="text-[10px] text-muted-foreground">{dateStr}</p>

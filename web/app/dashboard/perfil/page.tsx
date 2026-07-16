@@ -447,10 +447,10 @@ export default function PerfilPage() {
 
           {/* Nombre + badge de rol en la misma línea */}
           <div className="mt-3 flex items-center gap-2 flex-wrap">
-            <h1 className="text-[22px] font-bold text-foreground leading-tight">
+            <h1 className="text-[22px] font-semibold text-foreground leading-tight">
               {user?.name ?? 'Usuario'}
             </h1>
-            <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full tracking-widest"
+            <span className="text-[10px] font-semibold px-2.5 py-0.5 rounded-full tracking-widest"
               style={{ background: rc.bg, color: rc.text }}>
               {roleLabels[role] ?? role}
             </span>
@@ -476,7 +476,7 @@ export default function PerfilPage() {
                     whileTap={{ scale: 0.96 }}
                     onClick={saveBio}
                     disabled={savingBio}
-                    className="px-4 py-1.5 rounded-lg text-[12px] font-bold text-white disabled:opacity-60 cursor-pointer"
+                    className="px-4 py-1.5 rounded-lg text-[12px] font-semibold text-white disabled:opacity-60 cursor-pointer"
                     style={{ background: 'linear-gradient(135deg,#7C3AED,#4361EE)' }}>
                     {savingBio ? 'Guardando…' : 'Guardar'}
                   </motion.button>
@@ -541,15 +541,15 @@ export default function PerfilPage() {
           {/* Stats: Publicaciones · Seguidores · Siguiendo */}
           <div className="flex items-center gap-6 mt-4">
             <div className="text-center">
-              <p className="text-[18px] font-bold text-foreground leading-none">{posts.length}</p>
+              <p className="text-[18px] font-semibold text-foreground leading-none">{posts.length}</p>
               <p style={{ fontSize: 11, fontWeight: 600, color: '#8E87A8', marginTop: 2 }}>Publicaciones</p>
             </div>
             <div className="text-center">
-              <p className="text-[18px] font-bold text-foreground leading-none">{followStats.followersCount}</p>
+              <p className="text-[18px] font-semibold text-foreground leading-none">{followStats.followersCount}</p>
               <p style={{ fontSize: 11, fontWeight: 600, color: '#8E87A8', marginTop: 2 }}>Seguidores</p>
             </div>
             <div className="text-center">
-              <p className="text-[18px] font-bold text-foreground leading-none">{followStats.followingCount}</p>
+              <p className="text-[18px] font-semibold text-foreground leading-none">{followStats.followingCount}</p>
               <p style={{ fontSize: 11, fontWeight: 600, color: '#8E87A8', marginTop: 2 }}>Siguiendo</p>
             </div>
           </div>
@@ -567,7 +567,7 @@ export default function PerfilPage() {
                 onClick={() => setActiveTab(tab)}
                 // "Contacto" solo en móvil — en desktop siempre visible en columna derecha
                 className={`flex-1 py-3.5 relative transition-colors${tab === 'Contacto' ? ' sm:hidden' : ''}`}
-                style={{ fontSize: 12, fontWeight: 700, color: activeTab === tab ? '#7C3AED' : '#8E87A8' }}
+                style={{ fontSize: 12, fontWeight: 600, color: activeTab === tab ? '#7C3AED' : '#8E87A8' }}
               >
                 {tab}
                 {activeTab === tab && (
@@ -581,7 +581,7 @@ export default function PerfilPage() {
           {/* Tab Contacto — solo en desktop, centrado en el 50% derecho */}
           <div className="hidden sm:flex sm:w-1/2 items-center justify-center">
             <div className="relative py-3.5">
-              <span style={{ fontSize: 12, fontWeight: 700, color: '#8E87A8' }}>Contacto</span>
+              <span style={{ fontSize: 12, fontWeight: 600, color: '#8E87A8' }}>Contacto</span>
             </div>
           </div>
         </div>
@@ -605,13 +605,13 @@ export default function PerfilPage() {
                     style={{ background: 'linear-gradient(135deg,#7C3AED,#4361EE)' }}>
                     <Globe className="w-6 h-6 text-white" />
                   </div>
-                  <p className="text-[14px] font-bold text-foreground mb-1">Sin publicaciones aún</p>
+                  <p className="text-[14px] font-semibold text-foreground mb-1">Sin publicaciones aún</p>
                   <p className="text-[12px] text-muted-foreground">
                     Comparte algo con tu equipo desde el inicio.
                   </p>
                   <Link href="/dashboard">
                     <motion.div whileTap={{ scale: 0.97 }}
-                      className="mt-4 px-5 py-2 rounded-full text-[13px] font-bold text-white cursor-pointer"
+                      className="mt-4 px-5 py-2 rounded-full text-[13px] font-semibold text-white cursor-pointer"
                       style={{ background: '#7C3AED' }}>
                       Ir al inicio
                     </motion.div>
@@ -644,7 +644,7 @@ export default function PerfilPage() {
                     style={{ background: 'linear-gradient(135deg,#7C3AED,#4361EE)' }}>
                     <ImagePlus className="w-6 h-6 text-white" />
                   </div>
-                  <p className="text-[14px] font-bold text-foreground mb-1">Sin fotos aún</p>
+                  <p className="text-[14px] font-semibold text-foreground mb-1">Sin fotos aún</p>
                   <p className="text-[12px] text-muted-foreground">Las fotos de tus publicaciones aparecerán aquí.</p>
                 </div>
               ) : (
@@ -665,7 +665,7 @@ export default function PerfilPage() {
                         {isLast && (
                           <div className="absolute inset-0 flex items-center justify-center"
                             style={{ background: 'rgba(0,0,0,0.52)' }}>
-                            <span className="text-white font-bold text-[22px]">+{remaining}</span>
+                            <span className="text-white font-semibold text-[22px]">+{remaining}</span>
                           </div>
                         )}
                       </div>
@@ -684,7 +684,7 @@ export default function PerfilPage() {
           <div className="rounded-2xl overflow-hidden"
             style={{ background: 'white', border: '1px solid rgba(124,58,237,0.10)', boxShadow: '0 1px 12px rgba(0,0,0,0.06)' }}>
             <div className="flex items-center justify-between px-5 py-4 border-b border-border/50">
-              <p className="text-[11px] font-bold uppercase tracking-widest" style={{ color: '#8E87A8' }}>Información de contacto</p>
+              <p className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: '#8E87A8' }}>Información de contacto</p>
               <button
                 onClick={openContactEdit}
                 className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors hover:bg-secondary cursor-pointer"
@@ -698,7 +698,7 @@ export default function PerfilPage() {
                   <Phone className="w-4 h-4" style={{ color: '#7C3AED' }} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-[10px] font-bold uppercase tracking-widest mb-0.5" style={{ color: '#8E87A8' }}>Teléfono</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-widest mb-0.5" style={{ color: '#8E87A8' }}>Teléfono</p>
                   <p className="text-[13px] font-medium text-foreground truncate">
                     {memberMe?.phone || <span className="text-muted-foreground/50 italic text-[12px]">Sin registrar</span>}
                   </p>
@@ -709,7 +709,7 @@ export default function PerfilPage() {
                   <Mail className="w-4 h-4" style={{ color: '#7C3AED' }} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-[10px] font-bold uppercase tracking-widest mb-0.5" style={{ color: '#8E87A8' }}>Correo electrónico</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-widest mb-0.5" style={{ color: '#8E87A8' }}>Correo electrónico</p>
                   <p className="text-[13px] font-medium text-foreground truncate">
                     {(memberMe?.email || user?.email) || <span className="text-muted-foreground/50 italic text-[12px]">Sin registrar</span>}
                   </p>
@@ -724,7 +724,7 @@ export default function PerfilPage() {
                       : <Building2 className="w-4 h-4" style={{ color: '#7C3AED' }} />}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-[10px] font-bold uppercase tracking-widest mb-0.5" style={{ color: '#8E87A8' }}>Club</p>
+                    <p className="text-[10px] font-semibold uppercase tracking-widest mb-0.5" style={{ color: '#8E87A8' }}>Club</p>
                     <p className="text-[13px] font-medium text-foreground truncate">{user.club.name}</p>
                   </div>
                 </div>
@@ -735,7 +735,7 @@ export default function PerfilPage() {
                     <Users className="w-4 h-4" style={{ color: '#7C3AED' }} />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-[10px] font-bold uppercase tracking-widest mb-0.5" style={{ color: '#8E87A8' }}>Categoría</p>
+                    <p className="text-[10px] font-semibold uppercase tracking-widest mb-0.5" style={{ color: '#8E87A8' }}>Categoría</p>
                     <p className="text-[13px] font-medium text-foreground">{[memberMe.category, memberMe.tipo].filter(Boolean).join(' · ')}</p>
                   </div>
                 </div>
@@ -746,7 +746,7 @@ export default function PerfilPage() {
                     <MapPin className="w-4 h-4" style={{ color: '#7C3AED' }} />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-[10px] font-bold uppercase tracking-widest mb-0.5" style={{ color: '#8E87A8' }}>Ubicación</p>
+                    <p className="text-[10px] font-semibold uppercase tracking-widest mb-0.5" style={{ color: '#8E87A8' }}>Ubicación</p>
                     <p className="text-[13px] font-medium text-foreground">{[user.club.city, user.club.department].filter(Boolean).join(', ')}</p>
                   </div>
                 </div>
@@ -763,7 +763,7 @@ export default function PerfilPage() {
 
           {/* Header */}
           <div className="flex items-center justify-between px-5 py-4 border-b border-border/50">
-            <p className="text-[11px] font-bold uppercase tracking-widest" style={{ color: '#8E87A8' }}>
+            <p className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: '#8E87A8' }}>
               Información de contacto
             </p>
             <button
@@ -784,7 +784,7 @@ export default function PerfilPage() {
                 <Phone className="w-4 h-4" style={{ color: '#7C3AED' }} />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-[10px] font-bold uppercase tracking-widest mb-0.5" style={{ color: '#8E87A8' }}>Teléfono</p>
+                <p className="text-[10px] font-semibold uppercase tracking-widest mb-0.5" style={{ color: '#8E87A8' }}>Teléfono</p>
                 <p className="text-[13px] font-medium text-foreground truncate">
                   {memberMe?.phone || <span className="text-muted-foreground/50 italic text-[12px]">Sin registrar</span>}
                 </p>
@@ -798,7 +798,7 @@ export default function PerfilPage() {
                 <Mail className="w-4 h-4" style={{ color: '#7C3AED' }} />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-[10px] font-bold uppercase tracking-widest mb-0.5" style={{ color: '#8E87A8' }}>Correo electrónico</p>
+                <p className="text-[10px] font-semibold uppercase tracking-widest mb-0.5" style={{ color: '#8E87A8' }}>Correo electrónico</p>
                 <p className="text-[13px] font-medium text-foreground truncate">
                   {(memberMe?.email || user?.email) || <span className="text-muted-foreground/50 italic text-[12px]">Sin registrar</span>}
                 </p>
@@ -817,7 +817,7 @@ export default function PerfilPage() {
                   }
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-[10px] font-bold uppercase tracking-widest mb-0.5" style={{ color: '#8E87A8' }}>Club</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-widest mb-0.5" style={{ color: '#8E87A8' }}>Club</p>
                   <div className="flex items-center gap-1.5">
                     <p className="text-[13px] font-medium text-foreground truncate">{user.club.name}</p>
                     {user.club.verified && (
@@ -840,7 +840,7 @@ export default function PerfilPage() {
                   <Users className="w-4 h-4" style={{ color: '#7C3AED' }} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-[10px] font-bold uppercase tracking-widest mb-0.5" style={{ color: '#8E87A8' }}>Categoría</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-widest mb-0.5" style={{ color: '#8E87A8' }}>Categoría</p>
                   <p className="text-[13px] font-medium text-foreground">
                     {[memberMe.category, memberMe.tipo].filter(Boolean).join(' · ')}
                   </p>
@@ -856,7 +856,7 @@ export default function PerfilPage() {
                   <MapPin className="w-4 h-4" style={{ color: '#7C3AED' }} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-[10px] font-bold uppercase tracking-widest mb-0.5" style={{ color: '#8E87A8' }}>Ubicación</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-widest mb-0.5" style={{ color: '#8E87A8' }}>Ubicación</p>
                   <p className="text-[13px] font-medium text-foreground">
                     {[user.club.city, user.club.department].filter(Boolean).join(', ')}
                   </p>
@@ -886,7 +886,7 @@ export default function PerfilPage() {
             onClick={e => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-5">
-              <h3 className="text-[16px] font-bold text-foreground">Editar contacto</h3>
+              <h3 className="text-[16px] font-semibold text-foreground">Editar contacto</h3>
               <button onClick={() => setEditingContact(false)} className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-secondary transition-colors cursor-pointer">
                 <X className="w-4 h-4 text-muted-foreground" />
               </button>
@@ -894,11 +894,11 @@ export default function PerfilPage() {
 
             <div className="space-y-4">
               <div>
-                <label className="text-[11px] font-bold uppercase tracking-widest mb-1.5 block" style={{ color: '#8E87A8' }}>Teléfono</label>
+                <label className="text-[11px] font-semibold uppercase tracking-widest mb-1.5 block" style={{ color: '#8E87A8' }}>Teléfono</label>
                 <PhoneInput value={contactPhone} onChange={setContactPhone} />
               </div>
               <div>
-                <label className="text-[11px] font-bold uppercase tracking-widest mb-1.5 block" style={{ color: '#8E87A8' }}>Correo electrónico</label>
+                <label className="text-[11px] font-semibold uppercase tracking-widest mb-1.5 block" style={{ color: '#8E87A8' }}>Correo electrónico</label>
                 <input
                   type="email"
                   value={contactEmail}
@@ -919,7 +919,7 @@ export default function PerfilPage() {
               <button
                 onClick={saveContact}
                 disabled={savingContact}
-                className="flex-1 h-11 rounded-xl text-[13px] font-bold text-white flex items-center justify-center gap-2 disabled:opacity-60 cursor-pointer"
+                className="flex-1 h-11 rounded-xl text-[13px] font-semibold text-white flex items-center justify-center gap-2 disabled:opacity-60 cursor-pointer"
                 style={{ background: 'linear-gradient(135deg,#7C3AED,#4361EE)' }}
               >
                 {savingContact ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Guardar'}

@@ -286,7 +286,7 @@ function PostCard({
           <div>
             <div className="flex items-center gap-2 flex-wrap">
               <p
-                className={`text-[14px] font-bold text-foreground leading-tight ${post.authorClerkId ? 'cursor-pointer hover:underline' : ''}`}
+                className={`text-[14px] font-semibold text-foreground leading-tight ${post.authorClerkId ? 'cursor-pointer hover:underline' : ''}`}
                 onClick={() => post.authorClerkId && router.push(`/dashboard/perfil/${post.authorClerkId}`)}
               >{post.authorName || 'Usuario'}</p>
               <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full"
@@ -294,7 +294,7 @@ function PostCard({
                 {roleLabels[post.authorRole] ?? post.authorRole}
               </span>
               {post.scope === 'PUBLIC' && post.clubName && (
-                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(67,97,238,0.10)', color: '#4361EE' }}>
+                <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(67,97,238,0.10)', color: '#4361EE' }}>
                   {post.clubName}
                 </span>
               )}
@@ -362,7 +362,7 @@ function PostCard({
                   <div className="flex gap-2 px-3 pb-3 pt-1">
                     <button
                       onClick={() => { onDelete(post.id); setConfirmDel(false); }}
-                      className="flex-1 text-[11px] font-bold py-1.5 rounded-lg bg-red-500 text-white cursor-pointer active:scale-95 transition-transform"
+                      className="flex-1 text-[11px] font-semibold py-1.5 rounded-lg bg-red-500 text-white cursor-pointer active:scale-95 transition-transform"
                     >
                       Eliminar
                     </button>
@@ -446,7 +446,7 @@ function PostCard({
                     padding: '10px 0',
                   }}
                 >
-                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider px-3.5 mb-2">
+                  <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-3.5 mb-2">
                     Les gustó a
                   </p>
                   {loadingLikes ? (
@@ -539,7 +539,7 @@ function PostCard({
                           /* ── Modo edición inline ── */
                           <div className="rounded-2xl rounded-tl-sm px-3 py-2"
                             style={{ background: '#fff', border: '1px solid rgba(124,58,237,0.18)' }}>
-                            <p className="text-[11px] font-bold text-foreground mb-1">{c.authorName}</p>
+                            <p className="text-[11px] font-semibold text-foreground mb-1">{c.authorName}</p>
                             <textarea
                               value={editText}
                               onChange={e => setEditText(e.target.value)}
@@ -550,7 +550,7 @@ function PostCard({
                             />
                             <div className="flex items-center gap-1.5 mt-1.5">
                               <button onClick={() => handleSaveEdit(c.id)} disabled={savingEdit || !editText.trim()}
-                                className="text-[11px] font-bold px-2.5 py-0.5 rounded-full text-white disabled:opacity-40"
+                                className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full text-white disabled:opacity-40"
                                 style={{ background: '#7C3AED' }}>
                                 {savingEdit ? 'Guardando…' : 'Guardar'}
                               </button>
@@ -564,7 +564,7 @@ function PostCard({
                         ) : (
                           <div className="rounded-2xl rounded-tl-sm px-3 py-2"
                             style={{ background: '#fff', border: '1px solid rgba(124,58,237,0.08)' }}>
-                            <p className="text-[11px] font-bold text-foreground mb-0.5">{c.authorName}</p>
+                            <p className="text-[11px] font-semibold text-foreground mb-0.5">{c.authorName}</p>
                             <p className="text-[13px] text-foreground leading-snug">{c.content}</p>
                           </div>
                         )}
@@ -785,7 +785,7 @@ function PostComposer({
           disabled={!content.trim() || sending || loading || uploading}
           whileTap={{ scale: 0.95 }}
           transition={{ type: 'spring' as const, stiffness: 500, damping: 15 }}
-          className="shrink-0 px-5 py-2 rounded-full text-[13px] font-bold text-white disabled:opacity-50 transition-opacity"
+          className="shrink-0 px-5 py-2 rounded-full text-[13px] font-semibold text-white disabled:opacity-50 transition-opacity"
           style={{ background: 'linear-gradient(135deg, #7C3AED 0%, #4361EE 100%)' }}>
           {sending
             ? <div className="w-3.5 h-3.5 border-2 border-white/50 border-t-white rounded-full animate-spin" />
@@ -1041,7 +1041,7 @@ export default function DashboardPage() {
             >
               <div className="flex items-center justify-center gap-2">
                 <span className="text-[16px] leading-none">⏳</span>
-                <p className="text-[12px] font-bold" style={{ color: trial.daysLeft <= 3 ? '#EF476F' : '#B88A00' }}>
+                <p className="text-[12px] font-semibold" style={{ color: trial.daysLeft <= 3 ? '#EF476F' : '#B88A00' }}>
                   {trial.daysLeft === 0
                     ? 'Tu período de prueba vence hoy'
                     : `Período de prueba · ${trial.daysLeft} día${trial.daysLeft !== 1 ? 's' : ''} restante${trial.daysLeft !== 1 ? 's' : ''}`}
@@ -1049,7 +1049,7 @@ export default function DashboardPage() {
               </div>
               <Link
                 href="/dashboard/ajustes?tab=suscripcion"
-                className="block w-fit mx-auto mt-2 px-4 py-1.5 rounded-lg text-[12px] font-bold text-white transition-opacity hover:opacity-90"
+                className="block w-fit mx-auto mt-2 px-4 py-1.5 rounded-lg text-[12px] font-semibold text-white transition-opacity hover:opacity-90"
                 style={{ background: trial.daysLeft <= 3 ? '#EF476F' : '#B88A00' }}
               >
                 {trial.daysLeft <= 3 ? 'Activar plan ahora y no perder el acceso' : 'Activar plan ahora'}
@@ -1086,7 +1086,7 @@ export default function DashboardPage() {
                 style={{ background: 'linear-gradient(135deg,#4361EE,#7C3AED)' }}>
                 <CalendarDays className="w-3 h-3 text-white" />
               </div>
-              <p className="text-[11px] font-bold text-foreground truncate">Próximos eventos</p>
+              <p className="text-[11px] font-semibold text-foreground truncate">Próximos eventos</p>
             </div>
             {widgetsLoading ? (
               <div className="px-3 pb-3 flex flex-col gap-1.5">
@@ -1111,7 +1111,7 @@ export default function DashboardPage() {
                     <div key={ev.id} className="flex items-center gap-2 py-1.5 rounded-lg">
                       <div className="flex flex-col items-center justify-center w-8 h-8 rounded-lg shrink-0"
                         style={{ background: tc.bg }}>
-                        <span className="text-[11px] font-black leading-none" style={{ color: tc.text }}>{d.getDate()}</span>
+                        <span className="text-[11px] font-semibold leading-none" style={{ color: tc.text }}>{d.getDate()}</span>
                         <span className="text-[8px] font-semibold uppercase leading-none" style={{ color: tc.text }}>
                           {d.toLocaleDateString('es-CO', { month: 'short' })}
                         </span>
@@ -1132,7 +1132,7 @@ export default function DashboardPage() {
                 style={{ background: 'linear-gradient(135deg,#EF476F,#FFB703)' }}>
                 <Gift className="w-3 h-3 text-white" />
               </div>
-              <p className="text-[11px] font-bold text-foreground">Cumpleaños</p>
+              <p className="text-[11px] font-semibold text-foreground">Cumpleaños</p>
             </div>
             {widgetsLoading ? (
               <div className="px-3 pb-3 flex flex-col gap-1.5">
@@ -1158,10 +1158,10 @@ export default function DashboardPage() {
                           <span className="text-[14px] leading-none">🎂</span>
                         ) : (
                           <>
-                            <p className="text-[12px] font-bold leading-none" style={{ color: daysColor }}>
+                            <p className="text-[12px] font-semibold leading-none" style={{ color: daysColor }}>
                               {isTomorrow ? '1' : b.daysUntil}
                             </p>
-                            <p className="text-[7px] font-bold uppercase leading-none mt-0.5" style={{ color: daysColor }}>
+                            <p className="text-[7px] font-semibold uppercase leading-none mt-0.5" style={{ color: daysColor }}>
                               {isTomorrow ? 'mañ' : 'días'}
                             </p>
                           </>
@@ -1210,7 +1210,7 @@ export default function DashboardPage() {
                   )}
                   <Icon className="relative w-3.5 h-3.5 z-10" style={{ color: active ? '#fff' : '#8E87A8' }} />
                   <div className="relative text-left z-10">
-                    <p className="text-[12px] font-bold leading-none" style={{ color: active ? '#fff' : '#8E87A8' }}>
+                    <p className="text-[12px] font-semibold leading-none" style={{ color: active ? '#fff' : '#8E87A8' }}>
                       {tab.label}
                     </p>
                     <p className="text-[9px] leading-none mt-0.5" style={{ color: active ? 'rgba(255,255,255,0.70)' : '#B0ABCA' }}>
@@ -1253,7 +1253,7 @@ export default function DashboardPage() {
               >
                 {feedScope === 'public' ? <Globe className="w-6 h-6 text-white" /> : <Lock className="w-6 h-6 text-white" />}
               </div>
-              <p className="text-[14px] font-bold text-foreground mb-1">
+              <p className="text-[14px] font-semibold text-foreground mb-1">
                 {feedScope === 'public' ? 'El feed público está vacío' : 'No hay publicaciones internas aún'}
               </p>
               <p className="text-[12px] text-muted-foreground leading-relaxed">
@@ -1300,7 +1300,7 @@ export default function DashboardPage() {
                 style={{ background: 'linear-gradient(135deg,#4361EE,#7C3AED)' }}>
                 <CalendarDays className="w-3.5 h-3.5 text-white" />
               </div>
-              <p className="text-[13px] font-bold text-foreground">Próximos eventos</p>
+              <p className="text-[13px] font-semibold text-foreground">Próximos eventos</p>
             </div>
             <Link href="/dashboard/calendario"
               className="text-[11px] font-semibold text-purple-600 hover:underline cursor-pointer">
@@ -1340,7 +1340,7 @@ export default function DashboardPage() {
                     {/* Fecha */}
                     <div className="flex flex-col items-center justify-center w-10 h-10 rounded-xl shrink-0"
                       style={{ background: tc.bg }}>
-                      <span className="text-[13px] font-black leading-none" style={{ color: tc.text }}>
+                      <span className="text-[13px] font-semibold leading-none" style={{ color: tc.text }}>
                         {d.getDate()}
                       </span>
                       <span className="text-[9px] font-semibold uppercase leading-none mt-0.5" style={{ color: tc.text }}>
@@ -1351,7 +1351,7 @@ export default function DashboardPage() {
                     <div className="flex-1 min-w-0">
                       <p className="text-[12px] font-semibold text-foreground truncate">{ev.title.charAt(0).toUpperCase() + ev.title.slice(1).toLowerCase()}</p>
                       <div className="flex items-center gap-2 mt-0.5">
-                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: tc.bg, color: tc.text }}>
+                        <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full" style={{ background: tc.bg, color: tc.text }}>
                           {typeLabel[ev.type] ?? ev.type}
                         </span>
                         <span className="text-[10px] text-muted-foreground">{time}</span>
@@ -1375,7 +1375,7 @@ export default function DashboardPage() {
               style={{ background: 'linear-gradient(135deg,#EF476F,#FFB703)' }}>
               <Gift className="w-3.5 h-3.5 text-white" />
             </div>
-            <p className="text-[13px] font-bold text-foreground">Cumpleaños</p>
+            <p className="text-[13px] font-semibold text-foreground">Cumpleaños</p>
           </div>
 
           {widgetsLoading ? (
@@ -1406,10 +1406,10 @@ export default function DashboardPage() {
                         <span className="text-[18px] leading-none">🎂</span>
                       ) : (
                         <>
-                          <p className="text-[14px] font-bold leading-none" style={{ color: daysColor }}>
+                          <p className="text-[14px] font-semibold leading-none" style={{ color: daysColor }}>
                             {isTomorrow ? '1' : b.daysUntil}
                           </p>
-                          <p className="text-[8px] font-bold uppercase tracking-wide leading-none mt-0.5" style={{ color: daysColor }}>
+                          <p className="text-[8px] font-semibold uppercase tracking-wide leading-none mt-0.5" style={{ color: daysColor }}>
                             {isTomorrow ? 'mañana' : 'días'}
                           </p>
                         </>

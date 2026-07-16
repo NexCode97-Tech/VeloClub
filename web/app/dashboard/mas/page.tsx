@@ -115,7 +115,7 @@ export default function MasPage() {
                 style={{ boxShadow: '0 2px 12px rgba(124,58,237,0.15)' }}>
                 {avatarSrc
                   ? <img src={avatarSrc} alt="avatar" className="w-full h-full object-cover" />
-                  : <span className="text-violet-500 font-bold text-xl">{avatarInitial}</span>
+                  : <span className="text-violet-500 font-semibold text-xl">{avatarInitial}</span>
                 }
                 {/* Overlay de subida */}
                 <AnimatePresence>
@@ -163,7 +163,7 @@ export default function MasPage() {
 
             {/* Nombre + email */}
             <div className="flex-1 min-w-0">
-              <p className="text-[14px] font-bold text-foreground truncate" style={{ fontFamily: 'inherit' }}>
+              <p className="text-[14px] font-semibold text-foreground truncate" style={{ fontFamily: 'inherit' }}>
                 {user?.fullName ?? user?.firstName ?? 'Mi cuenta'}
               </p>
               <p className="text-[11px] text-muted-foreground truncate">
@@ -205,11 +205,11 @@ export default function MasPage() {
           <div className="w-12 h-12 rounded-full bg-violet-100 shrink-0 flex items-center justify-center overflow-hidden">
             {user?.imageUrl
               ? <img src={user.imageUrl} alt="avatar" className="w-full h-full object-cover" />
-              : <span className="text-violet-500 font-bold text-lg">{avatarInitial}</span>
+              : <span className="text-violet-500 font-semibold text-lg">{avatarInitial}</span>
             }
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-[14px] font-bold text-foreground truncate" style={{ fontFamily: 'inherit' }}>
+            <p className="text-[14px] font-semibold text-foreground truncate" style={{ fontFamily: 'inherit' }}>
               {user?.fullName ?? user?.firstName ?? 'Mi cuenta'}
             </p>
             <p className="text-[11px] text-muted-foreground truncate">

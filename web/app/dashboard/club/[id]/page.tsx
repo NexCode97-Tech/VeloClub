@@ -154,7 +154,7 @@ export default function PublicClubPage() {
               whileTap={{ scale: 0.97 }}
               onClick={toggleFollow}
               disabled={toggling}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-[13px] font-bold transition-all cursor-pointer disabled:opacity-60"
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-[13px] font-semibold transition-all cursor-pointer disabled:opacity-60"
               style={following
                 ? { background: 'rgba(67,97,238,0.10)', color: '#4361EE', border: '1.5px solid rgba(67,97,238,0.25)' }
                 : { background: 'linear-gradient(135deg,#4361EE,#7C3AED)', color: '#fff', border: 'none' }
@@ -168,9 +168,9 @@ export default function PublicClubPage() {
           </div>
 
           <div className="mt-3 flex items-center gap-2 flex-wrap">
-            <h1 className="text-[22px] font-bold text-foreground leading-tight">{club.name}</h1>
+            <h1 className="text-[22px] font-semibold text-foreground leading-tight">{club.name}</h1>
             {club.deporte && (
-              <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full tracking-widest"
+              <span className="text-[10px] font-semibold px-2.5 py-0.5 rounded-full tracking-widest"
                 style={{ background: 'rgba(67,97,238,0.10)', color: '#4361EE' }}>
                 {club.deporte}
               </span>
@@ -207,7 +207,7 @@ export default function PublicClubPage() {
               { n: club._count.members, label: 'Miembros' },
             ].map(s => (
               <div key={s.label} className="text-center">
-                <p className="text-[18px] font-bold text-foreground leading-none">{s.n}</p>
+                <p className="text-[18px] font-semibold text-foreground leading-none">{s.n}</p>
                 <p style={{ fontSize: 11, fontWeight: 600, color: '#8E87A8', marginTop: 2 }}>{s.label}</p>
               </div>
             ))}
@@ -224,7 +224,7 @@ export default function PublicClubPage() {
                 key={tab}
                 onClick={() => setActiveTab(tab)}
                 className={`flex-1 py-3.5 relative transition-colors${tab === 'Contacto' ? ' sm:hidden' : ''}`}
-                style={{ fontSize: 12, fontWeight: 700, color: activeTab === tab ? '#4361EE' : '#8E87A8' }}
+                style={{ fontSize: 12, fontWeight: 600, color: activeTab === tab ? '#4361EE' : '#8E87A8' }}
               >
                 {tab}
                 {activeTab === tab && (
@@ -236,7 +236,7 @@ export default function PublicClubPage() {
             ))}
           </div>
           <div className="hidden sm:flex sm:w-1/2 items-center justify-center">
-            <span className="py-3.5" style={{ fontSize: 12, fontWeight: 700, color: '#8E87A8' }}>Contacto</span>
+            <span className="py-3.5" style={{ fontSize: 12, fontWeight: 600, color: '#8E87A8' }}>Contacto</span>
           </div>
         </div>
       </div>
@@ -257,7 +257,7 @@ export default function PublicClubPage() {
                     style={{ background: 'linear-gradient(135deg,#4361EE,#7C3AED)' }}>
                     <Lock className="w-6 h-6 text-white" />
                   </div>
-                  <p className="text-[14px] font-bold text-foreground mb-1">Publicaciones privadas</p>
+                  <p className="text-[14px] font-semibold text-foreground mb-1">Publicaciones privadas</p>
                   <p className="text-[12px] text-muted-foreground">Las publicaciones de este club son solo para sus miembros.</p>
                 </div>
               </motion.div>
@@ -295,7 +295,7 @@ function ContactCard({ club, mainLocation }: { club: PublicClub; mainLocation: M
       <div className="rounded-2xl overflow-hidden"
         style={{ background: 'white', border: '1px solid rgba(67,97,238,0.10)', boxShadow: '0 1px 12px rgba(0,0,0,0.06)' }}>
         <div className="px-5 py-4 border-b border-border/50">
-          <p className="text-[11px] font-bold uppercase tracking-widest" style={{ color: '#8E87A8' }}>Información de contacto</p>
+          <p className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: '#8E87A8' }}>Información de contacto</p>
         </div>
         <div className="divide-y divide-border/40">
           <ContactRow icon={<Phone className="w-4 h-4" style={{ color: '#4361EE' }} />} label="Teléfono" value={club.phone} />
@@ -336,7 +336,7 @@ function ContactRow({ icon, label, value }: { icon: React.ReactNode; label: stri
         {icon}
       </div>
       <div className="min-w-0">
-        <p className="text-[10px] font-bold uppercase tracking-widest mb-0.5" style={{ color: '#8E87A8' }}>{label}</p>
+        <p className="text-[10px] font-semibold uppercase tracking-widest mb-0.5" style={{ color: '#8E87A8' }}>{label}</p>
         <p className="text-[13px] font-medium text-foreground">
           {value || <span className="text-muted-foreground/50 italic text-[12px]">Sin registrar</span>}
         </p>

@@ -246,17 +246,17 @@ export default function LogrosPage() {
   return (
     <div className="min-h-full bg-background">
 
-      {/* ── Header ─────────────────────────────────────────────────────────── */}
-      <div className="px-5 py-3">
-        <div className="flex items-center mb-4 lg:pb-3 lg:border-b" style={{ minHeight: 58, borderColor: 'rgba(0,0,0,0.07)' }}>
-          <h1 className="text-[22px] font-semibold text-foreground" style={{ fontFamily: 'inherit', lineHeight: 1.1 }}>
-            Rendimiento
-          </h1>
-        </div>
+      {/* ── Header — separador full-width alineado con la fila del logo en el sidebar ── */}
+      <div className="px-5 py-3 bg-background flex items-center lg:border-b" style={{ minHeight: 58, borderColor: 'rgba(0,0,0,0.07)' }}>
+        <h1 className="text-[22px] font-semibold text-foreground" style={{ fontFamily: 'inherit', lineHeight: 1.1 }}>
+          Rendimiento
+        </h1>
+      </div>
 
+      <div className="px-5 pt-4 lg:pt-6">
         {/* Botón dentro del contenido, debajo del separador */}
         {role !== 'STUDENT' && (
-          <div className="flex justify-end mb-4 lg:mt-3">
+          <div className="flex justify-end mb-4">
             <motion.button
               whileTap={{ scale: 0.93 }}
               onClick={() => {

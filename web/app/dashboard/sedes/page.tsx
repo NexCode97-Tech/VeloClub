@@ -201,7 +201,7 @@ export default function SedesPage() {
         {canManage && (
           <button
             onClick={openNew}
-            className="hidden lg:flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold text-white"
+            className="flex lg:hidden items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold text-white"
             style={{ background: 'linear-gradient(135deg, #7C3AED 0%, #4361EE 100%)' }}
           >
             <Plus className="w-4 h-4" />

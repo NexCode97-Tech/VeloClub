@@ -4,7 +4,7 @@ import { useAuth } from '@clerk/nextjs';
 import { useEffect, useState } from 'react';
 import Script from 'next/script';
 import { apiFetch } from '@/lib/api-client';
-import { CreditCard, RotateCcw, CheckCircle2, XCircle, ArrowLeft } from 'lucide-react';
+import { CreditCard, CheckCircle2, XCircle, ArrowLeft, Landmark, Banknote, Clock } from 'lucide-react';
 
 const fmt = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 });
 
@@ -34,10 +34,19 @@ interface MpCardTokenParams {
 }
 interface MpInstance {
   createCardToken: (params: MpCardTokenParams) => Promise<{ id: string }>;
+  getPaymentMethods: (params: { bin: string }) => Promise<{ results: Array<{ id: string }> }>;
 }
 declare global {
   interface Window { MercadoPago?: new (publicKey: string) => MpInstance }
 }
+
+type MetodoPago = 'CARD' | 'PSE' | 'EFECTY';
+interface MetodosDisponibles {
+  tarjeta: boolean;
+  pse: { disponible: boolean; bancos: Array<{ id: string; description: string }> };
+  efecty: boolean;
+}
+const DOC_TYPES = ['CC', 'CE', 'NIT', 'TI', 'PAS'];
 
 export default function SuscripcionCard() {
   const { getToken } = useAuth();
@@ -51,6 +60,17 @@ export default function SuscripcionCard() {
   const [error, setError] = useState<string | null>(null);
 
   const [card, setCard] = useState({ number: '', name: '', month: '', year: '', cvv: '', docNumber: '' });
+
+  // Pago dentro de la app (Checkout API) — medios, formularios y consentimientos
+  const [metodos, setMetodos] = useState<MetodosDisponibles | null>(null);
+  const [loadingMetodos, setLoadingMetodos] = useState(false);
+  const [metodo, setMetodo] = useState<MetodoPago>('CARD');
+  const [pse, setPse] = useState({ bancoId: '', personType: 'natural', docType: 'CC', docNumber: '' });
+  const [efecty, setEfecty] = useState({ docType: 'CC', docNumber: '' });
+  const [aceptaTerminos, setAceptaTerminos] = useState(false);
+  const [aceptaRecurrente, setAceptaRecurrente] = useState(false);
+  const [payPending, setPayPending] = useState(false);
+  const [voucherUrl, setVoucherUrl] = useState<string | null>(null);
 
   // Selección de plan — se muestra mientras el club no tenga ningún pago registrado
   const [pickedPlan, setPickedPlan] = useState(false);
@@ -97,14 +117,75 @@ export default function SuscripcionCard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data, pickedPlan]);
 
-  async function handlePagar() {
-    setPaying(true); setError(null);
+  async function loadMetodos() {
+    setLoadingMetodos(true);
     try {
       const token = await getToken();
-      const res = await apiFetch<{ initPoint: string }>('/mercadopago/checkout', { method: 'POST', token });
-      window.location.href = res.initPoint;
+      const res = await apiFetch<MetodosDisponibles>('/mercadopago/metodos-pago', { token });
+      setMetodos(res);
+      if (!res.tarjeta) setMetodo(res.pse.disponible ? 'PSE' : 'EFECTY');
+    } catch { /* la sección de pago mostrará solo tarjeta como fallback */ }
+    finally { setLoadingMetodos(false); }
+  }
+
+  // Cargar los medios de pago cuando hay algo por pagar (sin vigencia o vencido)
+  useEffect(() => {
+    const debePagar = data && ((!data.vigencia && pickedPlan) || data.vigencia?.vencido);
+    if (debePagar && !metodos && !loadingMetodos) loadMetodos();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data, pickedPlan]);
+
+  async function handlePagarDirecto() {
+    setPaying(true); setError(null);
+    try {
+      const body: Record<string, unknown> = { metodo, aceptaTerminos };
+
+      if (metodo === 'CARD') {
+        if (!window.MercadoPago) throw new Error('El pago aún está cargando, intenta de nuevo en unos segundos.');
+        const publicKey = process.env.NEXT_PUBLIC_MP_PUBLIC_KEY;
+        if (!publicKey) throw new Error('Falta configurar la llave pública de Mercado Pago');
+        const mp = new window.MercadoPago(publicKey);
+
+        const tokenResult = await mp.createCardToken({
+          cardNumber: card.number.replace(/\s/g, ''),
+          cardholderName: card.name,
+          cardExpirationMonth: card.month,
+          cardExpirationYear: card.year,
+          securityCode: card.cvv,
+          identificationType: 'CC',
+          identificationNumber: card.docNumber,
+        });
+        const bin = card.number.replace(/\s/g, '').slice(0, 6);
+        const pm = await mp.getPaymentMethods({ bin });
+        const paymentMethodId = pm.results?.[0]?.id;
+        if (!paymentMethodId) throw new Error('No reconocimos la tarjeta. Verifica el número.');
+        Object.assign(body, { cardTokenId: tokenResult.id, paymentMethodId, docType: 'CC', docNumber: card.docNumber });
+      } else if (metodo === 'PSE') {
+        Object.assign(body, { bancoId: pse.bancoId, personType: pse.personType, docType: pse.docType, docNumber: pse.docNumber });
+      } else {
+        Object.assign(body, { docType: efecty.docType, docNumber: efecty.docNumber });
+      }
+
+      const token = await getToken();
+      const res = await apiFetch<{ status: string; redirectUrl?: string | null }>('/mercadopago/pagar', {
+        method: 'POST', token, body: JSON.stringify(body),
+      });
+
+      if (res.status === 'approved') {
+        setCard({ number: '', name: '', month: '', year: '', cvv: '', docNumber: '' });
+        await load();
+      } else if (res.status === 'pending') {
+        if (metodo === 'PSE' && res.redirectUrl) {
+          // PSE: el banco es quien autoriza la transferencia — redirección obligatoria
+          window.location.href = res.redirectUrl;
+          return;
+        }
+        setVoucherUrl(res.redirectUrl ?? null);
+        setPayPending(true);
+      }
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'No se pudo iniciar el pago');
+      setError(e instanceof Error ? e.message : 'No se pudo procesar el pago. Intenta de nuevo.');
+    } finally {
       setPaying(false);
     }
   }
@@ -130,7 +211,7 @@ export default function SuscripcionCard() {
       const token = await getToken();
       await apiFetch('/mercadopago/subscribe', {
         method: 'POST', token,
-        body: JSON.stringify({ cardTokenId: tokenResult.id }),
+        body: JSON.stringify({ cardTokenId: tokenResult.id, aceptaTerminos: aceptaRecurrente }),
       });
 
       setShowCardForm(false);
@@ -306,6 +387,9 @@ export default function SuscripcionCard() {
         {showCardForm && !suscripcion.autoRenew && (
           <div className="space-y-3 p-4 rounded-xl border border-border">
             <p className="text-[12px] font-semibold text-foreground flex items-center gap-2"><CreditCard className="w-3.5 h-3.5" /> Datos de la tarjeta</p>
+            <p className="text-[11px] text-muted-foreground -mt-1">
+              La renovación automática solo admite tarjeta de crédito o débito — es el único medio que se puede volver a cobrar sin que estés presente. Para pagar con PSE, Nequi u otro medio, usa "Pagar suscripción ahora" cada vez que venza.
+            </p>
             <input placeholder="Número de tarjeta" value={card.number} onChange={e => setCard(c => ({ ...c, number: e.target.value }))}
               className="w-full px-3 py-2 rounded-lg border border-input text-sm" inputMode="numeric" />
             <input placeholder="Nombre del titular" value={card.name} onChange={e => setCard(c => ({ ...c, name: e.target.value }))}
@@ -320,19 +404,158 @@ export default function SuscripcionCard() {
               <input placeholder="Cédula" value={card.docNumber} onChange={e => setCard(c => ({ ...c, docNumber: e.target.value }))}
                 className="px-3 py-2 rounded-lg border border-input text-sm" inputMode="numeric" />
             </div>
-            <button onClick={handleActivarAutoRenew} disabled={activating || !sdkReady}
+            <label className="flex items-start gap-2 cursor-pointer">
+              <input type="checkbox" checked={aceptaRecurrente} onChange={e => setAceptaRecurrente(e.target.checked)} className="mt-0.5 shrink-0" />
+              <span className="text-[11px] text-muted-foreground leading-relaxed">
+                Autorizo de forma expresa este pago y los cobros automáticos recurrentes a esta tarjeta al inicio de cada período, según los{' '}
+                <a href="/legal/terminos" target="_blank" rel="noopener noreferrer" className="underline text-primary">Términos y Condiciones</a> y la{' '}
+                <a href="/legal/politica-datos" target="_blank" rel="noopener noreferrer" className="underline text-primary">Política de Tratamiento de Datos</a>.
+                Puedo desactivar la renovación automática en cualquier momento desde esta pantalla, sin penalidades (Ley 1480 de 2011).
+              </span>
+            </label>
+            <button onClick={handleActivarAutoRenew} disabled={activating || !sdkReady || !aceptaRecurrente}
               className="w-full py-2.5 rounded-xl bg-primary text-white text-[13px] font-semibold disabled:opacity-60">
               {activating ? 'Procesando pago...' : 'Pagar y activar renovación automática'}
             </button>
           </div>
         )}
 
-        {(!vigencia || vigencia.vencido) && (
-          <button onClick={handlePagar} disabled={paying}
-            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-primary text-white text-[13px] font-semibold disabled:opacity-60">
-            <RotateCcw className="w-4 h-4" />
-            {paying ? 'Redirigiendo...' : 'Pagar suscripción ahora'}
-          </button>
+        {/* ── Pago único dentro de la app — todos los medios de Mercado Pago ── */}
+        {(!vigencia || vigencia.vencido) && !showCardForm && (
+          <div className="space-y-3 pt-1" style={{ borderTop: '1px solid rgba(0,0,0,0.06)', paddingTop: 16 }}>
+            <p className="text-[13px] font-semibold text-foreground">Paga tu suscripción</p>
+
+            {payPending ? (
+              <div className="p-4 rounded-xl space-y-2" style={{ background: 'rgba(255,183,3,0.08)', border: '1px solid rgba(255,183,3,0.30)' }}>
+                <p className="text-[13px] font-semibold flex items-center gap-1.5" style={{ color: '#B26A00' }}>
+                  <Clock className="w-3.5 h-3.5" /> Pago pendiente de confirmación
+                </p>
+                <p className="text-[12px] text-muted-foreground">
+                  {voucherUrl
+                    ? 'Generamos tu cupón de pago. Cuando lo pagues en un punto Efecty, tu plan se activará automáticamente.'
+                    : 'Cuando el pago se confirme, tu plan se activará automáticamente.'}
+                </p>
+                {voucherUrl && (
+                  <a href={voucherUrl} target="_blank" rel="noopener noreferrer"
+                    className="inline-block text-[13px] font-semibold text-primary underline">
+                    Abrir cupón de pago
+                  </a>
+                )}
+                <button onClick={() => { setPayPending(false); setVoucherUrl(null); load(); }}
+                  className="block text-[12px] font-semibold text-muted-foreground underline cursor-pointer">
+                  Ya pagué — actualizar estado
+                </button>
+              </div>
+            ) : loadingMetodos ? (
+              <div className="flex justify-center py-6">
+                <div className="w-5 h-5 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+              </div>
+            ) : (
+              <>
+                {/* Selector de medio de pago */}
+                <div className="grid grid-cols-3 gap-2">
+                  {([
+                    { key: 'CARD'   as MetodoPago, label: 'Tarjeta', icon: CreditCard, disponible: metodos?.tarjeta ?? true },
+                    { key: 'PSE'    as MetodoPago, label: 'PSE',     icon: Landmark,   disponible: metodos?.pse.disponible ?? false },
+                    { key: 'EFECTY' as MetodoPago, label: 'Efecty',  icon: Banknote,   disponible: metodos?.efecty ?? false },
+                  ]).filter(m => m.disponible).map(({ key, label, icon: Icon }) => {
+                    const active = metodo === key;
+                    return (
+                      <button key={key} onClick={() => { setMetodo(key); setError(null); }}
+                        className="flex flex-col items-center gap-1 py-2.5 rounded-xl text-[12px] font-semibold transition-colors cursor-pointer"
+                        style={active
+                          ? { border: '2px solid #7C3AED', color: '#7C3AED', background: 'rgba(124,58,237,0.05)' }
+                          : { border: '1px solid rgba(0,0,0,0.10)', color: '#8E87A8', background: '#fff' }}
+                      >
+                        <Icon className="w-4 h-4" />
+                        {label}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Formulario según el medio */}
+                {metodo === 'CARD' && (
+                  <div className="space-y-2.5">
+                    <input placeholder="Número de tarjeta" value={card.number} onChange={e => setCard(c => ({ ...c, number: e.target.value }))}
+                      className="w-full px-3 py-2 rounded-lg border border-input text-sm" inputMode="numeric" />
+                    <input placeholder="Nombre del titular" value={card.name} onChange={e => setCard(c => ({ ...c, name: e.target.value }))}
+                      className="w-full px-3 py-2 rounded-lg border border-input text-sm" />
+                    <div className="grid grid-cols-4 gap-2">
+                      <input placeholder="MM" value={card.month} onChange={e => setCard(c => ({ ...c, month: e.target.value }))}
+                        className="px-3 py-2 rounded-lg border border-input text-sm" inputMode="numeric" maxLength={2} />
+                      <input placeholder="AAAA" value={card.year} onChange={e => setCard(c => ({ ...c, year: e.target.value }))}
+                        className="px-3 py-2 rounded-lg border border-input text-sm" inputMode="numeric" maxLength={4} />
+                      <input placeholder="CVV" value={card.cvv} onChange={e => setCard(c => ({ ...c, cvv: e.target.value }))}
+                        className="px-3 py-2 rounded-lg border border-input text-sm" inputMode="numeric" maxLength={4} />
+                      <input placeholder="Cédula" value={card.docNumber} onChange={e => setCard(c => ({ ...c, docNumber: e.target.value }))}
+                        className="px-3 py-2 rounded-lg border border-input text-sm" inputMode="numeric" />
+                    </div>
+                  </div>
+                )}
+
+                {metodo === 'PSE' && (
+                  <div className="space-y-2.5">
+                    <select value={pse.bancoId} onChange={e => setPse(p => ({ ...p, bancoId: e.target.value }))}
+                      className="w-full px-3 py-2 rounded-lg border border-input text-sm bg-white">
+                      <option value="">Selecciona tu banco</option>
+                      {(metodos?.pse.bancos ?? []).map(b => (
+                        <option key={b.id} value={b.id}>{b.description}</option>
+                      ))}
+                    </select>
+                    <div className="grid grid-cols-2 gap-2">
+                      <select value={pse.personType} onChange={e => setPse(p => ({ ...p, personType: e.target.value }))}
+                        className="px-3 py-2 rounded-lg border border-input text-sm bg-white">
+                        <option value="natural">Persona natural</option>
+                        <option value="juridica">Persona jurídica</option>
+                      </select>
+                      <select value={pse.docType} onChange={e => setPse(p => ({ ...p, docType: e.target.value }))}
+                        className="px-3 py-2 rounded-lg border border-input text-sm bg-white">
+                        {DOC_TYPES.map(d => <option key={d} value={d}>{d}</option>)}
+                      </select>
+                    </div>
+                    <input placeholder="Número de documento" value={pse.docNumber} onChange={e => setPse(p => ({ ...p, docNumber: e.target.value }))}
+                      className="w-full px-3 py-2 rounded-lg border border-input text-sm" inputMode="numeric" />
+                    <p className="text-[11px] text-muted-foreground">Serás dirigido a tu banco para autorizar la transferencia. Al completarla, volverás a VeloClub.</p>
+                  </div>
+                )}
+
+                {metodo === 'EFECTY' && (
+                  <div className="space-y-2.5">
+                    <div className="grid grid-cols-2 gap-2">
+                      <select value={efecty.docType} onChange={e => setEfecty(p => ({ ...p, docType: e.target.value }))}
+                        className="px-3 py-2 rounded-lg border border-input text-sm bg-white">
+                        {DOC_TYPES.map(d => <option key={d} value={d}>{d}</option>)}
+                      </select>
+                      <input placeholder="Número de documento" value={efecty.docNumber} onChange={e => setEfecty(p => ({ ...p, docNumber: e.target.value }))}
+                        className="px-3 py-2 rounded-lg border border-input text-sm" inputMode="numeric" />
+                    </div>
+                    <p className="text-[11px] text-muted-foreground">Generaremos un cupón para que pagues en efectivo en cualquier punto Efecty. Tu plan se activa cuando pagues.</p>
+                  </div>
+                )}
+
+                {/* Aceptación de términos — obligatoria (Ley 1480 de 2011) */}
+                <label className="flex items-start gap-2 cursor-pointer">
+                  <input type="checkbox" checked={aceptaTerminos} onChange={e => setAceptaTerminos(e.target.checked)} className="mt-0.5 shrink-0" />
+                  <span className="text-[11px] text-muted-foreground leading-relaxed">
+                    Acepto los <a href="/legal/terminos" target="_blank" rel="noopener noreferrer" className="underline text-primary">Términos y Condiciones</a> y
+                    la <a href="/legal/politica-datos" target="_blank" rel="noopener noreferrer" className="underline text-primary">Política de Tratamiento de Datos</a> de VeloClub.
+                  </span>
+                </label>
+
+                <button
+                  onClick={handlePagarDirecto}
+                  disabled={paying || !aceptaTerminos || (metodo === 'CARD' && !sdkReady)}
+                  className="w-full py-3 rounded-xl bg-primary text-white text-[13px] font-semibold disabled:opacity-60"
+                >
+                  {paying ? 'Procesando pago...' : `Pagar ${fmt.format(suscripcion.planMonto)}`}
+                </button>
+                <p className="text-[10px] text-muted-foreground text-center">
+                  Pago procesado de forma segura por Mercado Pago. Tus datos nunca se guardan en VeloClub.
+                </p>
+              </>
+            )}
+          </div>
         )}
       </div>
     </>

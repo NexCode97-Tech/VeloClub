@@ -6,6 +6,7 @@ import { calcularPrecioPlan, vigencia, type TipoPlan } from '../lib/pricing';
 import {
   crearPreferenciaCheckout, crearPreapproval, cancelarPreapproval,
   obtenerPago, obtenerPreapproval, verificarFirmaWebhook, buscarPagoPorReferencia,
+  listarMediosPago, crearPagoDirecto, type MedioPago,
 } from '../lib/mercadopago';
 
 const router = Router();
@@ -78,6 +79,170 @@ router.post('/set-plan', requireAuth, async (req, res) => {
   res.json({ ok: true });
 });
 
+// ── GET /mercadopago/metodos-pago — medios disponibles para pagar en la app ─
+// Cache en memoria (1h): la lista de medios de la cuenta casi nunca cambia.
+let mediosCache: { data: MedioPago[]; expiresAt: number } | null = null;
+
+router.get('/metodos-pago', requireAuth, async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  try {
+    if (!mediosCache || mediosCache.expiresAt < Date.now()) {
+      const data = await listarMediosPago();
+      mediosCache = { data, expiresAt: Date.now() + 60 * 60 * 1000 };
+    }
+    const activos = mediosCache.data.filter(m => m.status === 'active');
+
+    const tarjetas = activos.filter(m => m.payment_type_id === 'credit_card' || m.payment_type_id === 'debit_card');
+    const pse = activos.find(m => m.id === 'pse');
+    const efecty = activos.find(m => m.id === 'efecty');
+
+    res.json({
+      tarjeta: tarjetas.length > 0,
+      pse: pse ? { disponible: true, bancos: pse.financial_institutions ?? [] } : { disponible: false, bancos: [] },
+      efecty: !!efecty,
+    });
+  } catch (err) {
+    console.error('[mercadopago/metodos-pago]', err instanceof Error ? err.message : err);
+    res.status(500).json({ error: 'No se pudieron cargar los medios de pago' });
+  }
+});
+
+// ── POST /mercadopago/pagar — pago único dentro de la app (Checkout API) ────
+// Mensajes amigables para los rechazos más comunes de tarjeta
+const RECHAZO_MSG: Record<string, string> = {
+  cc_rejected_insufficient_amount:   'La tarjeta no tiene fondos suficientes.',
+  cc_rejected_bad_filled_card_number:'Revisa el número de la tarjeta.',
+  cc_rejected_bad_filled_date:       'Revisa la fecha de vencimiento.',
+  cc_rejected_bad_filled_security_code: 'Revisa el código de seguridad (CVV).',
+  cc_rejected_bad_filled_other:      'Revisa los datos de la tarjeta.',
+  cc_rejected_call_for_authorize:    'Tu banco requiere que autorices este pago. Llámalos e intenta de nuevo.',
+  cc_rejected_card_disabled:         'La tarjeta está inactiva. Comunícate con tu banco.',
+  cc_rejected_high_risk:             'El pago fue rechazado por seguridad. Intenta con otro medio de pago.',
+  cc_rejected_max_attempts:          'Llegaste al límite de intentos. Intenta con otra tarjeta.',
+  cc_rejected_duplicated_payment:    'Ya hiciste un pago por este valor hace poco. Espera unos minutos.',
+};
+
+router.post('/pagar', requireAuth, async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  const clubId = req.user!.clubId ?? '';
+
+  const {
+    metodo, aceptaTerminos, cardTokenId, paymentMethodId,
+    docType, docNumber, personType, bancoId,
+  } = req.body as {
+    metodo?: 'CARD' | 'PSE' | 'EFECTY'; aceptaTerminos?: boolean;
+    cardTokenId?: string; paymentMethodId?: string;
+    docType?: string; docNumber?: string; personType?: string; bancoId?: string;
+  };
+
+  if (aceptaTerminos !== true) {
+    return res.status(400).json({ error: 'Debes aceptar los términos y condiciones para continuar' });
+  }
+  if (!metodo || !['CARD', 'PSE', 'EFECTY'].includes(metodo)) {
+    return res.status(400).json({ error: 'Medio de pago inválido' });
+  }
+  if (!docNumber || !/^[0-9]{4,15}$/.test(docNumber)) {
+    return res.status(400).json({ error: 'Número de documento inválido' });
+  }
+  if (metodo === 'CARD' && (!cardTokenId || !paymentMethodId)) {
+    return res.status(400).json({ error: 'Faltan los datos de la tarjeta' });
+  }
+  if (metodo === 'PSE' && !bancoId) {
+    return res.status(400).json({ error: 'Selecciona tu banco' });
+  }
+
+  const [suscripcion, cantidadDeportistas, club] = await Promise.all([
+    suscripcionDelClub(clubId),
+    prisma.member.count({ where: { clubId, role: 'STUDENT' } }),
+    prisma.club.findUnique({ where: { id: clubId }, select: { name: true, email: true } }),
+  ]);
+
+  const monto = calcularPrecioPlan(cantidadDeportistas, suscripcion.tipoPlan as TipoPlan, suscripcion.autoRenew);
+  const payerEmail = req.auth?.email || club?.email || 'sin-correo@veloclubtech.com';
+  const reference = `sub-${suscripcion.id}-${Date.now()}`;
+  const description = `Suscripción VeloClub — ${club?.name ?? 'Club'}`;
+
+  // Registrar el consentimiento (Ley 1480 de 2011)
+  await prisma.clubSuscripcion.update({
+    where: { id: suscripcion.id },
+    data: { consentimientoPagoAt: new Date() },
+  });
+
+  const identification = { type: docType || 'CC', number: docNumber };
+
+  let payload: Record<string, unknown>;
+  if (metodo === 'CARD') {
+    payload = {
+      transaction_amount: monto,
+      token: cardTokenId,
+      installments: 1,
+      payment_method_id: paymentMethodId,
+      description,
+      external_reference: reference,
+      payer: { email: payerEmail, identification },
+    };
+  } else if (metodo === 'PSE') {
+    payload = {
+      transaction_amount: monto,
+      payment_method_id: 'pse',
+      description,
+      external_reference: reference,
+      payer: {
+        email: payerEmail,
+        entity_type: personType === 'juridica' ? 'association' : 'individual',
+        identification,
+      },
+      transaction_details: { financial_institution: bancoId },
+      callback_url: `${process.env.WEB_ORIGIN}/dashboard/ajustes?tab=suscripcion`,
+      additional_info: { ip_address: req.ip ?? '127.0.0.1' },
+    };
+  } else {
+    payload = {
+      transaction_amount: monto,
+      payment_method_id: 'efecty',
+      description,
+      external_reference: reference,
+      payer: { email: payerEmail, identification },
+    };
+  }
+
+  try {
+    const pago = await crearPagoDirecto(payload);
+
+    if (pago.status === 'approved') {
+      // Registrar de una vez (el webhook queda de respaldo, idempotente por mpPaymentId)
+      const yaRegistrado = await prisma.suscripcionPago.findUnique({ where: { mpPaymentId: String(pago.id) } });
+      if (!yaRegistrado) {
+        await prisma.suscripcionPago.create({
+          data: {
+            suscripcionId: suscripcion.id,
+            concepto: 'Pago suscripción',
+            monto: pago.transaction_amount,
+            fecha: new Date(),
+            estado: 'PAID',
+            mpPaymentId: String(pago.id),
+          },
+        });
+      }
+      return res.json({ status: 'approved' });
+    }
+
+    if (pago.status === 'pending' || pago.status === 'in_process') {
+      // PSE redirige al banco; Efecty entrega el cupón para pagar en un punto físico
+      return res.json({
+        status: 'pending',
+        redirectUrl: pago.transaction_details?.external_resource_url ?? null,
+      });
+    }
+
+    const msg = RECHAZO_MSG[pago.status_detail] ?? 'El pago fue rechazado. Intenta con otro medio de pago.';
+    return res.status(402).json({ error: msg });
+  } catch (err) {
+    console.error('[mercadopago/pagar]', err instanceof Error ? err.message : err);
+    res.status(500).json({ error: 'No se pudo procesar el pago. Intenta de nuevo.' });
+  }
+});
+
 // ── POST /mercadopago/checkout — pago único ──────────────────────────────────
 router.post('/checkout', requireAuth, async (req, res) => {
   if (!requireAdmin(req, res)) return;
@@ -111,8 +276,11 @@ router.post('/checkout', requireAuth, async (req, res) => {
 router.post('/subscribe', requireAuth, async (req, res) => {
   if (!requireAdmin(req, res)) return;
   const clubId = req.user!.clubId ?? '';
-  const { cardTokenId } = req.body as { cardTokenId?: string };
+  const { cardTokenId, aceptaTerminos } = req.body as { cardTokenId?: string; aceptaTerminos?: boolean };
   if (!cardTokenId) return res.status(400).json({ error: 'cardTokenId requerido' });
+  if (aceptaTerminos !== true) {
+    return res.status(400).json({ error: 'Debes autorizar los cobros recurrentes para activar la renovación automática' });
+  }
 
   const [suscripcion, cantidadDeportistas, club] = await Promise.all([
     suscripcionDelClub(clubId),
@@ -143,6 +311,7 @@ router.post('/subscribe', requireAuth, async (req, res) => {
         mpPayerEmail: payerEmail,
         ultimoMontoSincronizado: monto,
         intentosFallidos: 0,
+        consentimientoRecurrenteAt: new Date(),
       },
     });
 

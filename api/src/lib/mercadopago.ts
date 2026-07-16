@@ -108,6 +108,40 @@ export async function obtenerPago(paymentId: string): Promise<{
   return mpFetch(`/v1/payments/${paymentId}`, { method: 'GET' });
 }
 
+// ── Checkout API (transparente) — medios de pago dentro de la app ───────────
+
+export interface MedioPago {
+  id: string;
+  name: string;
+  payment_type_id: string;
+  status: string;
+  thumbnail?: string;
+  financial_institutions?: Array<{ id: string; description: string }>;
+}
+
+export async function listarMediosPago(): Promise<MedioPago[]> {
+  return mpFetch<MedioPago[]>('/v1/payment_methods', { method: 'GET' });
+}
+
+export interface PagoDirectoResponse {
+  id: number;
+  status: string;
+  status_detail: string;
+  transaction_amount: number;
+  external_reference: string | null;
+  transaction_details?: { external_resource_url?: string };
+}
+
+// POST /v1/payments — pago directo sin redirección (tarjeta, PSE, Efecty).
+// X-Idempotency-Key es obligatorio en este endpoint.
+export async function crearPagoDirecto(payload: Record<string, unknown>): Promise<PagoDirectoResponse> {
+  return mpFetch<PagoDirectoResponse>('/v1/payments', {
+    method: 'POST',
+    headers: { 'X-Idempotency-Key': crypto.randomUUID() },
+    body: JSON.stringify(payload),
+  });
+}
+
 // ── Buscar el pago más reciente por external_reference — usado para confirmar
 // el primer cobro de un Preapproval de forma síncrona, sin esperar al webhook ─
 export async function buscarPagoPorReferencia(reference: string): Promise<{

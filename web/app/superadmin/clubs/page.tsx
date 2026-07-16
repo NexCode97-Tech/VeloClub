@@ -246,6 +246,14 @@ export default function ClubsPage() {
                         {club.active ? 'Activo' : 'Inactivo'}
                       </span>
                       <span style={{ flexShrink: 0, fontSize: 9, fontWeight: 600, padding: '2px 7px', borderRadius: 99, background: badge.bg, color: badge.color }}>{badge.label}</span>
+                      {club.verificationStatus === 'PENDING' && (
+                        <span style={{ flexShrink: 0, fontSize: 9, fontWeight: 600, padding: '2px 7px', borderRadius: 99, background: 'rgba(255,183,3,0.16)', color: '#B88A00' }}>
+                          {club.nameFlagged ? 'Revisar nombre' : 'Por verificar'}
+                        </span>
+                      )}
+                      {club.verificationStatus === 'REJECTED' && (
+                        <span style={{ flexShrink: 0, fontSize: 9, fontWeight: 600, padding: '2px 7px', borderRadius: 99, background: 'rgba(239,71,111,0.12)', color: '#EF476F' }}>Rechazado</span>
+                      )}
                     </div>
                     <p style={{ margin: 0, fontSize: 11, color: '#8E87A8' }}>
                       {club._count.members} miembro{club._count.members !== 1 ? 's' : ''}{club.deporte ? ` · ${club.deporte}` : ''}

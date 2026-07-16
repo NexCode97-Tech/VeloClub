@@ -9,7 +9,7 @@ import SportSelect from './sport-select';
 import { motion, AnimatePresence, type Variants } from 'framer-motion';
 import {
   ArrowLeft, Pencil, Trash2, X, Check, TrendingUp, CalendarClock,
-  CircleDollarSign, Eye, Upload, RotateCcw, MessageCircle, Info, Power,
+  CircleDollarSign, Eye, Upload, RotateCcw, MessageCircle, Info, Power, BadgeCheck,
 } from 'lucide-react';
 
 // ── Formateo ────────────────────────────────────────────────────────────────
@@ -44,6 +44,9 @@ export interface Member {
 export interface Club {
   id: string; name: string; active: boolean; createdAt: string;
   trialEndsAt?: string | null; deporte?: string | null; logoUrl?: string | null;
+  verificationStatus?: 'PENDING' | 'VERIFIED' | 'REJECTED';
+  nameFlagged?: boolean;
+  city?: string | null; department?: string | null; memberCountApprox?: number | null;
   _count: { members: number };
   users: { email: string; name: string }[];
   suscripcion?: { tipoPlan: string; planMonto: number } | null;
@@ -274,6 +277,17 @@ export default function ClubDetail({ club, suscripcion, onBack, onReload, onDele
   async function toggleActive() {
     const token = await getToken();
     await apiFetch(`/superadmin/clubs/${club.id}/toggle`, { method: 'PATCH', token });
+    await onReload();
+  }
+  async function verificarClub() {
+    const token = await getToken();
+    await apiFetch(`/superadmin/clubs/${club.id}/verificar`, { method: 'PATCH', token });
+    await onReload();
+  }
+  async function rechazarClub() {
+    const reason = prompt('Motivo del rechazo (opcional):') ?? undefined;
+    const token = await getToken();
+    await apiFetch(`/superadmin/clubs/${club.id}/rechazar`, { method: 'PATCH', token, body: JSON.stringify({ reason }) });
     await onReload();
   }
   async function deleteClub() {
@@ -608,6 +622,35 @@ export default function ClubDetail({ club, suscripcion, onBack, onReload, onDele
 
           {/* Acciones del club */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 14 }}>
+            {/* Verificación (cola de clubes auto-registrados) */}
+            {club.verificationStatus === 'PENDING' && (
+              <div style={{ background: 'rgba(255,183,3,0.08)', border: '1px solid rgba(255,183,3,0.28)', borderRadius: 12, padding: 12 }}>
+                <p style={{ margin: '0 0 8px', fontSize: 12, fontWeight: 600, color: '#B88A00' }}>
+                  Club por verificar{club.nameFlagged ? ' · nombre parecido a otro' : ''}
+                </p>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <motion.button onClick={verificarClub} whileTap={{ scale: 0.97 }}
+                    style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, padding: '10px 0', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg,#06D6A0,#0CB68D)', color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+                    <BadgeCheck size={14} /> Verificar
+                  </motion.button>
+                  <motion.button onClick={rechazarClub} whileTap={{ scale: 0.97 }}
+                    style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, padding: '10px 0', borderRadius: 10, border: '1px solid rgba(239,71,111,0.20)', background: 'rgba(239,71,111,0.05)', color: '#EF476F', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+                    Rechazar
+                  </motion.button>
+                </div>
+              </div>
+            )}
+            {club.verificationStatus === 'VERIFIED' && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 12, fontWeight: 600, color: '#06D6A0' }}>
+                <BadgeCheck size={15} /> Club verificado
+              </div>
+            )}
+            {club.verificationStatus === 'REJECTED' && (
+              <motion.button onClick={verificarClub} whileTap={{ scale: 0.97 }}
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, padding: '10px 0', borderRadius: 10, border: '1px solid rgba(120,80,200,0.14)', background: 'transparent', color: '#6B6580', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+                <BadgeCheck size={14} /> Rechazado — verificar de todos modos
+              </motion.button>
+            )}
             <motion.a href={getWhatsAppUrl(club)} target="_blank" rel="noopener noreferrer" whileTap={{ scale: 0.98 }}
               style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px 0', borderRadius: 12, background: 'rgba(37,211,102,0.08)', border: '1px solid rgba(37,211,102,0.28)', color: '#1BA147', textDecoration: 'none', fontSize: 12, fontWeight: 600, fontFamily: 'inherit' }}>
               <MessageCircle size={15} /> Enviar recordatorio por WhatsApp

@@ -22,7 +22,7 @@ import { MemberAvatar } from '@/components/ui/member-avatar';
 // ── Interfaces ────────────────────────────────────────────────────────────────
 
 interface MeResponse {
-  status: 'ok' | 'superadmin' | 'complete_profile' | 'no_access' | 'inactive' | 'trial_expired';
+  status: 'ok' | 'superadmin' | 'complete_profile' | 'no_access' | 'needs_onboarding' | 'inactive' | 'trial_expired';
   user?: { name: string; role: string; picture?: string | null; club?: { name: string; logoUrl?: string } };
   trial?: { daysLeft: number; endsAt: string } | null;
 }
@@ -886,6 +886,7 @@ export default function DashboardPage() {
         if (meRes.status === 'rejected') return;
         const res = meRes.value;
         if (res.status === 'superadmin')       { router.push('/superadmin');       return; }
+        if (res.status === 'needs_onboarding'){ router.push('/onboarding');        return; }
         if (res.status === 'no_access')        { router.push('/no-access');        return; }
         if (res.status === 'inactive')         { router.push('/inactivo');         return; }
         if (res.status === 'trial_expired')    { router.push('/trial-expirado');   return; }

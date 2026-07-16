@@ -229,6 +229,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         }
 
         if (!res || stale) return;
+        if (res.status === 'needs_onboarding'){ router.replace('/onboarding');       return; }
         if (res.status === 'no_access')        { router.replace('/no-access');       return; }
         if (res.status === 'inactive')         { router.replace('/inactivo');         return; }
         if (res.status === 'superadmin')       { router.replace('/superadmin');       return; }

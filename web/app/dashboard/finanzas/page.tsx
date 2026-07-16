@@ -167,10 +167,13 @@ function StudentRow({
     <button onClick={() => !marking && onMarkPaid(payment!.id)} disabled={marking}
       className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-bold cursor-pointer disabled:opacity-50 shrink-0"
       style={{ background: 'rgba(6,214,160,0.15)', color: '#06D6A0' }}>
-      {marking
-        ? <Check className="w-3 h-3" />
-        : <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: '#06D6A0' }} />
-      }
+      {marking ? (
+        <span className="w-3 h-3 rounded-full flex items-center justify-center shrink-0" style={{ background: '#06D6A0' }}>
+          <Check className="w-2 h-2" style={{ color: '#fff' }} />
+        </span>
+      ) : (
+        <span className="w-3 h-3 rounded-full shrink-0" style={{ border: '1.5px solid #06D6A0' }} />
+      )}
       Pagado
     </button>
   ) : configured && !payment ? (

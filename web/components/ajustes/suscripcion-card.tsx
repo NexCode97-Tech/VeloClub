@@ -1,7 +1,7 @@
 'use client';
 
 import { useAuth } from '@clerk/nextjs';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Script from 'next/script';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { apiFetch } from '@/lib/api-client';
@@ -9,6 +9,14 @@ import { CreditCard, ArrowLeft, Landmark, Banknote, Clock, RefreshCw, XCircle } 
 
 const fmt = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 });
 const EASE = [0.23, 1, 0.32, 1] as const;
+
+// Deslizamiento horizontal entre formularios de pago (Tarjeta / PSE / Efecty),
+// con dirección según hacia qué lado del selector se mueve.
+const SLIDE_VARIANTS = {
+  enter: (dir: number) => ({ opacity: 0, x: dir * 16 }),
+  center: { opacity: 1, x: 0 },
+  exit: (dir: number) => ({ opacity: 0, x: -dir * 16 }),
+};
 
 type TipoPlan = 'MENSUAL' | 'TRIMESTRAL' | 'ANUAL';
 const PLAN_LABEL: Record<TipoPlan, string> = { MENSUAL: 'Mensual', TRIMESTRAL: 'Trimestral', ANUAL: 'Anual' };
@@ -279,6 +287,15 @@ export default function SuscripcionCard() {
   const [metodos, setMetodos] = useState<MetodosDisponibles | null>(null);
   const [loadingMetodos, setLoadingMetodos] = useState(false);
   const [metodo, setMetodo] = useState<MetodoPago>('CARD');
+
+  // Dirección del deslizamiento entre formularios de pago: hacia la derecha si
+  // el nuevo medio está más a la derecha en el selector (Tarjeta → PSE → Efecty),
+  // hacia la izquierda si es al revés.
+  const METODO_ORDEN: MetodoPago[] = ['CARD', 'PSE', 'EFECTY'];
+  const metodoEfectivo: MetodoPago = activarAutoRenovacion ? 'CARD' : metodo;
+  const prevMetodoRef = useRef(metodoEfectivo);
+  const direccionSlide = METODO_ORDEN.indexOf(metodoEfectivo) >= METODO_ORDEN.indexOf(prevMetodoRef.current) ? 1 : -1;
+  useEffect(() => { prevMetodoRef.current = metodoEfectivo; });
   const [pse, setPse] = useState({
     bancoId: '', personType: 'natural', docType: 'CC', docNumber: '',
     nombres: '', apellidos: '', telefono: '',
@@ -911,12 +928,16 @@ export default function SuscripcionCard() {
                 </Expand>
 
                 {/* Formularios según medio (o tarjeta forzada si auto-renovación) */}
-                {(activarAutoRenovacion || metodo === 'CARD') && (
+                <AnimatePresence mode="wait" custom={direccionSlide} initial={false}>
+                {metodoEfectivo === 'CARD' && (
                   <motion.div
-                    initial={reduce ? false : { opacity: 0, y: 6 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.2, ease: EASE }}
                     key="form-card"
+                    custom={direccionSlide}
+                    variants={SLIDE_VARIANTS}
+                    initial={reduce ? false : 'enter'}
+                    animate="center"
+                    exit={reduce ? undefined : 'exit'}
+                    transition={{ duration: 0.2, ease: EASE }}
                   >
                     {activarAutoRenovacion && (
                       <p className="text-[11px] text-muted-foreground rounded-lg p-2 mb-2.5" style={{ background: 'rgba(255,183,3,0.08)' }}>
@@ -927,8 +948,16 @@ export default function SuscripcionCard() {
                   </motion.div>
                 )}
 
-                {!activarAutoRenovacion && metodo === 'PSE' && (
-                  <motion.div initial={reduce ? false : { opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2, ease: EASE }} key="form-pse" className="space-y-2.5">
+                {metodoEfectivo === 'PSE' && (
+                  <motion.div
+                    key="form-pse"
+                    custom={direccionSlide}
+                    variants={SLIDE_VARIANTS}
+                    initial={reduce ? false : 'enter'}
+                    animate="center"
+                    exit={reduce ? undefined : 'exit'}
+                    transition={{ duration: 0.2, ease: EASE }}
+                    className="space-y-2.5">
                     <select value={pse.bancoId} onChange={e => setPse(p => ({ ...p, bancoId: e.target.value }))}
                       className="w-full px-3 py-2 rounded-lg border border-input text-sm bg-white">
                       <option value="">Selecciona tu banco</option>
@@ -973,8 +1002,17 @@ export default function SuscripcionCard() {
                   </motion.div>
                 )}
 
-                {!activarAutoRenovacion && metodo === 'EFECTY' && (
-                  <motion.div initial={reduce ? false : { opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2, ease: EASE }} key="form-efecty" className="space-y-2.5">
+                {metodoEfectivo === 'EFECTY' && (
+                  <motion.div
+                    key="form-efecty"
+                    custom={direccionSlide}
+                    variants={SLIDE_VARIANTS}
+                    initial={reduce ? false : 'enter'}
+                    animate="center"
+                    exit={reduce ? undefined : 'exit'}
+                    transition={{ duration: 0.2, ease: EASE }}
+                    className="space-y-2.5"
+                  >
                     <div className="grid grid-cols-2 gap-2">
                       <select value={efecty.docType} onChange={e => setEfecty(p => ({ ...p, docType: e.target.value }))}
                         className="px-3 py-2 rounded-lg border border-input text-sm bg-white">
@@ -986,6 +1024,7 @@ export default function SuscripcionCard() {
                     <p className="text-[11px] text-muted-foreground">Generaremos un cupón para que pagues en efectivo en cualquier punto Efecty. Tu plan se activa cuando pagues.</p>
                   </motion.div>
                 )}
+                </AnimatePresence>
 
                 {/* Términos — el texto cambia si activa renovación automática */}
                 <label className="flex items-start gap-2 cursor-pointer">

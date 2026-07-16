@@ -7,13 +7,14 @@ import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Building2, Headset, ArrowLeft, Check, AlertTriangle, Loader2,
-  ChevronDown, Trophy, MessageCircle,
+  Trophy, MessageCircle,
 } from 'lucide-react';
 import { COLOMBIA } from '@/lib/colombia';
 import { apiFetch } from '@/lib/api-client';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { PhoneInput } from '@/components/ui/phone-input';
+import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select';
 
 const DEPORTES = [
   'Fútbol', 'Microfútbol', 'Natación', 'Atletismo', 'Ciclismo', 'Ciclomontañismo',
@@ -127,7 +128,6 @@ function CreateClubForm({ getToken, onBack, onDone }: {
   const [department, setDepartment] = useState('');
   const [city, setCity] = useState('');
   const [phone, setPhone] = useState('');
-  const [memberCount, setMemberCount] = useState('');
   const [nameStatus, setNameStatus] = useState<NameStatus>('idle');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -168,7 +168,6 @@ function CreateClubForm({ getToken, onBack, onDone }: {
           department: department || undefined,
           city: city || undefined,
           phone: phone || undefined,
-          memberCountApprox: memberCount ? Number(memberCount) : undefined,
         }),
       });
       onDone();
@@ -203,49 +202,44 @@ function CreateClubForm({ getToken, onBack, onDone }: {
 
         <div className="space-y-1.5">
           <Label>Deporte *</Label>
-          <div className="relative">
-            <select value={deporte} onChange={e => setDeporte(e.target.value)} required
-              className="w-full appearance-none px-3 py-2.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary/30">
-              <option value="" disabled>Selecciona el deporte</option>
-              {DEPORTES.map(d => <option key={d} value={d}>{d}</option>)}
-            </select>
-            <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-          </div>
+          <Select value={deporte} onValueChange={v => setDeporte(v ?? '')}>
+            <SelectTrigger className="w-full h-11 rounded-xl">
+              <span className={deporte ? 'text-slate-900' : 'text-muted-foreground'}>{deporte || 'Selecciona el deporte'}</span>
+            </SelectTrigger>
+            <SelectContent>
+              {DEPORTES.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
+            </SelectContent>
+          </Select>
         </div>
 
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
             <Label>Departamento</Label>
-            <div className="relative">
-              <select value={department} onChange={e => { setDepartment(e.target.value); setCity(''); }}
-                className="w-full appearance-none px-3 py-2.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary/30">
-                <option value="">Selecciona</option>
-                {departments.map(d => <option key={d} value={d}>{d}</option>)}
-              </select>
-              <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-            </div>
+            <Select value={department} onValueChange={v => { setDepartment(v ?? ''); setCity(''); }}>
+              <SelectTrigger className="w-full h-11 rounded-xl">
+                <span className={department ? 'text-slate-900' : 'text-muted-foreground'}>{department || 'Selecciona'}</span>
+              </SelectTrigger>
+              <SelectContent>
+                {departments.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
+              </SelectContent>
+            </Select>
           </div>
           <div className="space-y-1.5">
             <Label>Municipio</Label>
-            <div className="relative">
-              <select value={city} onChange={e => setCity(e.target.value)} disabled={!department}
-                className="w-full appearance-none px-3 py-2.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-900 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-primary/30">
-                <option value="">{department ? 'Selecciona' : '—'}</option>
-                {municipios.map(m => <option key={m} value={m}>{m}</option>)}
-              </select>
-              <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-            </div>
+            <Select value={city} onValueChange={v => setCity(v ?? '')} disabled={!department}>
+              <SelectTrigger className="w-full h-11 rounded-xl">
+                <span className={city ? 'text-slate-900' : 'text-muted-foreground'}>{city || (department ? 'Selecciona' : '—')}</span>
+              </SelectTrigger>
+              <SelectContent>
+                {municipios.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}
+              </SelectContent>
+            </Select>
           </div>
         </div>
 
         <div className="space-y-1.5">
           <Label>Teléfono de contacto</Label>
           <PhoneInput value={phone} onChange={setPhone} placeholder="Número del club" />
-        </div>
-
-        <div className="space-y-1.5">
-          <Label># aproximado de miembros</Label>
-          <Input type="number" min={0} value={memberCount} onChange={e => setMemberCount(e.target.value)} placeholder="Ej: 25" />
         </div>
 
         {error && <p className="text-sm" style={{ color: '#EF476F' }}>{error}</p>}
@@ -313,14 +307,14 @@ function ContactForm({ getToken, onBack, onDone }: {
         </div>
         <div className="space-y-1.5">
           <Label>Deporte</Label>
-          <div className="relative">
-            <select value={f.deporte} onChange={e => set('deporte')(e.target.value)}
-              className="w-full appearance-none px-3 py-2.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary/30">
-              <option value="">Selecciona</option>
-              {DEPORTES.map(d => <option key={d} value={d}>{d}</option>)}
-            </select>
-            <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-          </div>
+          <Select value={f.deporte} onValueChange={v => set('deporte')(v ?? '')}>
+            <SelectTrigger className="w-full h-11 rounded-xl">
+              <span className={f.deporte ? 'text-slate-900' : 'text-muted-foreground'}>{f.deporte || 'Selecciona'}</span>
+            </SelectTrigger>
+            <SelectContent>
+              {DEPORTES.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
+            </SelectContent>
+          </Select>
         </div>
         <div className="space-y-1.5">
           <Label>Tu nombre *</Label>

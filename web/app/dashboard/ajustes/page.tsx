@@ -589,13 +589,13 @@ function AjustesPageContent() {
 
   return (
     <div className="min-h-full bg-background">
-      {/* Header */}
-      <div className="px-5 py-3 bg-background">
+      {/* Header — mismo alto (58px) y borde inferior que la fila del logo en el
+          sidebar, para que ambas líneas queden alineadas a la misma altura */}
+      <div className="px-5 py-3 bg-background flex items-center lg:border-b" style={{ minHeight: 58, borderColor: 'rgba(0,0,0,0.07)' }}>
         <h1 className="text-[22px] font-semibold text-foreground" style={{ lineHeight: 1.1 }}>
           Ajustes
         </h1>
       </div>
-      <div className="hidden lg:block" style={{ borderTop: '1px solid rgba(0,0,0,0.07)' }} />
 
       {/* Modal recorte de logo — en portal a document.body para quedar por encima
           del menú flotante inferior (que si no tapa los botones en móvil) */}

@@ -240,8 +240,8 @@ export default function ReportesPage() {
 
   return (
     <div className="min-h-full bg-background pb-8">
-      {/* Header */}
-      <div className="px-5 py-3 bg-background">
+      {/* Header — borde inferior alineado con la fila del logo en el sidebar */}
+      <div className="px-5 py-3 bg-background lg:border-b" style={{ minHeight: 58, borderColor: 'rgba(0,0,0,0.07)' }}>
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-[22px] font-semibold text-foreground" style={{ fontFamily: 'inherit', lineHeight: 1.1 }}>

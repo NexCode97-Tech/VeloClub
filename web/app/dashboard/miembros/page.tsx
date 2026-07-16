@@ -348,40 +348,13 @@ export default function MiembrosPage() {
           transition={{ duration: 0.28, ease: EASE_OUT }}
           className="px-5 py-3 pb-0"
         >
-          <div className="flex items-start justify-between mb-6">
-            <div>
-              <h1 className="text-[22px] font-semibold" style={{ color: '#1A1028', fontFamily: 'inherit', lineHeight: 1.1 }}>
-                Miembros
-              </h1>
-              <p className="text-xs mt-0.5" style={{ color: '#8E87A8' }}>
-                Gestiona deportistas, entrenadores y administradores del club
-              </p>
-            </div>
-            <div className="flex items-center gap-2">
-              <button onClick={() => downloadMembersTemplate(locations)}
-                className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-[13px] font-semibold transition-all hover:bg-white cursor-pointer"
-                style={{ color: '#8E87A8', border: '1px solid rgba(120,80,200,0.12)' }}>
-                <FileSpreadsheet className="w-4 h-4" /> Plantilla
-              </button>
-              <button onClick={() => setImportOpen(true)}
-                className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-[13px] font-semibold transition-all hover:bg-white cursor-pointer"
-                style={{ color: '#8E87A8', border: '1px solid rgba(120,80,200,0.12)' }}>
-                <Upload className="w-4 h-4" /> Importar
-              </button>
-              <button onClick={() => downloadMembersPDF(members, clubName)} disabled={members.length === 0}
-                className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-[13px] font-semibold transition-all hover:bg-white cursor-pointer disabled:opacity-40"
-                style={{ color: '#8E87A8', border: '1px solid rgba(120,80,200,0.12)' }}>
-                <Download className="w-4 h-4" /> PDF
-              </button>
-              <motion.button onClick={openNew}
-                whileHover={reducedMotion ? {} : { scale: 1.02 }}
-                whileTap={reducedMotion ? {} : { scale: 0.97 }}
-                transition={{ duration: 0.14, ease: EASE_OUT }}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-[13px] font-semibold text-white cursor-pointer"
-                style={{ background: 'linear-gradient(135deg, #7C3AED 0%, #4361EE 100%)', boxShadow: '0 4px 16px rgba(124,58,237,0.30)' }}>
-                <Plus className="w-4 h-4" /> Nuevo miembro
-              </motion.button>
-            </div>
+          <div className="mb-6 lg:pb-3 lg:border-b" style={{ borderColor: 'rgba(0,0,0,0.07)' }}>
+            <h1 className="text-[22px] font-semibold" style={{ color: '#1A1028', fontFamily: 'inherit', lineHeight: 1.1 }}>
+              Miembros
+            </h1>
+            <p className="text-xs mt-0.5" style={{ color: '#8E87A8' }}>
+              Gestiona deportistas, entrenadores y administradores del club
+            </p>
           </div>
 
           {/* ── Stats strip ── */}
@@ -490,9 +463,30 @@ export default function MiembrosPage() {
               </SelectContent>
             </Select>
 
-            <p className="text-[12px] font-semibold ml-auto whitespace-nowrap" style={{ color: '#8E87A8' }}>
+            <p className="text-[12px] font-semibold whitespace-nowrap" style={{ color: '#8E87A8' }}>
               {filtered.length} resultado{filtered.length !== 1 ? 's' : ''}
             </p>
+
+            <div className="flex items-center gap-2 ml-auto">
+              <button onClick={() => setImportOpen(true)}
+                className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-[13px] font-semibold transition-all hover:bg-white cursor-pointer"
+                style={{ color: '#8E87A8', border: '1px solid rgba(120,80,200,0.12)' }}>
+                <Upload className="w-4 h-4" /> Importar
+              </button>
+              <button onClick={() => downloadMembersPDF(members, clubName)} disabled={members.length === 0}
+                className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-[13px] font-semibold transition-all hover:bg-white cursor-pointer disabled:opacity-40"
+                style={{ color: '#8E87A8', border: '1px solid rgba(120,80,200,0.12)' }}>
+                <Download className="w-4 h-4" /> PDF
+              </button>
+              <motion.button onClick={openNew}
+                whileHover={reducedMotion ? {} : { scale: 1.02 }}
+                whileTap={reducedMotion ? {} : { scale: 0.97 }}
+                transition={{ duration: 0.14, ease: EASE_OUT }}
+                className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-[13px] font-semibold text-white cursor-pointer"
+                style={{ background: 'linear-gradient(135deg, #7C3AED 0%, #4361EE 100%)', boxShadow: '0 4px 16px rgba(124,58,237,0.30)' }}>
+                <Plus className="w-4 h-4" /> Nuevo miembro
+              </motion.button>
+            </div>
           </motion.div>
         </motion.div>
 

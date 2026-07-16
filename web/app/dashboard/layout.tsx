@@ -4,7 +4,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useAuth, useSession, useUser } from '@clerk/nextjs';
-import { useEffect, useState, Suspense } from 'react';
+import { useEffect, useState, useRef, Suspense } from 'react';
 import { createPortal } from 'react-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { apiFetch } from '@/lib/api-client';
@@ -138,6 +138,14 @@ const ROLE_NAV: Record<string, typeof ADMIN_NAV> = {
   ADMIN:   ADMIN_NAV,
   COACH:   COACH_NAV,
   STUDENT: STUDENT_NAV,
+};
+
+// Deslizamiento del sidebar al entrar/salir de un sub-menú (Ajustes,
+// Rendimiento). d > 0 entra al sub-menú (desde la derecha); d < 0 vuelve.
+const NAV_SLIDE = {
+  enter:  (d: number) => ({ x: d * 22, opacity: 0 }),
+  center: { x: 0, opacity: 1 },
+  exit:   (d: number) => ({ x: d * -22, opacity: 0 }),
 };
 
 
@@ -300,6 +308,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     { key: 'train', label: 'Entrenamientos', icon: Dumbbell },
   ];
 
+  // Vista actual del sidebar y dirección del deslizamiento (main → sub-menú
+  // desliza hacia adentro; Volver desliza de regreso).
+  const navView: 'ajustes' | 'logros' | 'main' =
+    (!collapsed && onAjustes) ? 'ajustes' : (!collapsed && onLogros) ? 'logros' : 'main';
+  const navDepth = navView === 'main' ? 0 : 1;
+  const prevNavDepthRef = useRef(navDepth);
+  const navDir = navDepth >= prevNavDepthRef.current ? 1 : -1;
+  useEffect(() => { prevNavDepthRef.current = navDepth; }, [navDepth]);
+
   // Índice activo para el pill deslizante del bottom bar
   const activeTabIndex = tabItems.findIndex(t => isTabActive(t.href));
   // Cuando el sidebar está expandido, Ajustes está oculto — no mostrar su pill activo
@@ -388,85 +405,95 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </div>
 
         {/* Nav items */}
-        <nav className="flex-1 px-2 py-2 overflow-y-auto relative">
-          {!collapsed && onAjustes ? (
-            <div>
-              <Link
-                href="/dashboard"
-                className="flex items-center gap-3 rounded-xl text-sm font-semibold transition-colors hover:bg-secondary mb-2"
-                style={{ height: 40, paddingLeft: 12, paddingRight: 12, color: '#8E87A8' }}
-              >
-                <ArrowLeft className="w-[16px] h-[16px] shrink-0" />
-                <span>Volver</span>
-              </Link>
-              <Suspense fallback={null}>
-                <AjustesSubNavLinks items={AJUSTES_SUBNAV} accentColor={accentColor} accentBg={accentBg} />
-              </Suspense>
-            </div>
-          ) : !collapsed && onLogros ? (
-            <div>
-              <Link
-                href="/dashboard"
-                className="flex items-center gap-3 rounded-xl text-sm font-semibold transition-colors hover:bg-secondary mb-2"
-                style={{ height: 40, paddingLeft: 12, paddingRight: 12, color: '#8E87A8' }}
-              >
-                <ArrowLeft className="w-[16px] h-[16px] shrink-0" />
-                <span>Volver</span>
-              </Link>
-              <Suspense fallback={null}>
-                <LogrosSubNavLinks items={LOGROS_SUBNAV} accentColor={accentColor} accentBg={accentBg} />
-              </Suspense>
-            </div>
-          ) : (
-            <>
-              {!collapsed && activeSideIndex >= 0 && (
-                <div
-                  className="absolute left-2 right-2 rounded-xl pointer-events-none"
-                  style={{
-                    height: 44,
-                    top: `calc(${activeSideIndex} * 48px + 8px)`,
-                    background: accentBg,
-                    transition: 'top 0.25s cubic-bezier(0.34,1.2,0.64,1)',
-                  }}
-                />
-              )}
-              <div className="space-y-1 relative">
-                {sideNavItems.map(({ href, label, icon: Icon }) => {
-                  // Ajustes y Mi Perfil viven en el footer (ícono de ajustes sobre el avatar)
-                  if (href === '/dashboard/ajustes') return null;
-                  if (href === '/dashboard/perfil') return null;
-                  const active = isSideActive(href);
-                  return (
-                    <Link
-                      key={href}
-                      href={href}
-                      className={`flex items-center rounded-xl text-sm font-semibold transition-colors relative z-10 ${active ? '' : 'hover:bg-secondary'}`}
+        <nav className="flex-1 px-2 py-2 overflow-y-auto overflow-x-hidden relative">
+          <AnimatePresence mode="wait" custom={navDir} initial={false}>
+            <motion.div
+              key={navView}
+              custom={navDir}
+              variants={NAV_SLIDE}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={{ duration: 0.22, ease: [0.23, 1, 0.32, 1] }}
+            >
+              {navView === 'ajustes' ? (
+                <div>
+                  <Link
+                    href="/dashboard"
+                    className="flex items-center gap-3 rounded-xl text-sm font-semibold transition-colors hover:bg-secondary mb-2"
+                    style={{ height: 40, paddingLeft: 12, paddingRight: 12, color: '#8E87A8' }}
+                  >
+                    <ArrowLeft className="w-[16px] h-[16px] shrink-0" />
+                    <span>Volver</span>
+                  </Link>
+                  <Suspense fallback={null}>
+                    <AjustesSubNavLinks items={AJUSTES_SUBNAV} accentColor={accentColor} accentBg={accentBg} />
+                  </Suspense>
+                </div>
+              ) : navView === 'logros' ? (
+                <div>
+                  <Link
+                    href="/dashboard"
+                    className="flex items-center gap-3 rounded-xl text-sm font-semibold transition-colors hover:bg-secondary mb-2"
+                    style={{ height: 40, paddingLeft: 12, paddingRight: 12, color: '#8E87A8' }}
+                  >
+                    <ArrowLeft className="w-[16px] h-[16px] shrink-0" />
+                    <span>Volver</span>
+                  </Link>
+                  <Suspense fallback={null}>
+                    <LogrosSubNavLinks items={LOGROS_SUBNAV} accentColor={accentColor} accentBg={accentBg} />
+                  </Suspense>
+                </div>
+              ) : (
+                <div className="space-y-1 relative">
+                  {!collapsed && activeSideIndex >= 0 && (
+                    <div
+                      className="absolute left-0 right-0 rounded-xl pointer-events-none"
                       style={{
                         height: 44,
-                        color: active ? accentColor : '#8E87A8',
-                        gap: collapsed ? 0 : 12,
-                        paddingLeft: collapsed ? 0 : 12,
-                        paddingRight: collapsed ? 0 : 12,
-                        justifyContent: collapsed ? 'center' : undefined,
-                        background: collapsed && active ? accentBg : undefined,
+                        top: `calc(${activeSideIndex} * 48px)`,
+                        background: accentBg,
+                        transition: 'top 0.25s cubic-bezier(0.34,1.2,0.64,1)',
                       }}
-                      onMouseEnter={collapsed ? (e) => {
-                        const r = e.currentTarget.getBoundingClientRect();
-                        setNavTip({ label, top: r.top + r.height / 2, left: r.right + 3 });
-                      } : undefined}
-                      onMouseLeave={collapsed ? () => setNavTip(null) : undefined}
-                    >
-                      <Icon className="w-[18px] h-[18px] shrink-0" strokeWidth={active ? 2.5 : 2} />
-                      {!collapsed && <span>{label}</span>}
-                      {!collapsed && href === '/dashboard/logros' && (
-                        <ChevronRight className="w-4 h-4 ml-auto shrink-0" style={{ opacity: 0.7 }} />
-                      )}
-                    </Link>
-                  );
-                })}
-              </div>
-            </>
-          )}
+                    />
+                  )}
+                  {sideNavItems.map(({ href, label, icon: Icon }) => {
+                    // Ajustes y Mi Perfil viven en el footer (ícono de ajustes sobre el avatar)
+                    if (href === '/dashboard/ajustes') return null;
+                    if (href === '/dashboard/perfil') return null;
+                    const active = isSideActive(href);
+                    return (
+                      <Link
+                        key={href}
+                        href={href}
+                        className={`flex items-center rounded-xl text-sm font-semibold transition-colors relative z-10 ${active ? '' : 'hover:bg-secondary'}`}
+                        style={{
+                          height: 44,
+                          color: active ? accentColor : '#8E87A8',
+                          gap: collapsed ? 0 : 12,
+                          paddingLeft: collapsed ? 0 : 12,
+                          paddingRight: collapsed ? 0 : 12,
+                          justifyContent: collapsed ? 'center' : undefined,
+                          background: collapsed && active ? accentBg : undefined,
+                        }}
+                        onMouseEnter={collapsed ? (e) => {
+                          const r = e.currentTarget.getBoundingClientRect();
+                          setNavTip({ label, top: r.top + r.height / 2, left: r.right + 3 });
+                        } : undefined}
+                        onMouseLeave={collapsed ? () => setNavTip(null) : undefined}
+                      >
+                        <Icon className="w-[18px] h-[18px] shrink-0" strokeWidth={active ? 2.5 : 2} />
+                        {!collapsed && <span>{label}</span>}
+                        {!collapsed && href === '/dashboard/logros' && (
+                          <ChevronRight className="w-4 h-4 ml-auto shrink-0" style={{ opacity: 0.7 }} />
+                        )}
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
+            </motion.div>
+          </AnimatePresence>
         </nav>
 
         {/* Footer — usuario */}

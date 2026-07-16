@@ -91,11 +91,11 @@ function formatearNumeroTarjeta(raw: string, brand: CardBrand): string {
 function BrandLogo({ brand }: { brand: Exclude<CardBrand, null> }) {
   if (brand === 'mastercard') {
     // eslint-disable-next-line @next/next/no-img-element
-    return <img src="/card-brands/mastercard.svg" alt="Mastercard" style={{ height: 22, width: 'auto' }} />;
+    return <img src="/card-brands/mastercard.svg" alt="Mastercard" style={{ height: 16, width: 'auto' }} />;
   }
   if (brand === 'visa') {
     // eslint-disable-next-line @next/next/no-img-element
-    return <img src="/card-brands/visa.svg" alt="Visa" style={{ height: 15, width: 'auto' }} />;
+    return <img src="/card-brands/visa.svg" alt="Visa" style={{ height: 11, width: 'auto' }} />;
   }
   if (brand === 'amex') {
     return (
@@ -127,7 +127,7 @@ function CardBrandBadge({ brand }: { brand: CardBrand }) {
           exit={reduce ? { opacity: 0 } : { opacity: 0, scale: 0.9 }}
           transition={{ duration: 0.15, ease: EASE }}
           className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center bg-white rounded-md pointer-events-none"
-          style={{ height: 28, padding: '0 7px', boxShadow: '0 0 0 1px rgba(0,0,0,0.08)' }}
+          style={{ height: 22, padding: '0 6px', boxShadow: '0 0 0 1px rgba(0,0,0,0.08)' }}
         >
           <BrandLogo brand={brand} />
         </motion.span>
@@ -610,7 +610,7 @@ export default function SuscripcionCard() {
           placeholder="Número de tarjeta" value={card.number}
           onChange={e => handleCardNumberChange(e.target.value)}
           className="w-full px-3 py-2 rounded-lg border border-input text-sm"
-          style={{ paddingRight: cardBrand ? 72 : undefined }}
+          style={{ paddingRight: cardBrand ? 60 : undefined }}
           inputMode="numeric" autoComplete="cc-number"
         />
         <CardBrandBadge brand={cardBrand} />
@@ -630,7 +630,7 @@ export default function SuscripcionCard() {
         <p className="text-[11px] text-muted-foreground">Consultando cuotas disponibles...</p>
       )}
       {!loadingCuotas && cardTipo === 'debit_card' && (
-        <p className="text-[11px] text-muted-foreground">Tarjeta débito detectada — el pago se hace en 1 solo cobro.</p>
+        <p className="text-[11px] text-muted-foreground">Tarjeta débito detectada. El pago se hace en 1 solo cobro.</p>
       )}
       {!loadingCuotas && cardTipo === 'credit_card' && cuotas.length > 1 && (
         <select

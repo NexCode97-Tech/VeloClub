@@ -108,6 +108,12 @@ export async function obtenerPago(paymentId: string): Promise<{
   return mpFetch(`/v1/payments/${paymentId}`, { method: 'GET' });
 }
 
+// Reembolso total de un pago — usado cuando se cancela una suscripción cuyo
+// período pagado todavía no había empezado a correr (pago hecho en el trial).
+export async function reembolsarPago(paymentId: string): Promise<void> {
+  await mpFetch(`/v1/payments/${paymentId}/refunds`, { method: 'POST' });
+}
+
 // ── Checkout API (transparente) — medios de pago dentro de la app ───────────
 
 export interface MedioPago {

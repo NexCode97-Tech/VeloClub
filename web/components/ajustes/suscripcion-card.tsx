@@ -218,6 +218,7 @@ export default function SuscripcionCard() {
   const [canceling, setCanceling] = useState(false);
   const [confirmarCancelar, setConfirmarCancelar] = useState(false);
   const [reactivating, setReactivating] = useState(false);
+  const [avisoReembolso, setAvisoReembolso] = useState(false);
   const [sdkReady, setSdkReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -484,8 +485,9 @@ export default function SuscripcionCard() {
     setCanceling(true); setError(null);
     try {
       const token = await getToken();
-      await apiFetch('/mercadopago/cancelar', { method: 'POST', token });
+      const res = await apiFetch<{ ok: true; reembolsado: boolean }>('/mercadopago/cancelar', { method: 'POST', token });
       setConfirmarCancelar(false);
+      setAvisoReembolso(res.reembolsado);
       await load();
     } catch (e) { setError(e instanceof Error ? e.message : 'No se pudo cancelar la suscripción'); }
     finally { setCanceling(false); }
@@ -515,6 +517,11 @@ export default function SuscripcionCard() {
         <p className="text-[11px] font-semibold text-muted-foreground tracking-wide mb-1">Sin plan activo · {data.cantidadDeportistas} deportistas</p>
         <p className="text-[15px] font-bold text-foreground mb-4">Elige tu plan</p>
 
+        {avisoReembolso && (
+          <p className="text-[12px] rounded-lg p-2.5 mb-3" style={{ background: 'rgba(6,214,160,0.08)', color: '#06D6A0' }}>
+            Cancelaste dentro de tu período de prueba gratis. Ya se reembolsó el pago completo a tu tarjeta.
+          </p>
+        )}
         {error && <p className="text-[12px] text-red-500 mb-3">{error}</p>}
 
         {loadingPlanes || !planes ? (

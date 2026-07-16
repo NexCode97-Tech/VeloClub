@@ -7,7 +7,7 @@ import { calcularPrecioPlan, vigencia, type TipoPlan } from '../lib/pricing';
 import {
   crearPreferenciaCheckout, crearPreapproval, cancelarPreapproval,
   obtenerPago, obtenerPreapproval, verificarFirmaWebhook, buscarPagoPorReferencia,
-  listarMediosPago, crearPagoDirecto, type MedioPago,
+  listarMediosPago, crearPagoDirecto, reembolsarPago, type MedioPago,
 } from '../lib/mercadopago';
 import { activarClubTrasPago } from '../lib/sync-suscripciones';
 
@@ -29,6 +29,15 @@ function requireAdmin(req: import('express').Request, res: import('express').Res
 function resolverPayerEmail(req: import('express').Request, clubEmail: string | null | undefined): string {
   if (process.env.MP_SANDBOX_PAYER_EMAIL) return process.env.MP_SANDBOX_PAYER_EMAIL;
   return req.auth?.email || clubEmail || 'sin-correo@veloclubtech.com';
+}
+
+// Si el club paga estando todavía en su período de prueba de 15 días, el plan
+// pagado no debe empezar a correr ese mismo día (desperdiciaría días gratis) —
+// arranca justo cuando termina el trial, para que se aprovechen los 15 días
+// gratis completos y después el mes pagado completo, sin solaparse.
+function fechaEfectivaPago(trialEndsAt: Date | null | undefined): Date {
+  const ahora = new Date();
+  return trialEndsAt && trialEndsAt > ahora ? trialEndsAt : ahora;
 }
 
 async function suscripcionDelClub(clubId: string) {
@@ -184,7 +193,7 @@ router.post('/pagar', requireAuth, async (req, res) => {
   const [suscripcion, cantidadDeportistas, club] = await Promise.all([
     suscripcionDelClub(clubId),
     prisma.member.count({ where: { clubId, role: 'STUDENT' } }),
-    prisma.club.findUnique({ where: { id: clubId }, select: { name: true, email: true } }),
+    prisma.club.findUnique({ where: { id: clubId }, select: { name: true, email: true, trialEndsAt: true } }),
   ]);
 
   // El 5% de descuento es un incentivo por pagar con tarjeta (el único medio que
@@ -261,7 +270,7 @@ router.post('/pagar', requireAuth, async (req, res) => {
             suscripcionId: suscripcion.id,
             concepto: 'Pago suscripción',
             monto: pago.transaction_amount,
-            fecha: new Date(),
+            fecha: fechaEfectivaPago(club?.trialEndsAt),
             estado: 'PAID',
             mpPaymentId: String(pago.id),
           },
@@ -332,7 +341,7 @@ router.post('/subscribe', requireAuth, async (req, res) => {
   const [suscripcion, cantidadDeportistas, club] = await Promise.all([
     suscripcionDelClub(clubId),
     prisma.member.count({ where: { clubId, role: 'STUDENT' } }),
-    prisma.club.findUnique({ where: { id: clubId }, select: { name: true, email: true } }),
+    prisma.club.findUnique({ where: { id: clubId }, select: { name: true, email: true, trialEndsAt: true } }),
   ]);
 
   const monto = calcularPrecioPlan(cantidadDeportistas, suscripcion.tipoPlan as TipoPlan, true);
@@ -376,7 +385,7 @@ router.post('/subscribe', requireAuth, async (req, res) => {
               suscripcionId: suscripcion.id,
               concepto: 'Renovación automática',
               monto: pago.transaction_amount,
-              fecha: new Date(),
+              fecha: fechaEfectivaPago(club?.trialEndsAt),
               estado: 'PAID',
               mpPaymentId: String(pago.id),
             },
@@ -442,6 +451,25 @@ router.post('/cancelar', requireAuth, async (req, res) => {
     return res.status(400).json({ error: 'No tienes una suscripción activa para cancelar' });
   }
 
+  // Si el pago más reciente todavía no había empezado a correr (porque se hizo
+  // durante el trial de 15 días, y arranca el día 16 — ver fechaEfectivaPago),
+  // el club no alcanzó a usar ni un solo día de lo pagado: se reembolsa entero.
+  const pagados = suscripcion.pagos.filter(p => p.estado === 'PAID' && p.fecha);
+  const ultimoPago = pagados.length > 0 ? pagados.reduce((a, b) => (a.fecha! > b.fecha! ? a : b)) : null;
+  const periodoNoIniciado = !!ultimoPago && ultimoPago.fecha! > new Date();
+
+  let reembolsado = false;
+  if (periodoNoIniciado && ultimoPago!.mpPaymentId) {
+    try {
+      await reembolsarPago(ultimoPago!.mpPaymentId);
+      await prisma.suscripcionPago.update({ where: { id: ultimoPago!.id }, data: { estado: 'REFUNDED' } });
+      reembolsado = true;
+    } catch (err) {
+      console.error('[mercadopago/cancelar] no se pudo reembolsar', err instanceof Error ? err.message : err);
+      Sentry.captureException(err, { tags: { route: 'mercadopago/cancelar:reembolso' }, extra: { clubId, mpPaymentId: ultimoPago!.mpPaymentId } });
+    }
+  }
+
   // Cancelar el cobro recurrente en Mercado Pago si estaba activo
   if (suscripcion.mpPreapprovalId) {
     try { await cancelarPreapproval(suscripcion.mpPreapprovalId); }
@@ -451,6 +479,8 @@ router.post('/cancelar', requireAuth, async (req, res) => {
     }
   }
 
+  // Si se reembolsó, el pago queda REFUNDED y vigencia() lo ignora — el club
+  // vuelve a quedar sin plan pagado, como si nunca hubiera pagado.
   await prisma.clubSuscripcion.update({
     where: { id: suscripcion.id },
     data: { autoRenew: false, mpPreapprovalId: null, intentosFallidos: 0, canceladaAt: new Date() },
@@ -459,11 +489,13 @@ router.post('/cancelar', requireAuth, async (req, res) => {
   await notifyClubStaff(clubId, {
     tipo: 'SUSCRIPCION_CANCELADA',
     titulo: 'Suscripción cancelada',
-    cuerpo: `Cancelaste tu suscripción. Tu club sigue activo ${vig.diasRestantes} día${vig.diasRestantes !== 1 ? 's' : ''} más y no se harán nuevos cobros. Puedes reactivar cuando quieras.`,
+    cuerpo: reembolsado
+      ? 'Cancelaste tu suscripción antes de que terminara tu período de prueba gratis. Se reembolsó el pago completo a tu tarjeta.'
+      : `Cancelaste tu suscripción. Tu club sigue activo ${vig.diasRestantes} día${vig.diasRestantes !== 1 ? 's' : ''} más y no se harán nuevos cobros. Puedes reactivar cuando quieras.`,
     link: '/dashboard/ajustes?tab=suscripcion',
   });
 
-  res.json({ ok: true, diasRestantes: vig.diasRestantes });
+  res.json({ ok: true, diasRestantes: reembolsado ? 0 : vig.diasRestantes, reembolsado });
 });
 
 // ── POST /mercadopago/reactivar — deshacer una cancelación ──────────────────
@@ -569,12 +601,14 @@ router.post('/webhook', async (req, res) => {
     const yaRegistrado = await prisma.suscripcionPago.findUnique({ where: { mpPaymentId: String(pago.id) } });
     if (yaRegistrado) return;
 
+    const clubDelPago = await prisma.club.findUnique({ where: { id: suscripcion.clubId }, select: { trialEndsAt: true } });
+
     await prisma.suscripcionPago.create({
       data: {
         suscripcionId: suscripcion.id,
         concepto: suscripcion.autoRenew ? 'Renovación automática' : 'Pago suscripción',
         monto: pago.transaction_amount,
-        fecha: new Date(),
+        fecha: fechaEfectivaPago(clubDelPago?.trialEndsAt),
         estado: 'PAID',
         mpPaymentId: String(pago.id),
       },

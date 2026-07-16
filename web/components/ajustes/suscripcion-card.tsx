@@ -23,7 +23,13 @@ const PLAN_LABEL: Record<TipoPlan, string> = { MENSUAL: 'Mensual', TRIMESTRAL: '
 const PLAN_DESCUENTO_LABEL: Record<TipoPlan, string> = { MENSUAL: 'Sin descuento', TRIMESTRAL: '10% de descuento', ANUAL: '20% de descuento' };
 const MESES_POR_PLAN: Record<TipoPlan, number> = { MENSUAL: 1, TRIMESTRAL: 3, ANUAL: 12 };
 // Todos los planes incluyen lo mismo — la lista solo refuerza el valor en la tarjeta
-const BENEFICIOS_PLAN = ['Gestión de miembros y asistencia QR', 'Pagos y finanzas del club', 'Resultados y competencias'];
+const BENEFICIOS_PLAN = [
+  'Gestión de miembros y asistencia digital',
+  'Pagos y finanzas del club',
+  'Resultados y competencias',
+  'Analíticas',
+  'Gestión de sedes',
+];
 
 interface PlanOpcion { tipoPlan: TipoPlan; precio: number; precioConAutoRenew: number }
 

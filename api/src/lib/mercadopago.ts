@@ -133,11 +133,17 @@ export interface PagoDirectoResponse {
 }
 
 // POST /v1/payments — pago directo sin redirección (tarjeta, PSE, Efecty).
-// X-Idempotency-Key es obligatorio en este endpoint.
-export async function crearPagoDirecto(payload: Record<string, unknown>): Promise<PagoDirectoResponse> {
+// X-Idempotency-Key es obligatorio en este endpoint. X-meli-session-id (Device ID,
+// recolectado por el SDK JS en el navegador) es requerido por Mercado Pago para
+// evaluar el riesgo del pago — sin él, los pagos con tarjeta pueden rechazarse
+// por seguridad aunque los datos sean correctos.
+export async function crearPagoDirecto(payload: Record<string, unknown>, deviceId?: string): Promise<PagoDirectoResponse> {
   return mpFetch<PagoDirectoResponse>('/v1/payments', {
     method: 'POST',
-    headers: { 'X-Idempotency-Key': crypto.randomUUID() },
+    headers: {
+      'X-Idempotency-Key': crypto.randomUUID(),
+      ...(deviceId ? { 'X-meli-session-id': deviceId } : {}),
+    },
     body: JSON.stringify(payload),
   });
 }

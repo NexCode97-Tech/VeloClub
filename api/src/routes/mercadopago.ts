@@ -133,11 +133,12 @@ router.post('/pagar', requireAuth, async (req, res) => {
 
   const {
     metodo, aceptaTerminos, cardTokenId, paymentMethodId,
-    docType, docNumber, personType, bancoId,
+    docType, docNumber, personType, bancoId, deviceId,
   } = req.body as {
     metodo?: 'CARD' | 'PSE' | 'EFECTY'; aceptaTerminos?: boolean;
     cardTokenId?: string; paymentMethodId?: string;
     docType?: string; docNumber?: string; personType?: string; bancoId?: string;
+    deviceId?: string;
   };
 
   if (aceptaTerminos !== true) {
@@ -212,7 +213,7 @@ router.post('/pagar', requireAuth, async (req, res) => {
   }
 
   try {
-    const pago = await crearPagoDirecto(payload);
+    const pago = await crearPagoDirecto(payload, deviceId);
 
     if (pago.status === 'approved') {
       // Registrar de una vez (el webhook queda de respaldo, idempotente por mpPaymentId)

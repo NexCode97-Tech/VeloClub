@@ -296,12 +296,16 @@ export default function SuscripcionCard() {
   async function handlePagar() {
     setPaying(true); setError(null);
     try {
+      // Device ID: recolectado automáticamente por el SDK JS de Mercado Pago —
+      // Mercado Pago lo exige para evaluar el riesgo del pago (X-meli-session-id)
+      const deviceId = typeof window !== 'undefined' ? (window as unknown as { MP_DEVICE_SESSION_ID?: string }).MP_DEVICE_SESSION_ID : undefined;
+
       // Con renovación automática → suscripción recurrente (cobra ya + guarda tarjeta)
       if (activarAutoRenovacion) {
         const { tokenId } = await tokenizarTarjeta();
         const token = await getToken();
         await apiFetch('/mercadopago/subscribe', {
-          method: 'POST', token, body: JSON.stringify({ cardTokenId: tokenId, aceptaTerminos }),
+          method: 'POST', token, body: JSON.stringify({ cardTokenId: tokenId, aceptaTerminos, deviceId }),
         });
         resetCard();
         await load();
@@ -309,7 +313,7 @@ export default function SuscripcionCard() {
       }
 
       // Sin renovación automática → pago único (tarjeta / PSE / Efecty)
-      const body: Record<string, unknown> = { metodo, aceptaTerminos };
+      const body: Record<string, unknown> = { metodo, aceptaTerminos, deviceId };
       if (metodo === 'CARD') {
         const { tokenId, paymentMethodId } = await tokenizarTarjeta();
         if (!paymentMethodId) throw new Error('No reconocimos la tarjeta. Verifica el número.');

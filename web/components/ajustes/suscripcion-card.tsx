@@ -330,6 +330,17 @@ export default function SuscripcionCard() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { load(); }, []);
 
+  // El SDK de Mercado Pago puede haberse cargado ya en una navegación previa,
+  // en cuyo caso el onLoad del <Script> no vuelve a dispararse. Verificamos
+  // directamente window.MercadoPago para no dejar el botón deshabilitado.
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.MercadoPago) { setSdkReady(true); return; }
+    const iv = setInterval(() => {
+      if (typeof window !== 'undefined' && window.MercadoPago) { setSdkReady(true); clearInterval(iv); }
+    }, 300);
+    return () => clearInterval(iv);
+  }, []);
+
   // Sin pagos registrados aún y sin elegir plan en esta sesión → cargar precios de los 3 planes
   useEffect(() => {
     if (data && !data.vigencia && !pickedPlan && !planes && !loadingPlanes) loadPlanes();

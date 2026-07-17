@@ -292,41 +292,18 @@ function LogrosPageInner() {
           ))}
         </div>
 
-        {/* Encabezado de sección (escritorio) + botón — misma lógica que Ajustes:
+        {/* Encabezado de sección (escritorio) — misma lógica que Ajustes:
             muestra el ícono y el título de la pestaña activa, como "Mi perfil". */}
-        <div className="flex items-center mb-4">
-          {/* Sección activa: ícono en cuadrito con degradado + título */}
-          <div className="hidden lg:flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
-              style={{ background: 'linear-gradient(135deg, #7C3AED 0%, #4361EE 100%)' }}>
-              {tab === 'comp'
-                ? <Trophy className="w-3.5 h-3.5 text-white" />
-                : <Dumbbell className="w-3.5 h-3.5 text-white" />}
-            </div>
-            <h2 className="text-[15px] font-semibold text-foreground">
-              {tab === 'comp' ? 'Competencias' : 'Entrenamientos'}
-            </h2>
+        <div className="hidden lg:flex items-center gap-2 mb-4">
+          <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
+            style={{ background: 'linear-gradient(135deg, #7C3AED 0%, #4361EE 100%)' }}>
+            {tab === 'comp'
+              ? <Trophy className="w-3.5 h-3.5 text-white" />
+              : <Dumbbell className="w-3.5 h-3.5 text-white" />}
           </div>
-          {/* Botón de acción, empujado a la derecha */}
-          {role !== 'STUDENT' && (
-            <motion.button
-              whileTap={{ scale: 0.93 }}
-              onClick={() => {
-                if (tab === 'comp') { setCompForm(emptyComp); setCompError(null); setCompOpen(true); }
-                else { setSessionForm(emptySession); setSessionError(null); setSessionOpen(true); }
-              }}
-              className="ml-auto flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[13px] font-semibold text-white shadow-sm shrink-0 cursor-pointer"
-              style={{
-                background: 'linear-gradient(135deg, #7C3AED 0%, #4361EE 100%)',
-                opacity: canManage ? 1 : 0,
-                pointerEvents: canManage ? 'auto' : 'none',
-                transition: 'opacity 0.15s ease',
-              }}
-            >
-              <Plus className="w-4 h-4" />
-              <span className="hidden sm:inline">{tab === 'comp' ? 'Competencia' : 'Entrenamiento'}</span>
-            </motion.button>
-          )}
+          <h2 className="text-[15px] font-semibold text-foreground">
+            {tab === 'comp' ? 'Competencias' : 'Entrenamientos'}
+          </h2>
         </div>
 
         {/* Stats strip — siempre ocupa espacio para evitar layout shift */}
@@ -344,6 +321,29 @@ function LogrosPageInner() {
             </>
           )}
         </div>
+
+        {/* Botón de acción — debajo de las tarjetas de estadísticas */}
+        {role !== 'STUDENT' && (
+          <div className="flex justify-end mb-4">
+            <motion.button
+              whileTap={{ scale: 0.93 }}
+              onClick={() => {
+                if (tab === 'comp') { setCompForm(emptyComp); setCompError(null); setCompOpen(true); }
+                else { setSessionForm(emptySession); setSessionError(null); setSessionOpen(true); }
+              }}
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[13px] font-semibold text-white shadow-sm shrink-0 cursor-pointer"
+              style={{
+                background: 'linear-gradient(135deg, #7C3AED 0%, #4361EE 100%)',
+                opacity: canManage ? 1 : 0,
+                pointerEvents: canManage ? 'auto' : 'none',
+                transition: 'opacity 0.15s ease',
+              }}
+            >
+              <Plus className="w-4 h-4" />
+              <span className="hidden sm:inline">{tab === 'comp' ? 'Competencia' : 'Entrenamiento'}</span>
+            </motion.button>
+          </div>
+        )}
       </div>
 
       {/* ── Content ─────────────────────────────────────────────────────────── */}

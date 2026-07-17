@@ -261,10 +261,30 @@ function LogrosPageInner() {
     <div className="min-h-full bg-background">
 
       {/* ── Header — separador full-width alineado con la fila del logo en el sidebar ── */}
-      <div className="px-5 py-3 bg-background flex items-center lg:border-b" style={{ minHeight: 58, borderColor: 'rgba(0,0,0,0.07)' }}>
+      <div className="px-5 py-3 bg-background flex items-center justify-between lg:border-b" style={{ minHeight: 58, borderColor: 'rgba(0,0,0,0.07)' }}>
         <h1 className="text-[22px] font-semibold text-foreground" style={{ fontFamily: 'inherit', lineHeight: 1.1 }}>
           Rendimiento
         </h1>
+        {/* Botón de acción — solo móvil, a la misma altura del título */}
+        {role !== 'STUDENT' && (
+          <motion.button
+            whileTap={{ scale: 0.93 }}
+            onClick={() => {
+              if (tab === 'comp') { setCompForm(emptyComp); setCompError(null); setCompOpen(true); }
+              else { setSessionForm(emptySession); setSessionError(null); setSessionOpen(true); }
+            }}
+            className="lg:hidden flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[13px] font-semibold text-white shadow-sm shrink-0 cursor-pointer"
+            style={{
+              background: 'linear-gradient(135deg, #7C3AED 0%, #4361EE 100%)',
+              opacity: canManage ? 1 : 0,
+              pointerEvents: canManage ? 'auto' : 'none',
+              transition: 'opacity 0.15s ease',
+            }}
+          >
+            <Plus className="w-4 h-4" />
+            <span className="hidden sm:inline">{tab === 'comp' ? 'Competencia' : 'Entrenamiento'}</span>
+          </motion.button>
+        )}
       </div>
 
       <div className="px-5 pt-4 lg:pt-6">
@@ -322,9 +342,10 @@ function LogrosPageInner() {
           )}
         </div>
 
-        {/* Botón de acción — debajo de las tarjetas de estadísticas */}
+        {/* Botón de acción — solo escritorio, debajo de las tarjetas de estadísticas
+            (en móvil el botón vive arriba, a la altura del título) */}
         {role !== 'STUDENT' && (
-          <div className="flex justify-end mb-4">
+          <div className="hidden lg:flex justify-end mb-4">
             <motion.button
               whileTap={{ scale: 0.93 }}
               onClick={() => {

@@ -83,6 +83,26 @@ const settingsSchema = z.object({
   noAttendanceDays: z.array(z.number().min(0).max(6)).optional(),
 });
 
+// GET /clubs/trusted — pública (sin auth). Logos de clubes verificados con
+// logo propio, para la sección "confían en nosotros" del landing. Solo
+// expone id, nombre y logo — nada sensible.
+router.get('/trusted', async (_req, res) => {
+  const cacheKey = 'clubs:trusted';
+  const cached = await cacheGet<{ clubs: unknown[] }>(cacheKey);
+  if (cached) return res.json(cached);
+
+  const clubs = await prisma.club.findMany({
+    where: { active: true, verificationStatus: 'VERIFIED', logoUrl: { not: null } },
+    select: { id: true, name: true, logoUrl: true },
+    orderBy: { createdAt: 'asc' },
+    take: 12,
+  });
+
+  const payload = { clubs };
+  await cacheSet(cacheKey, payload, 900); // 15 min
+  res.json(payload);
+});
+
 // GET /clubs/settings
 router.get('/settings', requireAuth, async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'No autenticado' });

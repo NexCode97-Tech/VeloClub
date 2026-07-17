@@ -56,7 +56,7 @@ export default function LandingFeaturesTabs({ features }: { features: FeatureTab
       <div
         role="tablist"
         aria-label="Funcionalidades de VeloClub"
-        className="flex items-center gap-2 mb-2.5 rounded-full p-1.5 overflow-x-auto no-scrollbar w-full sm:w-fit sm:max-w-full"
+        className="flex items-center gap-2 mb-2.5 rounded-full p-1.5 overflow-x-auto no-scrollbar w-full"
         style={{ background: 'rgba(124,58,237,0.06)' }}
       >
         {features.map(f => {
@@ -82,8 +82,7 @@ export default function LandingFeaturesTabs({ features }: { features: FeatureTab
                       color: isActive ? '#fff' : '#6B6580',
                     }
                   : {
-                      flex: '0 0 auto',
-                      width: 'auto',
+                      flex: '1 1 0%',
                       paddingLeft: 14,
                       paddingRight: 14,
                       background: isActive ? '#1A1028' : 'transparent',

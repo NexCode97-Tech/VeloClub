@@ -78,7 +78,7 @@ export default function LandingFeaturesTabs({ features }: { features: FeatureTab
               aria-selected={isActive}
               aria-label={f.label}
               onClick={() => selectMain(f)}
-              className={`relative z-10 flex items-center justify-center gap-1.5 h-9 rounded-full text-[13px] font-semibold cursor-pointer overflow-hidden min-w-0 transition-[flex,background-color] duration-300 ${
+              className={`relative z-10 flex items-center justify-center gap-1.5 h-9 rounded-full text-[13px] font-semibold cursor-pointer overflow-hidden min-w-0 transition-[flex,background-color] duration-700 ${
                 isActive ? '' : 'hover:bg-[rgba(26,16,40,0.06)]'
               }`}
               style={{
@@ -94,7 +94,7 @@ export default function LandingFeaturesTabs({ features }: { features: FeatureTab
                   layoutId="feature-tab-pill"
                   className="absolute inset-0 rounded-full bg-[#1A1028]"
                   style={{ zIndex: -1 }}
-                  transition={reducedMotion ? { duration: 0 } : { duration: 0.6, ease: EASE_OUT }}
+                  transition={reducedMotion ? { duration: 0 } : { duration: 0.7, ease: EASE_OUT }}
                 />
               )}
               <f.icon className="w-4 h-4 shrink-0" />

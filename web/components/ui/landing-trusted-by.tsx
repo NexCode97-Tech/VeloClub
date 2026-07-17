@@ -21,7 +21,7 @@ const MIN_SET_SIZE = 14;
 function ClubLogo({ club }: { club: TrustedClub }) {
   return (
     <div
-      className="flex items-center justify-center shrink-0 grayscale opacity-70 hover:grayscale-0 hover:opacity-100 transition-all duration-200"
+      className="flex items-center justify-center shrink-0"
       title={club.name}
     >
       <Image
@@ -56,11 +56,11 @@ export default function LandingTrustedBy() {
   const duration = Math.max(set.length * 2.5, 18);
 
   return (
-    <section className="relative w-full overflow-hidden pt-16 pb-4">
+    <section className="relative w-full overflow-hidden pt-16 pb-4 bg-[#0D0520]">
       <div className="mx-auto w-full max-w-2xl px-5">
-        <p className="text-center text-2xl sm:text-3xl font-semibold text-[#1A1028] tracking-tight" style={{ fontFamily: 'Open Sans, sans-serif' }}>
+        <p className="text-center text-2xl sm:text-3xl font-semibold text-white tracking-tight" style={{ fontFamily: 'Open Sans, sans-serif' }}>
           Clubes que ya confían en{' '}
-          <span className="text-[#7C3AED]">VeloClub</span>
+          <span className="text-[#A78BFA]">VeloClub</span>
         </p>
       </div>
 
@@ -96,12 +96,12 @@ export default function LandingTrustedBy() {
 
       {/* Horizonte con partículas — misma técnica que el ejemplo, recoloreado a marca */}
       <div className="relative -mt-24 h-80 w-full overflow-hidden [mask-image:radial-gradient(50%_50%,white,transparent)]">
-        <div className="absolute inset-0 before:absolute before:inset-0 before:bg-[radial-gradient(circle_at_bottom_center,#7C3AED,transparent_70%)] before:opacity-30" />
-        <div className="absolute -left-1/2 top-1/2 aspect-[1/0.7] z-10 w-[200%] rounded-[100%] border-t border-[rgba(124,58,237,0.15)] bg-[#F7F7FB]" />
+        <div className="absolute inset-0 before:absolute before:inset-0 before:bg-[radial-gradient(circle_at_bottom_center,#7C3AED,transparent_70%)] before:opacity-40" />
+        <div className="absolute -left-1/2 top-1/2 aspect-[1/0.7] z-10 w-[200%] rounded-[100%] border-t border-white/15 bg-[#0D0520]" />
         {!reducedMotion && (
           <Sparkles
             density={900}
-            color="#7C3AED"
+            color="#ffffff"
             className="absolute inset-x-0 bottom-0 h-full w-full [mask-image:radial-gradient(50%_50%,white,transparent_85%)]"
           />
         )}

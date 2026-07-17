@@ -1,9 +1,9 @@
 'use client';
 
-import { useId } from 'react';
-import Particles, { ParticlesProvider, useParticlesProvider } from '@tsparticles/react';
+import { useEffect, useId, useState } from 'react';
+import Particles, { initParticlesEngine } from '@tsparticles/react';
 import { loadSlim } from '@tsparticles/slim';
-import type { Engine, ISourceOptions } from '@tsparticles/engine';
+import type { ISourceOptions } from '@tsparticles/engine';
 
 interface SparklesProps {
   className?: string;
@@ -20,14 +20,8 @@ interface SparklesProps {
   options?: Partial<ISourceOptions>;
 }
 
-async function initEngine(engine: Engine) {
-  await loadSlim(engine);
-}
-
-// Fondo de partículas sutil (efecto "sparkles") usado en la sección de
-// confianza del landing. @tsparticles/react v4 inicializa el motor vía
-// ParticlesProvider/useParticlesProvider en vez del antiguo initParticlesEngine.
-function SparklesInner(props: SparklesProps) {
+// Fondo de partículas sutil ("sparkles") usado en la sección de confianza del landing.
+export function Sparkles(props: SparklesProps) {
   const {
     className,
     size = 1,
@@ -43,10 +37,16 @@ function SparklesInner(props: SparklesProps) {
     options = {},
   } = props;
 
-  const { loaded } = useParticlesProvider();
+  const [isReady, setIsReady] = useState(false);
   const id = useId();
 
-  if (!loaded) return null;
+  useEffect(() => {
+    initParticlesEngine(async engine => {
+      await loadSlim(engine);
+    }).then(() => {
+      setIsReady(true);
+    });
+  }, []);
 
   const defaultOptions: ISourceOptions = {
     background: { color: { value: background } },
@@ -70,13 +70,5 @@ function SparklesInner(props: SparklesProps) {
     detectRetina: true,
   };
 
-  return <Particles id={id} options={{ ...defaultOptions, ...options }} className={className} />;
-}
-
-export function Sparkles(props: SparklesProps) {
-  return (
-    <ParticlesProvider init={initEngine}>
-      <SparklesInner {...props} />
-    </ParticlesProvider>
-  );
+  return isReady ? <Particles id={id} options={{ ...defaultOptions, ...options }} className={className} /> : null;
 }

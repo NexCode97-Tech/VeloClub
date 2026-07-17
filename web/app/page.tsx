@@ -93,7 +93,7 @@ export default function HomePage() {
 
       {/* Nav — transparente, encima del hero */}
       <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? 'bg-[#0D0520]/95 backdrop-blur-md border-b border-white/5 shadow-lg shadow-black/30' : ''}`}>
-        <div className="max-w-5xl mx-auto flex items-center justify-between px-5 py-0 sm:h-20">
+        <div className="max-w-5xl mx-auto flex items-center justify-between px-5 py-3 sm:py-0 sm:h-20">
           {/* Desktop links — izquierda */}
           <div className="hidden sm:flex items-center gap-6">
             <a href="#funcionalidades" className="text-sm font-medium text-white/85 hover:text-white transition-colors">

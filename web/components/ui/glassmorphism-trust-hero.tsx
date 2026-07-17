@@ -6,7 +6,7 @@ import { ArrowRight } from 'lucide-react';
 
 export default function GlassmorphismHero() {
   return (
-    <div className="relative w-full min-h-dvh bg-zinc-950 overflow-hidden flex items-center" style={{ WebkitTransform: 'translateZ(0)', transform: 'translateZ(0)', touchAction: 'pan-y', WebkitOverflowScrolling: 'auto' }}>
+    <div className="relative w-full min-h-svh bg-zinc-950 overflow-hidden flex items-center" style={{ WebkitTransform: 'translateZ(0)', transform: 'translateZ(0)', touchAction: 'pan-y', WebkitOverflowScrolling: 'auto' }}>
       <style>{`
         @keyframes fadeSlideIn {
           from { opacity: 0; transform: translateY(16px); }
@@ -80,7 +80,7 @@ export default function GlassmorphismHero() {
       />
 
       {/* CONTENIDO */}
-      <div className="relative z-10 w-full max-w-5xl mx-auto px-5 pt-24 pb-12 sm:pt-28 sm:pb-16 lg:py-0 lg:min-h-dvh lg:flex lg:items-center">
+      <div className="relative z-10 w-full max-w-5xl mx-auto px-5 pt-24 pb-12 sm:pt-28 sm:pb-16 lg:py-0 lg:min-h-svh lg:flex lg:items-center">
         <div className="w-full grid grid-cols-1 lg:grid-cols-12 lg:gap-6 items-center">
 
           {/* COLUMNA — texto */}

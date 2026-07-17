@@ -78,19 +78,25 @@ export default function LandingFeaturesTabs({ features }: { features: FeatureTab
                       flex: isActive ? '2.4 1 0%' : '1 1 0%',
                       paddingLeft: 8,
                       paddingRight: 8,
-                      background: isActive ? '#1A1028' : 'transparent',
                       color: isActive ? '#fff' : '#6B6580',
                     }
                   : {
                       flex: '1 1 0%',
                       paddingLeft: 14,
                       paddingRight: 14,
-                      background: isActive ? '#1A1028' : 'transparent',
                       color: isActive ? '#fff' : '#6B6580',
                     }
               }
             >
-              <f.icon className="w-4 h-4 shrink-0" />
+              {isActive && (
+                <motion.div
+                  layoutId="feature-tab-pill"
+                  className="absolute inset-0 rounded-full bg-[#1A1028]"
+                  transition={reducedMotion ? { duration: 0 } : { type: 'spring', stiffness: 420, damping: 34, mass: 0.9 }}
+                  style={{ zIndex: 0 }}
+                />
+              )}
+              <f.icon className="relative z-10 w-4 h-4 shrink-0" />
               <AnimatePresence initial={false}>
                 {showLabel && (
                   <motion.span
@@ -98,7 +104,7 @@ export default function LandingFeaturesTabs({ features }: { features: FeatureTab
                     animate={{ opacity: 1 }}
                     exit={reducedMotion ? { opacity: 0 } : { opacity: 0 }}
                     transition={{ duration: 0.15, ease: EASE_OUT }}
-                    className="whitespace-nowrap overflow-hidden text-ellipsis"
+                    className="relative z-10 whitespace-nowrap overflow-hidden text-ellipsis"
                   >
                     {f.label}
                   </motion.span>
@@ -125,13 +131,18 @@ export default function LandingFeaturesTabs({ features }: { features: FeatureTab
                 role="tab"
                 aria-selected={isActive}
                 onClick={() => setSubKey(s.key)}
-                className="inline-flex items-center px-2.5 py-1.5 rounded-lg text-[11.5px] font-medium cursor-pointer transition-colors"
-                style={{
-                  background: isActive ? 'rgba(124,58,237,0.08)' : 'transparent',
-                  color: isActive ? '#1A1028' : '#9B95AC',
-                }}
+                className="relative inline-flex items-center px-2.5 py-1.5 rounded-lg text-[11.5px] font-medium cursor-pointer overflow-hidden"
+                style={{ color: isActive ? '#1A1028' : '#9B95AC' }}
               >
-                {s.label}
+                {isActive && (
+                  <motion.div
+                    layoutId="feature-subtab-pill"
+                    className="absolute inset-0 rounded-lg"
+                    style={{ background: 'rgba(124,58,237,0.08)', zIndex: 0 }}
+                    transition={reducedMotion ? { duration: 0 } : { type: 'spring', stiffness: 420, damping: 34, mass: 0.9 }}
+                  />
+                )}
+                <span className="relative z-10">{s.label}</span>
               </motion.button>
             );
           })}

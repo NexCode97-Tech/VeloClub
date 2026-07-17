@@ -170,57 +170,71 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* Mobile dropdown menu */}
-        <div
-          className={`sm:hidden overflow-hidden transition-all duration-300 ease-in-out ${
-            menuOpen ? 'max-h-64 opacity-100' : 'max-h-0 opacity-0'
-          }`}
-        >
-          <div className="mx-3 mb-2 px-3 pb-3 pt-2 flex flex-col gap-1 rounded-2xl bg-black/40 backdrop-blur-lg border border-white/15">
-            <a
-              href="#funcionalidades"
-              onClick={() => setMenuOpen(false)}
-              className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium text-white/90 hover:bg-white/10 transition-colors"
-            >
-              <div className="w-7 h-7 rounded-lg bg-white/10 flex items-center justify-center shrink-0">
-                <Zap className="w-3.5 h-3.5 text-white" />
-              </div>
-              Funcionalidades
-            </a>
-            <a
-              href="#por-que"
-              onClick={() => setMenuOpen(false)}
-              className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium text-white/90 hover:bg-white/10 transition-colors"
-            >
-              <div className="w-7 h-7 rounded-lg bg-white/10 flex items-center justify-center shrink-0">
-                <Shield className="w-3.5 h-3.5 text-white" />
-              </div>
-              ¿Por qué VeloClub?
-            </a>
-            <Link
-              href="/sign-in"
-              onClick={() => setMenuOpen(false)}
-              className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-semibold text-white/90 hover:bg-white/10 transition-colors mt-1"
-            >
-              <div className="w-7 h-7 rounded-lg bg-white/10 flex items-center justify-center shrink-0">
-                <ChevronRight className="w-3.5 h-3.5 text-white" />
-              </div>
-              Iniciar sesión
-            </Link>
-            <Link
-              href="/crear-club"
-              onClick={() => setMenuOpen(false)}
-              className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-semibold text-white transition-colors"
-              style={{ background: 'linear-gradient(135deg, #7C3AED, #9333EA)' }}
-            >
-              <div className="w-7 h-7 rounded-lg bg-white/20 flex items-center justify-center shrink-0">
-                <ChevronRight className="w-3.5 h-3.5 text-white" />
-              </div>
-              Crear mi club
-            </Link>
-          </div>
-        </div>
       </nav>
+
+      {/* Menú móvil — overlay a pantalla completa */}
+      <div
+        className={`sm:hidden fixed inset-0 z-[60] bg-white flex flex-col transition-opacity duration-300 ${
+          menuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+        }`}
+      >
+        <div className="flex items-center justify-between px-5 py-4 border-b border-[rgba(120,80,200,0.08)]">
+          <Image
+            src="/logo.png"
+            alt="VeloClub"
+            width={80}
+            height={80}
+            className="object-contain h-8 w-auto"
+          />
+          <button
+            className="p-2 rounded-xl text-[#1A1028] hover:bg-[rgba(124,58,237,0.06)] transition-colors"
+            onClick={() => setMenuOpen(false)}
+            aria-label="Cerrar menú"
+          >
+            <X className="w-6 h-6" />
+          </button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto py-1">
+          <a
+            href="#funcionalidades"
+            onClick={() => setMenuOpen(false)}
+            className="flex items-center justify-between px-5 py-4 border-b border-[rgba(120,80,200,0.06)] text-[15px] font-medium text-[#1A1028]"
+          >
+            Funcionalidades
+            <ChevronRight className="w-4 h-4 text-[#9B95AC]" />
+          </a>
+          <a
+            href="#por-que"
+            onClick={() => setMenuOpen(false)}
+            className="flex items-center justify-between px-5 py-4 border-b border-[rgba(120,80,200,0.06)] text-[15px] font-medium text-[#1A1028]"
+          >
+            ¿Por qué VeloClub?
+            <ChevronRight className="w-4 h-4 text-[#9B95AC]" />
+          </a>
+        </div>
+
+        <div
+          className="px-5 pt-3 border-t border-[rgba(120,80,200,0.08)] flex flex-col gap-2.5"
+          style={{ paddingBottom: 'max(2rem, env(safe-area-inset-bottom))' }}
+        >
+          <Link
+            href="/crear-club"
+            onClick={() => setMenuOpen(false)}
+            className="w-full text-center text-sm font-semibold text-white px-4 py-3 rounded-full"
+            style={{ background: 'linear-gradient(135deg, #7C3AED, #9333EA)' }}
+          >
+            Crear mi club
+          </Link>
+          <Link
+            href="/sign-in"
+            onClick={() => setMenuOpen(false)}
+            className="w-full text-center text-sm font-semibold text-[#1A1028] px-4 py-3 rounded-full border border-[rgba(120,80,200,0.15)]"
+          >
+            Iniciar sesión
+          </Link>
+        </div>
+      </div>
 
       {/* Hero glassmorphism */}
       <GlassmorphismHero />

@@ -39,26 +39,49 @@ export default function LandingFeaturesTabs({ features }: { features: FeatureTab
 
   return (
     <div>
-      {/* Pestañas principales — compactas, ancho según contenido */}
-      <div role="tablist" aria-label="Funcionalidades de VeloClub" className="flex flex-wrap gap-2 mb-2.5">
+      {/* Pestañas principales — una sola fila, todas comprimidas (solo ícono);
+          la activa se expande mostrando el texto, las demás quedan en ícono. */}
+      <div
+        role="tablist"
+        aria-label="Funcionalidades de VeloClub"
+        className="flex items-center gap-2 mb-2.5 rounded-full p-1.5 overflow-x-auto no-scrollbar"
+        style={{ background: 'rgba(124,58,237,0.06)' }}
+      >
         {features.map(f => {
           const isActive = f.key === mainKey;
           return (
-            <button
+            <motion.button
               key={f.key}
+              layout
               role="tab"
               aria-selected={isActive}
+              aria-label={f.label}
               onClick={() => selectMain(f)}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-[13px] font-semibold cursor-pointer transition-colors"
+              transition={reducedMotion ? { duration: 0 } : { type: 'spring', stiffness: 500, damping: 40 }}
+              className="relative flex items-center justify-center gap-1.5 h-9 rounded-full text-[13px] font-semibold cursor-pointer overflow-hidden shrink-0"
               style={{
+                width: isActive ? 'auto' : 36,
+                paddingLeft: isActive ? 14 : 0,
+                paddingRight: isActive ? 14 : 0,
                 background: isActive ? '#1A1028' : 'transparent',
                 color: isActive ? '#fff' : '#6B6580',
-                border: isActive ? '1px solid transparent' : '1px solid rgba(120,80,200,0.16)',
               }}
             >
-              <f.icon className="w-3.5 h-3.5" />
-              {f.label}
-            </button>
+              <f.icon className="w-4 h-4 shrink-0" />
+              <AnimatePresence initial={false}>
+                {isActive && (
+                  <motion.span
+                    initial={reducedMotion ? { opacity: 1 } : { opacity: 0, width: 0 }}
+                    animate={{ opacity: 1, width: 'auto' }}
+                    exit={reducedMotion ? { opacity: 0 } : { opacity: 0, width: 0 }}
+                    transition={{ duration: 0.16, ease: EASE_OUT }}
+                    className="whitespace-nowrap overflow-hidden"
+                  >
+                    {f.label}
+                  </motion.span>
+                )}
+              </AnimatePresence>
+            </motion.button>
           );
         })}
       </div>

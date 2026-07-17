@@ -94,7 +94,7 @@ export default function LandingFeaturesTabs({ features }: { features: FeatureTab
                   layoutId="feature-tab-pill"
                   className="absolute inset-0 rounded-full bg-[#1A1028]"
                   style={{ zIndex: -1 }}
-                  transition={reducedMotion ? { duration: 0 } : { duration: 0.4, ease: EASE_OUT }}
+                  transition={reducedMotion ? { duration: 0 } : { duration: 0.6, ease: EASE_OUT }}
                 />
               )}
               <f.icon className="w-4 h-4 shrink-0" />

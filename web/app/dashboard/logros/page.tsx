@@ -268,6 +268,30 @@ function LogrosPageInner() {
       </div>
 
       <div className="px-5 pt-4 lg:pt-6">
+        {/* Tabs — solo móvil; en escritorio viven en el sidebar. Van justo debajo
+            del título, igual que en Finanzas. */}
+        <div className="md:hidden relative flex bg-secondary rounded-2xl p-1 mb-4">
+          {/* Sliding indicator */}
+          <motion.div
+            className="absolute top-1 bottom-1 rounded-xl bg-white shadow-sm"
+            animate={{ left: tab === 'comp' ? '4px' : '50%', width: 'calc(50% - 4px)' }}
+            transition={{ type: 'spring', stiffness: 500, damping: 36 }}
+          />
+          {(['comp', 'train'] as const).map(t => (
+            <button
+              key={t}
+              onClick={() => setTab(t)}
+              className="relative z-10 flex-1 py-2.5 rounded-xl text-[12px] font-semibold transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+              style={{ color: tab === t ? '#1A1028' : '#8E87A8' }}
+            >
+              {t === 'comp'
+                ? <><Trophy className="w-3.5 h-3.5" />Competencias</>
+                : <><Dumbbell className="w-3.5 h-3.5" />Entrenamientos</>
+              }
+            </button>
+          ))}
+        </div>
+
         {/* Encabezado de sección (escritorio) + botón — misma lógica que Ajustes:
             muestra el ícono y el título de la pestaña activa, como "Mi perfil". */}
         <div className="flex items-center mb-4">
@@ -319,29 +343,6 @@ function LogrosPageInner() {
               <StatPill value={loading ? 0 : totalTrainResults} label="Resultados" color="#4361EE" />
             </>
           )}
-        </div>
-
-        {/* Tabs — solo móvil; en escritorio viven en el sidebar */}
-        <div className="md:hidden relative flex bg-secondary rounded-2xl p-1">
-          {/* Sliding indicator */}
-          <motion.div
-            className="absolute top-1 bottom-1 rounded-xl bg-white shadow-sm"
-            animate={{ left: tab === 'comp' ? '4px' : '50%', width: 'calc(50% - 4px)' }}
-            transition={{ type: 'spring', stiffness: 500, damping: 36 }}
-          />
-          {(['comp', 'train'] as const).map(t => (
-            <button
-              key={t}
-              onClick={() => setTab(t)}
-              className="relative z-10 flex-1 py-2.5 rounded-xl text-[12px] font-semibold transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
-              style={{ color: tab === t ? '#1A1028' : '#8E87A8' }}
-            >
-              {t === 'comp'
-                ? <><Trophy className="w-3.5 h-3.5" />Competencias</>
-                : <><Dumbbell className="w-3.5 h-3.5" />Entrenamientos</>
-              }
-            </button>
-          ))}
         </div>
       </div>
 

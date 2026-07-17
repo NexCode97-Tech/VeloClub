@@ -101,7 +101,7 @@ export default function LandingFeaturesTabs({ features }: { features: FeatureTab
             className="absolute top-1.5 h-9 rounded-full bg-[#1A1028] pointer-events-none"
             style={{ zIndex: 0 }}
             animate={{ x: lefts[activeIndex], width: widths[activeIndex] }}
-            transition={reducedMotion ? { duration: 0 } : { duration: 0.3, ease: EASE_OUT }}
+            transition={reducedMotion ? { duration: 0 } : { duration: 0.2, ease: EASE_OUT }}
           />
         )}
         {features.map((f, i) => {

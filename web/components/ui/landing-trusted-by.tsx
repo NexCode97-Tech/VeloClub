@@ -72,7 +72,9 @@ export default function LandingTrustedBy() {
         ) : (
           <motion.div
             className="flex items-center gap-10 sm:gap-14 w-max"
-            animate={{ x: ['0%', '-50%'] }}
+            initial={{ x: '0%' }}
+            whileInView={{ x: ['0%', '-50%'] }}
+            viewport={{ once: true, amount: 0.2 }}
             transition={{ duration, ease: 'linear', repeat: Infinity }}
           >
             {[...clubs, ...clubs].map((c, i) => (

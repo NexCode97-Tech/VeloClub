@@ -56,7 +56,7 @@ export default function LandingFeaturesTabs({ features }: { features: FeatureTab
       <div
         role="tablist"
         aria-label="Funcionalidades de VeloClub"
-        className="flex items-center gap-2 mb-2.5 rounded-full p-1.5 overflow-x-auto no-scrollbar"
+        className="flex items-center gap-2 mb-2.5 rounded-full p-1.5 overflow-x-auto no-scrollbar w-full sm:w-fit sm:max-w-full"
         style={{ background: 'rgba(124,58,237,0.06)' }}
       >
         {features.map(f => {

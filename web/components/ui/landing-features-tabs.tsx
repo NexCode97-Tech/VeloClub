@@ -114,7 +114,9 @@ export default function LandingFeaturesTabs({ features }: { features: FeatureTab
               aria-selected={isActive}
               aria-label={f.label}
               onClick={() => selectMain(f)}
-              className="relative z-10 flex items-center justify-center gap-1.5 h-9 rounded-full text-[13px] font-semibold cursor-pointer overflow-hidden min-w-0 transition-[flex] duration-300"
+              className={`relative z-10 flex items-center justify-center gap-1.5 h-9 rounded-full text-[13px] font-semibold cursor-pointer overflow-hidden min-w-0 transition-[flex,background-color] duration-300 ${
+                isActive ? '' : 'hover:bg-[rgba(26,16,40,0.06)]'
+              }`}
               style={{
                 transitionTimingFunction: EASE_OUT_CSS,
                 flex: `${flexOf(i)} 1 0%`,
@@ -158,7 +160,9 @@ export default function LandingFeaturesTabs({ features }: { features: FeatureTab
                 role="tab"
                 aria-selected={isActive}
                 onClick={() => setSubKey(s.key)}
-                className="relative inline-flex items-center px-2.5 py-1.5 rounded-lg text-[11.5px] font-medium cursor-pointer overflow-hidden"
+                className={`relative inline-flex items-center px-2.5 py-1.5 rounded-lg text-[11.5px] font-medium cursor-pointer overflow-hidden transition-colors duration-200 ${
+                  isActive ? '' : 'hover:bg-[rgba(124,58,237,0.05)]'
+                }`}
                 style={{ color: isActive ? '#1A1028' : '#9B95AC' }}
               >
                 {isActive && (

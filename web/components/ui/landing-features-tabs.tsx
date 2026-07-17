@@ -61,11 +61,13 @@ export default function LandingFeaturesTabs({ features }: { features: FeatureTab
           El fondo activo usa shared layout animation (layoutId) entre
           botones: puede saltar en vez de deslizar en móvil porque compite
           con el resize del ancho vía flex-grow (transition-[flex]) — ya
-          probado y confirmado por el usuario, se deja así a propósito. */}
+          probado y confirmado por el usuario, se deja así a propósito.
+          Esquinas de abajo planas para que toque sin espacio la tarjeta
+          blanca de sub-pestañas + contenido de más abajo. */}
       <div
         role="tablist"
         aria-label="Funcionalidades de VeloClub"
-        className="relative flex items-center gap-2 mb-2.5 rounded-full p-1.5 overflow-x-auto no-scrollbar w-full"
+        className="relative flex items-center gap-2 rounded-t-2xl p-1.5 overflow-x-auto no-scrollbar w-full"
         style={{ background: 'rgba(124,58,237,0.06)' }}
       >
         {features.map((f, i) => {
@@ -116,44 +118,44 @@ export default function LandingFeaturesTabs({ features }: { features: FeatureTab
         })}
       </div>
 
-      {/* Sub-pestañas — más discretas, cambian con la pestaña principal */}
-      <div role="tablist" aria-label={`Aspectos de ${main.label}`} className="flex flex-wrap gap-1 mb-4">
-        <AnimatePresence mode="popLayout" initial={false}>
-          {main.sub.map(s => {
-            const isActive = s.key === subKey;
-            return (
-              <motion.button
-                key={`${main.key}-${s.key}`}
-                layout
-                initial={reducedMotion ? { opacity: 0 } : { opacity: 0, y: 4 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.16, ease: EASE_OUT }}
-                role="tab"
-                aria-selected={isActive}
-                onClick={() => setSubKey(s.key)}
-                className={`relative inline-flex items-center px-2.5 py-1.5 rounded-lg text-[11.5px] font-medium cursor-pointer overflow-hidden transition-colors duration-200 ${
-                  isActive ? '' : 'hover:bg-[rgba(124,58,237,0.05)]'
-                }`}
-                style={{ color: isActive ? '#1A1028' : '#9B95AC' }}
-              >
-                {isActive && (
-                  <motion.div
-                    layoutId="feature-subtab-pill"
-                    className="absolute inset-0 rounded-lg"
-                    style={{ background: 'rgba(124,58,237,0.08)', zIndex: 0 }}
-                    transition={reducedMotion ? { duration: 0 } : { type: 'spring', stiffness: 420, damping: 34, mass: 0.9 }}
-                  />
-                )}
-                <span className="relative z-10">{s.label}</span>
-              </motion.button>
-            );
-          })}
-        </AnimatePresence>
-      </div>
+      {/* Tarjeta blanca continua: sub-pestañas + panel de contenido, pegada
+          sin espacio a las pestañas principales de arriba. */}
+      <div className="relative overflow-hidden rounded-b-2xl bg-white border border-[rgba(120,80,200,0.10)]" style={{ minHeight: 150 }}>
+        <div role="tablist" aria-label={`Aspectos de ${main.label}`} className="flex flex-wrap gap-1 px-6 sm:px-7 pt-4">
+          <AnimatePresence mode="popLayout" initial={false}>
+            {main.sub.map(s => {
+              const isActive = s.key === subKey;
+              return (
+                <motion.button
+                  key={`${main.key}-${s.key}`}
+                  layout
+                  initial={reducedMotion ? { opacity: 0 } : { opacity: 0, y: 4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.16, ease: EASE_OUT }}
+                  role="tab"
+                  aria-selected={isActive}
+                  onClick={() => setSubKey(s.key)}
+                  className={`relative inline-flex items-center px-2.5 py-1.5 rounded-lg text-[11.5px] font-medium cursor-pointer overflow-hidden transition-colors duration-200 ${
+                    isActive ? '' : 'hover:bg-[rgba(124,58,237,0.05)]'
+                  }`}
+                  style={{ color: isActive ? '#1A1028' : '#9B95AC' }}
+                >
+                  {isActive && (
+                    <motion.div
+                      layoutId="feature-subtab-pill"
+                      className="absolute inset-0 rounded-lg"
+                      style={{ background: 'rgba(124,58,237,0.08)', zIndex: 0 }}
+                      transition={reducedMotion ? { duration: 0 } : { type: 'spring', stiffness: 420, damping: 34, mass: 0.9 }}
+                    />
+                  )}
+                  <span className="relative z-10">{s.label}</span>
+                </motion.button>
+              );
+            })}
+          </AnimatePresence>
+        </div>
 
-      {/* Panel de contenido */}
-      <div className="relative overflow-hidden rounded-2xl bg-white border border-[rgba(120,80,200,0.10)]" style={{ minHeight: 150 }}>
         <AnimatePresence mode="wait" initial={false}>
           <motion.div
             key={`${main.key}-${sub.key}`}
@@ -161,7 +163,7 @@ export default function LandingFeaturesTabs({ features }: { features: FeatureTab
             animate={{ opacity: 1, y: 0 }}
             exit={reducedMotion ? { opacity: 0 } : { opacity: 0, y: -6 }}
             transition={{ duration: 0.2, ease: EASE_OUT }}
-            className="p-6 sm:p-7 flex items-start gap-4"
+            className="px-6 sm:px-7 pt-3 pb-6 sm:pb-7 flex items-start gap-4"
           >
             <div
               className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"

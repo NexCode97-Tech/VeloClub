@@ -420,11 +420,11 @@ export default function ClubProfilePage() {
           {/* Logo — sobresale el banner, mismo patrón que avatar de perfil */}
           <div className="flex items-end justify-between" style={{ marginTop: -75 }}>
             <div className="relative z-10">
-              {/* Mobile: 150px | Desktop: 170px */}
+              {/* Mobile: 130px | Desktop: 170px */}
               <div
                 className="rounded-full border-4 border-white overflow-hidden sm:w-[170px] sm:h-[170px]"
                 style={{
-                  width: 150, height: 150,
+                  width: 130, height: 130,
                   boxShadow: '0 4px 16px rgba(67,97,238,0.22)',
                   background: club.logoUrl ? undefined : 'linear-gradient(135deg,#4361EE,#7C3AED)',
                 }}>

@@ -241,13 +241,10 @@ export default function ReportesPage() {
   return (
     <div className="min-h-full bg-background pb-8">
       {/* Header — borde inferior alineado con la fila del logo en el sidebar */}
-      <div className="px-5 py-3 bg-background flex items-center lg:border-b" style={{ minHeight: 58, borderColor: 'rgba(0,0,0,0.07)' }}>
+      <div className="px-5 py-3 bg-background flex items-center justify-between lg:border-b" style={{ minHeight: 58, borderColor: 'rgba(0,0,0,0.07)' }}>
         <h1 className="text-[22px] font-semibold text-foreground" style={{ fontFamily: 'inherit', lineHeight: 1.1 }}>
           Analíticas
         </h1>
-      </div>
-
-      <div className="px-4 pt-4 lg:pt-6 flex justify-end">
         <MonthPicker
           value={selectedMonth}
           currentMonth={nowStr}
@@ -257,7 +254,7 @@ export default function ReportesPage() {
         />
       </div>
 
-      <motion.div variants={stagger} initial="hidden" animate="show" className="flex flex-col gap-4 px-4 py-4">
+      <motion.div variants={stagger} initial="hidden" animate="show" className="flex flex-col gap-4 px-4 pt-4 lg:pt-6">
 
         {/* KPIs */}
         <motion.div variants={cardVariant} className="grid grid-cols-2 sm:grid-cols-3 gap-3">

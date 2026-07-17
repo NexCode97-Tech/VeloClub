@@ -99,7 +99,7 @@ export default function GlassmorphismHero() {
             {/* Descripción */}
             <p className="vc-fade d3 text-sm text-zinc-400 leading-relaxed mx-auto lg:mx-0 max-w-sm lg:max-w-md">
               VeloClub es la plataforma todo-en-uno para gestionar miembros, asistencia,
-              pagos y competencias de tu club deportivo — desde un solo lugar.
+              pagos y competencias de tu club deportivo, desde un solo lugar.
             </p>
 
             {/* CTA */}

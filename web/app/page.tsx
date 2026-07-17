@@ -15,36 +15,51 @@ const FEATURE_COLOR = '#7C3AED';
 const FEATURE_BG = 'rgba(124,58,237,0.10)';
 const features = [
   {
+    key: 'miembros',
     icon: Users,
-    label: 'Gestión de miembros',
-    desc: 'Administra deportistas, entrenadores y admins con perfiles completos y fotos.',
-    points: ['Perfiles completos con foto y datos deportivos', 'Roles diferenciados por permiso', 'Organización por sede'],
+    label: 'Miembros',
     color: FEATURE_COLOR,
     bg: FEATURE_BG,
+    sub: [
+      { key: 'perfiles', label: 'Perfiles', desc: 'Administra deportistas, entrenadores y admins con perfiles completos y fotos.' },
+      { key: 'roles', label: 'Roles', desc: 'Cada rol (admin, entrenador, deportista) tiene su propio nivel de acceso.' },
+      { key: 'sedes', label: 'Sedes', desc: 'Organiza a los miembros según el lugar de entrenamiento al que pertenecen.' },
+    ],
   },
   {
+    key: 'asistencia',
     icon: CalendarCheck,
     label: 'Asistencia',
-    desc: 'Registra presente, ausente, tardanza o excusa médica por sede y fecha.',
-    points: ['Registro por sede y fecha', 'Historial completo por deportista', 'Reportes de inasistencias'],
     color: FEATURE_COLOR,
     bg: FEATURE_BG,
+    sub: [
+      { key: 'registro', label: 'Registro', desc: 'Registra presente, ausente, tardanza o excusa médica por sede y fecha.' },
+      { key: 'historial', label: 'Historial', desc: 'Consulta el historial completo de asistencia de cada deportista.' },
+      { key: 'reportes', label: 'Reportes', desc: 'Genera reportes de inasistencias para hacer seguimiento a tiempo.' },
+    ],
   },
   {
+    key: 'pagos',
     icon: CreditCard,
     label: 'Pagos y finanzas',
-    desc: 'Mensualidades, flujo de caja, ingresos y egresos en tiempo real.',
-    points: ['Mensualidades al día', 'Flujo de caja en tiempo real', 'Comprobantes de pago'],
     color: FEATURE_COLOR,
     bg: FEATURE_BG,
+    sub: [
+      { key: 'mensualidades', label: 'Mensualidades', desc: 'Controla los pagos de mensualidades de cada deportista al día.' },
+      { key: 'flujo', label: 'Flujo de caja', desc: 'Ingresos y egresos del club, actualizados en tiempo real.' },
+      { key: 'comprobantes', label: 'Comprobantes', desc: 'Cada pago queda con su respectivo comprobante adjunto.' },
+    ],
   },
   {
+    key: 'rendimiento',
     icon: Trophy,
     label: 'Rendimiento',
-    desc: 'Historial de competencias y entrenamientos por deportista y prueba.',
-    points: ['Competencias y resultados', 'Entrenamientos por prueba', 'Historial por deportista'],
     color: FEATURE_COLOR,
     bg: FEATURE_BG,
+    sub: [
+      { key: 'competencias', label: 'Competencias', desc: 'Historial de competencias y resultados por deportista y prueba.' },
+      { key: 'entrenamientos', label: 'Entrenamientos', desc: 'Registra sesiones de entrenamiento y el avance de cada atleta.' },
+    ],
   },
 ];
 

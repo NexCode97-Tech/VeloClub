@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import type { LucideIcon } from 'lucide-react';
 
@@ -9,10 +9,6 @@ import type { LucideIcon } from 'lucide-react';
 // de pestaña principal o sub-pestaña.
 const EASE_OUT: [number, number, number, number] = [0.23, 1, 0.32, 1];
 const EASE_OUT_CSS = `cubic-bezier(${EASE_OUT.join(',')})`;
-
-// Deben coincidir con las clases Tailwind del contenedor (p-1.5 = 6px, gap-2 = 8px).
-const TAB_PADDING = 6;
-const TAB_GAP = 8;
 const TAB_ACTIVE_FLEX_MOBILE = 2.4;
 
 export interface FeatureSub {
@@ -36,9 +32,6 @@ export default function LandingFeaturesTabs({ features }: { features: FeatureTab
   const reducedMotion = useReducedMotion();
   const [isMobile, setIsMobile] = useState(false);
 
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [containerWidth, setContainerWidth] = useState(0);
-
   // La compresión (solo ícono, se expande al seleccionar) es un patrón
   // pensado para el poco espacio horizontal del móvil. En pantallas más
   // grandes las pestañas se muestran siempre expandidas con su texto.
@@ -48,21 +41,6 @@ export default function LandingFeaturesTabs({ features }: { features: FeatureTab
     const listener = (e: MediaQueryListEvent) => setIsMobile(e.matches);
     mql.addEventListener('change', listener);
     return () => mql.removeEventListener('change', listener);
-  }, []);
-
-  // Igual que el sidebar de la app anima su propio ancho directamente
-  // (animate={{ width }}), acá calculamos la posición/ancho exactos del
-  // fondo activo a partir de los mismos valores flex que usan los botones,
-  // en vez de depender de un layoutId compartido entre elementos distintos
-  // (eso causaba que la animación saltara en vez de deslizarse).
-  useEffect(() => {
-    const measure = () => {
-      if (containerRef.current) setContainerWidth(containerRef.current.clientWidth);
-    };
-    measure();
-    const ro = new ResizeObserver(measure);
-    if (containerRef.current) ro.observe(containerRef.current);
-    return () => ro.disconnect();
   }, []);
 
   const main = features.find(f => f.key === mainKey) ?? features[0];
@@ -75,35 +53,21 @@ export default function LandingFeaturesTabs({ features }: { features: FeatureTab
 
   const activeIndex = features.findIndex(f => f.key === mainKey);
   const flexOf = (i: number) => (isMobile ? (i === activeIndex ? TAB_ACTIVE_FLEX_MOBILE : 1) : 1);
-  const totalFlex = features.reduce((sum, _f, i) => sum + flexOf(i), 0);
-  const available = Math.max(containerWidth - TAB_PADDING * 2 - TAB_GAP * (features.length - 1), 0);
-  const unit = totalFlex > 0 ? available / totalFlex : 0;
-  const widths = features.map((_f, i) => flexOf(i) * unit);
-  const lefts = widths.map((_w, i) => TAB_PADDING + widths.slice(0, i).reduce((a, b) => a + b, 0) + i * TAB_GAP);
-  const pillReady = containerWidth > 0 && activeIndex >= 0;
 
   return (
     <div>
       {/* Pestañas principales — una sola fila, todas comprimidas (solo ícono);
           la activa se expande mostrando el texto, las demás quedan en ícono.
-          El fondo activo es un único elemento que se desliza animando su
-          posición (x) y ancho reales, calculados a partir del mismo flex
-          que usan los botones — no un layoutId compartido entre botones. */}
+          El fondo activo usa shared layout animation (layoutId) entre
+          botones: puede saltar en vez de deslizar en móvil porque compite
+          con el resize del ancho vía flex-grow (transition-[flex]) — ya
+          probado y confirmado por el usuario, se deja así a propósito. */}
       <div
-        ref={containerRef}
         role="tablist"
         aria-label="Funcionalidades de VeloClub"
         className="relative flex items-center gap-2 mb-2.5 rounded-full p-1.5 overflow-x-auto no-scrollbar w-full"
         style={{ background: 'rgba(124,58,237,0.06)' }}
       >
-        {pillReady && (
-          <motion.div
-            className="absolute top-1.5 h-9 rounded-full bg-[#1A1028] pointer-events-none"
-            style={{ zIndex: 0 }}
-            animate={{ x: lefts[activeIndex], width: widths[activeIndex] }}
-            transition={reducedMotion ? { duration: 0 } : { duration: 0.2, ease: EASE_OUT }}
-          />
-        )}
         {features.map((f, i) => {
           const isActive = f.key === mainKey;
           const showLabel = isActive || !isMobile;
@@ -125,6 +89,14 @@ export default function LandingFeaturesTabs({ features }: { features: FeatureTab
                 color: isActive ? '#fff' : '#6B6580',
               }}
             >
+              {isActive && (
+                <motion.div
+                  layoutId="feature-tab-pill"
+                  className="absolute inset-0 rounded-full bg-[#1A1028]"
+                  style={{ zIndex: -1 }}
+                  transition={reducedMotion ? { duration: 0 } : { duration: 0.2, ease: EASE_OUT }}
+                />
+              )}
               <f.icon className="w-4 h-4 shrink-0" />
               <AnimatePresence initial={false}>
                 {showLabel && (

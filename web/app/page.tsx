@@ -8,34 +8,38 @@ import Image from 'next/image';
 import { Users, CalendarCheck, CreditCard, Trophy, CheckCircle2, ChevronRight, Zap, Shield, Smartphone, Menu, X } from 'lucide-react';
 import GlassmorphismHero from '@/components/ui/glassmorphism-trust-hero';
 
+// Mismo color/fondo para los 4 (el de "Gestión de miembros"), para que los
+// íconos de "Todo lo que necesitas" queden unificados en vez de multicolor.
+const FEATURE_COLOR = '#7C3AED';
+const FEATURE_BG = 'rgba(124,58,237,0.10)';
 const features = [
   {
     icon: Users,
     label: 'Gestión de miembros',
     desc: 'Administra deportistas, entrenadores y admins con perfiles completos y fotos.',
-    color: '#7C3AED',
-    bg: 'rgba(124,58,237,0.10)',
+    color: FEATURE_COLOR,
+    bg: FEATURE_BG,
   },
   {
     icon: CalendarCheck,
     label: 'Asistencia',
     desc: 'Registra presente, ausente, tardanza o excusa médica por sede y fecha.',
-    color: '#06D6A0',
-    bg: 'rgba(6,214,160,0.10)',
+    color: FEATURE_COLOR,
+    bg: FEATURE_BG,
   },
   {
     icon: CreditCard,
     label: 'Pagos y finanzas',
     desc: 'Mensualidades, flujo de caja, ingresos y egresos en tiempo real.',
-    color: '#4361EE',
-    bg: 'rgba(67,97,238,0.10)',
+    color: FEATURE_COLOR,
+    bg: FEATURE_BG,
   },
   {
     icon: Trophy,
     label: 'Rendimiento',
     desc: 'Historial de competencias y entrenamientos por deportista y prueba.',
-    color: '#FFB703',
-    bg: 'rgba(255,183,3,0.10)',
+    color: FEATURE_COLOR,
+    bg: FEATURE_BG,
   },
 ];
 
@@ -113,10 +117,9 @@ export default function HomePage() {
           <div className="hidden sm:flex items-center gap-4">
             <Link
               href="/sign-in"
-              className="flex items-center gap-1.5 text-sm font-semibold text-white/90 hover:text-white transition-colors"
+              className="text-sm font-semibold text-white/90 hover:text-white transition-colors"
             >
               Iniciar sesión
-              <ChevronRight className="w-4 h-4" />
             </Link>
             <Link
               href="/crear-club"

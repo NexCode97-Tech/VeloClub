@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowRight, Star } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 
 export default function GlassmorphismHero() {
   return (
@@ -86,16 +86,6 @@ export default function GlassmorphismHero() {
 
           {/* COLUMNA — texto */}
           <div className="lg:col-span-7 flex flex-col items-center lg:items-start space-y-5 text-center lg:text-left">
-
-            {/* Badge */}
-            <div className="vc-fade d1 flex justify-center lg:justify-start">
-              <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 backdrop-blur-md">
-                <span className="text-[10px] font-semibold uppercase tracking-wider text-zinc-300 flex items-center gap-1.5">
-                  Plataforma multi-deporte
-                  <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
-                </span>
-              </div>
-            </div>
 
             {/* Headline */}
             <h1 className="vc-fade d2 text-[2.4rem] sm:text-5xl lg:text-[3.25rem] font-semibold tracking-tighter leading-[0.92] text-white">

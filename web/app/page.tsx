@@ -240,19 +240,6 @@ export default function HomePage() {
       {/* Clubes que confían en VeloClub */}
       <LandingTrustedBy />
 
-      {/* App móvil preview — solo mobile/tablet (en desktop está en el hero) */}
-      <section className="lg:hidden w-full bg-white py-10">
-        <div className="max-w-5xl mx-auto px-5 flex justify-center">
-          <Image
-            src="/version-movil.webp"
-            alt="VeloClub versión móvil"
-            width={720}
-            height={400}
-            className="w-full max-w-2xl object-contain"
-          />
-        </div>
-      </section>
-
       {/* Benefits */}
       <section id="por-que" className="px-5 py-16 max-w-5xl mx-auto">
         <div className="bg-white rounded-3xl border border-[rgba(120,80,200,0.08)] shadow-sm p-7 sm:p-10">

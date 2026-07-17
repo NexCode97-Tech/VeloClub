@@ -6,7 +6,7 @@ import Image from 'next/image';
 
 export default function GlassmorphismHero() {
   return (
-    <div className="relative w-full min-h-svh bg-zinc-950 overflow-hidden flex items-center" style={{ WebkitTransform: 'translateZ(0)', transform: 'translateZ(0)', touchAction: 'pan-y', WebkitOverflowScrolling: 'auto' }}>
+    <div className="relative w-full min-h-svh bg-zinc-950 overflow-hidden flex items-start lg:items-center" style={{ WebkitTransform: 'translateZ(0)', transform: 'translateZ(0)', touchAction: 'pan-y', WebkitOverflowScrolling: 'auto' }}>
       <style>{`
         @keyframes fadeSlideIn {
           from { opacity: 0; transform: translateY(16px); }
@@ -118,6 +118,17 @@ export default function GlassmorphismHero() {
               >
                 Contáctanos
               </a>
+            </div>
+
+            {/* Imagen — solo mobile/tablet, debajo del contenido */}
+            <div className="vc-fade d5 lg:hidden w-full flex justify-center pt-2">
+              <Image
+                src="/version-movil.webp"
+                alt="VeloClub versión móvil"
+                width={720}
+                height={400}
+                className="w-full max-w-xs sm:max-w-sm object-contain drop-shadow-2xl"
+              />
             </div>
           </div>
 

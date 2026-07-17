@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import type { LucideIcon } from 'lucide-react';
 
@@ -28,6 +28,18 @@ export default function LandingFeaturesTabs({ features }: { features: FeatureTab
   const [mainKey, setMainKey] = useState(features[0].key);
   const [subKey, setSubKey] = useState(features[0].sub[0].key);
   const reducedMotion = useReducedMotion();
+  const [isMobile, setIsMobile] = useState(false);
+
+  // La compresión (solo ícono, se expande al seleccionar) es un patrón
+  // pensado para el poco espacio horizontal del móvil. En pantallas más
+  // grandes las pestañas se muestran siempre expandidas con su texto.
+  useEffect(() => {
+    const mql = window.matchMedia('(max-width: 639px)');
+    setIsMobile(mql.matches);
+    const listener = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+    mql.addEventListener('change', listener);
+    return () => mql.removeEventListener('change', listener);
+  }, []);
 
   const main = features.find(f => f.key === mainKey) ?? features[0];
   const sub = main.sub.find(s => s.key === subKey) ?? main.sub[0];
@@ -49,6 +61,7 @@ export default function LandingFeaturesTabs({ features }: { features: FeatureTab
       >
         {features.map(f => {
           const isActive = f.key === mainKey;
+          const showLabel = isActive || !isMobile;
           return (
             <motion.button
               key={f.key}
@@ -60,16 +73,16 @@ export default function LandingFeaturesTabs({ features }: { features: FeatureTab
               transition={reducedMotion ? { duration: 0 } : { type: 'spring', stiffness: 500, damping: 40 }}
               className="relative flex items-center justify-center gap-1.5 h-9 rounded-full text-[13px] font-semibold cursor-pointer overflow-hidden shrink-0"
               style={{
-                width: isActive ? 'auto' : 36,
-                paddingLeft: isActive ? 14 : 0,
-                paddingRight: isActive ? 14 : 0,
+                width: showLabel ? 'auto' : 36,
+                paddingLeft: showLabel ? 14 : 0,
+                paddingRight: showLabel ? 14 : 0,
                 background: isActive ? '#1A1028' : 'transparent',
                 color: isActive ? '#fff' : '#6B6580',
               }}
             >
               <f.icon className="w-4 h-4 shrink-0" />
               <AnimatePresence initial={false}>
-                {isActive && (
+                {showLabel && (
                   <motion.span
                     initial={reducedMotion ? { opacity: 1 } : { opacity: 0, width: 0 }}
                     animate={{ opacity: 1, width: 'auto' }}

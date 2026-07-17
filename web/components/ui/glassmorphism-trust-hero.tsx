@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import Link from 'next/link';
 import Image from 'next/image';
 import { ArrowRight } from 'lucide-react';
 
@@ -103,22 +102,16 @@ export default function GlassmorphismHero() {
             </p>
 
             {/* CTA */}
-            <div className="vc-fade d4 flex flex-col sm:flex-row items-stretch sm:items-center justify-center lg:justify-start gap-3">
-              <Link
-                href="/crear-club"
-                className="group inline-flex items-center justify-center gap-2 rounded-full w-full sm:w-auto px-8 py-3 text-sm font-semibold transition-all hover:scale-[1.02] active:scale-[0.98]"
-                style={{ background: 'linear-gradient(135deg, #7C3AED, #9333EA)', color: '#fff' }}
-              >
-                Crear mi club gratis
-                <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
-              </Link>
+            <div className="vc-fade d4 flex justify-center lg:justify-start">
               <a
                 href="https://wa.me/573006359008"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-2 rounded-full w-full sm:w-auto px-8 py-3 text-sm font-semibold text-white/90 border border-white/25 hover:bg-white/10 transition-all active:scale-[0.98]"
+                className="group inline-flex items-center justify-center gap-2 rounded-full w-full sm:w-auto px-8 py-3 text-sm font-semibold text-white transition-all hover:scale-[1.02] active:scale-[0.98]"
+                style={{ background: 'linear-gradient(135deg, #7C3AED, #9333EA)' }}
               >
                 Contáctanos
+                <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
               </a>
             </div>
           </div>

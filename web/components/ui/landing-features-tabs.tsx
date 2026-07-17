@@ -8,6 +8,7 @@ import type { LucideIcon } from 'lucide-react';
 // duraciones cortas (<300ms). El contenido usa fade+slide corto al cambiar
 // de pestaña principal o sub-pestaña.
 const EASE_OUT: [number, number, number, number] = [0.23, 1, 0.32, 1];
+const EASE_OUT_CSS = `cubic-bezier(${EASE_OUT.join(',')})`;
 
 export interface FeatureSub {
   key: string;
@@ -52,7 +53,10 @@ export default function LandingFeaturesTabs({ features }: { features: FeatureTab
   return (
     <div>
       {/* Pestañas principales — una sola fila, todas comprimidas (solo ícono);
-          la activa se expande mostrando el texto, las demás quedan en ícono. */}
+          la activa se expande mostrando el texto, las demás quedan en ícono.
+          El ancho de cada botón anima por CSS (transition-[flex]) y el fondo
+          activo se desliza aparte con layoutId, para que no compitan dos
+          animaciones de layout de Framer Motion sobre el mismo elemento. */}
       <div
         role="tablist"
         aria-label="Funcionalidades de VeloClub"
@@ -63,30 +67,20 @@ export default function LandingFeaturesTabs({ features }: { features: FeatureTab
           const isActive = f.key === mainKey;
           const showLabel = isActive || !isMobile;
           return (
-            <motion.button
+            <button
               key={f.key}
-              layout
               role="tab"
               aria-selected={isActive}
               aria-label={f.label}
               onClick={() => selectMain(f)}
-              transition={reducedMotion ? { duration: 0 } : { type: 'spring', stiffness: 420, damping: 34, mass: 0.9 }}
-              className="relative flex items-center justify-center gap-1.5 h-9 rounded-full text-[13px] font-semibold cursor-pointer overflow-hidden min-w-0"
-              style={
-                isMobile
-                  ? {
-                      flex: isActive ? '2.4 1 0%' : '1 1 0%',
-                      paddingLeft: 8,
-                      paddingRight: 8,
-                      color: isActive ? '#fff' : '#6B6580',
-                    }
-                  : {
-                      flex: '1 1 0%',
-                      paddingLeft: 14,
-                      paddingRight: 14,
-                      color: isActive ? '#fff' : '#6B6580',
-                    }
-              }
+              className="relative flex items-center justify-center gap-1.5 h-9 rounded-full text-[13px] font-semibold cursor-pointer overflow-hidden min-w-0 transition-[flex] duration-300"
+              style={{
+                transitionTimingFunction: EASE_OUT_CSS,
+                flex: isMobile ? (isActive ? '2.4 1 0%' : '1 1 0%') : '1 1 0%',
+                paddingLeft: isMobile ? 8 : 14,
+                paddingRight: isMobile ? 8 : 14,
+                color: isActive ? '#fff' : '#6B6580',
+              }}
             >
               {isActive && (
                 <motion.div
@@ -110,7 +104,7 @@ export default function LandingFeaturesTabs({ features }: { features: FeatureTab
                   </motion.span>
                 )}
               </AnimatePresence>
-            </motion.button>
+            </button>
           );
         })}
       </div>

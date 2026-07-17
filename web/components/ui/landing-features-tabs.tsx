@@ -121,7 +121,7 @@ export default function LandingFeaturesTabs({ features }: { features: FeatureTab
       {/* Tarjeta blanca continua: sub-pestañas + panel de contenido, pegada
           sin espacio a las pestañas principales de arriba. */}
       <div className="relative overflow-hidden rounded-b-2xl bg-white border border-[rgba(120,80,200,0.10)]" style={{ minHeight: 150 }}>
-        <div role="tablist" aria-label={`Aspectos de ${main.label}`} className="flex flex-wrap gap-1 px-6 sm:px-7 pt-4">
+        <div role="tablist" aria-label={`Aspectos de ${main.label}`} className="flex flex-wrap gap-1 px-6 sm:px-7 pt-4 pb-3 border-b border-[rgba(120,80,200,0.10)]">
           <AnimatePresence mode="popLayout" initial={false}>
             {main.sub.map(s => {
               const isActive = s.key === subKey;

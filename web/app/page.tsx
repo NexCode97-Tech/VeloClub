@@ -130,14 +130,23 @@ export default function HomePage() {
             </Link>
           </div>
 
-          {/* Mobile hamburger */}
-          <button
-            className="sm:hidden p-2.5 rounded-xl text-white hover:bg-white/10 transition-colors"
-            onClick={() => setMenuOpen(v => !v)}
-            aria-label={menuOpen ? 'Cerrar menú' : 'Abrir menú'}
-          >
-            {menuOpen ? <X className="w-7 h-7" /> : <Menu className="w-7 h-7" />}
-          </button>
+          {/* Mobile — botón crear club + hamburguesa */}
+          <div className="sm:hidden flex items-center gap-2">
+            <Link
+              href="/crear-club"
+              className="inline-flex items-center text-[13px] font-semibold text-white px-3.5 py-2 rounded-full"
+              style={{ background: 'linear-gradient(135deg, #7C3AED, #9333EA)' }}
+            >
+              Crear mi club
+            </Link>
+            <button
+              className="p-2.5 rounded-xl text-white hover:bg-white/10 transition-colors"
+              onClick={() => setMenuOpen(v => !v)}
+              aria-label={menuOpen ? 'Cerrar menú' : 'Abrir menú'}
+            >
+              {menuOpen ? <X className="w-7 h-7" /> : <Menu className="w-7 h-7" />}
+            </button>
+          </div>
         </div>
 
         {/* Mobile dropdown menu */}

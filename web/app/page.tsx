@@ -7,6 +7,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Users, CalendarCheck, CreditCard, Trophy, CheckCircle2, ChevronRight, Zap, Shield, Smartphone, Menu, X } from 'lucide-react';
 import GlassmorphismHero from '@/components/ui/glassmorphism-trust-hero';
+import LandingFeaturesTabs from '@/components/ui/landing-features-tabs';
 
 // Mismo color/fondo para los 4 (el de "Gestión de miembros"), para que los
 // íconos de "Todo lo que necesitas" queden unificados en vez de multicolor.
@@ -17,6 +18,7 @@ const features = [
     icon: Users,
     label: 'Gestión de miembros',
     desc: 'Administra deportistas, entrenadores y admins con perfiles completos y fotos.',
+    points: ['Perfiles completos con foto y datos deportivos', 'Roles diferenciados por permiso', 'Organización por sede'],
     color: FEATURE_COLOR,
     bg: FEATURE_BG,
   },
@@ -24,6 +26,7 @@ const features = [
     icon: CalendarCheck,
     label: 'Asistencia',
     desc: 'Registra presente, ausente, tardanza o excusa médica por sede y fecha.',
+    points: ['Registro por sede y fecha', 'Historial completo por deportista', 'Reportes de inasistencias'],
     color: FEATURE_COLOR,
     bg: FEATURE_BG,
   },
@@ -31,6 +34,7 @@ const features = [
     icon: CreditCard,
     label: 'Pagos y finanzas',
     desc: 'Mensualidades, flujo de caja, ingresos y egresos en tiempo real.',
+    points: ['Mensualidades al día', 'Flujo de caja en tiempo real', 'Comprobantes de pago'],
     color: FEATURE_COLOR,
     bg: FEATURE_BG,
   },
@@ -38,6 +42,7 @@ const features = [
     icon: Trophy,
     label: 'Rendimiento',
     desc: 'Historial de competencias y entrenamientos por deportista y prueba.',
+    points: ['Competencias y resultados', 'Entrenamientos por prueba', 'Historial por deportista'],
     color: FEATURE_COLOR,
     bg: FEATURE_BG,
   },
@@ -213,25 +218,7 @@ export default function HomePage() {
         >
           Todo lo que necesitas
         </h2>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {features.map(({ icon: Icon, label, desc, color, bg }) => (
-            <div
-              key={label}
-              className="bg-white rounded-2xl p-5 border border-[rgba(120,80,200,0.08)] shadow-sm hover:shadow-md transition-shadow"
-            >
-              <div
-                className="w-10 h-10 rounded-xl flex items-center justify-center mb-3"
-                style={{ background: bg }}
-              >
-                <Icon className="w-5 h-5" style={{ color }} />
-              </div>
-              <p className="font-semibold text-[#1A1028] text-sm mb-1" style={{ fontFamily: 'Open Sans, sans-serif' }}>
-                {label}
-              </p>
-              <p className="text-xs text-[#8E87A8] leading-relaxed">{desc}</p>
-            </div>
-          ))}
-        </div>
+        <LandingFeaturesTabs features={features} />
       </section>
 
       {/* App móvil preview — solo mobile/tablet (en desktop está en el hero) */}

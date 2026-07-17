@@ -146,6 +146,15 @@
     font-family: var(--font-heading);
   }
 
+  /* Oculta la barra de scroll horizontal (ej. tab bars con overflow-x-auto) */
+  .no-scrollbar {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
   /* ── Optimizaciones globales de rendimiento móvil ────────────────────────── */
 
   /* Eliminar el flash azul/gris en tap (iOS y Android) */

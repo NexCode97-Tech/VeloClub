@@ -70,25 +70,36 @@ export default function LandingFeaturesTabs({ features }: { features: FeatureTab
               aria-selected={isActive}
               aria-label={f.label}
               onClick={() => selectMain(f)}
-              transition={reducedMotion ? { duration: 0 } : { type: 'spring', stiffness: 500, damping: 40 }}
-              className="relative flex items-center justify-center gap-1.5 h-9 rounded-full text-[13px] font-semibold cursor-pointer overflow-hidden shrink-0"
-              style={{
-                width: showLabel ? 'auto' : 36,
-                paddingLeft: showLabel ? 14 : 0,
-                paddingRight: showLabel ? 14 : 0,
-                background: isActive ? '#1A1028' : 'transparent',
-                color: isActive ? '#fff' : '#6B6580',
-              }}
+              transition={reducedMotion ? { duration: 0 } : { type: 'spring', stiffness: 420, damping: 34, mass: 0.9 }}
+              className="relative flex items-center justify-center gap-1.5 h-9 rounded-full text-[13px] font-semibold cursor-pointer overflow-hidden min-w-0"
+              style={
+                isMobile
+                  ? {
+                      flex: isActive ? '2.4 1 0%' : '1 1 0%',
+                      paddingLeft: 8,
+                      paddingRight: 8,
+                      background: isActive ? '#1A1028' : 'transparent',
+                      color: isActive ? '#fff' : '#6B6580',
+                    }
+                  : {
+                      flex: '0 0 auto',
+                      width: 'auto',
+                      paddingLeft: 14,
+                      paddingRight: 14,
+                      background: isActive ? '#1A1028' : 'transparent',
+                      color: isActive ? '#fff' : '#6B6580',
+                    }
+              }
             >
               <f.icon className="w-4 h-4 shrink-0" />
               <AnimatePresence initial={false}>
                 {showLabel && (
                   <motion.span
-                    initial={reducedMotion ? { opacity: 1 } : { opacity: 0, width: 0 }}
-                    animate={{ opacity: 1, width: 'auto' }}
-                    exit={reducedMotion ? { opacity: 0 } : { opacity: 0, width: 0 }}
-                    transition={{ duration: 0.16, ease: EASE_OUT }}
-                    className="whitespace-nowrap overflow-hidden"
+                    initial={reducedMotion ? { opacity: 1 } : { opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={reducedMotion ? { opacity: 0 } : { opacity: 0 }}
+                    transition={{ duration: 0.15, ease: EASE_OUT }}
+                    className="whitespace-nowrap overflow-hidden text-ellipsis"
                   >
                     {f.label}
                   </motion.span>

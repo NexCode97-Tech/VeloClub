@@ -422,8 +422,8 @@ export default function PerfilPage() {
           <div className="flex items-end justify-between" style={{ marginTop: -75 }}>
             <div className="relative z-10">
               <div className="rounded-full border-4 border-white overflow-hidden"
-                style={{ boxShadow: '0 4px 16px rgba(124,58,237,0.20)', width: 130, height: 130 }}>
-                <Avatar src={user?.picture} name={user?.name ?? 'Usuario'} size={130} role={role} />
+                style={{ boxShadow: '0 4px 16px rgba(124,58,237,0.20)', width: 120, height: 120 }}>
+                <Avatar src={user?.picture} name={user?.name ?? 'Usuario'} size={120} role={role} />
               </div>
               {/* Badge del club — esquina inferior derecha */}
               {user?.club?.logoUrl && (

@@ -14,6 +14,23 @@ interface TrustedClub {
 
 const EASE_OUT: [number, number, number, number] = [0.23, 1, 0.32, 1];
 
+function ClubLogo({ club }: { club: TrustedClub }) {
+  return (
+    <div
+      className="flex items-center justify-center shrink-0 grayscale opacity-70 hover:grayscale-0 hover:opacity-100 transition-all duration-200"
+      title={club.name}
+    >
+      <Image
+        src={club.logoUrl}
+        alt={club.name}
+        width={64}
+        height={64}
+        className="object-contain w-10 h-10 sm:w-12 sm:h-12 rounded-full"
+      />
+    </div>
+  );
+}
+
 export default function LandingTrustedBy() {
   const [clubs, setClubs] = useState<TrustedClub[]>([]);
   const reducedMotion = useReducedMotion();
@@ -26,6 +43,10 @@ export default function LandingTrustedBy() {
 
   if (clubs.length === 0) return null;
 
+  // Duración proporcional a la cantidad de logos para que la velocidad
+  // de desplazamiento se sienta constante sin importar cuántos clubes haya.
+  const duration = Math.max(clubs.length * 3, 18);
+
   return (
     <section className="relative w-full overflow-hidden pt-16 pb-4">
       <div className="mx-auto w-full max-w-2xl px-5">
@@ -33,36 +54,33 @@ export default function LandingTrustedBy() {
           Clubes que ya confían en{' '}
           <span className="text-[#7C3AED]">VeloClub</span>
         </p>
-
-        <motion.div
-          initial={reducedMotion ? { opacity: 1 } : { opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true, amount: 0.4 }}
-          transition={{ duration: 0.4, ease: EASE_OUT }}
-          className="mt-12 grid gap-x-6 gap-y-8"
-          style={{ gridTemplateColumns: `repeat(${Math.min(clubs.length, 5)}, minmax(0, 1fr))` }}
-        >
-          {clubs.map((c, i) => (
-            <motion.div
-              key={c.id}
-              initial={reducedMotion ? { opacity: 1 } : { opacity: 0, y: 8 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 0.4 }}
-              transition={{ duration: 0.3, ease: EASE_OUT, delay: reducedMotion ? 0 : i * 0.05 }}
-              className="flex items-center justify-center grayscale opacity-70 hover:grayscale-0 hover:opacity-100 transition-all duration-200"
-              title={c.name}
-            >
-              <Image
-                src={c.logoUrl}
-                alt={c.name}
-                width={64}
-                height={64}
-                className="object-contain w-10 h-10 sm:w-12 sm:h-12 rounded-full"
-              />
-            </motion.div>
-          ))}
-        </motion.div>
       </div>
+
+      <motion.div
+        initial={reducedMotion ? { opacity: 1 } : { opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        viewport={{ once: true, amount: 0.4 }}
+        transition={{ duration: 0.4, ease: EASE_OUT }}
+        className="mt-12 w-full overflow-hidden [mask-image:linear-gradient(to_right,transparent,white_12%,white_88%,transparent)]"
+      >
+        {reducedMotion ? (
+          <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-6 px-5">
+            {clubs.map(c => (
+              <ClubLogo key={c.id} club={c} />
+            ))}
+          </div>
+        ) : (
+          <motion.div
+            className="flex items-center gap-10 sm:gap-14 w-max"
+            animate={{ x: ['0%', '-50%'] }}
+            transition={{ duration, ease: 'linear', repeat: Infinity }}
+          >
+            {[...clubs, ...clubs].map((c, i) => (
+              <ClubLogo key={`${c.id}-${i}`} club={c} />
+            ))}
+          </motion.div>
+        )}
+      </motion.div>
 
       {/* Horizonte con partículas — misma técnica que el ejemplo, recoloreado a marca */}
       <div className="relative -mt-24 h-80 w-full overflow-hidden [mask-image:radial-gradient(50%_50%,white,transparent)]">

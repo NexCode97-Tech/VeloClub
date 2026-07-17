@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import { motion, useReducedMotion } from 'framer-motion';
 import { apiFetch } from '@/lib/api-client';
@@ -35,13 +35,38 @@ export default function LandingTrustedBy() {
   const [clubs, setClubs] = useState<TrustedClub[]>([]);
   const reducedMotion = useReducedMotion();
 
+  const containerRef = useRef<HTMLDivElement>(null);
+  const trackRef = useRef<HTMLDivElement>(null);
+  const [overflows, setOverflows] = useState(false);
+
   useEffect(() => {
     apiFetch<{ clubs: TrustedClub[] }>('/clubs/trusted')
       .then(r => setClubs(r.clubs))
       .catch(() => setClubs([]));
   }, []);
 
+  // Solo tiene sentido animar el deslizante si los logos exceden el ancho
+  // del contenedor. Si caben todos, se muestran centrados y estáticos
+  // (ej. escritorio con pocos clubes) en vez de arrancar pegados a la izquierda.
+  useEffect(() => {
+    if (clubs.length === 0) return;
+    const measure = () => {
+      if (!containerRef.current || !trackRef.current) return;
+      setOverflows(trackRef.current.scrollWidth > containerRef.current.clientWidth);
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    if (containerRef.current) ro.observe(containerRef.current);
+    window.addEventListener('resize', measure);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener('resize', measure);
+    };
+  }, [clubs]);
+
   if (clubs.length === 0) return null;
+
+  const shouldAnimate = !reducedMotion && overflows;
 
   // Duración proporcional a la cantidad de logos para que la velocidad
   // de desplazamiento se sienta constante sin importar cuántos clubes haya.
@@ -57,19 +82,14 @@ export default function LandingTrustedBy() {
       </div>
 
       <motion.div
+        ref={containerRef}
         initial={reducedMotion ? { opacity: 1 } : { opacity: 0 }}
         whileInView={{ opacity: 1 }}
         viewport={{ once: true, amount: 0.4 }}
         transition={{ duration: 0.4, ease: EASE_OUT }}
         className="mt-12 w-full overflow-hidden [mask-image:linear-gradient(to_right,transparent,white_12%,white_88%,transparent)]"
       >
-        {reducedMotion ? (
-          <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-6 px-5">
-            {clubs.map(c => (
-              <ClubLogo key={c.id} club={c} />
-            ))}
-          </div>
-        ) : (
+        {shouldAnimate ? (
           <motion.div
             className="flex items-center gap-10 sm:gap-14 w-max"
             initial={{ x: '0%' }}
@@ -81,6 +101,20 @@ export default function LandingTrustedBy() {
               <ClubLogo key={`${c.id}-${i}`} club={c} />
             ))}
           </motion.div>
+        ) : (
+          <div ref={trackRef} className="flex flex-wrap items-center justify-center gap-x-10 gap-y-6 px-5 w-max mx-auto">
+            {clubs.map(c => (
+              <ClubLogo key={c.id} club={c} />
+            ))}
+          </div>
+        )}
+        {/* Pista invisible solo para medir el ancho real del contenido sin duplicar */}
+        {shouldAnimate && (
+          <div ref={trackRef} className="absolute -z-10 opacity-0 pointer-events-none flex items-center gap-10 sm:gap-14 w-max">
+            {clubs.map(c => (
+              <ClubLogo key={`measure-${c.id}`} club={c} />
+            ))}
+          </div>
         )}
       </motion.div>
 

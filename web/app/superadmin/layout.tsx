@@ -163,7 +163,7 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
         animate={{ width: collapsed ? 68 : 240 }}
         transition={{ duration: 0.25, ease: [0.23, 1, 0.32, 1] }}
         className="hidden md:flex flex-col shrink-0 relative"
-        style={{ background: '#fff', borderRight: '1px solid rgba(0,0,0,0.07)', overflow: 'visible' }}
+        style={{ background: '#fff', borderRight: '1px solid rgba(0,0,0,0.07)', overflow: 'visible', willChange: 'width' }}
       >
         {/* Logo */}
         <div className="flex items-center shrink-0" style={{ borderBottom: '1px solid rgba(0,0,0,0.06)', minHeight: 58, padding: '0 14px', gap: 9, justifyContent: collapsed ? 'center' : undefined }}>
@@ -208,8 +208,12 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
         </div>
       </motion.aside>
 
-      {/* ── Columna de contenido ── */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      {/* ── Columna de contenido ──
+          contain: 'layout paint' aísla el costo de layout/pintado del
+          contenido (tablas con muchas filas, avatares) para que no se
+          recalcule todo en cada frame de la animación del sidebar
+          hermano — eso era lo que causaba los saltos. */}
+      <div className="flex-1 flex flex-col overflow-hidden" style={{ contain: 'layout paint' }}>
 
       {/* Global Header */}
       <div className="flex items-center gap-2 shrink-0" style={{ padding: '12px 16px 10px', background: '#F7F7FB', borderBottom: '1px solid rgba(120,80,200,0.10)' }}>

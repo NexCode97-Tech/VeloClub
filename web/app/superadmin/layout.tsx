@@ -2,7 +2,7 @@
 
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth, useSession, UserButton } from '@clerk/nextjs';
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, memo } from 'react';
 import { apiFetch, ApiError } from '@/lib/api-client';
 import LoadingScreen from '@/components/ui/loading-screen';
 import Link from 'next/link';
@@ -63,6 +63,76 @@ interface Notif {
 
 const ACCENT = '#7C3AED';
 
+// Sidebar aislado: dueño de su propio estado `collapsed`. Al vivir aquí (y no
+// en el layout raíz), togglear contraer/expandir solo re-renderiza este
+// subárbol, no todo el layout — lo que elimina el INP alto que hacía la
+// animación entrecortada. React.memo evita re-renders cuando el layout padre
+// se actualiza por otras razones (notificaciones, etc.).
+const SuperadminSidebar = memo(function SuperadminSidebar({ pathname }: { pathname: string }) {
+  const [collapsed, setCollapsed] = useState(() =>
+    typeof window !== 'undefined' && localStorage.getItem('superadmin-sidebar-collapsed') === 'true'
+  );
+
+  function toggleCollapsed() {
+    setCollapsed(c => {
+      const next = !c;
+      if (typeof window !== 'undefined') localStorage.setItem('superadmin-sidebar-collapsed', String(next));
+      return next;
+    });
+  }
+
+  return (
+    <motion.aside
+      animate={{ width: collapsed ? 68 : 240 }}
+      transition={{ duration: 0.25, ease: [0.23, 1, 0.32, 1] }}
+      className="hidden md:flex flex-col shrink-0 relative"
+      style={{ background: '#fff', borderRight: '1px solid rgba(0,0,0,0.07)', overflow: 'visible' }}
+    >
+      {/* Logo */}
+      <div className="flex items-center shrink-0" style={{ borderBottom: '1px solid rgba(0,0,0,0.06)', minHeight: 58, padding: '0 14px', gap: 9, justifyContent: collapsed ? 'center' : undefined }}>
+        <Image src="/logo.png" alt="VeloClub" width={28} height={28} className="object-contain shrink-0" style={{ borderRadius: 7 }} />
+        {!collapsed && <span className="text-[15px] font-semibold" style={{ color: '#1A1028' }}>VeloClub</span>}
+        {!collapsed && <span className="ml-auto text-[9px] font-semibold px-2 py-0.5 rounded-full" style={{ background: 'rgba(239,71,111,0.10)', color: '#EF476F', letterSpacing: '0.02em' }}>Admin</span>}
+      </div>
+      {/* Botón contraer/expandir */}
+      <button onClick={toggleCollapsed}
+        className="absolute z-20 flex items-center justify-center rounded-full"
+        style={{ top: '50%', transform: 'translateY(-50%)', right: -12, width: 24, height: 24, background: '#fff', border: '1px solid rgba(0,0,0,0.10)', boxShadow: '0 2px 8px rgba(0,0,0,0.10)', color: ACCENT }}
+        title={collapsed ? 'Expandir' : 'Contraer'}>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ transform: collapsed ? 'rotate(180deg)' : 'none' }}>
+          <polyline points="15 18 9 12 15 6" />
+        </svg>
+      </button>
+      {/* Nav */}
+      <nav className="flex-1 px-2 py-2 space-y-1 overflow-y-auto">
+        {TABS.map(tab => {
+          const active = tab.exact ? pathname === tab.href : pathname.startsWith(tab.href);
+          return (
+            <Link key={tab.href} href={tab.href}
+              title={collapsed ? tab.label : undefined}
+              className={`flex items-center gap-3 rounded-xl text-sm font-semibold transition-colors ${active ? '' : 'hover:bg-secondary'}`}
+              style={{ height: 44, padding: collapsed ? 0 : '0 12px', justifyContent: collapsed ? 'center' : undefined, color: active ? ACCENT : '#8E87A8', background: active ? 'rgba(124,58,237,0.10)' : undefined }}
+            >
+              <tab.Icon size={18} strokeWidth={active ? 2.5 : 2} className="shrink-0" />
+              {!collapsed && <span>{tab.label}</span>}
+            </Link>
+          );
+        })}
+      </nav>
+      {/* Footer — usuario */}
+      <div className="flex items-center gap-2.5 shrink-0" style={{ borderTop: '1px solid rgba(0,0,0,0.06)', padding: '10px 14px', justifyContent: collapsed ? 'center' : undefined }}>
+        <UserButton appearance={{ elements: { avatarBox: { width: 34, height: 34, borderRadius: '50%' } } }} />
+        {!collapsed && (
+          <div className="min-w-0">
+            <p className="text-[12px] font-semibold m-0 truncate" style={{ color: '#1A1028' }}>Superadmin</p>
+            <p className="text-[9px] font-semibold m-0" style={{ color: '#EF476F', letterSpacing: '0.02em' }}>Panel global</p>
+          </div>
+        )}
+      </div>
+    </motion.aside>
+  );
+});
+
 export default function SuperadminLayout({ children }: { children: React.ReactNode }) {
   const pathname  = usePathname();
   const router    = useRouter();
@@ -76,17 +146,6 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
   const [panelOpen, setPanelOpen]     = useState(false);
   const [notifs, setNotifs]           = useState<Notif[]>([]);
   const [notifsLoading, setNotifsLoading] = useState(false);
-  const [collapsed, setCollapsed]     = useState(() =>
-    typeof window !== 'undefined' && localStorage.getItem('superadmin-sidebar-collapsed') === 'true'
-  );
-
-  function toggleCollapsed() {
-    setCollapsed(c => {
-      const next = !c;
-      if (typeof window !== 'undefined') localStorage.setItem('superadmin-sidebar-collapsed', String(next));
-      return next;
-    });
-  }
 
   // Auth check — stale flag evita condición de carrera al cambiar sesión activa
   useEffect(() => {
@@ -153,67 +212,17 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
   return (
     <div className="flex h-dvh overflow-hidden" style={{ background: '#F7F7FB', fontFamily: 'inherit' }}>
 
-      {/* ── Sidebar — solo escritorio/tablet ──
-          Mismo mecanismo de animación que el sidebar del dashboard normal
-          (motion.aside + animate width con Framer Motion), que ya es fluido.
-          La transición CSS plana (transition: 'width ...') se sentía más
-          lenta/entrecortada que el driver de Framer Motion para esta misma
-          propiedad. */}
-      <motion.aside
-        animate={{ width: collapsed ? 68 : 240 }}
-        transition={{ duration: 0.25, ease: [0.23, 1, 0.32, 1] }}
-        className="hidden md:flex flex-col shrink-0 relative"
-        style={{ background: '#fff', borderRight: '1px solid rgba(0,0,0,0.07)', overflow: 'visible', willChange: 'width' }}
-      >
-        {/* Logo */}
-        <div className="flex items-center shrink-0" style={{ borderBottom: '1px solid rgba(0,0,0,0.06)', minHeight: 58, padding: '0 14px', gap: 9, justifyContent: collapsed ? 'center' : undefined }}>
-          <Image src="/logo.png" alt="VeloClub" width={28} height={28} className="object-contain shrink-0" style={{ borderRadius: 7 }} />
-          {!collapsed && <span className="text-[15px] font-semibold" style={{ color: '#1A1028' }}>VeloClub</span>}
-          {!collapsed && <span className="ml-auto text-[9px] font-semibold px-2 py-0.5 rounded-full" style={{ background: 'rgba(239,71,111,0.10)', color: '#EF476F', letterSpacing: '0.02em' }}>Admin</span>}
-        </div>
-        {/* Botón contraer/expandir */}
-        <button onClick={toggleCollapsed}
-          className="absolute z-20 flex items-center justify-center rounded-full"
-          style={{ top: '50%', transform: 'translateY(-50%)', right: -12, width: 24, height: 24, background: '#fff', border: '1px solid rgba(0,0,0,0.10)', boxShadow: '0 2px 8px rgba(0,0,0,0.10)', color: ACCENT }}
-          title={collapsed ? 'Expandir' : 'Contraer'}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ transform: collapsed ? 'rotate(180deg)' : 'none' }}>
-            <polyline points="15 18 9 12 15 6" />
-          </svg>
-        </button>
-        {/* Nav */}
-        <nav className="flex-1 px-2 py-2 space-y-1 overflow-y-auto">
-          {TABS.map(tab => {
-            const active = tab.exact ? pathname === tab.href : pathname.startsWith(tab.href);
-            return (
-              <Link key={tab.href} href={tab.href}
-                title={collapsed ? tab.label : undefined}
-                className={`flex items-center gap-3 rounded-xl text-sm font-semibold transition-colors ${active ? '' : 'hover:bg-secondary'}`}
-                style={{ height: 44, padding: collapsed ? 0 : '0 12px', justifyContent: collapsed ? 'center' : undefined, color: active ? ACCENT : '#8E87A8', background: active ? 'rgba(124,58,237,0.10)' : undefined }}
-              >
-                <tab.Icon size={18} strokeWidth={active ? 2.5 : 2} className="shrink-0" />
-                {!collapsed && <span>{tab.label}</span>}
-              </Link>
-            );
-          })}
-        </nav>
-        {/* Footer — usuario */}
-        <div className="flex items-center gap-2.5 shrink-0" style={{ borderTop: '1px solid rgba(0,0,0,0.06)', padding: '10px 14px', justifyContent: collapsed ? 'center' : undefined }}>
-          <UserButton appearance={{ elements: { avatarBox: { width: 34, height: 34, borderRadius: '50%' } } }} />
-          {!collapsed && (
-            <div className="min-w-0">
-              <p className="text-[12px] font-semibold m-0 truncate" style={{ color: '#1A1028' }}>Superadmin</p>
-              <p className="text-[9px] font-semibold m-0" style={{ color: '#EF476F', letterSpacing: '0.02em' }}>Panel global</p>
-            </div>
-          )}
-        </div>
-      </motion.aside>
+      {/* ── Sidebar — aislado en su propio componente ──
+          El estado `collapsed` vive dentro de SuperadminSidebar, no en este
+          layout raíz. Así, al hacer clic en contraer/expandir, solo se
+          re-renderiza el sidebar y no todo el layout (header, panel de
+          notificaciones, main). Antes el toggle re-renderizaba el árbol
+          completo, causando un INP de ~568ms y que la animación fuera "a
+          saltos". */}
+      <SuperadminSidebar pathname={pathname} />
 
-      {/* ── Columna de contenido ──
-          contain: 'layout paint' aísla el costo de layout/pintado del
-          contenido (tablas con muchas filas, avatares) para que no se
-          recalcule todo en cada frame de la animación del sidebar
-          hermano — eso era lo que causaba los saltos. */}
-      <div className="flex-1 flex flex-col overflow-hidden" style={{ contain: 'layout paint' }}>
+      {/* ── Columna de contenido ── */}
+      <div className="flex-1 flex flex-col overflow-hidden">
 
       {/* Global Header */}
       <div className="flex items-center gap-2 shrink-0" style={{ padding: '12px 16px 10px', background: '#F7F7FB', borderBottom: '1px solid rgba(120,80,200,0.10)' }}>

@@ -1,13 +1,13 @@
 'use client';
 
 import { usePathname, useRouter } from 'next/navigation';
-import { useAuth, useSession, UserButton } from '@clerk/nextjs';
+import { useAuth, useSession, useUser, useClerk, UserButton } from '@clerk/nextjs';
 import { useEffect, useState, useCallback, memo } from 'react';
 import { apiFetch, ApiError } from '@/lib/api-client';
 import LoadingScreen from '@/components/ui/loading-screen';
 import Link from 'next/link';
 import Image from 'next/image';
-import { LayoutDashboard, Building2 } from 'lucide-react';
+import { LayoutDashboard, Building2, LogOut } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 // Config fue fusionado con Perfil (UserButton) — 3 tabs + UserButton = 4 slots
@@ -69,6 +69,9 @@ const ACCENT = '#7C3AED';
 // animación entrecortada. React.memo evita re-renders cuando el layout padre
 // se actualiza por otras razones (notificaciones, etc.).
 const SuperadminSidebar = memo(function SuperadminSidebar({ pathname }: { pathname: string }) {
+  const { user } = useUser();
+  const { signOut } = useClerk();
+  const router = useRouter();
   const [collapsed, setCollapsed] = useState(() =>
     typeof window !== 'undefined' && localStorage.getItem('superadmin-sidebar-collapsed') === 'true'
   );
@@ -80,6 +83,13 @@ const SuperadminSidebar = memo(function SuperadminSidebar({ pathname }: { pathna
       return next;
     });
   }
+
+  async function handleSignOut() {
+    await signOut();
+    router.push('/sign-in');
+  }
+
+  const avatarUrl = user?.imageUrl ?? null;
 
   return (
     <motion.aside
@@ -119,14 +129,31 @@ const SuperadminSidebar = memo(function SuperadminSidebar({ pathname }: { pathna
           );
         })}
       </nav>
-      {/* Footer — usuario */}
+      {/* Footer — usuario.
+          Se usa un <img> simple (patrón del dashboard) en vez del
+          <UserButton> de Clerk: ese componente monta un ResizeObserver
+          interno que, al redimensionarse el sidebar durante la animación,
+          hacía ~500ms de trabajo síncrono repetido (INP alto, animación a
+          saltos). El avatar plano no observa resize. */}
       <div className="flex items-center gap-2.5 shrink-0" style={{ borderTop: '1px solid rgba(0,0,0,0.06)', padding: '10px 14px', justifyContent: collapsed ? 'center' : undefined }}>
-        <UserButton appearance={{ elements: { avatarBox: { width: 34, height: 34, borderRadius: '50%' } } }} />
+        {avatarUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={avatarUrl} alt="Superadmin" className="shrink-0" style={{ width: 34, height: 34, borderRadius: '50%', objectFit: 'cover', border: '2px solid #fff', boxShadow: '0 2px 8px rgba(0,0,0,0.15)' }} />
+        ) : (
+          <div className="shrink-0 flex items-center justify-center" style={{ width: 34, height: 34, borderRadius: '50%', background: 'linear-gradient(135deg, #7C3AED, #EF476F)', color: '#fff', fontSize: 13, fontWeight: 600 }}>S</div>
+        )}
         {!collapsed && (
-          <div className="min-w-0">
-            <p className="text-[12px] font-semibold m-0 truncate" style={{ color: '#1A1028' }}>Superadmin</p>
-            <p className="text-[9px] font-semibold m-0" style={{ color: '#EF476F', letterSpacing: '0.02em' }}>Panel global</p>
-          </div>
+          <>
+            <div className="min-w-0 flex-1">
+              <p className="text-[12px] font-semibold m-0 truncate" style={{ color: '#1A1028' }}>Superadmin</p>
+              <p className="text-[9px] font-semibold m-0" style={{ color: '#EF476F', letterSpacing: '0.02em' }}>Panel global</p>
+            </div>
+            <button onClick={handleSignOut} title="Cerrar sesión"
+              className="shrink-0 flex items-center justify-center rounded-lg transition-colors hover:bg-secondary"
+              style={{ width: 28, height: 28, color: '#8E87A8' }}>
+              <LogOut size={15} />
+            </button>
+          </>
         )}
       </div>
     </motion.aside>

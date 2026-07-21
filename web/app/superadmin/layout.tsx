@@ -8,6 +8,7 @@ import LoadingScreen from '@/components/ui/loading-screen';
 import Link from 'next/link';
 import Image from 'next/image';
 import { LayoutDashboard, Building2, LogOut } from 'lucide-react';
+import { IconAjustes } from '@/components/ui/custom-icons';
 import { motion, AnimatePresence } from 'framer-motion';
 
 // Config fue fusionado con Perfil (UserButton) — 3 tabs + UserButton = 4 slots
@@ -136,7 +137,19 @@ const SuperadminSidebar = memo(function SuperadminSidebar({ pathname }: { pathna
           <img> plano del avatar (foto Google > foto Clerk) con fallback a
           inicial, en vez del <UserButton> de Clerk (que montaba un
           ResizeObserver interno costoso al animar el ancho). */}
-      <div className="flex items-center gap-2.5 shrink-0" style={{ borderTop: '1px solid rgba(0,0,0,0.06)', padding: '10px 14px', justifyContent: collapsed ? 'center' : undefined }}>
+      <div className="flex items-center shrink-0" style={{ borderTop: '1px solid rgba(0,0,0,0.06)', padding: collapsed ? '12px 0' : '10px 14px', gap: 10, flexDirection: collapsed ? 'column' : 'row', justifyContent: collapsed ? 'center' : undefined }}>
+        {/* Ícono de ajustes — colapsado: encima del avatar (igual que el admin) */}
+        {collapsed && (() => {
+          const active = pathname.startsWith('/superadmin/configuracion');
+          return (
+            <Link href="/superadmin/configuracion" title="Ajustes"
+              className="shrink-0 flex items-center justify-center rounded-xl transition-colors"
+              style={{ width: 40, height: 40, color: active ? ACCENT : '#8E87A8', background: active ? 'rgba(124,58,237,0.10)' : undefined }}>
+              <IconAjustes className="w-[18px] h-[18px]" strokeWidth={active ? 2.5 : 2} />
+            </Link>
+          );
+        })()}
+
         {avatarSrc ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={avatarSrc} alt="Superadmin" className="shrink-0" style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover', border: '2px solid #fff', boxShadow: '0 2px 8px rgba(0,0,0,0.15)' }} />
@@ -149,6 +162,12 @@ const SuperadminSidebar = memo(function SuperadminSidebar({ pathname }: { pathna
               <p className="text-[12px] font-semibold m-0 truncate" style={{ color: '#1A1028' }}>Superadmin</p>
               <p className="text-[9px] font-semibold m-0" style={{ color: '#EF476F', letterSpacing: '0.02em' }}>Panel global</p>
             </div>
+            {/* Ícono de ajustes (expandido) — igual que el admin */}
+            <Link href="/superadmin/configuracion" title="Ajustes"
+              className="shrink-0 flex items-center justify-center transition-colors hover:bg-secondary rounded-lg"
+              style={{ width: 26, height: 26, color: '#8E87A8' }}>
+              <IconAjustes className="w-[14px] h-[14px]" />
+            </Link>
             <button onClick={handleSignOut} title="Cerrar sesión"
               className="shrink-0 flex items-center justify-center rounded-lg transition-colors hover:bg-secondary"
               style={{ width: 28, height: 28, color: '#8E87A8' }}>

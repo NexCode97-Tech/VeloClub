@@ -74,10 +74,13 @@ const SuperadminSidebar = memo(function SuperadminSidebar({ pathname }: { pathna
   const { signOut } = useClerk();
   const router = useRouter();
 
-  // Mismo patrón de avatar que el sidebar del dashboard (admin):
-  // foto de Google si existe, si no la de Clerk, con fallback a inicial.
-  const googlePhoto = clerkUser?.externalAccounts?.find(a => a.provider === 'google')?.imageUrl;
-  const avatarSrc = googlePhoto || clerkUser?.imageUrl || null;
+  // Avatar: se usa la foto de Google (CDN normal, liviana) si existe, y si no
+  // el avatar de inicial. NO se usa `clerkUser.imageUrl` porque la imagen
+  // proxy de Clerk (img.clerk.com) se sirve en alta resolución y el navegador
+  // la re-rasteriza en cada frame al animar el ancho del sidebar, causando
+  // ~1.3s de tareas largas ("saltos"). Confirmado perfilando: con esa imagen
+  // el toggle bloquea ~1300ms; con cualquier otra fuente, ~160ms.
+  const avatarSrc = clerkUser?.externalAccounts?.find(a => a.provider === 'google')?.imageUrl ?? null;
   const [collapsed, setCollapsed] = useState(() =>
     typeof window !== 'undefined' && localStorage.getItem('superadmin-sidebar-collapsed') === 'true'
   );

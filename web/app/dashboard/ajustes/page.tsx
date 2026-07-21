@@ -605,7 +605,7 @@ function AjustesPageContent() {
     <div className="min-h-full bg-background">
       {/* Header — mismo alto (58px) y borde inferior que la fila del logo en el
           sidebar, para que ambas líneas queden alineadas a la misma altura */}
-      <div className="px-5 py-3 bg-background flex items-center lg:border-b" style={{ minHeight: 58, borderColor: 'rgba(0,0,0,0.07)' }}>
+      <div className="px-5 py-3 bg-background flex items-center md:border-b" style={{ minHeight: 58, borderColor: 'rgba(0,0,0,0.07)' }}>
         <h1 className="text-[22px] font-semibold text-foreground" style={{ lineHeight: 1.1 }}>
           Ajustes
         </h1>
@@ -709,8 +709,9 @@ function AjustesPageContent() {
         document.body
       )}
 
-      {/* ══ MOBILE (< lg) ══════════════════════════════════════════════════ */}
-      <div className="lg:hidden">
+      {/* ══ MOBILE (< md) — tabs de íconos; en tablet/escritorio el sidebar ya
+          tiene el submenú, así que estos tabs no se muestran ═══════════════ */}
+      <div className="md:hidden">
         {isAdmin && (
           <div className="px-4 pb-4">
             <div
@@ -767,8 +768,8 @@ function AjustesPageContent() {
         </AnimatePresence>
       </div>
 
-      {/* ══ DESKTOP (>= lg) — columna centrada, una sección a la vez ═══════ */}
-      <div className="hidden lg:block px-6 pt-6 pb-8">
+      {/* ══ TABLET + ESCRITORIO (>= md) — columna centrada, una sección a la vez ═ */}
+      <div className="hidden md:block px-6 pt-6 pb-8">
         <div className="max-w-5xl mx-auto">
           {(!isAdmin || tab === 'perfil') && (
             <div className="space-y-4">

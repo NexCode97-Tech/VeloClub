@@ -69,9 +69,14 @@ const ACCENT = '#7C3AED';
 // animación entrecortada. React.memo evita re-renders cuando el layout padre
 // se actualiza por otras razones (notificaciones, etc.).
 const SuperadminSidebar = memo(function SuperadminSidebar({ pathname }: { pathname: string }) {
-  const { user } = useUser();
+  const { user: clerkUser } = useUser();
   const { signOut } = useClerk();
   const router = useRouter();
+
+  // Mismo patrón de avatar que el sidebar del dashboard (admin):
+  // foto de Google si existe, si no la de Clerk, con fallback a inicial.
+  const googlePhoto = clerkUser?.externalAccounts?.find(a => a.provider === 'google')?.imageUrl;
+  const avatarSrc = googlePhoto || clerkUser?.imageUrl || null;
   const [collapsed, setCollapsed] = useState(() =>
     typeof window !== 'undefined' && localStorage.getItem('superadmin-sidebar-collapsed') === 'true'
   );
@@ -88,8 +93,6 @@ const SuperadminSidebar = memo(function SuperadminSidebar({ pathname }: { pathna
     await signOut();
     router.push('/sign-in');
   }
-
-  const avatarUrl = user?.imageUrl ?? null;
 
   return (
     <motion.aside
@@ -129,18 +132,16 @@ const SuperadminSidebar = memo(function SuperadminSidebar({ pathname }: { pathna
           );
         })}
       </nav>
-      {/* Footer — usuario.
-          Se usa un <img> simple (patrón del dashboard) en vez del
-          <UserButton> de Clerk: ese componente monta un ResizeObserver
-          interno que, al redimensionarse el sidebar durante la animación,
-          hacía ~500ms de trabajo síncrono repetido (INP alto, animación a
-          saltos). El avatar plano no observa resize. */}
+      {/* Footer — usuario. Mismo patrón que el sidebar del dashboard:
+          <img> plano del avatar (foto Google > foto Clerk) con fallback a
+          inicial, en vez del <UserButton> de Clerk (que montaba un
+          ResizeObserver interno costoso al animar el ancho). */}
       <div className="flex items-center gap-2.5 shrink-0" style={{ borderTop: '1px solid rgba(0,0,0,0.06)', padding: '10px 14px', justifyContent: collapsed ? 'center' : undefined }}>
-        {avatarUrl ? (
+        {avatarSrc ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={avatarUrl} alt="Superadmin" className="shrink-0" style={{ width: 34, height: 34, borderRadius: '50%', objectFit: 'cover', border: '2px solid #fff', boxShadow: '0 2px 8px rgba(0,0,0,0.15)' }} />
+          <img src={avatarSrc} alt="Superadmin" className="shrink-0" style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover', border: '2px solid #fff', boxShadow: '0 2px 8px rgba(0,0,0,0.15)' }} />
         ) : (
-          <div className="shrink-0 flex items-center justify-center" style={{ width: 34, height: 34, borderRadius: '50%', background: 'linear-gradient(135deg, #7C3AED, #EF476F)', color: '#fff', fontSize: 13, fontWeight: 600 }}>S</div>
+          <div className="shrink-0 flex items-center justify-center" style={{ width: 32, height: 32, borderRadius: '50%', background: 'linear-gradient(135deg, #7C3AED, #EF476F)', color: '#fff', fontSize: 13, fontWeight: 600 }}>S</div>
         )}
         {!collapsed && (
           <>

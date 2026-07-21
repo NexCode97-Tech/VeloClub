@@ -7,7 +7,7 @@ import { apiFetch, ApiError } from '@/lib/api-client';
 import LoadingScreen from '@/components/ui/loading-screen';
 import Link from 'next/link';
 import Image from 'next/image';
-import { LayoutDashboard, Building2, LogOut } from 'lucide-react';
+import { LayoutDashboard, Building2, LogOut, Ticket } from 'lucide-react';
 import { IconAjustes } from '@/components/ui/custom-icons';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -15,11 +15,13 @@ import { motion, AnimatePresence } from 'framer-motion';
 const TABS = [
   { href: '/superadmin',          label: 'Inicio',    exact: true,  Icon: LayoutDashboard  },
   { href: '/superadmin/clubs',    label: 'Clubes',    exact: false, Icon: Building2        },
+  { href: '/superadmin/cupones',  label: 'Cupones',   exact: false, Icon: Ticket           },
 ];
 
 const SCREEN_LABELS: Record<string, string> = {
   '/superadmin':          'Inicio',
   '/superadmin/clubs':    'Clubes',
+  '/superadmin/cupones':  'Cupones',
 };
 
 // Ícono SVG por tipo de notificación — sin emojis

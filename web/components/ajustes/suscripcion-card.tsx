@@ -244,6 +244,38 @@ export default function SuscripcionCard() {
   // Formulario para activar recurrencia sobre un plan ya activo
   const [showActivarForm, setShowActivarForm] = useState(false);
 
+  // Cupón de descuento (solo aplica a pago único, no a la renovación automática)
+  const [couponInput, setCouponInput] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState<{ codigo: string; porcentaje: number } | null>(null);
+  const [couponError, setCouponError] = useState<string | null>(null);
+  const [validatingCoupon, setValidatingCoupon] = useState(false);
+
+  async function aplicarCupon() {
+    const codigo = couponInput.trim();
+    if (!codigo) return;
+    setValidatingCoupon(true); setCouponError(null);
+    try {
+      const token = await getToken();
+      const res = await apiFetch<{ valido: boolean; codigo: string; porcentaje: number }>(
+        '/mercadopago/validar-cupon',
+        { method: 'POST', token, body: JSON.stringify({ codigo }) },
+      );
+      setAppliedCoupon({ codigo: res.codigo, porcentaje: res.porcentaje });
+      setCouponInput('');
+    } catch (e) {
+      setAppliedCoupon(null);
+      setCouponError(e instanceof Error ? e.message : 'No se pudo validar el cupón');
+    } finally {
+      setValidatingCoupon(false);
+    }
+  }
+
+  function quitarCupon() {
+    setAppliedCoupon(null);
+    setCouponError(null);
+    setCouponInput('');
+  }
+
   const [card, setCard] = useState({ number: '', name: '', expiry: '', cvv: '', docNumber: '' });
   const cardBrand = detectarMarca(card.number.replace(/\D/g, ''));
 
@@ -436,6 +468,7 @@ export default function SuscripcionCard() {
 
       // Sin renovación automática → pago único (tarjeta / PSE / Efecty)
       const body: Record<string, unknown> = { metodo, aceptaTerminos, deviceId };
+      if (appliedCoupon) body.couponCode = appliedCoupon.codigo;
       if (metodo === 'CARD') {
         const { tokenId, paymentMethodId } = await tokenizarTarjeta();
         if (!paymentMethodId) throw new Error('No reconocimos la tarjeta. Verifica el número.');
@@ -461,6 +494,7 @@ export default function SuscripcionCard() {
 
       if (res.status === 'approved') {
         resetCard();
+        quitarCupon();
         await load();
       } else if (res.status === 'pending') {
         if (metodo === 'PSE' && res.redirectUrl) {
@@ -637,6 +671,10 @@ export default function SuscripcionCard() {
   const planActivo = !!vigencia && !vigencia.vencido;
   const pctColor = !vigencia ? '#8E87A8' : vigencia.vencido ? '#EF476F' : vigencia.pct >= 50 ? '#06D6A0' : vigencia.pct >= 20 ? '#FFB703' : '#EF476F';
   const precioAPagar = activarAutoRenovacion ? suscripcion.planMontoConAutoRenew : suscripcion.planMontoSinAutoRenew;
+  // El cupón solo aplica a pago único (no a la renovación automática recurrente).
+  const cuponActivo = !activarAutoRenovacion ? appliedCoupon : null;
+  const descuentoCuponPesos = cuponActivo ? Math.round(precioAPagar * (cuponActivo.porcentaje / 100)) : 0;
+  const precioFinal = Math.max(0, precioAPagar - descuentoCuponPesos);
   const estaCancelada = planActivo && !!suscripcion.canceladaAt;
   const fechaVencimiento = planActivo && vigencia
     ? new Date(Date.now() + vigencia.diasRestantes * 86400000).toLocaleDateString('es-CO', { day: '2-digit', month: 'long', year: 'numeric' })
@@ -1049,6 +1087,53 @@ export default function SuscripcionCard() {
                 )}
                 </AnimatePresence>
 
+                {/* Cupón de descuento — solo para pago único (no renovación automática) */}
+                {!activarAutoRenovacion && (
+                  <div className="rounded-xl border border-border p-3">
+                    {cuponActivo ? (
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className="text-[12px] font-semibold text-foreground m-0 truncate">
+                            Cupón {cuponActivo.codigo} aplicado
+                          </p>
+                          <p className="text-[11px] text-[#06D6A0] m-0">
+                            −{cuponActivo.porcentaje}% · ahorras {fmt.format(descuentoCuponPesos)}
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={quitarCupon}
+                          className="shrink-0 text-[11px] font-semibold text-muted-foreground hover:text-foreground underline"
+                        >
+                          Quitar
+                        </button>
+                      </div>
+                    ) : (
+                      <>
+                        <p className="text-[11px] font-semibold text-muted-foreground mb-1.5">¿Tienes un cupón de descuento?</p>
+                        <div className="flex gap-2">
+                          <input
+                            value={couponInput}
+                            onChange={e => { setCouponInput(e.target.value.toUpperCase()); setCouponError(null); }}
+                            onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); aplicarCupon(); } }}
+                            placeholder="Código del cupón"
+                            className="flex-1 min-w-0 px-3 py-2 rounded-lg border border-border bg-background text-[13px] uppercase tracking-wide"
+                          />
+                          <button
+                            type="button"
+                            onClick={aplicarCupon}
+                            disabled={validatingCoupon || !couponInput.trim()}
+                            className="shrink-0 px-3.5 py-2 rounded-lg bg-secondary text-[12px] font-semibold text-foreground disabled:opacity-50"
+                          >
+                            {validatingCoupon ? '...' : 'Aplicar'}
+                          </button>
+                        </div>
+                        {couponError && <p className="text-[11px] text-[#EF476F] mt-1.5 m-0">{couponError}</p>}
+                      </>
+                    )}
+                  </div>
+                )}
+
                 {/* Términos — el texto cambia si activa renovación automática */}
                 <label className="flex items-start gap-2 cursor-pointer">
                   <input type="checkbox" checked={aceptaTerminos} onChange={e => setAceptaTerminos(e.target.checked)} className="mt-0.5 shrink-0" />
@@ -1069,7 +1154,7 @@ export default function SuscripcionCard() {
                   transition={{ duration: 0.12, ease: EASE }}
                   className="w-full py-3 rounded-xl bg-primary text-white text-[13px] font-semibold disabled:opacity-60"
                 >
-                  {paying ? 'Procesando pago...' : <>Pagar <PrecioAnimado valor={precioAPagar} /></>}
+                  {paying ? 'Procesando pago...' : <>Pagar <PrecioAnimado valor={precioFinal} /></>}
                 </motion.button>
                 <p className="text-[10px] text-muted-foreground text-center">
                   Pago procesado de forma segura por Mercado Pago. Tus datos nunca se guardan en VeloClub.

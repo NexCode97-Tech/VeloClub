@@ -48,6 +48,7 @@ model Club {
   attendances    Attendance[]
   suscripcion    ClubSuscripcion?
   posts          Post[]
+  cuponCanjes    CuponCanje[]
 }
 
 // ─── User (staff: ADMIN, COACH, SUPERADMIN) ──────────────────────────────────
@@ -351,6 +352,34 @@ model SuscripcionPago {
   updatedAt       DateTime        @updatedAt
 
   @@index([suscripcionId])
+}
+
+// ─── Cupones de descuento (checkout de suscripción) ──────────────────────────
+
+model Cupon {
+  id           String       @id @default(cuid())
+  codigo       String       @unique   // guardado y comparado en MAYÚSCULAS
+  porcentaje   Int                    // 1..100
+  activo       Boolean      @default(true)
+  expiraEn     DateTime?              // null = sin expiración
+  maxUsos      Int?                   // null = ilimitado (total de canjes permitidos)
+  usosActuales Int          @default(0)
+  canjes       CuponCanje[]
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+}
+
+model CuponCanje {
+  id              String   @id @default(cuid())
+  cuponId         String
+  cupon           Cupon    @relation(fields: [cuponId], references: [id], onDelete: Cascade)
+  clubId          String
+  club            Club     @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  montoDescontado Int                 // pesos descontados en el pago, para trazabilidad
+  createdAt       DateTime @default(now())
+
+  @@unique([cuponId, clubId])         // un club no puede usar el mismo cupón dos veces
+  @@index([clubId])
 }
 
 // ─── Post (feed comunitario) ─────────────────────────────────────────────────

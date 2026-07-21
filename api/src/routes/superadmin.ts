@@ -530,4 +530,86 @@ router.post('/backfill-author-clerk-ids', requireAuth, requireSuperadmin, async 
   res.json({ ok: true, updatedPosts, updatedComments });
 });
 
+// ─── Cupones de descuento ─────────────────────────────────────────────────────
+
+const cuponSchema = z.object({
+  codigo:     z.string().trim().min(3).max(30).regex(/^[A-Za-z0-9._-]+$/, 'Solo letras, números, punto, guion y guion bajo'),
+  porcentaje: z.number().int().min(1).max(100),
+  activo:     z.boolean().optional(),
+  expiraEn:   z.string().datetime().nullable().optional(),
+  maxUsos:    z.number().int().min(1).nullable().optional(),
+});
+
+const cuponUpdateSchema = cuponSchema.partial();
+
+// Listar cupones con su conteo de canjes
+router.get('/cupones', requireAuth, requireSuperadmin, async (_req, res) => {
+  const cupones = await prisma.cupon.findMany({
+    orderBy: { createdAt: 'desc' },
+    include: { _count: { select: { canjes: true } } },
+  });
+  res.json({ cupones });
+});
+
+// Crear cupón
+router.post('/cupones', requireAuth, requireSuperadmin, async (req, res) => {
+  const parsed = cuponSchema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: parsed.error.issues[0]?.message ?? 'Datos inválidos' });
+  const { codigo, porcentaje, activo, expiraEn, maxUsos } = parsed.data;
+
+  const codigoNorm = codigo.trim().toUpperCase();
+  const existente = await prisma.cupon.findUnique({ where: { codigo: codigoNorm } });
+  if (existente) return res.status(409).json({ error: 'Ya existe un cupón con ese código' });
+
+  const cupon = await prisma.cupon.create({
+    data: {
+      codigo: codigoNorm,
+      porcentaje,
+      activo: activo ?? true,
+      expiraEn: expiraEn ? new Date(expiraEn) : null,
+      maxUsos: maxUsos ?? null,
+    },
+    include: { _count: { select: { canjes: true } } },
+  });
+  res.status(201).json({ cupon });
+});
+
+// Editar / activar / desactivar cupón
+router.patch('/cupones/:id', requireAuth, requireSuperadmin, async (req, res) => {
+  const parsed = cuponUpdateSchema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: parsed.error.issues[0]?.message ?? 'Datos inválidos' });
+  const { codigo, porcentaje, activo, expiraEn, maxUsos } = parsed.data;
+
+  const actual = await prisma.cupon.findUnique({ where: { id: String(req.params.id) } });
+  if (!actual) return res.status(404).json({ error: 'Cupón no encontrado' });
+
+  let codigoNorm: string | undefined;
+  if (codigo !== undefined) {
+    codigoNorm = codigo.trim().toUpperCase();
+    const otro = await prisma.cupon.findUnique({ where: { codigo: codigoNorm } });
+    if (otro && otro.id !== actual.id) return res.status(409).json({ error: 'Ya existe un cupón con ese código' });
+  }
+
+  const cupon = await prisma.cupon.update({
+    where: { id: actual.id },
+    data: {
+      ...(codigoNorm !== undefined ? { codigo: codigoNorm } : {}),
+      ...(porcentaje !== undefined ? { porcentaje } : {}),
+      ...(activo !== undefined ? { activo } : {}),
+      ...(expiraEn !== undefined ? { expiraEn: expiraEn ? new Date(expiraEn) : null } : {}),
+      ...(maxUsos !== undefined ? { maxUsos: maxUsos ?? null } : {}),
+    },
+    include: { _count: { select: { canjes: true } } },
+  });
+  res.json({ cupon });
+});
+
+// Eliminar cupón (borra también sus canjes por cascade)
+router.delete('/cupones/:id', requireAuth, requireSuperadmin, async (req, res) => {
+  const actual = await prisma.cupon.findUnique({ where: { id: String(req.params.id) } });
+  if (!actual) return res.status(404).json({ error: 'Cupón no encontrado' });
+  await prisma.cupon.delete({ where: { id: actual.id } });
+  res.json({ ok: true });
+});
+
 export default router;

@@ -10,6 +10,7 @@ import {
   listarMediosPago, crearPagoDirecto, reembolsarPago, type MedioPago,
 } from '../lib/mercadopago';
 import { activarClubTrasPago } from '../lib/sync-suscripciones';
+import { validarCupon, descuentoCupon, registrarCanje } from '../lib/cupones';
 
 const router = Router();
 
@@ -136,6 +137,17 @@ router.get('/metodos-pago', requireAuth, async (req, res) => {
   }
 });
 
+// ── POST /mercadopago/validar-cupon — previsualizar descuento antes de pagar ─
+router.post('/validar-cupon', requireAuth, async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  const clubId = req.user!.clubId ?? '';
+  const { codigo } = req.body as { codigo?: string };
+
+  const r = await validarCupon(codigo ?? '', clubId);
+  if (!r.ok) return res.status(400).json({ valido: false, error: r.error });
+  return res.json({ valido: true, codigo: r.cupon.codigo, porcentaje: r.cupon.porcentaje });
+});
+
 // ── POST /mercadopago/pagar — pago único dentro de la app (Checkout API) ────
 // Mensajes amigables para los rechazos más comunes de tarjeta
 const RECHAZO_MSG: Record<string, string> = {
@@ -160,6 +172,7 @@ router.post('/pagar', requireAuth, async (req, res) => {
     docType, docNumber, personType, bancoId, deviceId, installments,
     nombres, apellidos, telefono,
     direccion, numeroDireccion, codigoPostal, barrio, ciudad,
+    couponCode,
   } = req.body as {
     metodo?: 'CARD' | 'PSE' | 'EFECTY'; aceptaTerminos?: boolean;
     cardTokenId?: string; paymentMethodId?: string;
@@ -168,6 +181,7 @@ router.post('/pagar', requireAuth, async (req, res) => {
     // Requeridos por la nueva versión de PSE de Mercado Pago
     nombres?: string; apellidos?: string; telefono?: string;
     direccion?: string; numeroDireccion?: string; codigoPostal?: string; barrio?: string; ciudad?: string;
+    couponCode?: string;
   };
 
   const cuotas = Number.isInteger(installments) && installments! >= 1 && installments! <= 36 ? installments! : 1;
@@ -202,7 +216,20 @@ router.post('/pagar', requireAuth, async (req, res) => {
   // El 5% de descuento es un incentivo por pagar con tarjeta (el único medio que
   // habilita la renovación automática) — un pago manual por PSE o Efecty no lo
   // recibe, aunque la suscripción ya tenga autoRenew activo de antes.
-  const monto = calcularPrecioPlan(cantidadDeportistas, suscripcion.tipoPlan as TipoPlan, metodo === 'CARD');
+  const montoBase = calcularPrecioPlan(cantidadDeportistas, suscripcion.tipoPlan as TipoPlan, metodo === 'CARD');
+
+  // Cupón de descuento (opcional). SIEMPRE se re-valida en el servidor: nunca se
+  // confía en el frontend para el precio. Se aplica sobre el total final.
+  let cuponId: string | null = null;
+  let descuento = 0;
+  if (couponCode && couponCode.trim()) {
+    const v = await validarCupon(couponCode, clubId);
+    if (!v.ok) return res.status(400).json({ error: v.error });
+    cuponId = v.cupon.id;
+    descuento = descuentoCupon(montoBase, v.cupon.porcentaje);
+  }
+  const monto = Math.max(0, montoBase - descuento);
+
   const payerEmail = resolverPayerEmail(req, club?.email);
   const reference = `sub-${suscripcion.id}-${Date.now()}`;
   const description = `Suscripción VeloClub — ${club?.name ?? 'Club'}`;
@@ -212,6 +239,30 @@ router.post('/pagar', requireAuth, async (req, res) => {
     where: { id: suscripcion.id },
     data: { consentimientoPagoAt: new Date() },
   });
+
+  // Cupón del 100%: el total queda en $0 → no se puede cobrar por Mercado Pago
+  // (rechaza montos de 0). Se activa el club directamente y se registra un pago
+  // de $0 para dejar constancia, más el canje del cupón.
+  if (monto <= 0 && cuponId) {
+    try {
+      await prisma.suscripcionPago.create({
+        data: {
+          suscripcionId: suscripcion.id,
+          concepto: `Suscripción VeloClub (cupón ${couponCode!.trim().toUpperCase()} — 100%)`,
+          monto: 0,
+          fecha: fechaEfectivaPago(club?.trialEndsAt),
+          estado: 'PAID',
+        },
+      });
+      await activarClubTrasPago(clubId);
+      await registrarCanje(cuponId, clubId, descuento);
+      return res.json({ status: 'approved' });
+    } catch (err) {
+      console.error('[mercadopago/pagar] cupón 100%', err instanceof Error ? err.message : err);
+      Sentry.captureException(err, { tags: { route: 'mercadopago/pagar', metodo: 'CUPON_100' }, extra: { clubId } });
+      return res.status(500).json({ error: 'No se pudo activar el club con el cupón. Intenta de nuevo.' });
+    }
+  }
 
   const identification = { type: docType || 'CC', number: docNumber };
 
@@ -281,11 +332,16 @@ router.post('/pagar', requireAuth, async (req, res) => {
       }
       // El pago activa el club: limpia el trial y reactiva si estaba desactivado por vencimiento
       await activarClubTrasPago(clubId);
+      // Registrar el canje del cupón (si se usó) — el descuento ya se aplicó al cobro
+      if (cuponId) await registrarCanje(cuponId, clubId, descuento);
       return res.json({ status: 'approved' });
     }
 
     if (pago.status === 'pending' || pago.status === 'in_process') {
-      // PSE redirige al banco; Efecty entrega el cupón para pagar en un punto físico
+      // PSE redirige al banco; Efecty entrega el cupón para pagar en un punto físico.
+      // El descuento ya quedó aplicado en el monto del pago de MP, así que el canje
+      // se registra ahora (un uso por club, no reutilizable en otro intento).
+      if (cuponId) await registrarCanje(cuponId, clubId, descuento);
       return res.json({
         status: 'pending',
         redirectUrl: pago.transaction_details?.external_resource_url ?? null,

@@ -2,6 +2,7 @@
 
 import { useAuth } from '@clerk/nextjs';
 import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { apiFetch } from '@/lib/api-client';
 import Link from 'next/link';
@@ -49,39 +50,80 @@ interface Club {
 }
 
 // ── Mini bar chart (custom, no recharts) ──────────────────────────────────────
+// Cada barra es un mes del año en curso; al pasar el cursor se muestra un
+// tooltip flotante con el mes y el monto recaudado. El área de hover es toda
+// la altura del chart (no solo la barra, que puede ser muy bajita).
 function MiniBarChart({ data }: { data: number[] }) {
   const shouldReduceMotion = useReducedMotion();
   const max = Math.max(...data, 1);
   const nowIdx = data.length - 1;
+  const [tip, setTip] = useState<{ i: number; x: number; y: number } | null>(null);
 
   return (
+    <>
     <motion.div
       variants={stagger}
       initial="hidden"
       animate="show"
       style={{ display: 'flex', alignItems: 'flex-end', gap: 4, height: 44 }}
+      onMouseLeave={() => setTip(null)}
     >
       {data.map((v, i) => {
         const h = Math.max(6, Math.round((v / max) * 44));
         const isRecent = i >= nowIdx - 2;
+        const hovered = tip?.i === i;
         return (
-          <motion.div
+          <div
             key={i}
-            variants={shouldReduceMotion ? {} : barVariant}
-            custom={i}
-            style={{
-              flex: 1,
-              height: h,
-              borderRadius: 4,
-              background: isRecent
-                ? '#7C3AED'
-                : `rgba(124,58,237,${0.15 + (i / data.length) * 0.25})`,
-              transformOrigin: 'bottom',
+            style={{ flex: 1, height: 44, display: 'flex', alignItems: 'flex-end', cursor: 'pointer' }}
+            onMouseEnter={e => {
+              const r = e.currentTarget.getBoundingClientRect();
+              setTip({ i, x: r.left + r.width / 2, y: r.top });
             }}
-          />
+          >
+            <motion.div
+              variants={shouldReduceMotion ? {} : barVariant}
+              custom={i}
+              style={{
+                width: '100%',
+                height: h,
+                borderRadius: 4,
+                background: isRecent
+                  ? (hovered ? '#6D28D9' : '#7C3AED')
+                  : hovered
+                    ? 'rgba(124,58,237,0.55)'
+                    : `rgba(124,58,237,${0.15 + (i / data.length) * 0.25})`,
+                transformOrigin: 'bottom',
+                transition: 'background 0.15s',
+              }}
+            />
+          </div>
         );
       })}
     </motion.div>
+
+    {/* Tooltip flotante — mismo diseño que el del sidebar colapsado */}
+    {tip && typeof document !== 'undefined' && createPortal(
+      <div
+        className="pointer-events-none"
+        style={{ position: 'fixed', top: tip.y - 8, left: tip.x, transform: 'translate(-50%, -100%)', zIndex: 60 }}
+      >
+        <div
+          className="relative text-white text-[12px] font-semibold rounded-lg whitespace-nowrap"
+          style={{ background: '#1A1028', padding: '6px 10px', boxShadow: '0 6px 20px rgba(0,0,0,0.22)' }}
+        >
+          {MONTH_SHORT[tip.i]} · {fmt.format(data[tip.i])}
+          <span
+            style={{
+              position: 'absolute', bottom: -4, left: '50%', transform: 'translateX(-50%) rotate(45deg)',
+              width: 8, height: 8, background: '#1A1028', borderRadius: 1,
+            }}
+          />
+        </div>
+      </div>,
+      document.body
+    )}
+    </>
   );
 }
 

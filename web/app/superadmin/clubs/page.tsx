@@ -7,7 +7,8 @@ import { apiFetch } from '@/lib/api-client';
 import { useNow } from '@/lib/use-now';
 import { PhoneInput } from '@/components/ui/phone-input';
 import { motion, AnimatePresence, type Variants } from 'framer-motion';
-import { ChevronRight, LayoutGrid, Table2 } from 'lucide-react';
+import { ChevronRight, LayoutGrid, Table2, Search } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select';
 import ClubDetail, { type Club, type Suscripcion } from './club-detail';
 import SportSelect from './sport-select';
 
@@ -86,26 +87,26 @@ const PLAN_FILTER_LABEL: Record<PlanCategory, string> = {
   PRUEBA: 'Prueba', MENSUAL: 'Mensual', TRIMESTRAL: 'Trimestral', ANUAL: 'Anual', SIN_PLAN: 'Sin plan',
 };
 
-// Select nativo estilizado, consistente con el resto del panel
+// Dropdown estilizado (Select de la app: portal + animación + hover de marca),
+// con trigger compacto tipo pill consistente con el resto del panel.
 function FilterSelect({ value, onChange, options, placeholder }: {
   value: string; onChange: (v: string) => void;
   options: { value: string; label: string }[]; placeholder: string;
 }) {
+  const selected = options.find(o => o.value === value);
   return (
-    <select
-      value={value}
-      onChange={e => onChange(e.target.value)}
-      style={{
-        appearance: 'none', padding: '7px 26px 7px 10px', borderRadius: 10,
-        border: '1px solid rgba(120,80,200,0.16)', background: '#fff', color: value === 'ALL' ? '#8E87A8' : '#1A1028',
-        fontSize: 11, fontWeight: 600, fontFamily: 'inherit', cursor: 'pointer', outline: 'none',
-        backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%238E87A8' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E\")",
-        backgroundRepeat: 'no-repeat', backgroundPosition: 'right 8px center',
-      }}
-    >
-      <option value="ALL">{placeholder}</option>
-      {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-    </select>
+    <Select value={value} onValueChange={v => onChange(v ?? 'ALL')}>
+      <SelectTrigger
+        className="h-auto rounded-[10px] bg-white gap-1"
+        style={{ border: '1px solid rgba(120,80,200,0.16)', padding: '7px 8px 7px 10px', fontSize: 11, fontWeight: 600 }}
+      >
+        <span style={{ color: selected ? '#1A1028' : '#8E87A8' }}>{selected?.label ?? placeholder}</span>
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="ALL">{placeholder}</SelectItem>
+        {options.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+      </SelectContent>
+    </Select>
   );
 }
 
@@ -125,11 +126,12 @@ export default function ClubsPage() {
   const [detailId, setDetailId] = useState<string | null>(null);
   const [view, setView] = useState<'table' | 'cards'>('table');
 
-  // Filtros de columnas
+  // Filtros de columnas + búsqueda por nombre
   const [filterEstado, setFilterEstado] = useState('ALL');
   const [filterPlan,   setFilterPlan]   = useState('ALL');
   const [filterVerif,  setFilterVerif]  = useState('ALL');
   const [filterDeporte, setFilterDeporte] = useState('ALL');
+  const [search, setSearch] = useState('');
 
   const [showNew, setShowNew] = useState(false);
   const [newForm, setNewForm] = useState({ clubName: '', adminEmail: '', adminName: '', adminPhone: '', deporte: '' });
@@ -169,16 +171,18 @@ export default function ClubsPage() {
   }, [clubs]);
 
   const filteredClubs = useMemo(() => {
+    const q = search.trim().toLowerCase();
     return clubs.filter(c => {
+      if (q && !c.name.toLowerCase().includes(q)) return false;
       if (filterEstado !== 'ALL' && (filterEstado === 'ACTIVE') !== c.active) return false;
       if (filterPlan !== 'ALL' && planCategory(c) !== filterPlan) return false;
       if (filterVerif !== 'ALL' && (c.verificationStatus ?? 'VERIFIED') !== filterVerif) return false;
       if (filterDeporte !== 'ALL' && c.deporte !== filterDeporte) return false;
       return true;
     });
-  }, [clubs, filterEstado, filterPlan, filterVerif, filterDeporte]);
+  }, [clubs, search, filterEstado, filterPlan, filterVerif, filterDeporte]);
 
-  const filtersActive = filterEstado !== 'ALL' || filterPlan !== 'ALL' || filterVerif !== 'ALL' || filterDeporte !== 'ALL';
+  const filtersActive = filterEstado !== 'ALL' || filterPlan !== 'ALL' || filterVerif !== 'ALL' || filterDeporte !== 'ALL' || search.trim() !== '';
 
   async function handleCreate() {
     if (!newForm.clubName || !newForm.adminEmail || !newForm.adminName) return;
@@ -297,9 +301,22 @@ export default function ClubsPage() {
           )}
         </AnimatePresence>
 
-        {/* Filtros de columnas */}
+        {/* Filtros de columnas + búsqueda */}
         {!loading && clubs.length > 0 && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 12 }}>
+            <div style={{ position: 'relative', flex: '1 1 180px', minWidth: 160, maxWidth: 260 }}>
+              <Search size={13} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: '#8E87A8', pointerEvents: 'none' }} />
+              <input
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                placeholder="Buscar club..."
+                style={{
+                  width: '100%', padding: '7px 10px 7px 28px', borderRadius: 10,
+                  border: '1px solid rgba(120,80,200,0.16)', background: '#fff', color: '#1A1028',
+                  fontSize: 11, fontWeight: 600, fontFamily: 'inherit', outline: 'none',
+                }}
+              />
+            </div>
             <FilterSelect value={filterEstado} onChange={setFilterEstado} placeholder="Estado"
               options={[{ value: 'ACTIVE', label: 'Activo' }, { value: 'INACTIVE', label: 'Inactivo' }]} />
             <FilterSelect value={filterPlan} onChange={setFilterPlan} placeholder="Plan"
@@ -310,7 +327,7 @@ export default function ClubsPage() {
               <FilterSelect value={filterDeporte} onChange={setFilterDeporte} placeholder="Deporte" options={deporteOptions} />
             )}
             {filtersActive && (
-              <button onClick={() => { setFilterEstado('ALL'); setFilterPlan('ALL'); setFilterVerif('ALL'); setFilterDeporte('ALL'); }}
+              <button onClick={() => { setFilterEstado('ALL'); setFilterPlan('ALL'); setFilterVerif('ALL'); setFilterDeporte('ALL'); setSearch(''); }}
                 style={{ fontSize: 11, fontWeight: 600, color: '#7C3AED', background: 'none', border: 'none', cursor: 'pointer', padding: '6px 4px' }}>
                 Limpiar filtros
               </button>

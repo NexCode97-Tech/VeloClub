@@ -28,6 +28,9 @@ interface AttRecord { memberId: string; status: Status }
 
 type Status = 'PRESENT' | 'LATE' | 'ABSENT' | 'MEDICAL_EXCUSE';
 const CYCLE: Status[] = ['PRESENT', 'LATE', 'ABSENT', 'MEDICAL_EXCUSE'];
+// Orden del ciclo al tocar un deportista. Todos arrancan en Ausente, así que
+// el primer toque los marca Presente (el flujo más común al pasar lista).
+const TOGGLE_CYCLE: Status[] = ['ABSENT', 'PRESENT', 'LATE', 'MEDICAL_EXCUSE'];
 const STATUS_LABEL: Record<Status, string> = { PRESENT: 'P', LATE: 'T', ABSENT: 'A', MEDICAL_EXCUSE: 'M' };
 const STATUS_COLOR: Record<Status, string> = { PRESENT: '#06D6A0', LATE: '#FFB703', ABSENT: '#EF476F', MEDICAL_EXCUSE: '#8B8FA8' };
 const STATUS_NAME: Record<Status, string>  = { PRESENT: 'Presente', LATE: 'Tarde', ABSENT: 'Ausente', MEDICAL_EXCUSE: 'Excusa médica' };
@@ -266,7 +269,8 @@ export default function AsistenciaPage() {
     const forLoc = membersData.members.filter(
       m => m.locations.some(l => l.location.id === selectedLoc)
     );
-    const base = Object.fromEntries(forLoc.map(m => [m.id, 'PRESENT' as Status]));
+    // Todos arrancan Ausentes: el entrenador marca Presente a quienes asistieron
+    const base = Object.fromEntries(forLoc.map(m => [m.id, 'ABSENT' as Status]));
     const existing: Record<string, Status> = {};
     for (const r of attData.records) existing[r.memberId] = r.status as Status;
     setAtt({ ...base, ...existing });
@@ -279,7 +283,7 @@ export default function AsistenciaPage() {
   function toggle(id: string) {
     setAtt(prev => {
       const cur = prev[id] ?? 'ABSENT';
-      return { ...prev, [id]: CYCLE[(CYCLE.indexOf(cur) + 1) % CYCLE.length] };
+      return { ...prev, [id]: TOGGLE_CYCLE[(TOGGLE_CYCLE.indexOf(cur) + 1) % TOGGLE_CYCLE.length] };
     });
   }
 

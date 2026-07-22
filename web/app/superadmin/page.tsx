@@ -284,10 +284,15 @@ export default function SuperadminDashboard() {
           </motion.div>
         )}
 
-        {/* ── Hero card — RECAUDADO ESTE MES ─────────────────────────────── */}
+        {/* ── Hero + tarjetas de resumen ──
+            Escritorio (md+): grilla 50/50 — izquierda la tarjeta de recaudo
+            con barras, derecha las 5 tarjetas en dos filas. Móvil: apilado. */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-stretch" style={{ marginBottom: 20 }}>
+
+        {/* Hero card — RECAUDADO ESTE MES (columna izquierda en escritorio) */}
         <motion.div
           variants={cardVariant}
-          style={{ background: '#fff', borderRadius: 24, padding: '20px 20px 18px', marginBottom: 10, border: '1px solid rgba(120,80,200,0.10)', boxShadow: '0 2px 20px rgba(124,58,237,0.06)', position: 'relative', overflow: 'hidden' }}
+          style={{ background: '#fff', borderRadius: 24, padding: '20px 20px 18px', border: '1px solid rgba(120,80,200,0.10)', boxShadow: '0 2px 20px rgba(124,58,237,0.06)', position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
         >
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 10 }}>
             <p style={{ margin: 0, fontSize: 10, fontWeight: 600, color: '#8E87A8', letterSpacing: '0.02em' }}>
@@ -315,13 +320,18 @@ export default function SuperadminDashboard() {
             </span>
             <span style={{ fontSize: 11, color: '#8E87A8' }}>vs mes anterior</span>
           </div>
-          {monthlyBars.length > 0 && <MiniBarChart data={monthlyBars} />}
+          {/* marginTop auto pega las barras al fondo cuando la tarjeta se
+              estira a la altura de la columna derecha en escritorio */}
+          {monthlyBars.length > 0 && <div style={{ marginTop: 'auto' }}><MiniBarChart data={monthlyBars} /></div>}
         </motion.div>
 
-        {/* ── Dos cards pequeñas ──────────────────────────────────────────── */}
+        {/* Columna derecha (escritorio): dos filas de tarjetas */}
+        <div className="flex flex-col gap-3">
+
+        {/* Dos cards pequeñas */}
         <motion.div
           variants={cardVariant}
-          style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 20 }}
+          style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, flex: 1 }}
         >
           <div style={{ background: '#fff', borderRadius: 20, padding: '16px 14px', border: '1px solid rgba(120,80,200,0.10)', boxShadow: '0 2px 12px rgba(124,58,237,0.05)' }}>
             <p style={{ margin: '0 0 10px', fontSize: 9, fontWeight: 600, color: '#8E87A8', letterSpacing: '0.02em' }}>Clubes activos</p>
@@ -342,11 +352,11 @@ export default function SuperadminDashboard() {
           </div>
         </motion.div>
 
-        {/* ── Stats secundarias ────────────────────────────────────────────── */}
+        {/* Stats secundarias */}
         <motion.div
           variants={stagger}
           className="grid grid-cols-1 sm:grid-cols-3 gap-3"
-          style={{ marginBottom: 20 }}
+          style={{ flex: 1 }}
         >
           {[
             { label: 'Total recaudado', value: totalRecaudado > 0 ? fmtHero(totalRecaudado).main + fmtHero(totalRecaudado).suffix : '$0', color: '#06D6A0', sub: 'Histórico' },
@@ -361,6 +371,9 @@ export default function SuperadminDashboard() {
             </motion.div>
           ))}
         </motion.div>
+
+        </div>{/* /columna derecha */}
+        </div>{/* /grilla 50-50 */}
 
         {/* ── Gráfica de ingresos por mes ──────────────────────────────────── */}
         {hasIncomeData && (

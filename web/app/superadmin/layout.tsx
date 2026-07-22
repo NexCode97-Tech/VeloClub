@@ -3,6 +3,7 @@
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth, useSession, useUser, useClerk, UserButton } from '@clerk/nextjs';
 import { useEffect, useState, useCallback, memo } from 'react';
+import { createPortal } from 'react-dom';
 import { apiFetch, ApiError } from '@/lib/api-client';
 import LoadingScreen from '@/components/ui/loading-screen';
 import Link from 'next/link';
@@ -87,6 +88,23 @@ const SuperadminSidebar = memo(function SuperadminSidebar({ pathname }: { pathna
     typeof window !== 'undefined' && localStorage.getItem('superadmin-sidebar-collapsed') === 'true'
   );
 
+  // Tooltip flotante al pasar el cursor sobre un módulo con el sidebar
+  // comprimido — mismo patrón que el sidebar del dashboard (admin).
+  const [navTip, setNavTip] = useState<{ label: string; top: number; left: number } | null>(null);
+  useEffect(() => { if (!collapsed) setNavTip(null); }, [collapsed]);
+
+  function tipHandlers(label: string) {
+    return collapsed
+      ? {
+          onMouseEnter: (e: React.MouseEvent<HTMLElement>) => {
+            const r = e.currentTarget.getBoundingClientRect();
+            setNavTip({ label, top: r.top + r.height / 2, left: r.right + 3 });
+          },
+          onMouseLeave: () => setNavTip(null),
+        }
+      : {};
+  }
+
   function toggleCollapsed() {
     setCollapsed(c => {
       const next = !c;
@@ -101,6 +119,7 @@ const SuperadminSidebar = memo(function SuperadminSidebar({ pathname }: { pathna
   }
 
   return (
+    <>
     <motion.aside
       animate={{ width: collapsed ? 68 : 240 }}
       transition={{ duration: 0.25, ease: [0.23, 1, 0.32, 1] }}
@@ -128,9 +147,9 @@ const SuperadminSidebar = memo(function SuperadminSidebar({ pathname }: { pathna
           const active = tab.exact ? pathname === tab.href : pathname.startsWith(tab.href);
           return (
             <Link key={tab.href} href={tab.href}
-              title={collapsed ? tab.label : undefined}
               className={`flex items-center gap-3 rounded-xl text-sm font-semibold transition-colors ${active ? '' : 'hover:bg-secondary'}`}
               style={{ height: 44, padding: collapsed ? 0 : '0 12px', justifyContent: collapsed ? 'center' : undefined, color: active ? ACCENT : '#8E87A8', background: active ? 'rgba(124,58,237,0.10)' : undefined }}
+              {...tipHandlers(tab.label)}
             >
               <tab.Icon size={18} strokeWidth={active ? 2.5 : 2} className="shrink-0" />
               {!collapsed && <span>{tab.label}</span>}
@@ -147,9 +166,10 @@ const SuperadminSidebar = memo(function SuperadminSidebar({ pathname }: { pathna
         {collapsed && (() => {
           const active = pathname.startsWith('/superadmin/configuracion');
           return (
-            <Link href="/superadmin/configuracion" title="Ajustes"
-              className="shrink-0 flex items-center justify-center rounded-xl transition-colors"
-              style={{ width: 40, height: 40, color: active ? ACCENT : '#8E87A8', background: active ? 'rgba(124,58,237,0.10)' : undefined }}>
+            <Link href="/superadmin/configuracion"
+              className={`shrink-0 flex items-center justify-center rounded-xl transition-colors ${active ? '' : 'hover:bg-secondary'}`}
+              style={{ width: 40, height: 40, color: active ? ACCENT : '#8E87A8', background: active ? 'rgba(124,58,237,0.10)' : undefined }}
+              {...tipHandlers('Ajustes')}>
               <IconAjustes className="w-[18px] h-[18px]" strokeWidth={active ? 2.5 : 2} />
             </Link>
           );
@@ -170,7 +190,7 @@ const SuperadminSidebar = memo(function SuperadminSidebar({ pathname }: { pathna
             {/* Ícono de ajustes (expandido) — igual que el admin */}
             <Link href="/superadmin/configuracion" title="Ajustes"
               className="shrink-0 flex items-center justify-center transition-colors hover:bg-secondary rounded-lg"
-              style={{ width: 26, height: 26, color: '#8E87A8' }}>
+              style={{ width: 28, height: 28, color: '#8E87A8' }}>
               <IconAjustes className="w-[14px] h-[14px]" />
             </Link>
             <button onClick={handleSignOut} title="Cerrar sesión"
@@ -182,6 +202,31 @@ const SuperadminSidebar = memo(function SuperadminSidebar({ pathname }: { pathna
         )}
       </div>
     </motion.aside>
+
+    {/* Tooltip del sidebar colapsado — etiqueta con el nombre del módulo,
+        mismo diseño que el del dashboard (admin) */}
+    {navTip && typeof document !== 'undefined' && createPortal(
+      <div
+        className="hidden md:block pointer-events-none"
+        style={{ position: 'fixed', top: navTip.top, left: navTip.left, transform: 'translateY(-50%)', zIndex: 60 }}
+      >
+        <div
+          className="relative text-white text-[12px] font-semibold rounded-lg whitespace-nowrap"
+          style={{ background: '#1A1028', padding: '6px 10px', boxShadow: '0 6px 20px rgba(0,0,0,0.22)' }}
+        >
+          {navTip.label}
+          {/* Flechita apuntando al ícono */}
+          <span
+            style={{
+              position: 'absolute', top: '50%', left: -4, transform: 'translateY(-50%) rotate(45deg)',
+              width: 8, height: 8, background: '#1A1028', borderRadius: 1,
+            }}
+          />
+        </div>
+      </div>,
+      document.body
+    )}
+    </>
   );
 });
 

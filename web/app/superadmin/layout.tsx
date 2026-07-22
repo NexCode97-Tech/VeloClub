@@ -4,7 +4,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useAuth, useSession, useUser, useClerk, UserButton } from '@clerk/nextjs';
 import { useEffect, useState, useCallback, memo } from 'react';
 import { createPortal } from 'react-dom';
-import { apiFetch, ApiError } from '@/lib/api-client';
+import { apiFetch } from '@/lib/api-client';
 import LoadingScreen from '@/components/ui/loading-screen';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -72,10 +72,20 @@ const ACCENT = '#7C3AED';
 // subárbol, no todo el layout — lo que elimina el INP alto que hacía la
 // animación entrecortada. React.memo evita re-renders cuando el layout padre
 // se actualiza por otras razones (notificaciones, etc.).
-const SuperadminSidebar = memo(function SuperadminSidebar({ pathname }: { pathname: string }) {
+const SuperadminSidebar = memo(function SuperadminSidebar({ pathname, noLeidas, onOpenNotifs }: {
+  pathname: string;
+  noLeidas: number;
+  onOpenNotifs: () => void;
+}) {
   const { user: clerkUser } = useUser();
   const { signOut } = useClerk();
   const router = useRouter();
+  const [spin, setSpin] = useState(false);
+
+  function handleRefresh() {
+    setSpin(true);
+    setTimeout(() => { setSpin(false); window.location.reload(); }, 400);
+  }
 
   // Avatar: se usa la foto de Google (CDN normal, liviana) si existe, y si no
   // el avatar de inicial. NO se usa `clerkUser.imageUrl` porque la imagen
@@ -126,11 +136,41 @@ const SuperadminSidebar = memo(function SuperadminSidebar({ pathname }: { pathna
       className="hidden md:flex flex-col shrink-0 relative"
       style={{ background: '#fff', borderRight: '1px solid rgba(0,0,0,0.07)', overflow: 'visible' }}
     >
-      {/* Logo */}
+      {/* Logo — con botones de actualizar y notificaciones (igual que el
+          sidebar del admin, que lleva sus acciones en esta fila) */}
       <div className="flex items-center shrink-0" style={{ borderBottom: '1px solid rgba(0,0,0,0.06)', minHeight: 58, padding: '0 14px', gap: 9, justifyContent: collapsed ? 'center' : undefined }}>
         <Image src="/logo.png" alt="VeloClub" width={28} height={28} className="object-contain shrink-0" style={{ borderRadius: 7 }} />
         {!collapsed && <span className="text-[15px] font-semibold" style={{ color: '#1A1028' }}>VeloClub</span>}
-        {!collapsed && <span className="ml-auto text-[9px] font-semibold px-2 py-0.5 rounded-full" style={{ background: 'rgba(239,71,111,0.10)', color: '#EF476F', letterSpacing: '0.02em' }}>Admin</span>}
+        {!collapsed && (
+          <div className="flex items-center gap-1 ml-auto">
+            <button
+              onClick={handleRefresh}
+              className="flex items-center justify-center rounded-lg transition-colors hover:bg-secondary"
+              style={{ width: 28, height: 28, color: '#8E87A8', transition: 'transform 0.4s', transform: spin ? 'rotate(180deg)' : 'rotate(0deg)' }}
+              title="Actualizar"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+              </svg>
+            </button>
+            <button
+              onClick={onOpenNotifs}
+              className="flex items-center justify-center rounded-lg transition-colors hover:bg-secondary relative"
+              style={{ width: 28, height: 28, color: '#8E87A8' }}
+              title="Notificaciones"
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+              </svg>
+              {noLeidas > 0 && (
+                <div className="absolute flex items-center justify-center" style={{ top: 2, right: 2, minWidth: 13, height: 13, borderRadius: 7, background: '#EF476F', border: '1.5px solid #fff', fontSize: 7.5, fontWeight: 600, color: '#fff', padding: '0 3px' }}>
+                  {noLeidas > 9 ? '9+' : noLeidas}
+                </div>
+              )}
+            </button>
+          </div>
+        )}
       </div>
       {/* Botón contraer/expandir */}
       <button onClick={toggleCollapsed}
@@ -289,6 +329,12 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
     return () => clearInterval(iv);
   }, [checking, loadNotifs]);
 
+  // Estable (useCallback) para no romper el memo del sidebar en cada render
+  const openNotifs = useCallback(() => {
+    setPanelOpen(true);
+    loadNotifs();
+  }, [loadNotifs]);
+
   async function marcarLeida(id: string) {
     const token = await session?.getToken();
     await apiFetch(`/superadmin/notificaciones/${id}/leer`, { method: 'PATCH', token });
@@ -316,7 +362,7 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
           notificaciones, main). Antes el toggle re-renderizaba el árbol
           completo, causando un INP de ~568ms y que la animación fuera "a
           saltos". */}
-      <SuperadminSidebar pathname={pathname} />
+      <SuperadminSidebar pathname={pathname} noLeidas={noLeidas} onOpenNotifs={openNotifs} />
 
       {/* ── Columna de contenido ── */}
       <div className="flex-1 flex flex-col overflow-hidden">
@@ -326,24 +372,24 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
         <h2 className="flex-1 m-0 text-[17px] font-semibold" style={{ fontFamily: 'inherit', color: '#1A1028' }}>
           {title}
         </h2>
-        {/* Refresh */}
+        {/* Refresh — solo móvil: en md+ vive en la fila del logo del sidebar */}
         <motion.button
           onClick={() => { setSpin(true); setTimeout(() => { setSpin(false); window.location.reload(); }, 400); }}
           whileTap={{ scale: 0.9 }}
           transition={{ duration: 0.12, ease: [0.23, 1, 0.32, 1] as [number,number,number,number] }}
-          className="w-[34px] h-[34px] rounded-full flex items-center justify-center"
+          className="md:hidden w-[34px] h-[34px] rounded-full flex items-center justify-center"
           style={{ background: '#F0EEF8', border: '1px solid rgba(120,80,200,0.10)', color: '#8E87A8', transition: 'transform 0.4s', transform: spin ? 'rotate(180deg)' : 'rotate(0deg)' }}
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
           </svg>
         </motion.button>
-        {/* Bell */}
+        {/* Bell — solo móvil: en md+ vive en la fila del logo del sidebar */}
         <motion.button
           onClick={() => { setPanelOpen(true); loadNotifs(); }}
           whileTap={{ scale: 0.9 }}
           transition={{ duration: 0.12, ease: [0.23, 1, 0.32, 1] as [number,number,number,number] }}
-          className="w-[34px] h-[34px] rounded-full flex items-center justify-center relative"
+          className="md:hidden w-[34px] h-[34px] rounded-full flex items-center justify-center relative"
           style={{ background: '#F0EEF8', border: '1px solid rgba(120,80,200,0.10)', color: '#8E87A8' }}
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

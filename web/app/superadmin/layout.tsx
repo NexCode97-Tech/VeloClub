@@ -368,7 +368,9 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
       <div className="flex-1 flex flex-col overflow-hidden">
 
       {/* Global Header */}
-      <div className="flex items-center gap-2 shrink-0" style={{ padding: '12px 16px 10px', background: '#F7F7FB', borderBottom: '1px solid rgba(120,80,200,0.10)' }}>
+      {/* Misma altura (58px) y color de borde que la fila del logo del sidebar,
+          para que la línea divisoria se vea continua — igual que en el dashboard */}
+      <div className="flex items-center gap-2 shrink-0" style={{ minHeight: 58, padding: '0 16px', background: '#F7F7FB', borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
         <h2 className="flex-1 m-0 text-[17px] font-semibold" style={{ fontFamily: 'inherit', color: '#1A1028' }}>
           {title}
         </h2>

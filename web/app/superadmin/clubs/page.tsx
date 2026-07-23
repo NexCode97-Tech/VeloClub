@@ -106,11 +106,20 @@ function FilterSelect({ value, onChange, options, placeholder }: {
   const selected = options.find(o => o.value === value);
   return (
     <Select value={value} onValueChange={v => onChange(v ?? 'ALL')}>
+      {/* El trigger siempre muestra el nombre del filtro (como Estado); la
+          selección aparece como badge morado al lado. */}
       <SelectTrigger
         className="rounded-[10px] bg-white gap-1"
-        style={{ height: 30, minHeight: 30, border: '1px solid rgba(120,80,200,0.16)', padding: '0 8px 0 10px', fontSize: 11, fontWeight: 600, boxSizing: 'border-box' }}
+        style={{ height: 30, minHeight: 30, border: `1px solid ${selected ? 'rgba(124,58,237,0.35)' : 'rgba(120,80,200,0.16)'}`, padding: '0 8px 0 10px', fontSize: 11, fontWeight: 600, boxSizing: 'border-box' }}
       >
-        <span style={{ color: selected ? '#1A1028' : '#8E87A8' }}>{selected?.label ?? placeholder}</span>
+        <span style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#1A1028' }}>
+          {placeholder}
+          {selected && (
+            <span style={{ fontSize: 9, fontWeight: 700, color: '#7C3AED', background: 'rgba(124,58,237,0.10)', borderRadius: 99, padding: '1px 6px', whiteSpace: 'nowrap' }}>
+              {selected.label}
+            </span>
+          )}
+        </span>
       </SelectTrigger>
       <SelectContent>
         <SelectItem value="ALL">Todos</SelectItem>

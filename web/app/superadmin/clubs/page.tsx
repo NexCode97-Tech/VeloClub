@@ -215,6 +215,54 @@ export default function ClubsPage() {
     );
   }
 
+  // Barra de filtros integrada a la tabla (un solo bloque, estilo APP NTRL):
+  // búsqueda primero, luego tabs segmentados de Estado y los demás dropdowns.
+  const filterBar = (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', padding: '10px 14px', borderBottom: '1px solid rgba(120,80,200,0.10)', background: '#fff' }}>
+      <div style={{ position: 'relative', flex: '1 1 180px', minWidth: 160, maxWidth: 260 }}>
+        <Search size={13} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: '#8E87A8', pointerEvents: 'none' }} />
+        <input
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          placeholder="Buscar club..."
+          style={{
+            width: '100%', padding: '7px 10px 7px 28px', borderRadius: 10,
+            border: '1px solid rgba(120,80,200,0.16)', background: '#fff', color: '#1A1028',
+            fontSize: 11, fontWeight: 600, fontFamily: 'inherit', outline: 'none',
+          }}
+        />
+      </div>
+      {/* Estado — tabs segmentados (mismo lenguaje visual del toggle Tabla/Tarjetas) */}
+      <div style={{ display: 'flex', background: '#fff', border: '1px solid rgba(120,80,200,0.14)', borderRadius: 10, padding: 2, gap: 2 }}>
+        {[{ v: 'ALL', l: 'Todos' }, { v: 'ACTIVE', l: 'Activos' }, { v: 'INACTIVE', l: 'Inactivos' }].map(({ v, l }) => (
+          <button key={v} onClick={() => setFilterEstado(v)}
+            style={{
+              padding: '5px 10px', borderRadius: 8, border: 'none', cursor: 'pointer',
+              fontSize: 11, fontWeight: 600, fontFamily: 'inherit', whiteSpace: 'nowrap',
+              background: filterEstado === v ? 'rgba(124,58,237,0.10)' : 'transparent',
+              color: filterEstado === v ? '#7C3AED' : '#8E87A8',
+              transition: 'background 0.15s, color 0.15s',
+            }}>
+            {l}
+          </button>
+        ))}
+      </div>
+      <FilterSelect value={filterPlan} onChange={setFilterPlan} placeholder="Plan"
+        options={(['PRUEBA', 'MENSUAL', 'TRIMESTRAL', 'ANUAL', 'SIN_PLAN'] as PlanCategory[]).map(p => ({ value: p, label: PLAN_FILTER_LABEL[p] }))} />
+      <FilterSelect value={filterVerif} onChange={setFilterVerif} placeholder="Verificación"
+        options={[{ value: 'VERIFIED', label: 'Verificado' }, { value: 'PENDING', label: 'Por verificar' }, { value: 'REJECTED', label: 'Rechazado' }]} />
+      {deporteOptions.length > 0 && (
+        <FilterSelect value={filterDeporte} onChange={setFilterDeporte} placeholder="Deporte" options={deporteOptions} />
+      )}
+      {filtersActive && (
+        <button onClick={() => { setFilterEstado('ALL'); setFilterPlan('ALL'); setFilterVerif('ALL'); setFilterDeporte('ALL'); setSearch(''); }}
+          style={{ fontSize: 11, fontWeight: 600, color: '#7C3AED', background: 'none', border: 'none', cursor: 'pointer', padding: '6px 4px' }}>
+          Limpiar
+        </button>
+      )}
+    </div>
+  );
+
   return (
     <div style={{ background: '#F7F7FB', minHeight: '100%' }}>
       <div style={{ padding: '12px 16px 80px' }}>
@@ -301,40 +349,6 @@ export default function ClubsPage() {
           )}
         </AnimatePresence>
 
-        {/* Filtros de columnas + búsqueda */}
-        {!loading && clubs.length > 0 && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 12 }}>
-            <div style={{ position: 'relative', flex: '1 1 180px', minWidth: 160, maxWidth: 260 }}>
-              <Search size={13} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: '#8E87A8', pointerEvents: 'none' }} />
-              <input
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-                placeholder="Buscar club..."
-                style={{
-                  width: '100%', padding: '7px 10px 7px 28px', borderRadius: 10,
-                  border: '1px solid rgba(120,80,200,0.16)', background: '#fff', color: '#1A1028',
-                  fontSize: 11, fontWeight: 600, fontFamily: 'inherit', outline: 'none',
-                }}
-              />
-            </div>
-            <FilterSelect value={filterEstado} onChange={setFilterEstado} placeholder="Estado"
-              options={[{ value: 'ACTIVE', label: 'Activo' }, { value: 'INACTIVE', label: 'Inactivo' }]} />
-            <FilterSelect value={filterPlan} onChange={setFilterPlan} placeholder="Plan"
-              options={(['PRUEBA', 'MENSUAL', 'TRIMESTRAL', 'ANUAL', 'SIN_PLAN'] as PlanCategory[]).map(p => ({ value: p, label: PLAN_FILTER_LABEL[p] }))} />
-            <FilterSelect value={filterVerif} onChange={setFilterVerif} placeholder="Verificación"
-              options={[{ value: 'VERIFIED', label: 'Verificado' }, { value: 'PENDING', label: 'Por verificar' }, { value: 'REJECTED', label: 'Rechazado' }]} />
-            {deporteOptions.length > 0 && (
-              <FilterSelect value={filterDeporte} onChange={setFilterDeporte} placeholder="Deporte" options={deporteOptions} />
-            )}
-            {filtersActive && (
-              <button onClick={() => { setFilterEstado('ALL'); setFilterPlan('ALL'); setFilterVerif('ALL'); setFilterDeporte('ALL'); setSearch(''); }}
-                style={{ fontSize: 11, fontWeight: 600, color: '#7C3AED', background: 'none', border: 'none', cursor: 'pointer', padding: '6px 4px' }}>
-                Limpiar filtros
-              </button>
-            )}
-          </div>
-        )}
-
         {/* Lista */}
         {loading ? (
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 160 }}>
@@ -351,15 +365,16 @@ export default function ClubsPage() {
             <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: '#8E87A8' }}>Sin clubes registrados</p>
             <p style={{ margin: '4px 0 0', fontSize: 11, color: '#C4BFD8' }}>Crea el primero con el botón de arriba</p>
           </motion.div>
-        ) : filteredClubs.length === 0 ? (
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.28, ease: EASE }}
-            style={{ background: '#fff', border: '1px solid rgba(120,80,200,0.10)', borderRadius: 20, padding: '40px 16px', textAlign: 'center' }}>
-            <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: '#8E87A8' }}>Sin resultados con estos filtros</p>
-            <p style={{ margin: '4px 0 0', fontSize: 11, color: '#C4BFD8' }}>Prueba ajustando o limpiando los filtros</p>
-          </motion.div>
-        ) : view === 'table' ? (
+        ) : (
           <motion.div variants={cardVariant} initial="hidden" animate="show"
             style={{ background: '#fff', border: '1px solid rgba(120,80,200,0.10)', borderRadius: 16, overflow: 'hidden' }}>
+            {filterBar}
+            {filteredClubs.length === 0 ? (
+            <div style={{ padding: '40px 16px', textAlign: 'center' }}>
+              <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: '#8E87A8' }}>Sin resultados con estos filtros</p>
+              <p style={{ margin: '4px 0 0', fontSize: 11, color: '#C4BFD8' }}>Prueba ajustando o limpiando los filtros</p>
+            </div>
+            ) : view === 'table' ? (
             <div style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: 'inherit', minWidth: 720 }}>
                 <thead>
@@ -417,9 +432,10 @@ export default function ClubsPage() {
                 </tbody>
               </table>
             </div>
-          </motion.div>
-        ) : (
-          <motion.div variants={stagger} initial="hidden" animate="show" className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 sm:gap-4">
+            ) : (
+            <motion.div variants={stagger} initial="hidden" animate="show"
+              className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 sm:gap-4"
+              style={{ padding: 14, background: '#F7F7FB' }}>
             {filteredClubs.map(club => {
               const badge = planBadge(club, now);
               const verif = verificationBadge(club);
@@ -461,6 +477,8 @@ export default function ClubsPage() {
                 </motion.button>
               );
             })}
+            </motion.div>
+            )}
           </motion.div>
         )}
 

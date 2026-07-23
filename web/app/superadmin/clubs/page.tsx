@@ -107,13 +107,13 @@ function FilterSelect({ value, onChange, options, placeholder }: {
   return (
     <Select value={value} onValueChange={v => onChange(v ?? 'ALL')}>
       <SelectTrigger
-        className="h-auto rounded-[10px] bg-white gap-1"
-        style={{ border: '1px solid rgba(120,80,200,0.16)', padding: '7px 8px 7px 10px', fontSize: 11, fontWeight: 600 }}
+        className="rounded-[10px] bg-white gap-1"
+        style={{ height: 30, minHeight: 30, border: '1px solid rgba(120,80,200,0.16)', padding: '0 8px 0 10px', fontSize: 11, fontWeight: 600, boxSizing: 'border-box' }}
       >
         <span style={{ color: selected ? '#1A1028' : '#8E87A8' }}>{selected?.label ?? placeholder}</span>
       </SelectTrigger>
       <SelectContent>
-        <SelectItem value="ALL">{placeholder}</SelectItem>
+        <SelectItem value="ALL">Todos</SelectItem>
         {options.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
       </SelectContent>
     </Select>
@@ -169,7 +169,7 @@ function EstadoFilterDropdown({ selected, onChange, counts }: {
     <>
       <button ref={btnRef} onClick={toggleOpen}
         style={{
-          display: 'flex', alignItems: 'center', gap: 6, padding: '7px 8px 7px 10px',
+          display: 'flex', alignItems: 'center', gap: 6, height: 30, padding: '0 8px 0 10px', boxSizing: 'border-box',
           borderRadius: 10, border: `1px solid ${selected.length > 0 ? 'rgba(124,58,237,0.35)' : 'rgba(120,80,200,0.16)'}`,
           background: '#fff', cursor: 'pointer', fontSize: 11, fontWeight: 600, fontFamily: 'inherit',
           color: '#1A1028', whiteSpace: 'nowrap',

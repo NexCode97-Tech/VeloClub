@@ -175,6 +175,7 @@ function AjustesPageContent() {
 
   // Perfil
   const [phone, setPhone]               = useState('');
+  const [profileName, setProfileName]   = useState('');
   const [savingProfile, setSavingProfile] = useState(false);
   const [savedProfile, setSavedProfile]   = useState(false);
 
@@ -218,6 +219,7 @@ function AjustesPageContent() {
       if (memberRes.member) {
         setMemberMe(memberRes.member);
         setPhone(memberRes.member.phone ?? '');
+        setProfileName(memberRes.member.fullName ?? '');
       }
 
       if (me.user?.role === 'ADMIN') {
@@ -246,6 +248,7 @@ function AjustesPageContent() {
         body: JSON.stringify({ name: name.trim(), department: department || undefined, city: city || undefined, noAttendanceDays: noAttDays }),
       });
       setClub(res.club);
+      window.dispatchEvent(new Event('vc:me-updated'));
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
     } finally {
@@ -263,7 +266,15 @@ function AjustesPageContent() {
         method: 'PATCH', token,
         body: JSON.stringify({ phone: phone || null }),
       });
+      // Guardar también el nombre si cambió — sincroniza User, Member y Clerk
+      const trimmedName = profileName.trim();
+      if (trimmedName.length >= 2 && trimmedName !== (memberMe?.fullName ?? '')) {
+        await apiFetch('/me/name', { method: 'PATCH', token, body: JSON.stringify({ name: trimmedName }) });
+        res.member.fullName = trimmedName;
+      }
       setMemberMe(res.member);
+      // Avisar al resto de la página (sidebar, encabezado) para refrescar en vivo
+      window.dispatchEvent(new Event('vc:me-updated'));
       setSavedProfile(true);
       setTimeout(() => setSavedProfile(false), 3000);
     } catch (err) {
@@ -308,6 +319,7 @@ function AjustesPageContent() {
       });
       setClub(prev => prev ? { ...prev, logoUrl: res.club.logoUrl } : prev);
       setLogoPreview(null);
+      window.dispatchEvent(new Event('vc:me-updated'));
     } catch (err) {
       alert('Error al subir el logo: ' + (err instanceof Error ? err.message : 'intenta de nuevo'));
       setLogoPreview(null);
@@ -323,6 +335,7 @@ function AjustesPageContent() {
       const token = await getToken();
       await apiFetch('/clubs/logo', { method: 'DELETE', token });
       setClub(prev => prev ? { ...prev, logoUrl: undefined } : prev);
+      window.dispatchEvent(new Event('vc:me-updated'));
     } finally {
       setDeletingLogo(false);
     }
@@ -392,8 +405,10 @@ function AjustesPageContent() {
           <div className="space-y-1.5">
             <Label className="text-[12px]">Nombre de usuario</Label>
             <Input
-              value={displayName} readOnly
-              className="text-muted-foreground bg-muted/30 cursor-not-allowed text-sm h-12"
+              value={profileName}
+              onChange={e => { setProfileName(e.target.value); setSavedProfile(false); }}
+              placeholder="Tu nombre completo"
+              className="text-sm h-12"
             />
           </div>
           <div className="space-y-1.5">

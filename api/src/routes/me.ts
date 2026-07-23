@@ -188,6 +188,35 @@ if (superadminEmails.includes(email.toLowerCase())) {
   return res.json({ status: 'complete_profile', user: newUser });
 });
 
+// PATCH /me/name — el usuario actualiza su nombre visible. Sincroniza las tres
+// fuentes (User, Member y Clerk) para que /me no lo revierta en el próximo login.
+router.patch('/name', requireAuth, async (req, res) => {
+  if (!req.auth || !req.user) return res.status(401).json({ error: 'No autenticado' });
+  const name = String((req.body as { name?: string }).name ?? '').trim();
+  if (name.length < 2 || name.length > 100) {
+    return res.status(400).json({ error: 'El nombre debe tener entre 2 y 100 caracteres' });
+  }
+
+  await prisma.user.update({ where: { id: req.user.id }, data: { name } });
+
+  const member = await prisma.member.findFirst({ where: { clerkId: req.auth.clerkId } });
+  if (member) {
+    await prisma.member.update({ where: { id: member.id }, data: { fullName: name } });
+  }
+
+  // Sincronizar en Clerk (si falla, User/Member ya quedaron actualizados)
+  try {
+    const { createClerkClient } = await import('@clerk/backend');
+    const clerk = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY! });
+    const [firstName, ...rest] = name.split(/\s+/);
+    await clerk.users.updateUser(req.auth.clerkId, { firstName, lastName: rest.join(' ') || undefined });
+  } catch (err) {
+    console.error('clerk name sync error:', err instanceof Error ? err.message : err);
+  }
+
+  res.json({ name });
+});
+
 // PATCH /me/bio — actualizar bio del usuario
 router.patch('/bio', requireAuth, async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'No autenticado' });

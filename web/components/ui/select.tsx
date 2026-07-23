@@ -96,7 +96,7 @@ function SelectContent({
           )}
           {...props}
         >
-          <SelectPrimitive.List>{children}</SelectPrimitive.List>
+          <SelectPrimitive.List className="max-h-[min(320px,var(--available-height))] overflow-y-auto">{children}</SelectPrimitive.List>
         </SelectPrimitive.Popup>
       </SelectPrimitive.Positioner>
     </SelectPrimitive.Portal>

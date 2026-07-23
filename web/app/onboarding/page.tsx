@@ -124,6 +124,7 @@ function CreateClubForm({ getToken, onBack, onDone }: {
   getToken: () => Promise<string | null>; onBack: () => void; onDone: () => void;
 }) {
   const [clubName, setClubName] = useState('');
+  const [ownerName, setOwnerName] = useState('');
   const [deporte, setDeporte] = useState('');
   const [department, setDepartment] = useState('');
   const [city, setCity] = useState('');
@@ -152,7 +153,7 @@ function CreateClubForm({ getToken, onBack, onDone }: {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [clubName]);
 
-  const canSubmit = clubName.trim().length >= 2 && !!deporte && nameStatus !== 'taken' && nameStatus !== 'checking' && !loading;
+  const canSubmit = clubName.trim().length >= 2 && ownerName.trim().length >= 2 && !!deporte && nameStatus !== 'taken' && nameStatus !== 'checking' && !loading;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -164,6 +165,7 @@ function CreateClubForm({ getToken, onBack, onDone }: {
         method: 'POST', token,
         body: JSON.stringify({
           clubName: clubName.trim(),
+          ownerName: ownerName.trim(),
           deporte: deporte || undefined,
           department: department || undefined,
           city: city || undefined,
@@ -198,6 +200,12 @@ function CreateClubForm({ getToken, onBack, onDone }: {
           </div>
           {nameStatus === 'taken' && <p className="text-[12px]" style={{ color: '#EF476F' }}>Ya existe un club verificado con ese nombre. Diferéncialo con tu ciudad o un distintivo.</p>}
           {nameStatus === 'similar' && <p className="text-[12px]" style={{ color: '#B45309' }}>Hay un club con un nombre parecido. Puedes continuar; lo revisaremos al verificar.</p>}
+        </div>
+
+        <div className="space-y-1.5">
+          <Label>Nombre del titular *</Label>
+          <Input value={ownerName} onChange={e => setOwnerName(e.target.value)} placeholder="Tu nombre completo" minLength={2} required />
+          <p className="text-[11.5px] text-slate-400">Así aparecerás dentro de la plataforma como dueño del club.</p>
         </div>
 
         <div className="space-y-1.5">

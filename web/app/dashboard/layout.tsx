@@ -178,6 +178,26 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   // Ocultar el tooltip si el sidebar deja de estar colapsado
   useEffect(() => { if (!collapsed) setNavTip(null); }, [collapsed]);
 
+  // Refresco en vivo de nombre/foto/logo en toda la página, sin recargar:
+  // 1) el evento global 'vc:me-updated' (lo disparan Ajustes y otros al guardar)
+  // 2) cambios reactivos del usuario de Clerk (foto/nombre editados en su modal)
+  const [meRefresh, setMeRefresh] = useState(0);
+  useEffect(() => {
+    const onUpd = () => setMeRefresh(k => k + 1);
+    window.addEventListener('vc:me-updated', onUpd);
+    return () => window.removeEventListener('vc:me-updated', onUpd);
+  }, []);
+  const clerkImage = clerkUser?.imageUrl ?? null;
+  const clerkFullName = clerkUser?.fullName ?? null;
+  const clerkSnapshotRef = useRef<string | null>(null);
+  useEffect(() => {
+    const snapshot = `${clerkImage}|${clerkFullName}`;
+    if (clerkSnapshotRef.current !== null && clerkSnapshotRef.current !== snapshot) {
+      setMeRefresh(k => k + 1);
+    }
+    clerkSnapshotRef.current = snapshot;
+  }, [clerkImage, clerkFullName]);
+
   // Rastrea la profundidad de navegación del sidebar (0 = nav principal,
   // 1 = sub-menú de un módulo) para animar la dirección del deslizamiento.
   // Debe declararse antes de cualquier return temprano (reglas de hooks).
@@ -206,7 +226,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     // Flag para cancelar operaciones async si el userId cambia antes de que terminen
     let stale = false;
 
-    setChecking(true);
+    // Solo mostrar pantalla de carga en el primer chequeo — los refrescos en vivo
+    // (meRefresh > 0) actualizan nombre/foto en silencio, sin parpadeo.
+    if (meRefresh === 0) setChecking(true);
 
     (async () => {
       try {
@@ -271,7 +293,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
     // Cleanup: marcar como stale para que la async no aplique resultados viejos
     return () => { stale = true; };
-  }, [isLoaded, isSignedIn, userId, sessionId]);
+  }, [isLoaded, isSignedIn, userId, sessionId, meRefresh]);
 
   if (checking) return <LoadingScreen />;
 

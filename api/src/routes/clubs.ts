@@ -69,6 +69,7 @@ const router = Router();
 
 const createClubSchema = z.object({
   clubName:          z.string().min(2).max(100),
+  ownerName:         z.string().min(2).max(100),
   deporte:           z.string().max(50).optional(),
   department:        z.string().max(100).optional(),
   city:              z.string().max(100).optional(),
@@ -429,7 +430,7 @@ router.post('/', requireAuth, async (req, res) => {
   const parsed = createClubSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: 'Datos inválidos', issues: parsed.error.issues });
 
-  const { clubName, deporte, department, city, phone, memberCountApprox } = parsed.data;
+  const { clubName, ownerName, deporte, department, city, phone, memberCountApprox } = parsed.data;
 
   // Anti-suplantación: no permitir duplicar el nombre de un club verificado.
   const collision = await checkNameCollision(clubName);
@@ -458,7 +459,9 @@ router.post('/', requireAuth, async (req, res) => {
         create: {
           clerkId:         req.auth.clerkId,
           email:           req.auth.email,
-          name:            req.auth.name,
+          // El nombre del titular viene del formulario — evita el genérico
+          // "Administrador" cuando Clerk no trae nombre (registro por correo).
+          name:            ownerName.trim(),
           picture:         req.auth.picture,
           role:            'ADMIN',
           profileComplete: true,
@@ -466,7 +469,7 @@ router.post('/', requireAuth, async (req, res) => {
       },
       members: {
         create: {
-          fullName:     req.auth.name || 'Administrador',
+          fullName:     ownerName.trim(),
           email:        req.auth.email,
           phone:        phone || undefined,
           role:         'ADMIN',

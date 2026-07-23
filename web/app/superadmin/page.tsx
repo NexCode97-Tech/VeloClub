@@ -430,7 +430,7 @@ export default function SuperadminDashboard() {
               <p style={{ margin: 0, fontSize: 12, color: '#8E87A8' }}>No hay clubes registrados aún</p>
             </div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3" style={{ gap: 10 }}>
               {clubs.map(club => {
                 const recaudado = (club.suscripcion?.pagos ?? []).filter(p => p.estado === 'PAID').reduce((a, p) => a + p.monto, 0);
                 return (

@@ -29,6 +29,10 @@ model Club {
   // reactivarlo automaticamente al pagar sin pisar una desactivacion manual
   // hecha por el superadmin por otro motivo (abuso, etc.)
   desactivadoPorVencimiento Boolean @default(false)
+  // Activacion manual del superadmin: mientras este en true, el chequeo de
+  // vencimiento NO vuelve a desactivar el club (la decision manual manda).
+  // Se limpia al registrar un pago real o al desactivar manualmente.
+  activadoManualmente Boolean @default(false)
   trialEndsAt       DateTime?
   deporte           String?
   description       String?

@@ -108,8 +108,12 @@ router.patch('/clubs/:id/toggle', requireAuth, requireSuperadmin, async (req, re
       // Cualquier toggle manual es explícito — nunca dejar la bandera de
       // "desactivado automáticamente por vencimiento" contaminando esta decisión
       desactivadoPorVencimiento: false,
-      // Al reactivar, limpia el trial para que el club quede como pagado
-      ...(reactivating ? { trialEndsAt: null } : {}),
+      // Al reactivar, limpia el trial y marca la activación como manual para
+      // que el chequeo de vencimiento no lo vuelva a desactivar en el próximo
+      // login; al desactivar, se limpia la marca.
+      ...(reactivating
+        ? { trialEndsAt: null, activadoManualmente: true }
+        : { activadoManualmente: false }),
     },
   });
 

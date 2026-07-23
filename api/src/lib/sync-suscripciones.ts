@@ -94,6 +94,9 @@ export async function activarClubTrasPago(clubId: string): Promise<void> {
     where: { id: clubId },
     data: {
       trialEndsAt: null,
+      // Un pago real vuelve a poner la vigencia al mando — la marca de
+      // activación manual deja de ser necesaria.
+      activadoManualmente: false,
       ...(club?.desactivadoPorVencimiento ? { active: true, desactivadoPorVencimiento: false } : {}),
       // Un pago real valida al responsable: si el club estaba sin verificar,
       // se auto-verifica (obtiene el sello y visibilidad pública).
@@ -113,6 +116,14 @@ export async function activarClubTrasPago(clubId: string): Promise<void> {
 // el login (/me, para bloquear al instante) como en el cron de respaldo
 // (por si un club vencido nunca vuelve a intentar entrar).
 export async function verificarYDesactivarSiVencido(clubId: string): Promise<boolean> {
+  // Un club activado manualmente por el superadmin no se toca: esa decisión
+  // manda hasta que él mismo lo desactive o el club registre un pago nuevo.
+  const clubFlags = await prisma.club.findUnique({
+    where: { id: clubId },
+    select: { activadoManualmente: true },
+  });
+  if (clubFlags?.activadoManualmente) return false;
+
   const suscripcion = await prisma.clubSuscripcion.findUnique({
     where: { clubId },
     include: { pagos: true },

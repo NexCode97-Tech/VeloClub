@@ -1,13 +1,14 @@
 'use client';
 
 import { useAuth } from '@clerk/nextjs';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { apiFetch } from '@/lib/api-client';
 import { useNow } from '@/lib/use-now';
 import { PhoneInput } from '@/components/ui/phone-input';
 import { motion, AnimatePresence, type Variants } from 'framer-motion';
-import { ChevronRight, LayoutGrid, Table2, Search } from 'lucide-react';
+import { ChevronRight, ChevronDown, Check, LayoutGrid, Table2, Search } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select';
 import ClubDetail, { type Club, type Suscripcion } from './club-detail';
 import SportSelect from './sport-select';
@@ -110,6 +111,128 @@ function FilterSelect({ value, onChange, options, placeholder }: {
   );
 }
 
+// Filtro de Estado tipo Vercel (puntos de color apilados + contador + panel
+// multi-selección). El panel va en portal con posición fija porque la tarjeta
+// contenedora tiene overflow hidden (ver memoria dropdown-overflow-recortado).
+const ESTADO_OPTS = [
+  { value: 'ACTIVE',   label: 'Activos',   dot: '#06D6A0' },
+  { value: 'INACTIVE', label: 'Inactivos', dot: '#EF476F' },
+];
+
+function EstadoFilterDropdown({ selected, onChange, counts }: {
+  selected: string[];               // [] = todos
+  onChange: (v: string[]) => void;
+  counts: Record<string, number>;   // { ACTIVE, INACTIVE, ALL }
+}) {
+  const [open, setOpen] = useState(false);
+  const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
+  const btnRef = useRef<HTMLButtonElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  const activeDots = selected.length === 0 ? ESTADO_OPTS : ESTADO_OPTS.filter(o => selected.includes(o.value));
+
+  function toggleOpen() {
+    if (!open && btnRef.current) {
+      const r = btnRef.current.getBoundingClientRect();
+      // Clamp al viewport para que no se salga por la derecha
+      const left = Math.min(r.left, window.innerWidth - 190);
+      setPos({ top: r.bottom + 6, left: Math.max(8, left) });
+    }
+    setOpen(v => !v);
+  }
+
+  useEffect(() => {
+    if (!open) return;
+    function onDown(e: MouseEvent) {
+      const t = e.target as Node;
+      if (btnRef.current?.contains(t) || panelRef.current?.contains(t)) return;
+      setOpen(false);
+    }
+    window.addEventListener('mousedown', onDown);
+    return () => window.removeEventListener('mousedown', onDown);
+  }, [open]);
+
+  function toggleValue(v: string) {
+    onChange(selected.includes(v) ? selected.filter(x => x !== v) : [...selected, v]);
+  }
+
+  return (
+    <>
+      <button ref={btnRef} onClick={toggleOpen}
+        style={{
+          display: 'flex', alignItems: 'center', gap: 6, padding: '7px 8px 7px 10px',
+          borderRadius: 10, border: `1px solid ${selected.length > 0 ? 'rgba(124,58,237,0.35)' : 'rgba(120,80,200,0.16)'}`,
+          background: '#fff', cursor: 'pointer', fontSize: 11, fontWeight: 600, fontFamily: 'inherit',
+          color: '#1A1028', whiteSpace: 'nowrap',
+        }}>
+        {/* Puntos de color apilados */}
+        <span style={{ display: 'flex', alignItems: 'center' }}>
+          {activeDots.map((o, i) => (
+            <span key={o.value} style={{
+              width: 9, height: 9, borderRadius: '50%', background: o.dot,
+              border: '1.5px solid #fff', marginLeft: i > 0 ? -3 : 0,
+            }} />
+          ))}
+        </span>
+        Estado
+        <span style={{
+          fontSize: 9, fontWeight: 700, color: '#7C3AED', background: 'rgba(124,58,237,0.10)',
+          borderRadius: 99, padding: '1px 6px',
+        }}>
+          {selected.length === 0 ? ESTADO_OPTS.length : selected.length}/{ESTADO_OPTS.length}
+        </span>
+        <ChevronDown size={12} color="#8E87A8" style={{ transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.18s' }} />
+      </button>
+
+      {open && pos && typeof document !== 'undefined' && createPortal(
+        <div ref={panelRef}
+          style={{
+            position: 'fixed', top: pos.top, left: pos.left, zIndex: 70, width: 180,
+            background: '#fff', border: '1px solid rgba(120,80,200,0.16)', borderRadius: 12,
+            boxShadow: '0 10px 32px rgba(26,16,40,0.14)', padding: 4, fontFamily: 'inherit',
+          }}>
+          {ESTADO_OPTS.map(o => {
+            const checked = selected.includes(o.value);
+            return (
+              <button key={o.value} onClick={() => toggleValue(o.value)}
+                className="hover:bg-[rgba(124,58,237,0.06)]"
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '7px 8px',
+                  borderRadius: 8, border: 'none', background: 'transparent', cursor: 'pointer',
+                  fontSize: 11, fontWeight: 600, fontFamily: 'inherit', color: '#1A1028', textAlign: 'left',
+                }}>
+                <span style={{
+                  width: 14, height: 14, borderRadius: 5, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  background: checked ? '#7C3AED' : 'transparent',
+                  border: checked ? '1px solid #7C3AED' : '1px solid rgba(120,80,200,0.30)', flexShrink: 0,
+                }}>
+                  {checked && <Check size={10} color="#fff" strokeWidth={3} />}
+                </span>
+                <span style={{ width: 8, height: 8, borderRadius: '50%', background: o.dot, flexShrink: 0 }} />
+                <span style={{ flex: 1 }}>{o.label}</span>
+                <span style={{ fontSize: 10, color: '#8E87A8', fontWeight: 500 }}>{counts[o.value] ?? 0}</span>
+              </button>
+            );
+          })}
+          <div style={{ height: 1, background: 'rgba(120,80,200,0.10)', margin: '4px 4px' }} />
+          <button onClick={() => { onChange([]); setOpen(false); }}
+            className="hover:bg-[rgba(124,58,237,0.06)]"
+            style={{
+              display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '7px 8px',
+              borderRadius: 8, border: 'none', background: 'transparent', cursor: 'pointer',
+              fontSize: 11, fontWeight: 600, fontFamily: 'inherit',
+              color: selected.length === 0 ? '#7C3AED' : '#8E87A8', textAlign: 'left',
+            }}>
+            <span style={{ flex: 1 }}>Mostrar todos</span>
+            <span style={{ fontSize: 10, color: '#8E87A8', fontWeight: 500 }}>{counts.ALL ?? 0}</span>
+          </button>
+        </div>,
+        document.body
+      )}
+    </>
+  );
+}
+
 // ── Componente principal ───────────────────────────────────────────────────────
 export default function ClubsPage() {
   const { getToken, isLoaded, isSignedIn } = useAuth();
@@ -127,7 +250,7 @@ export default function ClubsPage() {
   const [view, setView] = useState<'table' | 'cards'>('table');
 
   // Filtros de columnas + búsqueda por nombre
-  const [filterEstado, setFilterEstado] = useState('ALL');
+  const [filterEstado, setFilterEstado] = useState<string[]>([]); // [] = todos
   const [filterPlan,   setFilterPlan]   = useState('ALL');
   const [filterVerif,  setFilterVerif]  = useState('ALL');
   const [filterDeporte, setFilterDeporte] = useState('ALL');
@@ -174,7 +297,7 @@ export default function ClubsPage() {
     const q = search.trim().toLowerCase();
     return clubs.filter(c => {
       if (q && !c.name.toLowerCase().includes(q)) return false;
-      if (filterEstado !== 'ALL' && (filterEstado === 'ACTIVE') !== c.active) return false;
+      if (filterEstado.length > 0 && !filterEstado.includes(c.active ? 'ACTIVE' : 'INACTIVE')) return false;
       if (filterPlan !== 'ALL' && planCategory(c) !== filterPlan) return false;
       if (filterVerif !== 'ALL' && (c.verificationStatus ?? 'VERIFIED') !== filterVerif) return false;
       if (filterDeporte !== 'ALL' && c.deporte !== filterDeporte) return false;
@@ -182,7 +305,14 @@ export default function ClubsPage() {
     });
   }, [clubs, search, filterEstado, filterPlan, filterVerif, filterDeporte]);
 
-  const filtersActive = filterEstado !== 'ALL' || filterPlan !== 'ALL' || filterVerif !== 'ALL' || filterDeporte !== 'ALL' || search.trim() !== '';
+  // Conteos para el panel del filtro de Estado
+  const estadoCounts = useMemo(() => ({
+    ACTIVE: clubs.filter(c => c.active).length,
+    INACTIVE: clubs.filter(c => !c.active).length,
+    ALL: clubs.length,
+  }), [clubs]);
+
+  const filtersActive = filterEstado.length > 0 || filterPlan !== 'ALL' || filterVerif !== 'ALL' || filterDeporte !== 'ALL' || search.trim() !== '';
 
   async function handleCreate() {
     if (!newForm.clubName || !newForm.adminEmail || !newForm.adminName) return;
@@ -232,21 +362,8 @@ export default function ClubsPage() {
           }}
         />
       </div>
-      {/* Estado — tabs segmentados (mismo lenguaje visual del toggle Tabla/Tarjetas) */}
-      <div style={{ display: 'flex', background: '#fff', border: '1px solid rgba(120,80,200,0.14)', borderRadius: 10, padding: 2, gap: 2 }}>
-        {[{ v: 'ALL', l: 'Todos' }, { v: 'ACTIVE', l: 'Activos' }, { v: 'INACTIVE', l: 'Inactivos' }].map(({ v, l }) => (
-          <button key={v} onClick={() => setFilterEstado(v)}
-            style={{
-              padding: '5px 10px', borderRadius: 8, border: 'none', cursor: 'pointer',
-              fontSize: 11, fontWeight: 600, fontFamily: 'inherit', whiteSpace: 'nowrap',
-              background: filterEstado === v ? 'rgba(124,58,237,0.10)' : 'transparent',
-              color: filterEstado === v ? '#7C3AED' : '#8E87A8',
-              transition: 'background 0.15s, color 0.15s',
-            }}>
-            {l}
-          </button>
-        ))}
-      </div>
+      {/* Estado — dropdown multi-selección tipo Vercel (puntos de color + contador) */}
+      <EstadoFilterDropdown selected={filterEstado} onChange={setFilterEstado} counts={estadoCounts} />
       <FilterSelect value={filterPlan} onChange={setFilterPlan} placeholder="Plan"
         options={(['PRUEBA', 'MENSUAL', 'TRIMESTRAL', 'ANUAL', 'SIN_PLAN'] as PlanCategory[]).map(p => ({ value: p, label: PLAN_FILTER_LABEL[p] }))} />
       <FilterSelect value={filterVerif} onChange={setFilterVerif} placeholder="Verificación"
@@ -255,7 +372,7 @@ export default function ClubsPage() {
         <FilterSelect value={filterDeporte} onChange={setFilterDeporte} placeholder="Deporte" options={deporteOptions} />
       )}
       {filtersActive && (
-        <button onClick={() => { setFilterEstado('ALL'); setFilterPlan('ALL'); setFilterVerif('ALL'); setFilterDeporte('ALL'); setSearch(''); }}
+        <button onClick={() => { setFilterEstado([]); setFilterPlan('ALL'); setFilterVerif('ALL'); setFilterDeporte('ALL'); setSearch(''); }}
           style={{ fontSize: 11, fontWeight: 600, color: '#7C3AED', background: 'none', border: 'none', cursor: 'pointer', padding: '6px 4px' }}>
           Limpiar
         </button>

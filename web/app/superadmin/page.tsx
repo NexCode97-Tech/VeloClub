@@ -70,7 +70,11 @@ function MiniBarChart({ data }: { data: number[] }) {
     >
       {data.map((v, i) => {
         const h = Math.max(6, Math.round((v / max) * 44));
-        const isRecent = i >= nowIdx - 2;
+        // Solo el mes ACTUAL se pinta sólido; los anteriores usan el mismo
+        // degradado suave. Antes los últimos 3 meses iban sólidos y meses
+        // viejos con más recaudo se veían más pálidos que meses recientes
+        // en cero — el color parecía aleatorio.
+        const isCurrent = i === nowIdx;
         const hovered = tip?.i === i;
         return (
           <div
@@ -88,7 +92,7 @@ function MiniBarChart({ data }: { data: number[] }) {
                 width: '100%',
                 height: h,
                 borderRadius: 4,
-                background: isRecent
+                background: isCurrent
                   ? (hovered ? '#6D28D9' : '#7C3AED')
                   : hovered
                     ? 'rgba(124,58,237,0.55)'

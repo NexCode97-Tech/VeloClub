@@ -380,39 +380,41 @@ export default function ClubsPage() {
     ? <FilterSelect value={filterDeporte} onChange={setFilterDeporte} placeholder="Deporte" options={deporteOptions} />
     : null;
 
-  // Barra superior: solo búsqueda (+ Limpiar). En tarjetas se agregan los dropdowns
-  // porque ahí no hay encabezados de tabla.
-  const filterBar = (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', padding: '10px 14px', borderBottom: '1px solid rgba(120,80,200,0.10)', background: '#fff' }}>
-      <div style={{ position: 'relative', flex: '1 1 180px', minWidth: 160, maxWidth: 260 }}>
-        <Search size={13} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: '#8E87A8', pointerEvents: 'none' }} />
-        <input
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          placeholder="Buscar club..."
-          style={{
-            width: '100%', padding: '7px 10px 7px 28px', borderRadius: 10,
-            border: '1px solid rgba(120,80,200,0.16)', background: '#fff', color: '#1A1028',
-            fontSize: 11, fontWeight: 600, fontFamily: 'inherit', outline: 'none',
-          }}
-        />
-      </div>
-      {view === 'cards' && (
-        <>
-          {estadoFilter}
-          {planFilter}
-          {verifFilter}
-          {deporteFilter}
-        </>
-      )}
-      {filtersActive && (
-        <button onClick={clearFilters}
-          style={{ fontSize: 11, fontWeight: 600, color: '#7C3AED', background: 'none', border: 'none', cursor: 'pointer', padding: '6px 4px' }}>
-          Limpiar
-        </button>
-      )}
+  // Búsqueda compacta — en la tabla vive dentro del encabezado "Club"; en
+  // tarjetas va en la barra superior junto a los dropdowns.
+  const searchInput = (
+    <div style={{ position: 'relative', flex: '1 1 160px', minWidth: 140, maxWidth: 220 }}>
+      <Search size={13} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: '#8E87A8', pointerEvents: 'none' }} />
+      <input
+        value={search}
+        onChange={e => setSearch(e.target.value)}
+        placeholder="Buscar club..."
+        style={{
+          width: '100%', height: 30, padding: '0 10px 0 28px', borderRadius: 10, boxSizing: 'border-box',
+          border: '1px solid rgba(120,80,200,0.16)', background: '#fff', color: '#1A1028',
+          fontSize: 11, fontWeight: 600, fontFamily: 'inherit', outline: 'none',
+        }}
+      />
     </div>
   );
+  const clearButton = filtersActive ? (
+    <button onClick={clearFilters}
+      style={{ fontSize: 11, fontWeight: 600, color: '#7C3AED', background: 'none', border: 'none', cursor: 'pointer', padding: '6px 4px', whiteSpace: 'nowrap' }}>
+      Limpiar
+    </button>
+  ) : null;
+
+  // Barra superior — solo en la vista de tarjetas (la tabla lleva todo en sus encabezados)
+  const filterBar = view === 'cards' ? (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', padding: '10px 14px', borderBottom: '1px solid rgba(120,80,200,0.10)', background: '#fff' }}>
+      {searchInput}
+      {estadoFilter}
+      {planFilter}
+      {verifFilter}
+      {deporteFilter}
+      {clearButton}
+    </div>
+  ) : null;
 
   return (
     <div style={{ background: '#F7F7FB', minHeight: '100%' }}>
@@ -530,8 +532,14 @@ export default function ClubsPage() {
               <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: 'inherit', minWidth: 720 }}>
                 <thead>
                   <tr style={{ borderBottom: '1px solid rgba(120,80,200,0.10)' }}>
-                    {/* Encabezados-filtro: el dropdown ES el encabezado de la columna */}
-                    <th style={thText}>Club</th>
+                    {/* Encabezados-filtro: el dropdown ES el encabezado de la columna;
+                        la búsqueda vive en la columna Club */}
+                    <th style={{ ...thFilter, padding: '7px 14px', minWidth: 200 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        {searchInput}
+                        {clearButton}
+                      </div>
+                    </th>
                     <th style={thFilter}>{estadoFilter}</th>
                     <th style={thFilter}>{planFilter}</th>
                     <th style={thFilter}>{verifFilter}</th>

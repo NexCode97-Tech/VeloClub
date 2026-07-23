@@ -32,6 +32,15 @@ const expandY: Variants = {
   exit:   { opacity: 0, height: 0, overflow: 'hidden', transition: { duration: 0.18, ease: EASE_IN } },
 };
 
+// ── Estilos de encabezados de tabla ──────────────────────────────────────────
+const thText: React.CSSProperties = {
+  textAlign: 'left', padding: '10px 14px', fontSize: 11, fontWeight: 600,
+  color: '#8E87A8', whiteSpace: 'nowrap',
+};
+const thFilter: React.CSSProperties = {
+  textAlign: 'left', padding: '7px 8px', whiteSpace: 'nowrap',
+};
+
 // ── Input base ────────────────────────────────────────────────────────────────
 const inp: React.CSSProperties = {
   width: '100%', padding: '10px 12px', borderRadius: 10,
@@ -345,8 +354,25 @@ export default function ClubsPage() {
     );
   }
 
-  // Barra de filtros integrada a la tabla (un solo bloque, estilo APP NTRL):
-  // búsqueda primero, luego tabs segmentados de Estado y los demás dropdowns.
+  const clearFilters = () => { setFilterEstado([]); setFilterPlan('ALL'); setFilterVerif('ALL'); setFilterDeporte('ALL'); setSearch(''); };
+
+  // Filtros unificados con los encabezados: cada dropdown ES el encabezado de su
+  // columna en la vista de tabla. Se reutilizan como barra en la vista de tarjetas.
+  const estadoFilter = <EstadoFilterDropdown selected={filterEstado} onChange={setFilterEstado} counts={estadoCounts} />;
+  const planFilter = (
+    <FilterSelect value={filterPlan} onChange={setFilterPlan} placeholder="Plan"
+      options={(['PRUEBA', 'MENSUAL', 'TRIMESTRAL', 'ANUAL', 'SIN_PLAN'] as PlanCategory[]).map(p => ({ value: p, label: PLAN_FILTER_LABEL[p] }))} />
+  );
+  const verifFilter = (
+    <FilterSelect value={filterVerif} onChange={setFilterVerif} placeholder="Verificación"
+      options={[{ value: 'VERIFIED', label: 'Verificado' }, { value: 'PENDING', label: 'Por verificar' }, { value: 'REJECTED', label: 'Rechazado' }]} />
+  );
+  const deporteFilter = deporteOptions.length > 0
+    ? <FilterSelect value={filterDeporte} onChange={setFilterDeporte} placeholder="Deporte" options={deporteOptions} />
+    : null;
+
+  // Barra superior: solo búsqueda (+ Limpiar). En tarjetas se agregan los dropdowns
+  // porque ahí no hay encabezados de tabla.
   const filterBar = (
     <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', padding: '10px 14px', borderBottom: '1px solid rgba(120,80,200,0.10)', background: '#fff' }}>
       <div style={{ position: 'relative', flex: '1 1 180px', minWidth: 160, maxWidth: 260 }}>
@@ -362,17 +388,16 @@ export default function ClubsPage() {
           }}
         />
       </div>
-      {/* Estado — dropdown multi-selección tipo Vercel (puntos de color + contador) */}
-      <EstadoFilterDropdown selected={filterEstado} onChange={setFilterEstado} counts={estadoCounts} />
-      <FilterSelect value={filterPlan} onChange={setFilterPlan} placeholder="Plan"
-        options={(['PRUEBA', 'MENSUAL', 'TRIMESTRAL', 'ANUAL', 'SIN_PLAN'] as PlanCategory[]).map(p => ({ value: p, label: PLAN_FILTER_LABEL[p] }))} />
-      <FilterSelect value={filterVerif} onChange={setFilterVerif} placeholder="Verificación"
-        options={[{ value: 'VERIFIED', label: 'Verificado' }, { value: 'PENDING', label: 'Por verificar' }, { value: 'REJECTED', label: 'Rechazado' }]} />
-      {deporteOptions.length > 0 && (
-        <FilterSelect value={filterDeporte} onChange={setFilterDeporte} placeholder="Deporte" options={deporteOptions} />
+      {view === 'cards' && (
+        <>
+          {estadoFilter}
+          {planFilter}
+          {verifFilter}
+          {deporteFilter}
+        </>
       )}
       {filtersActive && (
-        <button onClick={() => { setFilterEstado([]); setFilterPlan('ALL'); setFilterVerif('ALL'); setFilterDeporte('ALL'); setSearch(''); }}
+        <button onClick={clearFilters}
           style={{ fontSize: 11, fontWeight: 600, color: '#7C3AED', background: 'none', border: 'none', cursor: 'pointer', padding: '6px 4px' }}>
           Limpiar
         </button>
@@ -496,11 +521,14 @@ export default function ClubsPage() {
               <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: 'inherit', minWidth: 720 }}>
                 <thead>
                   <tr style={{ borderBottom: '1px solid rgba(120,80,200,0.10)' }}>
-                    {['Club', 'Estado', 'Plan', 'Verificación', 'Miembros', 'Deporte', 'Creado'].map(h => (
-                      <th key={h} style={{ textAlign: 'left', padding: '10px 14px', fontSize: 10, fontWeight: 600, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.04em', whiteSpace: 'nowrap' }}>
-                        {h}
-                      </th>
-                    ))}
+                    {/* Encabezados-filtro: el dropdown ES el encabezado de la columna */}
+                    <th style={thText}>Club</th>
+                    <th style={thFilter}>{estadoFilter}</th>
+                    <th style={thFilter}>{planFilter}</th>
+                    <th style={thFilter}>{verifFilter}</th>
+                    <th style={thText}>Miembros</th>
+                    <th style={thFilter}>{deporteFilter ?? <span style={{ fontSize: 11, fontWeight: 600, color: '#8E87A8' }}>Deporte</span>}</th>
+                    <th style={thText}>Creado</th>
                     <th style={{ width: 32 }} />
                   </tr>
                 </thead>

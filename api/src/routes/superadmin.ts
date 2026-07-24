@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { requireAuth } from '../auth/middleware';
 import { prisma } from '../db/client';
 import { addToAllowlist, removeFromAllowlist } from '../lib/clerk-allowlist';
+import { invalidarTrustedCache } from './clubs';
 import { v2 as cloudinary } from 'cloudinary';
 
 cloudinary.config({
@@ -121,6 +122,7 @@ router.patch('/clubs/:id/toggle', requireAuth, requireSuperadmin, async (req, re
     await crearNotificacion('CLUB_DESACTIVADO', 'Club desactivado', `${club.name} fue desactivado.`);
   }
 
+  await invalidarTrustedCache(); // activar/desactivar cambia quién aparece en el landing
   res.json({ club: updated });
 });
 
@@ -131,6 +133,7 @@ router.patch('/clubs/:id/verificar', requireAuth, requireSuperadmin, async (req,
     where: { id },
     data: { verificationStatus: 'VERIFIED', verified: true, nameFlagged: false, rejectionReason: null, reviewedAt: new Date() },
   });
+  await invalidarTrustedCache(); // verificado → ya puede aparecer en el landing
   res.json({ club });
 });
 
@@ -142,6 +145,7 @@ router.patch('/clubs/:id/rechazar', requireAuth, requireSuperadmin, async (req, 
     where: { id },
     data: { verificationStatus: 'REJECTED', verified: false, rejectionReason: reason?.trim() || null, reviewedAt: new Date() },
   });
+  await invalidarTrustedCache(); // rechazado → deja de aparecer en el landing
   res.json({ club });
 });
 

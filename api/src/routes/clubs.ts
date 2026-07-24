@@ -84,6 +84,13 @@ const settingsSchema = z.object({
   noAttendanceDays: z.array(z.number().min(0).max(6)).optional(),
 });
 
+// Invalida la caché de la sección "confían en nosotros" del landing. Debe
+// llamarse cada vez que cambia si un club califica: logo, nombre, verificación
+// o estado activo/inactivo (desde este archivo o desde superadmin).
+export async function invalidarTrustedCache(): Promise<void> {
+  await cacheDel('clubs:trusted');
+}
+
 // GET /clubs/trusted — pública (sin auth). Logos de clubes verificados con
 // logo propio, para la sección "confían en nosotros" del landing. Solo
 // expone id, nombre y logo — nada sensible.
@@ -149,6 +156,7 @@ router.patch('/settings', requireAuth, async (req, res) => {
   });
   await cacheDel(`club:settings:${clubId}`);
   await cacheDel(`club:profile:${clubId}`);
+  await invalidarTrustedCache(); // el nombre pudo cambiar
   res.json({ club });
 });
 
@@ -182,6 +190,7 @@ router.post('/logo', requireAuth, async (req, res) => {
 
     await cacheDel(`club:settings:${clubId}`);
     await cacheDel(`club:profile:${clubId}`);
+    await invalidarTrustedCache(); // nuevo logo → puede aparecer en el landing
     res.json({ club });
   } catch (err) {
     const msg = err instanceof Error ? err.message : JSON.stringify(err);
@@ -206,6 +215,7 @@ router.delete('/logo', requireAuth, async (req, res) => {
   });
   await cacheDel(`club:settings:${clubId}`);
   await cacheDel(`club:profile:${clubId}`);
+  await invalidarTrustedCache(); // se quitó el logo → deja de aparecer
   res.json({ ok: true });
 });
 

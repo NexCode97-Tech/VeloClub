@@ -3,6 +3,7 @@ import { prisma } from '../db/client';
 import { calcularPrecioPlan, vigencia, type TipoPlan } from './pricing';
 import { actualizarMontoPreapproval } from './mercadopago';
 import { notifyClubStaff } from './notify';
+import { cacheDel } from './redis';
 
 // Revisa las suscripciones con renovación automática activa y, si el club
 // cambió de tramo de deportistas, actualiza el monto en Mercado Pago antes de
@@ -110,6 +111,10 @@ export async function activarClubTrasPago(clubId: string): Promise<void> {
     where: { clubId, canceladaAt: { not: null } },
     data: { canceladaAt: null },
   });
+
+  // Si el pago auto-verificó o reactivó el club, refrescar la sección
+  // "confían en nosotros" del landing.
+  await cacheDel('clubs:trusted');
 }
 
 // Revisa un solo club y lo desactiva si su plan ya venció — usada tanto en

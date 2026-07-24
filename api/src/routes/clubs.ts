@@ -99,11 +99,12 @@ router.get('/trusted', async (_req, res) => {
   const cached = await cacheGet<{ clubs: unknown[] }>(cacheKey);
   if (cached) return res.json(cached);
 
+  // Todos los clubes activos, verificados y con logo propio — sin límite, para
+  // que cualquier club nuevo que cumpla aparezca solo en el carrusel del landing.
   const clubs = await prisma.club.findMany({
     where: { active: true, verificationStatus: 'VERIFIED', logoUrl: { not: null } },
     select: { id: true, name: true, logoUrl: true },
     orderBy: { createdAt: 'asc' },
-    take: 12,
   });
 
   const payload = { clubs };

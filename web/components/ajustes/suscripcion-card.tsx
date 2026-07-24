@@ -385,6 +385,20 @@ export default function SuscripcionCard() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { load(); }, []);
 
+  // Al montar (p. ej. al volver del banco tras un pago PSE), verificar si algún
+  // pago pendiente ya se acreditó — activa el club al instante sin esperar el
+  // webhook de Mercado Pago. Si acreditó algo, recargar la suscripción.
+  useEffect(() => {
+    (async () => {
+      try {
+        const token = await getToken();
+        const r = await apiFetch<{ acreditados: number }>('/mercadopago/sincronizar', { method: 'POST', token });
+        if (r.acreditados > 0) await load();
+      } catch { /* silencioso: es una verificación de respaldo */ }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // El SDK de Mercado Pago puede haberse cargado ya en una navegación previa,
   // en cuyo caso el onLoad del <Script> no vuelve a dispararse. Verificamos
   // directamente window.MercadoPago para no dejar el botón deshabilitado.

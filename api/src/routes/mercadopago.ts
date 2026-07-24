@@ -41,6 +41,44 @@ function fechaEfectivaPago(trialEndsAt: Date | null | undefined): Date {
   return trialEndsAt && trialEndsAt > ahora ? trialEndsAt : ahora;
 }
 
+// Reconciliación de respaldo: revisa los pagos que quedaron "en proceso"
+// (PENDING con id de Mercado Pago) y, si Mercado Pago ya los acreditó, los pasa
+// a PAID y activa el club. No depende del webhook — cubre el caso de que la
+// notificación se demore o falle. Se usa al volver del banco (por club) y en un
+// intervalo periódico (todos). Devuelve cuántos pagos se acreditaron.
+export async function reconciliarPagosPendientes(clubId?: string): Promise<number> {
+  const pendientes = await prisma.suscripcionPago.findMany({
+    where: {
+      estado: 'PENDING',
+      mpPaymentId: { not: null },
+      ...(clubId ? { suscripcion: { clubId } } : {}),
+    },
+    include: { suscripcion: { select: { clubId: true } } },
+  });
+
+  let acreditados = 0;
+  for (const pago of pendientes) {
+    try {
+      const mp = await obtenerPago(String(pago.mpPaymentId));
+      if (mp.status === 'approved') {
+        await prisma.suscripcionPago.update({
+          where: { id: pago.id },
+          data:  { estado: 'PAID', monto: mp.transaction_amount },
+        });
+        await activarClubTrasPago(pago.suscripcion.clubId);
+        acreditados++;
+      } else if (mp.status === 'rejected' || mp.status === 'cancelled') {
+        // El pago no prosperó — limpiar el pendiente para no dejarlo colgado
+        await prisma.suscripcionPago.delete({ where: { id: pago.id } });
+      }
+    } catch (err) {
+      console.error('[reconciliar-pagos] pago', pago.id, err instanceof Error ? err.message : err);
+      Sentry.captureException(err, { tags: { route: 'reconciliar-pagos' }, extra: { pagoId: pago.id } });
+    }
+  }
+  return acreditados;
+}
+
 async function suscripcionDelClub(clubId: string) {
   return prisma.clubSuscripcion.upsert({
     where: { clubId },
@@ -316,20 +354,21 @@ router.post('/pagar', requireAuth, async (req, res) => {
     const pago = await crearPagoDirecto(payload, deviceId);
 
     if (pago.status === 'approved') {
-      // Registrar de una vez (el webhook queda de respaldo, idempotente por mpPaymentId)
-      const yaRegistrado = await prisma.suscripcionPago.findUnique({ where: { mpPaymentId: String(pago.id) } });
-      if (!yaRegistrado) {
-        await prisma.suscripcionPago.create({
-          data: {
-            suscripcionId: suscripcion.id,
-            concepto: 'Pago suscripción',
-            monto: pago.transaction_amount,
-            fecha: fechaEfectivaPago(club?.trialEndsAt),
-            estado: 'PAID',
-            mpPaymentId: String(pago.id),
-          },
-        });
-      }
+      // Registrar de una vez (el webhook queda de respaldo, idempotente por
+      // mpPaymentId). upsert: crea si no existe, o pasa a PAID si ya había un
+      // PENDING de un intento previo.
+      await prisma.suscripcionPago.upsert({
+        where:  { mpPaymentId: String(pago.id) },
+        update: { estado: 'PAID', monto: pago.transaction_amount },
+        create: {
+          suscripcionId: suscripcion.id,
+          concepto: 'Pago suscripción',
+          monto: pago.transaction_amount,
+          fecha: fechaEfectivaPago(club?.trialEndsAt),
+          estado: 'PAID',
+          mpPaymentId: String(pago.id),
+        },
+      });
       // El pago activa el club: limpia el trial y reactiva si estaba desactivado por vencimiento
       await activarClubTrasPago(clubId);
       // Registrar el canje del cupón (si se usó) — el descuento ya se aplicó al cobro
@@ -339,6 +378,26 @@ router.post('/pagar', requireAuth, async (req, res) => {
 
     if (pago.status === 'pending' || pago.status === 'in_process') {
       // PSE redirige al banco; Efecty entrega el cupón para pagar en un punto físico.
+      // Dejar constancia inmediata del pago como PENDING: así nunca queda invisible
+      // aunque falle la notificación de Mercado Pago. El webhook (o la reconciliación
+      // de respaldo) lo pasa a PAID y activa el club cuando se acredita. Idempotente
+      // por mpPaymentId único.
+      try {
+        await prisma.suscripcionPago.upsert({
+          where:  { mpPaymentId: String(pago.id) },
+          update: {},
+          create: {
+            suscripcionId: suscripcion.id,
+            concepto: 'Pago suscripción',
+            monto: pago.transaction_amount,
+            fecha: fechaEfectivaPago(club?.trialEndsAt),
+            estado: 'PENDING',
+            mpPaymentId: String(pago.id),
+          },
+        });
+      } catch (err) {
+        console.error('[mercadopago/pagar] no se pudo registrar el pago pendiente', err instanceof Error ? err.message : err);
+      }
       // El descuento ya quedó aplicado en el monto del pago de MP, así que el canje
       // se registra ahora (un uso por club, no reutilizable en otro intento).
       if (cuponId) await registrarCanje(cuponId, clubId, descuento);
@@ -354,6 +413,21 @@ router.post('/pagar', requireAuth, async (req, res) => {
     console.error('[mercadopago/pagar]', err instanceof Error ? err.message : err);
     Sentry.captureException(err, { tags: { route: 'mercadopago/pagar', metodo }, extra: { clubId } });
     res.status(500).json({ error: 'No se pudo procesar el pago. Intenta de nuevo.' });
+  }
+});
+
+// ── POST /mercadopago/sincronizar — verificar pagos pendientes del club ──────
+// Se llama al volver del banco (PSE) para acreditar el pago al instante sin
+// esperar el webhook: revisa los PENDING del club contra Mercado Pago.
+router.post('/sincronizar', requireAuth, async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  const clubId = req.user!.clubId ?? '';
+  try {
+    const acreditados = await reconciliarPagosPendientes(clubId);
+    res.json({ acreditados });
+  } catch (err) {
+    console.error('[mercadopago/sincronizar]', err instanceof Error ? err.message : err);
+    res.status(500).json({ error: 'No se pudo verificar el pago' });
   }
 });
 
@@ -662,14 +736,18 @@ router.post('/webhook', async (req, res) => {
     const suscripcion = await prisma.clubSuscripcion.findUnique({ where: { id: suscripcionId } });
     if (!suscripcion) return;
 
-    // Idempotencia: si ya registramos este mpPaymentId, no duplicar
+    // Idempotencia: si ya está PAID, no hacer nada. Si existe como PENDING (pago
+    // PSE/Efecty que dejamos "en proceso" al iniciarlo), pasarlo a PAID. Si no
+    // existe, crearlo.
     const yaRegistrado = await prisma.suscripcionPago.findUnique({ where: { mpPaymentId: String(pago.id) } });
-    if (yaRegistrado) return;
+    if (yaRegistrado?.estado === 'PAID') return;
 
     const clubDelPago = await prisma.club.findUnique({ where: { id: suscripcion.clubId }, select: { trialEndsAt: true } });
 
-    await prisma.suscripcionPago.create({
-      data: {
+    await prisma.suscripcionPago.upsert({
+      where:  { mpPaymentId: String(pago.id) },
+      update: { estado: 'PAID', monto: pago.transaction_amount },
+      create: {
         suscripcionId: suscripcion.id,
         concepto: suscripcion.autoRenew ? 'Renovación automática' : 'Pago suscripción',
         monto: pago.transaction_amount,

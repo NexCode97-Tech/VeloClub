@@ -24,7 +24,7 @@ import followsRouter from './routes/follows';
 import profilesRouter from './routes/profiles';
 import searchRouter from './routes/search';
 import notificationsRouter from './routes/notifications';
-import mercadopagoRouter from './routes/mercadopago';
+import mercadopagoRouter, { reconciliarPagosPendientes } from './routes/mercadopago';
 import { startWorkers } from './workers';
 import { prisma } from './db/client';
 import { getRedis } from './lib/redis';
@@ -197,6 +197,12 @@ const server = app.listen(PORT, () => {
       desactivarClubesVencidos().catch(err => console.error('[desactivar-vencidos:interval]', err));
     }, 24 * 60 * 60 * 1000);
   }, 2 * 60 * 1000);
+
+  // Reconciliación de pagos PSE/Efecty en proceso — red de seguridad por si la
+  // notificación de Mercado Pago se demora o falla. Corre cada 20 minutos.
+  setInterval(() => {
+    reconciliarPagosPendientes().catch(err => console.error('[reconciliar-pagos:interval]', err));
+  }, 20 * 60 * 1000);
 });
 
 // Timeout de 30s — evita que requests colgados bloqueen el servidor indefinidamente

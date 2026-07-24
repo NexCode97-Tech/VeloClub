@@ -134,12 +134,27 @@ const meLimiter = rateLimit({
   message: { error: 'Demasiadas solicitudes, intenta más tarde' },
 });
 
+// Rate limiting para /superadmin: por usuario (no por IP) y generoso — el panel
+// refresca listas cada 15s y el superadmin trabaja de forma intensiva; el
+// strictLimiter por IP (100/15min) lo bloqueaba con el solo polling.
+const superadminLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 1000,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => {
+    const clerkUserId = req.headers['x-clerk-user-id'] as string | undefined;
+    return clerkUserId ?? ipKeyGenerator(req.ip ?? 'unknown');
+  },
+  message: { error: 'Demasiadas solicitudes, intenta más tarde' },
+});
+
 // ── Rutas ─────────────────────────────────────────────────────────────────────
 app.use('/me', meLimiter, meRouter);
 app.use('/clubs', clubsRouter);
 app.use('/locations', locationsRouter);
 app.use('/members', membersRouter);
-app.use('/superadmin', strictLimiter, superadminRouter);
+app.use('/superadmin', superadminLimiter, superadminRouter);
 app.use('/events', eventsRouter);
 app.use('/payments', paymentsRouter);
 app.use('/competitions', competitionsRouter);

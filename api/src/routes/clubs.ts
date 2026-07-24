@@ -181,6 +181,8 @@ router.post('/logo', requireAuth, async (req, res) => {
       folder:     'veloclub/logos',
       public_id:  `club_${clubId}`,
       overwrite:  true,
+      // Logo uniforme y liviano: cuadrado 512x512, recorte centrado, calidad auto
+      transformation: [{ width: 512, height: 512, crop: 'fill', gravity: 'center', quality: 'auto:good' }],
     });
 
     const club = await prisma.club.update({

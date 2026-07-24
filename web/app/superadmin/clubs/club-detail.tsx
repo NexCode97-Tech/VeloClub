@@ -9,7 +9,7 @@ import SportSelect from './sport-select';
 import { motion, AnimatePresence, type Variants } from 'framer-motion';
 import {
   ArrowLeft, Pencil, Trash2, X, Check, TrendingUp, CalendarClock,
-  CircleDollarSign, Eye, Upload, RotateCcw, MessageCircle, Info, Power, BadgeCheck,
+  CircleDollarSign, Eye, Upload, RotateCcw, MessageCircle, Info, Power, BadgeCheck, Camera,
 } from 'lucide-react';
 
 // ── Formateo ────────────────────────────────────────────────────────────────
@@ -233,6 +233,32 @@ export default function ClubDetail({ club, suscripcion, onBack, onReload, onDele
   const [uploadingReceipt, setUploadingReceipt] = useState(false);
   const [deletingReceipt, setDeletingReceipt] = useState(false);
   const [receiptError, setReceiptError] = useState<string | null>(null);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+
+  // ── Logo del club (superadmin) ────────────────────────────────────────────
+  async function handleLogoChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    if (!file.type.startsWith('image/')) { alert('El archivo debe ser una imagen'); return; }
+    if (file.size > 2 * 1024 * 1024) { alert('La imagen no puede superar 2MB'); return; }
+    setUploadingLogo(true);
+    try {
+      const base64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+      const token = await getToken();
+      await apiFetch(`/superadmin/clubs/${club.id}/logo`, { method: 'POST', token, body: JSON.stringify({ base64 }) });
+      await onReload();
+    } catch (err) {
+      alert('Error al subir el logo: ' + (err instanceof Error ? err.message : 'intenta de nuevo'));
+    } finally {
+      setUploadingLogo(false);
+    }
+  }
 
   // ── Carga de miembros ────────────────────────────────────────────────────
   async function loadMembers() {
@@ -435,9 +461,20 @@ export default function ClubDetail({ club, suscripcion, onBack, onReload, onDele
       {/* ── Encabezado del club ── */}
       <div style={{ background: '#fff', border: '1px solid rgba(120,80,200,0.10)', borderRadius: 20, padding: '18px 16px', marginBottom: 14, boxShadow: '0 1px 8px rgba(0,0,0,0.04)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-          <div style={{ width: 56, height: 56, borderRadius: '50%', background: suscripcion ? pb.bg : trial ? trial.bg : 'rgba(124,58,237,0.10)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, fontWeight: 800, color: suscripcion ? pb.color : trial ? trial.color : '#7C3AED', fontFamily: 'inherit', flexShrink: 0, overflow: 'hidden' }}>
+          <label
+            title="Cambiar logo del club"
+            style={{ position: 'relative', width: 56, height: 56, borderRadius: '50%', background: suscripcion ? pb.bg : trial ? trial.bg : 'rgba(124,58,237,0.10)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, fontWeight: 800, color: suscripcion ? pb.color : trial ? trial.color : '#7C3AED', fontFamily: 'inherit', flexShrink: 0, overflow: 'hidden', cursor: uploadingLogo ? 'wait' : 'pointer' }}>
             {club.logoUrl ? <img src={club.logoUrl} alt={club.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : club.name.charAt(0).toUpperCase()}
-          </div>
+            {/* Overlay de cámara — cambia el logo del club desde el superadmin */}
+            <span style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: 'rgba(26,16,40,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', opacity: uploadingLogo ? 1 : 0, transition: 'opacity 0.18s' }}
+              onMouseEnter={e => { if (!uploadingLogo) e.currentTarget.style.opacity = '1'; }}
+              onMouseLeave={e => { if (!uploadingLogo) e.currentTarget.style.opacity = '0'; }}>
+              {uploadingLogo
+                ? <div className="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
+                : <Camera size={18} />}
+            </span>
+            <input type="file" accept="image/*" onChange={handleLogoChange} disabled={uploadingLogo} style={{ display: 'none' }} />
+          </label>
           <div style={{ flex: 1, minWidth: 0 }}>
             <p style={{ margin: '0 0 5px', fontSize: 18, fontWeight: 600, color: '#1A1028', fontFamily: 'inherit', lineHeight: 1.2, wordBreak: 'break-word' }}>{club.name}</p>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>

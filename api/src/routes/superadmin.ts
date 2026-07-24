@@ -4,6 +4,7 @@ import { requireAuth } from '../auth/middleware';
 import { prisma } from '../db/client';
 import { addToAllowlist, removeFromAllowlist } from '../lib/clerk-allowlist';
 import { invalidarTrustedCache } from './clubs';
+import { cacheDel } from '../lib/redis';
 import { v2 as cloudinary } from 'cloudinary';
 
 cloudinary.config({
@@ -124,6 +125,61 @@ router.patch('/clubs/:id/toggle', requireAuth, requireSuperadmin, async (req, re
 
   await invalidarTrustedCache(); // activar/desactivar cambia quién aparece en el landing
   res.json({ club: updated });
+});
+
+// Invalida las cachés que dependen del logo/datos de un club, para que el
+// cambio se refleje en todas partes sin recargar (landing, ajustes, perfil).
+async function invalidarCachesClub(clubId: string): Promise<void> {
+  await cacheDel(`club:settings:${clubId}`);
+  await cacheDel(`club:profile:${clubId}`);
+  await invalidarTrustedCache();
+}
+
+// POST /superadmin/clubs/:id/logo — el superadmin cambia el logo de cualquier club
+router.post('/clubs/:id/logo', requireAuth, requireSuperadmin, async (req, res) => {
+  const id = String(req.params.id);
+  const { base64 } = req.body as { base64?: string };
+  if (!base64) return res.status(400).json({ error: 'base64 requerido' });
+
+  const club = await prisma.club.findUnique({ where: { id }, select: { logoPublicId: true } });
+  if (!club) return res.status(404).json({ error: 'Club no encontrado' });
+
+  try {
+    if (club.logoPublicId) {
+      await cloudinary.uploader.destroy(club.logoPublicId).catch(() => {});
+    }
+    const result = await cloudinary.uploader.upload(base64, {
+      folder:     'veloclub/logos',
+      public_id:  `club_${id}`,
+      overwrite:  true,
+      transformation: [{ width: 512, height: 512, crop: 'fill', gravity: 'center', quality: 'auto:good' }],
+    });
+    const updated = await prisma.club.update({
+      where: { id },
+      data:  { logoUrl: result.secure_url, logoPublicId: result.public_id },
+      select: { id: true, logoUrl: true },
+    });
+    await invalidarCachesClub(id);
+    res.json({ club: updated });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : JSON.stringify(err);
+    console.error('[superadmin logo upload]', msg);
+    res.status(500).json({ error: msg });
+  }
+});
+
+// DELETE /superadmin/clubs/:id/logo — el superadmin quita el logo de un club
+router.delete('/clubs/:id/logo', requireAuth, requireSuperadmin, async (req, res) => {
+  const id = String(req.params.id);
+  const club = await prisma.club.findUnique({ where: { id }, select: { logoPublicId: true } });
+  if (!club) return res.status(404).json({ error: 'Club no encontrado' });
+
+  if (club.logoPublicId) {
+    await cloudinary.uploader.destroy(club.logoPublicId).catch(() => {});
+  }
+  await prisma.club.update({ where: { id }, data: { logoUrl: null, logoPublicId: null } });
+  await invalidarCachesClub(id);
+  res.json({ ok: true });
 });
 
 // PATCH /superadmin/clubs/:id/verificar — otorgar el sello (cola de verificación)

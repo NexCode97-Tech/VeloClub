@@ -152,7 +152,7 @@ router.post('/clubs/:id/logo', requireAuth, requireSuperadmin, async (req, res) 
       folder:     'veloclub/logos',
       public_id:  `club_${id}`,
       overwrite:  true,
-      transformation: [{ width: 512, height: 512, crop: 'fill', gravity: 'center', quality: 'auto:good' }],
+      transformation: [{ width: 500, height: 500, crop: 'fill', gravity: 'center', quality: 'auto:good' }],
     });
     const updated = await prisma.club.update({
       where: { id },

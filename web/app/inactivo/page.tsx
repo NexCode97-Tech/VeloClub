@@ -49,10 +49,10 @@ export default function InactivoPage() {
               <PauseCircle className="w-7 h-7" style={{ color: '#EF476F' }} />
             </div>
             <h1 className="text-2xl font-semibold text-slate-900 mb-1">
-              Tu club está pausado
+              Reactiva tu club
             </h1>
             <p className="text-slate-500 text-sm">
-              Tu plan venció y no se recibió un nuevo pago. Actívalo aquí mismo para retomar donde quedaste.
+              Tu plan venció. Realiza el pago de tu plan aquí mismo y podrás usar la plataforma con total normalidad de inmediato.
             </p>
           </div>
 

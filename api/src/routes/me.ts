@@ -107,9 +107,12 @@ if (superadminEmails.includes(email.toLowerCase())) {
       ]);
     }
 
-    // Check club active
+    // Check club active — incluir el rol es imprescindible: la página /inactivo
+    // decide con él si muestra la pantalla de pago (ADMIN) o el aviso de "avísale
+    // a tu admin" (coach/deportista). Sin rol, hasta el admin quedaba atrapado
+    // sin poder pagar para reactivar el club.
     if (user.club && !user.club.active) {
-      return res.json({ status: 'inactive' });
+      return res.json({ status: 'inactive', role: user.role });
     }
 
     // Check trial
@@ -152,7 +155,7 @@ if (superadminEmails.includes(email.toLowerCase())) {
   }
 
   if (!member.club.active) {
-    return res.json({ status: 'inactive' });
+    return res.json({ status: 'inactive', role: member.role });
   }
 
   // Check trial para nuevo usuario

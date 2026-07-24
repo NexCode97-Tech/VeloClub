@@ -177,6 +177,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   // Ocultar el tooltip si el sidebar deja de estar colapsado
   useEffect(() => { if (!collapsed) setNavTip(null); }, [collapsed]);
+  // Limpiar el tooltip al navegar — evita que quede pegado si el onMouseLeave
+  // no se dispara porque el contenido del sidebar cambió.
+  useEffect(() => { setNavTip(null); }, [pathname]);
 
   // Refresco en vivo de nombre/foto/logo en toda la página, sin recargar:
   // 1) el evento global 'vc:me-updated' (lo disparan Ajustes y otros al guardar)
@@ -620,8 +623,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           documentos legales. Reactivar cambiando TERMS_GATE_ENABLED a true. */}
       <TermsGateModal open={TERMS_GATE_ENABLED && !termsAccepted} onAccept={handleAcceptTerms} />
 
-      {/* Tooltip del sidebar colapsado — etiqueta con el nombre del módulo */}
-      {navTip && typeof document !== 'undefined' && createPortal(
+      {/* Tooltip del sidebar colapsado — etiqueta con el nombre del módulo.
+          Solo se renderiza cuando el sidebar está colapsado, así nunca queda
+          pegado si un onMouseLeave no alcanza a dispararse al navegar. */}
+      {collapsed && navTip && typeof document !== 'undefined' && createPortal(
         <div
           className="hidden md:block pointer-events-none"
           style={{ position: 'fixed', top: navTip.top, left: navTip.left, transform: 'translateY(-50%)', zIndex: 60 }}

@@ -544,7 +544,7 @@ function AjustesPageContent() {
               </button>
             )}
           </div>
-          <p className="text-[10px] text-muted-foreground mt-1.5">PNG, JPG · 400×400px · máx. 2MB</p>
+          <p className="text-[10px] text-muted-foreground mt-1.5">PNG, JPG · 500×500px · máx. 2MB</p>
         </div>
       </div>
 

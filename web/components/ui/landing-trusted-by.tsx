@@ -50,7 +50,7 @@ export default function LandingTrustedBy() {
                 className="h-full w-full rounded-full object-contain"
               />
             </span>
-            <span className="w-full select-none truncate text-center text-[10px] font-medium tracking-wide text-white/60 sm:text-[11px]">
+            <span className="w-full select-none text-center text-[10px] font-medium leading-tight tracking-wide text-white/60 sm:text-[11px] [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2] overflow-hidden">
               {club.name}
             </span>
           </div>

@@ -45,7 +45,18 @@ export function useCargaMinima(loading: boolean, minMs = 400): boolean {
 // pantalla. La línea que separa el título del módulo está a unos 58px, así que
 // esto lo deja bien debajo de ella y siempre a la vista, sin necesidad de
 // desplazarse. Es un punto fijo: no depende del contenido de cada módulo.
-const Y_LOGO = 260;
+// Se ajusta por dispositivo porque en móvil hay bastante menos alto disponible
+// (y encima le quita espacio la barra de navegación inferior).
+const Y_LOGO_MOVIL      = 270;
+const Y_LOGO_TABLET     = 285;
+const Y_LOGO_ESCRITORIO = 300;
+
+function yLogo(ancho: number): number {
+  if (ancho < 768)  return Y_LOGO_MOVIL;
+  if (ancho < 1024) return Y_LOGO_TABLET;
+  return Y_LOGO_ESCRITORIO;
+}
+
 // Alto aproximado del conjunto logo + barra, para centrarlo sobre ese punto
 const ALTO_CONTENIDO = 62;
 
@@ -64,7 +75,7 @@ export default function ModuleLoader({ minHeight }: { minHeight?: number }) {
       // El borde superior del elemento no se mueve al aplicarle espacio interno,
       // así que esta medida es estable y se puede recalcular sin acumular error.
       const top = el.getBoundingClientRect().top;
-      setPadTop(Math.max(0, Y_LOGO - top - ALTO_CONTENIDO / 2));
+      setPadTop(Math.max(0, yLogo(window.innerWidth) - top - ALTO_CONTENIDO / 2));
     };
     medir();
     window.addEventListener('resize', medir);
@@ -76,7 +87,7 @@ export default function ModuleLoader({ minHeight }: { minHeight?: number }) {
       style={
         minHeight !== undefined
           ? { minHeight, justifyContent: 'center' }
-          : { paddingTop: padTop, paddingBottom: 40, minHeight: Y_LOGO }
+          : { paddingTop: padTop, paddingBottom: 40, minHeight: Y_LOGO_MOVIL }
       }>
       <style>{`
         .vcml { animation: vcml-in .22s cubic-bezier(.23,1,.32,1) both; }

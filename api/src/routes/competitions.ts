@@ -7,6 +7,15 @@ import { notifyClubStaff, notifyClubStudents } from '../lib/notify';
 
 const router = Router();
 
+// Registrar competencias, entrenamientos y sus resultados es tarea del cuerpo
+// tecnico. El deportista solo consulta: antes estas rutas no validaban rol, asi
+// que respondian a cualquiera con sesion activa del club aunque la interfaz le
+// escondiera los botones.
+function puedeGestionar(req: import('express').Request): boolean {
+  return req.user?.role === 'ADMIN' || req.user?.role === 'COACH';
+}
+
+
 const competitionSchema = z.object({
   name:      z.string().min(1).max(200),
   place:     z.string().optional(),
@@ -48,6 +57,7 @@ router.get('/', requireAuth, async (req, res) => {
 // POST /competitions
 router.post('/', requireAuth, async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'No autenticado' });
+  if (!puedeGestionar(req)) return res.status(403).json({ error: 'Sin permisos' });
   const parsed = competitionSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.issues });
 
@@ -103,6 +113,7 @@ router.get('/:id', requireAuth, async (req, res) => {
 // PATCH /competitions/:id
 router.patch('/:id', requireAuth, async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'No autenticado' });
+  if (!puedeGestionar(req)) return res.status(403).json({ error: 'Sin permisos' });
   const id = String(req.params.id);
 
   const competition = await prisma.competition.findFirst({ where: { id, clubId: req.user.clubId ?? '' } });
@@ -130,6 +141,7 @@ router.patch('/:id', requireAuth, async (req, res) => {
 // DELETE /competitions/:id
 router.delete('/:id', requireAuth, async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'No autenticado' });
+  if (!puedeGestionar(req)) return res.status(403).json({ error: 'Sin permisos' });
   const id = String(req.params.id);
 
   const competition = await prisma.competition.findFirst({ where: { id, clubId: req.user.clubId ?? '' } });
@@ -145,6 +157,7 @@ router.delete('/:id', requireAuth, async (req, res) => {
 // POST /competitions/:id/events
 router.post('/:id/events', requireAuth, async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'No autenticado' });
+  if (!puedeGestionar(req)) return res.status(403).json({ error: 'Sin permisos' });
   const competitionId = String(req.params.id);
 
   const competition = await prisma.competition.findFirst({ where: { id: competitionId, clubId: req.user.clubId ?? '' } });
@@ -165,6 +178,7 @@ router.post('/:id/events', requireAuth, async (req, res) => {
 // DELETE /competitions/:id/events/:eventId
 router.delete('/:id/events/:eventId', requireAuth, async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'No autenticado' });
+  if (!puedeGestionar(req)) return res.status(403).json({ error: 'Sin permisos' });
   const competitionId = String(req.params.id);
   const eventId       = String(req.params.eventId);
 
@@ -181,6 +195,7 @@ router.delete('/:id/events/:eventId', requireAuth, async (req, res) => {
 // POST /competitions/:id/events/:eventId/results
 router.post('/:id/events/:eventId/results', requireAuth, async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'No autenticado' });
+  if (!puedeGestionar(req)) return res.status(403).json({ error: 'Sin permisos' });
   const competitionId = String(req.params.id);
   const eventId       = String(req.params.eventId);
 
@@ -224,6 +239,7 @@ router.post('/:id/events/:eventId/results', requireAuth, async (req, res) => {
 // DELETE /competitions/:id/events/:eventId/results/:resultId
 router.delete('/:id/events/:eventId/results/:resultId', requireAuth, async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'No autenticado' });
+  if (!puedeGestionar(req)) return res.status(403).json({ error: 'Sin permisos' });
   const competitionId = String(req.params.id);
   const resultId      = String(req.params.resultId);
 

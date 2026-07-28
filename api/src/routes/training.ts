@@ -6,6 +6,15 @@ import { emitToClub } from '../lib/sse';
 
 const router = Router();
 
+// Registrar competencias, entrenamientos y sus resultados es tarea del cuerpo
+// tecnico. El deportista solo consulta: antes estas rutas no validaban rol, asi
+// que respondian a cualquiera con sesion activa del club aunque la interfaz le
+// escondiera los botones.
+function puedeGestionar(req: import('express').Request): boolean {
+  return req.user?.role === 'ADMIN' || req.user?.role === 'COACH';
+}
+
+
 const sessionSchema = z.object({
   title:      z.string().min(1).max(200),
   date:       z.string(),
@@ -69,6 +78,7 @@ router.get('/:id', requireAuth, async (req, res) => {
 // POST /training
 router.post('/', requireAuth, async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'No autenticado' });
+  if (!puedeGestionar(req)) return res.status(403).json({ error: 'Sin permisos' });
   const parsed = sessionSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.issues });
 
@@ -93,6 +103,7 @@ router.post('/', requireAuth, async (req, res) => {
 // DELETE /training/:id
 router.delete('/:id', requireAuth, async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'No autenticado' });
+  if (!puedeGestionar(req)) return res.status(403).json({ error: 'Sin permisos' });
   const existing = await prisma.trainingSession.findFirst({
     where: { id: String(req.params.id), clubId: req.user.clubId ?? '' },
   });
@@ -105,6 +116,7 @@ router.delete('/:id', requireAuth, async (req, res) => {
 // POST /training/:id/results
 router.post('/:id/results', requireAuth, async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'No autenticado' });
+  if (!puedeGestionar(req)) return res.status(403).json({ error: 'Sin permisos' });
   const sessionId = String(req.params.id);
   const clubId    = req.user.clubId ?? '';
 
@@ -145,6 +157,7 @@ router.post('/:id/results', requireAuth, async (req, res) => {
 // DELETE /training/:id/results/:resultId
 router.delete('/:id/results/:resultId', requireAuth, async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'No autenticado' });
+  if (!puedeGestionar(req)) return res.status(403).json({ error: 'Sin permisos' });
   const sessionId = String(req.params.id);
   const resultId  = String(req.params.resultId);
 

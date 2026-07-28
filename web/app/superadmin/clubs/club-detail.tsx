@@ -456,6 +456,7 @@ export default function ClubDetail({ club, suscripcion, tab, onReload, onDeleted
   const trial    = club.trialEndsAt ? trialInfo(club.createdAt, club.trialEndsAt) : null;
   // Solo se considera plan real cuando hay al menos un abono pagado
   const tienePagos = pagos.some(p => p.estado === 'PAID');
+  const montoPlanTexto = fmt.format(monto);
 
   return (
     <motion.div initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.28, ease: EASE }}>
@@ -500,10 +501,12 @@ export default function ClubDetail({ club, suscripcion, tab, onReload, onDeleted
           </div>
         </div>
 
-        {/* Acciones pegadas al borde derecho y a la altura del nombre. Antes
-            ocupaban el ancho completo abajo, lo que le daba a "Eliminar club"
-            mas peso visual que a cualquier dato de la pantalla. */}
-        <div style={{ display: 'flex', gap: 6, marginLeft: 'auto', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+        {/* Acciones pegadas al borde derecho y centradas contra las dos lineas
+            de la izquierda: alineadas arriba quedaban a la altura del nombre y
+            se veian descolgadas del bloque. Antes ocupaban el ancho completo
+            abajo, lo que le daba a "Eliminar club" mas peso visual que a
+            cualquier dato de la pantalla. */}
+        <div style={{ display: 'flex', gap: 6, marginLeft: 'auto', alignSelf: 'center', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
           <motion.a href={getWhatsAppUrl(club)} target="_blank" rel="noopener noreferrer" whileTap={{ scale: 0.96 }}
             title="Enviar recordatorio por WhatsApp"
             style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 11px', borderRadius: 10, background: 'rgba(37,211,102,0.08)', border: '1px solid rgba(37,211,102,0.28)', color: '#1BA147', textDecoration: 'none', fontSize: 11, fontWeight: 600, fontFamily: 'inherit' }}>
@@ -740,14 +743,22 @@ export default function ClubDetail({ club, suscripcion, tab, onReload, onDeleted
                 ) : (
                   <motion.button onClick={() => { setEditPlan(true); setEditPlanMonto(formatMiles(String(Math.round(monto)))); setEditTipoPlan(tipo); }} whileTap={{ scale: 0.97 }}
                     style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <span style={{ fontSize: 18, fontWeight: 800, color: suscripcion ? '#1A1028' : '#8E87A8', fontFamily: 'inherit' }}>
-                      {suscripcion ? `${fmt.format(monto)}` : 'Sin plan'}
+                    {/* Sin abonos pagados no hay plan adquirido, asi que no se
+                        muestra ningun monto: el guardado puede ser un valor
+                        heredado que nadie eligio y leerlo como precio del club
+                        confunde. Se dice lo que realmente pasa. */}
+                    <span style={{ fontSize: 18, fontWeight: 800, color: tienePagos ? '#1A1028' : '#8E87A8', fontFamily: 'inherit' }}>
+                      {tienePagos ? montoPlanTexto : trial ? 'En prueba gratuita' : 'Sin plan'}
                     </span>
-                    {suscripcion && <span style={{ fontSize: 12, color: '#8E87A8' }}>{planSuffix(tipo)}</span>}
+                    {tienePagos && <span style={{ fontSize: 12, color: '#8E87A8' }}>{planSuffix(tipo)}</span>}
                     <Pencil size={11} color="#C4BFD8" />
                   </motion.button>
                 )}
-                {!suscripcion && !editPlan && <p style={{ margin: '4px 0 0', fontSize: 11, color: '#8E87A8' }}>Toca para configurar el plan</p>}
+                {!tienePagos && !editPlan && (
+                  <p style={{ margin: '4px 0 0', fontSize: 11, color: '#8E87A8' }}>
+                    {trial ? 'Aún no ha pagado ningún plan' : 'Toca para configurar el plan'}
+                  </p>
+                )}
               </div>
 
               {/* La vigencia solo tiene sentido con un abono pagado detras. Sin

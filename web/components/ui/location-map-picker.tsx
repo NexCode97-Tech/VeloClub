@@ -13,6 +13,25 @@ interface Props {
 
 const GOOGLE_MAPS_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY ?? '';
 
+/**
+ * Lee la posicion de un marcador sin asumir su forma.
+ *
+ * `AdvancedMarkerElement.position` no siempre devuelve un `LatLng` con metodos:
+ * cuando el marcador se creo o se movio pasandole un objeto plano
+ * `{ lat, lng }`, al leerlo `lat` y `lng` son numeros, no funciones. El codigo
+ * hacia `pos.lat()` a ciegas, asi que arrastrar el pin reventaba con
+ * "lat is not a function" y se perdia la posicion elegida.
+ */
+function leerPosicion(
+  pos: google.maps.LatLng | google.maps.LatLngLiteral | google.maps.LatLngAltitude | null | undefined
+): { lat: number; lng: number } | null {
+  if (!pos) return null;
+  const lat = typeof pos.lat === 'function' ? pos.lat() : pos.lat;
+  const lng = typeof pos.lng === 'function' ? pos.lng() : pos.lng;
+  if (typeof lat !== 'number' || typeof lng !== 'number') return null;
+  return { lat: parseFloat(lat.toFixed(6)), lng: parseFloat(lng.toFixed(6)) };
+}
+
 export function LocationMapPicker({ initialLat, initialLng, onConfirm }: Props) {
   const mapRef = useRef<HTMLDivElement>(null);
   const googleMapRef = useRef<google.maps.Map | null>(null);
@@ -73,8 +92,8 @@ export function LocationMapPicker({ initialLat, initialLng, onConfirm }: Props) 
           gmpDraggable: true,
         });
         m.addListener('dragend', () => {
-          const pos = m.position as google.maps.LatLng;
-          setPin({ lat: parseFloat(pos.lat().toFixed(6)), lng: parseFloat(pos.lng().toFixed(6)) });
+          const p = leerPosicion(m.position);
+          if (p) setPin(p);
         });
         markerRef.current = m;
       }
@@ -95,8 +114,8 @@ export function LocationMapPicker({ initialLat, initialLng, onConfirm }: Props) 
             gmpDraggable: true,
           });
           m.addListener('dragend', () => {
-            const pos = m.position as google.maps.LatLng;
-            setPin({ lat: parseFloat(pos.lat().toFixed(6)), lng: parseFloat(pos.lng().toFixed(6)) });
+            const p = leerPosicion(m.position);
+            if (p) setPin(p);
           });
           markerRef.current = m;
         }
@@ -131,8 +150,8 @@ export function LocationMapPicker({ initialLat, initialLng, onConfirm }: Props) 
               gmpDraggable: true,
             });
             m.addListener('dragend', () => {
-              const pos = m.position as google.maps.LatLng;
-              setPin({ lat: parseFloat(pos.lat().toFixed(6)), lng: parseFloat(pos.lng().toFixed(6)) });
+              const nueva = leerPosicion(m.position);
+              if (nueva) setPin(nueva);
             });
             markerRef.current = m;
           }
@@ -173,8 +192,8 @@ export function LocationMapPicker({ initialLat, initialLng, onConfirm }: Props) 
             gmpDraggable: true,
           });
           m.addListener('dragend', () => {
-            const p = m.position as google.maps.LatLng;
-            setPin({ lat: parseFloat(p.lat().toFixed(6)), lng: parseFloat(p.lng().toFixed(6)) });
+            const nueva = leerPosicion(m.position);
+            if (nueva) setPin(nueva);
           });
           markerRef.current = m;
         }

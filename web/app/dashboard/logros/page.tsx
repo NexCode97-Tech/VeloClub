@@ -274,6 +274,8 @@ function LogrosPageInner() {
         )}
       </div>
 
+      {mostrarCarga ? <ModuleLoader /> : (
+      <>
       <div className="px-5 pt-4 lg:pt-6">
         {/* Tabs — solo móvil; en escritorio viven en el sidebar. Van justo debajo
             del título, igual que en Finanzas. */}
@@ -355,11 +357,7 @@ function LogrosPageInner() {
       {/* ── Content ─────────────────────────────────────────────────────────── */}
       <div className="px-4 pb-6">
         <AnimatePresence mode="wait">
-          {mostrarCarga ? (
-            <motion.div key="skeleton" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-              <ModuleLoader />
-            </motion.div>
-          ) : tab === 'comp' ? (
+          {tab === 'comp' ? (
             <motion.div key="comp" initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 12 }} transition={{ duration: 0.2 }}>
               {visibleComps.length === 0 ? (
                 <EmptyState
@@ -396,6 +394,8 @@ function LogrosPageInner() {
           )}
         </AnimatePresence>
       </div>
+      </>
+      )}
 
       {/* ── Modal nueva competencia ─────────────────────────────────────────── */}
       <Dialog open={compOpen} onOpenChange={setCompOpen}>

@@ -42,15 +42,31 @@ export function useCargaMinima(loading: boolean, minMs = 400): boolean {
  * tarjeta pasan un `minHeight` fijo y pequeño.
  */
 export default function ModuleLoader({ minHeight }: { minHeight?: number }) {
-  return (
-    <div className={`flex flex-col items-center justify-center w-full${minHeight ? '' : ' vcml-box'}`}
-      style={minHeight ? { minHeight } : undefined}>
-      <style>{`
-        /* Ocupa el alto visible del área de contenido para quedar centrado de
-           verdad. En móvil se descuenta además la barra de navegación inferior. */
-        .vcml-box { min-height: calc(100dvh - 250px); }
-        @media (min-width: 768px) { .vcml-box { min-height: calc(100dvh - 150px); } }
+  const ref = useRef<HTMLDivElement>(null);
+  const [alto, setAlto] = useState<number | undefined>(undefined);
 
+  // Mide el espacio que queda entre donde arranca el cargador y el fondo de la
+  // pantalla, y lo ocupa completo. Así queda centrado en el mismo punto visual
+  // en todos los módulos, sin importar cuánto contenido tenga encima cada uno.
+  useEffect(() => {
+    if (minHeight !== undefined) return;
+    const medir = () => {
+      const el = ref.current;
+      if (!el) return;
+      const top = el.getBoundingClientRect().top;
+      // En móvil hay que descontar la barra de navegación inferior
+      const margenAbajo = window.innerWidth < 768 ? 96 : 28;
+      setAlto(Math.max(180, window.innerHeight - top - margenAbajo));
+    };
+    medir();
+    window.addEventListener('resize', medir);
+    return () => window.removeEventListener('resize', medir);
+  }, [minHeight]);
+
+  return (
+    <div ref={ref} className="flex flex-col items-center justify-center w-full"
+      style={{ minHeight: minHeight ?? alto ?? 'calc(100dvh - 220px)' }}>
+      <style>{`
         .vcml { animation: vcml-in .22s cubic-bezier(.23,1,.32,1) both; }
         @keyframes vcml-in { from { opacity: 0 } to { opacity: 1 } }
 

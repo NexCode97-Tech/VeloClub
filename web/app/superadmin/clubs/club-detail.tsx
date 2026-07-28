@@ -459,37 +459,43 @@ export default function ClubDetail({ club, suscripcion, tab, onReload, onDeleted
           esta franja no los repite: solo trae lo que no esta en ningun otro
           lado, que es el estado del club y las acciones sobre el. El logo se
           conserva pequeño porque es el control para cambiarlo. */}
-      <div style={{ background: '#fff', border: '1px solid rgba(120,80,200,0.10)', borderRadius: 16, padding: '10px 12px', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+      <div style={{ background: '#fff', border: '1px solid rgba(120,80,200,0.10)', borderRadius: 16, padding: '12px 14px', marginBottom: 14, display: 'flex', alignItems: 'flex-start', gap: 12, flexWrap: 'wrap' }}>
+        {/* El logo alinea con el nombre y no con el centro del bloque: centrado
+            entre las dos lineas quedaria flotando sin pertenecer a ninguna */}
         <label
           title="Cambiar logo del club"
-          style={{ position: 'relative', width: 34, height: 34, borderRadius: '50%', background: 'rgba(124,58,237,0.10)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: '#7C3AED', fontFamily: 'inherit', flexShrink: 0, overflow: 'hidden', cursor: uploadingLogo ? 'wait' : 'pointer' }}>
+          style={{ position: 'relative', width: 40, height: 40, borderRadius: '50%', background: 'rgba(124,58,237,0.10)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 700, color: '#7C3AED', fontFamily: 'inherit', flexShrink: 0, overflow: 'hidden', cursor: uploadingLogo ? 'wait' : 'pointer' }}>
           {club.logoUrl ? <img src={club.logoUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : club.name.charAt(0).toUpperCase()}
           <span style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: 'rgba(26,16,40,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', opacity: uploadingLogo ? 1 : 0, transition: 'opacity 0.18s' }}
             onMouseEnter={e => { if (!uploadingLogo) e.currentTarget.style.opacity = '1'; }}
             onMouseLeave={e => { if (!uploadingLogo) e.currentTarget.style.opacity = '0'; }}>
             {uploadingLogo
-              ? <div className="w-3 h-3 rounded-full border-2 border-white border-t-transparent animate-spin" />
-              : <Camera size={13} />}
+              ? <div className="w-3.5 h-3.5 rounded-full border-2 border-white border-t-transparent animate-spin" />
+              : <Camera size={15} />}
           </span>
           <input type="file" accept="image/*" onChange={handleLogoChange} disabled={uploadingLogo} style={{ display: 'none' }} />
         </label>
 
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-          <span style={{ fontSize: 10, fontWeight: 600, padding: '3px 9px', borderRadius: 99, background: club.active ? 'rgba(6,214,160,0.12)' : 'rgba(239,71,111,0.12)', color: club.active ? '#06D6A0' : '#EF476F' }}>
-            {club.active ? 'Activo' : 'Inactivo'}
-          </span>
-          {suscripcion && <span style={{ fontSize: 10, fontWeight: 600, padding: '3px 9px', borderRadius: 99, background: pb.bg, color: pb.color }}>{pb.label}</span>}
-          {trial && <span style={{ fontSize: 10, fontWeight: 600, padding: '3px 9px', borderRadius: 99, background: trial.bg, color: trial.color }}>{trial.label}</span>}
-          {club.verificationStatus === 'VERIFIED' && (
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10, fontWeight: 600, padding: '3px 9px', borderRadius: 99, background: 'rgba(6,214,160,0.12)', color: '#06D6A0' }}>
-              <BadgeCheck size={11} /> Verificado
+        <div style={{ flex: 1, minWidth: 150 }}>
+          <p style={{ margin: '0 0 7px', fontSize: 16, fontWeight: 600, color: '#1A1028', fontFamily: 'inherit', lineHeight: 1.2, wordBreak: 'break-word' }}>{club.name}</p>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+            <span style={{ fontSize: 10, fontWeight: 600, padding: '3px 9px', borderRadius: 99, background: club.active ? 'rgba(6,214,160,0.12)' : 'rgba(239,71,111,0.12)', color: club.active ? '#06D6A0' : '#EF476F' }}>
+              {club.active ? 'Activo' : 'Inactivo'}
             </span>
-          )}
+            {suscripcion && <span style={{ fontSize: 10, fontWeight: 600, padding: '3px 9px', borderRadius: 99, background: pb.bg, color: pb.color }}>{pb.label}</span>}
+            {trial && <span style={{ fontSize: 10, fontWeight: 600, padding: '3px 9px', borderRadius: 99, background: trial.bg, color: trial.color }}>{trial.label}</span>}
+            {club.verificationStatus === 'VERIFIED' && (
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10, fontWeight: 600, padding: '3px 9px', borderRadius: 99, background: 'rgba(6,214,160,0.12)', color: '#06D6A0' }}>
+                <BadgeCheck size={11} /> Verificado
+              </span>
+            )}
+          </div>
         </div>
 
-        {/* Acciones. Antes ocupaban el ancho completo abajo, lo que le daba a
-            "Eliminar club" mas peso visual que a cualquier dato de la pantalla. */}
-        <div style={{ display: 'flex', gap: 6, marginLeft: 'auto' }}>
+        {/* Acciones pegadas al borde derecho y a la altura del nombre. Antes
+            ocupaban el ancho completo abajo, lo que le daba a "Eliminar club"
+            mas peso visual que a cualquier dato de la pantalla. */}
+        <div style={{ display: 'flex', gap: 6, marginLeft: 'auto', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
           <motion.a href={getWhatsAppUrl(club)} target="_blank" rel="noopener noreferrer" whileTap={{ scale: 0.96 }}
             title="Enviar recordatorio por WhatsApp"
             style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 11px', borderRadius: 10, background: 'rgba(37,211,102,0.08)', border: '1px solid rgba(37,211,102,0.28)', color: '#1BA147', textDecoration: 'none', fontSize: 11, fontWeight: 600, fontFamily: 'inherit' }}>

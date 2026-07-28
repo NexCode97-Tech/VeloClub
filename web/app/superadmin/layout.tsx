@@ -11,7 +11,7 @@ import Image from 'next/image';
 import { LayoutDashboard, Building2, LogOut, Ticket, Info, CircleDollarSign, ArrowLeft } from 'lucide-react';
 import { IconAjustes } from '@/components/ui/custom-icons';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ClubProvider, useClubActivo, idClubDeRuta, type ClubActivo } from './club-context';
+import { ClubProvider, useClubActivo, idClubDeRuta } from './club-context';
 
 // Config fue fusionado con Perfil (UserButton) — 3 tabs + UserButton = 4 slots
 const TABS = [
@@ -90,12 +90,11 @@ const ACCENT = '#7C3AED';
 // subárbol, no todo el layout — lo que elimina el INP alto que hacía la
 // animación entrecortada. React.memo evita re-renders cuando el layout padre
 // se actualiza por otras razones (notificaciones, etc.).
-const SuperadminSidebar = memo(function SuperadminSidebar({ pathname, noLeidas, onOpenNotifs, clubId, clubActivo }: {
+const SuperadminSidebar = memo(function SuperadminSidebar({ pathname, noLeidas, onOpenNotifs, clubId }: {
   pathname: string;
   noLeidas: number;
   onOpenNotifs: () => void;
   clubId: string | null;
-  clubActivo: ClubActivo | null;
 }) {
   const { user: clerkUser } = useUser();
   const { signOut } = useClerk();
@@ -215,26 +214,9 @@ const SuperadminSidebar = memo(function SuperadminSidebar({ pathname, noLeidas, 
               {!collapsed && <span>Volver a clubes</span>}
             </Link>
 
-            {/* Identidad del club: sin esto, los modulos flotan sin decir de
-                quien son */}
-            <div className="flex items-center gap-2.5"
-              style={{ padding: collapsed ? '8px 0' : '10px 12px', justifyContent: collapsed ? 'center' : undefined }}>
-              {clubActivo?.logoUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={clubActivo.logoUrl} alt="" className="shrink-0"
-                  style={{ width: 30, height: 30, borderRadius: '50%', objectFit: 'cover', border: '1px solid rgba(0,0,0,0.06)' }} />
-              ) : (
-                <div className="shrink-0 flex items-center justify-center"
-                  style={{ width: 30, height: 30, borderRadius: '50%', background: 'rgba(124,58,237,0.10)', color: ACCENT, fontSize: 12, fontWeight: 700 }}>
-                  {(clubActivo?.name ?? '?').charAt(0).toUpperCase()}
-                </div>
-              )}
-              {!collapsed && (
-                <p className="text-[13px] font-semibold m-0 truncate" style={{ color: '#1A1028' }}>
-                  {clubActivo?.name ?? 'Cargando'}
-                </p>
-              )}
-            </div>
+            {/* Ni el logo ni el nombre se repiten aca: ambos viven en la franja
+                del contenido, y el titulo de la pantalla ya dice de que club se
+                trata. El sidebar solo lleva la salida y los modulos. */}
 
             {TABS_CLUB.map(m => {
               const active = slugActivo(pathname, clubId) === m.slug;
@@ -460,7 +442,7 @@ function SuperadminShell({ children }: { children: React.ReactNode }) {
           notificaciones, main). Antes el toggle re-renderizaba el árbol
           completo, causando un INP de ~568ms y que la animación fuera "a
           saltos". */}
-      <SuperadminSidebar pathname={pathname} noLeidas={noLeidas} onOpenNotifs={openNotifs} clubId={clubId} clubActivo={clubActivo} />
+      <SuperadminSidebar pathname={pathname} noLeidas={noLeidas} onOpenNotifs={openNotifs} clubId={clubId} />
 
       {/* ── Columna de contenido ── */}
       <div className="flex-1 flex flex-col overflow-hidden">

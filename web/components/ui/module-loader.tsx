@@ -41,22 +41,30 @@ export function useCargaMinima(loading: boolean, minMs = 400): boolean {
  * pantalla para quedar centrado de verdad; los casos donde vive dentro de una
  * tarjeta pasan un `minHeight` fijo y pequeño.
  */
+// Altura a la que queremos el logo, medida desde el borde superior de la
+// pantalla. La línea que separa el título del módulo está a unos 58px, así que
+// esto lo deja bien debajo de ella y siempre a la vista, sin necesidad de
+// desplazarse. Es un punto fijo: no depende del contenido de cada módulo.
+const Y_LOGO = 260;
+// Alto aproximado del conjunto logo + barra, para centrarlo sobre ese punto
+const ALTO_CONTENIDO = 62;
+
 export default function ModuleLoader({ minHeight }: { minHeight?: number }) {
   const ref = useRef<HTMLDivElement>(null);
-  const [alto, setAlto] = useState<number | undefined>(undefined);
+  const [padTop, setPadTop] = useState<number>(0);
 
-  // Mide el espacio que queda entre donde arranca el cargador y el fondo de la
-  // pantalla, y lo ocupa completo. Así queda centrado en el mismo punto visual
-  // en todos los módulos, sin importar cuánto contenido tenga encima cada uno.
+  // Mide dónde arranca el cargador dentro de la pantalla y compensa con espacio
+  // arriba, para que el logo caiga siempre en el mismo punto en todos los
+  // módulos, sin importar cuánto contenido tengan encima.
   useEffect(() => {
     if (minHeight !== undefined) return;
     const medir = () => {
       const el = ref.current;
       if (!el) return;
+      // El borde superior del elemento no se mueve al aplicarle espacio interno,
+      // así que esta medida es estable y se puede recalcular sin acumular error.
       const top = el.getBoundingClientRect().top;
-      // En móvil hay que descontar la barra de navegación inferior
-      const margenAbajo = window.innerWidth < 768 ? 96 : 28;
-      setAlto(Math.max(180, window.innerHeight - top - margenAbajo));
+      setPadTop(Math.max(0, Y_LOGO - top - ALTO_CONTENIDO / 2));
     };
     medir();
     window.addEventListener('resize', medir);
@@ -64,8 +72,12 @@ export default function ModuleLoader({ minHeight }: { minHeight?: number }) {
   }, [minHeight]);
 
   return (
-    <div ref={ref} className="flex flex-col items-center justify-center w-full"
-      style={{ minHeight: minHeight ?? alto ?? 'calc(100dvh - 220px)' }}>
+    <div ref={ref} className="flex flex-col items-center w-full"
+      style={
+        minHeight !== undefined
+          ? { minHeight, justifyContent: 'center' }
+          : { paddingTop: padTop, paddingBottom: 40, minHeight: Y_LOGO }
+      }>
       <style>{`
         .vcml { animation: vcml-in .22s cubic-bezier(.23,1,.32,1) both; }
         @keyframes vcml-in { from { opacity: 0 } to { opacity: 1 } }

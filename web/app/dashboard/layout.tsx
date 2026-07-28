@@ -8,7 +8,7 @@ import { useEffect, useState, useRef, Suspense } from 'react';
 import { createPortal } from 'react-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { apiFetch } from '@/lib/api-client';
-import LoadingScreen from '@/components/ui/loading-screen';
+import LoadingScreen, { type LoadStage } from '@/components/ui/loading-screen';
 import { BottomCircleMenu } from '@/components/ui/bottom-circle-menu';
 import { SearchModal } from '@/components/ui/search-modal';
 import { NotificationsBell } from '@/components/ui/notifications-bell';
@@ -158,6 +158,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const { user: clerkUser } = useUser();
   const [role, setRole] = useState<string | null>(null);
   const [checking, setChecking] = useState(true);
+  // Etapa real del arranque, para que la pantalla de carga diga qué está pasando
+  const [loadStage, setLoadStage] = useState<LoadStage>('init');
   const [masMenuOpen, setMasMenuOpen] = useState(false);
   // Tooltip del sidebar colapsado (etiqueta con el nombre del módulo al hacer hover)
   const [navTip, setNavTip] = useState<{ label: string; top: number; left: number } | null>(null);
@@ -235,8 +237,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
     (async () => {
       try {
+        if (meRefresh === 0) setLoadStage('auth');
         const token = await session?.getToken({ skipCache: true });
         if (stale) return;
+        if (meRefresh === 0) setLoadStage('data');
 
         let res: { status: string; user?: { role: string; name?: string; picture?: string | null; club?: { name?: string; logoUrl?: string }; termsAcceptedAt?: string | null } } | null = null;
         let attempts = 0;
@@ -248,6 +252,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             const { ApiError } = await import('@/lib/api-client');
             if (err instanceof ApiError && err.status === 429) {
               attempts++;
+              if (meRefresh === 0) setLoadStage('retry');
               await new Promise(r => setTimeout(r, 1500 * attempts));
               continue;
             }
@@ -256,6 +261,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         }
 
         if (!res || stale) return;
+        if (meRefresh === 0) setLoadStage('sync');
         if (res.status === 'needs_onboarding'){ router.replace('/onboarding');       return; }
         if (res.status === 'no_access')        { router.replace('/no-access');       return; }
         if (res.status === 'inactive')         { router.replace('/inactivo');         return; }
@@ -298,7 +304,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     return () => { stale = true; };
   }, [isLoaded, isSignedIn, userId, sessionId, meRefresh]);
 
-  if (checking) return <LoadingScreen />;
+  if (checking) return <LoadingScreen stage={loadStage} />;
 
   async function handleAcceptTerms() {
     const token = await session?.getToken();

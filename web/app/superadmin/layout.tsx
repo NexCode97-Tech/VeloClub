@@ -5,7 +5,7 @@ import { useAuth, useSession, useUser, useClerk, UserButton } from '@clerk/nextj
 import { useEffect, useState, useCallback, memo } from 'react';
 import { createPortal } from 'react-dom';
 import { apiFetch } from '@/lib/api-client';
-import LoadingScreen from '@/components/ui/loading-screen';
+import LoadingScreen, { type LoadStage } from '@/components/ui/loading-screen';
 import Link from 'next/link';
 import Image from 'next/image';
 import { LayoutDashboard, Building2, LogOut, Ticket } from 'lucide-react';
@@ -279,6 +279,8 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
   // Si Clerk ya está listo al montar (viene de redirect del dashboard), no mostrar loading
   const alreadyReady = isLoaded && isSignedIn;
   const [checking, setChecking]       = useState(!alreadyReady);
+  // Etapa real del arranque, para que la pantalla de carga diga qué está pasando
+  const [loadStage, setLoadStage]     = useState<LoadStage>('init');
   const [spin, setSpin]               = useState(false);
   const [panelOpen, setPanelOpen]     = useState(false);
   const [notifs, setNotifs]           = useState<Notif[]>([]);
@@ -293,10 +295,13 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
 
     (async () => {
       try {
+        setLoadStage('auth');
         const token = await session?.getToken({ skipCache: true });
         if (stale) return;
+        setLoadStage('data');
         const res = await apiFetch<{ status: string }>('/me', { token });
         if (stale) return;
+        setLoadStage('sync');
         if (res.status !== 'superadmin') { router.replace('/dashboard'); return; }
         setChecking(false);
       } catch (err) {
@@ -347,7 +352,7 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
     setNotifs(prev => prev.map(n => ({ ...n, leida: true })));
   }
 
-  if (checking) return <LoadingScreen />;
+  if (checking) return <LoadingScreen stage={loadStage} />;
 
   const title = SCREEN_LABELS[pathname] ?? 'VeloClub';
   const noLeidas = notifs.filter(n => !n.leida).length;

@@ -1,15 +1,143 @@
-import Image from 'next/image';
+'use client';
 
-export default function LoadingScreen() {
+import { useEffect, useRef, useState } from 'react';
+import Image from 'next/image';
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
+
+// Etapas reales del arranque — cada layout va avisando en cuál va, para que el
+// texto diga lo que de verdad está pasando en vez de rotar mensajes al azar.
+export type LoadStage = 'init' | 'auth' | 'data' | 'sync' | 'retry';
+
+const STAGE_TEXT: Record<LoadStage, string> = {
+  init:  'Alistando tu club',
+  auth:  'Verificando acceso',
+  data:  'Cargando tus datos',
+  sync:  'Sincronizando tu información',
+  retry: 'Reintentando, un momento',
+};
+
+// Con buena conexión las etapas se suceden en pocos milisegundos: sin un mínimo
+// por mensaje el texto parpadearía. Cada uno se sostiene al menos este tiempo.
+const MIN_STAGE_MS = 600;
+
+// No mostrar la pantalla de inmediato: si la carga es rápida, el usuario no ve
+// nada y la app se siente instantánea, en vez de un destello molesto.
+const APPEAR_DELAY_MS = 250;
+
+const EASE_OUT: [number, number, number, number] = [0.23, 1, 0.32, 1];
+
+// Dimensiones del logo respetando su relación real (1296x868)
+const LOGO_W = 130;
+const LOGO_H = 87;
+
+export default function LoadingScreen({ stage = 'init' }: { stage?: LoadStage }) {
+  const reducedMotion = useReducedMotion();
+  const [visible, setVisible] = useState(false);
+
+  // La etapa que se está mostrando, que puede ir por detrás de la real mientras
+  // se cumple el tiempo mínimo del mensaje anterior.
+  const [shown, setShown] = useState<LoadStage>(stage);
+  const lastChangeRef = useRef<number>(Date.now());
+
+  useEffect(() => {
+    const t = setTimeout(() => setVisible(true), APPEAR_DELAY_MS);
+    return () => clearTimeout(t);
+  }, []);
+
+  useEffect(() => {
+    if (stage === shown) return;
+    const restante = Math.max(0, MIN_STAGE_MS - (Date.now() - lastChangeRef.current));
+    const t = setTimeout(() => {
+      setShown(stage);
+      lastChangeRef.current = Date.now();
+    }, restante);
+    return () => clearTimeout(t);
+  }, [stage, shown]);
+
+  if (!visible) return null;
+
   return (
-    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white">
-      <Image src="/logo.png" alt="VeloClub" width={130} height={40} className="object-contain mb-8" />
-      <div className="flex gap-2">
-        <span className="w-2.5 h-2.5 rounded-full bg-purple-600 animate-bounce [animation-delay:-0.3s]" />
-        <span className="w-2.5 h-2.5 rounded-full bg-purple-600 animate-bounce [animation-delay:-0.15s]" />
-        <span className="w-2.5 h-2.5 rounded-full bg-purple-600 animate-bounce" />
+    <div className="vcls-root fixed inset-0 z-50 flex flex-col items-center justify-center bg-white">
+      <style>{`
+        .vcls-root { animation: vcls-fade .28s cubic-bezier(.23,1,.32,1) both; }
+        @keyframes vcls-fade { from { opacity: 0 } to { opacity: 1 } }
+
+        /* Barrido de luz: el logo se ve tenue y una franja con los colores de
+           marca lo recorre. La franja se mueve con transform (compositor). */
+        .vcls-logo { position: relative; }
+        .vcls-logo img { filter: grayscale(1); opacity: .20; }
+        .vcls-shine {
+          position: absolute; inset: 0; overflow: hidden; pointer-events: none;
+          -webkit-mask: url('/logo.png') center / contain no-repeat;
+                  mask: url('/logo.png') center / contain no-repeat;
+        }
+        .vcls-band {
+          position: absolute; top: 0; bottom: 0; left: -100%; width: 300%;
+          background: linear-gradient(100deg,
+            transparent 42%, #7C3AED 48%, #4361EE 52%, transparent 58%);
+          animation: vcls-sweep 1.9s cubic-bezier(.4,0,.2,1) infinite;
+        }
+        @keyframes vcls-sweep {
+          from { transform: translateX(-16%) }
+          to   { transform: translateX(16%) }
+        }
+
+        .vcls-track {
+          width: 140px; height: 3px; border-radius: 99px; overflow: hidden;
+          background: rgba(124,58,237,.13);
+        }
+        .vcls-fill {
+          width: 100%; height: 100%; border-radius: 99px;
+          background: linear-gradient(90deg, #7C3AED, #4361EE);
+          animation: vcls-bar 1.4s cubic-bezier(.65,0,.35,1) infinite;
+        }
+        @keyframes vcls-bar {
+          0%   { transform: translateX(-100%) scaleX(.6) }
+          50%  { transform: translateX(0%)    scaleX(1)  }
+          100% { transform: translateX(100%)  scaleX(.6) }
+        }
+
+        /* Con "reducir movimiento" activo: logo íntegro y sin barridos */
+        @media (prefers-reduced-motion: reduce) {
+          .vcls-root { animation: none }
+          .vcls-logo img { filter: none; opacity: 1 }
+          .vcls-shine { display: none }
+          .vcls-fill { animation: none; opacity: .5 }
+        }
+      `}</style>
+
+      <div className="vcls-logo" style={{ width: LOGO_W, height: LOGO_H }}>
+        <Image
+          src="/logo.png"
+          alt="VeloClub"
+          width={LOGO_W}
+          height={LOGO_H}
+          priority
+          className="object-contain"
+        />
+        <span className="vcls-shine" aria-hidden="true">
+          <span className="vcls-band" />
+        </span>
       </div>
-      <p className="text-slate-400 text-sm mt-6">Verificando acceso...</p>
+
+      <div className="vcls-track" style={{ marginTop: 26 }} />
+
+      {/* Texto de etapa: el que sale se va hacia arriba, el que entra sube desde abajo */}
+      <div style={{ position: 'relative', height: 20, width: 280, marginTop: 22 }}>
+        <AnimatePresence initial={false}>
+          <motion.p
+            key={shown}
+            initial={reducedMotion ? { opacity: 0 } : { opacity: 0, y: 6 }}
+            animate={reducedMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
+            exit={reducedMotion ? { opacity: 0 } : { opacity: 0, y: -6 }}
+            transition={{ duration: reducedMotion ? 0.12 : 0.2, ease: EASE_OUT }}
+            className="absolute inset-0 m-0 flex items-center justify-center text-[13px]"
+            style={{ color: '#8E87A8' }}
+          >
+            {STAGE_TEXT[shown]}
+          </motion.p>
+        </AnimatePresence>
+      </div>
     </div>
   );
 }

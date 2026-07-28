@@ -115,7 +115,7 @@ export default function LoadingScreen({ stage = 'init' }: { stage?: LoadStage })
           background: rgba(255,255,255,.22);
         }
         .vcls-fill {
-          width: 100%; height: 100%; border-radius: 99px; background: #fff;
+          display: block; width: 100%; height: 100%; border-radius: 99px; background: #fff;
           animation: vcls-bar 1.4s cubic-bezier(.65,0,.35,1) infinite;
         }
         @keyframes vcls-bar {
@@ -135,7 +135,9 @@ export default function LoadingScreen({ stage = 'init' }: { stage?: LoadStage })
 
       <BrandLogo shimmer />
 
-      <div className="vcls-track" style={{ marginTop: 26 }} />
+      <div className="vcls-track" style={{ marginTop: 26 }}>
+        <span className="vcls-fill" />
+      </div>
 
       {/* Texto de etapa: el que sale se va hacia arriba, el que entra sube desde abajo */}
       <div style={{ position: 'relative', height: 20, width: 280, marginTop: 22 }}>

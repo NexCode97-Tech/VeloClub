@@ -547,6 +547,54 @@ router.patch('/notificaciones/leer-todas', requireAuth, requireSuperadmin, async
 });
 
 // POST /superadmin/fix-member-names — normalizar todos los nombres a Title Case
+// GET /superadmin/suscripciones-fantasma — diagnostico, no toca nada
+//
+// Una suscripcion fantasma es una fila que se creo sola, sin que el club haya
+// pagado nunca: la pantalla de suscripcion hacia un upsert al consultarla, asi
+// que heredaba los valores por defecto del esquema (450.000 mensual, un precio
+// que ya no existe). En el superadmin esos clubes se veian como plan pago.
+router.get('/suscripciones-fantasma', requireAuth, requireSuperadmin, async (_req, res) => {
+  const suscripciones = await prisma.clubSuscripcion.findMany({
+    include: {
+      club:  { select: { id: true, name: true, trialEndsAt: true, active: true } },
+      pagos: { select: { id: true, estado: true } },
+    },
+  });
+
+  const fantasma = suscripciones
+    .filter(s => !s.pagos.some(p => p.estado === 'PAID'))
+    .map(s => ({
+      clubId:      s.club.id,
+      club:        s.club.name,
+      planMonto:   s.planMonto,
+      tipoPlan:    s.tipoPlan,
+      trialEndsAt: s.club.trialEndsAt,
+      enPrueba:    !!s.club.trialEndsAt && s.club.trialEndsAt > new Date(),
+      pagos:       s.pagos.length,
+    }));
+
+  res.json({ total: suscripciones.length, fantasma });
+});
+
+// POST /superadmin/suscripciones-fantasma/limpiar — borra esas filas
+//
+// Se borran en vez de corregirles el monto porque no representan nada: el club
+// no ha elegido plan ni ha pagado. Si despues elige o paga, el flujo la vuelve
+// a crear con el precio calculado. Solo toca suscripciones sin ningun pago
+// registrado, asi que no puede afectar a un club que si pago.
+router.post('/suscripciones-fantasma/limpiar', requireAuth, requireSuperadmin, async (_req, res) => {
+  const suscripciones = await prisma.clubSuscripcion.findMany({
+    include: { pagos: { select: { id: true } } },
+  });
+
+  const sinPagos = suscripciones.filter(s => s.pagos.length === 0);
+  if (sinPagos.length > 0) {
+    await prisma.clubSuscripcion.deleteMany({ where: { id: { in: sinPagos.map(s => s.id) } } });
+  }
+
+  res.json({ ok: true, revisadas: suscripciones.length, eliminadas: sinPagos.length });
+});
+
 router.post('/fix-member-names', requireAuth, requireSuperadmin, async (_req, res) => {
   function toTitleCase(str: string): string {
     return str.toLowerCase().split(' ')

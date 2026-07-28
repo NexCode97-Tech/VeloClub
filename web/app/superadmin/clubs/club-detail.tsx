@@ -450,7 +450,12 @@ export default function ClubDetail({ club, suscripcion, tab, onReload, onDeleted
   const vencido  = vig?.vencido ?? false;
   const pctColor = vencido ? '#EF476F' : pct >= 50 ? '#06D6A0' : pct >= 20 ? '#FFB703' : '#EF476F';
   const pb       = PLAN_BADGE[tipo];
-  const trial    = !suscripcion ? trialInfo(club.createdAt, club.trialEndsAt) : null;
+  // La prueba depende de trialEndsAt, no de que falte la suscripcion: un club
+  // en prueba puede tener fila de suscripcion sin haber pagado nunca, y antes
+  // eso lo hacia aparecer como plan pago. Misma regla que usa la lista.
+  const trial    = club.trialEndsAt ? trialInfo(club.createdAt, club.trialEndsAt) : null;
+  // Solo se considera plan real cuando hay al menos un abono pagado
+  const tienePagos = pagos.some(p => p.estado === 'PAID');
 
   return (
     <motion.div initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.28, ease: EASE }}>
@@ -482,8 +487,11 @@ export default function ClubDetail({ club, suscripcion, tab, onReload, onDeleted
             <span style={{ fontSize: 10, fontWeight: 600, padding: '3px 9px', borderRadius: 99, background: club.active ? 'rgba(6,214,160,0.12)' : 'rgba(239,71,111,0.12)', color: club.active ? '#06D6A0' : '#EF476F' }}>
               {club.active ? 'Activo' : 'Inactivo'}
             </span>
-            {suscripcion && <span style={{ fontSize: 10, fontWeight: 600, padding: '3px 9px', borderRadius: 99, background: pb.bg, color: pb.color }}>{pb.label}</span>}
-            {trial && <span style={{ fontSize: 10, fontWeight: 600, padding: '3px 9px', borderRadius: 99, background: trial.bg, color: trial.color }}>{trial.label}</span>}
+            {/* La prueba manda sobre el plan, igual que en la lista: si el club
+                sigue en prueba no ha pagado, asi que anunciar un plan mentiria */}
+            {trial
+              ? <span style={{ fontSize: 10, fontWeight: 600, padding: '3px 9px', borderRadius: 99, background: trial.bg, color: trial.color }}>{trial.label}</span>
+              : suscripcion && <span style={{ fontSize: 10, fontWeight: 600, padding: '3px 9px', borderRadius: 99, background: pb.bg, color: pb.color }}>{pb.label}</span>}
             {club.verificationStatus === 'VERIFIED' && (
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10, fontWeight: 600, padding: '3px 9px', borderRadius: 99, background: 'rgba(6,214,160,0.12)', color: '#06D6A0' }}>
                 <BadgeCheck size={11} /> Verificado
@@ -742,7 +750,10 @@ export default function ClubDetail({ club, suscripcion, tab, onReload, onDeleted
                 {!suscripcion && !editPlan && <p style={{ margin: '4px 0 0', fontSize: 11, color: '#8E87A8' }}>Toca para configurar el plan</p>}
               </div>
 
-              {suscripcion && (
+              {/* La vigencia solo tiene sentido con un abono pagado detras. Sin
+                  pagos mostraba "0%" y un "—", que se leia como plan vencido
+                  cuando en realidad el club nunca ha pagado */}
+              {tienePagos && (
                 <>
                   <div style={{ flexShrink: 0, minWidth: 92 }}>
                     <p style={{ margin: '0 0 6px', fontSize: 11, fontWeight: 500, color: '#8E87A8' }}>Vigencia</p>
@@ -759,13 +770,13 @@ export default function ClubDetail({ club, suscripcion, tab, onReload, onDeleted
             </div>
 
             {/* Barra vigencia */}
-            {suscripcion && (
+            {tienePagos && (
               <div style={{ marginTop: 14, height: 7, borderRadius: 99, background: 'rgba(120,80,200,0.08)', overflow: 'hidden' }}>
                 <motion.div style={{ height: '100%', borderRadius: 99, background: pctColor }} initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ duration: 0.8, ease: EASE, delay: 0.15 }} />
               </div>
             )}
 
-            {/* Estado de prueba (sin plan) */}
+            {/* Estado de prueba */}
             {trial && (
               <div style={{ marginTop: 6 }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>

@@ -79,11 +79,34 @@ export async function reconciliarPagosPendientes(clubId?: string): Promise<numbe
   return acreditados;
 }
 
-async function suscripcionDelClub(clubId: string) {
-  return prisma.clubSuscripcion.upsert({
-    where: { clubId },
-    update: {},
-    create: { clubId, año: new Date().getFullYear() },
+/**
+ * Lee la suscripción sin crearla. La usa la pantalla de suscripción, que es
+ * solo consulta: antes esta ruta hacía un upsert, así que a cualquier club cuyo
+ * admin abriera la pantalla durante la prueba se le creaba una suscripción con
+ * los valores por defecto del esquema (450.000 mensual, un precio que ya no
+ * existe). Esos clubes aparecían en el superadmin como si tuvieran plan pago.
+ */
+async function leerSuscripcion(clubId: string) {
+  return prisma.clubSuscripcion.findUnique({ where: { clubId }, include: { pagos: true } });
+}
+
+/**
+ * Devuelve la suscripción y la crea si hace falta. Solo para los flujos que de
+ * verdad la necesitan: elegir plan, pagar o activar la renovación. El monto se
+ * calcula con la cantidad real de deportistas en vez de heredar el valor por
+ * defecto del esquema.
+ */
+async function asegurarSuscripcion(clubId: string) {
+  const existente = await leerSuscripcion(clubId);
+  if (existente) return existente;
+
+  const cantidadDeportistas = await prisma.member.count({ where: { clubId, role: 'STUDENT' } });
+  return prisma.clubSuscripcion.create({
+    data: {
+      clubId,
+      año: new Date().getFullYear(),
+      planMonto: calcularPrecioPlan(cantidadDeportistas, 'MENSUAL'),
+    },
     include: { pagos: true },
   });
 }
@@ -94,19 +117,25 @@ router.get('/mi-suscripcion', requireAuth, async (req, res) => {
   const clubId = req.user!.clubId ?? '';
 
   const [suscripcion, cantidadDeportistas, club] = await Promise.all([
-    suscripcionDelClub(clubId),
+    leerSuscripcion(clubId),
     prisma.member.count({ where: { clubId, role: 'STUDENT' } }),
     prisma.club.findUnique({ where: { id: clubId }, select: { trialEndsAt: true } }),
   ]);
 
-  const precioSinAutoRenew = calcularPrecioPlan(cantidadDeportistas, suscripcion.tipoPlan as TipoPlan, false);
-  const precioConAutoRenew = calcularPrecioPlan(cantidadDeportistas, suscripcion.tipoPlan as TipoPlan, true);
-  const precio = suscripcion.autoRenew ? precioConAutoRenew : precioSinAutoRenew;
-  const vig = vigencia(suscripcion.pagos, suscripcion.tipoPlan as TipoPlan);
+  // Un club en prueba todavia no tiene suscripcion, y no hay que crearsela solo
+  // por consultar. El precio se calcula igual para poder mostrarselo.
+  const tipoPlan = (suscripcion?.tipoPlan ?? 'MENSUAL') as TipoPlan;
+  const autoRenew = suscripcion?.autoRenew ?? false;
+  const precioSinAutoRenew = calcularPrecioPlan(cantidadDeportistas, tipoPlan, false);
+  const precioConAutoRenew = calcularPrecioPlan(cantidadDeportistas, tipoPlan, true);
+  const precio = autoRenew ? precioConAutoRenew : precioSinAutoRenew;
+  const vig = suscripcion ? vigencia(suscripcion.pagos, tipoPlan) : null;
   const enTrial = !!club?.trialEndsAt && club.trialEndsAt > new Date();
 
   res.json({
-    suscripcion: { ...suscripcion, planMonto: precio, planMontoSinAutoRenew: precioSinAutoRenew, planMontoConAutoRenew: precioConAutoRenew },
+    suscripcion: suscripcion
+      ? { ...suscripcion, planMonto: precio, planMontoSinAutoRenew: precioSinAutoRenew, planMontoConAutoRenew: precioConAutoRenew }
+      : { clubId, tipoPlan, autoRenew, pagos: [], planMonto: precio, planMontoSinAutoRenew: precioSinAutoRenew, planMontoConAutoRenew: precioConAutoRenew },
     cantidadDeportistas,
     vigencia: vig,
     enTrial,
@@ -137,7 +166,7 @@ router.post('/set-plan', requireAuth, async (req, res) => {
     return res.status(400).json({ error: 'tipoPlan inválido' });
   }
 
-  const suscripcion = await suscripcionDelClub(clubId);
+  const suscripcion = await asegurarSuscripcion(clubId);
   await prisma.clubSuscripcion.update({
     where: { id: suscripcion.id },
     data: { tipoPlan: tipoPlan as TipoPlan },
@@ -246,7 +275,7 @@ router.post('/pagar', requireAuth, async (req, res) => {
   }
 
   const [suscripcion, cantidadDeportistas, club] = await Promise.all([
-    suscripcionDelClub(clubId),
+    asegurarSuscripcion(clubId),
     prisma.member.count({ where: { clubId, role: 'STUDENT' } }),
     prisma.club.findUnique({ where: { id: clubId }, select: { name: true, email: true, trialEndsAt: true } }),
   ]);
@@ -437,7 +466,7 @@ router.post('/checkout', requireAuth, async (req, res) => {
   const clubId = req.user!.clubId ?? '';
 
   const [suscripcion, cantidadDeportistas, club] = await Promise.all([
-    suscripcionDelClub(clubId),
+    asegurarSuscripcion(clubId),
     prisma.member.count({ where: { clubId, role: 'STUDENT' } }),
     prisma.club.findUnique({ where: { id: clubId }, select: { name: true, email: true } }),
   ]);
@@ -472,7 +501,7 @@ router.post('/subscribe', requireAuth, async (req, res) => {
   }
 
   const [suscripcion, cantidadDeportistas, club] = await Promise.all([
-    suscripcionDelClub(clubId),
+    asegurarSuscripcion(clubId),
     prisma.member.count({ where: { clubId, role: 'STUDENT' } }),
     prisma.club.findUnique({ where: { id: clubId }, select: { name: true, email: true, trialEndsAt: true } }),
   ]);

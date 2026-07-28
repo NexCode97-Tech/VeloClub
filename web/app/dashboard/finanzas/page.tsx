@@ -13,6 +13,8 @@ import {
   PhoneOff, Settings, Zap, ChevronUp, Pencil, Search, Receipt, ExternalLink,
 } from 'lucide-react';
 import { downloadInvoicePDF } from '@/lib/pdf';
+import MemberHistoryPanel from '@/components/finanzas/member-history-panel';
+import { buildWhatsAppUrl } from '@/lib/whatsapp';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -52,15 +54,6 @@ const rowVariants: Variants = {
   visible: { opacity: 1, y: 0, transition: { duration: 0.22, ease: [0.23, 1, 0.32, 1] as [number,number,number,number] } },
 };
 const EASE_OUT: [number,number,number,number] = [0.23, 1, 0.32, 1];
-
-function buildWhatsAppUrl(phone: string, memberName: string, amount: number, month: number, year: number, clubName: string) {
-  const clean = phone.replace(/\D/g, '');
-  const normalized = clean.startsWith('57') ? clean : `57${clean}`;
-  const text = encodeURIComponent(
-    `Hola, soy del ${clubName}. Le recordamos que la mensualidad de ${memberName} de ${MONTH_NAMES[month - 1]} ${year} por ${fmt.format(amount)} está pendiente. Por favor comuníquese con nosotros. ¡Gracias!`
-  );
-  return `https://wa.me/${normalized}?text=${text}`;
-}
 
 function getInitials(name: string) {
   return name.split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase();
@@ -107,12 +100,13 @@ interface StudentRowProps {
   onConfigSave: (memberId: string, fullName: string, monthlyFee: number, paymentDueDay: number) => void;
   configSaving: boolean;
   onOpenReceipt: (payment: Payment) => void;
+  onOpenHistory: (member: Member) => void;
 }
 
 function StudentRow({
   member: m, payment, clubName, clubLogoUrl, filterMonth, filterYear,
   reducedMotion, sentWa, onSentWa, onMarkPaid, onGenerate, onDeletePay,
-  generating, deleting, marking, onConfigSave, configSaving, onOpenReceipt,
+  generating, deleting, marking, onConfigSave, configSaving, onOpenReceipt, onOpenHistory,
 }: StudentRowProps) {
   const configured = !!(m.monthlyFee && m.paymentDueDay);
   const [configOpen, setConfigOpen] = useState(false);
@@ -288,19 +282,25 @@ function StudentRow({
       <div className="bg-white rounded-2xl overflow-hidden"
         style={{ border: '1px solid rgba(120,80,200,0.09)', boxShadow: '0 2px 12px rgba(124,58,237,0.05)' }}>
 
-        {/* Cabecera */}
+        {/* Cabecera — al tocarla se abre el historial completo del deportista */}
         <div className="px-4 pt-4 pb-3 flex items-center gap-3 relative"
           style={{ borderBottom: '1px solid rgba(120,80,200,0.07)' }}>
-          <div className="flex items-center justify-center text-white font-semibold text-[15px] shrink-0"
-            style={{ width: 48, height: 48, borderRadius: '50%', background: sc ? sc.text : '#8E87A8', boxShadow: `0 3px 10px ${sc ? sc.text : '#8E87A8'}40` }}>
-            {getInitials(m.fullName)}
-          </div>
-          <div className="flex-1 min-w-0 pr-7">
-            <p className="text-[13px] font-semibold truncate" style={{ color: '#1A1028' }}>{m.fullName}</p>
-            {configured && m.paymentDueDay && (
-              <p className="text-[10px] font-medium" style={{ color: '#8E87A8' }}>Cobro el día {m.paymentDueDay}</p>
-            )}
-          </div>
+          <button
+            onClick={() => onOpenHistory(m)}
+            title="Ver historial de pagos"
+            className="flex items-center gap-3 flex-1 min-w-0 pr-7 text-left cursor-pointer rounded-xl transition-opacity hover:opacity-80"
+          >
+            <div className="flex items-center justify-center text-white font-semibold text-[15px] shrink-0"
+              style={{ width: 48, height: 48, borderRadius: '50%', background: sc ? sc.text : '#8E87A8', boxShadow: `0 3px 10px ${sc ? sc.text : '#8E87A8'}40` }}>
+              {getInitials(m.fullName)}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-[13px] font-semibold truncate" style={{ color: '#1A1028' }}>{m.fullName}</p>
+              {configured && m.paymentDueDay && (
+                <p className="text-[10px] font-medium" style={{ color: '#8E87A8' }}>Cobro el día {m.paymentDueDay}</p>
+              )}
+            </div>
+          </button>
           {/* Engranaje — siempre esquina superior derecha */}
           <button onClick={openConfig}
             className="absolute top-3 right-3 w-7 h-7 rounded-lg flex items-center justify-center cursor-pointer"
@@ -377,6 +377,8 @@ export default function FinanzasPage() {
   const [bulkError, setBulkError]   = useState<string | null>(null);
 
   // ── Comprobantes de pago ──────────────────────────────────────────────────────
+  // Panel lateral con el historial completo de pagos de un deportista
+  const [historyMember, setHistoryMember]       = useState<Member | null>(null);
   const [receiptModal, setReceiptModal]         = useState<Payment | null>(null);
   const [receiptFile, setReceiptFile]           = useState<string | null>(null); // base64 preview
   const [uploadingReceipt, setUploadingReceipt] = useState(false);
@@ -972,6 +974,7 @@ export default function FinanzasPage() {
                     onConfigSave={handleConfigSave}
                     configSaving={configSaving === m.id}
                     onOpenReceipt={p => { setReceiptModal(p); setReceiptFile(null); setReceiptError(null); }}
+                    onOpenHistory={setHistoryMember}
                   />
                 ))}
               </motion.div>
@@ -1264,6 +1267,20 @@ export default function FinanzasPage() {
       </Dialog>
 
       {/* ── Modal comprobante de pago ───────────────────────────────────────── */}
+      {/* Panel lateral: historial completo del deportista, con comprobantes */}
+      <AnimatePresence>
+        {historyMember && (
+          <MemberHistoryPanel
+            key={historyMember.id}
+            member={historyMember}
+            clubName={clubName}
+            clubLogoUrl={clubLogoUrl}
+            onClose={() => setHistoryMember(null)}
+            onChanged={() => { invalidatePay(); invalidateFlow(); }}
+          />
+        )}
+      </AnimatePresence>
+
       <Dialog open={!!receiptModal} onOpenChange={v => { if (!v) { setReceiptModal(null); setReceiptFile(null); setReceiptError(null); } }}>
         <DialogContent className="max-w-sm">
           <DialogHeader>

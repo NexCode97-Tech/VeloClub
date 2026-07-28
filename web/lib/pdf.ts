@@ -301,3 +301,138 @@ export async function downloadInvoicePDF(
 
   doc.save(`recibo_${payment.memberName.replace(/\s+/g, '_')}_${MONTH_NAMES[payment.month - 1]}_${payment.year}.pdf`);
 }
+
+// ── Historial completo de pagos de un deportista ─────────────────────────────
+export interface HistoryPayment {
+  amount: number;
+  month: number;
+  year: number;
+  status: string;
+  dueDate?: string | null;
+  paidAt?: string | null;
+  receiptUrl?: string | null;
+  notes?: string | null;
+}
+
+function fmtCOP(n: number): string {
+  return '$' + Math.round(n).toLocaleString('es-CO');
+}
+
+function fmtFecha(iso?: string | null): string {
+  if (!iso) return '—';
+  return new Date(iso).toLocaleDateString('es-CO', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+export async function downloadHistoryPDF(
+  member: { fullName: string; docType?: string | null; docNumber?: string | null; monthlyFee?: number | null },
+  payments: HistoryPayment[],
+  clubName: string,
+  clubLogoUrl?: string | null,
+) {
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+
+  // ── Encabezado de marca ────────────────────────────────────────────────────
+  gradientRect(doc, 0, 0, 210, 22);
+
+  if (clubLogoUrl) {
+    const logo = await fetchLogoDataUrl(clubLogoUrl);
+    if (logo) {
+      try { doc.addImage(logo.dataUrl, logo.format, 14, 4.5, 13, 13); } catch { /* sin logo */ }
+    }
+  }
+
+  doc.setTextColor(...WHITE);
+  doc.setFontSize(13);
+  doc.setFont('helvetica', 'bold');
+  doc.text(clubName, clubLogoUrl ? 31 : 14, 13);
+  doc.setFontSize(8);
+  doc.setFont('helvetica', 'normal');
+  doc.text(
+    new Date().toLocaleDateString('es-CO', { day: 'numeric', month: 'long', year: 'numeric' }),
+    196, 13, { align: 'right' },
+  );
+
+  // ── Título y datos del deportista ──────────────────────────────────────────
+  doc.setTextColor(...DARK);
+  doc.setFontSize(16);
+  doc.setFont('helvetica', 'bold');
+  doc.text('Historial de pagos', 14, 34);
+
+  doc.setFontSize(11);
+  doc.text(member.fullName, 14, 42);
+
+  doc.setFontSize(8.5);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(...MUTED);
+  const datos: string[] = [];
+  if (member.docNumber) datos.push(`${member.docType ?? 'CC'} ${member.docNumber}`);
+  if (member.monthlyFee) datos.push(`Cuota mensual ${fmtCOP(member.monthlyFee)}`);
+  if (datos.length) doc.text(datos.join('  ·  '), 14, 47.5);
+
+  // ── Resumen ────────────────────────────────────────────────────────────────
+  const pagados    = payments.filter(p => p.status === 'PAID');
+  const pendientes = payments.filter(p => p.status !== 'PAID' && p.status !== 'REFUNDED');
+  const totalPagado    = pagados.reduce((a, p) => a + p.amount, 0);
+  const totalPendiente = pendientes.reduce((a, p) => a + p.amount, 0);
+
+  // Puntualidad: pagos hechos en o antes de la fecha de vencimiento
+  const conVencimiento = pagados.filter(p => p.dueDate && p.paidAt);
+  const aTiempo = conVencimiento.filter(p => new Date(p.paidAt!) <= new Date(p.dueDate!)).length;
+  const puntualidad = conVencimiento.length > 0
+    ? Math.round((aTiempo / conVencimiento.length) * 100)
+    : null;
+
+  const cajas: { label: string; value: string; color: [number, number, number] }[] = [
+    { label: 'Total pagado',  value: fmtCOP(totalPagado),    color: GREEN },
+    { label: 'Pendiente',     value: fmtCOP(totalPendiente), color: [239, 71, 111] },
+    { label: 'Puntualidad',   value: puntualidad !== null ? `${puntualidad}%` : '—', color: PURPLE },
+  ];
+
+  const boxY = 54;
+  const boxW = 58;
+  const boxH = 20;
+  cajas.forEach((c, i) => {
+    const x = 14 + i * (boxW + 3);
+    doc.setFillColor(...BG);
+    doc.roundedRect(x, boxY, boxW, boxH, 2.5, 2.5, 'F');
+    doc.setFontSize(7.5);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(...MUTED);
+    doc.text(c.label, x + 5, boxY + 7);
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...c.color);
+    doc.text(c.value, x + 5, boxY + 15.5);
+  });
+
+  // ── Tabla del historial ────────────────────────────────────────────────────
+  autoTable(doc, {
+    startY: boxY + boxH + 8,
+    head: [['Período', 'Monto', 'Estado', 'Vencimiento', 'Fecha de pago', 'Comprobante']],
+    body: payments.map(p => [
+      `${MONTH_NAMES[p.month - 1]} ${p.year}`,
+      fmtCOP(p.amount),
+      STATUS_ES[p.status] ?? p.status,
+      fmtFecha(p.dueDate),
+      fmtFecha(p.paidAt),
+      p.receiptUrl ? 'Sí' : 'No',
+    ]),
+    headStyles: { fillColor: PURPLE, textColor: WHITE, fontStyle: 'bold', fontSize: 8 },
+    bodyStyles: { fontSize: 8, textColor: DARK },
+    alternateRowStyles: { fillColor: [245, 243, 255] },
+    columnStyles: {
+      0: { cellWidth: 32 },
+      1: { cellWidth: 26, halign: 'right' },
+      2: { cellWidth: 26 },
+      3: { cellWidth: 30 },
+      4: { cellWidth: 32 },
+      5: { cellWidth: 26, halign: 'center' },
+    },
+    margin: { left: 14, right: 14 },
+    tableLineColor: [220, 215, 240],
+    tableLineWidth: 0.2,
+  });
+
+  footer(doc);
+  doc.save(`historial_${member.fullName.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0, 10)}.pdf`);
+}

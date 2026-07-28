@@ -123,19 +123,23 @@ router.get('/', requireAuth, async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'No autenticado' });
   const clubId = req.user.clubId ?? '';
 
-  const month  = req.query.month  ? parseInt(String(req.query.month))  : null;
-  const year   = req.query.year   ? parseInt(String(req.query.year))   : null;
-  const status = req.query.status ? String(req.query.status)           : null;
+  const month    = req.query.month  ? parseInt(String(req.query.month))  : null;
+  const year     = req.query.year   ? parseInt(String(req.query.year))   : null;
+  const status   = req.query.status ? String(req.query.status)           : null;
+  // Filtro por deportista: trae su historial completo para el panel de Finanzas
+  const memberId = req.query.memberId ? String(req.query.memberId)       : null;
 
   const where: Record<string, unknown> = { clubId };
   if (month  !== null) where.month  = month;
   if (year   !== null) where.year   = year;
   if (status)          where.status = status;
+  if (memberId)        where.memberId = memberId;
 
   const payments = await prisma.payment.findMany({
     where,
     include: { member: { select: { id: true, fullName: true, email: true, phone: true } } },
-    orderBy: { createdAt: 'desc' },
+    // Para el historial de un deportista importa el orden cronológico del período
+    orderBy: memberId ? [{ year: 'desc' }, { month: 'desc' }] : { createdAt: 'desc' },
   });
 
   res.json({ payments });

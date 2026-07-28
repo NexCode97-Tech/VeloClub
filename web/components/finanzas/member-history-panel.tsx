@@ -1,12 +1,13 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useAuth } from '@clerk/nextjs';
 import { useQuery } from '@tanstack/react-query';
 import { motion, useReducedMotion } from 'framer-motion';
 import {
   X, Check, Clock, AlertCircle, Receipt, Download, MessageCircle,
-  FileDown, Upload, Trash2, FileX, RotateCcw,
+  FileDown, Upload, Trash2, FileX, RotateCcw, CalendarX,
 } from 'lucide-react';
 import { apiFetch } from '@/lib/api-client';
 import { buildWhatsAppUrl } from '@/lib/whatsapp';
@@ -15,6 +16,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 
 const EASE_OUT: [number, number, number, number] = [0.23, 1, 0.32, 1];
 const IOS: [number, number, number, number] = [0.32, 0.72, 0, 1];
+const BRAND = 'linear-gradient(135deg, #7C3AED 0%, #4361EE 100%)';
 
 const fmt = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 });
 const MONTHS_FULL = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
@@ -38,10 +40,10 @@ interface HistoryPayment {
 type MonthState = 'ontime' | 'late' | 'pending' | 'none';
 
 const MONTH_STYLE: Record<MonthState, { bg: string; color: string; label: string }> = {
-  ontime:  { bg: 'rgba(6,214,160,0.16)',  color: '#0B7A5D', label: 'pagado a tiempo' },
+  ontime:  { bg: 'rgba(6,214,160,0.18)',  color: '#0B7A5D', label: 'pagado a tiempo' },
   late:    { bg: 'rgba(239,71,111,0.16)', color: '#A32D2D', label: 'pagado con retraso' },
-  pending: { bg: 'rgba(255,183,3,0.20)',  color: '#8A6200', label: 'pendiente' },
-  none:    { bg: 'rgba(120,80,200,0.07)', color: '#B8B2CC', label: 'sin generar' },
+  pending: { bg: 'rgba(255,183,3,0.22)',  color: '#8A6200', label: 'pendiente' },
+  none:    { bg: 'rgba(120,80,200,0.06)', color: '#C6C1D6', label: 'sin generar' },
 };
 
 function pagoATiempo(p: HistoryPayment): boolean | null {
@@ -51,10 +53,7 @@ function pagoATiempo(p: HistoryPayment): boolean | null {
 
 function estadoMes(p: HistoryPayment | undefined): MonthState {
   if (!p) return 'none';
-  if (p.status === 'PAID') {
-    const t = pagoATiempo(p);
-    return t === false ? 'late' : 'ontime';
-  }
+  if (p.status === 'PAID') return pagoATiempo(p) === false ? 'late' : 'ontime';
   if (p.status === 'REFUNDED') return 'none';
   return 'pending';
 }
@@ -104,7 +103,13 @@ export default function MemberHistoryPanel({
     return () => window.removeEventListener('keydown', onKey);
   }, [onClose, receipt]);
 
-  // Años con movimiento, del más reciente al más antiguo
+  // Bloquear el scroll del fondo mientras el panel está abierto
+  useEffect(() => {
+    const previo = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = previo; };
+  }, []);
+
   const years = useMemo(() => {
     const s = new Set(payments.map(p => p.year));
     s.add(new Date().getFullYear());
@@ -199,74 +204,81 @@ export default function MemberHistoryPanel({
   }
 
   const contactPhone = member.emergencyPhone || member.phone;
+  const iniciales = member.fullName.split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase();
+  const meta = [
+    member.docNumber ? `${member.docType ?? 'CC'} ${member.docNumber}` : null,
+    member.monthlyFee ? `Cuota ${fmt.format(member.monthlyFee)}` : null,
+    member.paymentDueDay ? `Vence el ${member.paymentDueDay}` : null,
+  ].filter(Boolean).join(' · ');
 
-  return (
+  const contenido = (
     <>
       {/* Fondo oscurecido */}
       <motion.div
         initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
         transition={{ duration: 0.25, ease: EASE_OUT }}
         onClick={onClose}
-        className="fixed inset-0 z-[90]"
-        style={{ background: 'rgba(26,16,40,0.42)', backdropFilter: 'blur(3px)' }}
+        className="fixed inset-0 z-[140]"
+        style={{ background: 'rgba(26,16,40,0.45)', backdropFilter: 'blur(3px)' }}
       />
 
-      {/* Panel lateral */}
+      {/* Panel flotante con esquinas redondeadas */}
       <motion.aside
-        initial={reducedMotion ? { opacity: 0 } : { x: '100%' }}
+        initial={reducedMotion ? { opacity: 0 } : { x: '105%' }}
         animate={reducedMotion ? { opacity: 1 } : { x: 0 }}
-        exit={reducedMotion ? { opacity: 0 } : { x: '100%' }}
-        transition={{ duration: reducedMotion ? 0.2 : 0.42, ease: IOS }}
-        className="fixed right-0 top-0 bottom-0 z-[91] w-full sm:w-[440px] bg-white flex flex-col"
-        style={{ boxShadow: '-8px 0 40px rgba(26,16,40,0.16)' }}
+        exit={reducedMotion ? { opacity: 0 } : { x: '105%' }}
+        transition={{ duration: reducedMotion ? 0.2 : 0.44, ease: IOS }}
+        className="fixed z-[141] flex flex-col overflow-hidden bg-white
+                   inset-2 sm:inset-y-3 sm:left-auto sm:right-3 sm:w-[430px]"
+        style={{ borderRadius: 20, boxShadow: '0 20px 60px rgba(26,16,40,0.24)' }}
         role="dialog"
         aria-label={`Historial de pagos de ${member.fullName}`}
       >
-        {/* Encabezado */}
-        <div className="flex items-center gap-3 px-4 shrink-0"
-          style={{ minHeight: 62, borderBottom: '1px solid rgba(120,80,200,0.10)' }}>
-          <div className="flex items-center justify-center text-white font-semibold shrink-0"
-            style={{ width: 44, height: 44, borderRadius: '50%', fontSize: 14, background: 'linear-gradient(135deg,#7C3AED,#4361EE)' }}>
-            {member.fullName.split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase()}
+        {/* Encabezado inmersivo con el degradado de marca */}
+        <div className="shrink-0">
+          <div style={{ background: BRAND, padding: '16px 16px 36px' }} className="flex items-center gap-3">
+            <div className="flex items-center justify-center text-white font-semibold shrink-0"
+              style={{ width: 46, height: 46, borderRadius: '50%', fontSize: 15, background: 'rgba(255,255,255,0.20)', border: '2px solid rgba(255,255,255,0.45)' }}>
+              {iniciales}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="m-0 text-[15px] font-semibold text-white truncate">{member.fullName}</p>
+              <p className="m-0 text-[11.5px] truncate" style={{ color: 'rgba(255,255,255,0.78)' }}>
+                {meta || 'Sin configurar'}
+              </p>
+            </div>
+            <button onClick={onClose} aria-label="Cerrar"
+              className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors"
+              style={{ background: 'rgba(255,255,255,0.18)', color: '#fff' }}>
+              <X className="w-4 h-4" />
+            </button>
           </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-[14.5px] font-semibold truncate m-0" style={{ color: '#1A1028' }}>{member.fullName}</p>
-            <p className="text-[11px] m-0 truncate" style={{ color: '#8E87A8' }}>
-              {[
-                member.docNumber ? `${member.docType ?? 'CC'} ${member.docNumber}` : null,
-                member.monthlyFee ? `Cuota ${fmt.format(member.monthlyFee)}` : null,
-                member.paymentDueDay ? `Vence el ${member.paymentDueDay}` : null,
-              ].filter(Boolean).join(' · ') || 'Sin configurar'}
-            </p>
+
+          {/* Indicadores montados sobre el degradado */}
+          <div className="grid grid-cols-3 bg-white"
+            style={{ margin: '-28px 15px 0', borderRadius: 14, boxShadow: '0 6px 22px rgba(26,16,40,0.10)', padding: '12px 0' }}>
+            {[
+              { l: 'Total pagado', v: fmt.format(stats.totalPagado), c: '#06D6A0', b: true },
+              { l: 'Pendiente',    v: fmt.format(stats.totalPendiente), c: '#EF476F', b: true },
+              { l: 'Puntualidad',  v: stats.puntualidad !== null ? `${stats.puntualidad}%` : '—', c: '#7C3AED', b: false },
+            ].map(s => (
+              <div key={s.l} className="text-center px-1"
+                style={{ borderRight: s.b ? '1px solid rgba(120,80,200,0.10)' : undefined }}>
+                <p className="m-0 text-[10px]" style={{ color: '#8E87A8' }}>{s.l}</p>
+                <p className="m-0 text-[15px] font-semibold" style={{ color: s.c, letterSpacing: '-0.3px' }}>{s.v}</p>
+              </div>
+            ))}
           </div>
-          <button onClick={onClose} aria-label="Cerrar"
-            className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors hover:bg-secondary"
-            style={{ color: '#8E87A8' }}>
-            <X className="w-4 h-4" />
-          </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto">
+        {/* Cuerpo desplazable */}
+        <div className="flex-1 overflow-y-auto" style={{ WebkitOverflowScrolling: 'touch' }}>
           {isLoading ? (
-            <div className="flex items-center justify-center py-20">
+            <div className="flex items-center justify-center py-16">
               <div className="w-6 h-6 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: '#7C3AED', borderTopColor: 'transparent' }} />
             </div>
           ) : (
             <>
-              {/* Indicadores */}
-              <div className="grid grid-cols-3" style={{ gap: 1, background: 'rgba(120,80,200,0.10)' }}>
-                {[
-                  { l: 'Total pagado', v: fmt.format(stats.totalPagado), c: '#06D6A0' },
-                  { l: 'Pendiente',    v: fmt.format(stats.totalPendiente), c: '#EF476F' },
-                  { l: 'Puntualidad',  v: stats.puntualidad !== null ? `${stats.puntualidad}%` : '—', c: '#7C3AED' },
-                ].map(s => (
-                  <div key={s.l} className="bg-white text-center" style={{ padding: '12px 6px' }}>
-                    <p className="m-0 text-[10.5px]" style={{ color: '#8E87A8' }}>{s.l}</p>
-                    <p className="m-0 text-[15px] font-semibold" style={{ color: s.c, letterSpacing: '-0.3px' }}>{s.v}</p>
-                  </div>
-                ))}
-              </div>
-
               {/* Selector de año */}
               {years.length > 1 && (
                 <div className="flex gap-1.5 px-4 pt-4 flex-wrap">
@@ -286,18 +298,17 @@ export default function MemberHistoryPanel({
 
               {/* Mapa del año */}
               <div className="px-4 pt-4">
-                <p className="m-0 mb-2.5 text-[11px] font-semibold" style={{ color: '#8E87A8' }}>
+                <p className="m-0 mb-2.5 text-[10.5px] font-semibold" style={{ color: '#8E87A8' }}>
                   {year} en un vistazo
                 </p>
                 <div className="grid grid-cols-12" style={{ gap: 4 }}>
                   {MONTHS_INI.map((ini, i) => {
-                    const p = porMes.get(i + 1);
-                    const st = MONTH_STYLE[estadoMes(p)];
+                    const st = MONTH_STYLE[estadoMes(porMes.get(i + 1))];
                     return (
                       <div key={i}
                         title={`${MONTHS_FULL[i]} · ${st.label}`}
                         className="flex items-center justify-center text-[9px] font-semibold transition-transform hover:scale-[1.18]"
-                        style={{ aspectRatio: '1', borderRadius: 5, background: st.bg, color: st.color }}>
+                        style={{ aspectRatio: '1', borderRadius: 6, background: st.bg, color: st.color }}>
                         {ini}
                       </div>
                     );
@@ -314,101 +325,106 @@ export default function MemberHistoryPanel({
               </div>
 
               {/* Historial */}
-              <div className="px-4 pt-5 pb-4">
-                <p className="m-0 mb-1 text-[11px] font-semibold" style={{ color: '#8E87A8' }}>
-                  Historial de pagos
-                </p>
-
+              <div className="px-4 pt-5 pb-3">
                 {delAño.length === 0 ? (
-                  <div className="text-center" style={{ padding: '28px 8px' }}>
-                    <p className="m-0 text-[12.5px] font-semibold" style={{ color: '#8E87A8' }}>Sin pagos en {year}</p>
-                    <p className="m-0 mt-1 text-[11px]" style={{ color: '#C4BFD8' }}>Los cobros que generes aparecerán aquí</p>
-                  </div>
-                ) : delAño.map(p => {
-                  const aTiempo = pagoATiempo(p);
-                  const pagado  = p.status === 'PAID';
-                  const dias    = pagado && p.paidAt && p.dueDate ? diasDeDiferencia(p.paidAt, p.dueDate) : null;
-
-                  const Icon = pagado ? (aTiempo === false ? AlertCircle : Check) : Clock;
-                  const tono = pagado
-                    ? (aTiempo === false ? { bg: 'rgba(239,71,111,0.12)', fg: '#A32D2D' } : { bg: 'rgba(6,214,160,0.13)', fg: '#0B7A5D' })
-                    : { bg: 'rgba(255,183,3,0.14)', fg: '#8A6200' };
-
-                  return (
-                    <div key={p.id}
-                      className="flex items-center gap-3"
-                      style={{ padding: '10px 0', borderBottom: '1px solid rgba(120,80,200,0.07)' }}>
-                      <div className="flex items-center justify-center shrink-0"
-                        style={{ width: 32, height: 32, borderRadius: 9, background: tono.bg, color: tono.fg }}>
-                        <Icon className="w-4 h-4" />
-                      </div>
-
-                      <div className="flex-1 min-w-0">
-                        <p className="m-0 text-[13px] font-semibold" style={{ color: '#1A1028' }}>
-                          {MONTHS_FULL[p.month - 1]} · {fmt.format(p.amount)}
-                        </p>
-                        <p className="m-0 text-[11px]" style={{ color: '#8E87A8' }}>
-                          {pagado
-                            ? `Pagado el ${fechaCorta(p.paidAt)}${dias !== null ? (dias > 0 ? ` · ${dias} día${dias !== 1 ? 's' : ''} tarde` : ' · a tiempo') : ''}`
-                            : p.dueDate ? `Vence el ${fechaCorta(p.dueDate)} · sin pagar` : 'Sin pagar'}
-                        </p>
-                      </div>
-
-                      {/* Acciones según el estado */}
-                      {!pagado && contactPhone && (
-                        <button
-                          onClick={() => window.open(buildWhatsAppUrl(contactPhone, member.fullName, p.amount, p.month, p.year, clubName), '_blank')}
-                          title="Recordar por WhatsApp"
-                          className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-transform active:scale-95"
-                          style={{ background: 'rgba(37,211,102,0.12)', color: '#25D366' }}>
-                          <MessageCircle className="w-3.5 h-3.5" />
-                        </button>
-                      )}
-                      {!pagado && (
-                        <button onClick={() => marcarPagado(p.id)} disabled={busy === p.id}
-                          title="Marcar como pagado"
-                          className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 disabled:opacity-50 transition-transform active:scale-95"
-                          style={{ background: 'rgba(6,214,160,0.13)', color: '#0B7A5D' }}>
-                          {busy === p.id
-                            ? <div className="w-3 h-3 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: '#0B7A5D', borderTopColor: 'transparent' }} />
-                            : <Check className="w-3.5 h-3.5" />}
-                        </button>
-                      )}
-                      <button
-                        onClick={() => { setReceipt(p); setReceiptFile(null); setError(null); }}
-                        title={p.receiptUrl ? 'Ver comprobante' : 'Subir comprobante'}
-                        className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-transform active:scale-95"
-                        style={{
-                          border: '1px solid rgba(120,80,200,0.16)',
-                          color: p.receiptUrl ? '#7C3AED' : '#B8B2CC',
-                        }}>
-                        {p.receiptUrl ? <Receipt className="w-3.5 h-3.5" /> : <FileX className="w-3.5 h-3.5" />}
-                      </button>
-                      {pagado && (
-                        <button
-                          onClick={() => downloadInvoicePDF(
-                            { ...p, paidAt: p.paidAt ?? undefined, notes: p.notes ?? undefined, memberName: member.fullName, docType: member.docType, docNumber: member.docNumber },
-                            clubName, clubLogoUrl,
-                          )}
-                          title="Descargar recibo"
-                          className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-transform active:scale-95"
-                          style={{ border: '1px solid rgba(120,80,200,0.16)', color: '#7C3AED' }}>
-                          <Download className="w-3.5 h-3.5" />
-                        </button>
-                      )}
+                  <div className="flex flex-col items-center justify-center text-center" style={{ padding: '26px 12px' }}>
+                    <div className="flex items-center justify-center mb-3"
+                      style={{ width: 46, height: 46, borderRadius: 14, background: 'rgba(124,58,237,0.07)' }}>
+                      <CalendarX className="w-5 h-5" style={{ color: '#7C3AED', opacity: 0.55 }} />
                     </div>
-                  );
-                })}
+                    <p className="m-0 text-[12.5px] font-semibold" style={{ color: '#8E87A8' }}>Sin cobros en {year}</p>
+                    <p className="m-0 mt-1 text-[11px] max-w-[240px]" style={{ color: '#C4BFD8' }}>
+                      Genera la mensualidad desde la lista de Finanzas y aparecerá aquí con su comprobante
+                    </p>
+                  </div>
+                ) : (
+                  <>
+                    <p className="m-0 mb-1 text-[10.5px] font-semibold" style={{ color: '#8E87A8' }}>
+                      Historial de pagos
+                    </p>
+                    {delAño.map(p => {
+                      const aTiempo = pagoATiempo(p);
+                      const pagado  = p.status === 'PAID';
+                      const dias    = pagado && p.paidAt && p.dueDate ? diasDeDiferencia(p.paidAt, p.dueDate) : null;
+
+                      const Icon = pagado ? (aTiempo === false ? AlertCircle : Check) : Clock;
+                      const tono = pagado
+                        ? (aTiempo === false ? { bg: 'rgba(239,71,111,0.12)', fg: '#A32D2D' } : { bg: 'rgba(6,214,160,0.13)', fg: '#0B7A5D' })
+                        : { bg: 'rgba(255,183,3,0.14)', fg: '#8A6200' };
+
+                      return (
+                        <div key={p.id} className="flex items-center gap-3"
+                          style={{ padding: '10px 0', borderBottom: '1px solid rgba(120,80,200,0.07)' }}>
+                          <div className="flex items-center justify-center shrink-0"
+                            style={{ width: 32, height: 32, borderRadius: 9, background: tono.bg, color: tono.fg }}>
+                            <Icon className="w-4 h-4" />
+                          </div>
+
+                          <div className="flex-1 min-w-0">
+                            <p className="m-0 text-[12.5px] font-semibold" style={{ color: '#1A1028' }}>
+                              {MONTHS_FULL[p.month - 1]} · {fmt.format(p.amount)}
+                            </p>
+                            <p className="m-0 text-[10.5px]" style={{ color: '#8E87A8' }}>
+                              {pagado
+                                ? `Pagado el ${fechaCorta(p.paidAt)}${dias !== null ? (dias > 0 ? ` · ${dias} día${dias !== 1 ? 's' : ''} tarde` : ' · a tiempo') : ''}`
+                                : p.dueDate ? `Vence el ${fechaCorta(p.dueDate)} · sin pagar` : 'Sin pagar'}
+                            </p>
+                          </div>
+
+                          {!pagado && contactPhone && (
+                            <button
+                              onClick={() => window.open(buildWhatsAppUrl(contactPhone, member.fullName, p.amount, p.month, p.year, clubName), '_blank')}
+                              title="Recordar por WhatsApp"
+                              className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-transform active:scale-95"
+                              style={{ background: 'rgba(37,211,102,0.12)', color: '#25D366' }}>
+                              <MessageCircle className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                          {!pagado && (
+                            <button onClick={() => marcarPagado(p.id)} disabled={busy === p.id}
+                              title="Marcar como pagado"
+                              className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 disabled:opacity-50 transition-transform active:scale-95"
+                              style={{ background: 'rgba(6,214,160,0.13)', color: '#0B7A5D' }}>
+                              {busy === p.id
+                                ? <div className="w-3 h-3 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: '#0B7A5D', borderTopColor: 'transparent' }} />
+                                : <Check className="w-3.5 h-3.5" />}
+                            </button>
+                          )}
+                          <button
+                            onClick={() => { setReceipt(p); setReceiptFile(null); setError(null); }}
+                            title={p.receiptUrl ? 'Ver comprobante' : 'Subir comprobante'}
+                            className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-transform active:scale-95"
+                            style={{ border: '1px solid rgba(120,80,200,0.16)', color: p.receiptUrl ? '#7C3AED' : '#B8B2CC' }}>
+                            {p.receiptUrl ? <Receipt className="w-3.5 h-3.5" /> : <FileX className="w-3.5 h-3.5" />}
+                          </button>
+                          {pagado && (
+                            <button
+                              onClick={() => downloadInvoicePDF(
+                                { ...p, paidAt: p.paidAt ?? undefined, notes: p.notes ?? undefined, memberName: member.fullName, docType: member.docType, docNumber: member.docNumber },
+                                clubName, clubLogoUrl,
+                              )}
+                              title="Descargar recibo"
+                              className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-transform active:scale-95"
+                              style={{ border: '1px solid rgba(120,80,200,0.16)', color: '#7C3AED' }}>
+                              <Download className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </>
+                )}
               </div>
             </>
           )}
         </div>
 
-        {/* Descargar historial completo */}
-        <div className="px-4 py-3 shrink-0" style={{ borderTop: '1px solid rgba(120,80,200,0.10)' }}>
+        {/* Descargar historial completo — siempre visible al pie */}
+        <div className="px-4 py-3 shrink-0"
+          style={{ borderTop: '1px solid rgba(120,80,200,0.10)', paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}>
           <button onClick={descargarHistorial} disabled={generandoPdf || payments.length === 0}
             className="w-full flex items-center justify-center gap-2 rounded-xl text-[12.5px] font-semibold text-white disabled:opacity-50 transition-transform active:scale-[0.98]"
-            style={{ padding: '11px 0', background: 'linear-gradient(135deg,#7C3AED,#4361EE)' }}>
+            style={{ padding: '11px 0', background: BRAND }}>
             <FileDown className="w-4 h-4" />
             {generandoPdf ? 'Generando...' : 'Descargar historial en PDF'}
           </button>
@@ -463,7 +479,7 @@ export default function MemberHistoryPanel({
                 {receiptFile && (
                   <button onClick={subirComprobante} disabled={busy === 'receipt'}
                     className="flex-1 rounded-xl text-[12px] font-semibold text-white disabled:opacity-50"
-                    style={{ padding: '10px 0', background: 'linear-gradient(135deg,#7C3AED,#4361EE)' }}>
+                    style={{ padding: '10px 0', background: BRAND }}>
                     {busy === 'receipt' ? 'Guardando...' : 'Guardar comprobante'}
                   </button>
                 )}
@@ -474,4 +490,10 @@ export default function MemberHistoryPanel({
       </Dialog>
     </>
   );
+
+  // Portal a la raíz del documento: la página lo renderiza dentro de un
+  // contenedor animado que crea su propio contexto de apilamiento, y ahí el
+  // z-index quedaba atrapado por debajo del menú flotante del móvil.
+  if (typeof document === 'undefined') return null;
+  return createPortal(contenido, document.body);
 }

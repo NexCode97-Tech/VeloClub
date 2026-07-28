@@ -8,7 +8,7 @@ import { useEffect, useState, useRef, Suspense } from 'react';
 import { createPortal } from 'react-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { apiFetch } from '@/lib/api-client';
-import LoadingScreen, { type LoadStage } from '@/components/ui/loading-screen';
+import LoadingScreen, { LoadingCurtain, APPEAR_DELAY_MS, CURTAIN_MS, type LoadStage } from '@/components/ui/loading-screen';
 import { BottomCircleMenu } from '@/components/ui/bottom-circle-menu';
 import { SearchModal } from '@/components/ui/search-modal';
 import { NotificationsBell } from '@/components/ui/notifications-bell';
@@ -160,6 +160,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [checking, setChecking] = useState(true);
   // Etapa real del arranque, para que la pantalla de carga diga qué está pasando
   const [loadStage, setLoadStage] = useState<LoadStage>('init');
+  // Cortina de salida: se retira hacia la derecha dejando ver el dashboard ya montado
+  const [curtain, setCurtain] = useState(true);
+  const mountedAtRef = useRef(Date.now());
   const [masMenuOpen, setMasMenuOpen] = useState(false);
   // Tooltip del sidebar colapsado (etiqueta con el nombre del módulo al hacer hover)
   const [navTip, setNavTip] = useState<{ label: string; top: number; left: number } | null>(null);
@@ -176,6 +179,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     }
     return false;
   });
+
+  // Retirar la cortina una vez termina la verificación. Si la carga fue tan
+  // rápida que la pantalla nunca alcanzó a aparecer, no hay nada que retirar.
+  useEffect(() => {
+    if (checking) return;
+    if (Date.now() - mountedAtRef.current < APPEAR_DELAY_MS) { setCurtain(false); return; }
+    const t = setTimeout(() => setCurtain(false), CURTAIN_MS);
+    return () => clearTimeout(t);
+  }, [checking]);
 
   // Ocultar el tooltip si el sidebar deja de estar colapsado
   useEffect(() => { if (!collapsed) setNavTip(null); }, [collapsed]);
@@ -379,6 +391,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }
 
   return (
+    <>
+    {/* La cortina va encima del dashboard ya montado y se corre a la derecha */}
+    {curtain && <LoadingCurtain />}
     <div className="flex h-dvh overflow-hidden bg-background">
 
       {/* ── Desktop sidebar ─────────────────────────────────────────────── */}
@@ -867,6 +882,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </nav>
       </div>
     </div>
+    </>
   );
 }
 

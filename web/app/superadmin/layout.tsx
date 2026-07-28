@@ -2,10 +2,10 @@
 
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth, useSession, useUser, useClerk, UserButton } from '@clerk/nextjs';
-import { useEffect, useState, useCallback, memo } from 'react';
+import { useEffect, useState, useRef, useCallback, memo } from 'react';
 import { createPortal } from 'react-dom';
 import { apiFetch } from '@/lib/api-client';
-import LoadingScreen, { type LoadStage } from '@/components/ui/loading-screen';
+import LoadingScreen, { LoadingCurtain, APPEAR_DELAY_MS, CURTAIN_MS, type LoadStage } from '@/components/ui/loading-screen';
 import Link from 'next/link';
 import Image from 'next/image';
 import { LayoutDashboard, Building2, LogOut, Ticket } from 'lucide-react';
@@ -281,6 +281,17 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
   const [checking, setChecking]       = useState(!alreadyReady);
   // Etapa real del arranque, para que la pantalla de carga diga qué está pasando
   const [loadStage, setLoadStage]     = useState<LoadStage>('init');
+  // Cortina de salida: se retira hacia la derecha dejando ver el panel ya montado.
+  // Si la sesión ya venía lista (alreadyReady) no hubo carga, así que no hay cortina.
+  const [curtain, setCurtain]         = useState(!alreadyReady);
+  const mountedAtRef                  = useRef(Date.now());
+
+  useEffect(() => {
+    if (checking) return;
+    if (Date.now() - mountedAtRef.current < APPEAR_DELAY_MS) { setCurtain(false); return; }
+    const t = setTimeout(() => setCurtain(false), CURTAIN_MS);
+    return () => clearTimeout(t);
+  }, [checking]);
   const [spin, setSpin]               = useState(false);
   const [panelOpen, setPanelOpen]     = useState(false);
   const [notifs, setNotifs]           = useState<Notif[]>([]);
@@ -358,6 +369,9 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
   const noLeidas = notifs.filter(n => !n.leida).length;
 
   return (
+    <>
+    {/* La cortina va encima del panel ya montado y se corre a la derecha */}
+    {curtain && <LoadingCurtain />}
     <div className="flex h-dvh overflow-hidden" style={{ background: '#F7F7FB', fontFamily: 'inherit' }}>
 
       {/* ── Sidebar — aislado en su propio componente ──
@@ -637,5 +651,6 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
       </div>
       </div>{/* fin columna de contenido */}
     </div>
+    </>
   );
 }

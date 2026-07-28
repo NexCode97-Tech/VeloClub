@@ -22,7 +22,10 @@ const MIN_STAGE_MS = 600;
 
 // No mostrar la pantalla de inmediato: si la carga es rápida, el usuario no ve
 // nada y la app se siente instantánea, en vez de un destello molesto.
-const APPEAR_DELAY_MS = 250;
+export const APPEAR_DELAY_MS = 250;
+
+// Duración de la cortina de salida. El layout la usa para saber cuándo quitarla.
+export const CURTAIN_MS = 800;
 
 const EASE_OUT: [number, number, number, number] = [0.23, 1, 0.32, 1];
 
@@ -30,6 +33,46 @@ const EASE_OUT: [number, number, number, number] = [0.23, 1, 0.32, 1];
 const LOGO_W = 130;
 const LOGO_H = 87;
 
+// Degradado de marca, el mismo del onboarding
+const BRAND = 'linear-gradient(135deg, #7C3AED 0%, #4361EE 100%)';
+
+// Estilos compartidos por la pantalla de carga y la cortina de salida, para que
+// el relevo entre una y otra sea visualmente idéntico.
+const SHARED_CSS = `
+  .vcls-logo { position: relative; }
+  /* El logo es morado y negro: en fondo de marca se pasa a blanco puro */
+  .vcls-logo img { filter: brightness(0) invert(1); opacity: .45; }
+  .vcls-shine {
+    position: absolute; inset: 0; overflow: hidden; pointer-events: none;
+    -webkit-mask: url('/logo.png') center / contain no-repeat;
+            mask: url('/logo.png') center / contain no-repeat;
+  }
+  .vcls-band {
+    position: absolute; top: 0; bottom: 0; left: -100%; width: 300%;
+    background: linear-gradient(100deg,
+      transparent 42%, #fff 48%, #fff 52%, transparent 58%);
+    animation: vcls-sweep 1.9s cubic-bezier(.4,0,.2,1) infinite;
+  }
+  @keyframes vcls-sweep {
+    from { transform: translateX(-16%) }
+    to   { transform: translateX(16%) }
+  }
+`;
+
+function BrandLogo({ shimmer }: { shimmer: boolean }) {
+  return (
+    <div className="vcls-logo" style={{ width: LOGO_W, height: LOGO_H }}>
+      <Image src="/logo.png" alt="VeloClub" width={LOGO_W} height={LOGO_H} priority className="object-contain" />
+      {shimmer && (
+        <span className="vcls-shine" aria-hidden="true">
+          <span className="vcls-band" />
+        </span>
+      )}
+    </div>
+  );
+}
+
+// ── Pantalla de carga ───────────────────────────────────────────────────────
 export default function LoadingScreen({ stage = 'init' }: { stage?: LoadStage }) {
   const reducedMotion = useReducedMotion();
   const [visible, setVisible] = useState(false);
@@ -57,38 +100,21 @@ export default function LoadingScreen({ stage = 'init' }: { stage?: LoadStage })
   if (!visible) return null;
 
   return (
-    <div className="vcls-root fixed inset-0 z-50 flex flex-col items-center justify-center bg-white">
+    <div
+      className="vcls-root fixed inset-0 z-[100] flex flex-col items-center justify-center"
+      style={{ background: BRAND }}
+    >
       <style>{`
+        ${SHARED_CSS}
         .vcls-root { animation: vcls-fade .28s cubic-bezier(.23,1,.32,1) both; }
         @keyframes vcls-fade { from { opacity: 0 } to { opacity: 1 } }
 
-        /* Barrido de luz: el logo se ve tenue y una franja con los colores de
-           marca lo recorre. La franja se mueve con transform (compositor). */
-        .vcls-logo { position: relative; }
-        .vcls-logo img { filter: grayscale(1); opacity: .20; }
-        .vcls-shine {
-          position: absolute; inset: 0; overflow: hidden; pointer-events: none;
-          -webkit-mask: url('/logo.png') center / contain no-repeat;
-                  mask: url('/logo.png') center / contain no-repeat;
-        }
-        .vcls-band {
-          position: absolute; top: 0; bottom: 0; left: -100%; width: 300%;
-          background: linear-gradient(100deg,
-            transparent 42%, #7C3AED 48%, #4361EE 52%, transparent 58%);
-          animation: vcls-sweep 1.9s cubic-bezier(.4,0,.2,1) infinite;
-        }
-        @keyframes vcls-sweep {
-          from { transform: translateX(-16%) }
-          to   { transform: translateX(16%) }
-        }
-
         .vcls-track {
           width: 140px; height: 3px; border-radius: 99px; overflow: hidden;
-          background: rgba(124,58,237,.13);
+          background: rgba(255,255,255,.22);
         }
         .vcls-fill {
-          width: 100%; height: 100%; border-radius: 99px;
-          background: linear-gradient(90deg, #7C3AED, #4361EE);
+          width: 100%; height: 100%; border-radius: 99px; background: #fff;
           animation: vcls-bar 1.4s cubic-bezier(.65,0,.35,1) infinite;
         }
         @keyframes vcls-bar {
@@ -100,25 +126,13 @@ export default function LoadingScreen({ stage = 'init' }: { stage?: LoadStage })
         /* Con "reducir movimiento" activo: logo íntegro y sin barridos */
         @media (prefers-reduced-motion: reduce) {
           .vcls-root { animation: none }
-          .vcls-logo img { filter: none; opacity: 1 }
+          .vcls-logo img { opacity: 1 }
           .vcls-shine { display: none }
-          .vcls-fill { animation: none; opacity: .5 }
+          .vcls-fill { animation: none; opacity: .6 }
         }
       `}</style>
 
-      <div className="vcls-logo" style={{ width: LOGO_W, height: LOGO_H }}>
-        <Image
-          src="/logo.png"
-          alt="VeloClub"
-          width={LOGO_W}
-          height={LOGO_H}
-          priority
-          className="object-contain"
-        />
-        <span className="vcls-shine" aria-hidden="true">
-          <span className="vcls-band" />
-        </span>
-      </div>
+      <BrandLogo shimmer />
 
       <div className="vcls-track" style={{ marginTop: 26 }} />
 
@@ -132,12 +146,47 @@ export default function LoadingScreen({ stage = 'init' }: { stage?: LoadStage })
             exit={reducedMotion ? { opacity: 0 } : { opacity: 0, y: -6 }}
             transition={{ duration: reducedMotion ? 0.12 : 0.2, ease: EASE_OUT }}
             className="absolute inset-0 m-0 flex items-center justify-center text-[13px]"
-            style={{ color: '#8E87A8' }}
+            style={{ color: 'rgba(255,255,255,.78)' }}
           >
             {STAGE_TEXT[shown]}
           </motion.p>
         </AnimatePresence>
       </div>
+    </div>
+  );
+}
+
+// ── Cortina de salida ───────────────────────────────────────────────────────
+// Toma el relevo de la pantalla de carga (idéntica en el primer fotograma) y se
+// corre hacia la derecha, dejando ver el contenido desde la izquierda.
+export function LoadingCurtain() {
+  return (
+    <div
+      className="vcls-curtain fixed inset-0 z-[100] flex flex-col items-center justify-center"
+      style={{ background: BRAND, pointerEvents: 'none', willChange: 'transform' }}
+      aria-hidden="true"
+    >
+      <style>{`
+        ${SHARED_CSS}
+        .vcls-curtain {
+          animation: vcls-slide .65s cubic-bezier(.32,.72,0,1) .12s both;
+        }
+        @keyframes vcls-slide {
+          from { transform: translateX(0) }
+          to   { transform: translateX(100%) }
+        }
+        /* El logo se apaga primero para que la cortina salga limpia */
+        .vcls-curtain .vcls-logo {
+          animation: vcls-logo-out .18s ease-out both;
+        }
+        @keyframes vcls-logo-out { from { opacity: 1 } to { opacity: 0 } }
+
+        @media (prefers-reduced-motion: reduce) {
+          .vcls-curtain { animation: vcls-curtain-fade .3s ease-out both }
+          @keyframes vcls-curtain-fade { from { opacity: 1 } to { opacity: 0 } }
+        }
+      `}</style>
+      <BrandLogo shimmer={false} />
     </div>
   );
 }

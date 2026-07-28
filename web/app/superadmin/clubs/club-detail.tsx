@@ -9,7 +9,7 @@ import SportSelect from './sport-select';
 import { motion, AnimatePresence, type Variants } from 'framer-motion';
 import {
   ArrowLeft, Pencil, Trash2, X, Check, TrendingUp, CalendarClock,
-  CircleDollarSign, Eye, Upload, RotateCcw, MessageCircle, Info, Power, BadgeCheck, Camera,
+  Eye, Upload, RotateCcw, MessageCircle, Power, BadgeCheck, Camera,
 } from 'lucide-react';
 
 // ── Formateo ────────────────────────────────────────────────────────────────
@@ -195,14 +195,16 @@ function getWhatsAppUrl(club: Club): string {
 interface ClubDetailProps {
   club: Club;
   suscripcion: Suscripcion | null;
+  /** Modulo que se pinta. Lo decide la ruta, no un estado interno: la
+   *  navegacion entre modulos vive en el sidebar. */
+  tab: 'info' | 'finanzas';
   onBack: () => void;
   onReload: () => Promise<void>;
   onDeleted: () => void;
 }
 
-export default function ClubDetail({ club, suscripcion, onBack, onReload, onDeleted }: ClubDetailProps) {
+export default function ClubDetail({ club, suscripcion, tab, onBack, onReload, onDeleted }: ClubDetailProps) {
   const { getToken } = useAuth();
-  const [tab, setTab] = useState<'info' | 'finanzas'>('info');
 
   // ── Estado: edición de club / trial ─────────────────────────────────────
   const [editing, setEditing] = useState(false);
@@ -488,23 +490,8 @@ export default function ClubDetail({ club, suscripcion, onBack, onReload, onDele
         </div>
       </div>
 
-      {/* ── Tabs ── */}
-      <div style={{ display: 'flex', gap: 6, background: 'rgba(120,80,200,0.06)', borderRadius: 14, padding: 4, marginBottom: 16 }}>
-        {([
-          { id: 'info',     label: 'Información', Icon: Info },
-          { id: 'finanzas', label: 'Finanzas',   Icon: CircleDollarSign },
-        ] as const).map(t => {
-          const active = tab === t.id;
-          return (
-            <motion.button key={t.id} onClick={() => setTab(t.id)} whileTap={{ scale: 0.98 }} transition={{ duration: 0.12 }}
-              style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, padding: '9px 0', borderRadius: 10, border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13, fontWeight: 600,
-                background: active ? '#fff' : 'transparent', color: active ? '#7C3AED' : '#8E87A8',
-                boxShadow: active ? '0 2px 8px rgba(124,58,237,0.12)' : 'none', transition: 'color 0.15s' }}>
-              <t.Icon size={15} /> {t.label}
-            </motion.button>
-          );
-        })}
-      </div>
+      {/* Los modulos (Informacion / Finanzas) viven en el sidebar; acá solo se
+          pinta el que la ruta indica. */}
 
       {/* ══════════════ TAB INFORMACIÓN ══════════════ */}
       {tab === 'info' && (

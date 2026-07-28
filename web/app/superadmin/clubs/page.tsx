@@ -10,7 +10,7 @@ import { PhoneInput } from '@/components/ui/phone-input';
 import { motion, AnimatePresence, type Variants } from 'framer-motion';
 import { ChevronRight, ChevronDown, Check, LayoutGrid, Table2, Search } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select';
-import ClubDetail, { type Club, type Suscripcion } from './club-detail';
+import { type Club } from './club-detail';
 import SportSelect from './sport-select';
 
 // ── Easing ────────────────────────────────────────────────────────────────────
@@ -260,11 +260,10 @@ export default function ClubsPage() {
   const now = useNow(30_000);
 
   const [clubs,   setClubs]   = useState<Club[]>([]);
-  const [susMap,  setSusMap]  = useState<Record<string, Suscripcion | null>>({});
   const [loading, setLoading] = useState(true);
   const [error,   setError]   = useState<string | null>(null);
 
-  const [detailId, setDetailId] = useState<string | null>(null);
+  // El detalle del club vive en su propia ruta; abrirlo es navegar, no cambiar estado
   const [view, setView] = useState<'table' | 'cards'>('table');
 
   // Filtros de columnas + búsqueda por nombre
@@ -281,14 +280,10 @@ export default function ClubsPage() {
   async function load(silent = false) {
     try {
       const token = await getToken();
-      const [clubsRes, susRes] = await Promise.all([
-        apiFetch<{ clubs: Club[] }>('/superadmin/clubs', { token }),
-        apiFetch<{ clubs: { id: string; suscripcion: Suscripcion | null }[] }>('/superadmin/suscripciones', { token }),
-      ]);
+      // La lista solo necesita los clubes: las suscripciones las carga ahora la
+      // pantalla del club, que es donde se usan
+      const clubsRes = await apiFetch<{ clubs: Club[] }>('/superadmin/clubs', { token });
       setClubs(clubsRes.clubs);
-      const map: Record<string, Suscripcion | null> = {};
-      for (const c of susRes.clubs) map[c.id] = c.suscripcion;
-      setSusMap(map);
     } catch (e) {
       if (!silent) setError(e instanceof Error ? e.message : 'Error al cargar clubs');
     } finally { setLoading(false); }
@@ -343,24 +338,6 @@ export default function ClubsPage() {
       await load();
     } catch (e) { setError(e instanceof Error ? e.message : 'Error'); }
     finally { setSaving(false); }
-  }
-
-  // ── Vista de detalle ──────────────────────────────────────────────────────
-  const detailClub = detailId ? clubs.find(c => c.id === detailId) : null;
-  if (detailClub) {
-    return (
-      <div style={{ background: '#F7F7FB', minHeight: '100%' }}>
-        <div style={{ padding: '12px 16px 80px', maxWidth: 1100, margin: '0 auto' }}>
-          <ClubDetail
-            club={detailClub}
-            suscripcion={susMap[detailClub.id] ?? null}
-            onBack={() => setDetailId(null)}
-            onReload={load}
-            onDeleted={() => { setDetailId(null); load(); }}
-          />
-        </div>
-      </div>
-    );
   }
 
   const clearFilters = () => { setFilterEstado([]); setFilterPlan('ALL'); setFilterVerif('ALL'); setFilterDeporte('ALL'); setSearch(''); };
@@ -554,7 +531,7 @@ export default function ClubsPage() {
                     const badge = planBadge(club, now);
                     const verif = verificationBadge(club);
                     return (
-                      <tr key={club.id} onClick={() => setDetailId(club.id)}
+                      <tr key={club.id} onClick={() => router.push(`/superadmin/clubs/${club.id}`)}
                         style={{ borderBottom: '1px solid rgba(120,80,200,0.06)', cursor: 'pointer' }}
                         onMouseEnter={e => (e.currentTarget.style.background = 'rgba(124,58,237,0.03)')}
                         onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
@@ -606,7 +583,7 @@ export default function ClubsPage() {
                 <motion.button
                   key={club.id}
                   variants={cardVariant}
-                  onClick={() => setDetailId(club.id)}
+                  onClick={() => router.push(`/superadmin/clubs/${club.id}`)}
                   whileHover={{ y: -2, boxShadow: '0 10px 28px rgba(124,58,237,0.10)' }}
                   whileTap={{ scale: 0.99 }}
                   transition={{ duration: 0.2, ease: EASE }}

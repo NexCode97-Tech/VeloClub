@@ -8,9 +8,10 @@ import { apiFetch } from '@/lib/api-client';
 import LoadingScreen, { LoadingCurtain, CURTAIN_MS, esperarPantallaCarga } from '@/components/ui/loading-screen';
 import Link from 'next/link';
 import Image from 'next/image';
-import { LayoutDashboard, Building2, LogOut, Ticket } from 'lucide-react';
+import { LayoutDashboard, Building2, LogOut, Ticket, Info, CircleDollarSign, ArrowLeft } from 'lucide-react';
 import { IconAjustes } from '@/components/ui/custom-icons';
 import { motion, AnimatePresence } from 'framer-motion';
+import { ClubProvider, useClubActivo, idClubDeRuta, type ClubActivo } from './club-context';
 
 // Config fue fusionado con Perfil (UserButton) — 3 tabs + UserButton = 4 slots
 const TABS = [
@@ -24,6 +25,23 @@ const SCREEN_LABELS: Record<string, string> = {
   '/superadmin/clubs':    'Clubes',
   '/superadmin/cupones':  'Cupones',
 };
+
+// Modulos de un club. Dentro del detalle, estos reemplazan a TABS tanto en el
+// sidebar de escritorio como en la barra inferior de movil.
+const TABS_CLUB = [
+  { slug: '',         label: 'Información', Icon: Info             },
+  { slug: 'finanzas', label: 'Finanzas',    Icon: CircleDollarSign },
+];
+
+function hrefClub(id: string, slug: string): string {
+  return slug ? `/superadmin/clubs/${id}/${slug}` : `/superadmin/clubs/${id}`;
+}
+
+/** El modulo activo se resuelve por el sufijo de la ruta, no por estado. */
+function slugActivo(pathname: string, id: string): string {
+  const resto = pathname.slice(`/superadmin/clubs/${id}`.length).replace(/^\//, '');
+  return resto;
+}
 
 // Ícono SVG por tipo de notificación — sin emojis
 function TipoIcono({ tipo }: { tipo: string }) {
@@ -72,10 +90,12 @@ const ACCENT = '#7C3AED';
 // subárbol, no todo el layout — lo que elimina el INP alto que hacía la
 // animación entrecortada. React.memo evita re-renders cuando el layout padre
 // se actualiza por otras razones (notificaciones, etc.).
-const SuperadminSidebar = memo(function SuperadminSidebar({ pathname, noLeidas, onOpenNotifs }: {
+const SuperadminSidebar = memo(function SuperadminSidebar({ pathname, noLeidas, onOpenNotifs, clubId, clubActivo }: {
   pathname: string;
   noLeidas: number;
   onOpenNotifs: () => void;
+  clubId: string | null;
+  clubActivo: ClubActivo | null;
 }) {
   const { user: clerkUser } = useUser();
   const { signOut } = useClerk();
@@ -181,9 +201,56 @@ const SuperadminSidebar = memo(function SuperadminSidebar({ pathname, noLeidas, 
           <polyline points="15 18 9 12 15 6" />
         </svg>
       </button>
-      {/* Nav */}
+      {/* Nav — dentro de un club muestra sus modulos en vez de la navegacion
+          global, con una salida explicita de vuelta a la lista */}
       <nav className="flex-1 px-2 py-2 space-y-1 overflow-y-auto">
-        {TABS.map(tab => {
+        {clubId ? (
+          <>
+            <Link href="/superadmin/clubs"
+              className="flex items-center gap-3 rounded-xl text-[12px] font-semibold transition-colors hover:bg-secondary"
+              style={{ height: 36, padding: collapsed ? 0 : '0 12px', justifyContent: collapsed ? 'center' : undefined, color: '#8E87A8' }}
+              {...tipHandlers('Volver a clubes')}
+            >
+              <ArrowLeft size={16} className="shrink-0" />
+              {!collapsed && <span>Volver a clubes</span>}
+            </Link>
+
+            {/* Identidad del club: sin esto, los modulos flotan sin decir de
+                quien son */}
+            <div className="flex items-center gap-2.5"
+              style={{ padding: collapsed ? '8px 0' : '10px 12px', justifyContent: collapsed ? 'center' : undefined }}>
+              {clubActivo?.logoUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={clubActivo.logoUrl} alt="" className="shrink-0"
+                  style={{ width: 30, height: 30, borderRadius: '50%', objectFit: 'cover', border: '1px solid rgba(0,0,0,0.06)' }} />
+              ) : (
+                <div className="shrink-0 flex items-center justify-center"
+                  style={{ width: 30, height: 30, borderRadius: '50%', background: 'rgba(124,58,237,0.10)', color: ACCENT, fontSize: 12, fontWeight: 700 }}>
+                  {(clubActivo?.name ?? '?').charAt(0).toUpperCase()}
+                </div>
+              )}
+              {!collapsed && (
+                <p className="text-[13px] font-semibold m-0 truncate" style={{ color: '#1A1028' }}>
+                  {clubActivo?.name ?? 'Cargando'}
+                </p>
+              )}
+            </div>
+
+            {TABS_CLUB.map(m => {
+              const active = slugActivo(pathname, clubId) === m.slug;
+              return (
+                <Link key={m.slug || 'info'} href={hrefClub(clubId, m.slug)}
+                  className={`flex items-center gap-3 rounded-xl text-sm font-semibold transition-colors ${active ? '' : 'hover:bg-secondary'}`}
+                  style={{ height: 44, padding: collapsed ? 0 : '0 12px', justifyContent: collapsed ? 'center' : undefined, color: active ? ACCENT : '#8E87A8', background: active ? 'rgba(124,58,237,0.10)' : undefined }}
+                  {...tipHandlers(m.label)}
+                >
+                  <m.Icon size={18} strokeWidth={active ? 2.5 : 2} className="shrink-0" />
+                  {!collapsed && <span>{m.label}</span>}
+                </Link>
+              );
+            })}
+          </>
+        ) : TABS.map(tab => {
           const active = tab.exact ? pathname === tab.href : pathname.startsWith(tab.href);
           return (
             <Link key={tab.href} href={tab.href}
@@ -270,8 +337,19 @@ const SuperadminSidebar = memo(function SuperadminSidebar({ pathname, noLeidas, 
   );
 });
 
+// El proveedor tiene que envolver al sidebar y al contenido a la vez: el
+// contenido publica el club y el sidebar lo lee.
 export default function SuperadminLayout({ children }: { children: React.ReactNode }) {
+  return <ClubProvider><SuperadminShell>{children}</SuperadminShell></ClubProvider>;
+}
+
+function SuperadminShell({ children }: { children: React.ReactNode }) {
   const pathname  = usePathname();
+  const { clubActivo: publicado } = useClubActivo();
+  const clubId = idClubDeRuta(pathname);
+  // Solo vale el club que corresponde a la ruta actual: al saltar de un club a
+  // otro, el dato del anterior sigue en memoria hasta que el nuevo cargue
+  const clubActivo = publicado && publicado.id === clubId ? publicado : null;
   const router    = useRouter();
   const { isLoaded, isSignedIn, userId, sessionId } = useAuth();
   const { session } = useSession();
@@ -362,7 +440,11 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
 
   if (checking) return <LoadingScreen />;
 
-  const title = SCREEN_LABELS[pathname] ?? 'VeloClub';
+  // Dentro de un club el encabezado lo nombra, que es mas util que repetir
+  // "Clubes" cuando ya estas dentro de uno
+  const title = clubId
+    ? (clubActivo?.name ?? 'Club')
+    : (SCREEN_LABELS[pathname] ?? 'VeloClub');
   const noLeidas = notifs.filter(n => !n.leida).length;
 
   return (
@@ -378,7 +460,7 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
           notificaciones, main). Antes el toggle re-renderizaba el árbol
           completo, causando un INP de ~568ms y que la animación fuera "a
           saltos". */}
-      <SuperadminSidebar pathname={pathname} noLeidas={noLeidas} onOpenNotifs={openNotifs} />
+      <SuperadminSidebar pathname={pathname} noLeidas={noLeidas} onOpenNotifs={openNotifs} clubId={clubId} clubActivo={clubActivo} />
 
       {/* ── Columna de contenido ── */}
       <div className="flex-1 flex flex-col overflow-hidden">
@@ -559,7 +641,38 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
 
       {/* Bottom Tab Nav — glassmorphism, solo móvil */}
       <div className="md:hidden shrink-0 flex justify-center" style={{ padding: '10px 16px 20px', background: 'transparent' }}>
-        {(() => {
+        {clubId ? (
+          // Dentro de un club la barra inferior muestra sus modulos, igual que
+          // el sidebar en escritorio, con la salida de vuelta a la lista
+          <div className="relative flex w-full"
+            style={{
+              background: 'rgba(255,255,255,0.82)',
+              backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
+              borderRadius: 40, padding: '6px 0',
+              border: '1px solid rgba(124,58,237,0.14)',
+              boxShadow: '0 8px 32px rgba(124,58,237,0.13), 0 2px 8px rgba(0,0,0,0.06)',
+            }}
+          >
+            <Link href="/superadmin/clubs" className="flex-1 flex flex-col items-center relative z-10" style={{ gap: 4, paddingBottom: 2 }}>
+              <div className="flex items-center justify-center" style={{ width: 44, height: 44 }}>
+                <ArrowLeft size={24} color="#8E87A8" strokeWidth={1.9} />
+              </div>
+              <span className="text-[9px] tracking-wide leading-none" style={{ color: '#8E87A8', fontWeight: 500 }}>Clubes</span>
+            </Link>
+            {TABS_CLUB.map(m => {
+              const active = slugActivo(pathname, clubId) === m.slug;
+              return (
+                <Link key={m.slug || 'info'} href={hrefClub(clubId, m.slug)}
+                  className="flex-1 flex flex-col items-center relative z-10" style={{ gap: 4, paddingBottom: 2 }}>
+                  <div className="flex items-center justify-center" style={{ width: 44, height: 44, borderRadius: '50%', background: active ? 'linear-gradient(135deg, #7C3AED 0%, #4361EE 55%, #06D6A0 100%)' : 'transparent', boxShadow: active ? '0 4px 20px rgba(124,58,237,0.40)' : 'none' }}>
+                    <m.Icon size={24} color={active ? '#fff' : '#8E87A8'} strokeWidth={active ? 2.2 : 1.9} />
+                  </div>
+                  <span className="text-[9px] tracking-wide leading-none" style={{ color: active ? '#7C3AED' : '#8E87A8', fontWeight: active ? 700 : 500 }}>{m.label}</span>
+                </Link>
+              );
+            })}
+          </div>
+        ) : (() => {
           const activeIdx = TABS.findIndex(t => t.exact ? pathname === t.href : pathname.startsWith(t.href));
           return (
             <div

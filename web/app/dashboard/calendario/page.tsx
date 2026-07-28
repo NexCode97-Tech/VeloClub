@@ -132,6 +132,7 @@ export default function CalendarioPage() {
       </div>
 
       {/* Layout: columna única en móvil, dos columnas en desktop */}
+      {mostrarCarga ? <ModuleLoader /> : (
       <div className="flex flex-col md:flex-row gap-5 md:items-start px-4 pt-4 lg:pt-6 pb-5">
 
         {/* ── Columna izquierda — Calendario ── */}
@@ -218,9 +219,7 @@ export default function CalendarioPage() {
               </span>
             </div>
 
-            {mostrarCarga ? (
-              <ModuleLoader minHeight={150} />
-            ) : selectedEvents.length === 0 ? (
+            { selectedEvents.length === 0 ? (
               <div className="flex flex-col items-center py-6 gap-2">
                 <CalendarDays className="w-8 h-8 text-muted-foreground/30" />
                 <p className="text-[12px] text-muted-foreground">Sin eventos el día {selectedDay}</p>
@@ -259,6 +258,7 @@ export default function CalendarioPage() {
           </div>
         </div>
       </div>
+      )}
     </motion.div>
   );
 }

@@ -401,7 +401,7 @@ export default function FinanzasPage() {
   });
 
   // Sostiene el indicador un mínimo de tiempo para que no parpadee
-  const mostrarCarga = useCargaMinima(loadingFlow && !cashflowData);
+  const mostrarCarga = useCargaMinima(loadingMembers || loadingPay || (loadingFlow && !cashflowData));
 
   const allMembers = membersData?.members  ?? [];
   const payments   = paymentsData?.payments ?? [];
@@ -702,6 +702,7 @@ export default function FinanzasPage() {
         </h1>
       </div>
 
+      {mostrarCarga ? <ModuleLoader /> : (
       <motion.div variants={pageStagger} initial="hidden" animate="show" className="px-4 pt-4 lg:pt-6 flex flex-col gap-4">
 
         {/* Tabs + filtros — una sola fila en desktop */}
@@ -1005,9 +1006,7 @@ export default function FinanzasPage() {
               ))}
             </div>
 
-            {mostrarCarga ? (
-              <ModuleLoader minHeight={220} />
-            ) : entries.length === 0 ? (
+            {entries.length === 0 ? (
               <div className="bg-white border border-border rounded-xl px-4 py-10 text-center">
                 <Wallet className="w-10 h-10 mx-auto mb-3 text-muted-foreground/30" />
                 <p className="text-[13px] font-semibold text-muted-foreground">Sin movimientos este mes</p>
@@ -1072,6 +1071,7 @@ export default function FinanzasPage() {
           </>
         )}
       </motion.div>
+      )}
 
       {/* Modal registrar cobro manual */}
       {/* Modal Tarifa general */}

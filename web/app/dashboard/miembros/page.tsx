@@ -342,6 +342,8 @@ export default function MiembrosPage() {
       {/* ══════════════════════════════════════════════════════════════════
           DESKTOP LAYOUT
       ══════════════════════════════════════════════════════════════════ */}
+      {mostrarCarga ? <ModuleLoader /> : (
+      <>
       <div className="hidden md:flex flex-col h-full">
 
         {/* ── Desktop Header — full-bleed, alineado con la fila del logo en el sidebar ── */}
@@ -741,9 +743,7 @@ export default function MiembrosPage() {
           <Input className="pl-9 bg-white border-border rounded-xl" placeholder="Buscar miembro..." value={search} onChange={e => setSearch(e.target.value)} />
         </motion.div>
 
-        {mostrarCarga ? (
-          <ModuleLoader />
-        ) : filtered.length === 0 ? (
+        {filtered.length === 0 ? (
           <div className="bg-white rounded-xl border border-border p-10 text-center mt-2">
             <Users className="w-10 h-10 text-muted-foreground/30 mx-auto mb-3" />
             <p className="text-sm text-muted-foreground">{search ? 'Sin resultados.' : 'No hay miembros registrados aún.'}</p>
@@ -798,6 +798,8 @@ export default function MiembrosPage() {
           </div>
         )}
       </motion.div>
+      </>
+      )}
 
       {/* ═══════════════════════════════════════════════════════════════════
           NUEVO PANEL — bottom sheet multi-paso

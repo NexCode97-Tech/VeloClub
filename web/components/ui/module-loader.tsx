@@ -18,26 +18,18 @@ const LOGO_H = 41;
  * indicador dura lo que dure la carga real, sin espera artificial.
  */
 export function useCargaMinima(loading: boolean, minMs = 400): boolean {
-  const [visible, setVisible] = useState(loading);
-  const inicioRef = useRef<number | null>(loading ? Date.now() : null);
+  // Arranca visible siempre, aunque los datos ya estén en caché: al cambiar de
+  // módulo el indicador debe aparecer igual, si no la transición se siente
+  // brusca unas veces sí y otras no.
+  const [visible, setVisible] = useState(true);
+  const inicioRef = useRef(Date.now());
 
   useEffect(() => {
-    if (loading) {
-      if (inicioRef.current === null) inicioRef.current = Date.now();
-      setVisible(true);
-      return;
-    }
-    if (inicioRef.current === null) { setVisible(false); return; }
+    // Mientras siga cargando de verdad, el indicador se mantiene
+    if (loading) return;
     const falta = minMs - (Date.now() - inicioRef.current);
-    if (falta <= 0) {
-      inicioRef.current = null;
-      setVisible(false);
-      return;
-    }
-    const t = setTimeout(() => {
-      inicioRef.current = null;
-      setVisible(false);
-    }, falta);
+    if (falta <= 0) { setVisible(false); return; }
+    const t = setTimeout(() => setVisible(false), falta);
     return () => clearTimeout(t);
   }, [loading, minMs]);
 
@@ -51,9 +43,14 @@ export function useCargaMinima(loading: boolean, minMs = 400): boolean {
  */
 export default function ModuleLoader({ minHeight }: { minHeight?: number }) {
   return (
-    <div className="flex flex-col items-center justify-center w-full"
-      style={{ minHeight: minHeight ?? 'min(58vh, 520px)' }}>
+    <div className={`flex flex-col items-center justify-center w-full${minHeight ? '' : ' vcml-box'}`}
+      style={minHeight ? { minHeight } : undefined}>
       <style>{`
+        /* Ocupa el alto visible del área de contenido para quedar centrado de
+           verdad. En móvil se descuenta además la barra de navegación inferior. */
+        .vcml-box { min-height: calc(100dvh - 250px); }
+        @media (min-width: 768px) { .vcml-box { min-height: calc(100dvh - 150px); } }
+
         .vcml { animation: vcml-in .22s cubic-bezier(.23,1,.32,1) both; }
         @keyframes vcml-in { from { opacity: 0 } to { opacity: 1 } }
 

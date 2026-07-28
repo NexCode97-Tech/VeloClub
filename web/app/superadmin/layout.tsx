@@ -5,7 +5,7 @@ import { useAuth, useSession, useUser, useClerk, UserButton } from '@clerk/nextj
 import { useEffect, useState, useRef, useCallback, memo } from 'react';
 import { createPortal } from 'react-dom';
 import { apiFetch } from '@/lib/api-client';
-import LoadingScreen, { LoadingCurtain, APPEAR_DELAY_MS, CURTAIN_MS, esperarPantallaCarga, type LoadStage } from '@/components/ui/loading-screen';
+import LoadingScreen, { LoadingCurtain, CURTAIN_MS, esperarPantallaCarga } from '@/components/ui/loading-screen';
 import Link from 'next/link';
 import Image from 'next/image';
 import { LayoutDashboard, Building2, LogOut, Ticket } from 'lucide-react';
@@ -279,8 +279,6 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
   // Si Clerk ya está listo al montar (viene de redirect del dashboard), no mostrar loading
   const alreadyReady = isLoaded && isSignedIn;
   const [checking, setChecking]       = useState(!alreadyReady);
-  // Etapa real del arranque, para que la pantalla de carga diga qué está pasando
-  const [loadStage, setLoadStage]     = useState<LoadStage>('init');
   // Cortina de salida: se retira hacia la derecha dejando ver el panel ya montado.
   // Si la sesión ya venía lista (alreadyReady) no hubo carga, así que no hay cortina.
   const [curtain, setCurtain]         = useState(!alreadyReady);
@@ -288,7 +286,6 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
 
   useEffect(() => {
     if (checking) return;
-    if (Date.now() - mountedAtRef.current < APPEAR_DELAY_MS) { setCurtain(false); return; }
     const t = setTimeout(() => setCurtain(false), CURTAIN_MS);
     return () => clearTimeout(t);
   }, [checking]);
@@ -306,13 +303,10 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
 
     (async () => {
       try {
-        setLoadStage('auth');
         const token = await session?.getToken({ skipCache: true });
         if (stale) return;
-        setLoadStage('data');
         const res = await apiFetch<{ status: string }>('/me', { token });
         if (stale) return;
-        setLoadStage('sync');
         if (res.status !== 'superadmin') { router.replace('/dashboard'); return; }
         // Sostener la pantalla de carga su tiempo mínimo antes de la cortina
         await esperarPantallaCarga(mountedAtRef.current);
@@ -366,7 +360,7 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
     setNotifs(prev => prev.map(n => ({ ...n, leida: true })));
   }
 
-  if (checking) return <LoadingScreen stage={loadStage} />;
+  if (checking) return <LoadingScreen />;
 
   const title = SCREEN_LABELS[pathname] ?? 'VeloClub';
   const noLeidas = notifs.filter(n => !n.leida).length;

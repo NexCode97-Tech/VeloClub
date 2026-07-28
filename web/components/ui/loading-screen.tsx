@@ -6,35 +6,30 @@ import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 
 // Etapas reales del arranque — cada layout va avisando en cuál va, para que el
 // texto diga lo que de verdad está pasando en vez de rotar mensajes al azar.
-export type LoadStage = 'init' | 'auth' | 'data' | 'sync' | 'retry';
+export type LoadStage = 'init' | 'data' | 'sync' | 'retry';
 
 const STAGE_TEXT: Record<LoadStage, string> = {
   init:  'Alistando tu club',
-  auth:  'Verificando acceso',
   data:  'Cargando tus datos',
-  sync:  'Sincronizando tu información',
+  sync:  'Ya casi está listo',
   retry: 'Reintentando, un momento',
 };
 
-// Con buena conexión las etapas se suceden en pocos milisegundos: sin un mínimo
-// por mensaje el texto parpadearía. Cada uno se sostiene al menos este tiempo.
-const MIN_STAGE_MS = 700;
+// Secuencia fija que siempre se muestra completa al abrir la app, sin depender
+// de qué tan rápido responda el servidor.
+const SEQUENCE: LoadStage[] = ['init', 'data', 'sync'];
 
-// No mostrar la pantalla de inmediato: si la carga es rápida, el usuario no ve
-// nada y la app se siente instantánea, en vez de un destello molesto.
-export const APPEAR_DELAY_MS = 250;
+// Cuánto se sostiene cada mensaje. Es la única perilla para alargar o acortar
+// toda la experiencia de carga: 3 mensajes × este valor + la cortina (~1s).
+// En 950ms el total ronda los 4 segundos.
+export const STAGE_DWELL_MS = 950;
 
-// Si la pantalla ya se mostró, se sostiene al menos este tiempo antes de dar
-// paso a la cortina. Enseñarla y quitarla en un parpadeo se percibe como un
-// error, peor que no haberla mostrado.
-export const MIN_VISIBLE_MS = 900;
+// La pantalla se sostiene hasta que la secuencia termina de reproducirse
+export const MIN_VISIBLE_MS = STAGE_DWELL_MS * SEQUENCE.length;
 
-// Espera lo que falte para cumplir el tiempo mínimo en pantalla. Si nunca llegó
-// a aparecer (carga muy rápida), no espera nada.
+// Espera lo que falte para que la secuencia alcance a mostrarse completa
 export async function esperarPantallaCarga(mountedAt: number): Promise<void> {
-  const visibleMs = Date.now() - mountedAt - APPEAR_DELAY_MS;
-  if (visibleMs < 0) return;
-  const falta = MIN_VISIBLE_MS - visibleMs;
+  const falta = MIN_VISIBLE_MS - (Date.now() - mountedAt);
   if (falta > 0) await new Promise(r => setTimeout(r, falta));
 }
 
@@ -88,41 +83,21 @@ function BrandLogo({ shimmer }: { shimmer: boolean }) {
 }
 
 // ── Pantalla de carga ───────────────────────────────────────────────────────
-export default function LoadingScreen({ stage = 'init' }: { stage?: LoadStage }) {
+export default function LoadingScreen({ retrying = false }: { retrying?: boolean }) {
   const reducedMotion = useReducedMotion();
-  const [visible, setVisible] = useState(false);
 
-  // La etapa que se está mostrando, que puede ir por detrás de la real mientras
-  // se cumple el tiempo mínimo del mensaje anterior.
-  const [shown, setShown] = useState<LoadStage>(stage);
-  const lastChangeRef = useRef<number>(Date.now());
-  // La etapa real más reciente, para leerla dentro del temporizador de aparición
-  const stageRef = useRef<LoadStage>(stage);
-  stageRef.current = stage;
-
-  // Al hacerse visible, mostrar la etapa real de ese momento y arrancar ahí el
-  // conteo del mínimo. Antes el conteo empezaba al montar, así que el primer
-  // mensaje perdía los 250ms de espera y aparecía apenas un instante.
-  useEffect(() => {
-    const t = setTimeout(() => {
-      setVisible(true);
-      setShown(stageRef.current);
-      lastChangeRef.current = Date.now();
-    }, APPEAR_DELAY_MS);
-    return () => clearTimeout(t);
-  }, []);
+  // La secuencia se reproduce siempre completa, con su propio ritmo. No depende
+  // de qué tan rápido responda el servidor: el layout espera a que termine.
+  const [idx, setIdx] = useState(0);
 
   useEffect(() => {
-    if (!visible || stage === shown) return;
-    const restante = Math.max(0, MIN_STAGE_MS - (Date.now() - lastChangeRef.current));
-    const t = setTimeout(() => {
-      setShown(stage);
-      lastChangeRef.current = Date.now();
-    }, restante);
+    if (idx >= SEQUENCE.length - 1) return;
+    const t = setTimeout(() => setIdx(i => i + 1), STAGE_DWELL_MS);
     return () => clearTimeout(t);
-  }, [stage, shown, visible]);
+  }, [idx]);
 
-  if (!visible) return null;
+  // El aviso de servidor saturado se impone sobre la secuencia mientras dure
+  const shown: LoadStage = retrying ? 'retry' : SEQUENCE[idx];
 
   return (
     <div

@@ -163,6 +163,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   // Cortina de salida: se retira hacia la derecha dejando ver el dashboard ya montado
   const [curtain, setCurtain] = useState(true);
   const mountedAtRef = useRef(Date.now());
+  // La espera de la pantalla de carga ocurre una sola vez, en el arranque.
+  // Con un ref (y no con meRefresh) queda garantizada aunque el efecto se
+  // vuelva a ejecutar por cualquier motivo.
+  const esperaHechaRef = useRef(false);
   const [masMenuOpen, setMasMenuOpen] = useState(false);
   // Tooltip del sidebar colapsado (etiqueta con el nombre del módulo al hacer hover)
   const [navTip, setNavTip] = useState<{ label: string; top: number; left: number } | null>(null);
@@ -206,12 +210,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const clerkFullName = clerkUser?.fullName ?? null;
   const clerkSnapshotRef = useRef<string | null>(null);
   useEffect(() => {
+    // Durante el arranque no cuenta como cambio: Clerk hidrata el usuario
+    // después del primer render y eso disparaba un refresco que reejecutaba la
+    // verificación saltándose la espera, cortando la pantalla de carga.
+    if (checking) return;
     const snapshot = `${clerkImage}|${clerkFullName}`;
     if (clerkSnapshotRef.current !== null && clerkSnapshotRef.current !== snapshot) {
       setMeRefresh(k => k + 1);
     }
     clerkSnapshotRef.current = snapshot;
-  }, [clerkImage, clerkFullName]);
+  }, [clerkImage, clerkFullName, checking]);
 
   // Rastrea la profundidad de navegación del sidebar (0 = nav principal,
   // 1 = sub-menú de un módulo) para animar la dirección del deslizamiento.
@@ -294,9 +302,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           if (blocked) { router.replace('/dashboard'); return; }
         }
 
-        // Sostener la pantalla de carga su tiempo mínimo antes de la cortina.
-        // Si nunca alcanzó a aparecer, no espera nada.
-        if (meRefresh === 0) await esperarPantallaCarga(mountedAtRef.current);
+        // Sostener la pantalla de carga hasta que la secuencia termine
+        if (!esperaHechaRef.current) {
+          esperaHechaRef.current = true;
+          await esperarPantallaCarga(mountedAtRef.current);
+        }
         if (stale) return;
         setChecking(false);
       } catch (err) {

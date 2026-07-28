@@ -368,20 +368,21 @@ export default function SedesPage() {
         )}
         {mostrarCarga ? (
           <ModuleLoader />
-        ) : (
-        <ModuleReveal>
-        {locations.length === 0 ? (
-          <motion.div variants={cardVariant} className="bg-card border border-border rounded-xl p-10 text-center">
+        ) : locations.length === 0 ? (
+          <ModuleReveal>
+          <div className="bg-card border border-border rounded-xl p-10 text-center">
             <MapPin className="w-10 h-10 text-muted-foreground/30 mx-auto mb-3" />
             <p className="text-sm text-muted-foreground">No hay sedes registradas aun.</p>
             <button onClick={openNew} className="mt-4 px-4 py-2 rounded-xl text-sm font-semibold border border-border text-muted-foreground hover:bg-secondary transition-colors">
               Agregar primera sede
             </button>
-          </motion.div>
+          </div>
+          </ModuleReveal>
         ) : (
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
+            <ModuleReveal>
             {locations.map(loc => (
-              <motion.div variants={cardVariant} key={loc.id} className="bg-card border border-border rounded-xl overflow-hidden flex flex-col">
+              <div key={loc.id} className="bg-card border border-border rounded-xl overflow-hidden flex flex-col">
                 <div className="flex items-start justify-between px-4 py-4">
                   <div className="flex items-start gap-3 flex-1 min-w-0">
                     <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 mt-0.5" style={{ background: 'rgba(6,214,160,0.12)' }}>
@@ -422,11 +423,10 @@ export default function SedesPage() {
                     />
                   </div>
                 )}
-              </motion.div>
+              </div>
             ))}
+            </ModuleReveal>
           </div>
-        )}
-        </ModuleReveal>
         )}
       </motion.div>
     </div>

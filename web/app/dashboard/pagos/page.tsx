@@ -528,16 +528,17 @@ export default function PagosPage() {
         {/* Lista */}
         {mostrarCarga ? (
           <ModuleLoader />
-        ) : (
-        <ModuleReveal>
-        {filtered.length === 0 ? (
+        ) : filtered.length === 0 ? (
+          <ModuleReveal>
           <div className="bg-white border border-border rounded-xl px-4 py-10 text-center">
             <IconMisPagos className="w-10 h-10 mx-auto mb-3 text-muted-foreground/30" />
             <p className="text-[13px] font-semibold text-muted-foreground">Sin pagos registrados</p>
             <p className="text-[11px] text-muted-foreground mt-1">Registra el primer pago del mes</p>
           </div>
+          </ModuleReveal>
         ) : (
           <div className="space-y-2 pb-4">
+            <ModuleReveal>
             {filtered.map(p => {
               const sc = STATUS_COLORS[p.status] ?? STATUS_COLORS.PENDING;
               const StatusIcon = sc.icon;
@@ -581,9 +582,8 @@ export default function PagosPage() {
                 </div>
               );
             })}
+            </ModuleReveal>
           </div>
-        )}
-        </ModuleReveal>
         )}
       </motion.div>
 

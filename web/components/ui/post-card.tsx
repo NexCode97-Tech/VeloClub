@@ -215,10 +215,17 @@ export function PostCard({ post, currentUserId, onLike, onComment, canDelete, on
         </div>
       )}
 
-      {/* Lightbox — portal para escapar del transform de Framer Motion */}
-      {lightbox && typeof document !== 'undefined' && createPortal(
+      {/* Lightbox — portal para escapar del transform de Framer Motion.
+          La condicion va DENTRO de AnimatePresence, no afuera: si envuelve al
+          portal, al cerrar se desmonta el AnimatePresence completo de golpe y
+          la animacion de salida y el borrado de React compiten por los mismos
+          nodos. Eso produce el "removeChild: the node to be removed is not a
+          child of this node" que se repite en /dashboard. */}
+      {typeof document !== 'undefined' && createPortal(
         <AnimatePresence>
+          {lightbox && (
           <motion.div
+            key="lightbox"
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             transition={{ duration: 0.18 }}
             className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
@@ -246,6 +253,7 @@ export function PostCard({ post, currentUserId, onLike, onComment, canDelete, on
               </button>
             </motion.div>
           </motion.div>
+          )}
         </AnimatePresence>,
         document.body
       )}

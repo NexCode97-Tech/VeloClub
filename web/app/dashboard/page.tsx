@@ -3,7 +3,7 @@
 import { useAuth, useSession } from '@clerk/nextjs';
 import { useClubStream } from '@/hooks/useClubStream';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState, useCallback, useRef, useLayoutEffect } from 'react';
+import { useEffect, useState, useCallback, useRef, useLayoutEffect, Fragment } from 'react';
 import { createPortal } from 'react-dom';
 import { apiFetch } from '@/lib/api-client';
 import Link from 'next/link';
@@ -425,10 +425,17 @@ function PostCard({
             </button>
           )}
 
-          {/* Popover de likes — renderizado en portal para evitar overflow clipping */}
-          {showLikesPopover && popoverPos && typeof document !== 'undefined' && createPortal(
+          {/* Popover de likes — en portal para evitar el recorte por overflow.
+              La condicion va DENTRO de AnimatePresence: envolviendo al portal,
+              al cerrar se desmontaba todo de golpe y la animacion de salida
+              competia con el borrado de React sobre los mismos nodos, que es lo
+              que produce el "removeChild" repetido en /dashboard. Los hijos
+              ademas necesitan key propia; un fragmento sin claves impide que
+              AnimatePresence los siga. */}
+          {typeof document !== 'undefined' && createPortal(
             <AnimatePresence>
-              <>
+              {showLikesPopover && popoverPos && (
+              <Fragment key="likes-popover">
                 <div className="fixed inset-0 z-[9998]" onClick={() => setShowLikesPopover(false)} />
                 <motion.div
                   initial={{ opacity: 0, scale: 0.93, y: -6 }}
@@ -469,7 +476,8 @@ function PostCard({
                     </div>
                   )}
                 </motion.div>
-              </>
+              </Fragment>
+              )}
             </AnimatePresence>,
             document.body
           )}

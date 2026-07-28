@@ -47,9 +47,43 @@ export interface Club {
   verificationStatus?: 'PENDING' | 'VERIFIED' | 'REJECTED';
   nameFlagged?: boolean;
   city?: string | null; department?: string | null; memberCountApprox?: number | null;
+  // Contacto propio del club, distinto al del administrador
+  phone?: string | null; email?: string | null; description?: string | null;
+  // Trazabilidad de la revision y motivo si se rechazo
+  reviewedAt?: string | null; rejectionReason?: string | null;
+  // Por que el club esta como esta: desactivado por falta de pago (se reactiva
+  // solo al pagar) o activado a mano por el superadmin pese al vencimiento
+  desactivadoPorVencimiento?: boolean; activadoManualmente?: boolean;
   _count: { members: number };
   users: { email: string; name: string }[];
   suscripcion?: { tipoPlan: string; planMonto: number } | null;
+}
+
+function fechaLarga(iso: string): string {
+  return new Date(iso).toLocaleDateString('es-CO', { day: 'numeric', month: 'long', year: 'numeric' });
+}
+
+function TituloBloque({ children }: { children: React.ReactNode }) {
+  return (
+    <p style={{ margin: '6px 0 0', paddingTop: 10, borderTop: '1px solid rgba(120,80,200,0.08)', fontSize: 10, fontWeight: 600, color: '#B4AFC7', letterSpacing: '0.04em' }}>
+      {children}
+    </p>
+  );
+}
+
+/** Filas etiqueta/valor. `tenue` marca los datos que aún no existen, para que
+ *  no compitan visualmente con los que sí tienen contenido. */
+function FilasDato({ filas }: { filas: { label: string; value: string; tenue?: boolean }[] }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+      {filas.map(f => (
+        <div key={f.label} style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 14 }}>
+          <span style={{ fontSize: 12, color: '#8E87A8', fontWeight: 500, flexShrink: 0 }}>{f.label}</span>
+          <span style={{ fontSize: 13, color: f.tenue ? '#C4BFD8' : '#1A1028', fontWeight: f.tenue ? 500 : 600, textAlign: 'right', wordBreak: 'break-word' }}>{f.value}</span>
+        </div>
+      ))}
+    </div>
+  );
 }
 
 // ── Constantes ──────────────────────────────────────────────────────────────
@@ -457,6 +491,7 @@ export default function ClubDetail({ club, suscripcion, tab, onReload, onDeleted
   // Solo se considera plan real cuando hay al menos un abono pagado
   const tienePagos = pagos.some(p => p.estado === 'PAID');
   const montoPlanTexto = fmt.format(monto);
+  const ubicacion = [club.city, club.department].filter(Boolean).join(', ') || 'Sin registrar';
 
   return (
     <motion.div initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.28, ease: EASE }}>
@@ -595,20 +630,39 @@ export default function ClubDetail({ club, suscripcion, tab, onReload, onDeleted
                 </div>
               </motion.div>
             ) : (
+              /* Agrupado en bloques y no como una lista plana: diez filas
+                 seguidas obligan a leerlas todas para encontrar un dato. El
+                 administrador y su correo no aparecen aca, viven en la tarjeta
+                 de admins y entrenadores, que ademas los muestra a todos. */
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                {/* El administrador y su correo no se repiten aca: viven en la
-                    tarjeta de admins y entrenadores, que ademas los muestra
-                    todos y no solo al primero */}
-                {[
-                  { label: 'Deporte', value: club.deporte ?? 'Sin especificar' },
-                  { label: 'Miembros', value: `${club._count.members} miembro${club._count.members !== 1 ? 's' : ''}` },
-                  { label: 'Creado', value: new Date(club.createdAt).toLocaleDateString('es-CO', { day: 'numeric', month: 'long', year: 'numeric' }) },
-                ].map(row => (
-                  <div key={row.label} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-                    <span style={{ fontSize: 12, color: '#8E87A8', fontWeight: 500, flexShrink: 0 }}>{row.label}</span>
-                    <span style={{ fontSize: 13, color: '#1A1028', fontWeight: 600, textAlign: 'right', wordBreak: 'break-word' }}>{row.value}</span>
-                  </div>
-                ))}
+                <FilasDato filas={[
+                  { label: 'Deporte',   value: club.deporte ?? 'Sin especificar' },
+                  { label: 'Ubicación', value: ubicacion },
+                  { label: 'Miembros',  value: `${club._count.members} miembro${club._count.members !== 1 ? 's' : ''}` },
+                  ...(club.memberCountApprox
+                    ? [{ label: 'Declarados al registrarse', value: `${club.memberCountApprox} aprox.` }]
+                    : []),
+                  { label: 'Creado',    value: fechaLarga(club.createdAt) },
+                ]} />
+
+                <TituloBloque>Contacto del club</TituloBloque>
+                <FilasDato filas={[
+                  { label: 'Teléfono', value: club.phone ?? 'Sin registrar', tenue: !club.phone },
+                  { label: 'Correo',   value: club.email ?? 'Sin registrar', tenue: !club.email },
+                ]} />
+
+                <TituloBloque>Estado</TituloBloque>
+                <FilasDato filas={[
+                  ...(club.trialEndsAt
+                    ? [{ label: 'Prueba vence', value: fechaLarga(club.trialEndsAt) }]
+                    : []),
+                  ...(club.reviewedAt
+                    ? [{ label: club.verificationStatus === 'REJECTED' ? 'Rechazado' : 'Verificado', value: fechaLarga(club.reviewedAt) }]
+                    : []),
+                  ...(club.trialEndsAt || club.reviewedAt
+                    ? []
+                    : [{ label: 'Revisión', value: 'Sin revisar aún', tenue: true }]),
+                ]} />
               </div>
             )}
           </div>
@@ -681,6 +735,36 @@ export default function ClubDetail({ club, suscripcion, tab, onReload, onDeleted
           {/* Acciones del club */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 14 }}>
             {/* Verificación (cola de clubes auto-registrados) */}
+            {/* Por que el club esta como esta. No va como fila de la tarjeta
+                porque un "Sí" al lado de una etiqueta no explica nada: lo util
+                es la consecuencia, y solo aparece cuando de verdad aplica. */}
+            {!club.active && club.desactivadoPorVencimiento && (
+              <div style={{ background: 'rgba(255,183,3,0.08)', border: '1px solid rgba(255,183,3,0.28)', borderRadius: 12, padding: 12 }}>
+                <p style={{ margin: 0, fontSize: 12, color: '#B88A00', lineHeight: 1.5 }}>
+                  Inactivo porque venció el pago, no por una decisión manual. Al registrar un abono se reactiva solo.
+                </p>
+              </div>
+            )}
+            {club.active && club.activadoManualmente && (
+              <div style={{ background: 'rgba(67,97,238,0.06)', border: '1px solid rgba(67,97,238,0.22)', borderRadius: 12, padding: 12 }}>
+                <p style={{ margin: 0, fontSize: 12, color: '#3651C7', lineHeight: 1.5 }}>
+                  Activado manualmente. Seguirá activo aunque venza el pago, hasta que se registre un abono o se desactive a mano.
+                </p>
+              </div>
+            )}
+            {club.verificationStatus === 'REJECTED' && club.rejectionReason && (
+              <div style={{ background: 'rgba(239,71,111,0.06)', border: '1px solid rgba(239,71,111,0.20)', borderRadius: 12, padding: 12 }}>
+                <p style={{ margin: '0 0 3px', fontSize: 10, fontWeight: 600, color: '#EF476F', letterSpacing: '0.04em' }}>MOTIVO DEL RECHAZO</p>
+                <p style={{ margin: 0, fontSize: 12, color: '#B23A5B', lineHeight: 1.5 }}>{club.rejectionReason}</p>
+              </div>
+            )}
+            {club.description && (
+              <div style={{ background: '#fff', border: '1px solid rgba(120,80,200,0.10)', borderRadius: 12, padding: 12 }}>
+                <p style={{ margin: '0 0 4px', fontSize: 10, fontWeight: 600, color: '#B4AFC7', letterSpacing: '0.04em' }}>DESCRIPCIÓN</p>
+                <p style={{ margin: 0, fontSize: 12, color: '#5A5278', lineHeight: 1.55 }}>{club.description}</p>
+              </div>
+            )}
+
             {club.verificationStatus === 'PENDING' && (
               <div style={{ background: 'rgba(255,183,3,0.08)', border: '1px solid rgba(255,183,3,0.28)', borderRadius: 12, padding: 12 }}>
                 <p style={{ margin: '0 0 8px', fontSize: 12, fontWeight: 600, color: '#B88A00' }}>

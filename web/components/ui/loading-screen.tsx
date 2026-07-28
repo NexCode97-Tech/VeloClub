@@ -19,12 +19,16 @@ const STAGE_TEXT: Record<LoadStage, string> = {
 // de qué tan rápido responda el servidor.
 const SEQUENCE: LoadStage[] = ['init', 'data', 'sync'];
 
-// Cuánto se sostiene cada mensaje. Los 3 mensajes ocupan 3s y la cortina cierra
-// con ~1s: la experiencia completa dura 4 segundos exactos.
-export const STAGE_DWELL_MS = 1000;
+// Cuánto dura la secuencia de mensajes. La cortina NO cuenta acá: entra después
+// de estos 4 segundos, así que la experiencia completa ronda los 5s.
+// Esta es la única perilla para alargar o acortar la carga.
+export const SEQUENCE_TOTAL_MS = 4000;
+
+// Reparto del tiempo entre los mensajes de la secuencia
+export const STAGE_DWELL_MS = Math.round(SEQUENCE_TOTAL_MS / SEQUENCE.length);
 
 // La pantalla se sostiene hasta que la secuencia termina de reproducirse
-export const MIN_VISIBLE_MS = STAGE_DWELL_MS * SEQUENCE.length;
+export const MIN_VISIBLE_MS = SEQUENCE_TOTAL_MS;
 
 // Espera lo que falte para que la secuencia alcance a mostrarse completa
 export async function esperarPantallaCarga(mountedAt: number): Promise<void> {

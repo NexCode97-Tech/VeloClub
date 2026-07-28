@@ -79,7 +79,6 @@ export default function ClubScreen({ id, tab }: { id: string; tab: 'info' | 'fin
           club={club}
           suscripcion={sus}
           tab={tab}
-          onBack={volver}
           onReload={load}
           onDeleted={volver}
         />

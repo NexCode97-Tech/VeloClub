@@ -8,7 +8,7 @@ import { PhoneInput } from '@/components/ui/phone-input';
 import SportSelect from './sport-select';
 import { motion, AnimatePresence, type Variants } from 'framer-motion';
 import {
-  ArrowLeft, Pencil, Trash2, X, Check, TrendingUp, CalendarClock,
+Pencil, Trash2, X, Check, TrendingUp, CalendarClock,
   Eye, Upload, RotateCcw, MessageCircle, Power, BadgeCheck, Camera,
 } from 'lucide-react';
 
@@ -198,12 +198,13 @@ interface ClubDetailProps {
   /** Modulo que se pinta. Lo decide la ruta, no un estado interno: la
    *  navegacion entre modulos vive en el sidebar. */
   tab: 'info' | 'finanzas';
-  onBack: () => void;
   onReload: () => Promise<void>;
   onDeleted: () => void;
 }
 
-export default function ClubDetail({ club, suscripcion, tab, onBack, onReload, onDeleted }: ClubDetailProps) {
+// Volver a la lista es tarea del sidebar y de la barra inferior en movil, asi
+// que el contenido ya no lleva su propio boton de volver.
+export default function ClubDetail({ club, suscripcion, tab, onReload, onDeleted }: ClubDetailProps) {
   const { getToken } = useAuth();
 
   // ── Estado: edición de club / trial ─────────────────────────────────────
@@ -450,43 +451,58 @@ export default function ClubDetail({ club, suscripcion, tab, onBack, onReload, o
   const pctColor = vencido ? '#EF476F' : pct >= 50 ? '#06D6A0' : pct >= 20 ? '#FFB703' : '#EF476F';
   const pb       = PLAN_BADGE[tipo];
   const trial    = !suscripcion ? trialInfo(club.createdAt, club.trialEndsAt) : null;
-  const admin    = club.users[0];
 
   return (
     <motion.div initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.28, ease: EASE }}>
-      {/* ── Botón volver ── */}
-      <motion.button onClick={onBack} whileTap={{ scale: 0.96 }}
-        style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', color: '#7C3AED', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', padding: '0 0 12px' }}>
-        <ArrowLeft size={16} /> Volver a clubs
-      </motion.button>
+      {/* ── Franja de estado ──
+          El nombre y el logo ya viven en el sidebar y en el titulo, asi que
+          esta franja no los repite: solo trae lo que no esta en ningun otro
+          lado, que es el estado del club y las acciones sobre el. El logo se
+          conserva pequeño porque es el control para cambiarlo. */}
+      <div style={{ background: '#fff', border: '1px solid rgba(120,80,200,0.10)', borderRadius: 16, padding: '10px 12px', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+        <label
+          title="Cambiar logo del club"
+          style={{ position: 'relative', width: 34, height: 34, borderRadius: '50%', background: 'rgba(124,58,237,0.10)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: '#7C3AED', fontFamily: 'inherit', flexShrink: 0, overflow: 'hidden', cursor: uploadingLogo ? 'wait' : 'pointer' }}>
+          {club.logoUrl ? <img src={club.logoUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : club.name.charAt(0).toUpperCase()}
+          <span style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: 'rgba(26,16,40,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', opacity: uploadingLogo ? 1 : 0, transition: 'opacity 0.18s' }}
+            onMouseEnter={e => { if (!uploadingLogo) e.currentTarget.style.opacity = '1'; }}
+            onMouseLeave={e => { if (!uploadingLogo) e.currentTarget.style.opacity = '0'; }}>
+            {uploadingLogo
+              ? <div className="w-3 h-3 rounded-full border-2 border-white border-t-transparent animate-spin" />
+              : <Camera size={13} />}
+          </span>
+          <input type="file" accept="image/*" onChange={handleLogoChange} disabled={uploadingLogo} style={{ display: 'none' }} />
+        </label>
 
-      {/* ── Encabezado del club ── */}
-      <div style={{ background: '#fff', border: '1px solid rgba(120,80,200,0.10)', borderRadius: 20, padding: '18px 16px', marginBottom: 14, boxShadow: '0 1px 8px rgba(0,0,0,0.04)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-          <label
-            title="Cambiar logo del club"
-            style={{ position: 'relative', width: 56, height: 56, borderRadius: '50%', background: suscripcion ? pb.bg : trial ? trial.bg : 'rgba(124,58,237,0.10)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, fontWeight: 800, color: suscripcion ? pb.color : trial ? trial.color : '#7C3AED', fontFamily: 'inherit', flexShrink: 0, overflow: 'hidden', cursor: uploadingLogo ? 'wait' : 'pointer' }}>
-            {club.logoUrl ? <img src={club.logoUrl} alt={club.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : club.name.charAt(0).toUpperCase()}
-            {/* Overlay de cámara — cambia el logo del club desde el superadmin */}
-            <span style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: 'rgba(26,16,40,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', opacity: uploadingLogo ? 1 : 0, transition: 'opacity 0.18s' }}
-              onMouseEnter={e => { if (!uploadingLogo) e.currentTarget.style.opacity = '1'; }}
-              onMouseLeave={e => { if (!uploadingLogo) e.currentTarget.style.opacity = '0'; }}>
-              {uploadingLogo
-                ? <div className="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
-                : <Camera size={18} />}
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+          <span style={{ fontSize: 10, fontWeight: 600, padding: '3px 9px', borderRadius: 99, background: club.active ? 'rgba(6,214,160,0.12)' : 'rgba(239,71,111,0.12)', color: club.active ? '#06D6A0' : '#EF476F' }}>
+            {club.active ? 'Activo' : 'Inactivo'}
+          </span>
+          {suscripcion && <span style={{ fontSize: 10, fontWeight: 600, padding: '3px 9px', borderRadius: 99, background: pb.bg, color: pb.color }}>{pb.label}</span>}
+          {trial && <span style={{ fontSize: 10, fontWeight: 600, padding: '3px 9px', borderRadius: 99, background: trial.bg, color: trial.color }}>{trial.label}</span>}
+          {club.verificationStatus === 'VERIFIED' && (
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10, fontWeight: 600, padding: '3px 9px', borderRadius: 99, background: 'rgba(6,214,160,0.12)', color: '#06D6A0' }}>
+              <BadgeCheck size={11} /> Verificado
             </span>
-            <input type="file" accept="image/*" onChange={handleLogoChange} disabled={uploadingLogo} style={{ display: 'none' }} />
-          </label>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <p style={{ margin: '0 0 5px', fontSize: 18, fontWeight: 600, color: '#1A1028', fontFamily: 'inherit', lineHeight: 1.2, wordBreak: 'break-word' }}>{club.name}</p>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-              <span style={{ fontSize: 9, fontWeight: 600, padding: '2px 8px', borderRadius: 99, background: club.active ? 'rgba(6,214,160,0.12)' : 'rgba(239,71,111,0.12)', color: club.active ? '#06D6A0' : '#EF476F' }}>
-                {club.active ? 'Activo' : 'Inactivo'}
-              </span>
-              {suscripcion && <span style={{ fontSize: 9, fontWeight: 600, padding: '2px 8px', borderRadius: 99, background: pb.bg, color: pb.color }}>{pb.label}</span>}
-              {trial && <span style={{ fontSize: 9, fontWeight: 600, padding: '2px 8px', borderRadius: 99, background: trial.bg, color: trial.color }}>{trial.label}</span>}
-            </div>
-          </div>
+          )}
+        </div>
+
+        {/* Acciones. Antes ocupaban el ancho completo abajo, lo que le daba a
+            "Eliminar club" mas peso visual que a cualquier dato de la pantalla. */}
+        <div style={{ display: 'flex', gap: 6, marginLeft: 'auto' }}>
+          <motion.a href={getWhatsAppUrl(club)} target="_blank" rel="noopener noreferrer" whileTap={{ scale: 0.96 }}
+            title="Enviar recordatorio por WhatsApp"
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 11px', borderRadius: 10, background: 'rgba(37,211,102,0.08)', border: '1px solid rgba(37,211,102,0.28)', color: '#1BA147', textDecoration: 'none', fontSize: 11, fontWeight: 600, fontFamily: 'inherit' }}>
+            <MessageCircle size={13} /> Recordatorio
+          </motion.a>
+          <motion.button onClick={toggleActive} whileTap={{ scale: 0.96 }}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 11px', borderRadius: 10, border: '1px solid rgba(120,80,200,0.14)', background: 'transparent', color: '#6B6580', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+            <Power size={13} /> {club.active ? 'Desactivar' : 'Activar'}
+          </motion.button>
+          <motion.button onClick={deleteClub} whileTap={{ scale: 0.96 }}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 11px', borderRadius: 10, border: '1px solid rgba(239,71,111,0.20)', background: 'transparent', color: '#EF476F', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+            <Trash2 size={13} /> Eliminar
+          </motion.button>
         </div>
       </div>
 
@@ -563,9 +579,10 @@ export default function ClubDetail({ club, suscripcion, tab, onBack, onReload, o
               </motion.div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {/* El administrador y su correo no se repiten aca: viven en la
+                    tarjeta de admins y entrenadores, que ademas los muestra
+                    todos y no solo al primero */}
                 {[
-                  { label: 'Administrador', value: admin?.name ?? '—' },
-                  { label: 'Email', value: admin?.email ?? '—' },
                   { label: 'Deporte', value: club.deporte ?? 'Sin especificar' },
                   { label: 'Miembros', value: `${club._count.members} miembro${club._count.members !== 1 ? 's' : ''}` },
                   { label: 'Creado', value: new Date(club.createdAt).toLocaleDateString('es-CO', { day: 'numeric', month: 'long', year: 'numeric' }) },
@@ -664,31 +681,14 @@ export default function ClubDetail({ club, suscripcion, tab, onBack, onReload, o
                 </div>
               </div>
             )}
-            {club.verificationStatus === 'VERIFIED' && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 12, fontWeight: 600, color: '#06D6A0' }}>
-                <BadgeCheck size={15} /> Club verificado
-              </div>
-            )}
+            {/* Verificado ya se comunica con el badge de la franja de arriba,
+                asi que aca solo quedan los estados que piden una decision */}
             {club.verificationStatus === 'REJECTED' && (
               <motion.button onClick={verificarClub} whileTap={{ scale: 0.97 }}
                 style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, padding: '10px 0', borderRadius: 10, border: '1px solid rgba(120,80,200,0.14)', background: 'transparent', color: '#6B6580', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
                 <BadgeCheck size={14} /> Rechazado — verificar de todos modos
               </motion.button>
             )}
-            <motion.a href={getWhatsAppUrl(club)} target="_blank" rel="noopener noreferrer" whileTap={{ scale: 0.98 }}
-              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px 0', borderRadius: 12, background: 'rgba(37,211,102,0.08)', border: '1px solid rgba(37,211,102,0.28)', color: '#1BA147', textDecoration: 'none', fontSize: 12, fontWeight: 600, fontFamily: 'inherit' }}>
-              <MessageCircle size={15} /> Enviar recordatorio por WhatsApp
-            </motion.a>
-            <div style={{ display: 'flex', gap: 8 }}>
-              <motion.button onClick={toggleActive} whileTap={{ scale: 0.97 }}
-                style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, padding: '11px 0', borderRadius: 12, border: '1px solid rgba(120,80,200,0.14)', background: 'transparent', color: '#6B6580', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
-                <Power size={14} /> {club.active ? 'Desactivar' : 'Activar'}
-              </motion.button>
-              <motion.button onClick={deleteClub} whileTap={{ scale: 0.97 }}
-                style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, padding: '11px 0', borderRadius: 12, border: '1px solid rgba(239,71,111,0.20)', background: 'rgba(239,71,111,0.05)', color: '#EF476F', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
-                <Trash2 size={14} /> Eliminar club
-              </motion.button>
-            </div>
           </div>
         </motion.div>
       )}
@@ -697,11 +697,16 @@ export default function ClubDetail({ club, suscripcion, tab, onBack, onReload, o
       {tab === 'finanzas' && (
         <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.22, ease: EASE }}>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
+          {/* El plan mide siempre lo mismo y el historial crece sin limite, asi
+              que van uno debajo del otro y no en dos columnas: en columnas, el
+              historial se estiraba solo y dejaba media pantalla vacia al lado. */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
 
           {/* Plan y vigencia */}
           <div style={{ background: '#fff', border: '1px solid rgba(120,80,200,0.10)', borderRadius: 18, padding: '16px', boxShadow: '0 1px 8px rgba(0,0,0,0.04)' }}>
-            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
+            {/* A lo ancho, el porcentaje pegado al borde derecho quedaria
+                lejisimos del plan. En columnas ambos se leen juntos. */}
+            <div className="flex flex-col sm:flex-row sm:items-start" style={{ gap: 16 }}>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <p style={{ margin: '0 0 8px', fontSize: 12, fontWeight: 600, color: '#7C3AED', letterSpacing: '0.02em' }}>Plan de suscripción</p>
                 {editPlan ? (
@@ -732,10 +737,18 @@ export default function ClubDetail({ club, suscripcion, tab, onBack, onReload, o
               </div>
 
               {suscripcion && (
-                <div style={{ textAlign: 'center', flexShrink: 0 }}>
-                  <p style={{ margin: 0, fontSize: 28, fontWeight: 800, color: pctColor, fontFamily: 'inherit', lineHeight: 1 }}>{pct}%</p>
-                  <p style={{ margin: '2px 0 0', fontSize: 9, fontWeight: 600, color: pctColor, whiteSpace: 'nowrap' }}>{vencido ? 'Vencido' : vig ? `${vig.diasRestantes}d restantes` : ''}</p>
-                </div>
+                <>
+                  <div style={{ flexShrink: 0, minWidth: 92 }}>
+                    <p style={{ margin: '0 0 6px', fontSize: 11, fontWeight: 500, color: '#8E87A8' }}>Vigencia</p>
+                    <p style={{ margin: 0, fontSize: 24, fontWeight: 800, color: pctColor, fontFamily: 'inherit', lineHeight: 1 }}>{pct}%</p>
+                  </div>
+                  <div style={{ flexShrink: 0, minWidth: 108 }}>
+                    <p style={{ margin: '0 0 6px', fontSize: 11, fontWeight: 500, color: '#8E87A8' }}>Estado</p>
+                    <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: pctColor, fontFamily: 'inherit', lineHeight: 1.2 }}>
+                      {vencido ? 'Vencido' : vig ? `${vig.diasRestantes} días restantes` : '—'}
+                    </p>
+                  </div>
+                </>
               )}
             </div>
 
@@ -772,6 +785,7 @@ export default function ClubDetail({ club, suscripcion, tab, onBack, onReload, o
               <motion.div variants={stagger} initial="hidden" animate="show" style={{ display: 'flex', flexDirection: 'column' }}>
                 {pagos.map((p, i) => {
                   const st = ESTADO[p.estado];
+                  const montoTexto = fmt.format(p.monto);
                   return (
                     <motion.div key={p.id} variants={fadeUp}>
                       <AnimatePresence mode="wait">
@@ -807,17 +821,26 @@ export default function ClubDetail({ club, suscripcion, tab, onBack, onReload, o
                           <motion.div key="row" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }}
                             style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 0', borderTop: i > 0 ? '1px solid rgba(120,80,200,0.08)' : 'none' }}>
                             <div style={{ width: 8, height: 8, borderRadius: '50%', background: st.color, flexShrink: 0 }} />
+                            {/* A lo ancho, fecha, monto y estado se alinean en
+                                columnas fijas y la lista se lee de arriba abajo
+                                sin saltar de posicion en cada fila */}
                             <div style={{ flex: 1, minWidth: 0 }}>
                               <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: '#1A1028', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.concepto}</p>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 2 }}>
-                                <CalendarClock size={9} color="#8E87A8" />
-                                <span style={{ fontSize: 10, color: '#8E87A8' }}>{p.fecha ? new Date(p.fecha).toLocaleDateString('es-CO', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Sin fecha'}</span>
-                              </div>
                             </div>
+                            <div className="hidden sm:flex items-center" style={{ gap: 5, flexShrink: 0, width: 132 }}>
+                              <CalendarClock size={11} color="#8E87A8" />
+                              <span style={{ fontSize: 11, color: '#8E87A8' }}>{p.fecha ? new Date(p.fecha).toLocaleDateString('es-CO', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Sin fecha'}</span>
+                            </div>
+                            <p className="hidden sm:block" style={{ margin: 0, width: 104, textAlign: 'right', fontSize: 14, fontWeight: 800, color: st.color, fontFamily: 'inherit', flexShrink: 0 }}>{montoTexto}</p>
+                            <span className="hidden sm:inline-block" style={{ width: 84, textAlign: 'center', fontSize: 10, fontWeight: 600, padding: '3px 0', borderRadius: 99, background: st.bg, color: st.color, flexShrink: 0 }}>{st.label}</span>
+
                             <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
-                              <div style={{ textAlign: 'right' }}>
-                                <p style={{ margin: 0, fontSize: 14, fontWeight: 800, color: st.color, fontFamily: 'inherit', lineHeight: 1 }}>{fmt.format(p.monto)}</p>
+                              {/* En movil no caben las columnas, asi que monto,
+                                  fecha y estado se apilan aca */}
+                              <div className="sm:hidden" style={{ textAlign: 'right' }}>
+                                <p style={{ margin: 0, fontSize: 14, fontWeight: 800, color: st.color, fontFamily: 'inherit', lineHeight: 1 }}>{montoTexto}</p>
                                 <span style={{ display: 'inline-block', marginTop: 3, fontSize: 9, fontWeight: 600, padding: '2px 7px', borderRadius: 99, background: st.bg, color: st.color }}>{st.label}</span>
+                                <p style={{ margin: '3px 0 0', fontSize: 10, color: '#8E87A8' }}>{p.fecha ? new Date(p.fecha).toLocaleDateString('es-CO', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Sin fecha'}</p>
                               </div>
                               <div style={{ display: 'flex', gap: 4 }}>
                                 <motion.button onClick={() => { setReceiptModal(p); setReceiptFile(null); setReceiptError(null); }} whileTap={{ scale: 0.88 }} title={p.receiptUrl ? 'Ver comprobante' : 'Subir comprobante'}

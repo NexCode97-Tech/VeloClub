@@ -24,8 +24,9 @@ const MIN_STAGE_MS = 600;
 // nada y la app se siente instantánea, en vez de un destello molesto.
 export const APPEAR_DELAY_MS = 250;
 
-// Duración de la cortina de salida. El layout la usa para saber cuándo quitarla.
-export const CURTAIN_MS = 800;
+// Duración total de la cortina de salida (120ms de arranque + 900ms de recorrido,
+// con margen). El layout la usa para saber cuándo quitarla del árbol.
+export const CURTAIN_MS = 1100;
 
 const EASE_OUT: [number, number, number, number] = [0.23, 1, 0.32, 1];
 
@@ -169,7 +170,7 @@ export function LoadingCurtain() {
       <style>{`
         ${SHARED_CSS}
         .vcls-curtain {
-          animation: vcls-slide .65s cubic-bezier(.32,.72,0,1) .12s both;
+          animation: vcls-slide .9s cubic-bezier(.32,.72,0,1) .12s both;
         }
         @keyframes vcls-slide {
           from { transform: translateX(0) }
@@ -177,7 +178,7 @@ export function LoadingCurtain() {
         }
         /* El logo se apaga primero para que la cortina salga limpia */
         .vcls-curtain .vcls-logo {
-          animation: vcls-logo-out .18s ease-out both;
+          animation: vcls-logo-out .24s ease-out both;
         }
         @keyframes vcls-logo-out { from { opacity: 1 } to { opacity: 0 } }
 

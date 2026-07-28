@@ -6,6 +6,9 @@ import { emitToClub } from '../lib/sse';
 
 const router = Router();
 
+// El flujo de caja es parte de Finanzas, un modulo exclusivo del administrador.
+// Por eso todas las rutas de este archivo, incluida la lectura, exigen ADMIN.
+
 const entrySchema = z.object({
   type:        z.enum(['INCOME', 'EXPENSE']),
   amount:      z.number().positive(),
@@ -16,6 +19,7 @@ const entrySchema = z.object({
 // GET /cashflow?month=&year=
 router.get('/', requireAuth, async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'No autenticado' });
+  if (req.user.role !== 'ADMIN') return res.status(403).json({ error: 'Solo administradores' });
   const clubId = req.user.clubId ?? '';
 
   const month = req.query.month ? parseInt(String(req.query.month)) : null;
@@ -43,6 +47,7 @@ router.get('/', requireAuth, async (req, res) => {
 // POST /cashflow  (manual entry only — auto entries come from payments)
 router.post('/', requireAuth, async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'No autenticado' });
+  if (req.user.role !== 'ADMIN') return res.status(403).json({ error: 'Solo administradores' });
   const parsed = entrySchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.issues });
 
@@ -63,6 +68,7 @@ router.post('/', requireAuth, async (req, res) => {
 // PATCH /cashflow/:id  (only manual entries)
 router.patch('/:id', requireAuth, async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'No autenticado' });
+  if (req.user.role !== 'ADMIN') return res.status(403).json({ error: 'Solo administradores' });
   const id = String(req.params.id);
 
   const entry = await prisma.cashEntry.findFirst({ where: { id, clubId: req.user.clubId ?? '' } });
@@ -88,6 +94,7 @@ router.patch('/:id', requireAuth, async (req, res) => {
 // DELETE /cashflow/:id  (only manual entries — paymentId must be null)
 router.delete('/:id', requireAuth, async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'No autenticado' });
+  if (req.user.role !== 'ADMIN') return res.status(403).json({ error: 'Solo administradores' });
   const id = String(req.params.id);
 
   const entry = await prisma.cashEntry.findFirst({ where: { id, clubId: req.user.clubId ?? '' } });

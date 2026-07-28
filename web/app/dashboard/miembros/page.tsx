@@ -30,6 +30,7 @@ import { PhoneInput, parsePhoneDisplay, FlagImg } from '@/components/ui/phone-in
 import { DatePicker } from '@/components/ui/date-picker';
 import { downloadMembersPDF } from '@/lib/pdf';
 import { downloadMembersTemplate, parseMembersExcel } from '@/lib/excel';
+import ModuleLoader, { useCargaMinima } from '@/components/ui/module-loader';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface Location { id: string; name: string }
@@ -137,6 +138,8 @@ export default function MiembrosPage() {
     return s;
   }, [form.role, locations.length]);
   const loading   = loadingMembers || loadingLocs;
+  // Sostiene el indicador un mínimo de tiempo para que no parpadee
+  const mostrarCarga = useCargaMinima(loading);
 
   // Cargar nombre del club (sin bloquear)
   useEffect(() => {
@@ -490,21 +493,8 @@ export default function MiembrosPage() {
 
         {/* ── Grid de tarjetas ── */}
         <div className="px-8 pb-8">
-          {loading ? (
-            /* Skeleton */
-            <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))' }}>
-              {[...Array(6)].map((_, i) => (
-                <div key={i} className="bg-white rounded-2xl overflow-hidden animate-pulse" style={{ border: '1px solid rgba(120,80,200,0.08)' }}>
-                  <div className="h-[72px]" style={{ background: 'rgba(120,80,200,0.07)' }} />
-                  <div className="px-5 pt-4 pb-5 space-y-3">
-                    <div className="h-3.5 w-32 rounded-full" style={{ background: 'rgba(120,80,200,0.07)' }} />
-                    <div className="h-2.5 w-48 rounded-full" style={{ background: 'rgba(120,80,200,0.05)' }} />
-                    <div className="h-2.5 w-36 rounded-full" style={{ background: 'rgba(120,80,200,0.05)' }} />
-                    <div className="h-8 rounded-xl mt-4" style={{ background: 'rgba(120,80,200,0.07)' }} />
-                  </div>
-                </div>
-              ))}
-            </div>
+          {mostrarCarga ? (
+          <ModuleLoader />
           ) : filtered.length === 0 ? (
             <motion.div
               initial={{ opacity: 0 }} animate={{ opacity: 1 }}
@@ -751,18 +741,8 @@ export default function MiembrosPage() {
           <Input className="pl-9 bg-white border-border rounded-xl" placeholder="Buscar miembro..." value={search} onChange={e => setSearch(e.target.value)} />
         </motion.div>
 
-        {loading ? (
-          <div className="space-y-2 pt-2">
-            {[1,2,3].map(i => (
-              <div key={i} className="bg-white border border-border rounded-xl px-3 py-3 flex items-center gap-3 animate-pulse">
-                <div className="w-10 h-10 rounded-full bg-secondary shrink-0" />
-                <div className="flex-1 space-y-2">
-                  <div className="h-3 w-36 bg-secondary rounded-full" />
-                  <div className="h-2.5 w-24 bg-secondary rounded-full" />
-                </div>
-              </div>
-            ))}
-          </div>
+        {mostrarCarga ? (
+          <ModuleLoader />
         ) : filtered.length === 0 ? (
           <div className="bg-white rounded-xl border border-border p-10 text-center mt-2">
             <Users className="w-10 h-10 text-muted-foreground/30 mx-auto mb-3" />

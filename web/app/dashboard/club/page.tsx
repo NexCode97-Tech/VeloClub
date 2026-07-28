@@ -317,7 +317,7 @@ export default function ClubProfilePage() {
 
   if (mostrarCarga) {
     return (
-      <ModuleLoader minHeight={240} />
+      <ModuleLoader />
     );
   }
 

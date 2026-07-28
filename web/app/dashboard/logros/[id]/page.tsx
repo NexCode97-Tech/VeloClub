@@ -295,7 +295,7 @@ export default function CompetitionDetailPage() {
 
   if (mostrarCarga) {
     return (
-      <ModuleLoader minHeight={220} />
+      <ModuleLoader />
     );
   }
 

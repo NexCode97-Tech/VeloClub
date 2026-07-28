@@ -18,6 +18,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select';
 import { DatePicker } from '@/components/ui/date-picker';
 import { LocationPicker } from '@/components/ui/location-picker';
+import ModuleLoader, { useCargaMinima } from '@/components/ui/module-loader';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 interface EventResult  { id: string; position?: number; member: { id: string; fullName: string; pictureUrl?: string | null } }
@@ -102,22 +103,6 @@ function StatPill({ value, label, color }: { value: number; label: string; color
   );
 }
 
-// Skeleton card
-function SkeletonCard() {
-  return (
-    <div className="bg-white border border-border rounded-2xl p-4 animate-pulse">
-      <div className="flex gap-3">
-        <div className="w-12 h-12 rounded-xl bg-secondary shrink-0" />
-        <div className="flex-1 space-y-2">
-          <div className="h-3 bg-secondary rounded-full w-2/3" />
-          <div className="h-2 bg-secondary rounded-full w-1/2" />
-          <div className="h-2 bg-secondary rounded-full w-1/3" />
-        </div>
-      </div>
-    </div>
-  );
-}
-
 const listVariants = {
   hidden: {},
   show: { transition: { staggerChildren: 0.06 } },
@@ -169,6 +154,8 @@ function LogrosPageInner() {
   const locations    = (locsData?.locations     ?? []) as Location[];
 
   const loading = loadingComps || loadingTrain || loadingLocs || !roleLoaded;
+  // Sostiene el indicador un minimo de tiempo para que no parpadee
+  const mostrarCarga = useCargaMinima(loading);
 
   useEffect(() => {
     getToken().then(async token => {
@@ -368,9 +355,9 @@ function LogrosPageInner() {
       {/* ── Content ─────────────────────────────────────────────────────────── */}
       <div className="px-4 pb-6">
         <AnimatePresence mode="wait">
-          {loading ? (
-            <motion.div key="skeleton" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col gap-3">
-              {[1, 2, 3].map(i => <SkeletonCard key={i} />)}
+          {mostrarCarga ? (
+            <motion.div key="skeleton" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+              <ModuleLoader />
             </motion.div>
           ) : tab === 'comp' ? (
             <motion.div key="comp" initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 12 }} transition={{ duration: 0.2 }}>

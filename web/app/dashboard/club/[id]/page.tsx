@@ -83,7 +83,7 @@ export default function PublicClubPage() {
 
   if (mostrarCarga) {
     return (
-      <ModuleLoader minHeight={280} />
+      <ModuleLoader />
     );
   }
 

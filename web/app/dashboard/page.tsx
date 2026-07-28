@@ -1010,7 +1010,7 @@ export default function DashboardPage() {
 
   if (mostrarCarga) {
     return (
-      <ModuleLoader minHeight={240} />
+      <ModuleLoader />
     );
   }
 

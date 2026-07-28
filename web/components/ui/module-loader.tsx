@@ -44,10 +44,15 @@ export function useCargaMinima(loading: boolean, minMs = 400): boolean {
   return visible;
 }
 
-export default function ModuleLoader({ minHeight = 220 }: { minHeight?: number }) {
+/**
+ * Indicador de carga de módulo. Por defecto ocupa el alto disponible de la
+ * pantalla para quedar centrado de verdad; los casos donde vive dentro de una
+ * tarjeta pasan un `minHeight` fijo y pequeño.
+ */
+export default function ModuleLoader({ minHeight }: { minHeight?: number }) {
   return (
     <div className="flex flex-col items-center justify-center w-full"
-      style={{ minHeight }}>
+      style={{ minHeight: minHeight ?? 'min(58vh, 520px)' }}>
       <style>{`
         .vcml { animation: vcml-in .22s cubic-bezier(.23,1,.32,1) both; }
         @keyframes vcml-in { from { opacity: 0 } to { opacity: 1 } }

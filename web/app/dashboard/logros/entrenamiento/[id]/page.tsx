@@ -97,7 +97,7 @@ export default function TrainingDetailPage() {
   }
 
   if (mostrarCarga) return (
-    <ModuleLoader minHeight={280} />
+    <ModuleLoader />
   );
   if (!session) return null;
 

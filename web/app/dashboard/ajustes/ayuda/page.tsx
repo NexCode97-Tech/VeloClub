@@ -215,7 +215,7 @@ export default function AyudaPage() {
           Guía rápida para cada módulo de VeloClub. Toca cualquier sección para ver los pasos.
         </p>
         {mostrarCarga ? (
-          <ModuleLoader minHeight={200} />
+          <ModuleLoader />
         ) : (
           <div className="space-y-2 md:grid md:grid-cols-2 md:gap-3 md:space-y-0">
             {guides.map(g => (

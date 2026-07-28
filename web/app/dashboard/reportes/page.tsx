@@ -15,6 +15,7 @@ import {
 import { format, startOfMonth, endOfMonth } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { MonthPicker, DateRange } from '@/components/ui/month-picker';
+import ModuleLoader, { useCargaMinima } from '@/components/ui/module-loader';
 
 const MONTH_NAMES      = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
 const MONTH_NAMES_FULL = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
@@ -52,6 +53,8 @@ export default function ReportesPage() {
 
   // ── Estado ──
   const [loading, setLoading] = useState(true);
+  // Sostiene el indicador un minimo de tiempo para que no parpadee
+  const mostrarCarga = useCargaMinima(loading);
   const [barsReady, setBarsReady] = useState(false);
 
   // KPIs
@@ -254,6 +257,7 @@ export default function ReportesPage() {
         />
       </div>
 
+      {mostrarCarga ? <ModuleLoader /> : (
       <motion.div variants={stagger} initial="hidden" animate="show" className="flex flex-col gap-4 px-4 pt-4 lg:pt-6">
 
         {/* KPIs */}
@@ -497,6 +501,7 @@ export default function ReportesPage() {
         </motion.div>
 
       </motion.div>
+      )}
     </div>
   );
 }

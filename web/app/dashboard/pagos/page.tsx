@@ -526,7 +526,7 @@ export default function PagosPage() {
 
         {/* Lista */}
         {mostrarCarga ? (
-          <ModuleLoader minHeight={220} />
+          <ModuleLoader />
         ) : filtered.length === 0 ? (
           <div className="bg-white border border-border rounded-xl px-4 py-10 text-center">
             <IconMisPagos className="w-10 h-10 mx-auto mb-3 text-muted-foreground/30" />

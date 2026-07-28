@@ -13,6 +13,7 @@ import { stagger, cardVariant } from '@/lib/page-animations';
 import {
   Select, SelectContent, SelectItem, SelectTrigger,
 } from '@/components/ui/select';
+import ModuleLoader, { useCargaMinima } from '@/components/ui/module-loader';
 
 interface Member {
   id: string;
@@ -247,6 +248,8 @@ export default function AsistenciaPage() {
 
   const locations = locsData?.locations ?? [];
   const loading   = loadingLocs || loadingMembers || loadingAtt;
+  // Sostiene el indicador un minimo de tiempo para que no parpadee
+  const mostrarCarga = useCargaMinima(loading);
 
   useEffect(() => {
     if (locations.length > 0 && !selectedLoc) setSelectedLoc(locations[0].id);
@@ -354,19 +357,8 @@ export default function AsistenciaPage() {
       </div>
 
       <motion.div variants={stagger} initial="hidden" animate="show" className="px-4 pt-4 lg:pt-6 space-y-3">
-        {loading ? (
-          <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 sm:gap-3">
-            {[...Array(12)].map((_, i) => (
-              <div key={i} className="bg-white rounded-2xl overflow-hidden animate-pulse" style={{ border: '1px solid rgba(120,80,200,0.08)' }}>
-                <div className="flex flex-col items-center pt-4 pb-2 px-2">
-                  <div className="w-12 h-12 rounded-full bg-secondary" />
-                  <div className="h-2.5 w-16 bg-secondary rounded-full mt-2" />
-                  <div className="h-2 w-12 bg-secondary rounded-full mt-1.5" />
-                </div>
-                <div className="h-8 bg-secondary/60 mt-2" />
-              </div>
-            ))}
-          </div>
+        {mostrarCarga ? (
+          <ModuleLoader />
         ) : (
           <>
             {/* ── Week streak strip (siempre visible para poder cambiar de día) ── */}

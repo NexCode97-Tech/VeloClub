@@ -104,7 +104,7 @@ export default function PublicProfilePage() {
 
   if (mostrarCarga) {
     return (
-      <ModuleLoader minHeight={240} />
+      <ModuleLoader />
     );
   }
 

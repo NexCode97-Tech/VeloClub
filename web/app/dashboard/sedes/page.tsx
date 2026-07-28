@@ -366,7 +366,7 @@ export default function SedesPage() {
           </div>
         )}
         {mostrarCarga ? (
-          <ModuleLoader minHeight={240} />
+          <ModuleLoader />
         ) : locations.length === 0 ? (
           <motion.div variants={cardVariant} className="bg-card border border-border rounded-xl p-10 text-center">
             <MapPin className="w-10 h-10 text-muted-foreground/30 mx-auto mb-3" />

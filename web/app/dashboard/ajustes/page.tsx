@@ -362,7 +362,7 @@ function AjustesPageContent() {
     }
   }
 
-  if (mostrarCarga) return <ModuleLoader minHeight={320} />;
+  if (mostrarCarga) return <ModuleLoader />;
 
   const logoSrc = logoPreview ?? club?.logoUrl ?? null;
   const isAdmin = role === 'ADMIN';

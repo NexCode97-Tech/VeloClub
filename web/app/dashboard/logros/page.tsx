@@ -313,7 +313,8 @@ function LogrosPageInner() {
         </div>
 
         {/* Encabezado de sección (escritorio) — misma lógica que Ajustes:
-            muestra el ícono y el título de la pestaña activa, como "Mi perfil". */}
+            muestra el ícono y el título de la pestaña activa, como "Mi perfil".
+            El botón de acción va en esta misma fila, a la derecha. */}
         <div className="hidden lg:flex items-center gap-2 mb-4">
           <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
             style={{ background: 'linear-gradient(135deg, #7C3AED 0%, #4361EE 100%)' }}>
@@ -324,6 +325,26 @@ function LogrosPageInner() {
           <h2 className="text-[15px] font-semibold text-foreground">
             {tab === 'comp' ? 'Competencias' : 'Entrenamientos'}
           </h2>
+
+          {role !== 'STUDENT' && (
+            <motion.button
+              whileTap={{ scale: 0.93 }}
+              onClick={() => {
+                if (tab === 'comp') { setCompForm(emptyComp); setCompError(null); setCompOpen(true); }
+                else { setSessionForm(emptySession); setSessionError(null); setSessionOpen(true); }
+              }}
+              className="ml-auto flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[13px] font-semibold text-white shadow-sm shrink-0 cursor-pointer"
+              style={{
+                background: 'linear-gradient(135deg, #7C3AED 0%, #4361EE 100%)',
+                opacity: canManage ? 1 : 0,
+                pointerEvents: canManage ? 'auto' : 'none',
+                transition: 'opacity 0.15s ease',
+              }}
+            >
+              <Plus className="w-4 h-4" />
+              {tab === 'comp' ? 'Competencia' : 'Entrenamiento'}
+            </motion.button>
+          )}
         </div>
 
         {/* Stats strip — siempre ocupa espacio para evitar layout shift */}
@@ -342,29 +363,6 @@ function LogrosPageInner() {
           )}
         </div>
 
-        {/* Botón de acción — solo escritorio, debajo de las tarjetas de estadísticas
-            (en móvil el botón vive arriba, a la altura del título) */}
-        {role !== 'STUDENT' && (
-          <div className="hidden lg:flex justify-end mb-4">
-            <motion.button
-              whileTap={{ scale: 0.93 }}
-              onClick={() => {
-                if (tab === 'comp') { setCompForm(emptyComp); setCompError(null); setCompOpen(true); }
-                else { setSessionForm(emptySession); setSessionError(null); setSessionOpen(true); }
-              }}
-              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[13px] font-semibold text-white shadow-sm shrink-0 cursor-pointer"
-              style={{
-                background: 'linear-gradient(135deg, #7C3AED 0%, #4361EE 100%)',
-                opacity: canManage ? 1 : 0,
-                pointerEvents: canManage ? 'auto' : 'none',
-                transition: 'opacity 0.15s ease',
-              }}
-            >
-              <Plus className="w-4 h-4" />
-              <span className="hidden sm:inline">{tab === 'comp' ? 'Competencia' : 'Entrenamiento'}</span>
-            </motion.button>
-          </div>
-        )}
       </div>
 
       {/* ── Content ─────────────────────────────────────────────────────────── */}

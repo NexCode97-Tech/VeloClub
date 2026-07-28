@@ -51,10 +51,13 @@ const pwaConfig = withPWA({
   dest: "public",
   reloadOnOnline: true,
   disable: process.env.NODE_ENV === "development",
-  // Excluir rutas de auth y APIs externas del Service Worker
-  fallbacks: {
-    document: '/offline',
-  },
+  // Sin fallback de documento y sin ruta especial para la raiz. Ambas opciones
+  // hacen que next-pwa inyecte manejadores async en el service worker, y al
+  // compilarlos quedan llamando a _async_to_generator y _ts_generator, que
+  // nunca se incluyen en el paquete del worker. El resultado es un
+  // ReferenceError al interceptar la navegacion: la app instalada no abre.
+  cacheStartUrl: false,
+  dynamicStartUrl: false,
   workboxOptions: {
     skipWaiting: true,
     clientsClaim: true,

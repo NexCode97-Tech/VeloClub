@@ -47,9 +47,9 @@ export function useCargaMinima(loading: boolean, minMs = 400): boolean {
 // desplazarse. Es un punto fijo: no depende del contenido de cada módulo.
 // Se ajusta por dispositivo porque en móvil hay bastante menos alto disponible
 // (y encima le quita espacio la barra de navegación inferior).
-const Y_LOGO_MOVIL      = 270;
-const Y_LOGO_TABLET     = 285;
-const Y_LOGO_ESCRITORIO = 300;
+const Y_LOGO_MOVIL      = 400;
+const Y_LOGO_TABLET     = 320;
+const Y_LOGO_ESCRITORIO = 320;
 
 function yLogo(ancho: number): number {
   if (ancho < 768)  return Y_LOGO_MOVIL;

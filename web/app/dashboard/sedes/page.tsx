@@ -123,8 +123,8 @@ export default function SedesPage() {
     if (locRes.status === 'fulfilled') setLocations(locRes.value.locations);
     if (clubRes.status === 'fulfilled') setClubDepartment(clubRes.value.club.department ?? null);
     if (meRes.status === 'fulfilled') {
-      const r = meRes.value.user?.role ?? '';
-      setCanManage(r === 'ADMIN' || r === 'COACH');
+      // Solo el administrador gestiona sedes; el resto las ve sin editarlas
+      setCanManage(meRes.value.user?.role === 'ADMIN');
     }
     setLoading(false);
   }
@@ -373,9 +373,11 @@ export default function SedesPage() {
           <div className="bg-card border border-border rounded-xl p-10 text-center">
             <MapPin className="w-10 h-10 text-muted-foreground/30 mx-auto mb-3" />
             <p className="text-sm text-muted-foreground">No hay sedes registradas aun.</p>
+            {canManage && (
             <button onClick={openNew} className="mt-4 px-4 py-2 rounded-xl text-sm font-semibold border border-border text-muted-foreground hover:bg-secondary transition-colors">
               Agregar primera sede
             </button>
+            )}
           </div>
           </ModuleReveal>
         ) : (

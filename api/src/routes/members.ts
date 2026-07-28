@@ -39,6 +39,13 @@ function getId(req: Request): string {
   return String(req.params.id);
 }
 
+// La gestion de miembros (crear, editar, eliminar, subir archivos) es exclusiva
+// del administrador. El entrenador y el deportista tienen acceso de lectura, y
+// cada quien puede editar sus propios datos de contacto por su cuenta.
+function esAdmin(req: Request): boolean {
+  return req.user?.role === 'ADMIN';
+}
+
 function toTitleCase(str: string): string {
   return str
     .toLowerCase()
@@ -129,6 +136,7 @@ router.get('/:id', requireAuth, async (req, res) => {
 // POST /members
 router.post('/', requireAuth, async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'No autenticado' });
+  if (!esAdmin(req)) return res.status(403).json({ error: 'Solo administradores' });
   const parsed = memberSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.issues });
 
@@ -217,6 +225,7 @@ router.patch('/bulk-fee', requireAuth, async (req, res) => {
 // PUT /members/:id
 router.put('/:id', requireAuth, async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'No autenticado' });
+  if (!esAdmin(req)) return res.status(403).json({ error: 'Solo administradores' });
   const id = getId(req);
 
   const existing = await prisma.member.findFirst({
@@ -317,6 +326,11 @@ router.patch('/:id/contact', requireAuth, async (req, res) => {
   });
   if (!existing) return res.status(404).json({ error: 'Miembro no encontrado' });
 
+  // Mi Perfil usa esta ruta para que cada quien edite su propio telefono y
+  // correo. Sobre los datos de otra persona solo puede escribir el administrador.
+  const esPropio = !!req.auth?.clerkId && existing.clerkId === req.auth.clerkId;
+  if (!esPropio && !esAdmin(req)) return res.status(403).json({ error: 'Solo administradores' });
+
   const phone = typeof req.body.phone === 'string' ? req.body.phone.trim() || null : null;
   const email = typeof req.body.email === 'string' ? req.body.email.trim() || null : null;
 
@@ -332,6 +346,7 @@ router.patch('/:id/contact', requireAuth, async (req, res) => {
 // DELETE /members/:id
 router.delete('/:id', requireAuth, async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'No autenticado' });
+  if (!esAdmin(req)) return res.status(403).json({ error: 'Solo administradores' });
   const id = getId(req);
 
   const existing = await prisma.member.findFirst({
@@ -371,6 +386,7 @@ router.delete('/:id', requireAuth, async (req, res) => {
 // POST /members/:id/upload
 router.post('/:id/upload', requireAuth, async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'No autenticado' });
+  if (!esAdmin(req)) return res.status(403).json({ error: 'Solo administradores' });
   const id = getId(req);
 
   const existing = await prisma.member.findFirst({

@@ -37,7 +37,8 @@ router.get('/', requireAuth, async (req, res) => {
 // POST /locations
 router.post('/', requireAuth, async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'No autenticado' });
-  if (!['ADMIN', 'COACH'].includes(req.user.role)) return res.status(403).json({ error: 'Sin permiso' });
+  // Solo el administrador gestiona sedes; el entrenador tiene acceso de lectura
+  if (req.user.role !== 'ADMIN') return res.status(403).json({ error: 'Solo administradores' });
   const parsed = locationSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.issues });
   const location = await prisma.location.create({
@@ -50,7 +51,8 @@ router.post('/', requireAuth, async (req, res) => {
 // PUT /locations/:id
 router.put('/:id', requireAuth, async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'No autenticado' });
-  if (!['ADMIN', 'COACH'].includes(req.user.role)) return res.status(403).json({ error: 'Sin permiso' });
+  // Solo el administrador gestiona sedes; el entrenador tiene acceso de lectura
+  if (req.user.role !== 'ADMIN') return res.status(403).json({ error: 'Solo administradores' });
   const id = getId(req);
   const parsed = locationSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.issues });
@@ -69,7 +71,8 @@ router.put('/:id', requireAuth, async (req, res) => {
 // DELETE /locations/:id
 router.delete('/:id', requireAuth, async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'No autenticado' });
-  if (!['ADMIN', 'COACH'].includes(req.user.role)) return res.status(403).json({ error: 'Sin permiso' });
+  // Solo el administrador gestiona sedes; el entrenador tiene acceso de lectura
+  if (req.user.role !== 'ADMIN') return res.status(403).json({ error: 'Solo administradores' });
   const id = getId(req);
   const existing = await prisma.location.findFirst({
     where: { id, clubId: req.user.clubId ?? '' },

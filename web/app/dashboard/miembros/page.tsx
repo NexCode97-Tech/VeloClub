@@ -99,6 +99,9 @@ export default function MiembrosPage() {
   const [saving, setSaving]     = useState(false);
   const [error, setError]       = useState<string | null>(null);
 
+  // Solo el administrador gestiona miembros; el resto ve la lista sin editarla
+  const [canManage, setCanManage] = useState(false);
+
   // Import state
   const [importOpen, setImportOpen]     = useState(false);
   const [importing, setImporting]       = useState(false);
@@ -122,6 +125,14 @@ export default function MiembrosPage() {
 
   const members   = membersData?.members   ?? [];
   const locations = locsData?.locations    ?? [];
+
+  useEffect(() => {
+    getToken().then(async token => {
+      const me = await apiFetch<{ status: string; user?: { role: string } }>('/me', { token });
+      setCanManage(me.user?.role === 'ADMIN');
+    }).catch(() => setCanManage(false));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Steps definition (después de declarar locations)
   const steps = useMemo(() => {
@@ -323,6 +334,7 @@ export default function MiembrosPage() {
             className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold border border-border text-muted-foreground hover:bg-secondary active:scale-95 transition-all disabled:opacity-40">
             <Download className="w-4 h-4" /><span className="hidden sm:inline">PDF</span>
           </button>
+          {canManage && (<>
           <button onClick={() => setImportOpen(true)}
             className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold border border-border text-muted-foreground hover:bg-secondary active:scale-95 transition-all">
             <Upload className="w-4 h-4" /><span className="hidden sm:inline">Importar</span>
@@ -337,6 +349,7 @@ export default function MiembrosPage() {
             style={{ background: 'linear-gradient(135deg, #7C3AED 0%, #4361EE 100%)' }}>
             <Plus className="w-4 h-4" /><span className="hidden sm:inline">Nuevo</span>
           </motion.button>
+          </>)}
         </div>
       </div>
 
@@ -461,16 +474,19 @@ export default function MiembrosPage() {
             </p>
 
             <div className="flex items-center gap-2 ml-auto">
+              {canManage && (
               <button onClick={() => setImportOpen(true)}
                 className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-[13px] font-semibold transition-all hover:bg-white cursor-pointer"
                 style={{ color: '#8E87A8', border: '1px solid rgba(120,80,200,0.12)' }}>
                 <Upload className="w-4 h-4" /> Importar
               </button>
+              )}
               <button onClick={() => downloadMembersPDF(members, clubName)} disabled={members.length === 0}
                 className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-[13px] font-semibold transition-all hover:bg-white cursor-pointer disabled:opacity-40"
                 style={{ color: '#8E87A8', border: '1px solid rgba(120,80,200,0.12)' }}>
                 <Download className="w-4 h-4" /> PDF
               </button>
+              {canManage && (
               <motion.button onClick={openNew}
                 whileHover={reducedMotion ? {} : { scale: 1.02 }}
                 whileTap={reducedMotion ? {} : { scale: 0.97 }}
@@ -479,6 +495,7 @@ export default function MiembrosPage() {
                 style={{ background: 'linear-gradient(135deg, #7C3AED 0%, #4361EE 100%)', boxShadow: '0 4px 16px rgba(124,58,237,0.30)' }}>
                 <Plus className="w-4 h-4" /> Nuevo miembro
               </motion.button>
+              )}
             </div>
           </div>
         </div>
@@ -499,9 +516,11 @@ export default function MiembrosPage() {
                 {search ? 'Sin resultados' : 'Sin miembros aún'}
               </p>
               <p className="text-[13px] mb-6" style={{ color: '#8E87A8' }}>
-                {search ? `Sin coincidencias para "${search}"` : 'Agrega el primer miembro del club'}
+                {search
+                  ? `Sin coincidencias para "${search}"`
+                  : canManage ? 'Agrega el primer miembro del club' : 'El club aún no tiene miembros registrados'}
               </p>
-              {!search && (
+              {!search && canManage && (
                 <motion.button onClick={openNew}
                   whileTap={reducedMotion ? {} : { scale: 0.97 }} transition={{ duration: 0.12 }}
                   className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-[13px] font-semibold text-white cursor-pointer"
@@ -659,6 +678,7 @@ export default function MiembrosPage() {
 
                     {/* ── Acciones ── */}
                     <div className="px-4 pb-4 pt-1 flex gap-2">
+                      {canManage && (
                       <motion.button
                         onClick={() => openEdit(m)}
                         whileHover={reducedMotion ? {} : { scale: 1.02 }}
@@ -669,17 +689,24 @@ export default function MiembrosPage() {
                       >
                         <Pencil className="w-3.5 h-3.5" /> Editar
                       </motion.button>
+                      )}
+                      {/* Sin permisos de gestion, ver el detalle es la unica accion
+                          disponible, asi que ocupa toda la fila */}
                       <motion.button
                         onClick={() => setViewMember(m)}
                         whileHover={reducedMotion ? {} : { scale: 1.02 }}
                         whileTap={reducedMotion ? {} : { scale: 0.97 }}
                         transition={{ duration: 0.12, ease: EASE_OUT }}
-                        className="w-10 h-10 rounded-xl flex items-center justify-center cursor-pointer shrink-0"
-                        style={{ background: 'rgba(124,58,237,0.08)' }}
+                        className={canManage
+                          ? 'w-10 h-10 rounded-xl flex items-center justify-center cursor-pointer shrink-0'
+                          : 'flex-1 py-2.5 rounded-xl text-[12px] font-semibold flex items-center justify-center gap-1.5 cursor-pointer'}
+                        style={{ background: 'rgba(124,58,237,0.08)', color: '#7C3AED' }}
                         aria-label="Ver deportista"
                       >
                         <Eye className="w-4 h-4" style={{ color: '#7C3AED' }} />
+                        {!canManage && 'Ver detalle'}
                       </motion.button>
+                      {canManage && (
                       <motion.button
                         onClick={() => handleDelete(m.id)}
                         whileHover={reducedMotion ? {} : { scale: 1.05 }}
@@ -691,6 +718,7 @@ export default function MiembrosPage() {
                       >
                         <Trash2 className="w-4 h-4" style={{ color: '#EF476F' }} />
                       </motion.button>
+                      )}
                     </div>
                   </motion.div>
                 );
@@ -739,7 +767,7 @@ export default function MiembrosPage() {
           <div className="bg-white rounded-xl border border-border p-10 text-center mt-2">
             <Users className="w-10 h-10 text-muted-foreground/30 mx-auto mb-3" />
             <p className="text-sm text-muted-foreground">{search ? 'Sin resultados.' : 'No hay miembros registrados aún.'}</p>
-            {!search && (
+            {!search && canManage && (
               <button onClick={openNew} className="mt-4 px-4 py-2 rounded-xl text-sm font-semibold border border-border text-muted-foreground hover:bg-secondary transition-colors">
                 Agregar primer miembro
               </button>
@@ -777,12 +805,14 @@ export default function MiembrosPage() {
                     <button onClick={() => setViewMember(m)} className="w-7 h-7 rounded-lg bg-secondary flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors">
                       <Eye className="w-3.5 h-3.5" />
                     </button>
+                    {canManage && (<>
                     <button onClick={() => openEdit(m)} className="w-7 h-7 rounded-lg bg-secondary flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors">
                       <Pencil className="w-3.5 h-3.5" />
                     </button>
                     <button onClick={() => handleDelete(m.id)} className="w-7 h-7 rounded-lg bg-red-50 flex items-center justify-center text-red-400 hover:text-red-600 transition-colors">
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
+                    </>)}
                   </div>
                 </motion.div>
               );

@@ -18,11 +18,25 @@ const STAGE_TEXT: Record<LoadStage, string> = {
 
 // Con buena conexión las etapas se suceden en pocos milisegundos: sin un mínimo
 // por mensaje el texto parpadearía. Cada uno se sostiene al menos este tiempo.
-const MIN_STAGE_MS = 600;
+const MIN_STAGE_MS = 700;
 
 // No mostrar la pantalla de inmediato: si la carga es rápida, el usuario no ve
 // nada y la app se siente instantánea, en vez de un destello molesto.
 export const APPEAR_DELAY_MS = 250;
+
+// Si la pantalla ya se mostró, se sostiene al menos este tiempo antes de dar
+// paso a la cortina. Enseñarla y quitarla en un parpadeo se percibe como un
+// error, peor que no haberla mostrado.
+export const MIN_VISIBLE_MS = 900;
+
+// Espera lo que falte para cumplir el tiempo mínimo en pantalla. Si nunca llegó
+// a aparecer (carga muy rápida), no espera nada.
+export async function esperarPantallaCarga(mountedAt: number): Promise<void> {
+  const visibleMs = Date.now() - mountedAt - APPEAR_DELAY_MS;
+  if (visibleMs < 0) return;
+  const falta = MIN_VISIBLE_MS - visibleMs;
+  if (falta > 0) await new Promise(r => setTimeout(r, falta));
+}
 
 // Duración total de la cortina de salida (120ms de arranque + 900ms de recorrido,
 // con margen). El layout la usa para saber cuándo quitarla del árbol.
@@ -82,21 +96,31 @@ export default function LoadingScreen({ stage = 'init' }: { stage?: LoadStage })
   // se cumple el tiempo mínimo del mensaje anterior.
   const [shown, setShown] = useState<LoadStage>(stage);
   const lastChangeRef = useRef<number>(Date.now());
+  // La etapa real más reciente, para leerla dentro del temporizador de aparición
+  const stageRef = useRef<LoadStage>(stage);
+  stageRef.current = stage;
 
+  // Al hacerse visible, mostrar la etapa real de ese momento y arrancar ahí el
+  // conteo del mínimo. Antes el conteo empezaba al montar, así que el primer
+  // mensaje perdía los 250ms de espera y aparecía apenas un instante.
   useEffect(() => {
-    const t = setTimeout(() => setVisible(true), APPEAR_DELAY_MS);
+    const t = setTimeout(() => {
+      setVisible(true);
+      setShown(stageRef.current);
+      lastChangeRef.current = Date.now();
+    }, APPEAR_DELAY_MS);
     return () => clearTimeout(t);
   }, []);
 
   useEffect(() => {
-    if (stage === shown) return;
+    if (!visible || stage === shown) return;
     const restante = Math.max(0, MIN_STAGE_MS - (Date.now() - lastChangeRef.current));
     const t = setTimeout(() => {
       setShown(stage);
       lastChangeRef.current = Date.now();
     }, restante);
     return () => clearTimeout(t);
-  }, [stage, shown]);
+  }, [stage, shown, visible]);
 
   if (!visible) return null;
 

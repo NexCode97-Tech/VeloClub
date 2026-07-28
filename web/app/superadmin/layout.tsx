@@ -5,7 +5,7 @@ import { useAuth, useSession, useUser, useClerk, UserButton } from '@clerk/nextj
 import { useEffect, useState, useRef, useCallback, memo } from 'react';
 import { createPortal } from 'react-dom';
 import { apiFetch } from '@/lib/api-client';
-import LoadingScreen, { LoadingCurtain, APPEAR_DELAY_MS, CURTAIN_MS, type LoadStage } from '@/components/ui/loading-screen';
+import LoadingScreen, { LoadingCurtain, APPEAR_DELAY_MS, CURTAIN_MS, esperarPantallaCarga, type LoadStage } from '@/components/ui/loading-screen';
 import Link from 'next/link';
 import Image from 'next/image';
 import { LayoutDashboard, Building2, LogOut, Ticket } from 'lucide-react';
@@ -314,6 +314,9 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
         if (stale) return;
         setLoadStage('sync');
         if (res.status !== 'superadmin') { router.replace('/dashboard'); return; }
+        // Sostener la pantalla de carga su tiempo mínimo antes de la cortina
+        await esperarPantallaCarga(mountedAtRef.current);
+        if (stale) return;
         setChecking(false);
       } catch (err) {
         if (stale) return;

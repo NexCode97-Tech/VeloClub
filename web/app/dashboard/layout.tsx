@@ -8,7 +8,7 @@ import { useEffect, useState, useRef, Suspense } from 'react';
 import { createPortal } from 'react-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { apiFetch } from '@/lib/api-client';
-import LoadingScreen, { LoadingCurtain, APPEAR_DELAY_MS, CURTAIN_MS, type LoadStage } from '@/components/ui/loading-screen';
+import LoadingScreen, { LoadingCurtain, APPEAR_DELAY_MS, CURTAIN_MS, esperarPantallaCarga, type LoadStage } from '@/components/ui/loading-screen';
 import { BottomCircleMenu } from '@/components/ui/bottom-circle-menu';
 import { SearchModal } from '@/components/ui/search-modal';
 import { NotificationsBell } from '@/components/ui/notifications-bell';
@@ -298,6 +298,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           if (blocked) { router.replace('/dashboard'); return; }
         }
 
+        // Sostener la pantalla de carga su tiempo mínimo antes de la cortina.
+        // Si nunca alcanzó a aparecer, no espera nada.
+        if (meRefresh === 0) await esperarPantallaCarga(mountedAtRef.current);
+        if (stale) return;
         setChecking(false);
       } catch (err) {
         if (stale) return;

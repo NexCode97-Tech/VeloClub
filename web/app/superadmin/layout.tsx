@@ -11,7 +11,7 @@ import Image from 'next/image';
 import { LayoutDashboard, Building2, LogOut, Ticket, Info, CircleDollarSign, ArrowLeft } from 'lucide-react';
 import { IconAjustes } from '@/components/ui/custom-icons';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ClubProvider, useClubActivo, idClubDeRuta } from './club-context';
+import { idClubDeRuta } from './club-context';
 
 // Config fue fusionado con Perfil (UserButton) — 3 tabs + UserButton = 4 slots
 const TABS = [
@@ -319,19 +319,9 @@ const SuperadminSidebar = memo(function SuperadminSidebar({ pathname, noLeidas, 
   );
 });
 
-// El proveedor tiene que envolver al sidebar y al contenido a la vez: el
-// contenido publica el club y el sidebar lo lee.
 export default function SuperadminLayout({ children }: { children: React.ReactNode }) {
-  return <ClubProvider><SuperadminShell>{children}</SuperadminShell></ClubProvider>;
-}
-
-function SuperadminShell({ children }: { children: React.ReactNode }) {
   const pathname  = usePathname();
-  const { clubActivo: publicado } = useClubActivo();
   const clubId = idClubDeRuta(pathname);
-  // Solo vale el club que corresponde a la ruta actual: al saltar de un club a
-  // otro, el dato del anterior sigue en memoria hasta que el nuevo cargue
-  const clubActivo = publicado && publicado.id === clubId ? publicado : null;
   const router    = useRouter();
   const { isLoaded, isSignedIn, userId, sessionId } = useAuth();
   const { session } = useSession();
@@ -422,10 +412,11 @@ function SuperadminShell({ children }: { children: React.ReactNode }) {
 
   if (checking) return <LoadingScreen />;
 
-  // Dentro de un club el encabezado lo nombra, que es mas util que repetir
-  // "Clubes" cuando ya estas dentro de uno
+  // Dentro de un club el encabezado sigue diciendo "Clubes": es el titulo de
+  // seccion del panel, igual que en el resto de pantallas, y dice donde estas
+  // parado. Quien nombra al club es la franja del contenido, junto a su logo.
   const title = clubId
-    ? (clubActivo?.name ?? 'Club')
+    ? 'Clubes'
     : (SCREEN_LABELS[pathname] ?? 'VeloClub');
   const noLeidas = notifs.filter(n => !n.leida).length;
 

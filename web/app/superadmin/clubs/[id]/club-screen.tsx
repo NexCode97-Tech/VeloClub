@@ -6,7 +6,6 @@ import { useAuth } from '@clerk/nextjs';
 import { apiFetch } from '@/lib/api-client';
 import ModuleLoader, { useCargaMinima } from '@/components/ui/module-loader';
 import ClubDetail, { type Club, type Suscripcion } from '../club-detail';
-import { useClubActivo } from '../../club-context';
 
 // Pantalla comun a los modulos del club. Cada ruta (informacion, finanzas) la
 // monta con su propia pestaña; lo unico que cambia es que bloque se pinta.
@@ -18,7 +17,6 @@ import { useClubActivo } from '../../club-context';
 export default function ClubScreen({ id, tab }: { id: string; tab: 'info' | 'finanzas' }) {
   const { getToken, isLoaded, isSignedIn } = useAuth();
   const router = useRouter();
-  const { setClubActivo } = useClubActivo();
 
   const [club, setClub]   = useState<Club | null>(null);
   const [sus, setSus]     = useState<Suscripcion | null>(null);
@@ -47,14 +45,6 @@ export default function ClubScreen({ id, tab }: { id: string; tab: 'info' | 'fin
     if (!isSignedIn) { router.push('/sign-in'); return; }
     load();
   }, [isLoaded, isSignedIn, load, router]);
-
-  // Publica el club para que el sidebar muestre su nombre y su logo. No se
-  // limpia al desmontar: cambiar de modulo desmonta esta pantalla y montaria la
-  // siguiente con el dato vacio, haciendo parpadear el nombre en el sidebar.
-  // Quien decide si el dato aplica es la ruta, comparando el id.
-  useEffect(() => {
-    if (club) setClubActivo({ id: club.id, name: club.name, logoUrl: club.logoUrl ?? null });
-  }, [club, setClubActivo]);
 
   const volver = () => router.push('/superadmin/clubs');
 

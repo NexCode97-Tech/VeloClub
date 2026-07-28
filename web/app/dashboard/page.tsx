@@ -20,6 +20,7 @@ import { Slideshow } from '@/components/ui/slideshow';
 import { MemberAvatar } from '@/components/ui/member-avatar';
 import ModuleLoader, { useCargaMinima } from '@/components/ui/module-loader';
 import ModuleReveal from '@/components/ui/module-reveal';
+import { ContenidoGuardado, MS_GUARDADO, type EstadoGuardado } from '@/components/ui/save-button-state';
 
 // ── Interfaces ────────────────────────────────────────────────────────────────
 
@@ -554,7 +555,13 @@ function PostCard({
                               <button onClick={() => handleSaveEdit(c.id)} disabled={savingEdit || !editText.trim()}
                                 className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full text-white disabled:opacity-40"
                                 style={{ background: '#7C3AED' }}>
-                                {savingEdit ? 'Guardando…' : 'Guardar'}
+                                <ContenidoGuardado
+                                  estado={savingEdit ? 'guardando' : 'idle'}
+                                  textoIdle="Guardar"
+                                  textoGuardando="Guardando"
+                                  textoGuardado="Guardado"
+                                  color="#fff"
+                                />
                               </button>
                               <button onClick={() => setEditingComment(null)}
                                 className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full text-muted-foreground"
@@ -681,6 +688,7 @@ function PostComposer({
   const [media, setMedia]       = useState<{ url: string; publicId: string; type: string; name: string } | null>(null);
   const [uploading, setUploading] = useState(false);
   const [sending, setSending]   = useState(false);
+  const [estadoPublicado, setEstadoPublicado] = useState<EstadoGuardado>('idle');
   const textRef    = useRef<HTMLTextAreaElement>(null);
   const fileRef    = useRef<HTMLInputElement>(null);
 
@@ -707,10 +715,17 @@ function PostComposer({
   async function handleSubmit() {
     const text = content.trim();
     if (!text) return;
-    setSending(true);
+    setSending(true); setEstadoPublicado('guardando');
     try {
       await onSubmit(text, media?.url, media?.publicId);
+      // Confirma antes de cerrar el compositor, para que quede claro que la
+      // publicacion si entro
+      setEstadoPublicado('guardado');
+      await new Promise(r => setTimeout(r, MS_GUARDADO));
       setContent(''); setMedia(null); setOpen(false);
+      setEstadoPublicado('idle');
+    } catch {
+      setEstadoPublicado('idle');
     } finally { setSending(false); }
   }
 
@@ -789,10 +804,13 @@ function PostComposer({
           transition={{ type: 'spring' as const, stiffness: 500, damping: 15 }}
           className="shrink-0 px-5 py-2 rounded-full text-[13px] font-semibold text-white disabled:opacity-50 transition-opacity"
           style={{ background: 'linear-gradient(135deg, #7C3AED 0%, #4361EE 100%)' }}>
-          {sending
-            ? <div className="w-3.5 h-3.5 border-2 border-white/50 border-t-white rounded-full animate-spin" />
-            : 'Publicar'
-          }
+          <ContenidoGuardado
+            estado={estadoPublicado}
+            textoIdle="Publicar"
+            textoGuardando="Publicando"
+            textoGuardado="Publicado"
+            color="#fff"
+          />
         </motion.button>
       </div>
     </motion.div>

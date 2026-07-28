@@ -32,6 +32,7 @@ import { downloadMembersPDF } from '@/lib/pdf';
 import { downloadMembersTemplate, parseMembersExcel } from '@/lib/excel';
 import ModuleLoader, { useCargaMinima } from '@/components/ui/module-loader';
 import ModuleReveal from '@/components/ui/module-reveal';
+import { ContenidoGuardado, MS_GUARDADO, type EstadoGuardado } from '@/components/ui/save-button-state';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface Location { id: string; name: string }
@@ -97,6 +98,7 @@ export default function MiembrosPage() {
   const [step, setStep]         = useState(0);
   const [stepDir, setStepDir]   = useState(1);
   const [saving, setSaving]     = useState(false);
+  const [estadoGuardado, setEstadoGuardado] = useState<EstadoGuardado>('idle');
   const [error, setError]       = useState<string | null>(null);
 
   // Solo el administrador gestiona miembros; el resto ve la lista sin editarla
@@ -192,7 +194,7 @@ export default function MiembrosPage() {
 
   async function handleSave() {
     if (!form.fullName.trim()) return;
-    setSaving(true); setError(null);
+    setSaving(true); setEstadoGuardado('guardando'); setError(null);
     try {
       const token = await getToken();
       const body = JSON.stringify({
@@ -219,10 +221,16 @@ export default function MiembrosPage() {
       } else {
         await apiFetch('/members', { method: 'POST', token, body });
       }
-      setOpen(false);
+      // Confirma antes de cerrar: si el panel se cierra de una, la persona no
+      // alcanza a ver que el cambio quedo guardado.
+      setEstadoGuardado('guardado');
       qc.invalidateQueries({ queryKey: QK.members() });
+      await new Promise(r => setTimeout(r, MS_GUARDADO));
+      setOpen(false);
+      setEstadoGuardado('idle');
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Error al guardar');
+      setEstadoGuardado('idle');
     } finally {
       setSaving(false);
     }
@@ -1193,17 +1201,18 @@ export default function MiembrosPage() {
                 className="flex-[2] py-3.5 rounded-2xl font-semibold text-[14px] text-white flex items-center justify-center gap-2 transition-opacity disabled:opacity-50"
                 style={{ background: 'linear-gradient(135deg, #7C3AED, #4361EE)' }}
               >
-                {saving ? (
-                  <span className="flex items-center gap-2">
-                    <span className="w-4 h-4 rounded-full border-2 border-white/40 border-t-white animate-spin" />
-                    Guardando...
-                  </span>
-                ) : step < steps.length - 1 ? (
-                  <>
-                    Continuar
-                    <ChevronRight className="w-4 h-4" />
-                  </>
-                ) : editing ? 'Guardar cambios' : 'Crear miembro'}
+                <ContenidoGuardado
+                  estado={estadoGuardado}
+                  textoGuardando="Guardando"
+                  textoGuardado="Guardado"
+                  color="#fff"
+                  textoIdle={step < steps.length - 1 ? (
+                    <>
+                      Continuar
+                      <ChevronRight className="w-4 h-4" />
+                    </>
+                  ) : editing ? 'Guardar cambios' : 'Crear miembro'}
+                />
               </motion.button>
             </div>
             </motion.div>

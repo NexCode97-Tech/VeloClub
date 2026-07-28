@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/select';
 import ModuleLoader, { useCargaMinima } from '@/components/ui/module-loader';
 import ModuleReveal from '@/components/ui/module-reveal';
+import { ContenidoGuardado } from '@/components/ui/save-button-state';
 
 interface Member {
   id: string;
@@ -351,8 +352,14 @@ export default function AsistenciaPage() {
             className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold text-white cursor-pointer transition-colors"
             style={{ background: saved ? '#06D6A0' : 'linear-gradient(135deg, #7C3AED 0%, #4361EE 100%)' }}
           >
-            <CheckCircle2 className="w-4 h-4" />
-            <span>{saving ? 'Guardando...' : saved ? 'Guardado' : 'Guardar'}</span>
+            {!saving && !saved && <CheckCircle2 className="w-4 h-4" />}
+            <ContenidoGuardado
+              estado={saving ? 'guardando' : saved ? 'guardado' : 'idle'}
+              textoIdle="Guardar"
+              textoGuardando="Guardando"
+              textoGuardado="Guardado"
+              color="#fff"
+            />
           </motion.button>
         )}
       </div>

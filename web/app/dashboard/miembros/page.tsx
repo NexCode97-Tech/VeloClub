@@ -342,8 +342,6 @@ export default function MiembrosPage() {
       {/* ══════════════════════════════════════════════════════════════════
           DESKTOP LAYOUT
       ══════════════════════════════════════════════════════════════════ */}
-      {mostrarCarga ? <ModuleLoader /> : (
-      <>
       <div className="hidden md:flex flex-col h-full">
 
         {/* ── Desktop Header — full-bleed, alineado con la fila del logo en el sidebar ── */}
@@ -358,6 +356,9 @@ export default function MiembrosPage() {
             Miembros
           </h1>
         </motion.div>
+
+        {mostrarCarga ? <ModuleLoader /> : (
+        <>
 
         <div className="px-5 pt-6">
           {/* ── Stats strip ── */}
@@ -495,9 +496,7 @@ export default function MiembrosPage() {
 
         {/* ── Grid de tarjetas ── */}
         <div className="px-8 pb-8">
-          {mostrarCarga ? (
-          <ModuleLoader />
-          ) : filtered.length === 0 ? (
+          {filtered.length === 0 ? (
             <motion.div
               initial={{ opacity: 0 }} animate={{ opacity: 1 }}
               transition={{ duration: 0.22, ease: EASE_OUT }}
@@ -710,11 +709,14 @@ export default function MiembrosPage() {
             </motion.div>
           )}
         </div>
+        </>
+        )}
       </div>
 
       {/* ══════════════════════════════════════════════════════════════════
           MOBILE LAYOUT
       ══════════════════════════════════════════════════════════════════ */}
+      {mostrarCarga ? <div className="md:hidden"><ModuleLoader /></div> : (
       <motion.div variants={pageStagger} initial="hidden" animate="show" className="md:hidden px-4 pt-4 space-y-3">
         {/* Stats móvil como filtros */}
         <motion.div variants={pageCard} className="grid grid-cols-4 gap-2">
@@ -798,7 +800,6 @@ export default function MiembrosPage() {
           </div>
         )}
       </motion.div>
-      </>
       )}
 
       {/* ═══════════════════════════════════════════════════════════════════

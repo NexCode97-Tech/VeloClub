@@ -18,26 +18,28 @@ export function PuntosOnda({ color = 'currentColor' }: { color?: string }) {
     <span className="vcpo" aria-hidden="true">
       <style>{`
         .vcpo { display: inline-flex; align-items: center; gap: 3px }
-        .vcpo i {
+        .vcpo > span {
           width: 4px; height: 4px; border-radius: 99px; display: block;
           background: ${color};
           animation: vcpo-onda ${DURACION_ONDA_MS}ms cubic-bezier(.4,0,.6,1) infinite;
         }
-        .vcpo i:nth-child(2) { animation-delay: ${Math.round(DURACION_ONDA_MS / 6)}ms }
-        .vcpo i:nth-child(3) { animation-delay: ${Math.round(DURACION_ONDA_MS / 3)}ms }
         @keyframes vcpo-onda {
           0%, 60%, 100% { transform: translateY(0);    opacity: .45 }
           30%           { transform: translateY(-3px); opacity: 1 }
         }
         @media (prefers-reduced-motion: reduce) {
-          .vcpo i { animation: vcpo-latido ${DURACION_ONDA_MS}ms ease-in-out infinite }
+          .vcpo > span { animation: vcpo-latido ${DURACION_ONDA_MS}ms ease-in-out infinite }
           @keyframes vcpo-latido {
             0%, 60%, 100% { opacity: .45 }
             30%           { opacity: 1 }
           }
         }
       `}</style>
-      <i /><i /><i />
+      {/* El retraso va en linea y no con nth-child porque el <style> de arriba
+          tambien cuenta como hijo y correria la numeracion una posicion */}
+      {[0, 1, 2].map(i => (
+        <span key={i} style={{ animationDelay: `${Math.round((DURACION_ONDA_MS / 6) * i)}ms` }} />
+      ))}
     </span>
   );
 }

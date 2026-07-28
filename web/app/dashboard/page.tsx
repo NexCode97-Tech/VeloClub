@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { Slideshow } from '@/components/ui/slideshow';
 import { MemberAvatar } from '@/components/ui/member-avatar';
+import ModuleLoader, { useCargaMinima } from '@/components/ui/module-loader';
 
 // ── Interfaces ────────────────────────────────────────────────────────────────
 
@@ -807,6 +808,8 @@ export default function DashboardPage() {
   const [me, setMe]         = useState<MeResponse | null>(null);
   const [trial, setTrial]   = useState<{ daysLeft: number; endsAt: string } | null>(null);
   const [loading, setLoading] = useState(true);
+  // Sostiene el indicador un minimo de tiempo para que no parpadee
+  const mostrarCarga = useCargaMinima(loading);
 
   // Notifs
   const notifRef = useRef<HTMLDivElement>(null);
@@ -1005,12 +1008,9 @@ export default function DashboardPage() {
 
   // ── Render ────────────────────────────────────────────────────────────────
 
-  if (loading) {
+  if (mostrarCarga) {
     return (
-      <div className="flex items-center justify-center h-48">
-        <div className="w-6 h-6 rounded-full border-2 border-t-transparent animate-spin"
-          style={{ borderColor: '#7C3AED', borderTopColor: 'transparent' }} />
-      </div>
+      <ModuleLoader minHeight={240} />
     );
   }
 

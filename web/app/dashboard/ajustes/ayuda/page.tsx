@@ -5,6 +5,7 @@ import { useAuth } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, ChevronDown } from 'lucide-react';
 import { apiFetch } from '@/lib/api-client';
+import ModuleLoader, { useCargaMinima } from '@/components/ui/module-loader';
 
 type Role = 'ADMIN' | 'COACH' | 'STUDENT';
 
@@ -176,6 +177,8 @@ export default function AyudaPage() {
   const { getToken } = useAuth();
   const [role, setRole] = useState<Role | null>(null);
   const [loading, setLoading] = useState(true);
+  // Sostiene el indicador un minimo de tiempo para que no parpadee
+  const mostrarCarga = useCargaMinima(loading);
 
   useEffect(() => {
     (async () => {
@@ -211,10 +214,8 @@ export default function AyudaPage() {
         <p className="text-[12px] px-1 mb-4 lg:text-[13px] lg:mb-6" style={{ color: '#8E87A8' }}>
           Guía rápida para cada módulo de VeloClub. Toca cualquier sección para ver los pasos.
         </p>
-        {loading ? (
-          <div className="flex justify-center py-10">
-            <div className="w-5 h-5 rounded-full border-2 border-primary border-t-transparent animate-spin" />
-          </div>
+        {mostrarCarga ? (
+          <ModuleLoader minHeight={200} />
         ) : (
           <div className="space-y-2 md:grid md:grid-cols-2 md:gap-3 md:space-y-0">
             {guides.map(g => (

@@ -7,6 +7,7 @@ import { motion } from 'framer-motion';
 import { apiFetch } from '@/lib/api-client';
 import { MemberAvatar } from '@/components/ui/member-avatar';
 import { MapPin, CalendarDays, Users, ImagePlus, UserPlus, UserCheck } from 'lucide-react';
+import ModuleLoader, { useCargaMinima } from '@/components/ui/module-loader';
 
 const roleLabels: Record<string, string> = {
   SUPERADMIN: 'Super admin', ADMIN: 'Administrador',
@@ -52,6 +53,8 @@ export default function PublicProfilePage() {
 
   const [profile, setProfile]     = useState<PublicProfile | null>(null);
   const [loading, setLoading]     = useState(true);
+  // Sostiene el indicador un minimo de tiempo para que no parpadee
+  const mostrarCarga = useCargaMinima(loading);
   const [following, setFollowing] = useState(false);
   const [toggling, setToggling]   = useState(false);
   const isOwnProfile              = userId === targetClerkId;
@@ -99,12 +102,9 @@ export default function PublicProfilePage() {
     finally { setToggling(false); }
   }
 
-  if (loading) {
+  if (mostrarCarga) {
     return (
-      <div className="flex items-center justify-center h-48">
-        <div className="w-6 h-6 rounded-full border-2 border-t-transparent animate-spin"
-          style={{ borderColor: '#7C3AED', borderTopColor: 'transparent' }} />
-      </div>
+      <ModuleLoader minHeight={240} />
     );
   }
 

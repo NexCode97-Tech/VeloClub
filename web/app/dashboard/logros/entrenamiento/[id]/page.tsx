@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button';
 import {
   Select, SelectContent, SelectItem, SelectTrigger,
 } from '@/components/ui/select';
+import ModuleLoader, { useCargaMinima } from '@/components/ui/module-loader';
 
 interface Member { id: string; fullName: string }
 interface TrainingResult {
@@ -37,6 +38,8 @@ export default function TrainingDetailPage() {
   const [members, setMembers]   = useState<Member[]>([]);
   const [role, setRole]         = useState('');
   const [loading, setLoading]   = useState(true);
+  // Sostiene el indicador un minimo de tiempo para que no parpadee
+  const mostrarCarga = useCargaMinima(loading);
   const [open, setOpen]         = useState(false);
   const [form, setForm]         = useState(emptyForm);
   const [saving, setSaving]     = useState(false);
@@ -93,10 +96,8 @@ export default function TrainingDetailPage() {
     } finally { setDeleting(null); }
   }
 
-  if (loading) return (
-    <div className="flex justify-center py-20">
-      <div className="w-6 h-6 rounded-full border-2 border-primary border-t-transparent animate-spin" />
-    </div>
+  if (mostrarCarga) return (
+    <ModuleLoader minHeight={280} />
   );
   if (!session) return null;
 

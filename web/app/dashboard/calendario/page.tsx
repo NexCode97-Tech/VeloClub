@@ -8,6 +8,7 @@ import { useEffect, useState } from 'react';
 import { apiFetch } from '@/lib/api-client';
 import { parseLocalDate } from '@/lib/utils';
 import { ChevronLeft, ChevronRight, CalendarDays, Trophy, Dumbbell, MapPin } from 'lucide-react';
+import ModuleLoader, { useCargaMinima } from '@/components/ui/module-loader';
 
 const MONTH_NAMES = [
   'Enero','Febrero','Marzo','Abril','Mayo','Junio',
@@ -53,6 +54,8 @@ export default function CalendarioPage() {
   const [selectedDay, setSelectedDay] = useState(now.getDate());
   const [events, setEvents]           = useState<CalEvent[]>([]);
   const [loading, setLoading]         = useState(true);
+  // Sostiene el indicador un minimo de tiempo para que no parpadee
+  const mostrarCarga = useCargaMinima(loading);
 
   const today = now.getDate();
   const isCurrentMonth = year === now.getFullYear() && month === now.getMonth();
@@ -215,10 +218,8 @@ export default function CalendarioPage() {
               </span>
             </div>
 
-            {loading ? (
-              <div className="flex justify-center py-6">
-                <div className="w-5 h-5 rounded-full border-2 animate-spin" style={{ borderColor: '#4361EE', borderTopColor: 'transparent' }} />
-              </div>
+            {mostrarCarga ? (
+              <ModuleLoader minHeight={150} />
             ) : selectedEvents.length === 0 ? (
               <div className="flex flex-col items-center py-6 gap-2">
                 <CalendarDays className="w-8 h-8 text-muted-foreground/30" />

@@ -10,6 +10,7 @@ import {
   ArrowLeft, BadgeCheck, MapPin, CalendarDays, UserPlus, UserCheck,
   Phone, Mail, Building2, Lock,
 } from 'lucide-react';
+import ModuleLoader, { useCargaMinima } from '@/components/ui/module-loader';
 
 interface PublicClub {
   id: string; name: string; city?: string | null; department?: string | null;
@@ -34,6 +35,8 @@ export default function PublicClubPage() {
 
   const [data, setData] = useState<Payload | null>(null);
   const [loading, setLoading] = useState(true);
+  // Sostiene el indicador un minimo de tiempo para que no parpadee
+  const mostrarCarga = useCargaMinima(loading);
   const [notFound, setNotFound] = useState(false);
   const [following, setFollowing] = useState(false);
   const [followers, setFollowers] = useState(0);
@@ -78,11 +81,9 @@ export default function PublicClubPage() {
     }
   }
 
-  if (loading) {
+  if (mostrarCarga) {
     return (
-      <div className="flex justify-center py-20">
-        <div className="w-6 h-6 rounded-full border-2 border-primary border-t-transparent animate-spin" />
-      </div>
+      <ModuleLoader minHeight={280} />
     );
   }
 

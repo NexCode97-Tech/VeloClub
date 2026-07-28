@@ -16,6 +16,7 @@ import {
 import { PhoneInput } from '@/components/ui/phone-input';
 
 import { PostCard, Post, PostComment } from '@/components/ui/post-card';
+import ModuleLoader, { useCargaMinima } from '@/components/ui/module-loader';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -118,6 +119,8 @@ export default function PerfilPage() {
   const [memberMe, setMemberMe]   = useState<MemberMe | null>(null);
   const [posts, setPosts]             = useState<Post[]>([]);
   const [loading, setLoading]         = useState(true);
+  // Sostiene el indicador un minimo de tiempo para que no parpadee
+  const mostrarCarga = useCargaMinima(loading);
   const [activeTab, setActiveTab]     = useState<Tab>('Publicaciones');
   const [currentUserId, setCurrentUserId] = useState('');
   const [coverUrl, setCoverUrl]       = useState<string | null>(null);
@@ -290,12 +293,9 @@ export default function PerfilPage() {
     setPosts(prev => prev.filter(p => p.id !== postId));
   }
 
-  if (loading) {
+  if (mostrarCarga) {
     return (
-      <div className="flex items-center justify-center h-48">
-        <div className="w-6 h-6 rounded-full border-2 border-t-transparent animate-spin"
-          style={{ borderColor: '#7C3AED', borderTopColor: 'transparent' }} />
-      </div>
+      <ModuleLoader minHeight={240} />
     );
   }
 

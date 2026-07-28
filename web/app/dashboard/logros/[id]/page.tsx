@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/select';
 import { DatePicker } from '@/components/ui/date-picker';
 import { LocationPicker } from '@/components/ui/location-picker';
+import ModuleLoader, { useCargaMinima } from '@/components/ui/module-loader';
 
 interface Member { id: string; fullName: string }
 interface EventResult {
@@ -141,6 +142,8 @@ export default function CompetitionDetailPage() {
   const [members, setMembers]         = useState<Member[]>([]);
   const [role, setRole]               = useState('');
   const [loading, setLoading]         = useState(true);
+  // Sostiene el indicador un minimo de tiempo para que no parpadee
+  const mostrarCarga = useCargaMinima(loading);
 
   // Modal prueba
   const [eventOpen, setEventOpen]   = useState(false);
@@ -290,11 +293,9 @@ export default function CompetitionDetailPage() {
 
   const canManage = role === 'ADMIN' || role === 'COACH';
 
-  if (loading) {
+  if (mostrarCarga) {
     return (
-      <div className="flex items-center justify-center h-40">
-        <div className="w-6 h-6 rounded-full border-2 border-primary border-t-transparent animate-spin" />
-      </div>
+      <ModuleLoader minHeight={220} />
     );
   }
 

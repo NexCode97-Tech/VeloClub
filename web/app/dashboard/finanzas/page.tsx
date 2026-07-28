@@ -25,6 +25,7 @@ import {
 import { DatePicker } from '@/components/ui/date-picker';
 import { motion, AnimatePresence, useReducedMotion, type Variants } from 'framer-motion';
 import { stagger as pageStagger, cardVariant as pageCard } from '@/lib/page-animations';
+import ModuleLoader, { useCargaMinima } from '@/components/ui/module-loader';
 
 const fmt = new Intl.NumberFormat('es-CO', {
   style: 'currency', currency: 'COP', maximumFractionDigits: 0,
@@ -398,6 +399,9 @@ export default function FinanzasPage() {
     queryKey: QK.cashflow(filterMonth, filterYear),
     queryFn: async () => { const token = await getToken(); return apiFetch<{ entries: CashEntry[] }>(`/cashflow?month=${filterMonth}&year=${filterYear}`, { token }); },
   });
+
+  // Sostiene el indicador un mínimo de tiempo para que no parpadee
+  const mostrarCarga = useCargaMinima(loadingFlow && !cashflowData);
 
   const allMembers = membersData?.members  ?? [];
   const payments   = paymentsData?.payments ?? [];
@@ -1001,10 +1005,8 @@ export default function FinanzasPage() {
               ))}
             </div>
 
-            {loadingFlow && !cashflowData ? (
-              <div className="flex justify-center py-10">
-                <div className="w-6 h-6 rounded-full border-2 border-primary border-t-transparent animate-spin" />
-              </div>
+            {mostrarCarga ? (
+              <ModuleLoader minHeight={220} />
             ) : entries.length === 0 ? (
               <div className="bg-white border border-border rounded-xl px-4 py-10 text-center">
                 <Wallet className="w-10 h-10 mx-auto mb-3 text-muted-foreground/30" />

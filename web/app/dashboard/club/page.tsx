@@ -8,6 +8,7 @@ import { apiFetch } from '@/lib/api-client';
 import { MapPin, Camera, Pencil, Trash2, ImagePlus, BadgeCheck, Lock, CalendarDays, Phone, Mail, Building2, Check, X, UserPlus, UserCheck } from 'lucide-react';
 import { PostCard, Post, PostComment } from '@/components/ui/post-card';
 import { PhoneInput } from '@/components/ui/phone-input';
+import ModuleLoader, { useCargaMinima } from '@/components/ui/module-loader';
 
 interface ClubMember {
   id: string; fullName: string; pictureUrl?: string | null;
@@ -156,6 +157,8 @@ export default function ClubProfilePage() {
   const [members, setMembers]             = useState<ClubMember[]>([]);
   const [followersCount, setFollowers]    = useState(0);
   const [loading, setLoading]             = useState(true);
+  // Sostiene el indicador un minimo de tiempo para que no parpadee
+  const mostrarCarga = useCargaMinima(loading);
   const [userRole, setUserRole]           = useState<string>('');
   const [coverUrl, setCoverUrl]           = useState<string | null>(null);
   const [uploadingCover, setUploadingCover]   = useState(false);
@@ -312,12 +315,9 @@ export default function ClubProfilePage() {
     e.target.value = '';
   }
 
-  if (loading) {
+  if (mostrarCarga) {
     return (
-      <div className="flex items-center justify-center h-48">
-        <div className="w-6 h-6 rounded-full border-2 border-t-transparent animate-spin"
-          style={{ borderColor: '#7C3AED', borderTopColor: 'transparent' }} />
-      </div>
+      <ModuleLoader minHeight={240} />
     );
   }
 

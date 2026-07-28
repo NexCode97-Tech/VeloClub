@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
+import ModuleLoader, { useCargaMinima } from '@/components/ui/module-loader';
 
 const fmt = new Intl.NumberFormat('es-CO', {
   style: 'currency', currency: 'COP', maximumFractionDigits: 0,
@@ -68,6 +69,8 @@ export default function PagosPage() {
   const [filterMonth, setFilterMonth] = useState(now.getMonth() + 1);
   const [filterYear, setFilterYear]   = useState(now.getFullYear());
   const [loading, setLoading]     = useState(true);
+  // Sostiene el indicador un minimo de tiempo para que no parpadee
+  const mostrarCarga = useCargaMinima(loading);
   const [open, setOpen]           = useState(false);
   const [form, setForm]           = useState(emptyForm);
   const [saving, setSaving]       = useState(false);
@@ -522,10 +525,8 @@ export default function PagosPage() {
         </div>
 
         {/* Lista */}
-        {loading ? (
-          <div className="flex justify-center py-10">
-            <div className="w-6 h-6 rounded-full border-2 border-primary border-t-transparent animate-spin" />
-          </div>
+        {mostrarCarga ? (
+          <ModuleLoader minHeight={220} />
         ) : filtered.length === 0 ? (
           <div className="bg-white border border-border rounded-xl px-4 py-10 text-center">
             <IconMisPagos className="w-10 h-10 mx-auto mb-3 text-muted-foreground/30" />

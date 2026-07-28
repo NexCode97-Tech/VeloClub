@@ -19,6 +19,7 @@ import { Label } from '@/components/ui/label';
 import { COLOMBIA, DEPARTMENTS } from '@/lib/colombia';
 import ReactCrop, { type Crop as CropType, centerCrop, makeAspectCrop } from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
+import ModuleLoader, { useCargaMinima } from '@/components/ui/module-loader';
 
 const DAYS = [
   { label: 'Lunes',     short: 'L', value: 1 },
@@ -170,6 +171,8 @@ function AjustesPageContent() {
   const [city, setCity]             = useState('');
   const [noAttDays, setNoAttDays]   = useState<number[]>([]);
   const [loading, setLoading]       = useState(true);
+  // Sostiene el indicador un minimo de tiempo para que no parpadee
+  const mostrarCarga = useCargaMinima(loading);
   const [saving, setSaving]         = useState(false);
   const [saved, setSaved]           = useState(false);
 
@@ -359,11 +362,7 @@ function AjustesPageContent() {
     }
   }
 
-  if (loading) return (
-    <div className="flex justify-center py-20">
-      <div className="w-6 h-6 rounded-full border-2 border-primary border-t-transparent animate-spin" />
-    </div>
-  );
+  if (mostrarCarga) return <ModuleLoader minHeight={320} />;
 
   const logoSrc = logoPreview ?? club?.logoUrl ?? null;
   const isAdmin = role === 'ADMIN';

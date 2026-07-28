@@ -14,6 +14,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog';
 import { Plus, Pencil, Trash2, MapPin, LocateFixed, X, ChevronRight, ChevronDown, AlertCircle } from 'lucide-react';
+import ModuleLoader, { useCargaMinima } from '@/components/ui/module-loader';
 
 // Carga dinámica del mapa (no SSR — Leaflet requiere window)
 const LocationMapPicker = dynamic(
@@ -70,6 +71,8 @@ export default function SedesPage() {
   const { getToken } = useAuth();
   const [locations, setLocations] = useState<Location[]>([]);
   const [loading, setLoading] = useState(true);
+  // Sostiene el indicador un minimo de tiempo para que no parpadee
+  const mostrarCarga = useCargaMinima(loading);
   const [clubDepartment, setClubDepartment] = useState<string | null>(null);
   const [canManage, setCanManage] = useState(false);
 
@@ -362,10 +365,8 @@ export default function SedesPage() {
             </button>
           </div>
         )}
-        {loading ? (
-          <div className="flex justify-center py-10">
-            <div className="w-6 h-6 rounded-full border-2 border-primary border-t-transparent animate-spin" />
-          </div>
+        {mostrarCarga ? (
+          <ModuleLoader minHeight={240} />
         ) : locations.length === 0 ? (
           <motion.div variants={cardVariant} className="bg-card border border-border rounded-xl p-10 text-center">
             <MapPin className="w-10 h-10 text-muted-foreground/30 mx-auto mb-3" />

@@ -20,6 +20,7 @@ import { COLOMBIA, DEPARTMENTS } from '@/lib/colombia';
 import ReactCrop, { type Crop as CropType, centerCrop, makeAspectCrop } from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
 import ModuleLoader, { useCargaMinima } from '@/components/ui/module-loader';
+import ModuleReveal from '@/components/ui/module-reveal';
 
 const DAYS = [
   { label: 'Lunes',     short: 'L', value: 1 },
@@ -756,8 +757,8 @@ function AjustesPageContent() {
         <AnimatePresence mode="wait">
           {(!isAdmin || tab === 'perfil') && (
             <motion.div key="perfil"
-              initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.2, ease: [0.23, 1, 0.32, 1] }}
+              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.26, ease: [0.23, 1, 0.32, 1] }}
               className="px-4 pb-28 space-y-4">
               {perfilCard}
               {dangerCard}
@@ -765,16 +766,16 @@ function AjustesPageContent() {
           )}
           {isAdmin && tab === 'club' && (
             <motion.div key="club"
-              initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.2, ease: [0.23, 1, 0.32, 1] }}
+              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.26, ease: [0.23, 1, 0.32, 1] }}
               className="px-4 pb-28">
               {clubCard}
             </motion.div>
           )}
           {isAdmin && tab === 'suscripcion' && (
             <motion.div key="suscripcion"
-              initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.2, ease: [0.23, 1, 0.32, 1] }}
+              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.26, ease: [0.23, 1, 0.32, 1] }}
               className="px-4 pb-28">
               <SuscripcionCard />
             </motion.div>
@@ -785,6 +786,7 @@ function AjustesPageContent() {
       {/* ══ TABLET + ESCRITORIO (>= md) — columna centrada, una sección a la vez ═ */}
       <div className="hidden md:block px-6 pt-6 pb-8">
         <div className="max-w-5xl mx-auto">
+          <ModuleReveal>
           {(!isAdmin || tab === 'perfil') && (
             <div className="space-y-4">
               <SectionHeader label="Mi perfil" icon={IconPerfil} />
@@ -804,6 +806,7 @@ function AjustesPageContent() {
               <SuscripcionCard />
             </div>
           )}
+          </ModuleReveal>
         </div>
       </div>
     </div>

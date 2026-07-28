@@ -16,6 +16,7 @@ import { format, startOfMonth, endOfMonth } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { MonthPicker, DateRange } from '@/components/ui/month-picker';
 import ModuleLoader, { useCargaMinima } from '@/components/ui/module-loader';
+import ModuleReveal from '@/components/ui/module-reveal';
 
 const MONTH_NAMES      = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
 const MONTH_NAMES_FULL = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
@@ -259,6 +260,7 @@ export default function ReportesPage() {
 
       {mostrarCarga ? <ModuleLoader /> : (
       <motion.div variants={stagger} initial="hidden" animate="show" className="flex flex-col gap-4 px-4 pt-4 lg:pt-6">
+        <ModuleReveal>
 
         {/* KPIs */}
         <motion.div variants={cardVariant} className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -500,6 +502,7 @@ export default function ReportesPage() {
 
         </motion.div>
 
+        </ModuleReveal>
       </motion.div>
       )}
     </div>

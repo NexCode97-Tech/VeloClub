@@ -9,6 +9,7 @@ import { apiFetch } from '@/lib/api-client';
 import { parseLocalDate } from '@/lib/utils';
 import { ChevronLeft, ChevronRight, CalendarDays, Trophy, Dumbbell, MapPin } from 'lucide-react';
 import ModuleLoader, { useCargaMinima } from '@/components/ui/module-loader';
+import ModuleReveal from '@/components/ui/module-reveal';
 
 const MONTH_NAMES = [
   'Enero','Febrero','Marzo','Abril','Mayo','Junio',
@@ -134,6 +135,7 @@ export default function CalendarioPage() {
       {/* Layout: columna única en móvil, dos columnas en desktop */}
       {mostrarCarga ? <ModuleLoader /> : (
       <div className="flex flex-col md:flex-row gap-5 md:items-start px-4 pt-4 lg:pt-6 pb-5">
+        <ModuleReveal>
 
         {/* ── Columna izquierda — Calendario ── */}
         <div className="flex flex-col gap-4 md:w-[420px] shrink-0">
@@ -257,6 +259,7 @@ export default function CalendarioPage() {
             )}
           </div>
         </div>
+        </ModuleReveal>
       </div>
       )}
     </motion.div>

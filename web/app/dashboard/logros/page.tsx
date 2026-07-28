@@ -19,6 +19,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/u
 import { DatePicker } from '@/components/ui/date-picker';
 import { LocationPicker } from '@/components/ui/location-picker';
 import ModuleLoader, { useCargaMinima } from '@/components/ui/module-loader';
+import ModuleReveal from '@/components/ui/module-reveal';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 interface EventResult  { id: string; position?: number; member: { id: string; fullName: string; pictureUrl?: string | null } }
@@ -275,7 +276,7 @@ function LogrosPageInner() {
       </div>
 
       {mostrarCarga ? <ModuleLoader /> : (
-      <>
+      <ModuleReveal>
       <div className="px-5 pt-4 lg:pt-6">
         {/* Tabs — solo móvil; en escritorio viven en el sidebar. Van justo debajo
             del título, igual que en Finanzas. */}
@@ -394,7 +395,7 @@ function LogrosPageInner() {
           )}
         </AnimatePresence>
       </div>
-      </>
+      </ModuleReveal>
       )}
 
       {/* ── Modal nueva competencia ─────────────────────────────────────────── */}

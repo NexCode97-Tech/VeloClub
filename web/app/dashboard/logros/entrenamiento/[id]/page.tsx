@@ -15,6 +15,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger,
 } from '@/components/ui/select';
 import ModuleLoader, { useCargaMinima } from '@/components/ui/module-loader';
+import ModuleReveal from '@/components/ui/module-reveal';
 
 interface Member { id: string; fullName: string }
 interface TrainingResult {
@@ -105,6 +106,7 @@ export default function TrainingDetailPage() {
 
   return (
     <div className="min-h-full bg-background">
+      <ModuleReveal>
       {/* Header */}
       <div className="px-4 py-3 bg-background flex items-center gap-3">
         <Link href="/dashboard/logros" className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-secondary transition-colors">
@@ -236,6 +238,7 @@ export default function TrainingDetailPage() {
           </div>
         </DialogContent>
       </Dialog>
+      </ModuleReveal>
     </div>
   );
 }

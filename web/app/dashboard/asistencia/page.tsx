@@ -14,6 +14,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger,
 } from '@/components/ui/select';
 import ModuleLoader, { useCargaMinima } from '@/components/ui/module-loader';
+import ModuleReveal from '@/components/ui/module-reveal';
 
 interface Member {
   id: string;
@@ -360,7 +361,7 @@ export default function AsistenciaPage() {
         {mostrarCarga ? (
           <ModuleLoader />
         ) : (
-          <>
+          <ModuleReveal>
             {/* ── Week streak strip (siempre visible para poder cambiar de día) ── */}
             <motion.div
               variants={cardVariant}
@@ -590,7 +591,7 @@ export default function AsistenciaPage() {
                 </div>
               </>
             )}
-          </>
+          </ModuleReveal>
         )}
       </motion.div>
     </div>

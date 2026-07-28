@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/dialog';
 import { Plus, Pencil, Trash2, MapPin, LocateFixed, X, ChevronRight, ChevronDown, AlertCircle } from 'lucide-react';
 import ModuleLoader, { useCargaMinima } from '@/components/ui/module-loader';
+import ModuleReveal from '@/components/ui/module-reveal';
 
 // Carga dinámica del mapa (no SSR — Leaflet requiere window)
 const LocationMapPicker = dynamic(
@@ -367,7 +368,9 @@ export default function SedesPage() {
         )}
         {mostrarCarga ? (
           <ModuleLoader />
-        ) : locations.length === 0 ? (
+        ) : (
+        <ModuleReveal>
+        {locations.length === 0 ? (
           <motion.div variants={cardVariant} className="bg-card border border-border rounded-xl p-10 text-center">
             <MapPin className="w-10 h-10 text-muted-foreground/30 mx-auto mb-3" />
             <p className="text-sm text-muted-foreground">No hay sedes registradas aun.</p>
@@ -422,6 +425,8 @@ export default function SedesPage() {
               </motion.div>
             ))}
           </div>
+        )}
+        </ModuleReveal>
         )}
       </motion.div>
     </div>

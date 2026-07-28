@@ -19,6 +19,7 @@ import {
 import { Slideshow } from '@/components/ui/slideshow';
 import { MemberAvatar } from '@/components/ui/member-avatar';
 import ModuleLoader, { useCargaMinima } from '@/components/ui/module-loader';
+import ModuleReveal from '@/components/ui/module-reveal';
 
 // ── Interfaces ────────────────────────────────────────────────────────────────
 
@@ -1022,7 +1023,7 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-full bg-background">
-
+      <ModuleReveal>
 
       {/* ── Banner trial ─────────────────────────────────────────────────── */}
       <AnimatePresence>
@@ -1433,6 +1434,7 @@ export default function DashboardPage() {
 
       </div>
       </div>
+      </ModuleReveal>
     </div>
   );
 }

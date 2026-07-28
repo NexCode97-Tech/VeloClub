@@ -48,3 +48,6 @@ next-env.d.ts
 /public/swe-worker-*.js
 /public/fallback-*.js
 /public/fallback-*.js.map
+
+# clerk configuration (can include secrets)
+/.clerk/

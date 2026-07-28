@@ -16,6 +16,7 @@ import {
 import { DatePicker } from '@/components/ui/date-picker';
 import { LocationPicker } from '@/components/ui/location-picker';
 import ModuleLoader, { useCargaMinima } from '@/components/ui/module-loader';
+import ModuleReveal from '@/components/ui/module-reveal';
 
 interface Member { id: string; fullName: string }
 interface EventResult {
@@ -311,6 +312,7 @@ export default function CompetitionDetailPage() {
 
   return (
     <div className="min-h-full bg-background">
+      <ModuleReveal>
       {/* Encabezado */}
       <div className="px-4 py-3 bg-background">
         <button
@@ -627,6 +629,7 @@ export default function CompetitionDetailPage() {
           </div>
         </DialogContent>
       </Dialog>
+      </ModuleReveal>
     </div>
   );
 }

@@ -26,6 +26,7 @@ import { DatePicker } from '@/components/ui/date-picker';
 import { motion, AnimatePresence, useReducedMotion, type Variants } from 'framer-motion';
 import { stagger as pageStagger, cardVariant as pageCard } from '@/lib/page-animations';
 import ModuleLoader, { useCargaMinima } from '@/components/ui/module-loader';
+import ModuleReveal from '@/components/ui/module-reveal';
 
 const fmt = new Intl.NumberFormat('es-CO', {
   style: 'currency', currency: 'COP', maximumFractionDigits: 0,
@@ -704,6 +705,7 @@ export default function FinanzasPage() {
 
       {mostrarCarga ? <ModuleLoader /> : (
       <motion.div variants={pageStagger} initial="hidden" animate="show" className="px-4 pt-4 lg:pt-6 flex flex-col gap-4">
+        <ModuleReveal>
 
         {/* Tabs + filtros — una sola fila en desktop */}
         <motion.div variants={pageCard} className="flex flex-col gap-2 md:flex-row md:items-center md:gap-3 md:w-full">
@@ -1070,6 +1072,7 @@ export default function FinanzasPage() {
             )}
           </>
         )}
+        </ModuleReveal>
       </motion.div>
       )}
 

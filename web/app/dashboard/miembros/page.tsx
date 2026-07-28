@@ -31,6 +31,7 @@ import { DatePicker } from '@/components/ui/date-picker';
 import { downloadMembersPDF } from '@/lib/pdf';
 import { downloadMembersTemplate, parseMembersExcel } from '@/lib/excel';
 import ModuleLoader, { useCargaMinima } from '@/components/ui/module-loader';
+import ModuleReveal from '@/components/ui/module-reveal';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface Location { id: string; name: string }
@@ -345,34 +346,25 @@ export default function MiembrosPage() {
       <div className="hidden md:flex flex-col h-full">
 
         {/* ── Desktop Header — full-bleed, alineado con la fila del logo en el sidebar ── */}
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.28, ease: EASE_OUT }}
+        <div
           className="px-5 py-3 bg-background flex items-center lg:border-b"
           style={{ minHeight: 58, borderColor: 'rgba(0,0,0,0.07)' }}
         >
           <h1 className="text-[22px] font-semibold" style={{ color: '#1A1028', fontFamily: 'inherit', lineHeight: 1.1 }}>
             Miembros
           </h1>
-        </motion.div>
+        </div>
 
         {mostrarCarga ? <ModuleLoader /> : (
-        <>
-
+        <ModuleReveal>
         <div className="px-5 pt-6">
           {/* ── Stats strip ── */}
-          <motion.div
-            variants={{ hidden: {}, show: { transition: { staggerChildren: 0.07 } } }}
-            initial="hidden" animate="show"
-            className="grid grid-cols-4 gap-3 mb-6"
-          >
+          <div className="grid grid-cols-4 gap-3 mb-6">
             {statsDesktop.map(s => {
               const active = roleFilter === s.filter;
               return (
                 <motion.button
                   key={s.label}
-                  variants={{ hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0, transition: { duration: 0.22, ease: EASE_OUT } } }}
                   whileTap={reducedMotion ? {} : { scale: 0.97 }}
                   onClick={() => setRoleFilter(s.filter)}
                   className="rounded-xl md:rounded-2xl py-3 md:py-5 flex flex-col items-center justify-center w-full cursor-pointer transition-all text-center"
@@ -387,13 +379,10 @@ export default function MiembrosPage() {
                 </motion.button>
               );
             })}
-          </motion.div>
+          </div>
 
           {/* ── Search + Filtros ── */}
-          <motion.div
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.24, ease: EASE_OUT, delay: 0.12 }}
+          <div
             className="flex items-center gap-2 mb-4 flex-wrap"
           >
             {/* Barra de búsqueda */}
@@ -491,7 +480,7 @@ export default function MiembrosPage() {
                 <Plus className="w-4 h-4" /> Nuevo miembro
               </motion.button>
             </div>
-          </motion.div>
+          </div>
         </div>
 
         {/* ── Grid de tarjetas ── */}
@@ -709,7 +698,7 @@ export default function MiembrosPage() {
             </motion.div>
           )}
         </div>
-        </>
+        </ModuleReveal>
         )}
       </div>
 
@@ -718,6 +707,7 @@ export default function MiembrosPage() {
       ══════════════════════════════════════════════════════════════════ */}
       {mostrarCarga ? <div className="md:hidden"><ModuleLoader /></div> : (
       <motion.div variants={pageStagger} initial="hidden" animate="show" className="md:hidden px-4 pt-4 space-y-3">
+        <ModuleReveal>
         {/* Stats móvil como filtros */}
         <motion.div variants={pageCard} className="grid grid-cols-4 gap-2">
           {statsDesktop.map(s => {
@@ -799,6 +789,7 @@ export default function MiembrosPage() {
             })}
           </div>
         )}
+        </ModuleReveal>
       </motion.div>
       )}
 

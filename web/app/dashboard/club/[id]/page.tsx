@@ -11,6 +11,7 @@ import {
   Phone, Mail, Building2, Lock,
 } from 'lucide-react';
 import ModuleLoader, { useCargaMinima } from '@/components/ui/module-loader';
+import ModuleReveal from '@/components/ui/module-reveal';
 
 interface PublicClub {
   id: string; name: string; city?: string | null; department?: string | null;
@@ -100,6 +101,7 @@ export default function PublicClubPage() {
 
   return (
     <div className="min-h-full bg-background">
+      <ModuleReveal>
       {/* ── Header del club ─────────────────────────────────────────────────── */}
       <div className="bg-white border-b border-border" style={{ boxShadow: '0 1px 12px rgba(0,0,0,0.06)' }}>
         {/* Banner portada */}
@@ -279,6 +281,7 @@ export default function PublicClubPage() {
           <ContactCard club={club} mainLocation={mainLocation} />
         </div>
       </div>
+      </ModuleReveal>
     </div>
   );
 }

@@ -8,6 +8,7 @@ import { apiFetch } from '@/lib/api-client';
 import { MemberAvatar } from '@/components/ui/member-avatar';
 import { MapPin, CalendarDays, Users, ImagePlus, UserPlus, UserCheck } from 'lucide-react';
 import ModuleLoader, { useCargaMinima } from '@/components/ui/module-loader';
+import ModuleReveal from '@/components/ui/module-reveal';
 
 const roleLabels: Record<string, string> = {
   SUPERADMIN: 'Super admin', ADMIN: 'Administrador',
@@ -125,9 +126,8 @@ export default function PublicProfilePage() {
 
   return (
     <div className="min-h-full bg-background">
-      <motion.div
-        initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
+      <ModuleReveal>
+      <div
         className="bg-white border-b border-border"
         style={{ boxShadow: '0 1px 12px rgba(0,0,0,0.06)' }}
       >
@@ -253,7 +253,7 @@ export default function PublicProfilePage() {
             </div>
           </div>
         </div>
-      </motion.div>
+      </div>
 
       {/* Contenido — en desktop: izquierda 50%, derecha 50% reservado */}
       <div className="sm:flex sm:gap-6">
@@ -295,6 +295,7 @@ export default function PublicProfilePage() {
       {/* Columna derecha — reservada, sticky */}
       <div className="hidden sm:block sm:w-1/2 sm:sticky sm:top-4 sm:self-start" />
       </div>
+      </ModuleReveal>
     </div>
   );
 }

@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { ArrowLeft, ChevronDown } from 'lucide-react';
 import { apiFetch } from '@/lib/api-client';
 import ModuleLoader, { useCargaMinima } from '@/components/ui/module-loader';
+import ModuleReveal from '@/components/ui/module-reveal';
 
 type Role = 'ADMIN' | 'COACH' | 'STUDENT';
 
@@ -218,9 +219,11 @@ export default function AyudaPage() {
           <ModuleLoader />
         ) : (
           <div className="space-y-2 md:grid md:grid-cols-2 md:gap-3 md:space-y-0">
+            <ModuleReveal>
             {guides.map(g => (
               <HelpCard key={g.id} guide={g} />
             ))}
+            </ModuleReveal>
           </div>
         )}
       </div>

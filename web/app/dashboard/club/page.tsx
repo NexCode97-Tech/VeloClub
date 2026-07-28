@@ -9,6 +9,7 @@ import { MapPin, Camera, Pencil, Trash2, ImagePlus, BadgeCheck, Lock, CalendarDa
 import { PostCard, Post, PostComment } from '@/components/ui/post-card';
 import { PhoneInput } from '@/components/ui/phone-input';
 import ModuleLoader, { useCargaMinima } from '@/components/ui/module-loader';
+import ModuleReveal from '@/components/ui/module-reveal';
 
 interface ClubMember {
   id: string; fullName: string; pictureUrl?: string | null;
@@ -333,11 +334,10 @@ export default function ClubProfilePage() {
 
   return (
     <div className="min-h-full bg-background">
+      <ModuleReveal>
 
       {/* ── Header del club ─────────────────────────────────────────────────── */}
-      <motion.div
-        initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
+      <div
         className="bg-white border-b border-border"
         style={{ boxShadow: '0 1px 12px rgba(0,0,0,0.06)' }}
       >
@@ -566,7 +566,7 @@ export default function ClubProfilePage() {
             </div>
           </div>
         </div>
-      </motion.div>
+      </div>
 
       {/* ── Tabs ──────────────────────────────────────────────────────────────── */}
       <div className="bg-white border-b border-border sticky top-0 z-10">
@@ -698,6 +698,7 @@ export default function ClubProfilePage() {
         </div>
 
       </div>
+      </ModuleReveal>
     </div>
   );
 }

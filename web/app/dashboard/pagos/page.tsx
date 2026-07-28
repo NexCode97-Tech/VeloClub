@@ -15,6 +15,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import ModuleLoader, { useCargaMinima } from '@/components/ui/module-loader';
+import ModuleReveal from '@/components/ui/module-reveal';
 
 const fmt = new Intl.NumberFormat('es-CO', {
   style: 'currency', currency: 'COP', maximumFractionDigits: 0,
@@ -527,7 +528,9 @@ export default function PagosPage() {
         {/* Lista */}
         {mostrarCarga ? (
           <ModuleLoader />
-        ) : filtered.length === 0 ? (
+        ) : (
+        <ModuleReveal>
+        {filtered.length === 0 ? (
           <div className="bg-white border border-border rounded-xl px-4 py-10 text-center">
             <IconMisPagos className="w-10 h-10 mx-auto mb-3 text-muted-foreground/30" />
             <p className="text-[13px] font-semibold text-muted-foreground">Sin pagos registrados</p>
@@ -579,6 +582,8 @@ export default function PagosPage() {
               );
             })}
           </div>
+        )}
+        </ModuleReveal>
         )}
       </motion.div>
 

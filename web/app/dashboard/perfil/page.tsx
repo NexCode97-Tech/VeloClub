@@ -17,6 +17,7 @@ import { PhoneInput } from '@/components/ui/phone-input';
 
 import { PostCard, Post, PostComment } from '@/components/ui/post-card';
 import ModuleLoader, { useCargaMinima } from '@/components/ui/module-loader';
+import ModuleReveal from '@/components/ui/module-reveal';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -307,12 +308,10 @@ export default function PerfilPage() {
   return (
     <>
     <div className="min-h-full bg-background">
+      <ModuleReveal>
 
       {/* ── Tarjeta de perfil ─────────────────────────────────────────────── */}
-      <motion.div
-        initial={{ opacity: 0, y: -8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
+      <div
         className="bg-white border-b border-border"
         style={{ boxShadow: '0 1px 12px rgba(0,0,0,0.06)' }}
       >
@@ -554,7 +553,7 @@ export default function PerfilPage() {
             </div>
           </div>
         </div>
-      </motion.div>
+      </div>
 
       {/* ── Tabs ─────────────────────────────────────────────────────────────── */}
       <div className="bg-white border-b border-border sticky top-0 z-10">
@@ -868,6 +867,7 @@ export default function PerfilPage() {
         </div>
       </div>
       </div>
+      </ModuleReveal>
     </div>
 
     {/* Modal edición de contacto */}

@@ -97,7 +97,7 @@ function ChoiceScreen({ onCreate, onContact, onSignOut }: { onCreate: () => void
         </div>
         <div className="min-w-0">
           <p className="font-semibold text-slate-900 text-[15px]">Crear mi club</p>
-          <p className="text-[12.5px] text-slate-500 leading-snug">Empieza gratis 15 días. Lo tienes listo en un minuto.</p>
+          <p className="text-[12.5px] text-slate-500 leading-snug">Empieza con 2 meses gratis. Lo tienes listo en un minuto.</p>
         </div>
       </button>
 
@@ -257,7 +257,7 @@ function CreateClubForm({ getToken, onBack, onDone }: {
           style={{ background: GRAD }}>
           {loading ? <><Loader2 className="w-4 h-4 animate-spin" /> Creando...</> : <><Trophy className="w-4 h-4" /> Crear club y empezar gratis</>}
         </button>
-        <p className="text-[11.5px] text-slate-400 text-center">15 días gratis. Tu club queda por verificar hasta que lo revisemos o realices el primer pago.</p>
+        <p className="text-[11.5px] text-slate-400 text-center">2 meses gratis. Tu club queda por verificar hasta que lo revisemos o realices el primer pago.</p>
       </form>
     </div>
   );

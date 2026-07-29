@@ -86,6 +86,16 @@ export default function GlassmorphismHero() {
           {/* COLUMNA — texto */}
           <div className="lg:col-span-7 flex flex-col items-center lg:items-start space-y-5 text-center lg:text-left">
 
+            {/* Promoción — encima del titular y no dentro de él: el titular
+                dice qué es VeloClub, y eso no cambia cuando la promoción
+                termine. Así, al vencer, se borra este bloque y nada más. */}
+            <div className="vc-fade d1 inline-flex items-center gap-2 rounded-full px-3.5 py-1.5"
+              style={{ background: 'rgba(124,58,237,0.16)', border: '1px solid rgba(168,85,247,0.35)' }}>
+              <span className="inline-block w-1.5 h-1.5 rounded-full" style={{ background: '#A855F7' }} />
+              <span className="text-[12px] font-semibold text-white">2 meses gratis</span>
+              <span className="text-[12px] text-zinc-400">hasta el 31 de octubre</span>
+            </div>
+
             {/* Headline */}
             <h1 className="vc-fade d2 text-[2.4rem] sm:text-5xl lg:text-[3.25rem] font-semibold tracking-tighter leading-[0.92] text-white">
               Gestiona tu club.<br />
@@ -108,7 +118,7 @@ export default function GlassmorphismHero() {
                 className="inline-flex items-center justify-center gap-2 rounded-full w-full sm:w-auto px-8 py-3 text-sm font-semibold text-white transition-all hover:scale-[1.02] active:scale-[0.98]"
                 style={{ background: 'linear-gradient(135deg, #7C3AED, #9333EA)' }}
               >
-                Crear mi club
+                Empezar 2 meses gratis
               </Link>
               <a
                 href="https://wa.me/573006359008"

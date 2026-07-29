@@ -293,7 +293,8 @@ export default function HomePage() {
             ¿Listo para empezar?
           </h2>
           <p className="text-purple-200 text-sm mb-7 relative">
-            Crea tu club gratis y empieza a gestionar todo desde hoy. 15 días de prueba.
+            Crea tu club y gestiona todo desde hoy. 2 meses gratis registrándote antes
+            del 31 de octubre, sin tarjeta y sin compromiso.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 relative">
             <Link

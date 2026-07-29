@@ -431,9 +431,30 @@ router.get('/name-availability', requireAuth, async (req, res) => {
   res.json({ status: collision });
 });
 
+// ── Promoción de lanzamiento: 2 meses gratis ────────────────────────────────
+//
+// Los clubes que se registren hasta el 31 de octubre de 2026 reciben 60 días de
+// prueba en vez de 15. Al vencer la promoción vuelve solo al período normal sin
+// necesidad de desplegar nada: la fecha manda.
+//
+// Se hace alargando el período de prueba y NO tocando los precios, para no
+// mover nada de la pasarela de pagos. Los clubes que ya estaban en prueba
+// cuando arrancó la promoción recibieron los 60 días sumados a lo que les
+// quedaba (ver scripts/promo-dos-meses.mjs).
+//
+// El corte es a medianoche del 1 de noviembre en hora de Colombia, así que un
+// club que se registre el 31 de octubre a las 11 de la noche todavía alcanza.
+const PROMO_FIN = new Date('2026-11-01T00:00:00-05:00');
+const DIAS_PRUEBA_PROMO  = 60;
+const DIAS_PRUEBA_NORMAL = 15;
+
+export function diasDePrueba(referencia = new Date()): number {
+  return referencia < PROMO_FIN ? DIAS_PRUEBA_PROMO : DIAS_PRUEBA_NORMAL;
+}
+
 // POST /clubs  — auto-registro de club (self-serve). El usuario ya está
 // autenticado en Clerk (correo/teléfono verificados). Crea el club en estado
-// PENDING con trial de 15 días y al usuario como ADMIN (User + Member).
+// PENDING con su período de prueba y al usuario como ADMIN (User + Member).
 router.post('/', requireAuth, async (req, res) => {
   if (!req.auth) return res.status(401).json({ error: 'No autenticado' });
 
@@ -455,7 +476,7 @@ router.post('/', requireAuth, async (req, res) => {
   }
 
   const trialEndsAt = new Date();
-  trialEndsAt.setDate(trialEndsAt.getDate() + 15);
+  trialEndsAt.setDate(trialEndsAt.getDate() + diasDePrueba());
 
   const club = await prisma.club.create({
     data: {

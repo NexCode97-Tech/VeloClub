@@ -42,13 +42,13 @@ export default function CrearClubPage() {
           Crea tu club<br />en un minuto.
         </h1>
         <p className="text-white/60 text-[15px] max-w-md mb-8">
-          Gestiona miembros, asistencia, pagos y competencias desde un solo lugar. Empieza gratis 15 días.
+          Gestiona miembros, asistencia, pagos y competencias desde un solo lugar. Empieza con 2 meses gratis.
         </p>
         <div className="space-y-3.5">
           {[
             { icon: Zap, text: 'Listo para usar en minutos, sin instalaciones' },
             { icon: Trophy, text: 'Miembros, asistencia, pagos y competencias' },
-            { icon: ShieldCheck, text: '15 días gratis, sin tarjeta requerida' },
+            { icon: ShieldCheck, text: '2 meses gratis, sin tarjeta requerida' },
           ].map(({ icon: Icon, text }) => (
             <div key={text} className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'rgba(124,58,237,0.20)' }}>
@@ -66,7 +66,7 @@ export default function CrearClubPage() {
         <div className="lg:hidden flex flex-col items-center text-center mb-2">
           <Image src="/logo.png" alt="VeloClub" width={40} height={40} className="object-contain mb-3" style={{ borderRadius: 9 }} />
           <h1 className="text-[20px] font-semibold text-white mb-1">Crea tu club</h1>
-          <p className="text-white/60 text-[13px] max-w-xs">15 días gratis. Listo en un minuto.</p>
+          <p className="text-white/60 text-[13px] max-w-xs">2 meses gratis. Listo en un minuto.</p>
         </div>
 
         <style>{`

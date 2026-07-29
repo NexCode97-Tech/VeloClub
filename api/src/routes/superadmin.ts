@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { requireAuth } from '../auth/middleware';
 import { prisma } from '../db/client';
 import { addToAllowlist, removeFromAllowlist } from '../lib/clerk-allowlist';
-import { invalidarTrustedCache } from './clubs';
+import { invalidarTrustedCache, diasDePrueba } from './clubs';
 import { cacheDel } from '../lib/redis';
 import { v2 as cloudinary } from 'cloudinary';
 
@@ -64,8 +64,11 @@ router.post('/clubs', requireAuth, requireSuperadmin, async (req, res) => {
   // apuntando al club viejo y el GET /me resuelve el club equivocado.
   const existingUser = await prisma.user.findFirst({ where: { email: { equals: adminEmail, mode: 'insensitive' } } });
 
+  // Mismo periodo que el auto-registro, incluida la promocion vigente: un club
+  // que creamos nosotros a mano no puede recibir menos dias que uno que se
+  // registra solo desde la landing
   const trialEndsAt = new Date();
-  trialEndsAt.setDate(trialEndsAt.getDate() + 15);
+  trialEndsAt.setDate(trialEndsAt.getDate() + diasDePrueba());
 
   const club = await prisma.club.create({
     data: {

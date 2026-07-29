@@ -23,6 +23,56 @@ export default function GlassmorphismHero() {
         .d3 { animation-delay: 0.28s; }
         .d4 { animation-delay: 0.38s; }
         .d5 { animation-delay: 0.48s; }
+        .d6 { animation-delay: 0.58s; }
+
+        /* Entrada linea por linea del titular. El desenfoque hace que el texto
+           parezca enfocarse al llegar, en vez de solo deslizarse: es lo que le
+           da peso editorial al titular sin recurrir a movimiento largo. */
+        @keyframes vcTitleIn {
+          from { opacity: 0; transform: translateY(22px); filter: blur(10px) }
+          to   { opacity: 1; transform: translateY(0);    filter: blur(0) }
+        }
+        .vc-line { animation: vcTitleIn .75s cubic-bezier(.23,1,.32,1) both; display: block }
+
+        /* Barrido de luz sobre la promocion. Se mueve con background-position,
+           que no fuerza recalculo de layout, y solo recorre el texto. */
+        @keyframes vcSweep {
+          0%   { background-position: -160% 0 }
+          55%  { background-position: 260% 0 }
+          100% { background-position: 260% 0 }
+        }
+        .vc-promo-text {
+          background-image: linear-gradient(100deg,
+            #E9D5FF 0%, #E9D5FF 38%, #FFFFFF 48%, #C4B5FD 58%, #E9D5FF 74%, #E9D5FF 100%);
+          background-size: 220% 100%;
+          -webkit-background-clip: text; background-clip: text;
+          color: transparent;
+          animation: vcSweep 4.5s cubic-bezier(.4,0,.2,1) 1.2s infinite;
+        }
+
+        /* Latido del punto de la pastilla: un halo que se expande y se apaga */
+        @keyframes vcPing {
+          0%   { transform: scale(1);   opacity: .65 }
+          70%  { transform: scale(2.6); opacity: 0 }
+          100% { transform: scale(2.6); opacity: 0 }
+        }
+        .vc-ping { animation: vcPing 2.4s cubic-bezier(0,0,.2,1) infinite }
+
+        /* El halo del boton respira. Va en box-shadow y no en transform para no
+           mover el boton mientras alguien intenta tocarlo. */
+        @keyframes vcGlow {
+          0%, 100% { box-shadow: 0 6px 24px rgba(124,58,237,.32) }
+          50%      { box-shadow: 0 8px 34px rgba(147,51,234,.55) }
+        }
+        .vc-cta { animation: vcGlow 3.2s ease-in-out 1.6s infinite }
+
+        @media (prefers-reduced-motion: reduce) {
+          .vc-cta { animation: none; box-shadow: 0 6px 24px rgba(124,58,237,.32) }
+          .vc-line { animation: fadeSlideIn .5s ease-out both }
+          .vc-promo-text { animation: none; color: #E9D5FF; background: none; -webkit-text-fill-color: currentColor }
+          .vc-ping { animation: none; opacity: .4 }
+          .vc-marquee { animation: none }
+        }
       `}</style>
 
       {/* 1. Imagen de fondo — Next.js Image con priority para LCP */}
@@ -86,36 +136,47 @@ export default function GlassmorphismHero() {
           {/* COLUMNA — texto */}
           <div className="lg:col-span-7 flex flex-col items-center lg:items-start space-y-5 text-center lg:text-left">
 
-            {/* Promoción — encima del titular y no dentro de él: el titular
-                dice qué es VeloClub, y eso no cambia cuando la promoción
-                termine. Así, al vencer, se borra este bloque y nada más. */}
-            <div className="vc-fade d1 inline-flex items-center gap-2 rounded-full px-3.5 py-1.5"
+            {/* Pastilla de campaña — el punto late para que el ojo la registre
+                antes de leerla */}
+            <div className="vc-fade d1 inline-flex items-center gap-2.5 rounded-full px-3.5 py-1.5"
               style={{ background: 'rgba(124,58,237,0.16)', border: '1px solid rgba(168,85,247,0.35)' }}>
-              <span className="inline-block w-1.5 h-1.5 rounded-full" style={{ background: '#A855F7' }} />
-              <span className="text-[12px] font-semibold text-white">2 meses gratis</span>
+              <span className="relative inline-flex w-1.5 h-1.5 shrink-0">
+                <span className="vc-ping absolute inset-0 rounded-full" style={{ background: '#A855F7' }} />
+                <span className="relative inline-block w-1.5 h-1.5 rounded-full" style={{ background: '#A855F7' }} />
+              </span>
+              <span className="text-[12px] font-semibold text-white">Promoción de lanzamiento</span>
               <span className="text-[12px] text-zinc-400">hasta el 31 de octubre</span>
             </div>
 
-            {/* Headline */}
-            <h1 className="vc-fade d2 text-[2.4rem] sm:text-5xl lg:text-[3.25rem] font-semibold tracking-tighter leading-[0.92] text-white">
-              Gestiona tu club.<br />
-              <span className="bg-gradient-to-br from-white via-white to-[#A855F7] bg-clip-text text-transparent">
-                Enfócate en
+            {/* Titular — la promoción es la tercera línea y remata la frase, así
+                que se lee de corrido: "Gestiona tu club, enfócate en el deporte,
+                con 2 meses gratis". Cada línea entra por separado, con un
+                desenfoque que se disipa: el texto parece enfocarse al llegar.
+                Cuando la promoción termine se borra esa línea y el titular
+                sigue teniendo sentido por sí solo. */}
+            <h1 className="text-[2.4rem] sm:text-5xl lg:text-[3.25rem] font-semibold tracking-tighter leading-[0.92] text-white">
+              <span className="vc-line" style={{ animationDelay: '.14s' }}>Gestiona tu club.</span>
+              <span className="vc-line" style={{ animationDelay: '.26s' }}>
+                <span className="bg-gradient-to-br from-white via-white to-[#A855F7] bg-clip-text text-transparent">
+                  Enfócate en el deporte.
+                </span>
               </span>
-              <br />el deporte.
+              <span className="vc-line" style={{ animationDelay: '.42s' }}>
+                <span className="vc-promo-text">Con 2 meses gratis.</span>
+              </span>
             </h1>
 
             {/* Descripción */}
-            <p className="vc-fade d3 text-sm text-zinc-400 leading-relaxed mx-auto lg:mx-0 max-w-sm lg:max-w-md">
-              VeloClub es la plataforma todo-en-uno para gestionar miembros, asistencia,
-              pagos y competencias de tu club deportivo, desde un solo lugar.
+            <p className="vc-fade d4 text-sm text-zinc-400 leading-relaxed mx-auto lg:mx-0 max-w-sm lg:max-w-md">
+              La plataforma todo-en-uno para gestionar miembros, asistencia, pagos y
+              competencias. Pruébala dos meses sin costo y sin tarjeta.
             </p>
 
             {/* CTA */}
-            <div className="vc-fade d4 flex flex-col sm:flex-row items-stretch sm:items-center justify-center lg:justify-start gap-3">
+            <div className="vc-fade d5 flex flex-col sm:flex-row items-stretch sm:items-center justify-center lg:justify-start gap-3">
               <Link
                 href="/crear-club"
-                className="inline-flex items-center justify-center gap-2 rounded-full w-full sm:w-auto px-8 py-3 text-sm font-semibold text-white transition-all hover:scale-[1.02] active:scale-[0.98]"
+                className="vc-cta inline-flex items-center justify-center gap-2 rounded-full w-full sm:w-auto px-8 py-3 text-sm font-semibold text-white transition-all hover:scale-[1.02] active:scale-[0.98]"
                 style={{ background: 'linear-gradient(135deg, #7C3AED, #9333EA)' }}
               >
                 Empezar 2 meses gratis
@@ -131,7 +192,7 @@ export default function GlassmorphismHero() {
             </div>
 
             {/* Imagen — solo mobile/tablet, debajo del contenido */}
-            <div className="vc-fade d5 lg:hidden w-full flex justify-center pt-2">
+            <div className="vc-fade d6 lg:hidden w-full flex justify-center pt-2">
               <Image
                 src="/version-movil.webp"
                 alt="VeloClub versión móvil"

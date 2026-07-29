@@ -5,6 +5,52 @@ Actualizar al final de cada sesión o cuando se complete un bloque de trabajo im
 
 ---
 
+## Sesión 2026-07-29
+
+**Modelo:** Claude Opus 5
+**Estado inicial:** `f840f7b`, rama `main`, app en producción
+**Estado final:** `68e6f60`, todo desplegado
+
+### Completado
+
+- [x] **Cargador de módulo:** distancia fija desde el borde superior por dispositivo
+  (móvil 400px, tablet y escritorio 320px) en vez de centrado en el espacio libre.
+- [x] **ModuleReveal:** entrada unificada del contenido en los 17 módulos (fade up
+  escalonado en CSS, sin dejar transform aplicado al terminar).
+- [x] **RBAC:** miembros y sedes pasan a solo lectura para el entrenador; flujo de
+  caja exige ADMIN; competencias y entrenamientos exigen ADMIN o COACH. Once rutas
+  de escritura no validaban ningún rol y respondían a cualquiera con sesión.
+- [x] **Suscripciones fantasma:** `GET /mi-suscripcion` hacía upsert y creaba planes
+  de 450.000 a clubes en prueba. Separada lectura de escritura y limpiadas las 5
+  filas existentes en producción.
+- [x] **Superadmin — detalle de club:** ahora tiene rutas propias
+  (`/superadmin/clubs/[id]` y `/finanzas`), el sidebar muestra los módulos del club,
+  y la tarjeta de datos se completó con ubicación, contacto, banderas de estado y
+  descripción. Historial de abonos a lo ancho.
+- [x] **Estados de guardado:** puntos en onda + palomita en los botones con texto.
+- [x] **PWA:** alcance del manifiesto en la raíz e `id`; service worker sin los
+  helpers indefinidos que rompían la navegación.
+- [x] **Sentry:** corregidos `removeChild` (444 ocurrencias, AnimatePresence fuera
+  del portal) y `t.lat is not a function`. Los de Mercado Pago resueltos: eran del
+  cambio de credenciales de prueba a producción el 16 de julio.
+- [x] **Promoción 2 meses gratis** hasta el 31 de octubre: `diasDePrueba()` da 60
+  días en auto-registro y en alta desde superadmin, con tests de las cuatro
+  fronteras. Aplicada a los 6 clubes en prueba sumando a lo que les quedaba.
+- [x] **Landing:** la promoción entra al titular como tercera línea, con entrada
+  línea por línea con desenfoque, barrido de luz, latido en la pastilla y halo del
+  botón. Corregido el flujo de registro que seguía prometiendo 15 días.
+
+### Decidido y aplazado
+
+- Barra de estado del iPhone detrás del degradado: descartado por ahora
+  (ver memoria `veloclub-barra-estado-pwa`).
+- Rediseño del Inicio tipo comunidad (degradado a todo el ancho, buscador y campana
+  separados, logo junto al nombre): **diseño aprobado, sin implementar**.
+- Limpiar espacios sobrantes en nombres de club (`"Correcaminos "` y
+  `"Duvan Oviedo  Centro…"`) y normalizar en la edición del superadmin.
+
+---
+
 ## Sesión 2026-06-16
 
 **Modelo:** Claude Opus 4.8

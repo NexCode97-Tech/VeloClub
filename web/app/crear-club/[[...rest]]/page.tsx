@@ -6,6 +6,7 @@ import { useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ArrowLeft, Trophy, Zap, ShieldCheck } from 'lucide-react';
+import LoadingScreen from '@/components/ui/loading-screen';
 
 // Flujo dedicado y con marca propia para el registro self-serve ("Crear mi
 // club"), separado de /sign-up (genérico) y /sign-in (usuarios existentes).
@@ -19,7 +20,10 @@ export default function CrearClubPage() {
     if (isLoaded && isSignedIn) router.replace('/dashboard');
   }, [isLoaded, isSignedIn]);
 
-  if (!isLoaded || isSignedIn) return null;
+  // Mientras Clerk arranca no se puede pintar el formulario, pero devolver null
+  // dejaba la pantalla en blanco: al tocar "Empezar 2 meses gratis" no pasaba
+  // nada visible durante segundos y parecia que el boton estuviera roto.
+  if (!isLoaded || isSignedIn) return <LoadingScreen />;
 
   return (
     <div className="min-h-screen bg-[#0D0520] flex flex-col lg:flex-row relative overflow-hidden">

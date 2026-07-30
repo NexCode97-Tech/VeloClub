@@ -74,8 +74,8 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   res.on('finish', () => {
     const ms = Date.now() - start;
     const level = res.statusCode >= 500 ? 'ERROR' : res.statusCode >= 400 ? 'WARN' : 'INFO';
-    // Ocultar token SSE en los logs
-    const path = req.path === '/stream' ? '/stream?token=[REDACTED]' : req.originalUrl;
+    // El ticket del stream no debe quedar registrado
+    const path = req.path === '/stream' ? '/stream?ticket=[REDACTED]' : req.originalUrl;
     console.log(JSON.stringify({ level, reqId, method: req.method, path, status: res.statusCode, ms }));
   });
   next();

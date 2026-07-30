@@ -1,27 +1,39 @@
 import { Router } from 'express';
-import { verifyToken } from '@clerk/backend';
+import { requireAuth } from '../auth/middleware';
 import { prisma } from '../db/client';
 import { addSSEClient, removeSSEClient } from '../lib/sse';
-import { audienciaEsValida } from '../lib/clerk-audiencia';
+import { crearTicketStream, canjearTicketStream } from '../lib/stream-ticket';
 
 const router = Router();
 
 /**
- * GET /stream?token=<clerk-jwt>
+ * POST /stream/ticket
  *
- * Conexión SSE por club. El token va en query param porque EventSource
- * no admite cabeceras personalizadas. El JWT es de corta duración (~60s).
+ * Entrega un ticket de un solo uso para abrir el stream. El JWT viaja aquí en la
+ * cabecera, como en cualquier otra ruta.
+ */
+router.post('/ticket', requireAuth, async (req, res) => {
+  if (!req.auth) return res.status(401).json({ error: 'No autenticado' });
+  const ticket = await crearTicketStream(req.auth.clerkId);
+  res.json({ ticket });
+});
+
+/**
+ * GET /stream?ticket=<ticket>
+ *
+ * Conexión SSE por club. El identificador va en la query porque EventSource no
+ * admite cabeceras; antes se mandaba ahí el JWT de Clerk, que quedaba expuesto en
+ * el historial del navegador y en los logs de los proxies intermedios.
  */
 router.get('/', async (req, res) => {
-  const token = String(req.query.token ?? '');
-  if (!token) return res.status(401).end();
+  const ticket = String(req.query.ticket ?? '');
+  if (!ticket) return res.status(401).end();
 
   try {
-    const payload = await verifyToken(token, {
-      secretKey: process.env.CLERK_SECRET_KEY!,
-    });
-    if (!audienciaEsValida(payload)) return res.status(401).end();
-    const user = await prisma.user.findUnique({ where: { clerkId: payload.sub } });
+    const clerkId = await canjearTicketStream(ticket);
+    if (!clerkId) return res.status(401).end();
+
+    const user = await prisma.user.findUnique({ where: { clerkId } });
     if (!user?.clubId) return res.status(403).end();
 
     const clubId = user.clubId;

@@ -5,6 +5,130 @@ Actualizar al final de cada sesión o cuando se complete un bloque de trabajo im
 
 ---
 
+## Sesión 2026-07-30
+
+**Modelo:** Claude Sonnet 5
+**Estado inicial:** `fd4030d`, rama `main`, app en producción
+**Estado final:** `abb0c40`, todo desplegado
+
+### Herramientas conectadas
+
+- [x] **CLI de Railway** enlazado al servicio `VeloClub`, y **CLI de Vercel** al
+  proyecto `veloclub`. El primer `vercel link` creó por error un proyecto vacío
+  llamado `web` en vez de enlazar el real; se eliminó y se reenlazó.
+- [x] **Sentry** (CLI + MCP) y **Clerk** (CLI + MCP) autenticados.
+- **Aprendido:** Railway ya despliega solo con el push desde GitHub; no necesita
+  despliegue aparte, contrario a lo que decía el CLAUDE.md.
+
+### Errores de Sentry corregidos
+
+Los 7 issues abiertos, atacados en su causa y no silenciados:
+
+- [x] **N+1 en `POST /attendance/bulk`:** un upsert por registro generaba 62
+  queries en una jornada. Ahora lee los existentes y agrupa las escrituras en
+  `createMany` + `updateMany`, quedando en unas 6.
+- [x] **Service worker:** el script que desregistraba workers corría en cada carga
+  y competía con el registro de la PWA, provocando `AbortError` al registrar
+  `/sw.js`. Pasa a correr una sola vez, desde `Providers`.
+- [x] **`signOut` en onboarding** lanzaba "You are signed out" con la sesión ya
+  expirada; el panel de superadmin refrescaba cada 15s y chocaba con el rate limit.
+- [x] **`apiFetch`** reintenta una vez ante 429 y ante cortes de red, pero solo
+  cuando la petición es idempotente, para no duplicar datos en POST o PATCH.
+
+### Auditoría OWASP — backend y frontend
+
+Auditados los 6.612 líneas de `api/src` y todo `web/`. Hallazgos verificados a mano
+antes de tocar código.
+
+**Crítico**
+
+- [x] **Escalada a SUPERADMIN:** `requireAuth` tomaba `emailAddresses[0]` sin
+  comprobar verificación. Ese correo es la llave de identidad de todo el backend,
+  así que agregando a la cuenta un correo secundario sin verificar igual al de otro
+  admin se tomaba su club o el panel completo. Solo se acepta correo verificado.
+  Comprobado contra los 28 usuarios de producción con
+  `api/scripts/auditar-emails-clerk.ts`: ninguno quedó bloqueado.
+
+**Alto**
+
+- [x] **Escrituras entre clubes:** comentarios, pruebas y resultados de
+  competencias, y resultados de entrenamiento se buscaban solo por id. Como los ids
+  viajan en los posts públicos, cualquier ADMIN o COACH podía editar o borrar
+  registros de otros clubes.
+- [x] **Fuga de datos personales:** `GET /payments` y `GET /members` no verificaban
+  rol. Un deportista recibía todos los pagos del club con correo y teléfono, y el
+  listado con documento, EPS, contacto de emergencia y archivos adjuntos. Ahora ve
+  solo su historial y una versión reducida del listado. La llave de caché incluye el
+  alcance para no servir la versión equivocada.
+- [x] **`POST/DELETE /events` sin rol:** un deportista podía crear eventos y con
+  ellos disparar notificaciones a todo el club.
+- [x] **Sentry Session Replay** grababa el 5% de las sesiones sin enmascarar:
+  nombres de menores, teléfonos, montos y comprobantes salían a un tercero.
+- [x] **Autorización que fallaba abierta:** el panel de superadmin se montaba antes
+  de confirmar el rol y cualquier error de red bastaba para renderizarlo; el
+  dashboard caía al menú de ADMIN si no lograba resolver el rol.
+
+**Medio**
+
+- [x] Zod en `PATCH /payments/:id` (el monto aceptaba negativos y alimentaba el
+  flujo de caja); sedes validadas contra el club en miembros, entrenamientos,
+  eventos y asistencia; url de Cloudinary obligatoria en el upload de miembros;
+  alcance del post en `GET /posts/:id/likes`.
+- [x] **Subidas a Cloudinary:** el uploader acepta también URLs remotas, así que
+  pasarle el cuerpo sin revisar permitía que Cloudinary consultara una dirección
+  arbitraria. Sin tope de tamaño real, y el feed admitía cualquier archivo bajo el
+  tipo `raw`. Cubiertos los 9 puntos con `lib/upload-guard`.
+- [x] **Límites por endpoint** (`lib/rate-limit`) en validación de cupones, intentos
+  de pago, subidas, alta de clubes, procesos masivos y `/cron`; el secreto de cron
+  se compara en tiempo constante.
+- [x] **Webhook de Mercado Pago:** ventana de frescura de 5 minutos contra replay,
+  tolerante a segundos o milisegundos para no dejar de procesar pagos.
+- [x] **Audiencia del JWT:** se valida el claim `azp`. A mano y no con
+  `authorizedParties`, porque si Clerk dejara de enviarlo esa opción rechazaría
+  todos los tokens y tumbaría el acceso de todos.
+- [x] **Cabeceras:** `Permissions-Policy`, `X-DNS-Prefetch-Control`, y en la CSP
+  `base-uri`, `form-action`, `manifest-src`, `media-src` y
+  `upgrade-insecure-requests`. Quitado el comodín de googleapis de `script-src`.
+- [x] Mensajes de error sin el cuerpo crudo de la respuesta, host validado en la
+  redirección de pago, y tipo y tamaño en la subida del feed.
+- [x] **Ticket de un solo uso para el SSE:** el JWT de Clerk ya no viaja en la url
+  del stream. Dura un minuto, se consume con `GETDEL` y solo sirve para abrir la
+  conexión. La reconexión pasa a retroceso exponencial.
+
+### Descartado con razón
+
+- **CSP con nonce (quitar `'unsafe-inline'`):** implementada con el soporte nativo
+  de Clerk 7.4.2 y probada en un preview con Chromium. **Rompe la app entera:** 57
+  bloqueos y pantallas en blanco, incluidos los chunks propios de Next. La causa es
+  estructural: `'strict-dynamic'` hace que el navegador ignore la lista de dominios
+  y confíe solo en el nonce, pero un nonce es único por respuesta y las páginas se
+  sirven prerenderizadas. Exigiría volver dinámicas todas las rutas, peor para una
+  PWA que el problema que resuelve. El riesgo de dejar `'unsafe-inline'` es bajo: la
+  auditoría no encontró ni un punto de inyección en el frontend.
+- **HSTS:** la auditoría lo reportó como faltante y es falso. Vercel ya lo envía con
+  `max-age=63072000`. No se agregó `preload` (es prácticamente irreversible) ni
+  `includeSubDomains` (no se pudo confirmar que todos los subdominios sirvan HTTPS).
+
+### Verificación
+
+`tsc --noEmit` y builds de producción en ambos proyectos, 15 tests del API, lint sin
+errores, y producción probada en Chromium real: cero bloqueos de CSP. En el API,
+`POST /stream/ticket` sin sesión responde 401 y un ticket inventado también.
+
+### Pendiente de revisión en dispositivo
+
+Entrar al dashboard, marcar un pago, subir una foto, entrar con una cuenta de
+deportista (debe ver solo sus pagos, y Resultados debe seguir mostrando nombres) y
+comprobar que dos pestañas se sincronizan solas.
+
+### Sigue aplazado
+
+- Rediseño del Inicio tipo comunidad: **diseño aprobado, sin implementar**.
+- Limpiar espacios sobrantes en nombres de club y normalizar en la edición del
+  superadmin.
+
+---
+
 ## Sesión 2026-07-29
 
 **Modelo:** Claude Opus 5

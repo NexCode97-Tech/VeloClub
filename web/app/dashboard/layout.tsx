@@ -317,7 +317,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         } else if (err instanceof ApiError && err.status === 403) {
           router.replace('/no-access');
         } else {
-          setChecking(false);
+          // Falla cerrado: sin rol confirmado no se renderiza el dashboard. Antes
+          // se mostraba con role null, que caía al menú de ADMIN por defecto.
+          router.replace('/sign-in');
         }
       }
     })();
@@ -334,8 +336,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     setTermsAccepted(true);
   }
 
-  const tabItems   = role ? (ROLE_TABS[role] ?? ROLE_TABS.ADMIN) : ROLE_TABS.ADMIN;
-  const sideNavItems = (ROLE_NAV[role ?? 'ADMIN'] ?? ADMIN_NAV);
+  // Sin rol confirmado se usa el menú de menor privilegio, no el de ADMIN: así un
+  // fallo al resolver el rol nunca deja a la vista los módulos de administración.
+  const tabItems   = role ? (ROLE_TABS[role] ?? ROLE_TABS.STUDENT) : ROLE_TABS.STUDENT;
+  const sideNavItems = role ? (ROLE_NAV[role] ?? ROLE_NAV.STUDENT) : ROLE_NAV.STUDENT;
   const tabHrefs   = new Set(tabItems.map((t) => t.href));
   const isOnExtra  = !tabHrefs.has(pathname) && pathname !== '/dashboard' && pathname.startsWith('/dashboard/');
 

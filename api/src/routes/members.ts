@@ -46,6 +46,15 @@ function esAdmin(req: Request): boolean {
   return req.user?.role === 'ADMIN';
 }
 
+// El listado se cachea en dos versiones según el alcance de datos que ve el rol,
+// así que cualquier cambio debe invalidar ambas.
+async function invalidateMembersCache(clubId: string): Promise<void> {
+  await Promise.all([
+    cacheDel(`members:${clubId}:staff`),
+    cacheDel(`members:${clubId}:student`),
+  ]);
+}
+
 function toTitleCase(str: string): string {
   return str
     .toLowerCase()
@@ -59,16 +68,29 @@ function toTitleCase(str: string): string {
 router.get('/', requireAuth, async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'No autenticado' });
   const clubId = req.user.clubId ?? '';
-  const cacheKey = `members:${clubId}`;
+
+  // Un STUDENT necesita el listado para mostrar nombres en resultados, pero no
+  // los datos personales (documento, EPS, contacto de emergencia, archivos ni
+  // cuota). La llave de caché incluye el alcance para no servirle a un ADMIN la
+  // versión reducida ni a un STUDENT la completa.
+  const isStudent = req.user.role === 'STUDENT';
+  const cacheKey = `members:${clubId}:${isStudent ? 'student' : 'staff'}`;
 
   const cached = await cacheGet<{ members: unknown[] }>(cacheKey);
   if (cached) return res.json(cached);
 
-  const members = await prisma.member.findMany({
-    where: { clubId },
-    include: { locations: { include: { location: true } } },
-    orderBy: { fullName: 'asc' },
-  });
+  const members = isStudent
+    ? await prisma.member.findMany({
+        where: { clubId },
+        select: { id: true, fullName: true, pictureUrl: true, role: true, category: true, tipo: true },
+        orderBy: { fullName: 'asc' },
+      })
+    : await prisma.member.findMany({
+        where: { clubId },
+        include: { locations: { include: { location: true } } },
+        orderBy: { fullName: 'asc' },
+      });
+
   await cacheSet(cacheKey, { members }, 300); // 5 min
   res.json({ members });
 });
@@ -170,7 +192,7 @@ router.post('/', requireAuth, async (req, res) => {
     try { await addToAllowlist(member.email); } catch { /* ya existe o error de Clerk */ }
   }
 
-  await cacheDel(`members:${req.user.clubId ?? ''}`);
+  await invalidateMembersCache(req.user.clubId ?? '');
   emitToClub(req.user.clubId ?? '', 'members');
   await notifyClubStaff(req.user.clubId ?? '', {
     tipo: 'NEW_MEMBER',
@@ -216,7 +238,7 @@ router.patch('/bulk-fee', requireAuth, async (req, res) => {
     data: { amount: monthlyFee },
   });
 
-  await cacheDel(`members:${clubId}`);
+  await invalidateMembersCache(clubId);
   emitToClub(clubId, 'members');
   emitToClub(clubId, 'payments');
   res.json({ updated: ids.length });
@@ -280,7 +302,7 @@ router.put('/:id', requireAuth, async (req, res) => {
     if (roleCambio) await revokeClerkSessions(member.clerkId);
   }
 
-  await cacheDel(`members:${req.user.clubId ?? ''}`);
+  await invalidateMembersCache(req.user.clubId ?? '');
   emitToClub(req.user.clubId ?? '', 'members');
   res.json({ member });
 });
@@ -378,7 +400,7 @@ router.delete('/:id', requireAuth, async (req, res) => {
     data: { clubId: null },
   });
 
-  await cacheDel(`members:${req.user.clubId ?? ''}`);
+  await invalidateMembersCache(req.user.clubId ?? '');
   emitToClub(req.user.clubId ?? '', 'members');
   res.json({ ok: true });
 });

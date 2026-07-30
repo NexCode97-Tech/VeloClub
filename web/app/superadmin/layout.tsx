@@ -326,9 +326,11 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
   const { isLoaded, isSignedIn, userId, sessionId } = useAuth();
   const { session } = useSession();
 
-  // Si Clerk ya está listo al montar (viene de redirect del dashboard), no mostrar loading
+  // La verificación arranca siempre cerrada: partir de false cuando Clerk ya
+  // estaba listo montaba el panel completo antes de saber si el usuario es
+  // superadmin, exponiendo la estructura del panel a cualquier sesión.
   const alreadyReady = isLoaded && isSignedIn;
-  const [checking, setChecking]       = useState(!alreadyReady);
+  const [checking, setChecking]       = useState(true);
   // Cortina de salida: se retira hacia la derecha dejando ver el panel ya montado.
   // Si la sesión ya venía lista (alreadyReady) no hubo carga, así que no hay cortina.
   const [curtain, setCurtain]         = useState(!alreadyReady);
@@ -365,7 +367,9 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
       } catch (err) {
         if (stale) return;
         console.error('Superadmin auth check failed:', err);
-        setChecking(false);
+        // Falla cerrado: si no se pudo confirmar el rol, no se muestra el panel.
+        // Antes cualquier error de red bastaba para renderizarlo.
+        router.replace('/dashboard');
       }
     })();
 

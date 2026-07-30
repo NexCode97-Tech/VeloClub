@@ -44,9 +44,25 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
     const clerkId = payload.sub as string;
 
     const clerkUser = await clerk.users.getUser(clerkId);
+
+    // El email es la llave de identidad en todo el backend: promueve a SUPERADMIN,
+    // vincula al Member y resuelve permisos. Tomar el primero del arreglo permitía
+    // suplantar a otro admin agregando ese correo sin verificar a la cuenta, así
+    // que solo se acepta un email verificado, priorizando el principal.
+    const isVerified = (e: { verification: { status: string } | null }) =>
+      e.verification?.status === 'verified';
+    const primary = clerkUser.emailAddresses.find(e => e.id === clerkUser.primaryEmailAddressId);
+    const trustedEmail = primary && isVerified(primary)
+      ? primary
+      : clerkUser.emailAddresses.find(isVerified);
+
+    if (!trustedEmail) {
+      return res.status(403).json({ error: 'Debes verificar tu correo para continuar' });
+    }
+
     req.auth = {
       clerkId,
-      email: clerkUser.emailAddresses[0]?.emailAddress ?? '',
+      email: trustedEmail.emailAddress,
       name: `${clerkUser.firstName ?? ''} ${clerkUser.lastName ?? ''}`.trim(),
       picture: clerkUser.imageUrl,
     };

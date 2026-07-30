@@ -135,6 +135,24 @@ router.get('/', requireAuth, async (req, res) => {
   if (status)          where.status = status;
   if (memberId)        where.memberId = memberId;
 
+  // Un STUDENT solo puede ver su propio historial. Antes se devolvían todos los
+  // pagos del club (con email y teléfono de cada miembro) y el filtrado ocurría
+  // en el cliente, así que los datos igual viajaban al navegador.
+  if (req.user.role === 'STUDENT') {
+    const self = await prisma.member.findFirst({
+      where: {
+        clubId,
+        OR: [
+          { clerkId: req.auth?.clerkId },
+          ...(req.auth?.email ? [{ email: { equals: req.auth.email, mode: 'insensitive' as const } }] : []),
+        ],
+      },
+      select: { id: true },
+    });
+    if (!self) return res.json({ payments: [] });
+    where.memberId = self.id;
+  }
+
   const payments = await prisma.payment.findMany({
     where,
     include: { member: { select: { id: true, fullName: true, email: true, phone: true } } },

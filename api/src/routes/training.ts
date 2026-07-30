@@ -166,6 +166,11 @@ router.delete('/:id/results/:resultId', requireAuth, async (req, res) => {
   });
   if (!session) return res.status(404).json({ error: 'Sesión no encontrada' });
 
+  // El resultado debe pertenecer a la sesión ya validada: borrar solo por id
+  // permitía eliminar resultados de entrenamientos de otros clubes.
+  const result = await prisma.trainingResult.findFirst({ where: { id: resultId, sessionId } });
+  if (!result) return res.status(404).json({ error: 'Resultado no encontrado' });
+
   await prisma.trainingResult.delete({ where: { id: resultId } });
   emitToClub(req.user.clubId ?? '', 'training');
   res.json({ ok: true });

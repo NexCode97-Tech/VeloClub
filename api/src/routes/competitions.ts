@@ -185,6 +185,11 @@ router.delete('/:id/events/:eventId', requireAuth, async (req, res) => {
   const competition = await prisma.competition.findFirst({ where: { id: competitionId, clubId: req.user.clubId ?? '' } });
   if (!competition) return res.status(404).json({ error: 'Competencia no encontrada' });
 
+  // La prueba debe pertenecer a la competencia ya validada: borrar solo por id
+  // permitía eliminar pruebas de competencias de otros clubes.
+  const event = await prisma.competitionEvent.findFirst({ where: { id: eventId, competitionId } });
+  if (!event) return res.status(404).json({ error: 'Prueba no encontrada' });
+
   await prisma.competitionEvent.delete({ where: { id: eventId } });
   emitToClub(req.user.clubId ?? '', 'competitions');
   res.json({ ok: true });
@@ -210,6 +215,11 @@ router.post('/:id/events/:eventId/results', requireAuth, async (req, res) => {
     where: { id: parsed.data.memberId, clubId: req.user.clubId ?? '' },
   });
   if (!member) return res.status(404).json({ error: 'Miembro no encontrado en este club' });
+
+  // El destino también se valida: sin esto se podían escribir resultados dentro
+  // de una prueba de otro club pasando un eventId ajeno.
+  const event = await prisma.competitionEvent.findFirst({ where: { id: eventId, competitionId } });
+  if (!event) return res.status(404).json({ error: 'Prueba no encontrada' });
 
   try {
     const result = await prisma.eventResult.upsert({
@@ -245,6 +255,13 @@ router.delete('/:id/events/:eventId/results/:resultId', requireAuth, async (req,
 
   const competition = await prisma.competition.findFirst({ where: { id: competitionId, clubId: req.user.clubId ?? '' } });
   if (!competition) return res.status(404).json({ error: 'Competencia no encontrada' });
+
+  // El resultado debe colgar de una prueba de esta competencia: borrar solo por
+  // id permitía eliminar resultados de cualquier club.
+  const result = await prisma.eventResult.findFirst({
+    where: { id: resultId, event: { competitionId } },
+  });
+  if (!result) return res.status(404).json({ error: 'Resultado no encontrado' });
 
   await prisma.eventResult.delete({ where: { id: resultId } });
   emitToClub(req.user.clubId ?? '', 'competitions');

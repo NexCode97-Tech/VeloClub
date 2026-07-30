@@ -221,7 +221,15 @@ router.patch('/:id/comments/:commentId', requireAuth, async (req, res) => {
   const content = String(req.body?.content ?? '').trim();
   if (!content) return res.status(400).json({ error: 'Contenido requerido' });
 
-  const comment = await prisma.postComment.findUnique({ where: { id: String(req.params.commentId) } });
+  // El comentario se ata al post y al club: buscarlo solo por id permitía editar
+  // comentarios de otros clubes, cuyos ids viajan en los posts públicos.
+  const comment = await prisma.postComment.findFirst({
+    where: {
+      id: String(req.params.commentId),
+      postId: String(req.params.id),
+      post: { clubId: req.user.clubId ?? '' },
+    },
+  });
   if (!comment) return res.status(404).json({ error: 'Comentario no encontrado' });
 
   const updated = await prisma.postComment.update({
@@ -238,7 +246,13 @@ router.delete('/:id/comments/:commentId', requireAuth, async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'No autenticado' });
   if (!['ADMIN', 'COACH'].includes(req.user.role)) return res.status(403).json({ error: 'Sin permisos' });
 
-  const comment = await prisma.postComment.findUnique({ where: { id: String(req.params.commentId) } });
+  const comment = await prisma.postComment.findFirst({
+    where: {
+      id: String(req.params.commentId),
+      postId: String(req.params.id),
+      post: { clubId: req.user.clubId ?? '' },
+    },
+  });
   if (!comment) return res.status(404).json({ error: 'Comentario no encontrado' });
 
   await prisma.postComment.delete({ where: { id: String(req.params.commentId) } });

@@ -91,6 +91,9 @@ router.get('/upcoming', requireAuth, async (req, res) => {
 // POST /events
 router.post('/', requireAuth, async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'No autenticado' });
+  // Sin este chequeo un STUDENT podía crear eventos y, con ellos, disparar
+  // notificaciones a todos los deportistas del club.
+  if (!['ADMIN', 'COACH'].includes(req.user.role)) return res.status(403).json({ error: 'Sin permisos' });
   const parsed = eventSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.issues });
 
@@ -120,6 +123,7 @@ router.post('/', requireAuth, async (req, res) => {
 // DELETE /events/:id
 router.delete('/:id', requireAuth, async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'No autenticado' });
+  if (!['ADMIN', 'COACH'].includes(req.user.role)) return res.status(403).json({ error: 'Sin permisos' });
   const id = String(req.params.id);
 
   const event = await prisma.calendarEvent.findFirst({ where: { id, clubId: req.user.clubId ?? '' } });

@@ -81,6 +81,21 @@ interface MetodosDisponibles {
 }
 const DOC_TYPES = ['CC', 'CE', 'NIT', 'TI', 'PAS'];
 
+// La url de redirección llega en la respuesta de la API (viene de Mercado Pago).
+// Se comprueba el destino antes de navegar para no convertir esa respuesta en una
+// redirección abierta si alguna vez devolviera un valor inesperado.
+const HOSTS_DE_PAGO = ['mercadopago.com', 'mercadopago.com.co', 'mercadolibre.com', 'mercadolivre.com'];
+
+function esDestinoDePagoConfiable(url: string): boolean {
+  try {
+    const { protocol, hostname } = new URL(url);
+    if (protocol !== 'https:') return false;
+    return HOSTS_DE_PAGO.some(h => hostname === h || hostname.endsWith(`.${h}`));
+  } catch {
+    return false;
+  }
+}
+
 // ── Detección de marca + formato del número de tarjeta ───────────────────────
 type CardBrand = 'visa' | 'mastercard' | 'amex' | 'diners' | null;
 
@@ -511,7 +526,7 @@ export default function SuscripcionCard() {
         quitarCupon();
         await load();
       } else if (res.status === 'pending') {
-        if (metodo === 'PSE' && res.redirectUrl) {
+        if (metodo === 'PSE' && res.redirectUrl && esDestinoDePagoConfiable(res.redirectUrl)) {
           window.location.href = res.redirectUrl;
           return;
         }

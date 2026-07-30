@@ -6,6 +6,7 @@ import helmet from 'helmet';
 import compression from 'compression';
 import dotenv from 'dotenv';
 import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
+import { strictLimiter } from './lib/rate-limit';
 import meRouter from './routes/me';
 import clubsRouter from './routes/clubs';
 import locationsRouter from './routes/locations';
@@ -61,14 +62,8 @@ const globalLimiter = rateLimit({
   message: { error: 'Demasiadas solicitudes, intenta más tarde' },
 });
 
-// Rate limiting estricto para endpoints sensibles: 100 req / 15min
-const strictLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 100,
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: { error: 'Demasiadas solicitudes, intenta más tarde' },
-});
+// Los límites por endpoint viven en lib/rate-limit para poder aplicarlos dentro
+// de cada router, en las rutas concretas que los necesitan.
 
 app.use(globalLimiter);
 

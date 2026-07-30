@@ -5,7 +5,10 @@ import { withSentryConfig } from "@sentry/nextjs";
 const CSP = [
   "default-src 'self'",
   // Scripts: propio dominio + Clerk + Mercado Pago (SDK de tokenización de tarjeta) + Cloudflare (CAPTCHA anti-bot de Clerk)
-  "script-src 'self' 'unsafe-inline' https://clerk.veloclubtech.com https://*.clerk.accounts.dev https://challenges.cloudflare.com https://maps.googleapis.com https://*.googleapis.com https://sdk.mercadopago.com https://http2.mlstatic.com",
+  // Sin el comodín de googleapis: el único script de Google que se carga es el de
+  // Maps, y un comodín convierte todo el ecosistema de APIs de Google en origen
+  // de script confiable.
+  "script-src 'self' 'unsafe-inline' https://clerk.veloclubtech.com https://*.clerk.accounts.dev https://challenges.cloudflare.com https://maps.googleapis.com https://sdk.mercadopago.com https://http2.mlstatic.com",
   // Estilos: propio dominio + inline (Tailwind/shadcn lo requieren)
   "style-src 'self' 'unsafe-inline'",
   // Imágenes: propio dominio + Clerk + Cloudinary + Google Maps + Google User Content (fotos de perfil OAuth)
@@ -22,6 +25,16 @@ const CSP = [
   "worker-src 'self' blob:",
   // No ejecutar plugins (Flash, etc.)
   "object-src 'none'",
+  // Impide que una inyección de <base> reescriba el destino de las rutas relativas
+  "base-uri 'self'",
+  // Los formularios se envían por fetch a la API; ningún envío sale a otro origen
+  "form-action 'self'",
+  // Manifiesto de la PWA
+  "manifest-src 'self'",
+  // Video del feed: se sirve desde Cloudinary y se previsualiza como blob local
+  "media-src 'self' blob: https://res.cloudinary.com",
+  // Fuerza HTTPS en cualquier subrecurso que quedara apuntando a http
+  "upgrade-insecure-requests",
 ].join('; ');
 
 const nextConfig: NextConfig = {
@@ -34,6 +47,11 @@ const nextConfig: NextConfig = {
           { key: 'X-Frame-Options', value: 'DENY' },
           { key: 'X-Content-Type-Options', value: 'nosniff' },
           { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+          // Se niegan las capacidades del navegador que la app no usa. La
+          // geolocalización sí se conserva: el selector de sedes la necesita.
+          { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=(self), payment=(), usb=(), magnetometer=(), accelerometer=()' },
+          // Evita resolver por DNS los dominios de terceros que aparezcan en enlaces
+          { key: 'X-DNS-Prefetch-Control', value: 'off' },
         ],
       },
     ];

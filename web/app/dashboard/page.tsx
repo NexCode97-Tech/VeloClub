@@ -695,15 +695,32 @@ function PostComposer({
   const [content, setContent]   = useState('');
   const [media, setMedia]       = useState<{ url: string; publicId: string; type: string; name: string } | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [errorArchivo, setErrorArchivo] = useState<string | null>(null);
   const [sending, setSending]   = useState(false);
   const [estadoPublicado, setEstadoPublicado] = useState<EstadoGuardado>('idle');
   const textRef    = useRef<HTMLTextAreaElement>(null);
   const fileRef    = useRef<HTMLInputElement>(null);
 
   async function handleFile(file: File) {
+    // Único punto de subida que no validaba nada. El backend ahora rechaza lo que
+    // no sea imagen, video o PDF, así que conviene avisar antes de leer el archivo.
+    const esVideo = file.type.startsWith('video');
+    const esImagen = file.type.startsWith('image');
+    const esPdf = file.type === 'application/pdf';
+    if (!esVideo && !esImagen && !esPdf) {
+      setErrorArchivo('Solo se permiten imágenes, videos o PDF.');
+      return;
+    }
+    const maxMB = esVideo ? 40 : esImagen ? 5 : 10;
+    if (file.size > maxMB * 1024 * 1024) {
+      setErrorArchivo(`El archivo supera el máximo de ${maxMB} MB.`);
+      return;
+    }
+    setErrorArchivo(null);
+
     setUploading(true);
     try {
-      const type = file.type.startsWith('video') ? 'video' : file.type.startsWith('image') ? 'image' : 'raw';
+      const type = esVideo ? 'video' : esImagen ? 'image' : 'raw';
       const reader = new FileReader();
       const base64 = await new Promise<string>(res => {
         reader.onload = e => res(e.target?.result as string);
@@ -780,6 +797,17 @@ function PostComposer({
               <X className="w-3.5 h-3.5" />
             </button>
           </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Aviso de archivo rechazado por tipo o tamaño */}
+      <AnimatePresence>
+        {errorArchivo && (
+          <motion.p initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.22 }}
+            className="mx-4 mb-3 text-[12px] font-medium" style={{ color: '#DC2626' }}>
+            {errorArchivo}
+          </motion.p>
         )}
       </AnimatePresence>
 

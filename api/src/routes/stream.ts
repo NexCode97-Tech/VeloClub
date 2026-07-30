@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { verifyToken } from '@clerk/backend';
 import { prisma } from '../db/client';
 import { addSSEClient, removeSSEClient } from '../lib/sse';
+import { audienciaEsValida } from '../lib/clerk-audiencia';
 
 const router = Router();
 
@@ -19,6 +20,7 @@ router.get('/', async (req, res) => {
     const payload = await verifyToken(token, {
       secretKey: process.env.CLERK_SECRET_KEY!,
     });
+    if (!audienciaEsValida(payload)) return res.status(401).end();
     const user = await prisma.user.findUnique({ where: { clerkId: payload.sub } });
     if (!user?.clubId) return res.status(403).end();
 

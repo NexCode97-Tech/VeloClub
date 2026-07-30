@@ -9,6 +9,7 @@ import {
   obtenerPago, obtenerPreapproval, verificarFirmaWebhook, buscarPagoPorReferencia,
   listarMediosPago, crearPagoDirecto, reembolsarPago, type MedioPago,
 } from '../lib/mercadopago';
+import { guessLimiter, paymentLimiter } from '../lib/rate-limit';
 import { activarClubTrasPago } from '../lib/sync-suscripciones';
 import { validarCupon, descuentoCupon, registrarCanje } from '../lib/cupones';
 
@@ -205,7 +206,7 @@ router.get('/metodos-pago', requireAuth, async (req, res) => {
 });
 
 // ── POST /mercadopago/validar-cupon — previsualizar descuento antes de pagar ─
-router.post('/validar-cupon', requireAuth, async (req, res) => {
+router.post('/validar-cupon', guessLimiter, requireAuth, async (req, res) => {
   if (!requireAdmin(req, res)) return;
   const clubId = req.user!.clubId ?? '';
   const { codigo } = req.body as { codigo?: string };
@@ -230,7 +231,7 @@ const RECHAZO_MSG: Record<string, string> = {
   cc_rejected_duplicated_payment:    'Ya hiciste un pago por este valor hace poco. Espera unos minutos.',
 };
 
-router.post('/pagar', requireAuth, async (req, res) => {
+router.post('/pagar', paymentLimiter, requireAuth, async (req, res) => {
   if (!requireAdmin(req, res)) return;
   const clubId = req.user!.clubId ?? '';
 
@@ -461,7 +462,7 @@ router.post('/sincronizar', requireAuth, async (req, res) => {
 });
 
 // ── POST /mercadopago/checkout — pago único ──────────────────────────────────
-router.post('/checkout', requireAuth, async (req, res) => {
+router.post('/checkout', paymentLimiter, requireAuth, async (req, res) => {
   if (!requireAdmin(req, res)) return;
   const clubId = req.user!.clubId ?? '';
 
@@ -491,7 +492,7 @@ router.post('/checkout', requireAuth, async (req, res) => {
 });
 
 // ── POST /mercadopago/subscribe — activar renovación automática ─────────────
-router.post('/subscribe', requireAuth, async (req, res) => {
+router.post('/subscribe', paymentLimiter, requireAuth, async (req, res) => {
   if (!requireAdmin(req, res)) return;
   const clubId = req.user!.clubId ?? '';
   const { cardTokenId, aceptaTerminos } = req.body as { cardTokenId?: string; aceptaTerminos?: boolean };

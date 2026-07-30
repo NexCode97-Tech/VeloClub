@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { requireAuth } from '../auth/middleware';
 import { prisma } from '../db/client';
 import { emitToClub } from '../lib/sse';
+import { sedeEsDelClub } from '../lib/sedes';
 
 const router = Router();
 
@@ -81,6 +82,10 @@ router.post('/', requireAuth, async (req, res) => {
   if (!puedeGestionar(req)) return res.status(403).json({ error: 'Sin permisos' });
   const parsed = sessionSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.issues });
+
+  if (!await sedeEsDelClub(parsed.data.locationId, req.user.clubId ?? '')) {
+    return res.status(403).json({ error: 'La sede no pertenece a este club' });
+  }
 
   const session = await prisma.trainingSession.create({
     data: {

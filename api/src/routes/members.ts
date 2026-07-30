@@ -8,6 +8,9 @@ import { emitToClub } from '../lib/sse';
 import { addToAllowlist, removeFromAllowlist, revokeClerkAccess, revokeClerkSessions } from '../lib/clerk-allowlist';
 import { notifyClubStaff } from '../lib/notify';
 import { cacheGet, cacheSet, cacheDel } from '../lib/redis';
+import { sedesSonDelClub } from '../lib/sedes';
+import { validarSubida } from '../lib/upload-guard';
+import { uploadLimiter, createLimiter } from '../lib/rate-limit';
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME?.trim(),
@@ -33,6 +36,14 @@ const memberSchema = z.object({
   monthlyFee: z.number().positive().nullable().optional(),
   locationIds: z.array(z.string()).optional(),
   role: z.enum(['ADMIN', 'COACH', 'STUDENT']).optional(),
+});
+
+// La url debe ser del propio Cloudinary: es lo único que el frontend renderiza y
+// lo único que un borrado posterior debe poder tocar.
+const uploadSchema = z.object({
+  field: z.enum(['picture', 'doc', 'insurance']),
+  url: z.string().url().startsWith('https://res.cloudinary.com/'),
+  publicId: z.string().min(1).max(200),
 });
 
 function getId(req: Request): string {
@@ -165,6 +176,10 @@ router.post('/', requireAuth, async (req, res) => {
   const { locationIds, birthDate, ...rest } = parsed.data;
   rest.fullName = toTitleCase(rest.fullName);
 
+  if (locationIds && !await sedesSonDelClub(locationIds, req.user.clubId ?? '')) {
+    return res.status(403).json({ error: 'Una o más sedes no pertenecen a este club' });
+  }
+
   let member;
   try {
     member = await prisma.member.create({
@@ -206,7 +221,7 @@ router.post('/', requireAuth, async (req, res) => {
 // PATCH /members/bulk-fee — configura tarifa + día de cobro de forma masiva.
 // Solo aplica a los deportistas (STUDENT) que aún NO tienen tarifa (no pisa
 // tarifas individuales). Actualiza también los cobros pendientes de esos miembros.
-router.patch('/bulk-fee', requireAuth, async (req, res) => {
+router.patch('/bulk-fee', createLimiter, requireAuth, async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'No autenticado' });
   if (req.user.role !== 'ADMIN') return res.status(403).json({ error: 'Sin permisos' });
 
@@ -260,6 +275,10 @@ router.put('/:id', requireAuth, async (req, res) => {
 
   const { locationIds, birthDate, ...rest } = parsed.data;
   if (rest.fullName) rest.fullName = toTitleCase(rest.fullName);
+
+  if (locationIds && !await sedesSonDelClub(locationIds, req.user.clubId ?? '')) {
+    return res.status(403).json({ error: 'Una o más sedes no pertenecen a este club' });
+  }
 
   if (locationIds !== undefined) {
     await prisma.memberLocation.deleteMany({ where: { memberId: id } });
@@ -406,7 +425,7 @@ router.delete('/:id', requireAuth, async (req, res) => {
 });
 
 // POST /members/:id/upload
-router.post('/:id/upload', requireAuth, async (req, res) => {
+router.post('/:id/upload', uploadLimiter, requireAuth, async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'No autenticado' });
   if (!esAdmin(req)) return res.status(403).json({ error: 'Solo administradores' });
   const id = getId(req);
@@ -416,19 +435,18 @@ router.post('/:id/upload', requireAuth, async (req, res) => {
   });
   if (!existing) return res.status(404).json({ error: 'Miembro no encontrado' });
 
-  const { field, url, publicId } = req.body as {
-    field: 'picture' | 'doc' | 'insurance';
-    url: string;
-    publicId: string;
-  };
+  // Antes se guardaba cualquier url y publicId del cuerpo. Eso permitía apuntar
+  // los campos de archivo a un dominio externo, o guardar el publicId de otro
+  // tenant de Cloudinary que un borrado posterior habría eliminado.
+  const parsedUpload = uploadSchema.safeParse(req.body);
+  if (!parsedUpload.success) return res.status(400).json({ error: parsedUpload.error.issues });
+  const { field, url, publicId } = parsedUpload.data;
 
   const fieldMap: Record<string, object> = {
     picture: { pictureUrl: url, picturePublicId: publicId },
     doc: { docFileUrl: url, docFilePublicId: publicId },
     insurance: { insuranceFileUrl: url, insurancePublicId: publicId },
   };
-
-  if (!fieldMap[field]) return res.status(400).json({ error: 'Campo inválido' });
 
   const member = await prisma.member.update({
     where: { id },
@@ -438,7 +456,7 @@ router.post('/:id/upload', requireAuth, async (req, res) => {
 });
 
 // POST /members/me/picture — deportista sube su propia foto de perfil
-router.post('/me/picture', requireAuth, async (req, res) => {
+router.post('/me/picture', uploadLimiter, requireAuth, async (req, res) => {
   if (!req.auth) return res.status(401).json({ error: 'No autenticado' });
 
   const member = await prisma.member.findFirst({
@@ -447,7 +465,8 @@ router.post('/me/picture', requireAuth, async (req, res) => {
   if (!member) return res.status(404).json({ error: 'Miembro no encontrado' });
 
   const { base64 } = req.body as { base64: string };
-  if (!base64) return res.status(400).json({ error: 'base64 requerido' });
+  const vFoto = validarSubida(base64, 'image');
+  if (!vFoto.ok) return res.status(400).json({ error: vFoto.error });
 
   try {
     // Eliminar foto anterior si existe

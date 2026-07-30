@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { createClerkClient, verifyToken } from '@clerk/backend';
 import { prisma } from '../db/client';
+import { audienciaEsValida } from '../lib/clerk-audiencia';
 
 const clerk = createClerkClient({
   secretKey: process.env.CLERK_SECRET_KEY!,
@@ -41,6 +42,9 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
     const payload = await verifyToken(token, {
       secretKey: process.env.CLERK_SECRET_KEY!,
     });
+    if (!audienciaEsValida(payload)) {
+      return res.status(401).json({ error: 'No autenticado' });
+    }
     const clerkId = payload.sub as string;
 
     const clerkUser = await clerk.users.getUser(clerkId);

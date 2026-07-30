@@ -6,6 +6,8 @@ import { emitToClub } from '../lib/sse';
 import { notifyClubStaff } from '../lib/notify';
 import { v2 as cloudinary } from 'cloudinary';
 import { createQueue } from '../lib/queue';
+import { validarSubida } from '../lib/upload-guard';
+import { createLimiter } from '../lib/rate-limit';
 
 const fmtCOP = (n: number) => `$${Math.round(n).toLocaleString('es-CO')}`;
 
@@ -31,6 +33,15 @@ const paymentSchema = z.object({
   paidAt: z.string().optional(),
   status: z.enum(['PENDING', 'PAID', 'OVERDUE', 'REFUNDED']).default('PENDING'),
   notes: z.string().optional(),
+});
+
+// Todos los campos son opcionales porque es un PATCH, pero los que lleguen deben
+// ser válidos: el monto alimenta el flujo de caja y la fecha se convierte a Date.
+const patchPaymentSchema = z.object({
+  status: z.enum(['PENDING', 'PAID', 'OVERDUE', 'REFUNDED']).optional(),
+  amount: z.number().positive().max(100_000_000).optional(),
+  notes:  z.string().max(500).optional(),
+  paidAt: z.string().datetime().optional(),
 });
 
 async function createCashEntry(clubId: string, paymentId: string, amount: number, memberName: string, month: number, year: number, paidAt?: Date | null) {
@@ -60,7 +71,7 @@ async function createCashEntry(clubId: string, paymentId: string, amount: number
 }
 
 // POST /payments/generate-month — genera pagos PENDING del mes para todos los miembros configurados
-router.post('/generate-month', requireAuth, async (req, res) => {
+router.post('/generate-month', createLimiter, requireAuth, async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'No autenticado' });
   if (req.user.role !== 'ADMIN') return res.status(403).json({ error: 'Sin permisos' });
 
@@ -210,14 +221,11 @@ router.patch('/:id', requireAuth, async (req, res) => {
   });
   if (!existing) return res.status(404).json({ error: 'Pago no encontrado' });
 
-  const { status, paidAt, notes, amount } = req.body as {
-    status?: string; paidAt?: string; notes?: string; amount?: number;
-  };
-
-  const VALID_STATUSES = ['PENDING', 'PAID', 'OVERDUE', 'REFUNDED'];
-  if (status !== undefined && !VALID_STATUSES.includes(status)) {
-    return res.status(400).json({ error: 'Estado inválido' });
-  }
+  // Antes solo se validaba el estado: amount podía llegar negativo o gigante y
+  // se propagaba al CashEntry, y un paidAt basura producía una fecha inválida.
+  const parsedPatch = patchPaymentSchema.safeParse(req.body);
+  if (!parsedPatch.success) return res.status(400).json({ error: parsedPatch.error.issues });
+  const { status, paidAt, notes, amount } = parsedPatch.data;
 
   const data: Record<string, unknown> = {};
   if (status !== undefined) data.status = status;
@@ -277,7 +285,8 @@ router.post('/:id/receipt', requireAuth, async (req, res) => {
 
   const id = String(req.params.id);
   const { base64 } = req.body as { base64: string };
-  if (!base64) return res.status(400).json({ error: 'base64 requerido' });
+  const vRecibo = validarSubida(base64, 'doc');
+  if (!vRecibo.ok) return res.status(400).json({ error: vRecibo.error });
 
   const clubId = req.user.clubId ?? '';
   const existing = await prisma.payment.findFirst({ where: { id, clubId } });
@@ -317,7 +326,8 @@ router.post('/:id/my-receipt', requireAuth, async (req, res) => {
 
   const id = String(req.params.id);
   const { base64 } = req.body as { base64: string };
-  if (!base64) return res.status(400).json({ error: 'base64 requerido' });
+  const vMiRecibo = validarSubida(base64, 'doc');
+  if (!vMiRecibo.ok) return res.status(400).json({ error: vMiRecibo.error });
 
   // Resolver el miembro del deportista (los STUDENT no tienen req.user)
   const member = await prisma.member.findFirst({

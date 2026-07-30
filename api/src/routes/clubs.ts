@@ -5,6 +5,8 @@ import { z } from 'zod';
 import { v2 as cloudinary } from 'cloudinary';
 import { cacheGet, cacheSet, cacheDel } from '../lib/redis';
 import { addToAllowlist } from '../lib/clerk-allowlist';
+import { validarSubida } from '../lib/upload-guard';
+import { uploadLimiter, createLimiter } from '../lib/rate-limit';
 
 // ── Normalización y similitud de nombres de club (anti-suplantación) ──────────
 // Quita tildes, pasa a minúsculas y colapsa espacios/puntuación para comparar
@@ -162,12 +164,13 @@ router.patch('/settings', requireAuth, async (req, res) => {
 });
 
 // POST /clubs/logo  — recibe base64, sube a Cloudinary
-router.post('/logo', requireAuth, async (req, res) => {
+router.post('/logo', uploadLimiter, requireAuth, async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'No autenticado' });
   if (req.user.role !== 'ADMIN') return res.status(403).json({ error: 'Solo administradores' });
 
   const { base64 } = req.body as { base64: string };
-  if (!base64) return res.status(400).json({ error: 'base64 requerido' });
+  const vLogo = validarSubida(base64, 'image');
+  if (!vLogo.ok) return res.status(400).json({ error: vLogo.error });
 
   const clubId = req.user.clubId ?? '';
 
@@ -333,12 +336,13 @@ router.patch('/description', requireAuth, async (req, res) => {
 });
 
 // POST /clubs/cover — portada del club
-router.post('/cover', requireAuth, async (req, res) => {
+router.post('/cover', uploadLimiter, requireAuth, async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'No autenticado' });
   if (req.user.role !== 'ADMIN') return res.status(403).json({ error: 'Solo administradores' });
 
   const { base64 } = req.body as { base64?: string };
-  if (!base64) return res.status(400).json({ error: 'base64 requerido' });
+  const vCover = validarSubida(base64, 'image');
+  if (!vCover.ok) return res.status(400).json({ error: vCover.error });
 
   const clubId = req.user.clubId ?? '';
   try {
@@ -347,7 +351,7 @@ router.post('/cover', requireAuth, async (req, res) => {
       await cloudinary.uploader.destroy(existing.coverPublicId).catch(() => {});
     }
 
-    const result = await cloudinary.uploader.upload(base64, {
+    const result = await cloudinary.uploader.upload(vCover.data, {
       folder: 'veloclub/club-covers',
       transformation: [{ width: 1200, height: 400, crop: 'fill', gravity: 'center', quality: 'auto:good' }],
     });
@@ -399,7 +403,7 @@ const leadSchema = z.object({
   message:           z.string().max(1000).optional(),
 });
 
-router.post('/lead', requireAuth, async (req, res) => {
+router.post('/lead', createLimiter, requireAuth, async (req, res) => {
   if (!req.auth) return res.status(401).json({ error: 'No autenticado' });
   const parsed = leadSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: 'Datos inválidos', issues: parsed.error.issues });
@@ -455,7 +459,7 @@ export function diasDePrueba(referencia = new Date()): number {
 // POST /clubs  — auto-registro de club (self-serve). El usuario ya está
 // autenticado en Clerk (correo/teléfono verificados). Crea el club en estado
 // PENDING con su período de prueba y al usuario como ADMIN (User + Member).
-router.post('/', requireAuth, async (req, res) => {
+router.post('/', createLimiter, requireAuth, async (req, res) => {
   if (!req.auth) return res.status(401).json({ error: 'No autenticado' });
 
   const existing = await prisma.user.findUnique({ where: { clerkId: req.auth.clerkId } });

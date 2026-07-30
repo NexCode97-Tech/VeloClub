@@ -4,6 +4,7 @@ import { requireAuth } from '../auth/middleware';
 import { prisma } from '../db/client';
 import { emitToClub } from '../lib/sse';
 import { notifyClubStudents } from '../lib/notify';
+import { sedeEsDelClub } from '../lib/sedes';
 
 const router = Router();
 
@@ -98,6 +99,10 @@ router.post('/', requireAuth, async (req, res) => {
   if (!parsed.success) return res.status(400).json({ error: parsed.error.issues });
 
   const { startDate, endDate, ...rest } = parsed.data;
+
+  if (!await sedeEsDelClub(rest.locationId, req.user.clubId ?? '')) {
+    return res.status(403).json({ error: 'La sede no pertenece a este club' });
+  }
 
   const event = await prisma.calendarEvent.create({
     data: {

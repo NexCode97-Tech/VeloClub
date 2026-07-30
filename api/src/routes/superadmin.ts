@@ -6,6 +6,7 @@ import { addToAllowlist, removeFromAllowlist } from '../lib/clerk-allowlist';
 import { invalidarTrustedCache, diasDePrueba } from './clubs';
 import { cacheDel } from '../lib/redis';
 import { v2 as cloudinary } from 'cloudinary';
+import { validarSubida } from '../lib/upload-guard';
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -142,7 +143,8 @@ async function invalidarCachesClub(clubId: string): Promise<void> {
 router.post('/clubs/:id/logo', requireAuth, requireSuperadmin, async (req, res) => {
   const id = String(req.params.id);
   const { base64 } = req.body as { base64?: string };
-  if (!base64) return res.status(400).json({ error: 'base64 requerido' });
+  const vLogo = validarSubida(base64, 'image');
+  if (!vLogo.ok) return res.status(400).json({ error: vLogo.error });
 
   const club = await prisma.club.findUnique({ where: { id }, select: { logoPublicId: true } });
   if (!club) return res.status(404).json({ error: 'Club no encontrado' });
@@ -151,7 +153,7 @@ router.post('/clubs/:id/logo', requireAuth, requireSuperadmin, async (req, res) 
     if (club.logoPublicId) {
       await cloudinary.uploader.destroy(club.logoPublicId).catch(() => {});
     }
-    const result = await cloudinary.uploader.upload(base64, {
+    const result = await cloudinary.uploader.upload(vLogo.data, {
       folder:     'veloclub/logos',
       public_id:  `club_${id}`,
       overwrite:  true,
@@ -486,7 +488,8 @@ router.delete('/suscripciones/pagos/:pagoId', requireAuth, requireSuperadmin, as
 router.post('/suscripciones/pagos/:pagoId/receipt', requireAuth, requireSuperadmin, async (req, res) => {
   const pagoId = String(req.params.pagoId);
   const { base64, fileName } = req.body as { base64: string; fileName?: string };
-  if (!base64) return res.status(400).json({ error: 'base64 requerido' });
+  const vComprobante = validarSubida(base64, 'doc');
+  if (!vComprobante.ok) return res.status(400).json({ error: vComprobante.error });
 
   const pago = await prisma.suscripcionPago.findUnique({ where: { id: pagoId } });
   if (!pago) return res.status(404).json({ error: 'Pago no encontrado' });

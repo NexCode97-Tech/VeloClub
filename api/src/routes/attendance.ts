@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { requireAuth } from '../auth/middleware';
 import { prisma } from '../db/client';
 import { emitToClub } from '../lib/sse';
+import { sedeEsDelClub } from '../lib/sedes';
 
 const router = Router();
 
@@ -137,6 +138,10 @@ router.post('/bulk', requireAuth, async (req, res) => {
 
   const { date: dateStr, locationId, records } = parsed.data;
   const date = new Date(dateStr);
+
+  if (!await sedeEsDelClub(locationId, clubId)) {
+    return res.status(403).json({ error: 'La sede no pertenece a este club' });
+  }
 
   // Validar que todos los memberIds pertenecen al club (previene ataque cross-tenant)
   const memberIds = records.map(r => r.memberId);

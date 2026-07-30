@@ -4,6 +4,8 @@ import { v2 as cloudinary } from 'cloudinary';
 import { requireAuth } from '../auth/middleware';
 import { prisma } from '../db/client';
 import { emitToClub } from '../lib/sse';
+import { validarSubida, TipoSubida } from '../lib/upload-guard';
+import { uploadLimiter } from '../lib/rate-limit';
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME?.trim(),
@@ -38,15 +40,20 @@ const commentSchema = z.object({
 });
 
 // POST /posts/upload-media — Subir imagen/video/archivo a Cloudinary
-router.post('/upload-media', requireAuth, async (req, res) => {
+router.post('/upload-media', uploadLimiter, requireAuth, async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'No autenticado' });
   if (!['ADMIN', 'COACH'].includes(req.user.role)) return res.status(403).json({ error: 'Sin permisos' });
 
-  const { data, type } = req.body as { data: string; type: 'image' | 'video' | 'raw' };
-  if (!data) return res.status(400).json({ error: 'Se requiere data en base64' });
+  const { data, type } = req.body as { data: string; type?: 'image' | 'video' | 'raw' };
+
+  // "raw" pasa a significar documento (PDF o imagen). Antes aceptaba cualquier
+  // archivo, incluidos ejecutables y HTML servidos desde el dominio de Cloudinary.
+  const tipo: TipoSubida = type === 'video' ? 'video' : type === 'raw' ? 'doc' : 'image';
+  const vMedia = validarSubida(data, tipo);
+  if (!vMedia.ok) return res.status(400).json({ error: vMedia.error });
 
   try {
-    const resourceType = type === 'video' ? 'video' : type === 'raw' ? 'raw' : 'image';
+    const resourceType = tipo === 'video' ? 'video' : tipo === 'doc' ? 'raw' : 'image';
     const result = await cloudinary.uploader.upload(data, {
       folder: `veloclub/posts/${req.user.clubId}`,
       resource_type: resourceType,
@@ -130,6 +137,12 @@ router.delete('/:id', requireAuth, async (req, res) => {
 router.get('/:id/likes', requireAuth, async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'No autenticado' });
   const postId = String(req.params.id);
+
+  // Mismo alcance que /comments y /like: sin esto se listaban los usuarios que
+  // dieron like a publicaciones privadas de otros clubes.
+  const post = await prisma.post.findUnique({ where: { id: postId } });
+  if (!post) return res.status(404).json({ error: 'Publicación no encontrada' });
+  if (post.scope === 'PRIVATE' && post.clubId !== req.user.clubId) return res.status(403).json({ error: 'Sin permisos' });
 
   const postLikes = await prisma.postLike.findMany({
     where: { postId },

@@ -189,6 +189,16 @@ export function verificarFirmaWebhook(params: {
   const v1 = parts.v1;
   if (!ts || !v1) return false;
 
+  // Ventana de frescura de 5 minutos. La firma sola es válida para siempre, así
+  // que una notificación capturada se podía reenviar indefinidamente y volver a
+  // disparar la activación del club y sus notificaciones.
+  const tsNum = Number(ts);
+  if (!Number.isFinite(tsNum) || tsNum <= 0) return false;
+  // Mercado Pago envía segundos, pero se aceptan milisegundos por robustez: si la
+  // unidad cambiara, rechazar todo dejaría de procesar los pagos.
+  const tsMs = tsNum > 1e12 ? tsNum : tsNum * 1000;
+  if (Math.abs(Date.now() - tsMs) > 5 * 60 * 1000) return false;
+
   const manifest = `id:${params.dataId};request-id:${params.xRequestId ?? ''};ts:${ts};`;
   const hash = crypto.createHmac('sha256', secret).update(manifest).digest('hex');
   const hashBuf = Buffer.from(hash);

@@ -17,8 +17,15 @@ import { prisma } from '../db/client';
 import { emitToClub } from '../lib/sse';
 import { notify, notifyClubStaff } from '../lib/notify';
 import { sincronizarMontosSuscripciones } from '../lib/sync-suscripciones';
+import { strictLimiter } from '../lib/rate-limit';
+import { timingSafeEqual } from 'node:crypto';
 
 const router = Router();
+
+// El secreto viaja en un header y sin tope se podían probar mil combinaciones cada
+// 15 minutos. Se usa el límite estricto y no uno más bajo porque las llamadas
+// legítimas de Railway Cron también consumen la cuota.
+router.use(strictLimiter);
 
 const MONTH_NAMES = [
   'Enero','Febrero','Marzo','Abril','Mayo','Junio',
@@ -33,7 +40,11 @@ function requireCronSecret(req: Request, res: Response, next: () => void) {
     res.status(500).json({ error: 'Cron no configurado' });
     return;
   }
-  if (req.headers['x-cron-secret'] !== secret) {
+  // Comparación de tiempo constante: `!==` filtra por cuánto tarda en fallar,
+  // lo que permite deducir el secreto carácter por carácter.
+  const recibido = Buffer.from(String(req.headers['x-cron-secret'] ?? ''));
+  const esperado = Buffer.from(secret);
+  if (recibido.length !== esperado.length || !timingSafeEqual(recibido, esperado)) {
     res.status(401).json({ error: 'No autorizado' });
     return;
   }

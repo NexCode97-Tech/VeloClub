@@ -4,6 +4,8 @@ import { prisma } from '../db/client';
 import { v2 as cloudinary } from 'cloudinary';
 import { removeFromAllowlist, revokeClerkAccess } from '../lib/clerk-allowlist';
 import { verificarYDesactivarSiVencido } from '../lib/sync-suscripciones';
+import { validarSubida } from '../lib/upload-guard';
+import { uploadLimiter } from '../lib/rate-limit';
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME?.trim(),
@@ -233,10 +235,11 @@ router.patch('/bio', requireAuth, async (req, res) => {
 });
 
 // POST /me/cover — subir foto de portada del perfil
-router.post('/cover', requireAuth, async (req, res) => {
+router.post('/cover', uploadLimiter, requireAuth, async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'No autenticado' });
   const { base64 } = req.body as { base64?: string };
-  if (!base64) return res.status(400).json({ error: 'base64 requerido' });
+  const vCover = validarSubida(base64, 'image');
+  if (!vCover.ok) return res.status(400).json({ error: vCover.error });
 
   try {
     // Eliminar portada anterior si existe
@@ -245,7 +248,7 @@ router.post('/cover', requireAuth, async (req, res) => {
       await cloudinary.uploader.destroy(current.coverPublicId).catch(() => {});
     }
 
-    const result = await cloudinary.uploader.upload(base64, {
+    const result = await cloudinary.uploader.upload(vCover.data, {
       folder: 'veloclub/covers',
       transformation: [{ width: 1200, height: 400, crop: 'fill', gravity: 'center', quality: 'auto:good' }],
     });

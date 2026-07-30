@@ -58,17 +58,6 @@ export default function RootLayout({
           <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
         </head>
         <body className="min-h-full flex flex-col">
-          {/* Desregistra service workers viejos en todos los dispositivos */}
-          <script dangerouslySetInnerHTML={{ __html: `
-            if ('serviceWorker' in navigator) {
-              navigator.serviceWorker.getRegistrations().then(function(regs) {
-                regs.forEach(function(reg) { reg.unregister(); });
-              });
-              caches.keys().then(function(keys) {
-                keys.forEach(function(key) { caches.delete(key); });
-              });
-            }
-          `}} />
           <Providers>{children}</Providers>
           <Analytics />
           <SpeedInsights />

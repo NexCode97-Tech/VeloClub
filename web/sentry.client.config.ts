@@ -10,4 +10,15 @@ Sentry.init({
   integrations: [
     Sentry.replayIntegration({ maskAllText: false, blockAllMedia: false }),
   ],
+  // Cortes de red del dispositivo del usuario y cancelaciones del navegador. No
+  // son fallos de la app y ya se mitigan con el reintento de apiFetch, así que
+  // solo generarían ruido que tapa los errores reales.
+  ignoreErrors: [
+    'Failed to fetch',
+    'NetworkError',
+    'Network request failed',
+    'Load failed',
+    'ClerkJS: Network error',
+    'AbortError',
+  ],
 });

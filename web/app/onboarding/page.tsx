@@ -35,6 +35,16 @@ export default function OnboardingPage() {
   const router = useRouter();
   const [mode, setMode] = useState<Mode>('choice');
 
+  // Si la sesión ya expiró, signOut lanza "You are signed out"; el destino final
+  // es el mismo, así que se ignora el fallo y se redirige igual.
+  const handleSignOut = async () => {
+    try {
+      await signOut({ redirectUrl: '/sign-in' });
+    } catch {
+      router.push('/sign-in');
+    }
+  };
+
   if (!isLoaded) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
@@ -57,7 +67,7 @@ export default function OnboardingPage() {
         <AnimatePresence mode="wait">
           {mode === 'choice' && (
             <motion.div key="choice" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2 }}>
-              <ChoiceScreen onCreate={() => setMode('create')} onContact={() => setMode('contact')} onSignOut={() => signOut({ redirectUrl: '/sign-in' })} />
+              <ChoiceScreen onCreate={() => setMode('create')} onContact={() => setMode('contact')} onSignOut={handleSignOut} />
             </motion.div>
           )}
           {mode === 'create' && (

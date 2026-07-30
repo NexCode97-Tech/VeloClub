@@ -150,26 +150,48 @@ router.post('/bulk', requireAuth, async (req, res) => {
     return res.status(403).json({ error: 'Uno o más miembros no pertenecen a este club' });
   }
 
-  await prisma.$transaction(
-    records.map(r =>
-      prisma.attendance.upsert({
-        where: { memberId_date: { memberId: r.memberId, date } },
-        create: {
-          clubId,
-          memberId:   r.memberId,
-          locationId: locationId ?? null,
-          date,
-          status:     r.status,
-          notes:      r.notes ?? null,
-        },
-        update: {
-          status:     r.status,
-          locationId: locationId ?? null,
-          notes:      r.notes ?? null,
-        },
+  // Upsert en bloque: un upsert por registro generaba un N+1 (62 queries en una
+  // sola jornada). Se resuelve leyendo los existentes y agrupando las escrituras.
+  const existing = await prisma.attendance.findMany({
+    where: { date, memberId: { in: memberIds } },
+    select: { memberId: true },
+  });
+  const existingIds = new Set(existing.map(a => a.memberId));
+
+  const toCreate = records.filter(r => !existingIds.has(r.memberId));
+  const toUpdate = records.filter(r => existingIds.has(r.memberId));
+
+  // Las actualizaciones se agrupan por valores idénticos para reducir el número
+  // de queries: en la práctica los registros comparten estado y notas vacías.
+  const updateGroups = new Map<string, { status: typeof records[number]['status']; notes: string | null; memberIds: string[] }>();
+  for (const r of toUpdate) {
+    const notes = r.notes ?? null;
+    const key = `${r.status}|${notes ?? ''}`;
+    const group = updateGroups.get(key);
+    if (group) group.memberIds.push(r.memberId);
+    else updateGroups.set(key, { status: r.status, notes, memberIds: [r.memberId] });
+  }
+
+  await prisma.$transaction([
+    ...(toCreate.length > 0
+      ? [prisma.attendance.createMany({
+          data: toCreate.map(r => ({
+            clubId,
+            memberId:   r.memberId,
+            locationId: locationId ?? null,
+            date,
+            status:     r.status,
+            notes:      r.notes ?? null,
+          })),
+        })]
+      : []),
+    ...Array.from(updateGroups.values()).map(g =>
+      prisma.attendance.updateMany({
+        where: { date, memberId: { in: g.memberIds } },
+        data: { status: g.status, locationId: locationId ?? null, notes: g.notes },
       })
-    )
-  );
+    ),
+  ]);
 
   emitToClub(clubId, 'attendance');
   res.json({ ok: true, saved: records.length });

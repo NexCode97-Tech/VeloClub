@@ -295,7 +295,8 @@ export default function ClubsPage() {
     load();
     // Refresco silencioso en tiempo real — sin spinner ni parpadeo, para que
     // clubes auto-registrados o verificados por otro superadmin aparezcan solos.
-    const interval = setInterval(() => load(true), 15_000);
+    // 60s: a 15s el panel chocaba con el rate limit del backend (429).
+    const interval = setInterval(() => load(true), 60_000);
     return () => clearInterval(interval);
   }, [isLoaded, isSignedIn]);
 

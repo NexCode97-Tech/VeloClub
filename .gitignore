@@ -32,3 +32,4 @@ api/prisma/dev.db
 .claude/
 
 .vercel
+.env*

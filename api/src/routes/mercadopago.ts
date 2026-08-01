@@ -33,10 +33,14 @@ function resolverPayerEmail(req: import('express').Request, clubEmail: string | 
   return req.auth?.email || clubEmail || 'sin-correo@veloclubtech.com';
 }
 
-// Si el club paga estando todavía en su período de prueba de 15 días, el plan
-// pagado no debe empezar a correr ese mismo día (desperdiciaría días gratis) —
-// arranca justo cuando termina el trial, para que se aprovechen los 15 días
-// gratis completos y después el mes pagado completo, sin solaparse.
+// Si el club paga estando todavía en su período de prueba, el plan pagado no
+// debe empezar a correr ese mismo día (desperdiciaría días gratis) — arranca
+// justo cuando termina la prueba, para que se aprovechen los días gratis
+// completos y después el período pagado completo, sin solaparse.
+//
+// La duración no se asume aquí: sale de trialEndsAt, que hoy son 60 días por la
+// promoción vigente y 15 fuera de ella (ver diasDePrueba en routes/clubs.ts). El
+// período pagado tampoco es siempre un mes: puede ser trimestral o anual.
 function fechaEfectivaPago(trialEndsAt: Date | null | undefined): Date {
   const ahora = new Date();
   return trialEndsAt && trialEndsAt > ahora ? trialEndsAt : ahora;

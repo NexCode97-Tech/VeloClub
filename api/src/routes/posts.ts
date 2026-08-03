@@ -5,6 +5,7 @@ import { requireAuth } from '../auth/middleware';
 import { prisma } from '../db/client';
 import { emitToClub } from '../lib/sse';
 import { validarSubida, TipoSubida } from '../lib/upload-guard';
+import { resolverNombreAutor } from '../lib/nombre-autor';
 import { uploadLimiter } from '../lib/rate-limit';
 
 cloudinary.config({
@@ -101,7 +102,7 @@ router.post('/', requireAuth, async (req, res) => {
       clubId:        req.user.clubId ?? '',
       clubName:      club?.name ?? '',
       authorClerkId: req.auth?.clerkId ?? null,
-      authorName:    req.auth?.name ?? 'Autor',
+      authorName:    await resolverNombreAutor(req.auth?.clerkId, req.auth?.name),
       authorRole:    req.user.role,
       authorAvatar:  req.auth?.picture ?? null,
       content:       parsed.data.content,
@@ -214,7 +215,7 @@ router.post('/:id/comments', requireAuth, async (req, res) => {
     data: {
       postId,
       authorClerkId: req.auth?.clerkId ?? null,
-      authorName:   req.auth?.name ?? 'Usuario',
+      authorName:   await resolverNombreAutor(req.auth?.clerkId, req.auth?.name),
       authorRole:   req.user.role,
       authorAvatar: req.auth?.picture ?? null,
       content:      parsed.data.content,

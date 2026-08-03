@@ -1,20 +1,69 @@
 'use client';
 
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Phone } from 'lucide-react';
 
 export interface SlideshowSlide {
   img: string;
   label?: string;
   title: string;
   description?: string;
+  /** Destino del botón de contacto. Sin url (o con '#') el botón no se muestra. */
   url?: string;
+  /** Texto del botón. Por defecto "Contactar". */
+  cta?: string;
 }
 
+// El tamaño no se recibe por props: los tres cortes usan la misma proporción 4:3
+// para que una sola imagen (1440x1080) calce sin recortes en móvil, tablet y
+// escritorio. Antes había un className que el componente ignoraba, y hacía creer
+// que el alto se controlaba desde afuera.
 interface SlideshowProps {
   slides: SlideshowSlide[];
   autoPlayMs?: number;
-  className?: string;
+}
+
+// Umbrales del gesto táctil: píxeles arrastrados o velocidad del impulso.
+const SWIPE_DISTANCIA = 60;
+const SWIPE_VELOCIDAD = 400;
+
+/**
+ * Botón de contacto del anuncio.
+ *
+ * Acabado de vidrio, el mismo lenguaje que la etiqueta de la esquina superior:
+ * así la tarjeta se lee como una sola pieza y se tapa lo mínimo de la imagen del
+ * anunciante, que es lo que él paga por mostrar.
+ *
+ * Solo aparece cuando el anuncio tiene un destino real; los de muestra siguen sin
+ * botón en lugar de ofrecer un enlace que no lleva a ninguna parte.
+ */
+function BotonContacto({ slide }: { slide: SlideshowSlide }) {
+  if (!slide.url || slide.url === '#') return null;
+  return (
+    <a
+      href={slide.url}
+      target="_blank"
+      rel="noopener noreferrer"
+      // Evita que el toque se interprete como interacción con el carrusel
+      onClick={e => e.stopPropagation()}
+      onPointerDownCapture={e => e.stopPropagation()}
+      className="inline-flex items-center gap-1.5 rounded-full text-white font-semibold transition-colors"
+      style={{
+        marginTop: 10,
+        padding: '8px 13px',
+        fontSize: 12,
+        lineHeight: 1,
+        background: 'rgba(255,255,255,0.14)',
+        border: '1px solid rgba(255,255,255,0.28)',
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
+      }}
+    >
+      <Phone className="w-3.5 h-3.5" aria-hidden />
+      {slide.cta ?? 'Contactar'}
+    </a>
+  );
 }
 
 // Precarga todas las imágenes al montar — evita jank en las transiciones
@@ -69,12 +118,13 @@ function SlideCard({ slide, priority }: { slide: SlideshowSlide; priority?: bool
             {slide.description}
           </p>
         )}
+        <BotonContacto slide={slide} />
       </div>
     </div>
   );
 }
 
-export function Slideshow({ slides, autoPlayMs = 5000, className = '' }: SlideshowProps) {
+export function Slideshow({ slides, autoPlayMs = 5000 }: SlideshowProps) {
   const [[page, direction], setPage] = useState([0, 0]);
   const [startIndex, setStartIndex] = useState(0);
   const [paused, setPaused] = useState(false);
@@ -103,13 +153,12 @@ export function Slideshow({ slides, autoPlayMs = 5000, className = '' }: Slidesh
   }
 
   const mobileSlide = slides[mobileIndex];
-  const getSlide = (offset: number) => slides[(startIndex + offset) % slides.length];
 
   return (
     <>
       {/* ── Móvil: carrusel con swipe ────────────────────────────── */}
       <div
-        className="relative w-full overflow-hidden rounded-2xl md:hidden h-[400px]"
+        className="relative w-full overflow-hidden rounded-2xl md:hidden aspect-[4/3]"
         style={{ boxShadow: '0 4px 16px rgba(0,0,0,0.13), inset 0 0 0 1px rgba(0,0,0,0.08)' }}
         onClick={handleInteraction}
       >
@@ -126,7 +175,23 @@ export function Slideshow({ slides, autoPlayMs = 5000, className = '' }: Slidesh
             animate="center"
             exit="exit"
             transition={{ duration: 0.5, ease: [0.23, 1, 0.32, 1] }}
-            className="absolute inset-0"
+            className="absolute inset-0 touch-pan-y"
+            // Deslizar con el dedo para adelantar o retroceder. El avance
+            // automático sigue corriendo, pero se pausa unos segundos tras cada
+            // gesto para no arrebatarle el control a quien está mirando.
+            drag="x"
+            dragDirectionLock
+            dragConstraints={{ left: 0, right: 0 }}
+            dragElastic={0.18}
+            onDragStart={handleInteraction}
+            onDragEnd={(_, info) => {
+              // Basta con un desplazamiento claro o un gesto rápido: exigir ambos
+              // haría que los deslizamientos cortos no respondieran.
+              const recorrido = info.offset.x;
+              const impulso = info.velocity.x;
+              if (recorrido < -SWIPE_DISTANCIA || impulso < -SWIPE_VELOCIDAD) paginate(1);
+              else if (recorrido > SWIPE_DISTANCIA || impulso > SWIPE_VELOCIDAD) paginate(-1);
+            }}
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={mobileSlide.img} alt={mobileSlide.title} className="w-full h-full object-cover" loading="eager" />
@@ -163,6 +228,7 @@ export function Slideshow({ slides, autoPlayMs = 5000, className = '' }: Slidesh
                   {mobileSlide.description}
                 </p>
               )}
+              <BotonContacto slide={mobileSlide} />
             </div>
           </motion.div>
         </AnimatePresence>
@@ -195,8 +261,8 @@ export function Slideshow({ slides, autoPlayMs = 5000, className = '' }: Slidesh
       {/* ── Tablet: cross-fade suave (sin slide translate) ──────── */}
       <div className="hidden md:block lg:hidden w-full rounded-2xl" style={{ position: 'relative' }}>
         <div className="grid grid-cols-2 gap-3" style={{ visibility: 'hidden', pointerEvents: 'none' }} aria-hidden>
-          <div className="aspect-[3/2]" />
-          <div className="aspect-[3/2]" />
+          <div className="aspect-[4/3]" />
+          <div className="aspect-[4/3]" />
         </div>
         {slides.map((_, idx) => {
           if (idx % 2 !== 0) return null;
@@ -216,10 +282,10 @@ export function Slideshow({ slides, autoPlayMs = 5000, className = '' }: Slidesh
                 pointerEvents: isActive ? 'auto' : 'none',
               }}
             >
-              <div className="aspect-[3/2]" style={{ boxShadow: '0 4px 16px rgba(0,0,0,0.13), inset 0 0 0 1px rgba(0,0,0,0.08)', borderRadius: '1rem', overflow: 'hidden' }}>
+              <div className="aspect-[4/3]" style={{ boxShadow: '0 4px 16px rgba(0,0,0,0.13), inset 0 0 0 1px rgba(0,0,0,0.08)', borderRadius: '1rem', overflow: 'hidden' }}>
                 <SlideCard slide={s0} priority={idx === 0} />
               </div>
-              <div className="aspect-[3/2]" style={{ boxShadow: '0 4px 16px rgba(0,0,0,0.13), inset 0 0 0 1px rgba(0,0,0,0.08)', borderRadius: '1rem', overflow: 'hidden' }}>
+              <div className="aspect-[4/3]" style={{ boxShadow: '0 4px 16px rgba(0,0,0,0.13), inset 0 0 0 1px rgba(0,0,0,0.08)', borderRadius: '1rem', overflow: 'hidden' }}>
                 <SlideCard slide={s1} priority={idx === 0} />
               </div>
             </div>
@@ -230,8 +296,8 @@ export function Slideshow({ slides, autoPlayMs = 5000, className = '' }: Slidesh
       {/* ── Escritorio: cross-fade suave — todas las capas montadas ─ */}
       <div className="hidden lg:block w-full rounded-2xl" style={{ position: 'relative' }}>
         <div className="grid grid-cols-2 gap-3" style={{ visibility: 'hidden', pointerEvents: 'none' }} aria-hidden>
-          <div className="h-[420px]" />
-          <div className="h-[420px]" />
+          <div className="aspect-[4/3]" />
+          <div className="aspect-[4/3]" />
         </div>
         {slides.map((_, idx) => {
           if (idx % 2 !== 0) return null;
@@ -251,10 +317,10 @@ export function Slideshow({ slides, autoPlayMs = 5000, className = '' }: Slidesh
                 pointerEvents: isActive ? 'auto' : 'none',
               }}
             >
-              <div className="h-[420px]" style={{ boxShadow: '0 4px 16px rgba(0,0,0,0.13), inset 0 0 0 1px rgba(0,0,0,0.08)', borderRadius: '1rem', overflow: 'hidden' }}>
+              <div className="aspect-[4/3]" style={{ boxShadow: '0 4px 16px rgba(0,0,0,0.13), inset 0 0 0 1px rgba(0,0,0,0.08)', borderRadius: '1rem', overflow: 'hidden' }}>
                 <SlideCard slide={s0} priority={idx === 0} />
               </div>
-              <div className="h-[420px]" style={{ boxShadow: '0 4px 16px rgba(0,0,0,0.13), inset 0 0 0 1px rgba(0,0,0,0.08)', borderRadius: '1rem', overflow: 'hidden' }}>
+              <div className="aspect-[4/3]" style={{ boxShadow: '0 4px 16px rgba(0,0,0,0.13), inset 0 0 0 1px rgba(0,0,0,0.08)', borderRadius: '1rem', overflow: 'hidden' }}>
                 <SlideCard slide={s1} priority={idx === 0} />
               </div>
             </div>

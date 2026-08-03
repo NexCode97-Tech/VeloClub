@@ -118,8 +118,9 @@ const ADS = [
     image: '/cafe-orquidea.png',
     label: 'Publicidad',
     title: 'Café Orquídea de la Meseta',
-    description: 'Café colombiano de la meseta santandereana en presentación de 450 gramos: energía para todo un mes. Pedidos al 315 317 1225.',
-    url: '#',
+    description: 'Café colombiano de la meseta santandereana en presentación de 450 gramos: energía para todo un mes.',
+    // Número que aparece en la pieza del anunciante
+    url: 'https://wa.me/573153171225',
     color: '#06D6A0',
   },
   {
@@ -1121,7 +1122,6 @@ export default function DashboardPage() {
       <div className="w-full px-6 pt-4">
         <Slideshow
           slides={ADS.map(ad => ({ img: ad.image, label: ad.label, title: ad.title, description: ad.description, url: ad.url }))}
-          className="min-h-[400px] md:min-h-[190px]"
         />
       </div>
 

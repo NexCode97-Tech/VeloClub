@@ -50,7 +50,6 @@ function BotonContacto({ slide }: { slide: SlideshowSlide }) {
       onPointerDownCapture={e => e.stopPropagation()}
       className="inline-flex items-center gap-1.5 rounded-full text-white font-semibold transition-colors"
       style={{
-        marginTop: 10,
         padding: '8px 13px',
         fontSize: 12,
         lineHeight: 1,
@@ -87,9 +86,11 @@ function SlideCard({ slide, priority }: { slide: SlideshowSlide; priority?: bool
         loading={priority ? 'eager' : 'lazy'}
         decoding={priority ? 'sync' : 'async'}
       />
+      {/* Velo corto y solo abajo: sin título ni descripción, únicamente tiene que
+          sostener el botón y los puntos sobre piezas de fondo claro. */}
       <div
-        className="absolute inset-0"
-        style={{ background: 'linear-gradient(to top, rgba(10,5,20,0.88) 0%, rgba(10,5,20,0.35) 55%, transparent 100%)' }}
+        className="absolute inset-x-0 bottom-0"
+        style={{ height: '32%', background: 'linear-gradient(to top, rgba(10,5,20,0.62) 0%, transparent 100%)' }}
       />
       {slide.label && (
         <div
@@ -106,18 +107,7 @@ function SlideCard({ slide, priority }: { slide: SlideshowSlide; priority?: bool
           </span>
         </div>
       )}
-      <div className="absolute bottom-0 left-0 right-0 px-4 pb-5 pt-10">
-        <h2
-          className="text-white font-semibold leading-tight mb-1.5"
-          style={{ fontSize: 15, textShadow: '0 1px 6px rgba(0,0,0,0.5)' }}
-        >
-          {slide.title}
-        </h2>
-        {slide.description && (
-          <p className="text-white/65 leading-relaxed line-clamp-3" style={{ fontSize: 11, fontWeight: 400 }}>
-            {slide.description}
-          </p>
-        )}
+      <div className="absolute bottom-0 left-0 right-0 px-4 pb-4">
         <BotonContacto slide={slide} />
       </div>
     </div>
@@ -196,8 +186,8 @@ export function Slideshow({ slides, autoPlayMs = 5000 }: SlideshowProps) {
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={mobileSlide.img} alt={mobileSlide.title} className="w-full h-full object-cover" loading="eager" />
             <div
-              className="absolute inset-0"
-              style={{ background: 'linear-gradient(to top, rgba(10,5,20,0.88) 0%, rgba(10,5,20,0.35) 55%, transparent 100%)' }}
+              className="absolute inset-x-0 bottom-0"
+              style={{ height: '32%', background: 'linear-gradient(to top, rgba(10,5,20,0.62) 0%, transparent 100%)' }}
             />
             {mobileSlide.label && (
               <div
@@ -216,18 +206,7 @@ export function Slideshow({ slides, autoPlayMs = 5000 }: SlideshowProps) {
                 </span>
               </div>
             )}
-            <div className="absolute bottom-0 left-0 right-0 px-4 pb-5 pt-10">
-              <h2
-                className="text-white font-semibold leading-tight mb-1.5"
-                style={{ fontSize: 16, textShadow: '0 1px 6px rgba(0,0,0,0.5)' }}
-              >
-                {mobileSlide.title}
-              </h2>
-              {mobileSlide.description && (
-                <p className="text-white/65 leading-relaxed line-clamp-3" style={{ fontSize: 11, fontWeight: 400 }}>
-                  {mobileSlide.description}
-                </p>
-              )}
+            <div className="absolute bottom-0 left-0 right-0 px-4 pb-4">
               <BotonContacto slide={mobileSlide} />
             </div>
           </motion.div>

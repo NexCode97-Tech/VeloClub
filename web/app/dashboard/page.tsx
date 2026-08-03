@@ -109,9 +109,9 @@ const ADS = [
   {
     image: '/natural.png',
     label: 'Publicidad',
-    title: 'Natural Ropa Deportiva',
+    title: 'Natural Ropa Deportiva, lycras para patinaje',
     description: 'Lycras y uniformes para patinaje, hechos para competir y entrenar. Confección a la medida del deportista y diseños personalizados para tu club.',
-    url: '#',
+    url: 'https://wa.me/573138296551',
     color: '#4361EE',
   },
   {

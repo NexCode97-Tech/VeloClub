@@ -228,15 +228,14 @@ export default function AsistenciaPage() {
   const { data: weekSavedData } = useQuery({
     queryKey: ['weekSaved', weekDates[0]],
     queryFn: async () => {
+      // Una sola petición para toda la semana. Antes eran siete (una por día)
+      // solo para saber cuáles tienen registro, y Sentry lo marcaba como N+1.
       const token = await getToken();
-      const results = await Promise.allSettled(
-        weekDates.map(d => apiFetch<{ records: AttRecord[] }>(`/attendance?date=${d}`, { token }))
+      const res = await apiFetch<{ days: string[] }>(
+        `/attendance/saved-days?from=${weekDates[0]}&to=${weekDates[weekDates.length - 1]}`,
+        { token },
       );
-      const saved = new Set<string>();
-      results.forEach((r, i) => {
-        if (r.status === 'fulfilled' && r.value.records.length > 0) saved.add(weekDates[i]);
-      });
-      return saved;
+      return new Set(res.days);
     },
     staleTime: 5 * 60 * 1000,
   });

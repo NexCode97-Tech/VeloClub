@@ -128,6 +128,34 @@ router.get('/range-stats', requireAuth, async (req, res) => {
   res.json({ days });
 });
 
+// GET /attendance/saved-days?from=YYYY-MM-DD&to=YYYY-MM-DD
+// Que dias del rango tienen asistencia registrada. La tira semanal necesita solo
+// eso, y lo resolvia pidiendo /attendance?date= siete veces: siete viajes de ida
+// y vuelta para averiguar siete si/no. Sentry lo reporto como N+1.
+router.get('/saved-days', requireAuth, async (req, res) => {
+  if (!req.user) return res.status(401).json({ error: 'No autenticado' });
+  const clubId = req.user.clubId ?? '';
+
+  const from = req.query.from ? new Date(String(req.query.from) + 'T00:00:00.000Z') : null;
+  const to   = req.query.to   ? new Date(String(req.query.to)   + 'T00:00:00.000Z') : null;
+  if (!from || !to || isNaN(from.getTime()) || isNaN(to.getTime())) {
+    return res.status(400).json({ error: 'Parámetros from y to requeridos (YYYY-MM-DD)' });
+  }
+  const dias = Math.floor((to.getTime() - from.getTime()) / 86_400_000) + 1;
+  if (dias < 1 || dias > 92) {
+    return res.status(400).json({ error: 'El rango debe ser entre 1 y 92 días' });
+  }
+
+  // distinct sobre la fecha: no interesa cuantos registros hay, solo si hay
+  const registros = await prisma.attendance.findMany({
+    where: { clubId, date: { gte: from, lte: to } },
+    select: { date: true },
+    distinct: ['date'],
+  });
+
+  res.json({ days: registros.map(r => r.date.toISOString().slice(0, 10)) });
+});
+
 // GET /attendance/report?from=YYYY-MM-DD&to=YYYY-MM-DD&locationId=
 // Consolidado por deportista: el detalle que necesita el reporte descargable.
 // range-stats no sirve para esto porque solo devuelve totales por dia, sin saber

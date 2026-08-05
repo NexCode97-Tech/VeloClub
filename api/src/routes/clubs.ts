@@ -118,6 +118,10 @@ router.get('/trusted', async (_req, res) => {
 router.get('/settings', requireAuth, async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'No autenticado' });
   const clubId = req.user.clubId ?? '';
+  // Sin club, la busqueda por id vacio devolvia null y respondia "Club no
+  // encontrado", que manda a buscar un club borrado cuando el problema real es
+  // que la cuenta quedo desvinculada. El mensaje ahora dice lo que pasa.
+  if (!clubId) return res.status(400).json({ error: 'Tu cuenta no está vinculada a un club' });
   const cacheKey = `club:settings:${clubId}`;
 
   const cached = await cacheGet<{ club: unknown }>(cacheKey);

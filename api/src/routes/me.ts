@@ -62,6 +62,37 @@ if (superadminEmails.includes(email.toLowerCase())) {
   }
 
   if (user) {
+    // Autorreparacion: una cuenta sin club que si tiene registro de miembro se
+    // vuelve a vincular sola al entrar. Sin esto, la persona queda atrapada en
+    // un estado del que no puede salir por su cuenta: Ajustes responde 404
+    // (busca un club con id vacio) y no puede asignar sedes al crear miembros,
+    // porque todo se valida contra un club que no existe. Le paso a tres
+    // cuentas, dos de ellas administradores, y solo se pudo arreglar a mano.
+    if (!user.clubId) {
+      const miembroDelUsuario = await prisma.member.findFirst({
+        where: {
+          OR: [
+            { clerkId },
+            ...(email ? [{ email: { equals: email, mode: 'insensitive' as const } }] : []),
+          ],
+        },
+        select: { clubId: true, role: true, club: { select: { active: true } } },
+        orderBy: { createdAt: 'desc' },
+      });
+      // Un club desactivado no se revincula: ahi el bloqueo es intencional
+      if (miembroDelUsuario?.club?.active) {
+        user = await prisma.user.update({
+          where: { clerkId },
+          // El rol manda desde el registro de miembro, que es donde el club lo
+          // administra: al desvincularse, una cuenta podia quedar con un rol
+          // viejo y menos permisos de los que le corresponden.
+          data: { clubId: miembroDelUsuario.clubId, role: miembroDelUsuario.role },
+          include: { club: true },
+        });
+        console.log(`[me] cuenta revinculada al club ${miembroDelUsuario.clubId}: ${email}`);
+      }
+    }
+
     // Update name/picture if changed in Clerk
     let resolvedName = name || user.name;
     if (!resolvedName || resolvedName === 'Usuario') {

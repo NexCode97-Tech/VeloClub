@@ -455,16 +455,31 @@ router.delete('/:id', requireAuth, async (req, res) => {
   // Desvincular el User (cuenta de login) si seguía apuntando a este club — si no se
   // limpia, un correo reutilizado en otro club queda con el login "fantasma" del club
   // viejo (el GET /me lo resuelve por User antes que por Member).
-  await prisma.user.updateMany({
-    where: {
-      clubId: req.user.clubId ?? '',
-      OR: [
-        ...(existing.clerkId ? [{ clerkId: existing.clerkId }] : []),
-        ...(existing.email ? [{ email: existing.email }] : []),
-      ],
-    },
-    data: { clubId: null },
-  });
+  //
+  // Pero solo si a la persona no le queda OTRO registro de miembro en el mismo
+  // club. Sin esta comprobacion, borrar un registro duplicado desvinculaba la
+  // cuenta de alguien que sigue perteneciendo al club: se quedaba sin poder
+  // abrir Ajustes (GET /clubs/settings buscaba un club con id vacio y respondia
+  // 404) y sin poder asignar sedes al crear miembros. Le paso a tres cuentas,
+  // entre ellas dos administradores.
+  const identidad = [
+    ...(existing.clerkId ? [{ clerkId: existing.clerkId }] : []),
+    ...(existing.email ? [{ email: existing.email }] : []),
+  ];
+
+  if (identidad.length > 0) {
+    const leQuedaOtroMiembro = await prisma.member.findFirst({
+      where: { clubId: req.user.clubId ?? '', OR: identidad },
+      select: { id: true },
+    });
+
+    if (!leQuedaOtroMiembro) {
+      await prisma.user.updateMany({
+        where: { clubId: req.user.clubId ?? '', OR: identidad },
+        data: { clubId: null },
+      });
+    }
+  }
 
   await invalidateMembersCache(req.user.clubId ?? '');
   emitToClub(req.user.clubId ?? '', 'members');

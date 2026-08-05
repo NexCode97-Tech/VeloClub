@@ -191,27 +191,35 @@ export default function GlassmorphismHero() {
               </a>
             </div>
 
-            {/* Imagen — solo mobile/tablet, debajo del contenido */}
-            <div className="vc-fade d6 lg:hidden w-full flex justify-center pt-2">
-              <Image
-                src="/version-movil.webp"
-                alt="VeloClub versión móvil"
-                width={720}
-                height={400}
-                className="w-full max-w-xs sm:max-w-sm object-contain drop-shadow-2xl"
-              />
-            </div>
           </div>
 
-          {/* Columna derecha — imagen solo desktop */}
-          <div className="hidden lg:flex lg:col-span-5 items-center justify-center overflow-visible">
+          {/* Imagen del mockup — UNA sola etiqueta para las dos pantallas.
+              Antes habia dos <Image> del mismo archivo, una con lg:hidden y otra
+              con hidden lg:flex. Esas clases solo esconden con CSS: los dos
+              <img> existian siempre y el navegador precargaba el de escritorio
+              tambien en el celular, donde esta oculto. Como hijo directo de la
+              grilla, en movil cae debajo del texto y en escritorio ocupa la
+              columna derecha, sin necesidad de duplicarla.
+
+              Sin `priority` a proposito: la unica imagen precargada debe ser el
+              fondo del hero, que es el elemento que mide el LCP. Con dos
+              preloads compitiendo, ninguna de las dos llega primero. Queda en
+              `eager` para que no se cargue perezosa estando sobre el pliegue.
+
+              Tampoco lleva `vc-fade`: esa clase arranca en opacity 0 y con el
+              retardo d6 tarda ~1,3 s en verse. El LCP solo cuenta cuando el
+              elemento se ve, asi que esconder una imagen grande detras de un
+              fade es penalizar la metrica que estamos arreglando. En movil si
+              tenia el fade; se quita a proposito. */}
+          <div className="lg:col-span-5 flex items-center justify-center overflow-visible w-full pt-2 lg:pt-0">
             <Image
               src="/version-movil.webp"
               alt="VeloClub versión móvil"
               width={780}
               height={540}
-              priority
-              className="w-full max-w-2xl object-contain drop-shadow-2xl scale-110"
+              loading="eager"
+              sizes="(max-width: 639px) 20rem, (max-width: 1023px) 24rem, 42rem"
+              className="w-full max-w-xs sm:max-w-sm lg:max-w-2xl object-contain drop-shadow-2xl lg:scale-110"
             />
           </div>
 

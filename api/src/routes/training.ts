@@ -19,17 +19,53 @@ function puedeGestionar(req: import('express').Request): boolean {
 const sessionSchema = z.object({
   title:      z.string().min(1).max(200),
   date:       z.string(),
+  escenario:  z.enum(['PISTA', 'GIMNASIO']).optional(),
   locationId: z.string().optional(),
   notes:      z.string().optional(),
 });
 
 const resultSchema = z.object({
   memberId:     z.string(),
-  time:         z.string().optional(),
-  distance:     z.string().optional(),
+  // Pista
+  time:         z.string().max(50).optional(),
+  distance:     z.string().max(50).optional(),
   laps:         z.number().int().positive().optional(),
-  observations: z.string().optional(),
+  // Gimnasio
+  exercise:     z.string().max(120).optional(),
+  weight:       z.string().max(50).optional(),
+  sets:         z.number().int().positive().optional(),
+  reps:         z.number().int().positive().optional(),
+  mark:         z.string().max(50).optional(),
+  observations: z.string().max(500).optional(),
 });
+
+// Un resultado de gimnasio no tiene vueltas y uno de pista no tiene series. El
+// cliente manda lo que corresponde, pero el escenario lo manda la sesion, asi
+// que aqui se descarta lo que no aplica en vez de confiar en el formulario.
+export function camposDelEscenario(
+  datos: z.infer<typeof resultSchema>,
+  escenario: 'PISTA' | 'GIMNASIO',
+) {
+  const comunes = { observations: datos.observations ?? null };
+  if (escenario === 'GIMNASIO') {
+    return {
+      ...comunes,
+      exercise: datos.exercise ?? null,
+      weight:   datos.weight   ?? null,
+      sets:     datos.sets     ?? null,
+      reps:     datos.reps     ?? null,
+      mark:     datos.mark     ?? null,
+      time: null, distance: null, laps: null,
+    };
+  }
+  return {
+    ...comunes,
+    time:     datos.time     ?? null,
+    distance: datos.distance ?? null,
+    laps:     datos.laps     ?? null,
+    exercise: null, weight: null, sets: null, reps: null, mark: null,
+  };
+}
 
 // GET /training?month=&year=
 router.get('/', requireAuth, async (req, res) => {
@@ -92,6 +128,7 @@ router.post('/', requireAuth, async (req, res) => {
       clubId:     req.user.clubId ?? '',
       title:      parsed.data.title,
       date:       new Date(parsed.data.date),
+      escenario:  parsed.data.escenario ?? 'PISTA',
       locationId: parsed.data.locationId ?? null,
       notes:      parsed.data.notes ?? null,
     },
@@ -140,15 +177,11 @@ router.post('/:id/results', requireAuth, async (req, res) => {
   if (!member) return res.status(404).json({ error: 'Miembro no encontrado en este club' });
 
   try {
+    const campos = camposDelEscenario(parsed.data, session.escenario);
     const result = await prisma.trainingResult.upsert({
       where: { sessionId_memberId: { sessionId, memberId: parsed.data.memberId } },
-      create: { sessionId, ...parsed.data },
-      update: {
-        time:         parsed.data.time         ?? null,
-        distance:     parsed.data.distance     ?? null,
-        laps:         parsed.data.laps         ?? null,
-        observations: parsed.data.observations ?? null,
-      },
+      create: { sessionId, memberId: parsed.data.memberId, ...campos },
+      update: campos,
       include: { member: { select: { id: true, fullName: true } } },
     });
     emitToClub(clubId, 'training');

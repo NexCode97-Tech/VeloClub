@@ -9,7 +9,7 @@ import { useCompetitions, useTraining, useLocations } from '@/hooks/useVeloQuery
 import Link from 'next/link';
 import {
   Trophy, Plus, Trash2, MapPin, CalendarDays, ChevronRight,
-  Dumbbell, Users, Target, Medal,
+  Dumbbell, Users, Target, Medal, ArrowLeft,
 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -20,6 +20,7 @@ import { DatePicker } from '@/components/ui/date-picker';
 import { LocationPicker } from '@/components/ui/location-picker';
 import ModuleLoader, { useCargaMinima } from '@/components/ui/module-loader';
 import ModuleReveal from '@/components/ui/module-reveal';
+import { ESCENARIOS, infoEscenario, type Escenario } from '@/lib/training-escenarios';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 interface EventResult  { id: string; position?: number; member: { id: string; fullName: string; pictureUrl?: string | null } }
@@ -27,13 +28,14 @@ interface CompEvent    { id: string; name: string; results: EventResult[] }
 interface Competition  { id: string; name: string; place?: string; latitude?: number | null; longitude?: number | null; date: string; events: CompEvent[] }
 
 interface TrainingResult { id: string; time?: string; distance?: string; laps?: number; observations?: string; member: { id: string; fullName: string } }
-interface TrainingSession { id: string; title: string; date: string; notes?: string; location?: { id: string; name: string } | null; results: TrainingResult[] }
+interface TrainingSession { id: string; title: string; date: string; escenario?: Escenario; notes?: string; location?: { id: string; name: string } | null; results: TrainingResult[] }
 
 interface Location { id: string; name: string; latitude?: number | null; longitude?: number | null; address?: string | null }
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 const emptyComp    = { name: '', place: '', latitude: null as number | null, longitude: null as number | null, date: '' };
-const emptySession = { title: '', date: '', locationId: '', notes: '' };
+// escenario vacio significa que aun no se ha elegido: el modal arranca en el paso 1
+const emptySession = { title: '', date: '', locationId: '', notes: '', escenario: '' as Escenario | '' };
 
 // Corrección ortográfica de ciudades/lugares (clave en MAYÚSCULAS)
 const PLACE_FIX: Record<string, string> = {
@@ -213,7 +215,7 @@ function LogrosPageInner() {
   }
 
   async function handleSaveSession() {
-    if (!sessionForm.title.trim() || !sessionForm.date) return;
+    if (!sessionForm.title.trim() || !sessionForm.date || !sessionForm.escenario) return;
     setSavingSession(true); setSessionError(null);
     try {
       const token = await getToken();
@@ -222,6 +224,7 @@ function LogrosPageInner() {
         body: JSON.stringify({
           title:      sessionForm.title,
           date:       sessionForm.date,
+          escenario:  sessionForm.escenario,
           locationId: sessionForm.locationId || undefined,
           notes:      sessionForm.notes      || undefined,
         }),
@@ -470,16 +473,56 @@ function LogrosPageInner() {
         <DialogContent className="max-w-sm">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <span className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'rgba(6,214,160,0.10)' }}>
-                <Dumbbell className="w-4 h-4" style={{ color: '#06D6A0' }} />
-              </span>
-              Nuevo entrenamiento
+              {sessionForm.escenario ? (
+                <button
+                  type="button"
+                  onClick={() => setSessionForm(f => ({ ...f, escenario: '' }))}
+                  aria-label="Cambiar escenario"
+                  className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-secondary cursor-pointer"
+                  style={{ background: infoEscenario(sessionForm.escenario).fondo }}
+                >
+                  <ArrowLeft className="w-4 h-4" style={{ color: infoEscenario(sessionForm.escenario).color }} />
+                </button>
+              ) : (
+                <span className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'rgba(6,214,160,0.10)' }}>
+                  <Dumbbell className="w-4 h-4" style={{ color: '#06D6A0' }} />
+                </span>
+              )}
+              {sessionForm.escenario
+                ? `Entrenamiento en ${infoEscenario(sessionForm.escenario).nombre.toLowerCase()}`
+                : 'Nuevo entrenamiento'}
             </DialogTitle>
           </DialogHeader>
+
+          {/* Paso 1 — donde se entrena. Decide que campos se piden despues. */}
+          {!sessionForm.escenario ? (
+            <div className="space-y-3 mt-2">
+              <p className="text-[12px] text-muted-foreground">
+                ¿Dónde se va a entrenar? De eso depende qué se registra en cada resultado.
+              </p>
+              {ESCENARIOS.map(e => (
+                <button
+                  key={e.valor}
+                  type="button"
+                  onClick={() => setSessionForm(f => ({ ...f, escenario: e.valor }))}
+                  className="w-full flex items-center gap-3 rounded-xl border border-border bg-white px-4 py-3 text-left transition-colors hover:border-primary/40 hover:bg-secondary/40 cursor-pointer active:scale-[0.99] duration-150"
+                >
+                  <span className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: e.fondo }}>
+                    <Dumbbell className="w-5 h-5" style={{ color: e.color }} />
+                  </span>
+                  <span className="flex-1 min-w-0">
+                    <span className="block text-[13px] font-semibold text-foreground">{e.nombre}</span>
+                    <span className="block text-[11px] text-muted-foreground">{e.descripcion}</span>
+                  </span>
+                  <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
+                </button>
+              ))}
+            </div>
+          ) : (
           <div className="space-y-4 mt-2">
             <div className="space-y-2">
               <Label>Título *</Label>
-              <Input value={sessionForm.title} onChange={e => setSessionForm(f => ({ ...f, title: e.target.value }))} placeholder="ej. Velocidad 500m" />
+              <Input value={sessionForm.title} onChange={e => setSessionForm(f => ({ ...f, title: e.target.value }))} placeholder={sessionForm.escenario === 'GIMNASIO' ? 'ej. Fuerza tren inferior' : 'ej. Velocidad 500m'} />
             </div>
             <div className="space-y-2">
               <Label>Fecha *</Label>
@@ -507,6 +550,7 @@ function LogrosPageInner() {
               {savingSession ? 'Guardando...' : 'Crear entrenamiento'}
             </Button>
           </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>
@@ -646,6 +690,7 @@ function TrainCard({ session: s, isStudent, myMemberId, canManage, deleting, onD
 }) {
   const rc      = isStudent && myMemberId ? s.results.filter(r => r.member.id === myMemberId).length : s.results.length;
   const dateStr = parseLocalDate(s.date).toLocaleDateString('es-CO', { day: 'numeric', month: 'short', year: 'numeric' });
+  const esc     = infoEscenario(s.escenario);
 
   return (
     <motion.div
@@ -681,9 +726,12 @@ function TrainCard({ session: s, isStudent, myMemberId, canManage, deleting, onD
               <CalendarDays className="w-3 h-3 shrink-0" />{dateStr}
             </span>
           </div>
-          <div className="flex items-center gap-2 mt-2">
+          <div className="flex flex-wrap items-center gap-2 mt-2">
             <span className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold" style={{ background: 'rgba(6,214,160,0.09)', color: '#05A07B' }}>
               <Users className="w-3 h-3" />{rc} resultado{rc !== 1 ? 's' : ''}
+            </span>
+            <span className="px-2.5 py-1 rounded-full text-[11px] font-semibold" style={{ background: esc.fondo, color: esc.color }}>
+              {esc.nombre}
             </span>
             {s.notes && (
               <span className="text-[10px] text-muted-foreground truncate max-w-[130px]">{s.notes}</span>

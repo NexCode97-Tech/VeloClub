@@ -5,30 +5,36 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { apiFetch } from '@/lib/api-client';
 import { parseLocalDate, toSentenceCase } from '@/lib/utils';
-import { ArrowLeft, Plus, Trash2, Dumbbell, Clock, Ruler, Hash } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Dumbbell, Clock, Ruler, Hash, Weight, Repeat, Layers, Award } from 'lucide-react';
 import Link from 'next/link';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import {
-  Select, SelectContent, SelectItem, SelectTrigger,
-} from '@/components/ui/select';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import ModuleLoader, { useCargaMinima } from '@/components/ui/module-loader';
 import ModuleReveal from '@/components/ui/module-reveal';
+import { infoEscenario, type Escenario } from '@/lib/training-escenarios';
 
 interface Member { id: string; fullName: string }
 interface TrainingResult {
-  id: string; time?: string; distance?: string; laps?: number;
+  id: string;
+  time?: string; distance?: string; laps?: number;
+  exercise?: string; weight?: string; sets?: number; reps?: number; mark?: string;
   observations?: string; member: { id: string; fullName: string };
 }
 interface TrainingSession {
-  id: string; title: string; date: string; notes?: string;
+  id: string; title: string; date: string; escenario?: Escenario; notes?: string;
   location?: { id: string; name: string } | null;
   results: TrainingResult[];
 }
 
-const emptyForm = { memberId: '', time: '', distance: '', laps: '', observations: '' };
+const emptyForm = {
+  memberId: '',
+  time: '', distance: '', laps: '',
+  exercise: '', weight: '', sets: '', reps: '', mark: '',
+  observations: '',
+};
 
 export default function TrainingDetailPage() {
   const { getToken } = useAuth();
@@ -62,7 +68,9 @@ export default function TrainingDetailPage() {
 
   useEffect(() => { load(); }, []);
 
-  const canManage = role === 'ADMIN' || role === 'COACH';
+  const canManage   = role === 'ADMIN' || role === 'COACH';
+  const escenario   = infoEscenario(session?.escenario);
+  const esGimnasio  = escenario.valor === 'GIMNASIO';
   // Todos los miembros disponibles — el backend hace upsert, así que si ya tiene resultado lo actualiza
   const availableMembers = members;
 
@@ -73,7 +81,17 @@ export default function TrainingDetailPage() {
       const token = await getToken();
       await apiFetch(`/training/${id}/results`, {
         method: 'POST', token,
-        body: JSON.stringify({
+        // El backend descarta lo que no aplica al escenario de la sesión,
+        // así que basta con mandar los campos del formulario visible.
+        body: JSON.stringify(esGimnasio ? {
+          memberId:     form.memberId,
+          exercise:     form.exercise || undefined,
+          weight:       form.weight   || undefined,
+          sets:         form.sets ? parseInt(form.sets) : undefined,
+          reps:         form.reps ? parseInt(form.reps) : undefined,
+          mark:         form.mark     || undefined,
+          observations: form.observations || undefined,
+        } : {
           memberId:     form.memberId,
           time:         form.time         || undefined,
           distance:     form.distance     || undefined,
@@ -133,10 +151,13 @@ export default function TrainingDetailPage() {
       <div className="px-4 pt-4 space-y-3 pb-4">
         {/* Info sesión */}
         <div className="bg-white border border-border rounded-xl px-4 py-3 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(6,214,160,0.10)' }}>
-            <Dumbbell className="w-5 h-5" style={{ color: '#06D6A0' }} />
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: escenario.fondo }}>
+            <Dumbbell className="w-5 h-5" style={{ color: escenario.color }} />
           </div>
-          <div>
+          <div className="min-w-0">
+            <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold mb-1" style={{ background: escenario.fondo, color: escenario.color }}>
+              {escenario.nombre}
+            </span>
             {session.location && <p className="text-[11px] text-muted-foreground">{session.location.name}</p>}
             {session.notes    && <p className="text-[11px] text-muted-foreground">{session.notes}</p>}
             <p className="text-[11px] text-muted-foreground">{session.results.length} resultado{session.results.length !== 1 ? 's' : ''}</p>
@@ -165,6 +186,31 @@ export default function TrainingDetailPage() {
                 <div className="flex-1 min-w-0">
                   <p className="text-[13px] font-semibold text-foreground">{r.member.fullName}</p>
                   <div className="flex flex-wrap gap-3 mt-0.5">
+                    {r.exercise && (
+                      <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                        <Dumbbell className="w-3 h-3" style={{ color: '#06D6A0' }} />{r.exercise}
+                      </span>
+                    )}
+                    {r.weight && (
+                      <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                        <Weight className="w-3 h-3" style={{ color: '#4361EE' }} />{r.weight}
+                      </span>
+                    )}
+                    {r.sets && (
+                      <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                        <Layers className="w-3 h-3" style={{ color: '#7C3AED' }} />{r.sets} serie{r.sets !== 1 ? 's' : ''}
+                      </span>
+                    )}
+                    {r.reps && (
+                      <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                        <Repeat className="w-3 h-3" style={{ color: '#FFB703' }} />{r.reps} rep{r.reps !== 1 ? 's' : ''}
+                      </span>
+                    )}
+                    {r.mark && (
+                      <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                        <Award className="w-3 h-3" style={{ color: '#EF476F' }} />{r.mark}
+                      </span>
+                    )}
                     {r.time && (
                       <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
                         <Clock className="w-3 h-3" style={{ color: '#4361EE' }} />{r.time}
@@ -200,33 +246,68 @@ export default function TrainingDetailPage() {
       {/* Modal agregar resultado */}
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-sm">
-          <DialogHeader><DialogTitle>Agregar resultado</DialogTitle></DialogHeader>
+          <DialogHeader>
+            <DialogTitle>Resultado en {escenario.nombre.toLowerCase()}</DialogTitle>
+          </DialogHeader>
           <div className="space-y-4 mt-2">
             <div className="space-y-2">
               <Label>Deportista *</Label>
-              <Select value={form.memberId} onValueChange={v => setForm(f => ({ ...f, memberId: v ?? '' }))}>
-                <SelectTrigger>
-                  <span className="text-sm">{members.find(m => m.id === form.memberId)?.fullName ?? 'Seleccionar deportista'}</span>
-                </SelectTrigger>
-                <SelectContent>
-                  {availableMembers.map(m => <SelectItem key={m.id} value={m.id}>{m.fullName}</SelectItem>)}
-                </SelectContent>
-              </Select>
+              <SearchableSelect
+                options={availableMembers.map(m => ({ value: m.id, label: m.fullName }))}
+                value={form.memberId}
+                onChange={v => setForm(f => ({ ...f, memberId: v }))}
+                placeholder="Seleccionar deportista"
+                searchPlaceholder="Buscar deportista..."
+                emptyMessage="Ningún deportista coincide"
+              />
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-2">
-                <Label>Tiempo</Label>
-                <Input value={form.time} onChange={e => setForm(f => ({ ...f, time: e.target.value }))} placeholder="ej. 2:30.5" />
-              </div>
-              <div className="space-y-2">
-                <Label>Distancia</Label>
-                <Input value={form.distance} onChange={e => setForm(f => ({ ...f, distance: e.target.value }))} placeholder="ej. 500m" />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label>Vueltas</Label>
-              <Input type="number" value={form.laps} onChange={e => setForm(f => ({ ...f, laps: e.target.value }))} placeholder="ej. 3" />
-            </div>
+
+            {esGimnasio ? (
+              <>
+                <div className="space-y-2">
+                  <Label>Ejercicio</Label>
+                  <Input value={form.exercise} onChange={e => setForm(f => ({ ...f, exercise: e.target.value }))} placeholder="ej. Sentadilla" />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <Label>Peso</Label>
+                    <Input value={form.weight} onChange={e => setForm(f => ({ ...f, weight: e.target.value }))} placeholder="ej. 60kg" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Marca</Label>
+                    <Input value={form.mark} onChange={e => setForm(f => ({ ...f, mark: e.target.value }))} placeholder="ej. 45cm" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <Label>Series</Label>
+                    <Input type="number" value={form.sets} onChange={e => setForm(f => ({ ...f, sets: e.target.value }))} placeholder="ej. 4" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Repeticiones</Label>
+                    <Input type="number" value={form.reps} onChange={e => setForm(f => ({ ...f, reps: e.target.value }))} placeholder="ej. 12" />
+                  </div>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <Label>Tiempo</Label>
+                    <Input value={form.time} onChange={e => setForm(f => ({ ...f, time: e.target.value }))} placeholder="ej. 2:30.5" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Distancia</Label>
+                    <Input value={form.distance} onChange={e => setForm(f => ({ ...f, distance: e.target.value }))} placeholder="ej. 500m" />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>Vueltas</Label>
+                  <Input type="number" value={form.laps} onChange={e => setForm(f => ({ ...f, laps: e.target.value }))} placeholder="ej. 3" />
+                </div>
+              </>
+            )}
+
             <div className="space-y-2">
               <Label>Observaciones</Label>
               <Input value={form.observations} onChange={e => setForm(f => ({ ...f, observations: e.target.value }))} placeholder="Opcional" />

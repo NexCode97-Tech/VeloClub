@@ -262,6 +262,10 @@ model TrainingSession {
   club       Club             @relation(fields: [clubId], references: [id], onDelete: Cascade)
   title      String
   date       DateTime
+  // Donde se entrena decide que se mide: en pista se cronometra, en gimnasio se
+  // levanta peso. El escenario vive en la sesion y no en cada resultado porque
+  // un entrenamiento entero ocurre en un solo lugar.
+  escenario  TrainingScenario @default(PISTA)
   locationId String?
   location   Location?        @relation(fields: [locationId], references: [id])
   notes      String?
@@ -279,9 +283,17 @@ model TrainingResult {
   session     TrainingSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   memberId    String
   member      Member          @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  // Campos de pista
   time        String?
   distance    String?
   laps        Int?
+  // Campos de gimnasio. La marca queda como texto libre porque no todo se mide
+  // en kilos: hay salto vertical en centimetros y planchas en segundos.
+  exercise    String?
+  weight      String?
+  sets        Int?
+  reps        Int?
+  mark        String?
   observations String?
   createdAt   DateTime        @default(now())
 
@@ -511,6 +523,11 @@ enum CashEntryType {
   INCOME
   EXPENSE
   REFUND
+}
+
+enum TrainingScenario {
+  PISTA
+  GIMNASIO
 }
 
 enum CalendarEventType {

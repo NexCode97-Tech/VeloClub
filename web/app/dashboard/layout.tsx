@@ -21,7 +21,7 @@ import {
   Search,
   ArrowLeft,
   Trophy,
-  Dumbbell,
+  ClipboardList,
 } from 'lucide-react';
 import { IconHome, IconUsers, IconCalendar, IconStatistics, IconClub, IconFinanzas, IconUbicacion, IconAsistencias, IconResultados, IconAjustes, IconMisPagos, IconPerfil, IconSuscripcion } from '@/components/ui/custom-icons';
 
@@ -373,7 +373,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const onLogros = pathname.startsWith('/dashboard/logros');
   const LOGROS_SUBNAV = [
     { key: 'comp',  label: 'Competencias',   icon: Trophy },
-    { key: 'train', label: 'Entrenamientos', icon: Dumbbell },
+    // Planilla y no mancuerna: la mancuerna ahora significa gimnasio, y este
+    // menú cubre los dos escenarios (pista y gimnasio).
+    { key: 'train', label: 'Entrenamientos', icon: ClipboardList },
   ];
 
   // Vista actual del sidebar y dirección del deslizamiento (main → sub-menú

@@ -9,7 +9,7 @@ import { useCompetitions, useTraining, useLocations } from '@/hooks/useVeloQuery
 import Link from 'next/link';
 import {
   Trophy, Plus, Trash2, MapPin, CalendarDays, ChevronRight,
-  Dumbbell, Users, Target, Medal, ArrowLeft,
+  ClipboardList, Users, Target, Medal, ArrowLeft,
 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -299,7 +299,7 @@ function LogrosPageInner() {
             >
               {t === 'comp'
                 ? <><Trophy className="w-3.5 h-3.5" />Competencias</>
-                : <><Dumbbell className="w-3.5 h-3.5" />Entrenamientos</>
+                : <><ClipboardList className="w-3.5 h-3.5" />Entrenamientos</>
               }
             </button>
           ))}
@@ -313,7 +313,7 @@ function LogrosPageInner() {
             style={{ background: 'linear-gradient(135deg, #7C3AED 0%, #4361EE 100%)' }}>
             {tab === 'comp'
               ? <Trophy className="w-3.5 h-3.5 text-white" />
-              : <Dumbbell className="w-3.5 h-3.5 text-white" />}
+              : <ClipboardList className="w-3.5 h-3.5 text-white" />}
           </div>
           <h2 className="text-[15px] font-semibold text-foreground">
             {tab === 'comp' ? 'Competencias' : 'Entrenamientos'}
@@ -382,7 +382,7 @@ function LogrosPageInner() {
             <motion.div key="train" initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -12 }} transition={{ duration: 0.2 }}>
               {visibleSessions.length === 0 ? (
                 <EmptyState
-                  icon={<Dumbbell className="w-10 h-10" style={{ color: '#06D6A0' }} />}
+                  icon={<ClipboardList className="w-10 h-10" style={{ color: '#06D6A0' }} />}
                   color="#06D6A0"
                   title="Sin entrenamientos"
                   desc="Registra sesiones de entrenamiento para hacer seguimiento del rendimiento."
@@ -485,7 +485,7 @@ function LogrosPageInner() {
                 </button>
               ) : (
                 <span className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'rgba(6,214,160,0.10)' }}>
-                  <Dumbbell className="w-4 h-4" style={{ color: '#06D6A0' }} />
+                  <ClipboardList className="w-4 h-4" style={{ color: '#06D6A0' }} />
                 </span>
               )}
               {sessionForm.escenario

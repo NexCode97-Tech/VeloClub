@@ -951,7 +951,14 @@ function LogrosSubNavLinks({ items, accentColor, accentBg }: {
   accentBg: string;
 }) {
   const searchParams = useSearchParams();
-  const logrosTab = searchParams.get('tab') ?? 'comp';
+  const pathname     = usePathname();
+
+  // El detalle de un entrenamiento vive en /logros/entrenamiento/[id] y no lleva
+  // ?tab=, asi que el submenu caia en el valor por defecto y resaltaba
+  // Competencias estando dentro de un entrenamiento. La ruta manda cuando la hay.
+  const logrosTab = pathname.startsWith('/dashboard/logros/entrenamiento')
+    ? 'train'
+    : (searchParams.get('tab') ?? 'comp');
   const activeIndex = items.findIndex(item => item.key === logrosTab);
 
   return (

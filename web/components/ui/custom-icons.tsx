@@ -122,3 +122,18 @@ export function IconSuscripcion({ className, style, ...props }: IconProps) {
     </svg>
   );
 }
+
+// Pista vista desde arriba. Lucide no tiene un icono de pista y la mancuerna ya
+// representa al gimnasio, asi que los dos escenarios de entrenamiento salian
+// con el mismo dibujo. Es de trazo y no relleno para que combine con el
+// Dumbbell de Lucide que va a su lado.
+export function IconPista({ className, style, strokeWidth = 1.8, ...props }: IconProps) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round"
+      className={className} style={style} {...props}>
+      <rect x="2" y="6" width="20" height="12" rx="6" />
+      <rect x="6" y="9.5" width="12" height="5" rx="2.5" />
+    </svg>
+  );
+}

@@ -508,7 +508,7 @@ function LogrosPageInner() {
                   className="w-full flex items-center gap-3 rounded-xl border border-border bg-white px-4 py-3 text-left transition-colors hover:border-primary/40 hover:bg-secondary/40 cursor-pointer active:scale-[0.99] duration-150"
                 >
                   <span className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: e.fondo }}>
-                    <Dumbbell className="w-5 h-5" style={{ color: e.color }} />
+                    <e.icono className="w-5 h-5" style={{ color: e.color }} />
                   </span>
                   <span className="flex-1 min-w-0">
                     <span className="block text-[13px] font-semibold text-foreground">{e.nombre}</span>
@@ -710,7 +710,7 @@ function TrainCard({ session: s, isStudent, myMemberId, canManage, deleting, onD
           className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0"
           style={{ background: 'linear-gradient(135deg,rgba(6,214,160,0.13),rgba(67,97,238,0.10))' }}
         >
-          <Dumbbell className="w-6 h-6" style={{ color: '#06D6A0' }} />
+          <esc.icono className="w-6 h-6" style={{ color: esc.color }} />
         </div>
 
         {/* Info */}

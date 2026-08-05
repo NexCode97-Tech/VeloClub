@@ -6,6 +6,9 @@
  * compite en gimnasio.
  */
 
+import { Dumbbell } from 'lucide-react';
+import { IconPista } from '@/components/ui/custom-icons';
+
 export type Escenario = 'PISTA' | 'GIMNASIO';
 
 export interface EscenarioInfo {
@@ -14,6 +17,7 @@ export interface EscenarioInfo {
   descripcion: string;
   color: string;
   fondo: string;
+  icono: React.ElementType;
 }
 
 export const ESCENARIOS: EscenarioInfo[] = [
@@ -23,6 +27,7 @@ export const ESCENARIOS: EscenarioInfo[] = [
     descripcion: 'Tiempos, distancia y vueltas',
     color: '#4361EE',
     fondo: 'rgba(67,97,238,0.10)',
+    icono: IconPista,
   },
   {
     valor: 'GIMNASIO',
@@ -30,6 +35,7 @@ export const ESCENARIOS: EscenarioInfo[] = [
     descripcion: 'Ejercicios, peso, series y repeticiones',
     color: '#06D6A0',
     fondo: 'rgba(6,214,160,0.10)',
+    icono: Dumbbell,
   },
 ];
 

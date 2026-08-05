@@ -71,6 +71,7 @@ export default function TrainingDetailPage() {
   const canManage   = role === 'ADMIN' || role === 'COACH';
   const escenario   = infoEscenario(session?.escenario);
   const esGimnasio  = escenario.valor === 'GIMNASIO';
+  const IconoEscenario = escenario.icono;
   // Todos los miembros disponibles — el backend hace upsert, así que si ya tiene resultado lo actualiza
   const availableMembers = members;
 
@@ -134,7 +135,7 @@ export default function TrainingDetailPage() {
           <h1 className="text-[15px] font-semibold text-foreground truncate" style={{ fontFamily: 'inherit' }}>
             {toSentenceCase(session.title)}
           </h1>
-          <p className="text-[11px] text-muted-foreground capitalize">{dateStr}</p>
+          <p className="text-[11px] text-muted-foreground">{toSentenceCase(dateStr)}</p>
         </div>
         {canManage && members.length > 0 && (
           <button
@@ -152,7 +153,7 @@ export default function TrainingDetailPage() {
         {/* Info sesión */}
         <div className="bg-white border border-border rounded-xl px-4 py-3 flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: escenario.fondo }}>
-            <Dumbbell className="w-5 h-5" style={{ color: escenario.color }} />
+            <IconoEscenario className="w-5 h-5" style={{ color: escenario.color }} />
           </div>
           <div className="min-w-0">
             <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold mb-1" style={{ background: escenario.fondo, color: escenario.color }}>
@@ -171,7 +172,7 @@ export default function TrainingDetailPage() {
 
         {session.results.length === 0 ? (
           <div className="bg-white border border-border rounded-xl px-4 py-10 text-center">
-            <Dumbbell className="w-8 h-8 mx-auto mb-2 text-muted-foreground/30" />
+            <IconoEscenario className="w-8 h-8 mx-auto mb-2 text-muted-foreground/30" />
             <p className="text-[12px] text-muted-foreground">Sin resultados registrados</p>
             {canManage && <p className="text-[11px] text-muted-foreground mt-1">Agrega el primer resultado con el botón +</p>}
           </div>

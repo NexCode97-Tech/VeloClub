@@ -144,15 +144,16 @@ router.post('/bulk', requireAuth, async (req, res) => {
   }
 
   // Validar que todos los memberIds pertenecen al club (previene ataque cross-tenant)
+  // y que están activos: a un deportista en pausa no se le registra asistencia.
   const memberIds = records.map(r => r.memberId);
   const validMembers = await prisma.member.findMany({
-    where: { id: { in: memberIds }, clubId },
+    where: { id: { in: memberIds }, clubId, active: true },
     select: { id: true },
   });
   const validIds = new Set(validMembers.map(m => m.id));
   const invalidIds = memberIds.filter(id => !validIds.has(id));
   if (invalidIds.length > 0) {
-    return res.status(403).json({ error: 'Uno o más miembros no pertenecen a este club' });
+    return res.status(403).json({ error: 'Uno o más miembros no pertenecen a este club o están desactivados' });
   }
 
   // Upsert en bloque: un upsert por registro generaba un N+1 (62 queries en una

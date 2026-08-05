@@ -23,6 +23,7 @@ interface Member {
   category?: string;
   tipo?: string;
   role: string;
+  active?: boolean;
   pictureUrl?: string | null;
   locations: { location: { id: string; name: string } }[];
 }
@@ -271,8 +272,10 @@ export default function AsistenciaPage() {
 
   useEffect(() => {
     if (!selectedLoc || !membersData || !attData) return;
+    // Un deportista en pausa no entra a la planilla: quedaría marcado ausente
+    // todos los días de sus vacaciones y le arruinaría el porcentaje del año.
     const forLoc = membersData.members.filter(
-      m => m.locations.some(l => l.location.id === selectedLoc)
+      m => m.active !== false && m.locations.some(l => l.location.id === selectedLoc)
     );
     // Todos arrancan Ausentes: el entrenador marca Presente a quienes asistieron
     const base = Object.fromEntries(forLoc.map(m => [m.id, 'ABSENT' as Status]));
@@ -282,7 +285,7 @@ export default function AsistenciaPage() {
   }, [selectedLoc, membersData, attData]);
 
   const members = (membersData?.members ?? []).filter(
-    m => m.locations.some(l => l.location.id === selectedLoc)
+    m => m.active !== false && m.locations.some(l => l.location.id === selectedLoc)
   );
 
   function toggle(id: string) {

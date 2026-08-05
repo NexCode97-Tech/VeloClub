@@ -23,7 +23,7 @@ import {
   Plus, Pencil, Trash2, Users, Search, Download,
   FileSpreadsheet, Upload, X, ChevronRight, Eye,
   Phone, Mail, Calendar, MapPin, Shield, Heart, CreditCard,
-  ArrowUpDown, Tag, ChevronDown,
+  ArrowUpDown, Tag, ChevronDown, PauseCircle, PlayCircle,
 } from 'lucide-react';
 import { MemberAvatar } from '@/components/ui/member-avatar';
 import { PhoneInput, parsePhoneDisplay, FlagImg } from '@/components/ui/phone-input';
@@ -44,6 +44,8 @@ interface Member {
   pictureUrl?: string | null; docType?: string | null; docNumber?: string | null;
   createdAt?: string;
   role: string;
+  active?: boolean;
+  desactivadoAt?: string | null;
   locations: { location: Location }[];
 }
 
@@ -83,6 +85,8 @@ export default function MiembrosPage() {
 
   const [search, setSearch]         = useState('');
   const [roleFilter, setRoleFilter] = useState<'ALL'|'STUDENT'|'COACH'|'ADMIN'>('ALL');
+  const [estadoFilter, setEstadoFilter] = useState<'ACTIVOS'|'PAUSADOS'|'TODOS'>('ACTIVOS');
+  const [cambiandoEstado, setCambiandoEstado] = useState<string | null>(null);
   const [sortOrder, setSortOrder]     = useState<'az'|'za'|'recent'|'oldest'>('recent');
   const [catFilter, setCatFilter]     = useState<string>('ALL');
   const [locFilter, setLocFilter]     = useState<string>('ALL');
@@ -243,6 +247,29 @@ export default function MiembrosPage() {
     qc.invalidateQueries({ queryKey: QK.members() });
   }
 
+  // Pausa temporal, no borrado: el deportista que se va de vacaciones conserva
+  // su historial y vuelve a entrar cuando lo reactiven.
+  async function handleToggleEstado(m: Member) {
+    const desactivar = m.active !== false;
+    if (desactivar && !confirm(
+      `¿Desactivar a ${m.fullName}?\n\nDeja de generarle cuota mensual, no aparece en asistencia ni en resultados y no puede entrar a la app. Su historial se conserva y puedes reactivarlo cuando vuelva.`
+    )) return;
+
+    setCambiandoEstado(m.id);
+    try {
+      const token = await getToken();
+      await apiFetch(`/members/${m.id}/estado`, {
+        method: 'PATCH', token,
+        body: JSON.stringify({ active: desactivar ? false : true }),
+      });
+      qc.invalidateQueries({ queryKey: QK.members() });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'No se pudo cambiar el estado');
+    } finally {
+      setCambiandoEstado(null);
+    }
+  }
+
   function toggleLocation(id: string) {
     setForm(f => ({
       ...f,
@@ -297,7 +324,11 @@ export default function MiembrosPage() {
       const matchCat    = catFilter  === 'ALL' || m.category === catFilter;
       const matchLoc = locFilter === 'ALL'
         || (locFilter === 'SIN_SEDE' ? m.locations.length === 0 : m.locations.some(l => l.location.id === locFilter));
-      return matchSearch && matchRole && matchCat && matchLoc;
+      // Los desactivados se esconden por defecto: si no, el club que pausa 25
+      // deportistas en noviembre sigue viendo la misma lista de siempre.
+      const matchEstado = estadoFilter === 'TODOS'
+        || (estadoFilter === 'ACTIVOS' ? m.active !== false : m.active === false);
+      return matchSearch && matchRole && matchCat && matchLoc && matchEstado;
     });
     list = [...list].sort((a, b) => {
       if (sortOrder === 'az')     return a.fullName.localeCompare(b.fullName);
@@ -307,7 +338,9 @@ export default function MiembrosPage() {
       return 0;
     });
     return list;
-  }, [members, search, roleFilter, catFilter, locFilter, sortOrder]);
+  }, [members, search, roleFilter, catFilter, locFilter, sortOrder, estadoFilter]);
+
+  const totalPausados = useMemo(() => members.filter(m => m.active === false).length, [members]);
 
   // ── Initials ─────────────────────────────────────────────────────────────────
   function initials(name: string) {
@@ -477,6 +510,29 @@ export default function MiembrosPage() {
               </SelectContent>
             </Select>
 
+            {/* Estado — solo aparece cuando el club ya pausó a alguien, para no
+                agregar un filtro más a quienes nunca lo van a usar */}
+            {(totalPausados > 0 || estadoFilter !== 'ACTIVOS') && (
+              <Select value={estadoFilter} onValueChange={v => { if (v) setEstadoFilter(v as typeof estadoFilter); }}>
+                <SelectTrigger className="px-3 rounded-xl text-[12px] font-semibold gap-1.5 cursor-pointer"
+                  style={{
+                    height: 42,
+                    background: estadoFilter !== 'ACTIVOS' ? 'rgba(142,135,168,0.10)' : '#fff',
+                    border: estadoFilter !== 'ACTIVOS' ? '1px solid rgba(142,135,168,0.35)' : '1px solid rgba(120,80,200,0.12)',
+                    color: estadoFilter !== 'ACTIVOS' ? '#5B5470' : '#1A1028',
+                    width: 'fit-content',
+                  }}>
+                  <PauseCircle className="w-3.5 h-3.5 shrink-0" style={{ color: estadoFilter !== 'ACTIVOS' ? '#5B5470' : '#8E87A8' }} />
+                  <span>{{ ACTIVOS: 'Activos', PAUSADOS: `En pausa (${totalPausados})`, TODOS: 'Todos' }[estadoFilter]}</span>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ACTIVOS">Activos</SelectItem>
+                  <SelectItem value="PAUSADOS">En pausa ({totalPausados})</SelectItem>
+                  <SelectItem value="TODOS">Todos</SelectItem>
+                </SelectContent>
+              </Select>
+            )}
+
             <p className="text-[12px] font-semibold whitespace-nowrap" style={{ color: '#8E87A8' }}>
               {filtered.length} resultado{filtered.length !== 1 ? 's' : ''}
             </p>
@@ -557,7 +613,9 @@ export default function MiembrosPage() {
                     }}
                   >
                     {/* ── Cabecera con gradiente ── */}
-                    <div className="relative px-5 pt-5 pb-4" style={{ background: ROLE_GRADIENT[m.role] ?? ROLE_GRADIENT.STUDENT }}>
+                    {/* El pausado va en gris: en una cuadrícula de 40 fichas, el
+                        color es lo que se nota antes de leer cualquier etiqueta */}
+                    <div className="relative px-5 pt-5 pb-4" style={{ background: m.active === false ? 'linear-gradient(135deg,#A8A2B8,#7C7690)' : (ROLE_GRADIENT[m.role] ?? ROLE_GRADIENT.STUDENT) }}>
                       {/* Patrón decorativo sutil */}
                       <div className="absolute inset-0 opacity-10" style={{
                         backgroundImage: 'radial-gradient(circle at 80% 20%, rgba(255,255,255,0.6) 0%, transparent 60%)',
@@ -583,6 +641,15 @@ export default function MiembrosPage() {
                             >
                               {ROLES[m.role]}
                             </span>
+                            {m.active === false && (
+                              <span
+                                className="text-[10px] font-semibold px-2 py-0.5 rounded-full flex items-center gap-1"
+                                style={{ background: 'rgba(0,0,0,0.28)', color: '#fff' }}
+                              >
+                                <PauseCircle className="w-2.5 h-2.5" />
+                                En pausa
+                              </span>
+                            )}
                             {m.tipo && (
                               <span
                                 className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
@@ -716,6 +783,22 @@ export default function MiembrosPage() {
                       </motion.button>
                       {canManage && (
                       <motion.button
+                        onClick={() => handleToggleEstado(m)}
+                        disabled={cambiandoEstado === m.id}
+                        whileHover={reducedMotion ? {} : { scale: 1.05 }}
+                        whileTap={reducedMotion ? {} : { scale: 0.95 }}
+                        transition={{ duration: 0.12, ease: EASE_OUT }}
+                        className="w-10 h-10 rounded-xl flex items-center justify-center cursor-pointer shrink-0 disabled:opacity-50"
+                        style={{ background: m.active === false ? 'rgba(6,214,160,0.10)' : 'rgba(142,135,168,0.12)' }}
+                        aria-label={m.active === false ? 'Reactivar miembro' : 'Desactivar miembro'}
+                      >
+                        {m.active === false
+                          ? <PlayCircle className="w-4 h-4" style={{ color: '#06D6A0' }} />
+                          : <PauseCircle className="w-4 h-4" style={{ color: '#5B5470' }} />}
+                      </motion.button>
+                      )}
+                      {canManage && (
+                      <motion.button
                         onClick={() => handleDelete(m.id)}
                         whileHover={reducedMotion ? {} : { scale: 1.05 }}
                         whileTap={reducedMotion ? {} : { scale: 0.95 }}
@@ -799,6 +882,9 @@ export default function MiembrosPage() {
                     <div className="flex items-center gap-1.5 mb-0.5">
                       <p className="text-[13px] font-semibold text-foreground truncate">{m.fullName}</p>
                       <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full shrink-0" style={{ color: rc.text, background: rc.bg }}>{ROLES[m.role]}</span>
+                      {m.active === false && (
+                        <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full shrink-0" style={{ color: '#5B5470', background: 'rgba(142,135,168,0.15)' }}>En pausa</span>
+                      )}
                     </div>
                     <p className="text-[11px] text-muted-foreground truncate lowercase">{m.email ?? '—'}</p>
                     {m.role === 'STUDENT' && (
@@ -816,6 +902,16 @@ export default function MiembrosPage() {
                     {canManage && (<>
                     <button onClick={() => openEdit(m)} className="w-7 h-7 rounded-lg bg-secondary flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors">
                       <Pencil className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => handleToggleEstado(m)}
+                      disabled={cambiandoEstado === m.id}
+                      aria-label={m.active === false ? 'Reactivar miembro' : 'Desactivar miembro'}
+                      className="w-7 h-7 rounded-lg bg-secondary flex items-center justify-center transition-colors disabled:opacity-50"
+                    >
+                      {m.active === false
+                        ? <PlayCircle className="w-3.5 h-3.5" style={{ color: '#06D6A0' }} />
+                        : <PauseCircle className="w-3.5 h-3.5" style={{ color: '#8E87A8' }} />}
                     </button>
                     <button onClick={() => handleDelete(m.id)} className="w-7 h-7 rounded-lg bg-red-50 flex items-center justify-center text-red-400 hover:text-red-600 transition-colors">
                       <Trash2 className="w-3.5 h-3.5" />

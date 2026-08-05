@@ -93,7 +93,7 @@ router.get('/', requireAuth, async (req, res) => {
   const members = isStudent
     ? await prisma.member.findMany({
         where: { clubId },
-        select: { id: true, fullName: true, pictureUrl: true, role: true, category: true, tipo: true },
+        select: { id: true, fullName: true, pictureUrl: true, role: true, category: true, tipo: true, active: true },
         orderBy: { fullName: 'asc' },
       })
     : await prisma.member.findMany({
@@ -112,7 +112,7 @@ router.get('/birthdays', requireAuth, async (req, res) => {
   const clubId = req.user.clubId ?? '';
 
   const all = await prisma.member.findMany({
-    where: { clubId, birthDate: { not: null } },
+    where: { clubId, active: true, birthDate: { not: null } },
     select: { id: true, fullName: true, birthDate: true, pictureUrl: true, role: true },
   });
 
@@ -381,6 +381,53 @@ router.patch('/:id/contact', requireAuth, async (req, res) => {
     select: { id: true, fullName: true, role: true, pictureUrl: true, phone: true, email: true, category: true, tipo: true },
   });
 
+  res.json({ member });
+});
+
+// PATCH /members/:id/estado — pausa temporal, no borrado.
+// Los deportistas se van de vacaciones en noviembre y vuelven en febrero: en vez
+// de eliminarlos y volver a crearlos (perdiendo asistencias, resultados y
+// pagos), se desactivan y se reactivan conservando todo.
+const estadoSchema = z.object({ active: z.boolean() });
+
+router.patch('/:id/estado', requireAuth, async (req, res) => {
+  if (!req.user) return res.status(401).json({ error: 'No autenticado' });
+  if (!esAdmin(req)) return res.status(403).json({ error: 'Solo administradores' });
+
+  const parsed = estadoSchema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: parsed.error.issues });
+
+  const id = getId(req);
+  const existing = await prisma.member.findFirst({
+    where: { id, clubId: req.user.clubId ?? '' },
+  });
+  if (!existing) return res.status(404).json({ error: 'Miembro no encontrado' });
+
+  // Un administrador que se desactive a sí mismo se deja fuera de su propio club
+  // sin nadie que pueda revertirlo desde la app.
+  if (!parsed.data.active && existing.clerkId && existing.clerkId === req.auth?.clerkId) {
+    return res.status(400).json({ error: 'No puedes desactivar tu propia cuenta' });
+  }
+
+  const member = await prisma.member.update({
+    where: { id },
+    data: {
+      active: parsed.data.active,
+      desactivadoAt: parsed.data.active ? null : new Date(),
+    },
+    include: { locations: { include: { location: true } } },
+  });
+
+  // Al desactivar se cierran las sesiones abiertas para que el bloqueo sea
+  // inmediato y no espere a que caduque el token. La barrera de verdad es GET
+  // /me, que responde 'inactive' y manda a /inactivo. No se toca el allowlist
+  // de Clerk: reactivar debe ser un clic, no una reinvitación.
+  if (!parsed.data.active && existing.clerkId) {
+    try { await revokeClerkSessions(existing.clerkId); } catch { /* el gate de /me igual bloquea */ }
+  }
+
+  await invalidateMembersCache(req.user.clubId ?? '');
+  emitToClub(req.user.clubId ?? '', 'members');
   res.json({ member });
 });
 

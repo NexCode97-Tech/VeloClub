@@ -130,12 +130,19 @@ model Member {
   inviteStatus      InviteStatus     @default(PENDING)
   clerkId           String?          @unique
   role              Role             @default(STUDENT)
+  // Pausa temporal, no borrado. Los deportistas se van de vacaciones en
+  // noviembre y vuelven en febrero: mientras esten inactivos no se les genera
+  // cuota, no cuentan para el precio del plan del club y no entran a la app,
+  // pero conservan asistencias, resultados y pagos anteriores.
+  active            Boolean          @default(true)
+  desactivadoAt     DateTime?
   createdAt         DateTime         @default(now())
   updatedAt         DateTime         @updatedAt
 
   @@index([clubId])
   @@index([email])
   @@index([clubId, inviteStatus])
+  @@index([clubId, active])
 }
 
 model MemberLocation {
@@ -339,6 +346,12 @@ model ClubSuscripcion {
   mpPreapprovalId        String?
   mpPayerEmail           String?
   ultimoMontoSincronizado Float?
+  // Tope de deportistas activos alcanzado en el ciclo de facturacion en curso.
+  // Sin esto, un club podria desactivar a todos la vispera del cobro y
+  // reactivarlos al dia siguiente para caer al tramo mas barato. El precio usa
+  // el tope, asi que una baja real de deportistas se refleja en el ciclo
+  // siguiente y no a mitad del que ya se esta cobrando.
+  picoDeportistas        Int?
   intentosFallidos       Int                 @default(0)
   ultimoIntentoFallidoAt DateTime?
   // Cancelación explícita del admin: se apaga la renovación pero el club sigue

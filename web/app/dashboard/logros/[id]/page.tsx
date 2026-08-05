@@ -18,7 +18,7 @@ import { LocationPicker } from '@/components/ui/location-picker';
 import ModuleLoader, { useCargaMinima } from '@/components/ui/module-loader';
 import ModuleReveal from '@/components/ui/module-reveal';
 
-interface Member { id: string; fullName: string }
+interface Member { id: string; fullName: string; active?: boolean }
 interface EventResult {
   id: string; position?: number; category?: string; observations?: string;
   member: { id: string; fullName: string; pictureUrl?: string | null };
@@ -175,7 +175,9 @@ export default function CompetitionDetailPage() {
       apiFetch<{ status: string; user?: { role: string } }>('/me', { token }),
     ]);
     setCompetition(compRes.competition);
-    setMembers(membersRes.members);
+    // Los pausados no se pueden inscribir en resultados nuevos, pero los que ya
+    // tienen quedan visibles porque el resultado guarda su propio miembro.
+    setMembers(membersRes.members.filter(m => m.active !== false));
     setRole(meRes.user?.role ?? '');
     setLoading(false);
   }

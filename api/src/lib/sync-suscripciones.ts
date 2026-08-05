@@ -2,6 +2,7 @@ import * as Sentry from '@sentry/node';
 import { prisma } from '../db/client';
 import { calcularPrecioPlan, vigencia, type TipoPlan } from './pricing';
 import { actualizarMontoPreapproval } from './mercadopago';
+import { contarDeportistasFacturables, reiniciarPicoDeportistas } from './deportistas';
 import { notifyClubStaff } from './notify';
 import { cacheDel } from './redis';
 
@@ -20,9 +21,7 @@ export async function sincronizarMontosSuscripciones(): Promise<{ revisadas: num
 
   for (const s of suscripciones) {
     try {
-      const cantidadDeportistas = await prisma.member.count({
-        where: { clubId: s.clubId, role: 'STUDENT' },
-      });
+      const cantidadDeportistas = await contarDeportistasFacturables(s.clubId);
       const montoActual = calcularPrecioPlan(cantidadDeportistas, s.tipoPlan as TipoPlan, true);
 
       if (montoActual !== s.ultimoMontoSincronizado) {
@@ -111,6 +110,10 @@ export async function activarClubTrasPago(clubId: string): Promise<void> {
     where: { clubId, canceladaAt: { not: null } },
     data: { canceladaAt: null },
   });
+
+  // El pago abre el ciclo siguiente: el tope de deportistas vuelve a la cantidad
+  // real de activos. Aquí es donde una baja de deportistas se hace efectiva.
+  await reiniciarPicoDeportistas(clubId);
 
   // Si el pago auto-verificó o reactivó el club, refrescar la sección
   // "confían en nosotros" del landing.

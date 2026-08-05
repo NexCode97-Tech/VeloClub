@@ -47,7 +47,8 @@ export async function notifyClubStudents(clubId: string, payload: NotifPayload) 
   if (!clubId) return;
   try {
     const students = await prisma.member.findMany({
-      where: { clubId, role: 'STUDENT', clerkId: { not: null } },
+      // Un deportista desactivado no recibe avisos del club mientras esté en pausa
+      where: { clubId, role: 'STUDENT', active: true, clerkId: { not: null } },
       select: { clerkId: true },
     });
     const recipients = students.map(s => s.clerkId!).filter(Boolean);

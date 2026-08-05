@@ -4,6 +4,7 @@ import { requireAuth } from '../auth/middleware';
 import { prisma } from '../db/client';
 import { notifyClubStaff } from '../lib/notify';
 import { calcularPrecioPlan, vigencia, type TipoPlan } from '../lib/pricing';
+import { contarDeportistasActivos, contarDeportistasFacturables } from '../lib/deportistas';
 import {
   crearPreferenciaCheckout, crearPreapproval, cancelarPreapproval,
   obtenerPago, obtenerPreapproval, verificarFirmaWebhook, buscarPagoPorReferencia,
@@ -105,7 +106,8 @@ async function asegurarSuscripcion(clubId: string) {
   const existente = await leerSuscripcion(clubId);
   if (existente) return existente;
 
-  const cantidadDeportistas = await prisma.member.count({ where: { clubId, role: 'STUDENT' } });
+  // Todavia no hay suscripcion, asi que no hay ciclo ni tope que respetar
+  const cantidadDeportistas = await contarDeportistasActivos(clubId);
   return prisma.clubSuscripcion.create({
     data: {
       clubId,
@@ -123,7 +125,7 @@ router.get('/mi-suscripcion', requireAuth, async (req, res) => {
 
   const [suscripcion, cantidadDeportistas, club] = await Promise.all([
     leerSuscripcion(clubId),
-    prisma.member.count({ where: { clubId, role: 'STUDENT' } }),
+    contarDeportistasFacturables(clubId),
     prisma.club.findUnique({ where: { id: clubId }, select: { trialEndsAt: true } }),
   ]);
 
@@ -152,7 +154,7 @@ router.get('/planes', requireAuth, async (req, res) => {
   if (!requireAdmin(req, res)) return;
   const clubId = req.user!.clubId ?? '';
 
-  const cantidadDeportistas = await prisma.member.count({ where: { clubId, role: 'STUDENT' } });
+  const cantidadDeportistas = await contarDeportistasFacturables(clubId);
   const planes = (['MENSUAL', 'TRIMESTRAL', 'ANUAL'] as TipoPlan[]).map(tipoPlan => ({
     tipoPlan,
     precio: calcularPrecioPlan(cantidadDeportistas, tipoPlan),
@@ -279,11 +281,13 @@ router.post('/pagar', paymentLimiter, requireAuth, async (req, res) => {
     }
   }
 
-  const [suscripcion, cantidadDeportistas, club] = await Promise.all([
+  const [suscripcion, club] = await Promise.all([
     asegurarSuscripcion(clubId),
-    prisma.member.count({ where: { clubId, role: 'STUDENT' } }),
     prisma.club.findUnique({ where: { id: clubId }, select: { name: true, email: true, trialEndsAt: true } }),
   ]);
+  // El tope del ciclo se lee despues de asegurar la suscripcion: en paralelo
+  // podria consultarla antes de que exista y quedarse sin tope que aplicar.
+  const cantidadDeportistas = await contarDeportistasFacturables(clubId);
 
   // El 5% de descuento es un incentivo por pagar con tarjeta (el único medio que
   // habilita la renovación automática) — un pago manual por PSE o Efecty no lo
@@ -470,11 +474,11 @@ router.post('/checkout', paymentLimiter, requireAuth, async (req, res) => {
   if (!requireAdmin(req, res)) return;
   const clubId = req.user!.clubId ?? '';
 
-  const [suscripcion, cantidadDeportistas, club] = await Promise.all([
+  const [suscripcion, club] = await Promise.all([
     asegurarSuscripcion(clubId),
-    prisma.member.count({ where: { clubId, role: 'STUDENT' } }),
     prisma.club.findUnique({ where: { id: clubId }, select: { name: true, email: true } }),
   ]);
+  const cantidadDeportistas = await contarDeportistasFacturables(clubId);
 
   const monto = calcularPrecioPlan(cantidadDeportistas, suscripcion.tipoPlan as TipoPlan, suscripcion.autoRenew);
   const payerEmail = resolverPayerEmail(req, club?.email);
@@ -505,11 +509,13 @@ router.post('/subscribe', paymentLimiter, requireAuth, async (req, res) => {
     return res.status(400).json({ error: 'Debes autorizar los cobros recurrentes para activar la renovación automática' });
   }
 
-  const [suscripcion, cantidadDeportistas, club] = await Promise.all([
+  const [suscripcion, club] = await Promise.all([
     asegurarSuscripcion(clubId),
-    prisma.member.count({ where: { clubId, role: 'STUDENT' } }),
     prisma.club.findUnique({ where: { id: clubId }, select: { name: true, email: true, trialEndsAt: true } }),
   ]);
+  // El tope del ciclo se lee despues de asegurar la suscripcion: en paralelo
+  // podria consultarla antes de que exista y quedarse sin tope que aplicar.
+  const cantidadDeportistas = await contarDeportistasFacturables(clubId);
 
   // Evita crear una segunda suscripción recurrente (con doble cobro) si ya hay
   // una activa — protege contra doble clic, doble pestaña o cualquier reintento.

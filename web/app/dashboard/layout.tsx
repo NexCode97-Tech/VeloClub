@@ -281,6 +281,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         if (res.status === 'needs_onboarding'){ router.replace('/onboarding');       return; }
         if (res.status === 'no_access')        { router.replace('/no-access');       return; }
         if (res.status === 'inactive')         { router.replace('/inactivo');         return; }
+        if (res.status === 'member_inactive')  { router.replace('/cuenta-pausada');   return; }
         if (res.status === 'superadmin')       { router.replace('/superadmin');       return; }
         if (res.status === 'complete_profile') { router.replace('/completar-perfil'); return; }
         const userRole = res.user?.role ?? null;

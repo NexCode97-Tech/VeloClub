@@ -117,6 +117,17 @@ if (superadminEmails.includes(email.toLowerCase())) {
       return res.json({ status: 'inactive', role: user.role });
     }
 
+    // Miembro desactivado (pausa por vacaciones). Es un estado propio y no
+    // 'inactive' porque el mensaje es muy distinto: el club sigue funcionando,
+    // el que está en pausa es él, y quien lo reactiva es su administrador.
+    const miembro = await prisma.member.findFirst({
+      where: { clubId: user.clubId ?? '', clerkId },
+      select: { active: true },
+    });
+    if (miembro && !miembro.active) {
+      return res.json({ status: 'member_inactive', role: user.role });
+    }
+
     // Check trial
     const now = new Date();
     const trialEndsAt = user.club?.trialEndsAt ?? null;
@@ -158,6 +169,10 @@ if (superadminEmails.includes(email.toLowerCase())) {
 
   if (!member.club.active) {
     return res.json({ status: 'inactive', role: member.role });
+  }
+
+  if (!member.active) {
+    return res.json({ status: 'member_inactive', role: member.role });
   }
 
   // Check trial para nuevo usuario

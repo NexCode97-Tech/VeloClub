@@ -16,7 +16,7 @@ import ModuleLoader, { useCargaMinima } from '@/components/ui/module-loader';
 import ModuleReveal from '@/components/ui/module-reveal';
 import { infoEscenario, type Escenario } from '@/lib/training-escenarios';
 
-interface Member { id: string; fullName: string }
+interface Member { id: string; fullName: string; active?: boolean }
 interface TrainingResult {
   id: string;
   time?: string; distance?: string; laps?: number;
@@ -62,7 +62,8 @@ export default function TrainingDetailPage() {
     ]);
     setRole(meRes.user?.role ?? '');
     setSession(sessionRes.session);
-    setMembers(membersRes.members);
+    // Un deportista en pausa no recibe resultados nuevos
+    setMembers(membersRes.members.filter(m => m.active !== false));
     setLoading(false);
   }
 

@@ -57,9 +57,12 @@ router.post('/generate-payments', requireCronSecret, async (_req, res) => {
   const month = now.getMonth() + 1;
   const year  = now.getFullYear();
 
-  // Todos los miembros activos con tarifa y día de pago configurados
+  // Miembros activos con tarifa y día de pago configurados. Un deportista
+  // desactivado (vacaciones) no genera cuota: si no, vuelve en febrero con tres
+  // meses de deuda por unos entrenamientos a los que nadie esperaba que fuera.
   const members = await prisma.member.findMany({
     where: {
+      active:        true,
       monthlyFee:    { not: null },
       paymentDueDay: { not: null },
     },

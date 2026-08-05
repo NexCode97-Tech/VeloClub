@@ -25,7 +25,7 @@ import { ContenidoGuardado, MS_GUARDADO, type EstadoGuardado } from '@/component
 // ── Interfaces ────────────────────────────────────────────────────────────────
 
 interface MeResponse {
-  status: 'ok' | 'superadmin' | 'complete_profile' | 'no_access' | 'needs_onboarding' | 'inactive' | 'trial_expired';
+  status: 'ok' | 'superadmin' | 'complete_profile' | 'no_access' | 'needs_onboarding' | 'inactive' | 'member_inactive' | 'trial_expired';
   user?: { name: string; role: string; picture?: string | null; club?: { name: string; logoUrl?: string } };
   trial?: { daysLeft: number; endsAt: string } | null;
 }
@@ -948,6 +948,7 @@ export default function DashboardPage() {
         if (res.status === 'needs_onboarding'){ router.push('/onboarding');        return; }
         if (res.status === 'no_access')        { router.push('/no-access');        return; }
         if (res.status === 'inactive')         { router.push('/inactivo');         return; }
+        if (res.status === 'member_inactive')  { router.push('/cuenta-pausada');   return; }
         if (res.status === 'trial_expired')    { router.push('/trial-expirado');   return; }
         if (res.status === 'complete_profile') { router.push('/completar-perfil'); return; }
         setMe(res);

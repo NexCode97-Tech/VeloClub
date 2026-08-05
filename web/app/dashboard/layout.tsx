@@ -344,6 +344,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const tabHrefs   = new Set(tabItems.map((t) => t.href));
   const isOnExtra  = !tabHrefs.has(pathname) && pathname !== '/dashboard' && pathname.startsWith('/dashboard/');
 
+  const enInicio = pathname === '/dashboard';
+
   function isTabActive(href: string) {
     if (href === '/dashboard/mas') return false; // el CircleMenu maneja su propio estado
     if (href === '/dashboard') return pathname === '/dashboard';
@@ -689,8 +691,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       {/* ── Main content ────────────────────────────────────────────────── */}
       <div className="flex-1 flex flex-col overflow-hidden min-w-0">
 
-        {/* ── Mobile header — solo en home ── */}
-        <header className={`md:hidden flex items-center justify-between px-4 py-3 shrink-0 bg-background ${pathname !== '/dashboard' ? 'hidden' : ''}`}>
+        {/* ── Barra superior móvil ──────────────────────────────────────────
+            Antes solo existía en Inicio, asi que el buscador y las
+            notificaciones (que viven en el encabezado del sidebar) no existian
+            en celular: el sidebar no se muestra ahi. Ahora la barra acompaña
+            todos los modulos, porque una notificacion de pago vencido no sirve
+            de nada si solo aparece cuando vuelves a Inicio.
+
+            En Inicio conserva el saludo y sus accesos; en el resto va compacta,
+            con el logo y el nombre del club para orientar. El menu flotante de
+            abajo no se toca. */}
+        <header className="md:hidden flex items-center justify-between px-4 py-3 shrink-0 bg-background sticky top-0 z-30">
           {/* Logo del club + saludo */}
           <div className="flex items-center gap-2.5 min-w-0">
             {clubLogoUrl ? (
@@ -712,16 +723,35 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               </div>
             )}
             <div className="min-w-0">
-              <p className="text-[10px] font-semibold uppercase tracking-widest truncate" style={{ color: '#8E87A8' }}>
-                Bienvenido
-              </p>
-              <p className="text-[13px] font-semibold leading-tight truncate" style={{ color: '#1A1028', fontFamily: 'inherit' }}>
-                {userName ?? clubName ?? 'VeloClub'}
-              </p>
+              {enInicio ? (
+                <>
+                  <p className="text-[10px] font-semibold uppercase tracking-widest truncate" style={{ color: '#8E87A8' }}>
+                    Bienvenido
+                  </p>
+                  <p className="text-[13px] font-semibold leading-tight truncate" style={{ color: '#1A1028', fontFamily: 'inherit' }}>
+                    {userName ?? clubName ?? 'VeloClub'}
+                  </p>
+                </>
+              ) : (
+                <p className="text-[13px] font-semibold leading-tight truncate" style={{ color: '#1A1028', fontFamily: 'inherit' }}>
+                  {clubName ?? 'VeloClub'}
+                </p>
+              )}
             </div>
           </div>
           {/* Acciones rápidas */}
-          <div className="flex items-center gap-3 shrink-0">
+          <div className="flex items-center gap-2 shrink-0">
+            {/* Buscador y notificaciones: en todos los modulos, no solo en Inicio */}
+            <button
+              onClick={() => setSearchOpen(true)}
+              aria-label="Buscar"
+              className="w-9 h-9 flex items-center justify-center rounded-full transition-colors"
+              style={{ color: '#8E87A8', background: '#fff', boxShadow: '0 1px 4px rgba(0,0,0,0.08), inset 0 0 0 1px rgba(0,0,0,0.06)' }}
+            >
+              <Search size={18} strokeWidth={2} />
+            </button>
+            <NotificationsBell />
+            {enInicio && (<>
             <button
               onClick={() => {
                 setRefreshing(true);
@@ -753,6 +783,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             >
               <Settings size={20} strokeWidth={1.8} />
             </Link>
+            </>)}
           </div>
         </header>
 

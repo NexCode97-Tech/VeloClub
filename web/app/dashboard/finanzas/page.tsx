@@ -873,13 +873,31 @@ export default function FinanzasPage() {
                       </>
                     )}
                   </div>
-                  {/* Logo VeloClub */}
-                  <img
-                    src="/icon-desktop-192.png"
-                    alt="VeloClub"
-                    className="w-14 h-14 object-contain"
-                    style={{ mixBlendMode: 'multiply', opacity: 0.92 }}
-                  />
+                  {/* El logo del club manda; VeloClub queda como respaldo para
+                      quien todavia no ha subido el suyo. Van con tratamiento
+                      distinto a proposito: el mixBlendMode multiply esta hecho
+                      para el icono de VeloClub sobre el degradado de la
+                      tarjeta, y aplicarselo al logo de un club lo ensuciaria o
+                      lo borraria, porque cada uno trae su propio fondo. */}
+                  {clubLogoUrl ? (
+                    <div
+                      className="w-14 h-14 rounded-full overflow-hidden shrink-0 flex items-center justify-center"
+                      style={{ background: '#fff', boxShadow: '0 2px 10px rgba(0,0,0,0.18)' }}
+                    >
+                      <img
+                        src={clubLogoUrl}
+                        alt={clubName || 'Logo del club'}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  ) : (
+                    <img
+                      src="/icon-desktop-192.png"
+                      alt="VeloClub"
+                      className="w-14 h-14 object-contain"
+                      style={{ mixBlendMode: 'multiply', opacity: 0.92 }}
+                    />
+                  )}
                 </div>
               </div>
             </div>

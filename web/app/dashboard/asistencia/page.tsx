@@ -5,7 +5,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import { apiFetch } from '@/lib/api-client';
 import { QK } from '@/hooks/useVeloQuery';
-import { Users, MapPin, CheckCircle2, Search } from 'lucide-react';
+import { Users, MapPin, CheckCircle2, Search, Download, FileSpreadsheet, FileText } from 'lucide-react';
 const EASE_OUT: [number,number,number,number] = [0.23, 1, 0.32, 1];
 import { MemberAvatar } from '@/components/ui/member-avatar';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
@@ -16,6 +16,14 @@ import {
 import ModuleLoader, { useCargaMinima } from '@/components/ui/module-loader';
 import ModuleReveal from '@/components/ui/module-reveal';
 import { ContenidoGuardado } from '@/components/ui/save-button-state';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { DatePicker } from '@/components/ui/date-picker';
+import { useClubSettings } from '@/hooks/useVeloQuery';
+import {
+  descargarAsistenciaPDF, descargarAsistenciaExcel,
+  type ReporteAsistencia,
+} from '@/lib/attendance-report';
 
 interface Member {
   id: string;
@@ -324,6 +332,57 @@ export default function AsistenciaPage() {
   const counts = CYCLE.map(s => ({ s, n: Object.values(att).filter(v => v === s).length }));
   const canManage = role === 'ADMIN' || role === 'COACH';
 
+  // ── Descarga del consolidado ───────────────────────────────────────────────
+  const { data: clubSettings } = useClubSettings();
+  const [descargaAbierta, setDescargaAbierta] = useState(false);
+  const [desde, setDesde]     = useState('');
+  const [hasta, setHasta]     = useState('');
+  const [sedeRep, setSedeRep] = useState('TODAS');
+  const [descargando, setDescargando] = useState<'pdf' | 'excel' | null>(null);
+  const [errorDescarga, setErrorDescarga] = useState<string | null>(null);
+
+  // Por defecto, el mes en curso: es el rango que se pide el 90% de las veces
+  function abrirDescarga() {
+    const hoy = new Date();
+    const primero = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
+    const iso = (d: Date) =>
+      `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    setDesde(iso(primero));
+    setHasta(iso(hoy));
+    setSedeRep(selectedLoc || 'TODAS');
+    setErrorDescarga(null);
+    setDescargaAbierta(true);
+  }
+
+  async function descargar(formato: 'pdf' | 'excel') {
+    if (!desde || !hasta) return;
+    setDescargando(formato);
+    setErrorDescarga(null);
+    try {
+      const token = await getToken();
+      const sedeQuery = sedeRep !== 'TODAS' ? `&locationId=${sedeRep}` : '';
+      const rep = await apiFetch<ReporteAsistencia>(
+        `/attendance/report?from=${desde}&to=${hasta}${sedeQuery}`, { token },
+      );
+      const opts = {
+        clubName: clubSettings?.club?.name ?? 'Club',
+        sedeName: sedeRep === 'TODAS'
+          ? 'Todas las sedes'
+          : (locations.find(l => l.id === sedeRep)?.name ?? 'Sede'),
+        desde, hasta,
+      };
+      if (formato === 'pdf') descargarAsistenciaPDF(rep, opts);
+      else                   descargarAsistenciaExcel(rep, opts);
+      setDescargaAbierta(false);
+    } catch (e) {
+      setErrorDescarga(e instanceof Error ? e.message : 'No se pudo generar el reporte');
+    } finally {
+      setDescargando(null);
+    }
+  }
+
+  const rangoInvalido = !!desde && !!hasta && hasta < desde;
+
   const [search, setSearch]       = useState('');
   const [catFilter, setCatFilter] = useState<string>('TODOS');
   const categories = ['TODOS', ...Array.from(new Set(members.map(m => m.category).filter(Boolean) as string[])).sort()];
@@ -347,6 +406,19 @@ export default function AsistenciaPage() {
             Asistencia
           </h1>
         </div>
+        <div className="flex items-center gap-2">
+        {canManage && (
+          <motion.button
+            onClick={abrirDescarga}
+            whileTap={{ scale: 0.93 }}
+            aria-label="Descargar consolidado de asistencia"
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold cursor-pointer transition-colors hover:bg-secondary"
+            style={{ background: 'rgba(124,58,237,0.08)', color: '#7C3AED' }}
+          >
+            <Download className="w-4 h-4" />
+            <span className="hidden sm:inline">Descargar</span>
+          </motion.button>
+        )}
         {canManage && !isBlocked && members.length > 0 && (
           <motion.button
             onClick={handleSave}
@@ -365,7 +437,96 @@ export default function AsistenciaPage() {
             />
           </motion.button>
         )}
+        </div>
       </div>
+
+      {/* ── Modal de descarga ─────────────────────────────────────────────── */}
+      <Dialog open={descargaAbierta} onOpenChange={setDescargaAbierta}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <span className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'rgba(124,58,237,0.10)' }}>
+                <Download className="w-4 h-4" style={{ color: '#7C3AED' }} />
+              </span>
+              Descargar asistencia
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 mt-2">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label>Desde</Label>
+                <DatePicker value={desde} onChange={setDesde} />
+              </div>
+              <div className="space-y-2">
+                <Label>Hasta</Label>
+                <DatePicker value={hasta} onChange={setHasta} />
+              </div>
+            </div>
+
+            {locations.length > 0 && (
+              <div className="space-y-2">
+                <Label>Sede</Label>
+                <Select value={sedeRep} onValueChange={v => { if (v) setSedeRep(v); }}>
+                  <SelectTrigger className="w-full h-12 rounded-xl">
+                    <span className="text-sm">
+                      {sedeRep === 'TODAS'
+                        ? 'Todas las sedes'
+                        : (locations.find(l => l.id === sedeRep)?.name ?? 'Seleccionar sede')}
+                    </span>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="TODAS">Todas las sedes</SelectItem>
+                    {locations.map(l => <SelectItem key={l.id} value={l.id}>{l.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {rangoInvalido && (
+              <p className="text-[12px] text-red-600">La fecha final no puede ser anterior a la inicial.</p>
+            )}
+            {errorDescarga && <p className="text-[12px] text-red-600">{errorDescarga}</p>}
+
+            <div className="space-y-2">
+              <Label>Formato</Label>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => descargar('excel')}
+                  disabled={!desde || !hasta || rangoInvalido || descargando !== null}
+                  className="flex flex-col items-center gap-1.5 rounded-xl border border-border bg-white px-3 py-4 transition-colors hover:border-primary/40 hover:bg-secondary/40 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <FileSpreadsheet className="w-6 h-6" style={{ color: '#06D6A0' }} />
+                  <span className="text-[13px] font-semibold text-foreground">
+                    {descargando === 'excel' ? 'Generando...' : 'Excel'}
+                  </span>
+                  <span className="text-[10px] text-muted-foreground text-center leading-tight">
+                    Detalle día por día
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => descargar('pdf')}
+                  disabled={!desde || !hasta || rangoInvalido || descargando !== null}
+                  className="flex flex-col items-center gap-1.5 rounded-xl border border-border bg-white px-3 py-4 transition-colors hover:border-primary/40 hover:bg-secondary/40 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <FileText className="w-6 h-6" style={{ color: '#EF476F' }} />
+                  <span className="text-[13px] font-semibold text-foreground">
+                    {descargando === 'pdf' ? 'Generando...' : 'PDF'}
+                  </span>
+                  <span className="text-[10px] text-muted-foreground text-center leading-tight">
+                    Listo para imprimir
+                  </span>
+                </button>
+              </div>
+            </div>
+
+            <p className="text-[11px] text-muted-foreground leading-relaxed">
+              El porcentaje cuenta las tardanzas como asistencia y descuenta las excusas médicas del total, para no castigar a un deportista lesionado.
+            </p>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <motion.div variants={stagger} initial="hidden" animate="show" className="px-4 pt-4 lg:pt-6 space-y-3">
         {mostrarCarga ? (

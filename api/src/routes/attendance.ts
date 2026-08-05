@@ -4,6 +4,7 @@ import { requireAuth } from '../auth/middleware';
 import { prisma } from '../db/client';
 import { emitToClub } from '../lib/sse';
 import { sedeEsDelClub } from '../lib/sedes';
+import { resumirAsistencia } from '../lib/asistencia';
 
 const router = Router();
 
@@ -125,6 +126,89 @@ router.get('/range-stats', requireAuth, async (req, res) => {
   }
 
   res.json({ days });
+});
+
+// GET /attendance/report?from=YYYY-MM-DD&to=YYYY-MM-DD&locationId=
+// Consolidado por deportista: el detalle que necesita el reporte descargable.
+// range-stats no sirve para esto porque solo devuelve totales por dia, sin saber
+// de quien son.
+const MAX_DIAS_REPORTE = 366;
+
+router.get('/report', requireAuth, async (req, res) => {
+  if (!req.user) return res.status(401).json({ error: 'No autenticado' });
+  // El consolidado del club completo es informacion del cuerpo tecnico
+  if (req.user.role !== 'ADMIN' && req.user.role !== 'COACH') {
+    return res.status(403).json({ error: 'Sin permisos' });
+  }
+  const clubId = req.user.clubId ?? '';
+
+  const from = req.query.from ? new Date(String(req.query.from) + 'T00:00:00.000Z') : null;
+  const to   = req.query.to   ? new Date(String(req.query.to)   + 'T00:00:00.000Z') : null;
+  if (!from || !to || isNaN(from.getTime()) || isNaN(to.getTime())) {
+    return res.status(400).json({ error: 'Parámetros from y to requeridos (YYYY-MM-DD)' });
+  }
+  if (to < from) return res.status(400).json({ error: 'La fecha final no puede ser anterior a la inicial' });
+
+  const dias = Math.floor((to.getTime() - from.getTime()) / 86_400_000) + 1;
+  if (dias > MAX_DIAS_REPORTE) {
+    return res.status(400).json({ error: 'El rango no puede superar un año' });
+  }
+
+  const locationId = req.query.locationId ? String(req.query.locationId) : undefined;
+  if (locationId && !await sedeEsDelClub(locationId, clubId)) {
+    return res.status(403).json({ error: 'La sede no pertenece a este club' });
+  }
+
+  // Los miembros salen del club (no de los registros) para que un deportista
+  // sin ninguna marca en el rango aparezca igual, con la fila en blanco. Si
+  // solo se listaran los que tienen registros, el que nunca fue desapareceria
+  // del reporte, que es justo a quien hay que ver.
+  const members = await prisma.member.findMany({
+    where: {
+      clubId,
+      role: 'STUDENT',
+      active: true,
+      ...(locationId ? { locations: { some: { locationId } } } : {}),
+    },
+    select: { id: true, fullName: true, category: true },
+    orderBy: { fullName: 'asc' },
+  });
+
+  const records = await prisma.attendance.findMany({
+    where: {
+      clubId,
+      date: { gte: from, lte: to },
+      ...(locationId ? { locationId } : {}),
+      memberId: { in: members.map(m => m.id) },
+    },
+    select: { memberId: true, date: true, status: true },
+  });
+
+  // Solo los dias en que de verdad hubo entrenamiento: armar columnas para los
+  // 30 dias del mes cuando se entrena martes y jueves llena el reporte de
+  // casillas vacias que se leen como inasistencias.
+  const diasConRegistro = Array.from(
+    new Set(records.map(r => r.date.toISOString().slice(0, 10)))
+  ).sort();
+
+  const porMiembro: Record<string, Record<string, string>> = {};
+  for (const r of records) {
+    const dia = r.date.toISOString().slice(0, 10);
+    (porMiembro[r.memberId] ??= {})[dia] = r.status;
+  }
+
+  const filas = members.map(m => {
+    const marcas = porMiembro[m.id] ?? {};
+    return {
+      id: m.id,
+      fullName: m.fullName,
+      category: m.category,
+      dias: marcas,
+      ...resumirAsistencia(Object.values(marcas)),
+    };
+  });
+
+  res.json({ dias: diasConRegistro, filas });
 });
 
 // POST /attendance/bulk  — upsert all records for a date+location

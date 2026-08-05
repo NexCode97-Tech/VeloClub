@@ -1,8 +1,6 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { useAuth } from '@clerk/nextjs';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Users, CalendarCheck, CreditCard, Trophy, CheckCircle2, ChevronRight, Zap, Shield, Smartphone, Menu, X } from 'lucide-react';
@@ -79,14 +77,14 @@ const NAV_LINKS = [
 ];
 
 export default function HomePage() {
-  const { isLoaded, isSignedIn } = useAuth();
-  const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
-  useEffect(() => {
-    if (isLoaded && isSignedIn) router.push('/dashboard');
-  }, [isLoaded, isSignedIn, router]);
+  // Antes aquí se preguntaba por la sesión con useAuth() y se devolvía null
+  // mientras Clerk cargaba. Esa pregunta ahora vive en el middleware: la landing
+  // se pinta igual para todo el mundo, así que Next.js la puede prerenderizar
+  // completa y el navegador encuentra la imagen del hero en el HTML inicial en
+  // vez de esperar a que arranque el JavaScript.
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 80);
@@ -106,8 +104,6 @@ export default function HomePage() {
     document.body.style.overflow = menuOpen ? 'hidden' : '';
     return () => { document.body.style.overflow = ''; };
   }, [menuOpen]);
-
-  if (!isLoaded || isSignedIn) return null;
 
   return (
     <main className="min-h-dvh bg-[#F7F7FB] [overflow-x:clip]">

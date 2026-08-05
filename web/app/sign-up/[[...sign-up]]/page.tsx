@@ -1,21 +1,16 @@
 'use client';
 
-import { SignUp, useAuth } from '@clerk/nextjs';
-import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { SignUp } from '@clerk/nextjs';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 
 export default function SignUpPage() {
-  const { isSignedIn, isLoaded } = useAuth();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (isLoaded && isSignedIn) router.replace('/dashboard');
-  }, [isLoaded, isSignedIn]);
-
-  if (!isLoaded || isSignedIn) return null;
-
+  // Antes esta pagina devolvia null mientras Clerk cargaba, asi que el
+  // prerenderizado quedaba vacio y el visitante veia una pantalla en blanco
+  // hasta que arrancara el JavaScript. Ahora la estructura se pinta de una y el
+  // widget de Clerk aparece dentro cuando termina de cargar. El middleware NO
+  // toca esta ruta a proposito: sacar a alguien de aqui a mitad del registro
+  // impediria crear el club.
   return (
     <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-slate-50 relative">
       <Link

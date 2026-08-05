@@ -1,21 +1,16 @@
 'use client';
 
-import { SignIn, useAuth } from '@clerk/nextjs';
-import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { SignIn } from '@clerk/nextjs';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 
 export default function SignInPage() {
-  const { isSignedIn, isLoaded } = useAuth();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (isLoaded && isSignedIn) router.replace('/dashboard');
-  }, [isLoaded, isSignedIn]);
-
-  if (!isLoaded || isSignedIn) return null;
-
+  // Antes esta pagina devolvia null mientras Clerk cargaba, asi que el
+  // prerenderizado quedaba vacio y el visitante veia una pantalla en blanco
+  // hasta que arrancara el JavaScript. Ahora la estructura se pinta de una y el
+  // widget de Clerk aparece dentro cuando termina de cargar. A quien ya tenga
+  // sesion lo manda al panel el propio componente de Clerk, guiado por
+  // signInForceRedirectUrl del ClerkProvider.
   return (
     <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-slate-50 relative">
       <Link

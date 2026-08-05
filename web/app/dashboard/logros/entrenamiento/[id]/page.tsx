@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { SearchableSelect } from '@/components/ui/searchable-select';
+import { MemberAvatar } from '@/components/ui/member-avatar';
 import ModuleLoader, { useCargaMinima } from '@/components/ui/module-loader';
 import ModuleReveal from '@/components/ui/module-reveal';
 import { infoEscenario, type Escenario } from '@/lib/training-escenarios';
@@ -21,7 +22,7 @@ interface TrainingResult {
   id: string;
   time?: string; distance?: string; laps?: number;
   exercise?: string; weight?: string; sets?: number; reps?: number; mark?: string;
-  observations?: string; member: { id: string; fullName: string };
+  observations?: string; member: { id: string; fullName: string; pictureUrl?: string | null };
 }
 interface TrainingSession {
   id: string; title: string; date: string; escenario?: Escenario; notes?: string;
@@ -179,12 +180,18 @@ export default function TrainingDetailPage() {
           </div>
         ) : (
           <div className="space-y-2">
-            {session.results.map((r, idx) => (
+            {/* El círculo lleva la foto, no un número. Antes mostraba la posición
+                en la lista, que se lee como un podio y no lo es: los resultados
+                vienen ordenados por fecha de registro, no por marca. En gimnasio
+                ni siquiera existe un criterio para rankear. */}
+            {session.results.map(r => (
               <div key={r.id} className="bg-white border border-border rounded-xl px-4 py-3 flex items-center gap-3">
-                <div className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-semibold text-white shrink-0"
-                  style={{ background: 'linear-gradient(135deg,#4361EE,#7209B7)' }}>
-                  {idx + 1}
-                </div>
+                <MemberAvatar
+                  name={r.member.fullName}
+                  photoUrl={r.member.pictureUrl}
+                  size={28}
+                  gradient="linear-gradient(135deg,#4361EE,#7209B7)"
+                />
                 <div className="flex-1 min-w-0">
                   <p className="text-[13px] font-semibold text-foreground">{r.member.fullName}</p>
                   <div className="flex flex-wrap gap-3 mt-0.5">

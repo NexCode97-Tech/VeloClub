@@ -87,7 +87,7 @@ router.get('/', requireAuth, async (req, res) => {
     where,
     include: {
       location: { select: { id: true, name: true } },
-      results:  { include: { member: { select: { id: true, fullName: true } } } },
+      results:  { include: { member: { select: { id: true, fullName: true, pictureUrl: true } } } },
     },
     orderBy: { date: 'desc' },
   });
@@ -103,7 +103,7 @@ router.get('/:id', requireAuth, async (req, res) => {
     include: {
       location: { select: { id: true, name: true } },
       results:  {
-        include: { member: { select: { id: true, fullName: true } } },
+        include: { member: { select: { id: true, fullName: true, pictureUrl: true } } },
         orderBy: { createdAt: 'asc' },
       },
     },
@@ -134,7 +134,7 @@ router.post('/', requireAuth, async (req, res) => {
     },
     include: {
       location: { select: { id: true, name: true } },
-      results:  { include: { member: { select: { id: true, fullName: true } } } },
+      results:  { include: { member: { select: { id: true, fullName: true, pictureUrl: true } } } },
     },
   });
 
@@ -182,7 +182,7 @@ router.post('/:id/results', requireAuth, async (req, res) => {
       where: { sessionId_memberId: { sessionId, memberId: parsed.data.memberId } },
       create: { sessionId, memberId: parsed.data.memberId, ...campos },
       update: campos,
-      include: { member: { select: { id: true, fullName: true } } },
+      include: { member: { select: { id: true, fullName: true, pictureUrl: true } } },
     });
     emitToClub(clubId, 'training');
     res.status(201).json({ result });

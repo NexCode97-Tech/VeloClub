@@ -83,6 +83,15 @@ type FeedScope = 'public' | 'private';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
+// Etiqueta del autor con el color de su rol, el mismo que usa el sidebar: el
+// administrador en ambar, el entrenador en verde y el deportista en violeta.
+const roleBadge: Record<string, { texto: string; fondo: string }> = {
+  SUPERADMIN: { texto: '#B02A47', fondo: 'rgba(239,71,111,0.12)' },
+  ADMIN:      { texto: '#854F0B', fondo: 'rgba(255,183,3,0.16)'  },
+  COACH:      { texto: '#057A5C', fondo: 'rgba(6,214,160,0.14)'  },
+  STUDENT:    { texto: '#6D28D9', fondo: 'rgba(124,58,237,0.10)' },
+};
+
 const roleLabels: Record<string, string> = {
   SUPERADMIN: 'Super admin',
   ADMIN:      'Administrador',
@@ -198,11 +207,12 @@ function Avatar({ src, name, size = 36, role }: { src?: string | null; name: str
 // ── PostCard ──────────────────────────────────────────────────────────────────
 
 function PostCard({
-  post, currentUserId, canDelete, onLike, onDelete, onComment, onDeleteComment, onEditComment, onFetchLikes,
+  post, currentUserId, canDelete, onLike, onDelete, onComment, onDeleteComment, onEditComment, onFetchLikes, onUpdatePost,
 }: {
   post: Post; currentUserId: string; canDelete: boolean;
   onLike: (id: string) => void;
   onDelete: (id: string) => void;
+  onUpdatePost: (id: string, cambios: { content?: string; scope?: 'PUBLIC' | 'PRIVATE' }) => Promise<void>;
   onComment: (postId: string, content: string) => Promise<void>;
   onDeleteComment: (postId: string, commentId: string) => void;
   onEditComment: (postId: string, commentId: string, content: string) => Promise<void>;
@@ -212,6 +222,28 @@ function PostCard({
   const liked     = post.likes.some(l => l.userId === currentUserId);
   const likeCount = post.likes.length;
   const [postMenuOpen, setPostMenuOpen] = useState(false);
+  // Editar solo cambia la descripcion. La foto, el autor y la fecha no se tocan.
+  const [editandoPost, setEditandoPost] = useState(false);
+  const [textoEdicion, setTextoEdicion] = useState('');
+  const [guardandoPost, setGuardandoPost] = useState(false);
+  const [moviendoPost, setMoviendoPost]   = useState(false);
+
+  async function handleGuardarEdicion() {
+    const texto = textoEdicion.trim();
+    if (!texto || texto === post.content) { setEditandoPost(false); return; }
+    setGuardandoPost(true);
+    try {
+      await onUpdatePost(post.id, { content: texto });
+      setEditandoPost(false);
+    } finally { setGuardandoPost(false); }
+  }
+
+  async function handleMoverPost() {
+    setMoviendoPost(true);
+    try {
+      await onUpdatePost(post.id, { scope: post.scope === 'PUBLIC' ? 'PRIVATE' : 'PUBLIC' });
+    } finally { setMoviendoPost(false); }
+  }
   const [confirmDel, setConfirmDel]     = useState(false);
   const [likeAnim, setLikeAnim]         = useState(false);
   const postMenuRef = useRef<HTMLDivElement>(null);
@@ -340,17 +372,16 @@ function PostCard({
                   className={`text-[14px] md:text-[13px] font-semibold text-foreground leading-tight ${post.authorClerkId ? 'cursor-pointer hover:underline' : ''}`}
                   onClick={() => post.authorClerkId && router.push(`/dashboard/perfil/${post.authorClerkId}`)}
                 >{post.authorName || 'Usuario'}</p>
-                <span className="text-[11px] md:text-[9px] font-semibold px-2.5 md:px-2 py-0.5 rounded-full"
-                  style={{ background: 'rgba(124,58,237,0.10)', color: '#7C3AED' }}>
+                <span className="text-[11px] md:text-[10px] font-semibold px-2.5 md:px-2 py-0.5 rounded-full shrink-0"
+                  style={{
+                    background: (roleBadge[post.authorRole] ?? roleBadge.STUDENT).fondo,
+                    color:      (roleBadge[post.authorRole] ?? roleBadge.STUDENT).texto,
+                  }}>
                   {roleLabels[post.authorRole] ?? post.authorRole}
                 </span>
-                {post.scope === 'PUBLIC' && post.clubName && (
-                  <span className="text-[10px] md:text-[9px] font-semibold px-2 py-0.5 rounded-full" style={{ background: 'rgba(67,97,238,0.10)', color: '#4361EE' }}>
-                    {post.clubName}
-                  </span>
-                )}
               </div>
-              <p className="text-[12px] md:text-[11px] text-muted-foreground mt-0.5">
+              <p className="text-[12px] md:text-[11px] text-muted-foreground mt-0.5 truncate">
+                {post.scope === 'PUBLIC' && post.clubName && <>{post.clubName}{' · '}</>}
                 {timeAgo(post.createdAt)}
                 {post.ubicacion && (
                   <>
@@ -388,16 +419,28 @@ function PostCard({
                     }}
                   >
                     <button
-                      onClick={() => { setPostMenuOpen(false); setConfirmDel(true); }}
-                      className="w-full flex items-center gap-2.5 px-4 py-2.5 text-[13px] font-semibold text-red-500 hover:bg-red-50 transition-colors cursor-pointer"
+                      onClick={() => { setPostMenuOpen(false); setEditandoPost(true); setTextoEdicion(post.content); }}
+                      className="w-full flex items-center gap-2.5 px-4 py-2.5 text-[13px] font-semibold text-foreground hover:bg-secondary transition-colors cursor-pointer"
                     >
-                      <Trash2 className="w-3.5 h-3.5" /> Eliminar
+                      <Pencil className="w-3.5 h-3.5" /> Editar
+                    </button>
+                    {/* Mover cambia la pestaña donde aparece la publicacion:
+                        de Publico a Mi club y al reves. El texto dice a donde
+                        va, no donde esta, para que no haya que adivinar. */}
+                    <button
+                      onClick={() => { setPostMenuOpen(false); handleMoverPost(); }}
+                      disabled={moviendoPost}
+                      className="w-full flex items-center gap-2.5 px-4 py-2.5 text-[13px] font-semibold text-foreground hover:bg-secondary transition-colors cursor-pointer border-t border-border/50 disabled:opacity-50"
+                    >
+                      {post.scope === 'PUBLIC'
+                        ? <><Lock className="w-3.5 h-3.5" /> Mover a Mi club</>
+                        : <><Globe className="w-3.5 h-3.5" /> Mover a Público</>}
                     </button>
                     <button
-                      onClick={() => setPostMenuOpen(false)}
-                      className="w-full flex items-center gap-2.5 px-4 py-2.5 text-[13px] font-semibold text-muted-foreground hover:bg-secondary transition-colors cursor-pointer border-t border-border/50"
+                      onClick={() => { setPostMenuOpen(false); setConfirmDel(true); }}
+                      className="w-full flex items-center gap-2.5 px-4 py-2.5 text-[13px] font-semibold text-red-500 hover:bg-red-50 transition-colors cursor-pointer border-t border-border/50"
                     >
-                      <X className="w-3.5 h-3.5" /> Cancelar
+                      <Trash2 className="w-3.5 h-3.5" /> Eliminar
                     </button>
                   </motion.div>
                 )}
@@ -441,7 +484,39 @@ function PostCard({
         </div>
 
         {/* Contenido */}
-        <p className="px-4 py-3 text-[14px] md:text-[13px] text-foreground leading-relaxed whitespace-pre-wrap">{post.content}</p>
+        <div className="md:border-y md:border-border/60">
+        {editandoPost ? (
+          <div className="px-4 py-3">
+            <textarea
+              value={textoEdicion}
+              onChange={e => setTextoEdicion(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Escape') setEditandoPost(false); }}
+              rows={3}
+              autoFocus
+              className="w-full text-[14px] md:text-[13px] text-foreground leading-relaxed outline-none resize-none rounded-xl px-3 py-2"
+              style={{ background: '#fff', border: '1px solid rgba(124,58,237,0.25)' }}
+            />
+            <div className="flex items-center justify-end gap-2 mt-2">
+              <button
+                onClick={() => setEditandoPost(false)}
+                className="px-3 py-1.5 rounded-lg text-[12px] font-semibold text-muted-foreground hover:bg-secondary transition-colors cursor-pointer"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleGuardarEdicion}
+                disabled={guardandoPost || !textoEdicion.trim()}
+                className="px-3 py-1.5 rounded-lg text-[12px] font-semibold text-white disabled:opacity-50 cursor-pointer"
+                style={{ background: 'linear-gradient(135deg,#7C3AED,#4361EE)' }}
+              >
+                {guardandoPost ? 'Guardando...' : 'Guardar'}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <p className="px-4 py-3 text-[14px] md:text-[13px] text-foreground leading-relaxed whitespace-pre-wrap">{post.content}</p>
+        )}
+        </div>
 
       </div>
 
@@ -558,7 +633,7 @@ function PostCard({
         )}
 
         {/* Acciones */}
-        <div className="flex items-center border-t border-border/60 md:mt-auto md:border-b md:gap-6 md:px-4 md:py-1">
+        <div className="flex items-center border-t border-border/60 md:border-t-0 md:mt-auto md:gap-6 md:px-4 md:py-1">
           {/* Me gusta */}
           <motion.button onClick={handleLike} whileTap={{ scale: 0.95 }}
             transition={{ type: 'spring' as const, stiffness: 500, damping: 15 }}
@@ -739,7 +814,7 @@ function PostCard({
 
                 {/* Input nuevo comentario — con linea arriba en escritorio,
                     para cerrar el bloque de comentarios como en el diseño */}
-                <div className="flex items-center gap-2 md:border-t md:border-border/60 md:pt-3">
+                <div className="flex items-center gap-2">
                   <div className="flex-1 flex items-center gap-2 rounded-full px-3 py-2"
                     style={{ background: '#fff', border: '1px solid rgba(124,58,237,0.12)' }}>
                     <input
@@ -1137,6 +1212,20 @@ export default function DashboardPage() {
     setPosts(prev => [res.post, ...prev]);
   }
 
+  async function handleUpdatePost(id: string, cambios: { content?: string; scope?: 'PUBLIC' | 'PRIVATE' }) {
+    const token = await session?.getToken();
+    const res = await apiFetch<{ post: Post }>(`/posts/${id}`, {
+      token, method: 'PATCH', body: JSON.stringify(cambios),
+    });
+    // Si cambio de pestaña, desaparece de la lista actual: el feed que se ve
+    // esta filtrado por alcance y la publicacion ya no pertenece a este.
+    const cambioDePestana = cambios.scope !== undefined
+      && cambios.scope !== (feedScope === 'public' ? 'PUBLIC' : 'PRIVATE');
+    setPosts(prev => cambioDePestana
+      ? prev.filter(p => p.id !== id)
+      : prev.map(p => (p.id === id ? res.post : p)));
+  }
+
   async function handleComment(postId: string, content: string) {
     const token = await session?.getToken();
     const res = await apiFetch<{ comment: PostComment }>(`/posts/${postId}/comments`, {
@@ -1458,7 +1547,7 @@ export default function DashboardPage() {
         {/* Widget — Próximos eventos */}
         <div className="rounded-2xl bg-white border border-border overflow-hidden"
           style={{ boxShadow: '0 1px 8px rgba(0,0,0,0.06)' }}>
-          <div className="flex items-center justify-between px-4 pt-4 pb-3 md:border-b md:border-border/60">
+          <div className="flex items-center justify-between px-4 pt-4 pb-3">
             <div className="flex items-center gap-2">
               <div className="w-7 h-7 rounded-lg flex items-center justify-center"
                 style={{ background: 'linear-gradient(135deg,#4361EE,#7C3AED)' }}>
@@ -1701,6 +1790,7 @@ export default function DashboardPage() {
                 onDeleteComment={handleDeleteComment}
                 onEditComment={handleEditComment}
                 onFetchLikes={handleFetchLikes}
+                onUpdatePost={handleUpdatePost}
               />
             ))}
           </AnimatePresence>

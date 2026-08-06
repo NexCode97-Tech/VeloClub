@@ -120,6 +120,42 @@ router.post('/', requireAuth, async (req, res) => {
 });
 
 // DELETE /posts/:id
+// PATCH /posts/:id — editar la descripcion o mover entre Publico y Mi club.
+// Solo esos dos campos: la foto, el autor y la fecha no se tocan al editar.
+const updatePostSchema = z.object({
+  content: z.string().min(1).max(2000).optional(),
+  scope:   z.enum(['PUBLIC', 'PRIVATE']).optional(),
+}).refine(d => d.content !== undefined || d.scope !== undefined, {
+  message: 'Nada que actualizar',
+});
+
+router.patch('/:id', requireAuth, async (req, res) => {
+  if (!req.user) return res.status(401).json({ error: 'No autenticado' });
+  if (!['ADMIN', 'COACH'].includes(req.user.role)) return res.status(403).json({ error: 'Sin permisos' });
+
+  const parsed = updatePostSchema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: parsed.error.issues });
+
+  // Se ata al club: buscarla solo por id permitiria editar publicaciones de
+  // otros clubes, cuyos ids viajan en el feed publico.
+  const post = await prisma.post.findFirst({
+    where: { id: String(req.params.id), clubId: req.user.clubId ?? '' },
+  });
+  if (!post) return res.status(404).json({ error: 'Publicación no encontrada' });
+
+  const updated = await prisma.post.update({
+    where: { id: post.id },
+    data: {
+      ...(parsed.data.content !== undefined ? { content: parsed.data.content.trim() } : {}),
+      ...(parsed.data.scope   !== undefined ? { scope: parsed.data.scope } : {}),
+    },
+    include: POST_INCLUDE,
+  });
+
+  emitToClub(req.user.clubId ?? '', 'posts');
+  res.json({ post: updated });
+});
+
 router.delete('/:id', requireAuth, async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'No autenticado' });
   if (!['ADMIN', 'COACH'].includes(req.user.role)) return res.status(403).json({ error: 'Sin permisos' });

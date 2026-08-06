@@ -11,6 +11,7 @@ import {
   CreditCard, Plus, Trash2, CheckCircle2, Clock, AlertCircle,
   TrendingUp, TrendingDown, Wallet, Download, MessageCircle, Check,
   PhoneOff, Settings, Zap, ChevronUp, Pencil, Search, Receipt, ExternalLink,
+  Eye, EyeOff,
 } from 'lucide-react';
 import { downloadInvoicePDF } from '@/lib/pdf';
 import MemberHistoryPanel from '@/components/finanzas/member-history-panel';
@@ -340,6 +341,23 @@ export default function FinanzasPage() {
   const [tab, setTab]             = useState<'mensualidades' | 'flujo'>('mensualidades');
   const [clubName, setClubName]     = useState('VeloClub');
   const [clubLogoUrl, setClubLogoUrl] = useState<string | null>(null);
+  // Recaudo oculto. Arranca en false y se corrige tras montar: leer
+  // localStorage durante el render rompe la hidratacion, porque el servidor no
+  // tiene acceso a el y pintaria un valor distinto al del navegador.
+  const [montoOculto, setMontoOculto] = useState(false);
+  useEffect(() => {
+    setMontoOculto(localStorage.getItem('finanzas-monto-oculto') === '1');
+  }, []);
+  // Se guarda en el clic y no en un efecto: un efecto sobre [montoOculto] corre
+  // tambien al montar, con el valor inicial, y pisaria la preferencia guardada
+  // justo antes de que la lectura de arriba alcance a aplicarse.
+  function alternarMonto() {
+    setMontoOculto(v => {
+      const siguiente = !v;
+      localStorage.setItem('finanzas-monto-oculto', siguiente ? '1' : '0');
+      return siguiente;
+    });
+  }
   const [clubPlan, setClubPlan]     = useState<{ tipoPlan: string; createdAt: string } | null>(null);
   const [clubCreatedAt, setClubCreatedAt] = useState<string | null>(null);
   const [filterMonth, setFilterMonth] = useState(now.getMonth() + 1);
@@ -832,18 +850,37 @@ export default function FinanzasPage() {
                   </div>
                 </div>
 
-                {/* Monto cobrado — centro */}
+                {/* Monto cobrado — centro.
+                    El ojo oculta el recaudo: esta pantalla se abre delante de
+                    deportistas y padres, y el total del mes no es algo que el
+                    club quiera mostrar por accidente. La preferencia se guarda,
+                    porque quien lo oculta lo quiere oculto siempre, no una vez. */}
                 <div>
-                  <p className="text-[10px] font-semibold tracking-widest uppercase opacity-60 mb-1">
-                    Cobrado {MONTH_NAMES[filterMonth - 1]} {filterYear}
-                  </p>
+                  <div className="flex items-center gap-2 mb-1">
+                    <p className="text-[10px] font-semibold tracking-widest uppercase opacity-60">
+                      Cobrado {MONTH_NAMES[filterMonth - 1]} {filterYear}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={alternarMonto}
+                      aria-label={montoOculto ? 'Mostrar recaudo' : 'Ocultar recaudo'}
+                      aria-pressed={montoOculto}
+                      className="w-6 h-6 rounded-md flex items-center justify-center transition-opacity opacity-60 hover:opacity-100 cursor-pointer"
+                    >
+                      {montoOculto
+                        ? <EyeOff className="w-3.5 h-3.5" />
+                        : <Eye className="w-3.5 h-3.5" />}
+                    </button>
+                  </div>
                   <p className="text-[32px] font-semibold leading-none tracking-tight"
                     style={{ fontFamily: 'inherit', textShadow: '0 2px 8px rgba(0,0,0,0.2)' }}>
-                    {fmt.format(totalPaid)}
+                    {montoOculto ? '••••••' : fmt.format(totalPaid)}
                   </p>
                   {totalPending > 0 && (
                     <p className="text-[11px] mt-1 opacity-75">
-                      <span style={{ color: '#FFD166' }}>{fmt.format(totalPending)}</span> pendiente
+                      <span style={{ color: '#FFD166' }}>
+                        {montoOculto ? '••••' : fmt.format(totalPending)}
+                      </span> pendiente
                     </p>
                   )}
                 </div>

@@ -291,6 +291,19 @@ function PostCard({
   // enlace y no llena una columna. Sin media, la tarjeta va a lo ancho.
   const parteEnDos = !!post.imageUrl && !isFile;
 
+  // En escritorio los comentarios se muestran abiertos: son los que llenan la
+  // columna derecha. Se detecta tras montar y no durante el render, porque el
+  // servidor no conoce el ancho de la pantalla y romperia la hidratacion.
+  const [esEscritorio, setEsEscritorio] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 768px)');
+    const aplicar = () => setEsEscritorio(mq.matches);
+    aplicar();
+    mq.addEventListener('change', aplicar);
+    return () => mq.removeEventListener('change', aplicar);
+  }, []);
+  const comentariosVisibles = showComments || esEscritorio;
+
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.97, y: 10 }}
@@ -456,7 +469,7 @@ function PostCard({
 
         {/* Contadores clicables */}
         {(likeCount > 0 || post.comments.length > 0) && (
-          <div className="relative flex items-center gap-3 px-4 pb-2">
+          <div className="relative flex items-center gap-3 px-4 pb-2 md:hidden">
             {likeCount > 0 && (
               <button
                 ref={likesButtonRef}
@@ -535,35 +548,40 @@ function PostCard({
         )}
 
         {/* Acciones */}
-        <div className="flex items-center border-t border-border/60 md:mt-auto">
+        <div className="flex items-center border-t border-border/60 md:mt-auto md:border-b md:gap-5 md:px-4">
           {/* Me gusta */}
           <motion.button onClick={handleLike} whileTap={{ scale: 0.95 }}
             transition={{ type: 'spring' as const, stiffness: 500, damping: 15 }}
-            className="flex-1 flex items-center justify-center gap-2 py-2.5 transition-colors hover:bg-secondary/60">
+            className="flex-1 flex items-center justify-center gap-2 py-2.5 transition-colors hover:bg-secondary/60 md:flex-none md:justify-start md:gap-1.5 md:hover:bg-transparent">
             <motion.div animate={likeAnim ? { scale: [1, 1.4, 1] } : { scale: 1 }} transition={{ duration: 0.35, ease: 'easeInOut' }}>
               <Heart className="w-[17px] h-[17px] transition-colors" fill={liked ? '#EF476F' : 'none'}
                 style={{ color: liked ? '#EF476F' : '#8E87A8' }} />
             </motion.div>
-            <span className="text-[13px] font-semibold" style={{ color: liked ? '#EF476F' : '#8E87A8' }}>Me gusta</span>
+            <span className="text-[13px] font-semibold md:hidden" style={{ color: liked ? '#EF476F' : '#8E87A8' }}>Me gusta</span>
+            {/* En escritorio el numero va pegado al corazon y la fila de
+                contadores de arriba desaparece */}
+            {likeCount > 0 && (
+              <span className="hidden md:inline text-[13px] font-semibold" style={{ color: liked ? '#EF476F' : '#8E87A8' }}>{likeCount}</span>
+            )}
           </motion.button>
 
-          <div className="w-px h-7 bg-border/60" />
+          <div className="w-px h-7 bg-border/60 md:hidden" />
 
           {/* Comentar */}
           <motion.button
             onClick={() => { setShowComments(v => !v); setTimeout(() => commentInputRef.current?.focus(), 150); }}
             whileTap={{ scale: 0.95 }}
-            className="flex-1 flex items-center justify-center gap-2 py-2.5 transition-colors hover:bg-secondary/60">
+            className="flex-1 flex items-center justify-center gap-2 py-2.5 transition-colors hover:bg-secondary/60 md:flex-none md:justify-start md:hover:bg-transparent">
             <MessageCircle className="w-[17px] h-[17px]" style={{ color: showComments ? '#4361EE' : '#8E87A8' }} />
             <span className="text-[13px] font-semibold" style={{ color: showComments ? '#4361EE' : '#8E87A8' }}>Comentar</span>
           </motion.button>
 
-          <div className="w-px h-7 bg-border/60" />
+          <div className="w-px h-7 bg-border/60 md:hidden" />
 
           {/* Compartir */}
           <motion.button
             whileTap={{ scale: 0.95 }}
-            className="flex-1 flex items-center justify-center gap-2 py-2.5 transition-colors hover:bg-secondary/60"
+            className="flex-1 flex items-center justify-center gap-2 py-2.5 transition-colors hover:bg-secondary/60 md:flex-none md:justify-start md:hover:bg-transparent"
             onClick={() => { if (navigator.share) navigator.share({ text: post.content }); }}>
             <ChevronRight className="w-[17px] h-[17px] rotate-[-45deg]" style={{ color: '#8E87A8' }} />
             <span className="text-[13px] font-semibold text-muted-foreground">Compartir</span>
@@ -572,7 +590,7 @@ function PostCard({
 
         {/* Comentarios */}
         <AnimatePresence>
-          {showComments && (
+          {comentariosVisibles && (
             <motion.div
                 initial={{ height: 0, opacity: 0 }}
               animate={{ height: 'auto', opacity: 1 }}
@@ -1398,7 +1416,7 @@ export default function DashboardPage() {
         {/* Widget — Próximos eventos */}
         <div className="rounded-2xl bg-white border border-border overflow-hidden"
           style={{ boxShadow: '0 1px 8px rgba(0,0,0,0.06)' }}>
-          <div className="flex items-center justify-between px-4 pt-4 pb-2">
+          <div className="flex items-center justify-between px-4 pt-4 pb-2 md:pb-3 md:border-b md:border-border/60">
             <div className="flex items-center gap-2">
               <div className="w-7 h-7 rounded-lg flex items-center justify-center"
                 style={{ background: 'linear-gradient(135deg,#4361EE,#7C3AED)' }}>

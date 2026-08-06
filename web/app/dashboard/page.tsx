@@ -312,7 +312,7 @@ function PostCard({
       exit={{    opacity: 0, scale: 0.95, y: -8 }}
       transition={{ type: 'spring' as const, stiffness: 300, damping: 26 }}
       layout
-      className={`bg-white border border-border rounded-2xl overflow-hidden md:max-w-[900px] md:mx-auto${
+      className={`bg-white border border-border rounded-2xl overflow-hidden${
         parteEnDos ? ' md:grid md:grid-cols-[22rem_1fr] md:grid-rows-[auto_1fr]' : ''}`}
       style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.08), inset 0 0 0 1px rgba(0,0,0,0.06)' }}
     >
@@ -326,31 +326,31 @@ function PostCard({
       <div className="md:col-start-2 md:row-start-1 md:min-w-0">
         {/* Autor */}
         <div className="flex items-center justify-between px-4 pt-4 pb-2">
-          <div className="flex items-center gap-2.5 min-w-0">
+          <div className="flex items-center gap-3 min-w-0">
             <button
               type="button"
               onClick={() => post.authorClerkId && router.push(`/dashboard/perfil/${post.authorClerkId}`)}
               className={post.authorClerkId ? 'cursor-pointer shrink-0' : 'cursor-default shrink-0'}
             >
-              <Avatar src={post.authorAvatar} name={post.authorName} size={34} role={post.authorRole} />
+              <Avatar src={post.authorAvatar} name={post.authorName} size={42} role={post.authorRole} />
             </button>
             <div>
               <div className="flex items-center gap-2 flex-wrap">
                 <p
-                  className={`text-[13px] font-semibold text-foreground leading-tight ${post.authorClerkId ? 'cursor-pointer hover:underline' : ''}`}
+                  className={`text-[14px] md:text-[13px] font-semibold text-foreground leading-tight ${post.authorClerkId ? 'cursor-pointer hover:underline' : ''}`}
                   onClick={() => post.authorClerkId && router.push(`/dashboard/perfil/${post.authorClerkId}`)}
                 >{post.authorName || 'Usuario'}</p>
-                <span className="text-[9px] font-semibold px-2 py-0.5 rounded-full"
+                <span className="text-[11px] md:text-[9px] font-semibold px-2.5 md:px-2 py-0.5 rounded-full"
                   style={{ background: 'rgba(124,58,237,0.10)', color: '#7C3AED' }}>
                   {roleLabels[post.authorRole] ?? post.authorRole}
                 </span>
                 {post.scope === 'PUBLIC' && post.clubName && (
-                  <span className="text-[9px] font-semibold px-2 py-0.5 rounded-full" style={{ background: 'rgba(67,97,238,0.10)', color: '#4361EE' }}>
+                  <span className="text-[10px] md:text-[9px] font-semibold px-2 py-0.5 rounded-full" style={{ background: 'rgba(67,97,238,0.10)', color: '#4361EE' }}>
                     {post.clubName}
                   </span>
                 )}
               </div>
-              <p className="text-[11px] text-muted-foreground mt-0.5">
+              <p className="text-[12px] md:text-[11px] text-muted-foreground mt-0.5">
                 {timeAgo(post.createdAt)}
                 {post.ubicacion && (
                   <>
@@ -567,9 +567,9 @@ function PostCard({
               <Heart className="w-[17px] h-[17px] md:w-4 md:h-4 transition-colors" fill={liked ? '#EF476F' : 'none'}
                 style={{ color: liked ? '#EF476F' : '#8E87A8' }} />
             </motion.div>
-            <span className="text-[13px] font-semibold md:hidden" style={{ color: liked ? '#EF476F' : '#8E87A8' }}>Me gusta</span>
-            {/* En escritorio el numero va pegado al corazon y la fila de
-                contadores de arriba desaparece */}
+            <span className="text-[13px] md:text-[12px] font-semibold" style={{ color: liked ? '#EF476F' : '#8E87A8' }}>Me gusta</span>
+            {/* En escritorio el numero acompaña a la palabra: la fila de
+                contadores de arriba no se muestra ahi */}
             {likeCount > 0 && (
               <span className="hidden md:inline text-[12px] font-semibold" style={{ color: liked ? '#EF476F' : '#8E87A8' }}>{likeCount}</span>
             )}
@@ -611,7 +611,7 @@ function PostCard({
               {/* En escritorio los comentarios se desplazan dentro de su columna:
                   sin tope, una publicacion con veinte comentarios estiraria la
                   tarjeta y dejaria la imagen flotando con un vacio al lado. */}
-              <div className="px-4 pb-4 space-y-3 border-t border-border/40 pt-3"
+              <div className="px-4 pb-4 space-y-3 border-t border-border/40 pt-3 md:border-t-0 md:bg-transparent"
                 style={{ background: 'rgba(124,58,237,0.02)' }}>
 
                 {/* Lista de comentarios */}
@@ -737,8 +737,9 @@ function PostCard({
                   </div>
                 )}
 
-                {/* Input nuevo comentario */}
-                <div className="flex items-center gap-2">
+                {/* Input nuevo comentario — con linea arriba en escritorio,
+                    para cerrar el bloque de comentarios como en el diseño */}
+                <div className="flex items-center gap-2 md:border-t md:border-border/60 md:pt-3">
                   <div className="flex-1 flex items-center gap-2 rounded-full px-3 py-2"
                     style={{ background: '#fff', border: '1px solid rgba(124,58,237,0.12)' }}>
                     <input
@@ -1457,7 +1458,7 @@ export default function DashboardPage() {
         {/* Widget — Próximos eventos */}
         <div className="rounded-2xl bg-white border border-border overflow-hidden"
           style={{ boxShadow: '0 1px 8px rgba(0,0,0,0.06)' }}>
-          <div className="flex items-center justify-between px-4 pt-4 pb-2 md:py-3 md:border-b md:border-border/60">
+          <div className="flex items-center justify-between px-4 pt-4 pb-3 md:border-b md:border-border/60">
             <div className="flex items-center gap-2">
               <div className="w-7 h-7 rounded-lg flex items-center justify-center"
                 style={{ background: 'linear-gradient(135deg,#4361EE,#7C3AED)' }}>

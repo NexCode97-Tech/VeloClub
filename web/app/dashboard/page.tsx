@@ -633,7 +633,7 @@ function PostCard({
         )}
 
         {/* Acciones */}
-        <div className="flex items-center border-t border-border/60 md:border-t-0 md:mt-auto md:gap-6 md:px-4 md:py-1">
+        <div className="flex items-center border-t border-border/60 md:mt-auto md:gap-6 md:px-4 md:py-1">
           {/* Me gusta */}
           <motion.button onClick={handleLike} whileTap={{ scale: 0.95 }}
             transition={{ type: 'spring' as const, stiffness: 500, damping: 15 }}

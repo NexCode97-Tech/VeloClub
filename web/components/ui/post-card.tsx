@@ -6,7 +6,7 @@ import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MemberAvatar } from '@/components/ui/member-avatar';
 import {
-  Globe, Lock, Heart, MessageCircle, ChevronRight,
+  Globe, Lock, Heart, MessageCircle, ChevronRight, MapPin,
   Send, X, Trash2, MoreHorizontal,
 } from 'lucide-react';
 
@@ -21,7 +21,7 @@ export interface Post {
   id: string; clubId: string; clubName: string;
   authorClerkId?: string | null;
   authorName: string; authorRole: string; authorAvatar?: string | null;
-  content: string; imageUrl?: string | null;
+  content: string; imageUrl?: string | null; ubicacion?: string | null;
   scope: 'PUBLIC' | 'PRIVATE';
   likes: PostLike[]; comments: PostComment[]; createdAt: string;
 }
@@ -127,7 +127,16 @@ export function PostCard({ post, currentUserId, onLike, onComment, canDelete, on
                 ? <Globe className="w-3 h-3 text-muted-foreground/40" />
                 : <Lock className="w-3 h-3 text-muted-foreground/40" />}
             </div>
-            <p className="text-[12px] text-muted-foreground">{timeAgo(post.createdAt)}</p>
+            <p className="text-[12px] text-muted-foreground">
+              {timeAgo(post.createdAt)}
+              {post.ubicacion && (
+                <>
+                  {' · '}
+                  <MapPin className="inline w-3 h-3 -mt-0.5" style={{ color: '#8E87A8' }} />
+                  {' '}{post.ubicacion}
+                </>
+              )}
+            </p>
           </div>
         </div>
         {canDelete && (

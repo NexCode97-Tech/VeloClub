@@ -15,7 +15,7 @@ import {
   Paperclip, Video, FileText,
   MoreHorizontal, Pencil, Trash2,
   ChevronRight, CalendarDays, Trophy, Users, Gift,
-  Clock, CheckSquare, Wallet,
+  Clock, CheckSquare, Wallet, MapPin,
 } from 'lucide-react';
 import { Slideshow } from '@/components/ui/slideshow';
 import { InicioHeaderMovil } from '@/components/ui/inicio-header-movil';
@@ -72,6 +72,7 @@ interface Post {
   authorAvatar?: string | null;
   content: string;
   imageUrl?: string | null;
+  ubicacion?: string | null;
   scope: 'PUBLIC' | 'PRIVATE';
   likes: PostLike[];
   comments: PostComment[];
@@ -311,7 +312,7 @@ function PostCard({
       exit={{    opacity: 0, scale: 0.95, y: -8 }}
       transition={{ type: 'spring' as const, stiffness: 300, damping: 26 }}
       layout
-      className={`bg-white border border-border rounded-2xl overflow-hidden${
+      className={`bg-white border border-border rounded-2xl overflow-hidden md:max-w-[900px] md:mx-auto${
         parteEnDos ? ' md:grid md:grid-cols-[22rem_1fr] md:grid-rows-[auto_1fr]' : ''}`}
       style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.08), inset 0 0 0 1px rgba(0,0,0,0.06)' }}
     >
@@ -325,31 +326,40 @@ function PostCard({
       <div className="md:col-start-2 md:row-start-1 md:min-w-0">
         {/* Autor */}
         <div className="flex items-center justify-between px-4 pt-4 pb-2">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5 min-w-0">
             <button
               type="button"
               onClick={() => post.authorClerkId && router.push(`/dashboard/perfil/${post.authorClerkId}`)}
               className={post.authorClerkId ? 'cursor-pointer shrink-0' : 'cursor-default shrink-0'}
             >
-              <Avatar src={post.authorAvatar} name={post.authorName} size={42} role={post.authorRole} />
+              <Avatar src={post.authorAvatar} name={post.authorName} size={34} role={post.authorRole} />
             </button>
             <div>
               <div className="flex items-center gap-2 flex-wrap">
                 <p
-                  className={`text-[14px] font-semibold text-foreground leading-tight ${post.authorClerkId ? 'cursor-pointer hover:underline' : ''}`}
+                  className={`text-[13px] font-semibold text-foreground leading-tight ${post.authorClerkId ? 'cursor-pointer hover:underline' : ''}`}
                   onClick={() => post.authorClerkId && router.push(`/dashboard/perfil/${post.authorClerkId}`)}
                 >{post.authorName || 'Usuario'}</p>
-                <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full"
+                <span className="text-[9px] font-semibold px-2 py-0.5 rounded-full"
                   style={{ background: 'rgba(124,58,237,0.10)', color: '#7C3AED' }}>
                   {roleLabels[post.authorRole] ?? post.authorRole}
                 </span>
                 {post.scope === 'PUBLIC' && post.clubName && (
-                  <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(67,97,238,0.10)', color: '#4361EE' }}>
+                  <span className="text-[9px] font-semibold px-2 py-0.5 rounded-full" style={{ background: 'rgba(67,97,238,0.10)', color: '#4361EE' }}>
                     {post.clubName}
                   </span>
                 )}
               </div>
-              <p className="text-[12px] text-muted-foreground mt-0.5">{timeAgo(post.createdAt)}</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5">
+                {timeAgo(post.createdAt)}
+                {post.ubicacion && (
+                  <>
+                    {' · '}
+                    <MapPin className="inline w-3 h-3 -mt-0.5" style={{ color: '#8E87A8' }} />
+                    {' '}{post.ubicacion}
+                  </>
+                )}
+              </p>
             </div>
           </div>
           {canDelete && (
@@ -431,7 +441,7 @@ function PostCard({
         </div>
 
         {/* Contenido */}
-        <p className="px-4 py-3 text-[14px] text-foreground leading-relaxed whitespace-pre-wrap">{post.content}</p>
+        <p className="px-4 py-3 text-[14px] md:text-[13px] text-foreground leading-relaxed whitespace-pre-wrap">{post.content}</p>
 
       </div>
 
@@ -548,20 +558,20 @@ function PostCard({
         )}
 
         {/* Acciones */}
-        <div className="flex items-center border-t border-border/60 md:mt-auto md:border-b md:gap-5 md:px-4">
+        <div className="flex items-center border-t border-border/60 md:mt-auto md:border-b md:gap-6 md:px-4 md:py-1">
           {/* Me gusta */}
           <motion.button onClick={handleLike} whileTap={{ scale: 0.95 }}
             transition={{ type: 'spring' as const, stiffness: 500, damping: 15 }}
             className="flex-1 flex items-center justify-center gap-2 py-2.5 transition-colors hover:bg-secondary/60 md:flex-none md:justify-start md:gap-1.5 md:hover:bg-transparent">
             <motion.div animate={likeAnim ? { scale: [1, 1.4, 1] } : { scale: 1 }} transition={{ duration: 0.35, ease: 'easeInOut' }}>
-              <Heart className="w-[17px] h-[17px] transition-colors" fill={liked ? '#EF476F' : 'none'}
+              <Heart className="w-[17px] h-[17px] md:w-4 md:h-4 transition-colors" fill={liked ? '#EF476F' : 'none'}
                 style={{ color: liked ? '#EF476F' : '#8E87A8' }} />
             </motion.div>
             <span className="text-[13px] font-semibold md:hidden" style={{ color: liked ? '#EF476F' : '#8E87A8' }}>Me gusta</span>
             {/* En escritorio el numero va pegado al corazon y la fila de
                 contadores de arriba desaparece */}
             {likeCount > 0 && (
-              <span className="hidden md:inline text-[13px] font-semibold" style={{ color: liked ? '#EF476F' : '#8E87A8' }}>{likeCount}</span>
+              <span className="hidden md:inline text-[12px] font-semibold" style={{ color: liked ? '#EF476F' : '#8E87A8' }}>{likeCount}</span>
             )}
           </motion.button>
 
@@ -572,8 +582,8 @@ function PostCard({
             onClick={() => { setShowComments(v => !v); setTimeout(() => commentInputRef.current?.focus(), 150); }}
             whileTap={{ scale: 0.95 }}
             className="flex-1 flex items-center justify-center gap-2 py-2.5 transition-colors hover:bg-secondary/60 md:flex-none md:justify-start md:hover:bg-transparent">
-            <MessageCircle className="w-[17px] h-[17px]" style={{ color: showComments ? '#4361EE' : '#8E87A8' }} />
-            <span className="text-[13px] font-semibold" style={{ color: showComments ? '#4361EE' : '#8E87A8' }}>Comentar</span>
+            <MessageCircle className="w-[17px] h-[17px] md:w-4 md:h-4" style={{ color: showComments ? '#4361EE' : '#8E87A8' }} />
+            <span className="text-[13px] md:text-[12px] font-semibold" style={{ color: showComments ? '#4361EE' : '#8E87A8' }}>Comentar</span>
           </motion.button>
 
           <div className="w-px h-7 bg-border/60 md:hidden" />
@@ -583,8 +593,8 @@ function PostCard({
             whileTap={{ scale: 0.95 }}
             className="flex-1 flex items-center justify-center gap-2 py-2.5 transition-colors hover:bg-secondary/60 md:flex-none md:justify-start md:hover:bg-transparent"
             onClick={() => { if (navigator.share) navigator.share({ text: post.content }); }}>
-            <ChevronRight className="w-[17px] h-[17px] rotate-[-45deg]" style={{ color: '#8E87A8' }} />
-            <span className="text-[13px] font-semibold text-muted-foreground">Compartir</span>
+            <ChevronRight className="w-[17px] h-[17px] md:w-4 md:h-4 rotate-[-45deg]" style={{ color: '#8E87A8' }} />
+            <span className="text-[13px] md:text-[12px] font-semibold text-muted-foreground">Compartir</span>
           </motion.button>
         </div>
 
@@ -601,14 +611,19 @@ function PostCard({
               {/* En escritorio los comentarios se desplazan dentro de su columna:
                   sin tope, una publicacion con veinte comentarios estiraria la
                   tarjeta y dejaria la imagen flotando con un vacio al lado. */}
-              <div className="px-4 pb-4 space-y-3 border-t border-border/40 pt-3 md:max-h-[320px] md:overflow-y-auto"
+              <div className="px-4 pb-4 space-y-3 border-t border-border/40 pt-3"
                 style={{ background: 'rgba(124,58,237,0.02)' }}>
 
                 {/* Lista de comentarios */}
+                {/* Scroll interno: sin tope, una publicacion con treinta
+                    comentarios estira la tarjeta hasta el infinito y en
+                    escritorio deja la imagen flotando con un vacio al lado.
+                    El campo de escribir queda fuera del scroll, siempre visible. */}
                 {post.comments.length > 0 && (
-                  <div className="space-y-2.5">
+                  <div className="space-y-2.5 max-h-[300px] overflow-y-auto pr-1"
+                    style={{ WebkitOverflowScrolling: 'touch', overscrollBehaviorY: 'contain' }}>
                     {post.comments.map(c => (
-                      <div key={c.id} className="flex items-start gap-2.5">
+                      <div key={c.id} className="flex items-start gap-2.5 md:gap-2">
                         <button
                           type="button"
                           onClick={() => c.authorClerkId && router.push(`/dashboard/perfil/${c.authorClerkId}`)}
@@ -650,13 +665,16 @@ function PostCard({
                               </div>
                             </div>
                           ) : (
-                            <div className="rounded-2xl rounded-tl-sm px-3 py-2"
+                            <div className="rounded-2xl rounded-tl-sm px-3 py-2 md:rounded-none md:px-0 md:py-0 md:border-0 md:bg-transparent"
                               style={{ background: '#fff', border: '1px solid rgba(124,58,237,0.08)' }}>
-                              <p className="text-[11px] font-semibold text-foreground mb-0.5">{c.authorName}</p>
-                              <p className="text-[13px] text-foreground leading-snug">{c.content}</p>
+                              <p className="text-[11px] font-semibold text-foreground mb-0.5 md:hidden">{c.authorName}</p>
+                              <p className="text-[13px] md:text-[12px] text-foreground leading-snug">
+                                <span className="hidden md:inline font-semibold">{c.authorName} </span>
+                                {c.content}
+                              </p>
                             </div>
                           )}
-                          <p className="text-[10px] text-muted-foreground mt-0.5 pl-1">{timeAgo(c.createdAt)}</p>
+                          <p className="text-[10px] text-muted-foreground mt-0.5 pl-1 md:pl-0">{timeAgo(c.createdAt)}</p>
                         </div>
 
                         {/* ── Botón ⋯ con dropdown ── */}
@@ -759,13 +777,16 @@ function PostComposer({
   userName, userRole, userAvatar, onSubmit, loading,
 }: {
   userName: string; userRole: string; userAvatar?: string | null;
-  onSubmit: (content: string, mediaUrl?: string, mediaPublicId?: string) => Promise<void>;
+  onSubmit: (content: string, mediaUrl?: string, mediaPublicId?: string, ubicacion?: string) => Promise<void>;
   loading: boolean;
 }) {
   const { session: composerSession } = useSession();
   const [open, setOpen]         = useState(false);
   const [content, setContent]   = useState('');
   const [media, setMedia]       = useState<{ url: string; publicId: string; type: string; name: string } | null>(null);
+  // Ubicacion en texto libre. No hay mapas ni sedes de por medio: es la
+  // etiqueta que el autor le quiere poner a la publicacion.
+  const [ubicacion, setUbicacion] = useState('');
   const [uploading, setUploading] = useState(false);
   const [errorArchivo, setErrorArchivo] = useState<string | null>(null);
   const [sending, setSending]   = useState(false);
@@ -814,12 +835,12 @@ function PostComposer({
     if (!text) return;
     setSending(true); setEstadoPublicado('guardando');
     try {
-      await onSubmit(text, media?.url, media?.publicId);
+      await onSubmit(text, media?.url, media?.publicId, ubicacion.trim() || undefined);
       // Confirma antes de cerrar el compositor, para que quede claro que la
       // publicacion si entro
       setEstadoPublicado('guardado');
       await new Promise(r => setTimeout(r, MS_GUARDADO));
-      setContent(''); setMedia(null); setOpen(false);
+      setContent(''); setMedia(null); setUbicacion(''); setOpen(false);
       setEstadoPublicado('idle');
     } catch {
       setEstadoPublicado('idle');
@@ -901,6 +922,25 @@ function PostComposer({
         onChange={e => { const f = e.target.files?.[0]; if (f) handleFile(f); e.target.value = ''; }} />
 
       {/* Barra inferior: adjuntos + publicar */}
+      {/* Ubicacion — texto libre, aparece con el compositor desplegado */}
+      {(open || content || media) && (
+        <div className="flex items-center gap-2 px-4 pb-2">
+          <MapPin className="w-4 h-4 shrink-0" style={{ color: '#8E87A8' }} />
+          <input
+            value={ubicacion}
+            onChange={e => setUbicacion(e.target.value)}
+            placeholder="Agregar ubicación (opcional)"
+            maxLength={120}
+            className="flex-1 min-w-0 text-[13px] text-foreground placeholder:text-muted-foreground/50 outline-none bg-transparent"
+          />
+          {ubicacion && (
+            <button type="button" onClick={() => setUbicacion('')} aria-label="Quitar ubicación" className="shrink-0">
+              <X className="w-3.5 h-3.5" style={{ color: '#8E87A8' }} />
+            </button>
+          )}
+        </div>
+      )}
+
       <div className={`${open || content || media ? 'flex' : 'hidden sm:flex'} items-center justify-between px-4 pb-4 border-t border-border/60 pt-3 gap-3`}>
         <div className="flex items-center gap-1 min-w-0">
           {[
@@ -1082,7 +1122,7 @@ export default function DashboardPage() {
 
   // ── Handlers ──────────────────────────────────────────────────────────────
 
-  async function handleCreatePost(content: string, mediaUrl?: string, mediaPublicId?: string) {
+  async function handleCreatePost(content: string, mediaUrl?: string, mediaPublicId?: string, ubicacion?: string) {
     const token = await session?.getToken();
     const res = await apiFetch<{ post: Post }>('/posts', {
       token, method: 'POST',
@@ -1090,6 +1130,7 @@ export default function DashboardPage() {
         content,
         scope: feedScope === 'public' ? 'PUBLIC' : 'PRIVATE',
         ...(mediaUrl ? { mediaUrl, mediaPublicId } : {}),
+        ...(ubicacion ? { ubicacion } : {}),
       }),
     });
     setPosts(prev => [res.post, ...prev]);
@@ -1416,7 +1457,7 @@ export default function DashboardPage() {
         {/* Widget — Próximos eventos */}
         <div className="rounded-2xl bg-white border border-border overflow-hidden"
           style={{ boxShadow: '0 1px 8px rgba(0,0,0,0.06)' }}>
-          <div className="flex items-center justify-between px-4 pt-4 pb-2 md:pb-3 md:border-b md:border-border/60">
+          <div className="flex items-center justify-between px-4 pt-4 pb-2 md:py-3 md:border-b md:border-border/60">
             <div className="flex items-center gap-2">
               <div className="w-7 h-7 rounded-lg flex items-center justify-center"
                 style={{ background: 'linear-gradient(135deg,#4361EE,#7C3AED)' }}>
@@ -1556,7 +1597,7 @@ export default function DashboardPage() {
         variants={feedVariants}
         initial="hidden"
         animate="show"
-        className="space-y-4"
+        className="space-y-4 md:space-y-8"
       >
 
         {/* ── Tabs Público / Privado ──────────────────────────────────────── */}

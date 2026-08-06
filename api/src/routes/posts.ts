@@ -33,6 +33,7 @@ const createPostSchema = z.object({
   mediaUrl:      z.string().url().optional(),
   mediaPublicId: z.string().optional(),
   mediaType:     z.enum(['image', 'video', 'file']).optional(),
+  ubicacion:     z.string().max(120).optional(),
   scope:         z.enum(['PUBLIC', 'PRIVATE']).default('PRIVATE'),
 });
 
@@ -108,6 +109,7 @@ router.post('/', requireAuth, async (req, res) => {
       content:       parsed.data.content,
       imageUrl:      parsed.data.mediaUrl ?? parsed.data.imageUrl ?? null,
       imagePublicId: parsed.data.mediaPublicId ?? parsed.data.imagePublicId ?? null,
+      ubicacion:     parsed.data.ubicacion?.trim() || null,
       scope:         parsed.data.scope,
     },
     include: POST_INCLUDE,

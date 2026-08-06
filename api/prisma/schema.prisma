@@ -425,6 +425,9 @@ model Post {
   content         String
   imageUrl        String?
   imagePublicId   String?
+  // Texto libre escrito por el autor. No es un lugar de mapas ni una sede del
+  // club: solo la etiqueta que quiso ponerle a la publicacion.
+  ubicacion       String?
   scope           PostScope  @default(PRIVATE)
   likes           PostLike[]
   comments        PostComment[]

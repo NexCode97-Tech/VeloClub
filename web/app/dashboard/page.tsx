@@ -47,7 +47,7 @@ import { ContenidoGuardado, MS_GUARDADO, type EstadoGuardado } from '@/component
 
 interface MeResponse {
   status: 'ok' | 'superadmin' | 'complete_profile' | 'no_access' | 'needs_onboarding' | 'inactive' | 'member_inactive' | 'trial_expired';
-  user?: { name: string; role: string; picture?: string | null; club?: { name: string; logoUrl?: string; verified?: boolean } };
+  user?: { name: string; role: string; picture?: string | null; clubId?: string | null; club?: { name: string; logoUrl?: string; verified?: boolean } };
   trial?: { daysLeft: number; endsAt: string } | null;
 }
 
@@ -1089,6 +1089,7 @@ export default function DashboardPage() {
                 post={post}
                 currentUserId={currentUserId}
                 canDelete={canPost}
+                clubIdPropio={me?.user?.clubId ?? null}
                 onLike={handleLike}
                 onDelete={handleDelete}
                 onComment={handleComment}

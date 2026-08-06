@@ -82,9 +82,13 @@ function Avatar({ src, name, size = 36, role }: {
 // ── PostCard ──────────────────────────────────────────────────────────────────
 
 export function PostCard({
-  post, currentUserId, canDelete, onLike, onDelete, onComment, onDeleteComment, onEditComment, onFetchLikes, onUpdatePost,
+  post, currentUserId, canDelete, clubIdPropio, onLike, onDelete, onComment, onDeleteComment, onEditComment, onFetchLikes, onUpdatePost,
 }: {
   post: Post; currentUserId: string; canDelete: boolean;
+  /** Club de quien mira. Se omite en los feeds que solo traen publicaciones
+   *  del propio club (Mi club y Mi perfil); en el feed publico de Inicio hay
+   *  publicaciones de otros clubes y ahi si hace falta. */
+  clubIdPropio?: string | null;
   onLike: (id: string) => void;
   onDelete: (id: string) => void;
   onUpdatePost: (id: string, cambios: { content?: string; scope?: 'PUBLIC' | 'PRIVATE' }) => Promise<void>;
@@ -100,6 +104,11 @@ export function PostCard({
   // eliminar solo aparece para el autor, sin importar su rol: un administrador
   // no administra las publicaciones de los demas.
   const esAutor = !!post.authorClerkId && post.authorClerkId === currentUserId;
+  // Los comentarios si los modera quien dirige el club, pero solo dentro de su
+  // club. En el feed publico de Inicio aparecen publicaciones de otros clubes y
+  // ahi el menu no debe salir: el servidor responde 404 a ese intento, asi que
+  // mostrarlo solo prometia algo que no se puede hacer.
+  const moderaComentarios = canDelete && (!clubIdPropio || post.clubId === clubIdPropio);
   const [postMenuOpen, setPostMenuOpen] = useState(false);
   // Editar solo cambia la descripcion. La foto, el autor y la fecha no se tocan.
   const [editandoPost, setEditandoPost] = useState(false);
@@ -648,7 +657,7 @@ export function PostCard({
                         </div>
 
                         {/* ── Botón ⋯ con dropdown ── */}
-                        {canDelete && editingComment !== c.id && (
+                        {moderaComentarios && editingComment !== c.id && (
                           <div className="mt-1 shrink-0">
                             <button
                               onClick={e => abrirMenuComentario(c.id, e.currentTarget)}

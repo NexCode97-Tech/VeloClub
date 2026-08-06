@@ -28,6 +28,12 @@ interface SlideshowProps {
 const SWIPE_DISTANCIA = 60;
 const SWIPE_VELOCIDAD = 400;
 
+// Techo de altura del anuncio. La proporcion 4:3 sola hacia que el anuncio
+// creciera con la pantalla: en un portatil de 1440 se comia 434px antes de la
+// primera publicacion, y en un monitor grande todavia mas. Por debajo de este
+// tope la proporcion manda, asi que en pantallas angostas nada se deforma.
+const ALTO_MAX = 200;
+
 /**
  * Botón de contacto del anuncio.
  *
@@ -102,7 +108,7 @@ function SlideCard({ slide, priority }: { slide: SlideshowSlide; priority?: bool
             padding: '4px 10px',
           }}
         >
-          <span className="text-[10px] font-semibold text-white/90 tracking-wide uppercase leading-none">
+          <span className="text-[10px] font-semibold text-white/90 tracking-wide leading-none">
             {slide.label}
           </span>
         </div>
@@ -201,7 +207,7 @@ export function Slideshow({ slides, autoPlayMs = 5000 }: SlideshowProps) {
                   padding: '4px 10px',
                 }}
               >
-                <span className="text-[10px] font-semibold text-white/90 tracking-wide uppercase leading-none">
+                <span className="text-[10px] font-semibold text-white/90 tracking-wide leading-none">
                   {mobileSlide.label}
                 </span>
               </div>
@@ -275,8 +281,8 @@ export function Slideshow({ slides, autoPlayMs = 5000 }: SlideshowProps) {
       {/* ── Escritorio: cross-fade suave — todas las capas montadas ─ */}
       <div className="hidden lg:block w-full rounded-2xl" style={{ position: 'relative' }}>
         <div className="grid grid-cols-2 gap-3" style={{ visibility: 'hidden', pointerEvents: 'none' }} aria-hidden>
-          <div className="aspect-[4/3]" />
-          <div className="aspect-[4/3]" />
+          <div className="aspect-[4/3]" style={{ maxHeight: ALTO_MAX }} />
+          <div className="aspect-[4/3]" style={{ maxHeight: ALTO_MAX }} />
         </div>
         {slides.map((_, idx) => {
           if (idx % 2 !== 0) return null;
@@ -296,10 +302,10 @@ export function Slideshow({ slides, autoPlayMs = 5000 }: SlideshowProps) {
                 pointerEvents: isActive ? 'auto' : 'none',
               }}
             >
-              <div className="aspect-[4/3]" style={{ boxShadow: '0 4px 16px rgba(0,0,0,0.13), inset 0 0 0 1px rgba(0,0,0,0.08)', borderRadius: '1rem', overflow: 'hidden' }}>
+              <div className="aspect-[4/3]" style={{ maxHeight: ALTO_MAX, boxShadow: '0 4px 16px rgba(0,0,0,0.13), inset 0 0 0 1px rgba(0,0,0,0.08)', borderRadius: '1rem', overflow: 'hidden' }}>
                 <SlideCard slide={s0} priority={idx === 0} />
               </div>
-              <div className="aspect-[4/3]" style={{ boxShadow: '0 4px 16px rgba(0,0,0,0.13), inset 0 0 0 1px rgba(0,0,0,0.08)', borderRadius: '1rem', overflow: 'hidden' }}>
+              <div className="aspect-[4/3]" style={{ maxHeight: ALTO_MAX, boxShadow: '0 4px 16px rgba(0,0,0,0.13), inset 0 0 0 1px rgba(0,0,0,0.08)', borderRadius: '1rem', overflow: 'hidden' }}>
                 <SlideCard slide={s1} priority={idx === 0} />
               </div>
             </div>

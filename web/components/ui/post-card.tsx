@@ -452,7 +452,7 @@ export function PostCard({
               <button
                 ref={likesButtonRef}
                 onClick={handleShowLikes}
-                className="text-[12px] text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                className="text-[12px] md:text-[11px] text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
               >
                 {likeCount} Me gusta
               </button>
@@ -460,7 +460,7 @@ export function PostCard({
             {post.comments.length > 0 && (
               <button
                 onClick={() => { setShowComments(true); setTimeout(() => commentInputRef.current?.focus(), 150); }}
-                className="text-[12px] text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                className="text-[12px] md:text-[11px] text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
               >
                 {post.comments.length} Comentario{post.comments.length !== 1 ? 's' : ''}
               </button>

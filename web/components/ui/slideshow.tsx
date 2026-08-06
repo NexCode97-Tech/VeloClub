@@ -15,10 +15,10 @@ export interface SlideshowSlide {
   cta?: string;
 }
 
-// El tamaño no se recibe por props: los tres cortes usan la misma proporción 4:3
-// para que una sola imagen (1440x1080) calce sin recortes en móvil, tablet y
-// escritorio. Antes había un className que el componente ignoraba, y hacía creer
-// que el alto se controlaba desde afuera.
+// El tamaño no se recibe por props: el alto es el mismo en móvil, tablet y
+// escritorio, y el ancho lo reparte la rejilla de cada corte. Antes había un
+// className que el componente ignoraba, y hacía creer que el alto se
+// controlaba desde afuera.
 interface SlideshowProps {
   slides: SlideshowSlide[];
   autoPlayMs?: number;
@@ -28,10 +28,11 @@ interface SlideshowProps {
 const SWIPE_DISTANCIA = 60;
 const SWIPE_VELOCIDAD = 400;
 
-// Techo de altura del anuncio. La proporcion 4:3 sola hacia que el anuncio
+// Altura del anuncio, igual en los tres cortes. La proporcion 4:3 hacia que
 // creciera con la pantalla: en un portatil de 1440 se comia 434px antes de la
-// primera publicacion, y en un monitor grande todavia mas. Por debajo de este
-// tope la proporcion manda, asi que en pantallas angostas nada se deforma.
+// primera publicacion, y en un monitor grande todavia mas. Con un alto fijo el
+// ancho lo reparte la rejilla y la imagen se recorta con `cover`; si se deja la
+// proporcion puesta, el navegador la conserva encogiendo tambien el ancho.
 const ALTO_MAX = 200;
 
 /**
@@ -165,8 +166,8 @@ export function Slideshow({ slides, autoPlayMs = 5000 }: SlideshowProps) {
     <>
       {/* ── Móvil: carrusel con swipe ────────────────────────────── */}
       <div
-        className="relative w-full overflow-hidden rounded-2xl md:hidden aspect-[4/3]"
-        style={{ boxShadow: '0 4px 16px rgba(0,0,0,0.13), inset 0 0 0 1px rgba(0,0,0,0.08)' }}
+        className="relative w-full overflow-hidden rounded-2xl md:hidden"
+        style={{ height: ALTO_MAX, boxShadow: '0 4px 16px rgba(0,0,0,0.13), inset 0 0 0 1px rgba(0,0,0,0.08)' }}
         onClick={handleInteraction}
       >
         <AnimatePresence initial={false} custom={direction}>
@@ -257,8 +258,8 @@ export function Slideshow({ slides, autoPlayMs = 5000 }: SlideshowProps) {
       {/* ── Tablet: cross-fade suave (sin slide translate) ──────── */}
       <div className="hidden md:block lg:hidden w-full rounded-2xl" style={{ position: 'relative' }}>
         <div className="grid grid-cols-2 gap-3" style={{ visibility: 'hidden', pointerEvents: 'none' }} aria-hidden>
-          <div className="aspect-[4/3]" />
-          <div className="aspect-[4/3]" />
+          <div style={{ height: ALTO_MAX }} />
+          <div style={{ height: ALTO_MAX }} />
         </div>
         {slides.map((_, idx) => {
           if (idx % 2 !== 0) return null;
@@ -278,10 +279,10 @@ export function Slideshow({ slides, autoPlayMs = 5000 }: SlideshowProps) {
                 pointerEvents: isActive ? 'auto' : 'none',
               }}
             >
-              <div className="aspect-[4/3]" style={{ boxShadow: '0 4px 16px rgba(0,0,0,0.13), inset 0 0 0 1px rgba(0,0,0,0.08)', borderRadius: '1rem', overflow: 'hidden' }}>
+              <div style={{ height: ALTO_MAX, boxShadow: '0 4px 16px rgba(0,0,0,0.13), inset 0 0 0 1px rgba(0,0,0,0.08)', borderRadius: '1rem', overflow: 'hidden' }}>
                 <SlideCard slide={s0} priority={idx === 0} />
               </div>
-              <div className="aspect-[4/3]" style={{ boxShadow: '0 4px 16px rgba(0,0,0,0.13), inset 0 0 0 1px rgba(0,0,0,0.08)', borderRadius: '1rem', overflow: 'hidden' }}>
+              <div style={{ height: ALTO_MAX, boxShadow: '0 4px 16px rgba(0,0,0,0.13), inset 0 0 0 1px rgba(0,0,0,0.08)', borderRadius: '1rem', overflow: 'hidden' }}>
                 <SlideCard slide={s1} priority={idx === 0} />
               </div>
             </div>

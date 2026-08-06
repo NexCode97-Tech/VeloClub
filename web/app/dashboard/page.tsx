@@ -108,15 +108,9 @@ function timeAgo(iso: string): string {
 
 // ── Ads (placeholder — reemplazar con datos reales desde API) ────────────────
 
+// El orden importa: los dos anunciantes que pagan van primero, y el tercer
+// lugar lo ocupa el espacio disponible, que es el que vende el cupo.
 const ADS = [
-  {
-    image: '/foto-equipamiento.jpg',
-    label: 'Equipamiento',
-    title: 'Nueva colección deportiva 2025',
-    description: 'Descubre la línea de ropa técnica diseñada para ciclistas de alto rendimiento. Tejidos transpirables, corte aerodinámico y protección UV para cada etapa.',
-    url: '#',
-    color: '#7C3AED',
-  },
   {
     image: '/natural.png',
     label: 'Publicidad',
@@ -133,6 +127,25 @@ const ADS = [
     // Número que aparece en la pieza del anunciante
     url: 'https://wa.me/573153171225',
     color: '#06D6A0',
+  },
+  {
+    image: '/publicidad-disponible.svg',
+    label: 'Espacio disponible',
+    title: 'Tu publicidad aquí',
+    description: 'Promociona tu marca o tu evento ante los clubes deportivos.',
+    // Pendiente: el numero de contacto de VeloClub para reservar el cupo. Sin
+    // url el boton no se muestra, que es mejor que mandar al numero de otro.
+    url: '#',
+    cta: 'Reservar espacio',
+    color: '#7C3AED',
+  },
+  {
+    image: '/foto-equipamiento.jpg',
+    label: 'Equipamiento',
+    title: 'Nueva colección deportiva 2025',
+    description: 'Descubre la línea de ropa técnica diseñada para ciclistas de alto rendimiento. Tejidos transpirables, corte aerodinámico y protección UV para cada etapa.',
+    url: '#',
+    color: '#7C3AED',
   },
   {
     image: '/foto-bicicleta.jpg',
@@ -981,7 +994,7 @@ export default function DashboardPage() {
       {/* ── Slideshow publicitario — ancho completo ─────────────────────────── */}
       <div className="w-full px-6 pt-4">
         <Slideshow
-          slides={ADS.map(ad => ({ img: ad.image, label: ad.label, title: ad.title, description: ad.description, url: ad.url }))}
+          slides={ADS.map(ad => ({ img: ad.image, label: ad.label, title: ad.title, description: ad.description, url: ad.url, cta: 'cta' in ad ? ad.cta : undefined }))}
         />
       </div>
 

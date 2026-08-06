@@ -55,10 +55,12 @@ function BotonContacto({ slide }: { slide: SlideshowSlide }) {
       // Evita que el toque se interprete como interacción con el carrusel
       onClick={e => e.stopPropagation()}
       onPointerDownCapture={e => e.stopPropagation()}
+      // Mismo tamaño que la etiqueta de la esquina superior, para que las dos
+      // piezas de la tarjeta se lean como una sola familia.
       className="inline-flex items-center gap-1.5 rounded-full text-white font-semibold transition-colors"
       style={{
-        padding: '8px 13px',
-        fontSize: 12,
+        padding: '4px 10px',
+        fontSize: 10,
         lineHeight: 1,
         background: 'rgba(255,255,255,0.14)',
         border: '1px solid rgba(255,255,255,0.28)',
@@ -66,7 +68,7 @@ function BotonContacto({ slide }: { slide: SlideshowSlide }) {
         WebkitBackdropFilter: 'blur(12px)',
       }}
     >
-      <Phone className="w-3.5 h-3.5" aria-hidden />
+      <Phone className="w-3 h-3" aria-hidden />
       {slide.cta ?? 'Contactar'}
     </a>
   );

@@ -221,6 +221,10 @@ function PostCard({
   const router    = useRouter();
   const liked     = post.likes.some(l => l.userId === currentUserId);
   const likeCount = post.likes.length;
+  // Una publicacion le pertenece a quien la hizo. El menu de editar, mover y
+  // eliminar solo aparece para el autor, sin importar su rol: un administrador
+  // no administra las publicaciones de los demas.
+  const esAutor = !!post.authorClerkId && post.authorClerkId === currentUserId;
   const [postMenuOpen, setPostMenuOpen] = useState(false);
   // Editar solo cambia la descripcion. La foto, el autor y la fecha no se tocan.
   const [editandoPost, setEditandoPost] = useState(false);
@@ -393,7 +397,7 @@ function PostCard({
               </p>
             </div>
           </div>
-          {canDelete && (
+          {esAutor && (
             <div ref={postMenuRef} className="relative">
               <button
                 onClick={() => { setPostMenuOpen(v => !v); setConfirmDel(false); }}
@@ -415,7 +419,7 @@ function PostCard({
                       background: '#fff',
                       border: '1px solid rgba(0,0,0,0.08)',
                       boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
-                      minWidth: 148,
+                      minWidth: 178,
                     }}
                   >
                     <button
@@ -430,11 +434,11 @@ function PostCard({
                     <button
                       onClick={() => { setPostMenuOpen(false); handleMoverPost(); }}
                       disabled={moviendoPost}
-                      className="w-full flex items-center gap-2.5 px-4 py-2.5 text-[13px] font-semibold text-foreground hover:bg-secondary transition-colors cursor-pointer border-t border-border/50 disabled:opacity-50"
+                      className="w-full flex items-center gap-2.5 px-4 py-2.5 text-[13px] font-semibold text-foreground hover:bg-secondary transition-colors cursor-pointer border-t border-border/50 disabled:opacity-50 whitespace-nowrap"
                     >
                       {post.scope === 'PUBLIC'
-                        ? <><Lock className="w-3.5 h-3.5" /> Mover a Mi club</>
-                        : <><Globe className="w-3.5 h-3.5" /> Mover a Público</>}
+                        ? <><Lock className="w-3.5 h-3.5 shrink-0" /> Mover a Mi club</>
+                        : <><Globe className="w-3.5 h-3.5 shrink-0" /> Mover a Público</>}
                     </button>
                     <button
                       onClick={() => { setPostMenuOpen(false); setConfirmDel(true); }}
@@ -554,7 +558,7 @@ function PostCard({
 
         {/* Contadores clicables */}
         {(likeCount > 0 || post.comments.length > 0) && (
-          <div className="relative flex items-center gap-3 px-4 pb-2 md:hidden">
+          <div className="relative flex items-center gap-3 px-4 pb-2">
             {likeCount > 0 && (
               <button
                 ref={likesButtonRef}
@@ -643,11 +647,6 @@ function PostCard({
                 style={{ color: liked ? '#EF476F' : '#8E87A8' }} />
             </motion.div>
             <span className="text-[13px] md:text-[12px] font-semibold" style={{ color: liked ? '#EF476F' : '#8E87A8' }}>Me gusta</span>
-            {/* En escritorio el numero acompaña a la palabra: la fila de
-                contadores de arriba no se muestra ahi */}
-            {likeCount > 0 && (
-              <span className="hidden md:inline text-[12px] font-semibold" style={{ color: liked ? '#EF476F' : '#8E87A8' }}>{likeCount}</span>
-            )}
           </motion.button>
 
           <div className="w-px h-7 bg-border/60 md:hidden" />
@@ -1303,44 +1302,6 @@ export default function DashboardPage() {
     <div className="min-h-full bg-background">
       <ModuleReveal>
 
-      {/* ── Banner trial ─────────────────────────────────────────────────── */}
-      <AnimatePresence>
-        {trial !== null && role === 'ADMIN' && (
-          <motion.div
-            className="hidden sm:block"
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
-          >
-            <div
-              className="mx-4 mt-3 rounded-2xl px-4 py-3"
-              style={{
-                background: trial.daysLeft <= 3 ? 'rgba(239,71,111,0.08)' : 'rgba(255,183,3,0.09)',
-                border: `1px solid ${trial.daysLeft <= 3 ? 'rgba(239,71,111,0.20)' : 'rgba(255,183,3,0.25)'}`,
-              }}
-            >
-              <div className="flex flex-col items-center justify-center gap-2 lg:flex-row lg:gap-4">
-                <div className="flex items-center justify-center gap-2">
-                  <span className="text-[16px] leading-none">⏳</span>
-                  <p className="text-[12px] font-semibold" style={{ color: trial.daysLeft <= 3 ? '#EF476F' : '#B88A00' }}>
-                    {trial.daysLeft === 0
-                      ? 'Tu período de prueba vence hoy'
-                      : `Período de prueba · ${trial.daysLeft} día${trial.daysLeft !== 1 ? 's' : ''} restante${trial.daysLeft !== 1 ? 's' : ''}`}
-                  </p>
-                </div>
-                <Link
-                  href="/dashboard/ajustes?tab=suscripcion"
-                  className="block w-fit px-4 py-1.5 rounded-lg text-[12px] font-semibold text-white transition-opacity hover:opacity-90"
-                  style={{ background: trial.daysLeft <= 3 ? '#EF476F' : '#B88A00' }}
-                >
-                  {trial.daysLeft <= 3 ? 'Activar plan ahora y no perder el acceso' : 'Activar plan ahora'}
-                </Link>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       <InicioHeaderMovil
         clubName={me?.user?.club?.name ?? null}
@@ -1350,15 +1311,19 @@ export default function DashboardPage() {
         verified={me?.user?.club?.verified}
       />
 
-      {/* ── Móvil: prueba y fichas ──────────────────────────────────────────
+      {/* ── Prueba y fichas ─────────────────────────────────────────────────
           La tarjeta de prueba se encogio a proposito: la version de escritorio
           ocupa un bloque entero con un boton grande, y en un celular eso empuja
           el contenido real fuera de la pantalla. Aqui informa igual, con la
           fecha exacta de fin en vez de solo los dias, sin gritar.
 
           No se monta sobre el degradado: el encabezado va fijo, asi que al
-          hacer scroll la tarjeta terminaria metiendose debajo de el. */}
-      <div className="sm:hidden px-4 pt-3 space-y-3">
+          hacer scroll la tarjeta terminaria metiendose debajo de el.
+
+          En escritorio reemplaza al aviso ancho de color ambar que habia antes:
+          la misma informacion, con la fecha exacta de fin, sin ocupar una franja
+          entera de la pantalla. */}
+      <div className="px-4 sm:px-6 pt-3 sm:pt-4 space-y-3">
         {trial !== null && role === 'ADMIN' && (
           <div
             className="rounded-2xl px-3.5 py-3 flex items-center gap-3 bg-white"
@@ -1530,19 +1495,10 @@ export default function DashboardPage() {
       </motion.div>
       </div>
 
-      {/* ── Slideshow publicitario — ancho completo ─────────────────────────── */}
-      <div className="w-full px-6 pt-4">
-        <Slideshow
-          slides={ADS.map(ad => ({ img: ad.image, label: ad.label, title: ad.title, description: ad.description, url: ad.url }))}
-        />
-      </div>
-
-      {/* ── Contenido principal — desktop: 50% izquierdo, 50% derecho reservado ── */}
-      <div className="w-full px-6 py-4">
       {/* Eventos y cumpleaños (escritorio) — en una fila, sobre el feed.
           Antes vivian apilados en una columna derecha que se comia la mitad
           del ancho, dejando las publicaciones en media pantalla. */}
-      <div className="hidden sm:grid sm:grid-cols-2 gap-4 mb-4">
+      <div className="hidden sm:grid sm:grid-cols-2 gap-4 px-6 pt-3">
 
         {/* Widget — Próximos eventos */}
         <div className="rounded-2xl bg-white border border-border overflow-hidden"
@@ -1682,6 +1638,16 @@ export default function DashboardPage() {
         </div>
 
       </div>
+
+      {/* ── Slideshow publicitario — ancho completo ─────────────────────────── */}
+      <div className="w-full px-6 pt-4">
+        <Slideshow
+          slides={ADS.map(ad => ({ img: ad.image, label: ad.label, title: ad.title, description: ad.description, url: ad.url }))}
+        />
+      </div>
+
+      {/* ── Contenido principal — desktop: 50% izquierdo, 50% derecho reservado ── */}
+      <div className="w-full px-6 py-4">
       <div className="w-full">
       <motion.div
         variants={feedVariants}

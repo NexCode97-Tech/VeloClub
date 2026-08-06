@@ -143,6 +143,13 @@ router.patch('/:id', requireAuth, async (req, res) => {
   });
   if (!post) return res.status(404).json({ error: 'Publicación no encontrada' });
 
+  // Una publicacion le pertenece a quien la hizo: ni un administrador puede
+  // editar la de otro. Se valida aqui y no solo escondiendo el menu, porque
+  // esconder un boton no impide llamar al endpoint.
+  if (!post.authorClerkId || post.authorClerkId !== req.auth?.clerkId) {
+    return res.status(403).json({ error: 'Solo el autor puede editar su publicación' });
+  }
+
   const updated = await prisma.post.update({
     where: { id: post.id },
     data: {
@@ -162,6 +169,11 @@ router.delete('/:id', requireAuth, async (req, res) => {
 
   const post = await prisma.post.findFirst({ where: { id: String(req.params.id), clubId: req.user.clubId ?? '' } });
   if (!post) return res.status(404).json({ error: 'Publicación no encontrada' });
+
+  // Igual que al editar: solo el autor. Ver la nota en PATCH /posts/:id.
+  if (!post.authorClerkId || post.authorClerkId !== req.auth?.clerkId) {
+    return res.status(403).json({ error: 'Solo el autor puede eliminar su publicación' });
+  }
 
   if (post.imagePublicId) {
     await cloudinary.uploader.destroy(post.imagePublicId, { resource_type: 'image' }).catch(() => {});

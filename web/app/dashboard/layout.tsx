@@ -325,6 +325,24 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     return () => { stale = true; };
   }, [isLoaded, isSignedIn, userId, sessionId, meRefresh]);
 
+  // El panel ocupa exactamente el alto de la ventana (h-dvh) y hace scroll por
+  // dentro, en <main>. Aun asi aparecia una segunda barra, la de la pagina
+  // completa, pegada a la del contenido. Se bloquea el scroll del documento
+  // mientras el panel esta montado: la unica barra que debe existir aqui es la
+  // de adentro. Se restaura al salir, porque la landing y el inicio de sesion
+  // si necesitan desplazarse.
+  useEffect(() => {
+    const html = document.documentElement;
+    const previoHtml = html.style.overflow;
+    const previoBody = document.body.style.overflow;
+    html.style.overflow = 'hidden';
+    document.body.style.overflow = 'hidden';
+    return () => {
+      html.style.overflow = previoHtml;
+      document.body.style.overflow = previoBody;
+    };
+  }, []);
+
   if (checking) return <LoadingScreen retrying={retrying} />;
 
   async function handleAcceptTerms() {

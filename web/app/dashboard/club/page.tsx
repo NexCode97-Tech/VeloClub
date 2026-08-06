@@ -669,6 +669,7 @@ export default function ClubProfilePage() {
                         post={post}
                         currentUserId={currentUserId}
                         canDelete={isAdmin}
+                        compacto
                         onLike={handleLike}
                         onComment={handleComment}
                         onDelete={handleDelete}

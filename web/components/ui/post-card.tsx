@@ -82,9 +82,12 @@ function Avatar({ src, name, size = 36, role }: {
 // ── PostCard ──────────────────────────────────────────────────────────────────
 
 export function PostCard({
-  post, currentUserId, canDelete, clubIdPropio, onLike, onDelete, onComment, onDeleteComment, onEditComment, onFetchLikes, onUpdatePost,
+  post, currentUserId, canDelete, clubIdPropio, compacto = false, onLike, onDelete, onComment, onDeleteComment, onEditComment, onFetchLikes, onUpdatePost,
 }: {
   post: Post; currentUserId: string; canDelete: boolean;
+  /** La tarjeta vive en una columna angosta (Mi club, Mi perfil): se arma
+   *  siempre con el diseño de movil, sin partirse en dos columnas. */
+  compacto?: boolean;
   /** Club de quien mira. Se omite en los feeds que solo traen publicaciones
    *  del propio club (Mi club y Mi perfil); en el feed publico de Inicio hay
    *  publicaciones de otros clubes y ahi si hace falta. */
@@ -225,6 +228,11 @@ export function PostCard({
   // Solo foto y video parten la tarjeta en dos: un adjunto es una fila de
   // enlace y no llena una columna. Sin media, la tarjeta va a lo ancho.
   const parteEnDos = !!post.imageUrl && !isFile;
+  // En Mi club y Mi perfil la publicacion vive en media pantalla, con la
+  // columna de contacto al lado. Ese ancho no da para partir la tarjeta en
+  // dos: la imagen y los comentarios quedarian en dos franjas ilegibles. Ahi
+  // se arma siempre como en movil, aunque se este en escritorio.
+  const dosColumnas = parteEnDos && !compacto;
 
   // En escritorio los comentarios se muestran abiertos: son los que llenan la
   // columna derecha. Se detecta tras montar y no durante el render, porque el
@@ -237,7 +245,9 @@ export function PostCard({
     mq.addEventListener('change', aplicar);
     return () => mq.removeEventListener('change', aplicar);
   }, []);
-  const comentariosVisibles = showComments || esEscritorio;
+  // Con el diseño compacto los comentarios arrancan cerrados, como en movil:
+  // no hay columna derecha que llenar.
+  const comentariosVisibles = showComments || (esEscritorio && !compacto);
 
   return (
     <motion.div
@@ -247,7 +257,7 @@ export function PostCard({
       transition={{ type: 'spring' as const, stiffness: 300, damping: 26 }}
       layout
       className={`bg-white border border-border rounded-2xl overflow-hidden${
-        parteEnDos ? ' md:grid md:grid-cols-[22rem_1fr] md:grid-rows-[auto_1fr]' : ''}`}
+        dosColumnas ? ' md:grid md:grid-cols-[22rem_1fr] md:grid-rows-[auto_1fr]' : ''}`}
       style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.08), inset 0 0 0 1px rgba(0,0,0,0.06)' }}
     >
       {/* En escritorio la tarjeta es una rejilla de 2x2: la imagen ocupa la
@@ -257,7 +267,7 @@ export function PostCard({
           el texto y los botones quedaban separados por huecos enormes. */}
       {/* Bloque de arriba: autor y texto. Va en una celda propia para que
           no se estire a lo alto igualando la imagen. */}
-      <div className="md:col-start-2 md:row-start-1 md:min-w-0">
+      <div className={dosColumnas ? 'md:col-start-2 md:row-start-1 md:min-w-0' : ''}>
         {/* Autor */}
         <div className="flex items-center justify-between px-4 pt-4 pb-2">
           <div className="flex items-center gap-3 min-w-0">
@@ -386,7 +396,7 @@ export function PostCard({
         </div>
 
         {/* Contenido */}
-        <div className="md:border-y md:border-border/60">
+        <div className={dosColumnas ? 'md:border-y md:border-border/60' : ''}>
         {editandoPost ? (
           <div className="px-4 py-3">
             <textarea
@@ -428,7 +438,7 @@ export function PostCard({
           En escritorio ocupa la columna izquierda de altura completa. */}
       {post.imageUrl && (
         <div className={`overflow-hidden${
-          parteEnDos
+          dosColumnas
             ? ' mb-3 md:mb-0 md:col-start-1 md:row-start-1 md:row-span-2 md:self-start'
             : ' mb-3'}`}>
           {isVideo ? (
@@ -452,11 +462,11 @@ export function PostCard({
 
       {/* Bloque de abajo: contadores, acciones y comentarios. Ocupa el alto
           restante para que los botones queden anclados al fondo. */}
-      <div className="md:col-start-2 md:row-start-2 md:min-w-0 md:flex md:flex-col">
+      <div className={dosColumnas ? 'md:col-start-2 md:row-start-2 md:min-w-0 md:flex md:flex-col' : ''}>
 
         {/* Contadores clicables */}
         {(likeCount > 0 || post.comments.length > 0) && (
-          <div className="relative flex items-center gap-3 px-4 pb-1.5 md:order-2 md:mt-auto">
+          <div className={`relative flex items-center gap-3 px-4 pb-1.5${dosColumnas ? ' md:order-2 md:mt-auto' : ''}`}>
             {likeCount > 0 && (
               <button
                 ref={likesButtonRef}
@@ -535,11 +545,11 @@ export function PostCard({
         )}
 
         {/* Acciones */}
-        <div className="flex items-center border-t border-border/60 md:order-3 md:gap-6 md:px-4 md:py-1">
+        <div className={`flex items-center border-t border-border/60${dosColumnas ? ' md:order-3 md:gap-6 md:px-4 md:py-1' : ''}`}>
           {/* Me gusta */}
           <motion.button onClick={handleLike} whileTap={{ scale: 0.95 }}
             transition={{ type: 'spring' as const, stiffness: 500, damping: 15 }}
-            className="flex-1 flex items-center justify-center gap-2 py-2.5 transition-colors hover:bg-secondary/60 md:flex-none md:justify-start md:gap-1.5 md:hover:bg-transparent">
+            className={`flex-1 flex items-center justify-center gap-2 py-2.5 transition-colors hover:bg-secondary/60${dosColumnas ? ' md:flex-none md:justify-start md:gap-1.5 md:hover:bg-transparent' : ''}`}>
             <motion.div animate={likeAnim ? { scale: [1, 1.4, 1] } : { scale: 1 }} transition={{ duration: 0.35, ease: 'easeInOut' }}>
               <Heart className="w-[17px] h-[17px] md:w-4 md:h-4 transition-colors" fill={liked ? '#EF476F' : 'none'}
                 style={{ color: liked ? '#EF476F' : '#8E87A8' }} />
@@ -547,23 +557,23 @@ export function PostCard({
             <span className="text-[13px] md:text-[12px] font-semibold" style={{ color: liked ? '#EF476F' : '#8E87A8' }}>Me gusta</span>
           </motion.button>
 
-          <div className="w-px h-7 bg-border/60 md:hidden" />
+          <div className={`w-px h-7 bg-border/60${dosColumnas ? ' md:hidden' : ''}`} />
 
           {/* Comentar */}
           <motion.button
             onClick={() => { setShowComments(v => !v); setTimeout(() => commentInputRef.current?.focus(), 150); }}
             whileTap={{ scale: 0.95 }}
-            className="flex-1 flex items-center justify-center gap-2 py-2.5 transition-colors hover:bg-secondary/60 md:flex-none md:justify-start md:hover:bg-transparent">
+            className={`flex-1 flex items-center justify-center gap-2 py-2.5 transition-colors hover:bg-secondary/60${dosColumnas ? ' md:flex-none md:justify-start md:hover:bg-transparent' : ''}`}>
             <MessageCircle className="w-[17px] h-[17px] md:w-4 md:h-4" style={{ color: showComments ? '#4361EE' : '#8E87A8' }} />
             <span className="text-[13px] md:text-[12px] font-semibold" style={{ color: showComments ? '#4361EE' : '#8E87A8' }}>Comentar</span>
           </motion.button>
 
-          <div className="w-px h-7 bg-border/60 md:hidden" />
+          <div className={`w-px h-7 bg-border/60${dosColumnas ? ' md:hidden' : ''}`} />
 
           {/* Compartir */}
           <motion.button
             whileTap={{ scale: 0.95 }}
-            className="flex-1 flex items-center justify-center gap-2 py-2.5 transition-colors hover:bg-secondary/60 md:flex-none md:justify-start md:hover:bg-transparent"
+            className={`flex-1 flex items-center justify-center gap-2 py-2.5 transition-colors hover:bg-secondary/60${dosColumnas ? ' md:flex-none md:justify-start md:hover:bg-transparent' : ''}`}
             onClick={() => { if (navigator.share) navigator.share({ text: post.content }); }}>
             <ChevronRight className="w-[17px] h-[17px] md:w-4 md:h-4 rotate-[-45deg]" style={{ color: '#8E87A8' }} />
             <span className="text-[13px] md:text-[12px] font-semibold text-muted-foreground">Compartir</span>
@@ -584,12 +594,12 @@ export function PostCard({
                  flex-1 + min-h-0: la lista es lo unico elastico de la columna,
                  se queda con el alto que sobra despues de cabecera, descripcion,
                  contador, acciones y campo de escribir. */
-              className="md:order-1 md:flex-1 md:min-h-0 md:flex md:flex-col"
+              className={dosColumnas ? 'md:order-1 md:flex-1 md:min-h-0 md:flex md:flex-col' : ''}
             >
               {/* En escritorio los comentarios se desplazan dentro de su columna:
                   sin tope, una publicacion con veinte comentarios estiraria la
                   tarjeta y dejaria la imagen flotando con un vacio al lado. */}
-              <div className="px-4 pb-2 border-t border-border/40 pt-3 md:border-t-0 md:bg-transparent md:flex-1 md:min-h-0 md:overflow-y-auto"
+              <div className={`px-4 pb-2 border-t border-border/40 pt-3${dosColumnas ? ' md:border-t-0 md:bg-transparent md:flex-1 md:min-h-0 md:overflow-y-auto' : ''}`}
                 style={{ background: 'rgba(124,58,237,0.02)' }}>
 
                 {/* Lista de comentarios.
@@ -599,7 +609,7 @@ export function PostCard({
                     imagenes bajas. En movil la tarjeta no tiene alto limite, asi
                     que si hace falta un tope para que no crezca sin fin. */}
                 {post.comments.length > 0 && (
-                  <div className="space-y-2.5 max-h-[300px] overflow-y-auto pr-1 md:max-h-none md:overflow-visible md:pr-0"
+                  <div className={`space-y-2.5 max-h-[300px] overflow-y-auto pr-1${dosColumnas ? ' md:max-h-none md:overflow-visible md:pr-0' : ''}`}
                     style={{ WebkitOverflowScrolling: 'touch', overscrollBehaviorY: 'contain' }}>
                     {post.comments.map(c => (
                       <div key={c.id} className="flex items-start gap-2.5 md:gap-2">
@@ -740,9 +750,9 @@ export function PostCard({
               exit={{ height: 0, opacity: 0 }}
               transition={{ duration: 0.25, ease: [0.23, 1, 0.32, 1] }}
               style={{ overflow: 'hidden' }}
-              className="md:order-4"
+              className={dosColumnas ? 'md:order-4' : ''}
             >
-              <div className="px-4 pb-4 pt-1 md:pt-2.5 md:pb-2.5 md:border-t md:border-border/60"
+              <div className={`px-4 pb-4 pt-1${dosColumnas ? ' md:pt-2.5 md:pb-2.5 md:border-t md:border-border/60' : ''}`}
                 style={{ background: 'rgba(124,58,237,0.02)' }}>
                 <div className="flex items-center gap-2">
                   <div className="flex-1 flex items-center gap-2 rounded-full px-3 py-2"

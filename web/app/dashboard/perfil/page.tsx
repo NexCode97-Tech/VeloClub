@@ -660,6 +660,7 @@ export default function PerfilPage() {
                     post={post}
                     currentUserId={currentUserId}
                     canDelete={canDelete}
+                    compacto
                     onLike={handleLike}
                     onComment={handleComment}
                     onDelete={handleDelete}

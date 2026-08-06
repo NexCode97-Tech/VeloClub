@@ -150,6 +150,17 @@ export function Slideshow({ slides, autoPlayMs = 5000 }: SlideshowProps) {
 
   const mobileSlide = slides[mobileIndex];
 
+  // Escritorio: tres anuncios a la vez. El paso lo lleva `page`, que avanza de
+  // uno en uno, y no `startIndex`, que salta de dos en dos para las parejas de
+  // tablet; con ese salto el trio cambiaba de forma irregular.
+  const gruposEscritorio: SlideshowSlide[][] = [];
+  for (let i = 0; i < slides.length; i += 3) {
+    gruposEscritorio.push([0, 1, 2].map(d => slides[(i + d) % slides.length]));
+  }
+  const grupoActivo = gruposEscritorio.length > 0
+    ? ((page % gruposEscritorio.length) + gruposEscritorio.length) % gruposEscritorio.length
+    : 0;
+
   return (
     <>
       {/* ── Móvil: carrusel con swipe ────────────────────────────── */}
@@ -280,34 +291,31 @@ export function Slideshow({ slides, autoPlayMs = 5000 }: SlideshowProps) {
 
       {/* ── Escritorio: cross-fade suave — todas las capas montadas ─ */}
       <div className="hidden lg:block w-full rounded-2xl" style={{ position: 'relative' }}>
-        <div className="grid grid-cols-2 gap-3" style={{ visibility: 'hidden', pointerEvents: 'none' }} aria-hidden>
-          <div className="aspect-[4/3]" style={{ maxHeight: ALTO_MAX }} />
-          <div className="aspect-[4/3]" style={{ maxHeight: ALTO_MAX }} />
+        <div className="grid grid-cols-3 gap-3" style={{ visibility: 'hidden', pointerEvents: 'none' }} aria-hidden>
+          <div style={{ height: ALTO_MAX }} />
+          <div style={{ height: ALTO_MAX }} />
+          <div style={{ height: ALTO_MAX }} />
         </div>
-        {slides.map((_, idx) => {
-          if (idx % 2 !== 0) return null;
-          // Normalizar al par más cercano — cubre slides.length impar
-          const normalizedStart = startIndex % slides.length;
-          const activePairStart = Math.floor(normalizedStart / 2) * 2;
-          const isActive = activePairStart === idx;
-          const s0 = slides[idx];
-          const s1 = slides[(idx + 1) % slides.length];
+        {/* Grupos de tres. Se arman con el resto para que un numero de
+            anuncios que no sea multiplo de tres no deje huecos: el ultimo
+            grupo se completa dando la vuelta al principio. */}
+        {gruposEscritorio.map((grupo, idxGrupo) => {
+          const isActive = idxGrupo === grupoActivo;
           return (
             <div
-              key={idx}
-              className="absolute inset-0 grid grid-cols-2 gap-3"
+              key={idxGrupo}
+              className="absolute inset-0 grid grid-cols-3 gap-3"
               style={{
                 opacity: isActive ? 1 : 0,
                 transition: 'opacity 0.55s cubic-bezier(0.23,1,0.32,1)',
                 pointerEvents: isActive ? 'auto' : 'none',
               }}
             >
-              <div className="aspect-[4/3]" style={{ maxHeight: ALTO_MAX, boxShadow: '0 4px 16px rgba(0,0,0,0.13), inset 0 0 0 1px rgba(0,0,0,0.08)', borderRadius: '1rem', overflow: 'hidden' }}>
-                <SlideCard slide={s0} priority={idx === 0} />
-              </div>
-              <div className="aspect-[4/3]" style={{ maxHeight: ALTO_MAX, boxShadow: '0 4px 16px rgba(0,0,0,0.13), inset 0 0 0 1px rgba(0,0,0,0.08)', borderRadius: '1rem', overflow: 'hidden' }}>
-                <SlideCard slide={s1} priority={idx === 0} />
-              </div>
+              {grupo.map((s, i) => (
+                <div key={i} style={{ height: ALTO_MAX, boxShadow: '0 4px 16px rgba(0,0,0,0.13), inset 0 0 0 1px rgba(0,0,0,0.08)', borderRadius: '1rem', overflow: 'hidden' }}>
+                  <SlideCard slide={s} priority={idxGrupo === 0} />
+                </div>
+              ))}
             </div>
           );
         })}

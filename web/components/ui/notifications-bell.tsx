@@ -43,7 +43,11 @@ function timeAgo(iso: string): string {
   return new Date(iso).toLocaleDateString('es-CO', { day: 'numeric', month: 'short' });
 }
 
-export function NotificationsBell() {
+/**
+ * `sobreOscuro` la pinta en blanco y a mayor tamano, para el encabezado con
+ * degradado de Inicio en movil. En el sidebar de escritorio va gris y pequena.
+ */
+export function NotificationsBell({ sobreOscuro = false }: { sobreOscuro?: boolean } = {}) {
   const { getToken } = useAuth();
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -115,11 +119,14 @@ export function NotificationsBell() {
       <button
         ref={btnRef}
         onClick={toggleOpen}
-        className="relative flex items-center justify-center rounded-lg transition-colors hover:bg-secondary"
-        style={{ width: 28, height: 28, color: '#8E87A8' }}
+        className={`relative flex items-center justify-center rounded-lg transition-colors ${sobreOscuro ? '' : 'hover:bg-secondary'}`}
+        style={sobreOscuro
+          ? { width: 36, height: 36, color: '#fff' }
+          : { width: 28, height: 28, color: '#8E87A8' }}
         title="Notificaciones"
+        aria-label="Notificaciones"
       >
-        <Bell className="w-[14px] h-[14px]" />
+        <Bell className={sobreOscuro ? 'w-[17px] h-[17px]' : 'w-[14px] h-[14px]'} />
         {unread > 0 && (
           <span
             className="absolute -top-1 -right-1 min-w-[16px] h-[16px] px-1 rounded-full flex items-center justify-center text-white"

@@ -12,10 +12,10 @@ import LoadingScreen, { LoadingCurtain, CURTAIN_MS, esperarPantallaCarga } from 
 import { BottomCircleMenu } from '@/components/ui/bottom-circle-menu';
 import { SearchModal } from '@/components/ui/search-modal';
 import { NotificationsBell } from '@/components/ui/notifications-bell';
+import { InicioHeaderMovil } from '@/components/ui/inicio-header-movil';
 import TermsGateModal from '@/components/ui/terms-gate-modal';
 import {
   Settings,
-  RefreshCw,
   ChevronLeft,
   ChevronRight,
   Search,
@@ -171,9 +171,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   // Tooltip del sidebar colapsado (etiqueta con el nombre del módulo al hacer hover)
   const [navTip, setNavTip] = useState<{ label: string; top: number; left: number } | null>(null);
   const [searchOpen, setSearchOpen] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
   const [clubLogoUrl, setClubLogoUrl] = useState<string | null>(null);
   const [clubName, setClubName] = useState<string | null>(null);
+  const [clubVerified, setClubVerified] = useState(false);
   const [userName, setUserName] = useState<string | null>(null);
   const [userPicture, setUserPicture] = useState<string | null>(null);
   const [termsAccepted, setTermsAccepted] = useState(true);
@@ -258,11 +258,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         const token = await session?.getToken({ skipCache: true });
         if (stale) return;
 
-        let res: { status: string; user?: { role: string; name?: string; picture?: string | null; club?: { name?: string; logoUrl?: string }; termsAcceptedAt?: string | null } } | null = null;
+        let res: { status: string; user?: { role: string; name?: string; picture?: string | null; club?: { name?: string; logoUrl?: string; verified?: boolean }; termsAcceptedAt?: string | null } } | null = null;
         let attempts = 0;
         while (attempts < 3) {
           try {
-            res = await apiFetch<{ status: string; user?: { role: string; name?: string; picture?: string | null; club?: { name?: string; logoUrl?: string }; termsAcceptedAt?: string | null } }>('/me', { token });
+            res = await apiFetch<{ status: string; user?: { role: string; name?: string; picture?: string | null; club?: { name?: string; logoUrl?: string; verified?: boolean }; termsAcceptedAt?: string | null } }>('/me', { token });
             break;
           } catch (err) {
             const { ApiError } = await import('@/lib/api-client');
@@ -288,6 +288,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         setRole(userRole);
         setClubLogoUrl(res.user?.club?.logoUrl ?? null);
         setClubName(res.user?.club?.name ?? null);
+        setClubVerified(!!res.user?.club?.verified);
         setUserName(res.user?.name ?? null);
         setUserPicture(res.user?.picture ?? null);
         setTermsAccepted(!!res.user?.termsAcceptedAt);
@@ -691,101 +692,79 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       {/* ── Main content ────────────────────────────────────────────────── */}
       <div className="flex-1 flex flex-col overflow-hidden min-w-0">
 
-        {/* ── Barra superior móvil ──────────────────────────────────────────
-            Antes solo existía en Inicio, asi que el buscador y las
-            notificaciones (que viven en el encabezado del sidebar) no existian
-            en celular: el sidebar no se muestra ahi. Ahora la barra acompaña
-            todos los modulos, porque una notificacion de pago vencido no sirve
-            de nada si solo aparece cuando vuelves a Inicio.
+        {/* ── Encabezado móvil ──────────────────────────────────────────────
+            El buscador y las notificaciones vivian solo en el encabezado del
+            sidebar, que no se muestra en celular: no estaban escondidos, no
+            existian. Y el encabezado movil solo aparecia en Inicio.
 
-            En Inicio conserva el saludo y sus accesos; en el resto va compacta,
-            con el logo y el nombre del club para orientar. El menu flotante de
-            abajo no se toca. */}
-        <header className="md:hidden flex items-center justify-between px-4 py-3 shrink-0 bg-background sticky top-0 z-30">
-          {/* Logo del club + saludo */}
-          <div className="flex items-center gap-2.5 min-w-0">
-            {clubLogoUrl ? (
-              <div className="shrink-0" style={{ width: 38, height: 38, borderRadius: '50%', overflow: 'hidden', border: '2px solid rgba(124,58,237,0.18)' }}>
-                <Image
-                  src={clubLogoUrl}
-                  alt={clubName ?? 'Club'}
-                  width={38}
-                  height={38}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-            ) : (
-              <div
-                className="w-9 h-9 rounded-full shrink-0 flex items-center justify-center text-sm font-semibold"
-                style={{ background: 'rgba(124,58,237,0.10)', color: '#7C3AED' }}
-              >
-                {clubName?.charAt(0)?.toUpperCase() ?? 'V'}
-              </div>
-            )}
-            <div className="min-w-0">
-              {enInicio ? (
-                <>
-                  <p className="text-[10px] font-semibold uppercase tracking-widest truncate" style={{ color: '#8E87A8' }}>
-                    Bienvenido
-                  </p>
-                  <p className="text-[13px] font-semibold leading-tight truncate" style={{ color: '#1A1028', fontFamily: 'inherit' }}>
-                    {userName ?? clubName ?? 'VeloClub'}
-                  </p>
-                </>
+            Ahora acompana todos los modulos. El buscador va como campo ancho y
+            no como icono: una lupa redonda mas junto a los botones que ya
+            estaban dejaba cinco circulos iguales apretados.
+
+            Se quitan recargar y perfil para que la fila respire. Recargar es
+            redundante (la PWA ya tiene deslizar para actualizar y el panel se
+            refresca solo por SSE) y Mi perfil es una pestana dentro de Ajustes,
+            asi que se llega por el engrane. El menu flotante no se toca. */}
+        {/* En Inicio el encabezado es el degradado con la identidad del club;
+            en el resto de modulos, la barra compacta. Los dos llevan el
+            buscador como campo ancho y la campana separada. */}
+        {enInicio ? (
+          <InicioHeaderMovil
+            clubName={clubName}
+            clubLogoUrl={clubLogoUrl}
+            userName={userName}
+            verified={clubVerified}
+            onBuscar={() => setSearchOpen(true)}
+          />
+        ) : (
+          <header className="md:hidden flex items-center gap-2 px-4 py-2.5 shrink-0 bg-background sticky top-0 z-30">
+            {/* Logo del club — lleva a Inicio */}
+            <Link href="/dashboard" aria-label="Ir a inicio" className="shrink-0">
+              {clubLogoUrl ? (
+                <div style={{ width: 36, height: 36, borderRadius: '50%', overflow: 'hidden', border: '2px solid rgba(124,58,237,0.18)' }}>
+                  <Image
+                    src={clubLogoUrl}
+                    alt={clubName ?? 'Club'}
+                    width={36}
+                    height={36}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
               ) : (
-                <p className="text-[13px] font-semibold leading-tight truncate" style={{ color: '#1A1028', fontFamily: 'inherit' }}>
-                  {clubName ?? 'VeloClub'}
-                </p>
+                <div
+                  className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-semibold"
+                  style={{ background: 'rgba(124,58,237,0.10)', color: '#7C3AED' }}
+                >
+                  {clubName?.charAt(0)?.toUpperCase() ?? 'V'}
+                </div>
               )}
-            </div>
-          </div>
-          {/* Acciones rápidas */}
-          <div className="flex items-center gap-2 shrink-0">
-            {/* Buscador y notificaciones: en todos los modulos, no solo en Inicio */}
+            </Link>
+
+            {/* Buscador — campo, no icono. Ocupa el espacio libre de la fila */}
             <button
               onClick={() => setSearchOpen(true)}
-              aria-label="Buscar"
-              className="w-9 h-9 flex items-center justify-center rounded-full transition-colors"
-              style={{ color: '#8E87A8', background: '#fff', boxShadow: '0 1px 4px rgba(0,0,0,0.08), inset 0 0 0 1px rgba(0,0,0,0.06)' }}
+              className="flex-1 min-w-0 flex items-center gap-2 h-9 px-3 rounded-full transition-colors text-left"
+              style={{ background: '#fff', boxShadow: '0 1px 4px rgba(0,0,0,0.06), inset 0 0 0 1px rgba(0,0,0,0.06)' }}
             >
-              <Search size={18} strokeWidth={2} />
+              <Search size={16} strokeWidth={2} style={{ color: '#8E87A8' }} className="shrink-0" />
+              <span className="text-[13px] truncate" style={{ color: '#8E87A8' }}>Buscar</span>
             </button>
-            <NotificationsBell />
-            {enInicio && (<>
-            <button
-              onClick={() => {
-                setRefreshing(true);
-                setTimeout(() => { window.location.reload(); }, 300);
-              }}
-              className="w-9 h-9 flex items-center justify-center rounded-full transition-colors"
-              style={{ color: '#8E87A8', background: '#fff', boxShadow: '0 1px 4px rgba(0,0,0,0.08), inset 0 0 0 1px rgba(0,0,0,0.06)' }}
-            >
-              <RefreshCw
-                size={18}
-                strokeWidth={2}
-                style={{
-                  transition: 'transform 0.5s ease',
-                  transform: refreshing ? 'rotate(360deg)' : 'rotate(0deg)',
-                }}
-              />
-            </button>
-            <Link
-              href="/dashboard/perfil"
-              className="w-9 h-9 flex items-center justify-center rounded-full transition-colors"
-              style={{ color: '#8E87A8', background: '#fff', boxShadow: '0 1px 4px rgba(0,0,0,0.08), inset 0 0 0 1px rgba(0,0,0,0.06)' }}
-            >
-              <IconPerfil className="w-[20px] h-[20px]" />
-            </Link>
+
+            {/* Notificaciones — separada del buscador, como en el diseño aprobado */}
+            <div className="shrink-0">
+              <NotificationsBell />
+            </div>
+
             <Link
               href="/dashboard/ajustes"
-              className="w-9 h-9 flex items-center justify-center rounded-full transition-colors"
+              aria-label="Ajustes"
+              className="w-9 h-9 flex items-center justify-center rounded-full transition-colors shrink-0"
               style={{ color: '#8E87A8', background: '#fff', boxShadow: '0 1px 4px rgba(0,0,0,0.08), inset 0 0 0 1px rgba(0,0,0,0.06)' }}
             >
-              <Settings size={20} strokeWidth={1.8} />
+              <Settings size={19} strokeWidth={1.8} />
             </Link>
-            </>)}
-          </div>
-        </header>
+          </header>
+        )}
 
         <main className="flex-1 overflow-y-auto pb-28 md:pb-0" style={{ WebkitOverflowScrolling: 'touch', overscrollBehaviorY: 'contain' }}>
           {children}

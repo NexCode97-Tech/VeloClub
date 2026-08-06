@@ -115,6 +115,50 @@ router.get('/trusted', async (_req, res) => {
 });
 
 // GET /clubs/settings
+// GET /clubs/resumen-inicio?fecha=YYYY-MM-DD
+// Los tres numeros de las fichas de Inicio en una sola consulta. Pedirlos por
+// separado obligaba a traer la lista completa de pagos del mes solo para sacar
+// un porcentaje; aqui son conteos y no viaja ningun dato personal.
+router.get('/resumen-inicio', requireAuth, async (req, res) => {
+  if (!req.user) return res.status(401).json({ error: 'No autenticado' });
+  const clubId = req.user.clubId ?? '';
+  if (!clubId) return res.status(400).json({ error: 'Tu cuenta no está vinculada a un club' });
+
+  // El resumen del club es del cuerpo tecnico; un deportista ve lo suyo en su panel
+  if (req.user.role !== 'ADMIN' && req.user.role !== 'COACH') {
+    return res.status(403).json({ error: 'Sin permisos' });
+  }
+
+  // La fecha la manda el cliente porque el "hoy" que importa es el del usuario
+  // (Colombia va a UTC-5, asi que el del servidor se adelanta cinco horas)
+  const fechaStr = String(req.query.fecha ?? '').match(/^\d{4}-\d{2}-\d{2}$/)
+    ? String(req.query.fecha)
+    : new Date().toISOString().slice(0, 10);
+  const hoy = new Date(fechaStr + 'T00:00:00.000Z');
+
+  const ahora = new Date();
+  const mes  = ahora.getMonth() + 1;
+  const anio = ahora.getFullYear();
+
+  const [deportistas, asistieronHoy, pagosDelMes, pagosPagados] = await Promise.all([
+    prisma.member.count({ where: { clubId, role: 'STUDENT', active: true } }),
+    // Llegar tarde cuenta como asistir, igual que en el reporte descargable
+    prisma.attendance.count({ where: { clubId, date: hoy, status: { in: ['PRESENT', 'LATE'] } } }),
+    prisma.payment.count({ where: { clubId, month: mes, year: anio } }),
+    prisma.payment.count({ where: { clubId, month: mes, year: anio, status: 'PAID' } }),
+  ]);
+
+  res.json({
+    deportistas,
+    asistenciaHoy: asistieronHoy,
+    // null y no 0 cuando el mes todavia no tiene cobros generados: un 0% diria
+    // que nadie ha pagado, cuando lo cierto es que aun no hay nada que pagar
+    pagosAlDia: req.user.role === 'ADMIN' && pagosDelMes > 0
+      ? Math.round((pagosPagados / pagosDelMes) * 100)
+      : null,
+  });
+});
+
 router.get('/settings', requireAuth, async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'No autenticado' });
   const clubId = req.user.clubId ?? '';

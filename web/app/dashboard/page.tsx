@@ -15,8 +15,28 @@ import {
   Paperclip, Video, FileText,
   MoreHorizontal, Pencil, Trash2,
   ChevronRight, CalendarDays, Trophy, Users, Gift,
+  Clock, CheckSquare, Wallet,
 } from 'lucide-react';
 import { Slideshow } from '@/components/ui/slideshow';
+
+// Ficha de resumen de Inicio en movil. Un numero grande y su contexto: lo
+// suficiente para saber si hay que entrar al modulo o no.
+function FichaInicio({ icono, etiqueta, valor, sufijo }: {
+  icono: React.ReactNode; etiqueta: string; valor: string; sufijo?: string;
+}) {
+  return (
+    <div className="flex-1 min-w-0 bg-white rounded-xl px-3 py-2.5" style={{ boxShadow: '0 1px 6px rgba(0,0,0,0.05)' }}>
+      <div className="flex items-center gap-1.5 mb-0.5">
+        {icono}
+        <span className="text-[10px] text-muted-foreground truncate">{etiqueta}</span>
+      </div>
+      <p className="text-[17px] font-semibold text-foreground leading-tight" style={{ fontFamily: 'inherit' }}>
+        {valor}
+        {sufijo && <span className="text-[11px] font-normal text-muted-foreground">{sufijo}</span>}
+      </p>
+    </div>
+  );
+}
 import { MemberAvatar } from '@/components/ui/member-avatar';
 import ModuleLoader, { useCargaMinima } from '@/components/ui/module-loader';
 import ModuleReveal from '@/components/ui/module-reveal';
@@ -774,6 +794,18 @@ function PostComposer({
           rows={open ? 3 : 1}
           className="flex-1 text-[14px] text-foreground placeholder:text-muted-foreground/50 resize-none outline-none bg-transparent leading-relaxed"
         />
+        {/* Atajo de foto mientras el compositor esta plegado: sin el, la fila
+            compacta de movil no ofreceria ninguna accion */}
+        {!open && !content && !media && (
+          <button
+            type="button"
+            aria-label="Agregar foto"
+            onClick={() => { if (fileRef.current) { fileRef.current.accept = 'image/*'; fileRef.current.click(); } }}
+            className="sm:hidden shrink-0 mt-1.5"
+          >
+            <ImageIcon className="w-[18px] h-[18px]" style={{ color: '#7C3AED' }} />
+          </button>
+        )}
       </div>
 
       {/* Preview de media */}
@@ -818,7 +850,7 @@ function PostComposer({
         onChange={e => { const f = e.target.files?.[0]; if (f) handleFile(f); e.target.value = ''; }} />
 
       {/* Barra inferior: adjuntos + publicar */}
-      <div className="flex items-center justify-between px-4 pb-4 border-t border-border/60 pt-3 gap-3">
+      <div className={`${open || content || media ? 'flex' : 'hidden sm:flex'} items-center justify-between px-4 pb-4 border-t border-border/60 pt-3 gap-3`}>
         <div className="flex items-center gap-1 min-w-0">
           {[
             { icon: ImageIcon, label: 'Foto',  accept: 'image/*' },
@@ -863,6 +895,8 @@ export default function DashboardPage() {
 
   const [me, setMe]         = useState<MeResponse | null>(null);
   const [trial, setTrial]   = useState<{ daysLeft: number; endsAt: string } | null>(null);
+  // Fichas de Inicio en movil: tres numeros que antes obligaban a entrar a cada modulo
+  const [resumen, setResumen] = useState<{ deportistas: number; asistenciaHoy: number; pagosAlDia: number | null } | null>(null);
   const [loading, setLoading] = useState(true);
   // Sostiene el indicador un minimo de tiempo para que no parpadee
   const mostrarCarga = useCargaMinima(loading);
@@ -933,13 +967,16 @@ export default function DashboardPage() {
         setAuthToken(token ?? null);
 
         const [
-          meRes, notifRes, postsRes, eventsRes, birdaysRes,
+          meRes, notifRes, postsRes, eventsRes, birdaysRes, resumenRes,
         ] = await Promise.allSettled([
           apiFetch<MeResponse>('/me', { token }),
           apiFetch<{ notifications: typeof notifs }>('/payments/notifications', { token }),
           apiFetch<{ posts: Post[] }>('/posts?scope=public', { token }),
           apiFetch<{ events: typeof upcomingEvents }>('/events/upcoming', { token }),
           apiFetch<{ birthdays: typeof birthdays }>('/members/birthdays', { token }),
+          apiFetch<{ deportistas: number; asistenciaHoy: number; pagosAlDia: number | null }>(
+            `/clubs/resumen-inicio?fecha=${new Date().toLocaleDateString('en-CA')}`, { token },
+          ),
         ]);
 
         if (meRes.status === 'rejected') return;
@@ -967,6 +1004,9 @@ export default function DashboardPage() {
         // Widgets
         if (eventsRes.status === 'fulfilled') setUpcomingEvents(eventsRes.value.events);
         if (birdaysRes.status === 'fulfilled') setBirthdays(birdaysRes.value.birthdays);
+        // Falla en silencio a proposito: un deportista no tiene permiso y las
+        // fichas simplemente no se muestran, sin romper el resto de Inicio
+        if (resumenRes.status === 'fulfilled') setResumen(resumenRes.value);
         setWidgetsLoading(false);
 
       } catch { /* silencioso */ } finally {
@@ -1091,7 +1131,7 @@ export default function DashboardPage() {
             transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
           >
             <div
-              className="mx-4 mt-3 rounded-2xl px-4 py-3"
+              className="hidden sm:block mx-4 mt-3 rounded-2xl px-4 py-3"
               style={{
                 background: trial.daysLeft <= 3 ? 'rgba(239,71,111,0.08)' : 'rgba(255,183,3,0.09)',
                 border: `1px solid ${trial.daysLeft <= 3 ? 'rgba(239,71,111,0.20)' : 'rgba(255,183,3,0.25)'}`,
@@ -1119,6 +1159,180 @@ export default function DashboardPage() {
         )}
       </AnimatePresence>
 
+      {/* ── Móvil: prueba y fichas, montadas sobre el degradado del encabezado ──
+          La tarjeta de prueba se encogio a proposito: la version de escritorio
+          ocupa un bloque entero con un boton grande, y en un celular eso empuja
+          el contenido real fuera de la pantalla. Aqui informa igual, con la
+          fecha exacta de fin en vez de solo los dias, sin gritar. */}
+      <div className="sm:hidden px-4 -mt-5 relative z-10 space-y-3">
+        {trial !== null && role === 'ADMIN' && (
+          <div
+            className="rounded-2xl px-3.5 py-3 flex items-center gap-3 bg-white"
+            style={{ boxShadow: '0 4px 18px rgba(80,50,160,0.12)' }}
+          >
+            <div
+              className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+              style={{ background: trial.daysLeft <= 3 ? 'rgba(239,71,111,0.10)' : 'rgba(255,183,3,0.14)' }}
+            >
+              <Clock className="w-[18px] h-[18px]" style={{ color: trial.daysLeft <= 3 ? '#EF476F' : '#854F0B' }} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-[13px] font-semibold text-foreground">
+                {trial.daysLeft === 0
+                  ? 'Tu prueba vence hoy'
+                  : `${trial.daysLeft} día${trial.daysLeft !== 1 ? 's' : ''} de prueba`}
+              </p>
+              <p className="text-[11px] text-muted-foreground truncate">
+                Termina el {new Date(trial.endsAt).toLocaleDateString('es-CO', { day: 'numeric', month: 'long' })}
+              </p>
+            </div>
+            <Link
+              href="/dashboard/ajustes?tab=suscripcion"
+              className="shrink-0 px-3 py-2 rounded-lg text-[11px] font-semibold text-white"
+              style={{ background: trial.daysLeft <= 3 ? '#EF476F' : 'linear-gradient(135deg,#7C3AED,#4361EE)' }}
+            >
+              Activar
+            </Link>
+          </div>
+        )}
+
+        {/* Fichas — el dato ya existia, pero obligaba a entrar a cada módulo */}
+        {resumen && (
+          <div className="flex gap-2">
+            <FichaInicio
+              icono={<CheckSquare className="w-[13px] h-[13px]" style={{ color: '#1D9E75' }} />}
+              etiqueta="Hoy"
+              valor={String(resumen.asistenciaHoy)}
+              sufijo={`/${resumen.deportistas}`}
+            />
+            {resumen.pagosAlDia !== null && (
+              <FichaInicio
+                icono={<Wallet className="w-[13px] h-[13px]" style={{ color: '#BA7517' }} />}
+                etiqueta="Al día"
+                valor={String(resumen.pagosAlDia)}
+                sufijo="%"
+              />
+            )}
+            <FichaInicio
+              icono={<CalendarDays className="w-[13px] h-[13px]" style={{ color: '#D4537E' }} />}
+              etiqueta="Eventos"
+              valor={String(upcomingEvents.length)}
+            />
+          </div>
+        )}
+      </div>
+
+      {/* ── Eventos y cumpleaños (móvil) ────────────────────────────────────
+          Suben por encima de la publicidad: Inicio abre mejor con informacion
+          del club que con un anuncio. Es `sm:hidden`, asi que escritorio
+          conserva sus widgets en la columna derecha. */}
+      <div className="sm:hidden px-4 pt-4">
+      {/* ── Widgets móvil — grid 2 cols, encima de los tabs ─────────────── */}
+      <motion.div variants={cardVariant} className="sm:hidden grid grid-cols-2 gap-3">
+        {/* Próximos eventos */}
+        <div className="rounded-2xl bg-white border border-border overflow-hidden"
+          style={{ boxShadow: '0 1px 8px rgba(0,0,0,0.06)' }}>
+          <div className="flex items-center gap-2 px-3 pt-3 pb-2">
+            <div className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0"
+              style={{ background: 'linear-gradient(135deg,#4361EE,#7C3AED)' }}>
+              <CalendarDays className="w-3 h-3 text-white" />
+            </div>
+            <p className="text-[11px] font-semibold text-foreground truncate">Próximos eventos</p>
+          </div>
+          {widgetsLoading ? (
+            <div className="px-3 pb-3 flex flex-col gap-1.5">
+              {[1,2].map(i => <div key={i} className="h-8 rounded-lg bg-secondary animate-pulse" />)}
+            </div>
+          ) : upcomingEvents.length === 0 ? (
+            <div className="px-3 pb-4 flex flex-col items-center gap-1 pt-1">
+              <CalendarDays className="w-6 h-6" style={{ color: '#C4BFDB' }} />
+              <p className="text-[10px] text-muted-foreground text-center">Sin eventos próximos</p>
+            </div>
+          ) : (
+            <div className="px-3 pb-3 flex flex-col gap-1">
+              {upcomingEvents.slice(0, 3).map(ev => {
+                const d = new Date(ev.startDate);
+                const typeColors: Record<string, { bg: string; text: string }> = {
+                  TRAINING:    { bg: 'rgba(6,214,160,0.10)',  text: '#06D6A0' },
+                  MEETUP:      { bg: 'rgba(67,97,238,0.10)',  text: '#4361EE' },
+                  COMPETITION: { bg: 'rgba(239,71,111,0.10)', text: '#EF476F' },
+                };
+                const tc = typeColors[ev.type] ?? typeColors.MEETUP;
+                return (
+                  <div key={ev.id} className="flex items-center gap-2 py-1.5 rounded-lg">
+                    <div className="flex flex-col items-center justify-center w-8 h-8 rounded-lg shrink-0"
+                      style={{ background: tc.bg }}>
+                      <span className="text-[11px] font-semibold leading-none" style={{ color: tc.text }}>{d.getDate()}</span>
+                      <span className="text-[8px] font-semibold uppercase leading-none" style={{ color: tc.text }}>
+                        {d.toLocaleDateString('es-CO', { month: 'short' })}
+                      </span>
+                    </div>
+                    <p className="text-[11px] font-semibold text-foreground truncate flex-1">{ev.title.charAt(0).toUpperCase() + ev.title.slice(1).toLowerCase()}</p>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Cumpleaños */}
+        <div className="rounded-2xl bg-white border border-border overflow-hidden"
+          style={{ boxShadow: '0 1px 8px rgba(0,0,0,0.06)' }}>
+          <div className="flex items-center gap-2 px-3 pt-3 pb-2">
+            <div className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0"
+              style={{ background: 'linear-gradient(135deg,#EF476F,#FFB703)' }}>
+              <Gift className="w-3 h-3 text-white" />
+            </div>
+            <p className="text-[11px] font-semibold text-foreground">Cumpleaños</p>
+          </div>
+          {widgetsLoading ? (
+            <div className="px-3 pb-3 flex flex-col gap-1.5">
+              {[1,2].map(i => <div key={i} className="h-8 rounded-lg bg-secondary animate-pulse" />)}
+            </div>
+          ) : birthdays.length === 0 ? (
+            <div className="px-3 pb-4 flex flex-col items-center gap-1 pt-1">
+              <Gift className="w-6 h-6" style={{ color: '#C4BFDB' }} />
+              <p className="text-[10px] text-muted-foreground text-center">Sin cumpleaños en 30 días</p>
+            </div>
+          ) : (
+            <div className="px-3 pb-3 flex flex-col gap-1">
+              {birthdays.slice(0, 3).map(b => {
+                const isToday    = b.daysUntil === 0;
+                const isTomorrow = b.daysUntil === 1;
+                const daysBg    = isToday ? 'rgba(239,71,111,0.12)' : 'rgba(124,58,237,0.10)';
+                const daysColor = isToday ? '#EF476F' : '#7C3AED';
+                return (
+                  <div key={b.id} className="flex items-center gap-2 py-1.5 rounded-lg">
+                    <div className="w-8 h-8 rounded-lg flex flex-col items-center justify-center shrink-0"
+                      style={{ background: daysBg }}>
+                      {isToday ? (
+                        <span className="text-[14px] leading-none">🎂</span>
+                      ) : (
+                        <>
+                          <p className="text-[12px] font-semibold leading-none" style={{ color: daysColor }}>
+                            {isTomorrow ? '1' : b.daysUntil}
+                          </p>
+                          <p className="text-[7px] font-semibold uppercase leading-none mt-0.5" style={{ color: daysColor }}>
+                            {isTomorrow ? 'mañ' : 'días'}
+                          </p>
+                        </>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[11px] font-semibold text-foreground truncate">{b.fullName}</p>
+                      <p className="text-[10px]" style={{ color: isToday ? '#EF476F' : '#8E87A8', fontWeight: 500 }}>
+                        {(() => { const d = new Date(b.birthDate); return d.toLocaleDateString('es-CO', { day: 'numeric', month: 'long' }); })()}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </motion.div>
+      </div>
+
       {/* ── Slideshow publicitario — ancho completo ─────────────────────────── */}
       <div className="w-full px-6 pt-4">
         <Slideshow
@@ -1127,228 +1341,11 @@ export default function DashboardPage() {
       </div>
 
       {/* ── Contenido principal — desktop: 50% izquierdo, 50% derecho reservado ── */}
-      <div className="w-full px-6 py-4 sm:flex sm:items-start sm:gap-6">
-      <div className="sm:w-1/2">
-      <motion.div
-        variants={feedVariants}
-        initial="hidden"
-        animate="show"
-        className="space-y-4"
-      >
-        {/* ── Widgets móvil — grid 2 cols, encima de los tabs ─────────────── */}
-        <motion.div variants={cardVariant} className="sm:hidden grid grid-cols-2 gap-3">
-          {/* Próximos eventos */}
-          <div className="rounded-2xl bg-white border border-border overflow-hidden"
-            style={{ boxShadow: '0 1px 8px rgba(0,0,0,0.06)' }}>
-            <div className="flex items-center gap-2 px-3 pt-3 pb-2">
-              <div className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0"
-                style={{ background: 'linear-gradient(135deg,#4361EE,#7C3AED)' }}>
-                <CalendarDays className="w-3 h-3 text-white" />
-              </div>
-              <p className="text-[11px] font-semibold text-foreground truncate">Próximos eventos</p>
-            </div>
-            {widgetsLoading ? (
-              <div className="px-3 pb-3 flex flex-col gap-1.5">
-                {[1,2].map(i => <div key={i} className="h-8 rounded-lg bg-secondary animate-pulse" />)}
-              </div>
-            ) : upcomingEvents.length === 0 ? (
-              <div className="px-3 pb-4 flex flex-col items-center gap-1 pt-1">
-                <CalendarDays className="w-6 h-6" style={{ color: '#C4BFDB' }} />
-                <p className="text-[10px] text-muted-foreground text-center">Sin eventos próximos</p>
-              </div>
-            ) : (
-              <div className="px-3 pb-3 flex flex-col gap-1">
-                {upcomingEvents.slice(0, 3).map(ev => {
-                  const d = new Date(ev.startDate);
-                  const typeColors: Record<string, { bg: string; text: string }> = {
-                    TRAINING:    { bg: 'rgba(6,214,160,0.10)',  text: '#06D6A0' },
-                    MEETUP:      { bg: 'rgba(67,97,238,0.10)',  text: '#4361EE' },
-                    COMPETITION: { bg: 'rgba(239,71,111,0.10)', text: '#EF476F' },
-                  };
-                  const tc = typeColors[ev.type] ?? typeColors.MEETUP;
-                  return (
-                    <div key={ev.id} className="flex items-center gap-2 py-1.5 rounded-lg">
-                      <div className="flex flex-col items-center justify-center w-8 h-8 rounded-lg shrink-0"
-                        style={{ background: tc.bg }}>
-                        <span className="text-[11px] font-semibold leading-none" style={{ color: tc.text }}>{d.getDate()}</span>
-                        <span className="text-[8px] font-semibold uppercase leading-none" style={{ color: tc.text }}>
-                          {d.toLocaleDateString('es-CO', { month: 'short' })}
-                        </span>
-                      </div>
-                      <p className="text-[11px] font-semibold text-foreground truncate flex-1">{ev.title.charAt(0).toUpperCase() + ev.title.slice(1).toLowerCase()}</p>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-
-          {/* Cumpleaños */}
-          <div className="rounded-2xl bg-white border border-border overflow-hidden"
-            style={{ boxShadow: '0 1px 8px rgba(0,0,0,0.06)' }}>
-            <div className="flex items-center gap-2 px-3 pt-3 pb-2">
-              <div className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0"
-                style={{ background: 'linear-gradient(135deg,#EF476F,#FFB703)' }}>
-                <Gift className="w-3 h-3 text-white" />
-              </div>
-              <p className="text-[11px] font-semibold text-foreground">Cumpleaños</p>
-            </div>
-            {widgetsLoading ? (
-              <div className="px-3 pb-3 flex flex-col gap-1.5">
-                {[1,2].map(i => <div key={i} className="h-8 rounded-lg bg-secondary animate-pulse" />)}
-              </div>
-            ) : birthdays.length === 0 ? (
-              <div className="px-3 pb-4 flex flex-col items-center gap-1 pt-1">
-                <Gift className="w-6 h-6" style={{ color: '#C4BFDB' }} />
-                <p className="text-[10px] text-muted-foreground text-center">Sin cumpleaños en 30 días</p>
-              </div>
-            ) : (
-              <div className="px-3 pb-3 flex flex-col gap-1">
-                {birthdays.slice(0, 3).map(b => {
-                  const isToday    = b.daysUntil === 0;
-                  const isTomorrow = b.daysUntil === 1;
-                  const daysBg    = isToday ? 'rgba(239,71,111,0.12)' : 'rgba(124,58,237,0.10)';
-                  const daysColor = isToday ? '#EF476F' : '#7C3AED';
-                  return (
-                    <div key={b.id} className="flex items-center gap-2 py-1.5 rounded-lg">
-                      <div className="w-8 h-8 rounded-lg flex flex-col items-center justify-center shrink-0"
-                        style={{ background: daysBg }}>
-                        {isToday ? (
-                          <span className="text-[14px] leading-none">🎂</span>
-                        ) : (
-                          <>
-                            <p className="text-[12px] font-semibold leading-none" style={{ color: daysColor }}>
-                              {isTomorrow ? '1' : b.daysUntil}
-                            </p>
-                            <p className="text-[7px] font-semibold uppercase leading-none mt-0.5" style={{ color: daysColor }}>
-                              {isTomorrow ? 'mañ' : 'días'}
-                            </p>
-                          </>
-                        )}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-[11px] font-semibold text-foreground truncate">{b.fullName}</p>
-                        <p className="text-[10px]" style={{ color: isToday ? '#EF476F' : '#8E87A8', fontWeight: 500 }}>
-                          {(() => { const d = new Date(b.birthDate); return d.toLocaleDateString('es-CO', { day: 'numeric', month: 'long' }); })()}
-                        </p>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        </motion.div>
-
-        {/* ── Tabs Público / Privado ──────────────────────────────────────── */}
-        <motion.div variants={cardVariant}>
-          <div
-            className="relative flex rounded-2xl p-1 gap-1"
-            style={{ background: '#FFFFFF', boxShadow: '0 1px 4px rgba(0,0,0,0.08), inset 0 0 0 1px rgba(0,0,0,0.06)' }}
-          >
-            {([
-              { key: 'public'  as FeedScope, label: 'Público',  icon: Globe, desc: 'Todos los clubes' },
-              { key: 'private' as FeedScope, label: 'Mi club',   icon: Lock,  desc: 'Solo interno' },
-            ] as const).map(tab => {
-              const active = feedScope === tab.key;
-              const Icon = tab.icon;
-              return (
-                <button
-                  key={tab.key}
-                  onClick={() => setFeedScope(tab.key)}
-                  className="relative flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl z-10"
-                >
-                  {/* Pill deslizante */}
-                  {active && (
-                    <motion.div
-                      layoutId="feed-tab-pill"
-                      className="absolute inset-0 rounded-xl"
-                      style={{ background: 'linear-gradient(135deg, #7C3AED 0%, #4361EE 100%)', boxShadow: '0 4px 20px rgba(124,58,237,0.40)' }}
-                      transition={{ type: 'spring', stiffness: 500, damping: 35 }}
-                    />
-                  )}
-                  <Icon className="relative w-3.5 h-3.5 z-10" style={{ color: active ? '#fff' : '#8E87A8' }} />
-                  <div className="relative text-left z-10">
-                    <p className="text-[12px] font-semibold leading-none" style={{ color: active ? '#fff' : '#8E87A8' }}>
-                      {tab.label}
-                    </p>
-                    <p className="text-[9px] leading-none mt-0.5" style={{ color: active ? 'rgba(255,255,255,0.70)' : '#B0ABCA' }}>
-                      {tab.desc}
-                    </p>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        </motion.div>
-
-        {/* Composer — solo ADMIN y COACH */}
-        {canPost && (
-          <PostComposer
-            userName={user?.name ?? ''}
-            userRole={role}
-            userAvatar={user?.picture ?? null}
-            onSubmit={handleCreatePost}
-            loading={postsLoading}
-          />
-        )}
-
-        {/* Feed */}
-        {postsLoading && posts.length === 0 ? (
-          <motion.div variants={cardVariant} className="flex flex-col items-center py-10 gap-3">
-            <div className="w-6 h-6 rounded-full border-2 border-t-transparent animate-spin"
-              style={{ borderColor: '#7C3AED', borderTopColor: 'transparent' }} />
-            <p className="text-[12px] text-muted-foreground">Cargando publicaciones...</p>
-          </motion.div>
-        ) : posts.length === 0 ? (
-          <motion.div variants={cardVariant}>
-            <div
-              className="rounded-2xl px-6 py-10 flex flex-col items-center text-center"
-              style={{ background: 'linear-gradient(135deg,rgba(124,58,237,0.04) 0%,rgba(67,97,238,0.03) 100%)', border: '1px solid rgba(124,58,237,0.10)' }}
-            >
-              <div
-                className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4"
-                style={{ background: 'linear-gradient(135deg,#7C3AED,#4361EE)' }}
-              >
-                {feedScope === 'public' ? <Globe className="w-6 h-6 text-white" /> : <Lock className="w-6 h-6 text-white" />}
-              </div>
-              <p className="text-[14px] font-semibold text-foreground mb-1">
-                {feedScope === 'public' ? 'El feed público está vacío' : 'No hay publicaciones internas aún'}
-              </p>
-              <p className="text-[12px] text-muted-foreground leading-relaxed">
-                {canPost
-                  ? feedScope === 'public'
-                    ? 'Sé el primero en publicar algo visible para todos los clubes.'
-                    : 'Comparte noticias o novedades exclusivas para tu club.'
-                  : feedScope === 'public'
-                    ? 'Aún no hay publicaciones públicas. Vuelve pronto.'
-                    : 'Tu club no ha publicado nada aún.'}
-              </p>
-            </div>
-          </motion.div>
-        ) : (
-          <AnimatePresence initial={false}>
-            {posts.map(post => (
-              <PostCard
-                key={post.id}
-                post={post}
-                currentUserId={currentUserId}
-                canDelete={canPost}
-                onLike={handleLike}
-                onDelete={handleDelete}
-                onComment={handleComment}
-                onDeleteComment={handleDeleteComment}
-                onEditComment={handleEditComment}
-                onFetchLikes={handleFetchLikes}
-              />
-            ))}
-          </AnimatePresence>
-        )}
-
-      </motion.div>
-      </div>
-      {/* Columna derecha — Widgets sticky */}
-      <div className="hidden sm:flex sm:flex-col sm:w-1/2 sm:pr-6 gap-4 sm:sticky sm:top-4 sm:self-start">
+      <div className="w-full px-6 py-4">
+      {/* Eventos y cumpleaños (escritorio) — en una fila, sobre el feed.
+          Antes vivian apilados en una columna derecha que se comia la mitad
+          del ancho, dejando las publicaciones en media pantalla. */}
+      <div className="hidden sm:grid sm:grid-cols-2 gap-4 mb-4">
 
         {/* Widget — Próximos eventos */}
         <div className="rounded-2xl bg-white border border-border overflow-hidden"
@@ -1487,6 +1484,121 @@ export default function DashboardPage() {
           )}
         </div>
 
+      </div>
+      <div className="w-full">
+      <motion.div
+        variants={feedVariants}
+        initial="hidden"
+        animate="show"
+        className="space-y-4"
+      >
+
+        {/* ── Tabs Público / Privado ──────────────────────────────────────── */}
+        <motion.div variants={cardVariant}>
+          <div
+            className="relative flex rounded-2xl p-1 gap-1"
+            style={{ background: '#FFFFFF', boxShadow: '0 1px 4px rgba(0,0,0,0.08), inset 0 0 0 1px rgba(0,0,0,0.06)' }}
+          >
+            {([
+              { key: 'public'  as FeedScope, label: 'Público',  icon: Globe, desc: 'Todos los clubes' },
+              { key: 'private' as FeedScope, label: 'Mi club',   icon: Lock,  desc: 'Solo interno' },
+            ] as const).map(tab => {
+              const active = feedScope === tab.key;
+              const Icon = tab.icon;
+              return (
+                <button
+                  key={tab.key}
+                  onClick={() => setFeedScope(tab.key)}
+                  className="relative flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl z-10"
+                >
+                  {/* Pill deslizante */}
+                  {active && (
+                    <motion.div
+                      layoutId="feed-tab-pill"
+                      className="absolute inset-0 rounded-xl"
+                      style={{ background: 'linear-gradient(135deg, #7C3AED 0%, #4361EE 100%)', boxShadow: '0 4px 20px rgba(124,58,237,0.40)' }}
+                      transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+                    />
+                  )}
+                  <Icon className="relative w-3.5 h-3.5 z-10" style={{ color: active ? '#fff' : '#8E87A8' }} />
+                  <div className="relative text-left z-10">
+                    <p className="text-[12px] font-semibold leading-none" style={{ color: active ? '#fff' : '#8E87A8' }}>
+                      {tab.label}
+                    </p>
+                    <p className="text-[9px] leading-none mt-0.5" style={{ color: active ? 'rgba(255,255,255,0.70)' : '#B0ABCA' }}>
+                      {tab.desc}
+                    </p>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </motion.div>
+
+        {/* Composer — solo ADMIN y COACH */}
+        {canPost && (
+          <PostComposer
+            userName={user?.name ?? ''}
+            userRole={role}
+            userAvatar={user?.picture ?? null}
+            onSubmit={handleCreatePost}
+            loading={postsLoading}
+          />
+        )}
+
+        {/* Feed */}
+        {postsLoading && posts.length === 0 ? (
+          <motion.div variants={cardVariant} className="flex flex-col items-center py-10 gap-3">
+            <div className="w-6 h-6 rounded-full border-2 border-t-transparent animate-spin"
+              style={{ borderColor: '#7C3AED', borderTopColor: 'transparent' }} />
+            <p className="text-[12px] text-muted-foreground">Cargando publicaciones...</p>
+          </motion.div>
+        ) : posts.length === 0 ? (
+          <motion.div variants={cardVariant}>
+            <div
+              className="rounded-2xl px-6 py-10 flex flex-col items-center text-center"
+              style={{ background: 'linear-gradient(135deg,rgba(124,58,237,0.04) 0%,rgba(67,97,238,0.03) 100%)', border: '1px solid rgba(124,58,237,0.10)' }}
+            >
+              <div
+                className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4"
+                style={{ background: 'linear-gradient(135deg,#7C3AED,#4361EE)' }}
+              >
+                {feedScope === 'public' ? <Globe className="w-6 h-6 text-white" /> : <Lock className="w-6 h-6 text-white" />}
+              </div>
+              <p className="text-[14px] font-semibold text-foreground mb-1">
+                {feedScope === 'public' ? 'El feed público está vacío' : 'No hay publicaciones internas aún'}
+              </p>
+              <p className="text-[12px] text-muted-foreground leading-relaxed">
+                {canPost
+                  ? feedScope === 'public'
+                    ? 'Sé el primero en publicar algo visible para todos los clubes.'
+                    : 'Comparte noticias o novedades exclusivas para tu club.'
+                  : feedScope === 'public'
+                    ? 'Aún no hay publicaciones públicas. Vuelve pronto.'
+                    : 'Tu club no ha publicado nada aún.'}
+              </p>
+            </div>
+          </motion.div>
+        ) : (
+          <AnimatePresence initial={false}>
+            {posts.map(post => (
+              <PostCard
+                key={post.id}
+                post={post}
+                currentUserId={currentUserId}
+                canDelete={canPost}
+                onLike={handleLike}
+                onDelete={handleDelete}
+                onComment={handleComment}
+                onDeleteComment={handleDeleteComment}
+                onEditComment={handleEditComment}
+                onFetchLikes={handleFetchLikes}
+              />
+            ))}
+          </AnimatePresence>
+        )}
+
+      </motion.div>
       </div>
       </div>
       </ModuleReveal>

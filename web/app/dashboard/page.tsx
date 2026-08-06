@@ -558,7 +558,7 @@ function PostCard({
 
         {/* Contadores clicables */}
         {(likeCount > 0 || post.comments.length > 0) && (
-          <div className="relative flex items-center gap-3 px-4 pb-2">
+          <div className="relative flex items-center gap-3 px-4 pb-1.5 md:order-2 md:mt-auto">
             {likeCount > 0 && (
               <button
                 ref={likesButtonRef}
@@ -573,7 +573,7 @@ function PostCard({
                 onClick={() => { setShowComments(true); setTimeout(() => commentInputRef.current?.focus(), 150); }}
                 className="text-[12px] text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
               >
-                {post.comments.length} comentario{post.comments.length !== 1 ? 's' : ''}
+                {post.comments.length} Comentario{post.comments.length !== 1 ? 's' : ''}
               </button>
             )}
 
@@ -637,7 +637,7 @@ function PostCard({
         )}
 
         {/* Acciones */}
-        <div className="flex items-center border-t border-border/60 md:mt-auto md:gap-6 md:px-4 md:py-1">
+        <div className="flex items-center border-t border-border/60 md:order-3 md:gap-6 md:px-4 md:py-1">
           {/* Me gusta */}
           <motion.button onClick={handleLike} whileTap={{ scale: 0.95 }}
             transition={{ type: 'spring' as const, stiffness: 500, damping: 15 }}
@@ -674,18 +674,21 @@ function PostCard({
 
         {/* Comentarios */}
         <AnimatePresence>
-          {comentariosVisibles && (
+          {comentariosVisibles && post.comments.length > 0 && (
             <motion.div
                 initial={{ height: 0, opacity: 0 }}
               animate={{ height: 'auto', opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
               transition={{ duration: 0.25, ease: [0.23, 1, 0.32, 1] }}
               style={{ overflow: 'hidden' }}
+              /* En escritorio los comentarios van entre la descripcion y el
+                 contador, por eso el order; en movil conservan su sitio abajo. */
+              className="md:order-1 md:min-h-0"
             >
               {/* En escritorio los comentarios se desplazan dentro de su columna:
                   sin tope, una publicacion con veinte comentarios estiraria la
                   tarjeta y dejaria la imagen flotando con un vacio al lado. */}
-              <div className="px-4 pb-4 space-y-3 border-t border-border/40 pt-3 md:border-t-0 md:bg-transparent"
+              <div className="px-4 pb-2 border-t border-border/40 pt-3 md:border-t-0 md:bg-transparent"
                 style={{ background: 'rgba(124,58,237,0.02)' }}>
 
                 {/* Lista de comentarios */}
@@ -811,8 +814,27 @@ function PostCard({
                   </div>
                 )}
 
-                {/* Input nuevo comentario — con linea arriba en escritorio,
-                    para cerrar el bloque de comentarios como en el diseño */}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Campo de escribir. Va aparte de la lista porque en escritorio queda
+            al pie de la tarjeta, debajo de la fila de acciones, y asi no se
+            desplaza junto con los comentarios: siempre esta a la vista.
+            En movil queda justo despues de la lista, igual que antes. */}
+        <AnimatePresence>
+          {comentariosVisibles && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.25, ease: [0.23, 1, 0.32, 1] }}
+              style={{ overflow: 'hidden' }}
+              className="md:order-4"
+            >
+              <div className="px-4 pb-4 pt-1 md:pt-2.5 md:pb-2.5 md:border-t md:border-border/60"
+                style={{ background: 'rgba(124,58,237,0.02)' }}>
                 <div className="flex items-center gap-2">
                   <div className="flex-1 flex items-center gap-2 rounded-full px-3 py-2"
                     style={{ background: '#fff', border: '1px solid rgba(124,58,237,0.12)' }}>

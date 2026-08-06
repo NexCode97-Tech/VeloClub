@@ -279,7 +279,7 @@ export function PostCard({ post, currentUserId, onLike, onComment, canDelete, on
       {(likeCount > 0 || post.comments.length > 0) && (
         <div className="flex items-center gap-3 px-4 pb-2">
           {likeCount > 0 && <span className="text-[12px] text-muted-foreground">{likeCount} Me gusta</span>}
-          {post.comments.length > 0 && <span className="text-[12px] text-muted-foreground">{post.comments.length} comentario{post.comments.length !== 1 ? 's' : ''}</span>}
+          {post.comments.length > 0 && <span className="text-[12px] text-muted-foreground">{post.comments.length} Comentario{post.comments.length !== 1 ? 's' : ''}</span>}
         </div>
       )}
 

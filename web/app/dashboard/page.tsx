@@ -760,20 +760,16 @@ function PostCard({
                               </div>
                             </div>
                           ) : (
-                            /* En escritorio el nombre lleva la hora al lado y el
-                               texto va debajo, sin fondo ni borde. El fondo va en
-                               clases y no en style: un style en linea le gana a
-                               md:bg-transparent y la burbuja blanca seguia
-                               saliendo en escritorio. */
-                            <div className="rounded-2xl rounded-tl-sm px-3 py-2 bg-white border border-[rgba(124,58,237,0.08)] md:rounded-none md:px-0 md:py-0 md:border-0 md:bg-transparent">
-                              <p className="text-[11px] font-semibold text-foreground mb-0.5 md:mb-[3px]">
+                            /* Mismo comentario en todos los tamaños: sin burbuja,
+                               el nombre con la hora al lado y el texto debajo. */
+                            <div>
+                              <p className="text-[12px] md:text-[11px] font-semibold text-foreground mb-[3px]">
                                 {c.authorName}
-                                <span className="hidden md:inline text-[10px] font-normal text-muted-foreground ml-2">{timeAgo(c.createdAt)}</span>
+                                <span className="text-[10px] font-normal text-muted-foreground ml-2">{timeAgo(c.createdAt)}</span>
                               </p>
                               <p className="text-[13px] md:text-[12px] text-foreground leading-snug">{c.content}</p>
                             </div>
                           )}
-                          <p className="text-[10px] text-muted-foreground mt-0.5 pl-1 md:hidden">{timeAgo(c.createdAt)}</p>
                         </div>
 
                         {/* ── Botón ⋯ con dropdown ── */}

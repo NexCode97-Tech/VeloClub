@@ -299,118 +299,128 @@ function PostCard({
       transition={{ type: 'spring' as const, stiffness: 300, damping: 26 }}
       layout
       className={`bg-white border border-border rounded-2xl overflow-hidden${
-        parteEnDos ? ' md:grid md:grid-cols-[minmax(0,360px)_1fr]' : ''}`}
+        parteEnDos ? ' md:grid md:grid-cols-[22rem_1fr] md:grid-rows-[auto_1fr]' : ''}`}
       style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.08), inset 0 0 0 1px rgba(0,0,0,0.06)' }}
     >
-      {/* Autor */}
-      <div className="flex items-center justify-between px-4 pt-4 pb-2 md:col-start-2">
-        <div className="flex items-center gap-3">
-          <button
-            type="button"
-            onClick={() => post.authorClerkId && router.push(`/dashboard/perfil/${post.authorClerkId}`)}
-            className={post.authorClerkId ? 'cursor-pointer shrink-0' : 'cursor-default shrink-0'}
-          >
-            <Avatar src={post.authorAvatar} name={post.authorName} size={42} role={post.authorRole} />
-          </button>
-          <div>
-            <div className="flex items-center gap-2 flex-wrap">
-              <p
-                className={`text-[14px] font-semibold text-foreground leading-tight ${post.authorClerkId ? 'cursor-pointer hover:underline' : ''}`}
-                onClick={() => post.authorClerkId && router.push(`/dashboard/perfil/${post.authorClerkId}`)}
-              >{post.authorName || 'Usuario'}</p>
-              <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full"
-                style={{ background: 'rgba(124,58,237,0.10)', color: '#7C3AED' }}>
-                {roleLabels[post.authorRole] ?? post.authorRole}
-              </span>
-              {post.scope === 'PUBLIC' && post.clubName && (
-                <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(67,97,238,0.10)', color: '#4361EE' }}>
-                  {post.clubName}
-                </span>
-              )}
-            </div>
-            <p className="text-[12px] text-muted-foreground mt-0.5">{timeAgo(post.createdAt)}</p>
-          </div>
-        </div>
-        {canDelete && (
-          <div ref={postMenuRef} className="relative">
+      {/* En escritorio la tarjeta es una rejilla de 2x2: la imagen ocupa la
+          columna izquierda completa y el contenido se reparte en dos celdas a
+          la derecha. Son dos y no cinco a proposito: con una celda por seccion,
+          las filas se estiraban para igualar el alto de la imagen y el autor,
+          el texto y los botones quedaban separados por huecos enormes. */}
+      {/* Bloque de arriba: autor y texto. Va en una celda propia para que
+          no se estire a lo alto igualando la imagen. */}
+      <div className="md:col-start-2 md:row-start-1 md:min-w-0">
+        {/* Autor */}
+        <div className="flex items-center justify-between px-4 pt-4 pb-2">
+          <div className="flex items-center gap-3">
             <button
-              onClick={() => { setPostMenuOpen(v => !v); setConfirmDel(false); }}
-              className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-secondary active:scale-90 transition-all cursor-pointer"
-              style={{ color: '#8E87A8' }}
+              type="button"
+              onClick={() => post.authorClerkId && router.push(`/dashboard/perfil/${post.authorClerkId}`)}
+              className={post.authorClerkId ? 'cursor-pointer shrink-0' : 'cursor-default shrink-0'}
             >
-              <MoreHorizontal className="w-4 h-4" />
+              <Avatar src={post.authorAvatar} name={post.authorName} size={42} role={post.authorRole} />
             </button>
-
-            <AnimatePresence>
-              {postMenuOpen && !confirmDel && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.92, y: -4 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.92, y: -4 }}
-                  transition={{ duration: 0.13, ease: [0.23, 1, 0.32, 1] }}
-                  className="absolute right-0 top-9 z-30 rounded-xl overflow-hidden"
-                  style={{
-                    background: '#fff',
-                    border: '1px solid rgba(0,0,0,0.08)',
-                    boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
-                    minWidth: 148,
-                  }}
-                >
-                  <button
-                    onClick={() => { setPostMenuOpen(false); setConfirmDel(true); }}
-                    className="w-full flex items-center gap-2.5 px-4 py-2.5 text-[13px] font-semibold text-red-500 hover:bg-red-50 transition-colors cursor-pointer"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" /> Eliminar
-                  </button>
-                  <button
-                    onClick={() => setPostMenuOpen(false)}
-                    className="w-full flex items-center gap-2.5 px-4 py-2.5 text-[13px] font-semibold text-muted-foreground hover:bg-secondary transition-colors cursor-pointer border-t border-border/50"
-                  >
-                    <X className="w-3.5 h-3.5" /> Cancelar
-                  </button>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            <AnimatePresence>
-              {confirmDel && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.92, y: -4 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.92, y: -4 }}
-                  transition={{ duration: 0.13, ease: [0.23, 1, 0.32, 1] }}
-                  className="absolute right-0 top-9 z-30 rounded-xl overflow-hidden"
-                  style={{
-                    background: '#fff',
-                    border: '1px solid rgba(239,71,111,0.20)',
-                    boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
-                    minWidth: 164,
-                  }}
-                >
-                  <p className="px-4 pt-3 pb-1 text-[11px] text-muted-foreground">¿Eliminar publicación?</p>
-                  <div className="flex gap-2 px-3 pb-3 pt-1">
-                    <button
-                      onClick={() => { onDelete(post.id); setConfirmDel(false); }}
-                      className="flex-1 text-[11px] font-semibold py-1.5 rounded-lg bg-red-500 text-white cursor-pointer active:scale-95 transition-transform"
-                    >
-                      Eliminar
-                    </button>
-                    <button
-                      onClick={() => setConfirmDel(false)}
-                      className="flex-1 text-[11px] font-semibold py-1.5 rounded-lg bg-secondary text-muted-foreground cursor-pointer"
-                    >
-                      Cancelar
-                    </button>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <p
+                  className={`text-[14px] font-semibold text-foreground leading-tight ${post.authorClerkId ? 'cursor-pointer hover:underline' : ''}`}
+                  onClick={() => post.authorClerkId && router.push(`/dashboard/perfil/${post.authorClerkId}`)}
+                >{post.authorName || 'Usuario'}</p>
+                <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full"
+                  style={{ background: 'rgba(124,58,237,0.10)', color: '#7C3AED' }}>
+                  {roleLabels[post.authorRole] ?? post.authorRole}
+                </span>
+                {post.scope === 'PUBLIC' && post.clubName && (
+                  <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(67,97,238,0.10)', color: '#4361EE' }}>
+                    {post.clubName}
+                  </span>
+                )}
+              </div>
+              <p className="text-[12px] text-muted-foreground mt-0.5">{timeAgo(post.createdAt)}</p>
+            </div>
           </div>
-        )}
-      </div>
+          {canDelete && (
+            <div ref={postMenuRef} className="relative">
+              <button
+                onClick={() => { setPostMenuOpen(v => !v); setConfirmDel(false); }}
+                className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-secondary active:scale-90 transition-all cursor-pointer"
+                style={{ color: '#8E87A8' }}
+              >
+                <MoreHorizontal className="w-4 h-4" />
+              </button>
 
-      {/* Contenido */}
-      <p className="px-4 py-3 text-[14px] text-foreground leading-relaxed whitespace-pre-wrap md:col-start-2">{post.content}</p>
+              <AnimatePresence>
+                {postMenuOpen && !confirmDel && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.92, y: -4 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.92, y: -4 }}
+                    transition={{ duration: 0.13, ease: [0.23, 1, 0.32, 1] }}
+                    className="absolute right-0 top-9 z-30 rounded-xl overflow-hidden"
+                    style={{
+                      background: '#fff',
+                      border: '1px solid rgba(0,0,0,0.08)',
+                      boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+                      minWidth: 148,
+                    }}
+                  >
+                    <button
+                      onClick={() => { setPostMenuOpen(false); setConfirmDel(true); }}
+                      className="w-full flex items-center gap-2.5 px-4 py-2.5 text-[13px] font-semibold text-red-500 hover:bg-red-50 transition-colors cursor-pointer"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" /> Eliminar
+                    </button>
+                    <button
+                      onClick={() => setPostMenuOpen(false)}
+                      className="w-full flex items-center gap-2.5 px-4 py-2.5 text-[13px] font-semibold text-muted-foreground hover:bg-secondary transition-colors cursor-pointer border-t border-border/50"
+                    >
+                      <X className="w-3.5 h-3.5" /> Cancelar
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              <AnimatePresence>
+                {confirmDel && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.92, y: -4 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.92, y: -4 }}
+                    transition={{ duration: 0.13, ease: [0.23, 1, 0.32, 1] }}
+                    className="absolute right-0 top-9 z-30 rounded-xl overflow-hidden"
+                    style={{
+                      background: '#fff',
+                      border: '1px solid rgba(239,71,111,0.20)',
+                      boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+                      minWidth: 164,
+                    }}
+                  >
+                    <p className="px-4 pt-3 pb-1 text-[11px] text-muted-foreground">¿Eliminar publicación?</p>
+                    <div className="flex gap-2 px-3 pb-3 pt-1">
+                      <button
+                        onClick={() => { onDelete(post.id); setConfirmDel(false); }}
+                        className="flex-1 text-[11px] font-semibold py-1.5 rounded-lg bg-red-500 text-white cursor-pointer active:scale-95 transition-transform"
+                      >
+                        Eliminar
+                      </button>
+                      <button
+                        onClick={() => setConfirmDel(false)}
+                        className="flex-1 text-[11px] font-semibold py-1.5 rounded-lg bg-secondary text-muted-foreground cursor-pointer"
+                      >
+                        Cancelar
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          )}
+        </div>
+
+        {/* Contenido */}
+        <p className="px-4 py-3 text-[14px] text-foreground leading-relaxed whitespace-pre-wrap">{post.content}</p>
+
+      </div>
 
       {/* Media — proporcion fija para que el feed no salte de altura:
           1:1 en fotos (como Instagram) y 9:16 en video. La imagen va completa
@@ -419,7 +429,7 @@ function PostCard({
       {post.imageUrl && (
         <div className={`overflow-hidden${
           parteEnDos
-            ? ' mb-3 md:mb-0 md:col-start-1 md:row-start-1 md:row-span-full md:self-start'
+            ? ' mb-3 md:mb-0 md:col-start-1 md:row-start-1 md:row-span-2 md:self-start'
             : ' mb-3'}`}>
           {isVideo ? (
             <div className="w-full mx-auto" style={{ aspectRatio: '9 / 16', maxWidth: 360, background: '#f4f4f6' }}>
@@ -440,283 +450,287 @@ function PostCard({
         </div>
       )}
 
-      {/* Contadores clicables */}
-      {(likeCount > 0 || post.comments.length > 0) && (
-        <div className="relative flex items-center gap-3 px-4 pb-2 md:col-start-2">
-          {likeCount > 0 && (
-            <button
-              ref={likesButtonRef}
-              onClick={handleShowLikes}
-              className="text-[12px] text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-            >
-              {likeCount} Me gusta
-            </button>
-          )}
-          {post.comments.length > 0 && (
-            <button
-              onClick={() => { setShowComments(true); setTimeout(() => commentInputRef.current?.focus(), 150); }}
-              className="text-[12px] text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-            >
-              {post.comments.length} comentario{post.comments.length !== 1 ? 's' : ''}
-            </button>
-          )}
+      {/* Bloque de abajo: contadores, acciones y comentarios. Ocupa el alto
+          restante para que los botones queden anclados al fondo. */}
+      <div className="md:col-start-2 md:row-start-2 md:min-w-0 md:flex md:flex-col">
 
-          {/* Popover de likes — en portal para evitar el recorte por overflow.
-              La condicion va DENTRO de AnimatePresence: envolviendo al portal,
-              al cerrar se desmontaba todo de golpe y la animacion de salida
-              competia con el borrado de React sobre los mismos nodos, que es lo
-              que produce el "removeChild" repetido en /dashboard. Los hijos
-              ademas necesitan key propia; un fragmento sin claves impide que
-              AnimatePresence los siga. */}
-          {typeof document !== 'undefined' && createPortal(
-            <AnimatePresence>
-              {showLikesPopover && popoverPos && (
-              <Fragment key="likes-popover">
-                <div className="fixed inset-0 z-[9998]" onClick={() => setShowLikesPopover(false)} />
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.93, y: -6 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.93, y: -6 }}
-                  transition={{ duration: 0.16, ease: [0.23, 1, 0.32, 1] }}
-                  style={{
-                    position: 'fixed',
-                    top: popoverPos.top,
-                    left: popoverPos.left,
-                    zIndex: 9999,
-                    background: '#fff',
-                    border: '1px solid rgba(124,58,237,0.12)',
-                    borderRadius: 14,
-                    boxShadow: '0 8px 28px rgba(0,0,0,0.13)',
-                    minWidth: 180,
-                    maxWidth: 240,
-                    padding: '10px 0',
-                  }}
-                >
-                  <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-3.5 mb-2">
-                    Les gustó a
-                  </p>
-                  {loadingLikes ? (
-                    <div className="flex items-center justify-center py-4">
-                      <div className="w-4 h-4 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: '#7C3AED', borderTopColor: 'transparent' }} />
-                    </div>
-                  ) : likeUsers.length === 0 ? (
-                    <p className="text-[12px] text-muted-foreground px-3.5 py-2">Sin datos</p>
-                  ) : (
-                    <div className="flex flex-col">
-                      {likeUsers.map((u, i) => (
-                        <div key={i} className="flex items-center gap-2.5 px-3.5 py-1.5 hover:bg-secondary/50 transition-colors">
-                          <Avatar src={u.picture} name={u.name} size={26} role={u.role} />
-                          <span className="text-[12px] font-semibold text-foreground leading-tight truncate">{u.name}</span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </motion.div>
-              </Fragment>
-              )}
-            </AnimatePresence>,
-            document.body
-          )}
-        </div>
-      )}
+        {/* Contadores clicables */}
+        {(likeCount > 0 || post.comments.length > 0) && (
+          <div className="relative flex items-center gap-3 px-4 pb-2">
+            {likeCount > 0 && (
+              <button
+                ref={likesButtonRef}
+                onClick={handleShowLikes}
+                className="text-[12px] text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+              >
+                {likeCount} Me gusta
+              </button>
+            )}
+            {post.comments.length > 0 && (
+              <button
+                onClick={() => { setShowComments(true); setTimeout(() => commentInputRef.current?.focus(), 150); }}
+                className="text-[12px] text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+              >
+                {post.comments.length} comentario{post.comments.length !== 1 ? 's' : ''}
+              </button>
+            )}
 
-      {/* Acciones */}
-      <div className="flex items-center border-t border-border/60 md:col-start-2">
-        {/* Me gusta */}
-        <motion.button onClick={handleLike} whileTap={{ scale: 0.95 }}
-          transition={{ type: 'spring' as const, stiffness: 500, damping: 15 }}
-          className="flex-1 flex items-center justify-center gap-2 py-2.5 transition-colors hover:bg-secondary/60">
-          <motion.div animate={likeAnim ? { scale: [1, 1.4, 1] } : { scale: 1 }} transition={{ duration: 0.35, ease: 'easeInOut' }}>
-            <Heart className="w-[17px] h-[17px] transition-colors" fill={liked ? '#EF476F' : 'none'}
-              style={{ color: liked ? '#EF476F' : '#8E87A8' }} />
-          </motion.div>
-          <span className="text-[13px] font-semibold" style={{ color: liked ? '#EF476F' : '#8E87A8' }}>Me gusta</span>
-        </motion.button>
-
-        <div className="w-px h-7 bg-border/60" />
-
-        {/* Comentar */}
-        <motion.button
-          onClick={() => { setShowComments(v => !v); setTimeout(() => commentInputRef.current?.focus(), 150); }}
-          whileTap={{ scale: 0.95 }}
-          className="flex-1 flex items-center justify-center gap-2 py-2.5 transition-colors hover:bg-secondary/60">
-          <MessageCircle className="w-[17px] h-[17px]" style={{ color: showComments ? '#4361EE' : '#8E87A8' }} />
-          <span className="text-[13px] font-semibold" style={{ color: showComments ? '#4361EE' : '#8E87A8' }}>Comentar</span>
-        </motion.button>
-
-        <div className="w-px h-7 bg-border/60" />
-
-        {/* Compartir */}
-        <motion.button
-          whileTap={{ scale: 0.95 }}
-          className="flex-1 flex items-center justify-center gap-2 py-2.5 transition-colors hover:bg-secondary/60"
-          onClick={() => { if (navigator.share) navigator.share({ text: post.content }); }}>
-          <ChevronRight className="w-[17px] h-[17px] rotate-[-45deg]" style={{ color: '#8E87A8' }} />
-          <span className="text-[13px] font-semibold text-muted-foreground">Compartir</span>
-        </motion.button>
-      </div>
-
-      {/* Comentarios */}
-      <AnimatePresence>
-        {showComments && (
-          <motion.div
-            className="md:col-start-2"
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.25, ease: [0.23, 1, 0.32, 1] }}
-            style={{ overflow: 'hidden' }}
-          >
-            {/* En escritorio los comentarios se desplazan dentro de su columna:
-                sin tope, una publicacion con veinte comentarios estiraria la
-                tarjeta y dejaria la imagen flotando con un vacio al lado. */}
-            <div className="px-4 pb-4 space-y-3 border-t border-border/40 pt-3 md:max-h-[320px] md:overflow-y-auto"
-              style={{ background: 'rgba(124,58,237,0.02)' }}>
-
-              {/* Lista de comentarios */}
-              {post.comments.length > 0 && (
-                <div className="space-y-2.5">
-                  {post.comments.map(c => (
-                    <div key={c.id} className="flex items-start gap-2.5">
-                      <button
-                        type="button"
-                        onClick={() => c.authorClerkId && router.push(`/dashboard/perfil/${c.authorClerkId}`)}
-                        className={c.authorClerkId ? 'cursor-pointer shrink-0' : 'cursor-default shrink-0'}
-                      >
-                        <Avatar src={c.authorAvatar} name={c.authorName} size={28} role={c.authorRole} />
-                      </button>
-                      <div className="flex-1 min-w-0">
-                        {editingComment === c.id ? (
-                          /* ── Modo edición inline ── */
-                          <div className="rounded-2xl rounded-tl-sm px-3 py-2"
-                            style={{ background: '#fff', border: '1px solid rgba(124,58,237,0.18)' }}>
-                            <p className="text-[11px] font-semibold text-foreground mb-1">{c.authorName}</p>
-                            <textarea
-                              value={editText}
-                              onChange={e => setEditText(e.target.value)}
-                              onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSaveEdit(c.id); } if (e.key === 'Escape') setEditingComment(null); }}
-                              className="w-full text-[13px] text-foreground leading-snug outline-none bg-transparent resize-none"
-                              rows={2}
-                              autoFocus
-                            />
-                            <div className="flex items-center gap-1.5 mt-1.5">
-                              <button onClick={() => handleSaveEdit(c.id)} disabled={savingEdit || !editText.trim()}
-                                className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full text-white disabled:opacity-40"
-                                style={{ background: '#7C3AED' }}>
-                                <ContenidoGuardado
-                                  estado={savingEdit ? 'guardando' : 'idle'}
-                                  textoIdle="Guardar"
-                                  textoGuardando="Guardando"
-                                  textoGuardado="Guardado"
-                                  color="#fff"
-                                />
-                              </button>
-                              <button onClick={() => setEditingComment(null)}
-                                className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full text-muted-foreground"
-                                style={{ background: 'rgba(0,0,0,0.06)' }}>
-                                Cancelar
-                              </button>
-                            </div>
+            {/* Popover de likes — en portal para evitar el recorte por overflow.
+                La condicion va DENTRO de AnimatePresence: envolviendo al portal,
+                al cerrar se desmontaba todo de golpe y la animacion de salida
+                competia con el borrado de React sobre los mismos nodos, que es lo
+                que produce el "removeChild" repetido en /dashboard. Los hijos
+                ademas necesitan key propia; un fragmento sin claves impide que
+                AnimatePresence los siga. */}
+            {typeof document !== 'undefined' && createPortal(
+              <AnimatePresence>
+                {showLikesPopover && popoverPos && (
+                <Fragment key="likes-popover">
+                  <div className="fixed inset-0 z-[9998]" onClick={() => setShowLikesPopover(false)} />
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.93, y: -6 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.93, y: -6 }}
+                    transition={{ duration: 0.16, ease: [0.23, 1, 0.32, 1] }}
+                    style={{
+                      position: 'fixed',
+                      top: popoverPos.top,
+                      left: popoverPos.left,
+                      zIndex: 9999,
+                      background: '#fff',
+                      border: '1px solid rgba(124,58,237,0.12)',
+                      borderRadius: 14,
+                      boxShadow: '0 8px 28px rgba(0,0,0,0.13)',
+                      minWidth: 180,
+                      maxWidth: 240,
+                      padding: '10px 0',
+                    }}
+                  >
+                    <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-3.5 mb-2">
+                      Les gustó a
+                    </p>
+                    {loadingLikes ? (
+                      <div className="flex items-center justify-center py-4">
+                        <div className="w-4 h-4 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: '#7C3AED', borderTopColor: 'transparent' }} />
+                      </div>
+                    ) : likeUsers.length === 0 ? (
+                      <p className="text-[12px] text-muted-foreground px-3.5 py-2">Sin datos</p>
+                    ) : (
+                      <div className="flex flex-col">
+                        {likeUsers.map((u, i) => (
+                          <div key={i} className="flex items-center gap-2.5 px-3.5 py-1.5 hover:bg-secondary/50 transition-colors">
+                            <Avatar src={u.picture} name={u.name} size={26} role={u.role} />
+                            <span className="text-[12px] font-semibold text-foreground leading-tight truncate">{u.name}</span>
                           </div>
-                        ) : (
-                          <div className="rounded-2xl rounded-tl-sm px-3 py-2"
-                            style={{ background: '#fff', border: '1px solid rgba(124,58,237,0.08)' }}>
-                            <p className="text-[11px] font-semibold text-foreground mb-0.5">{c.authorName}</p>
-                            <p className="text-[13px] text-foreground leading-snug">{c.content}</p>
+                        ))}
+                      </div>
+                    )}
+                  </motion.div>
+                </Fragment>
+                )}
+              </AnimatePresence>,
+              document.body
+            )}
+          </div>
+        )}
+
+        {/* Acciones */}
+        <div className="flex items-center border-t border-border/60 md:mt-auto">
+          {/* Me gusta */}
+          <motion.button onClick={handleLike} whileTap={{ scale: 0.95 }}
+            transition={{ type: 'spring' as const, stiffness: 500, damping: 15 }}
+            className="flex-1 flex items-center justify-center gap-2 py-2.5 transition-colors hover:bg-secondary/60">
+            <motion.div animate={likeAnim ? { scale: [1, 1.4, 1] } : { scale: 1 }} transition={{ duration: 0.35, ease: 'easeInOut' }}>
+              <Heart className="w-[17px] h-[17px] transition-colors" fill={liked ? '#EF476F' : 'none'}
+                style={{ color: liked ? '#EF476F' : '#8E87A8' }} />
+            </motion.div>
+            <span className="text-[13px] font-semibold" style={{ color: liked ? '#EF476F' : '#8E87A8' }}>Me gusta</span>
+          </motion.button>
+
+          <div className="w-px h-7 bg-border/60" />
+
+          {/* Comentar */}
+          <motion.button
+            onClick={() => { setShowComments(v => !v); setTimeout(() => commentInputRef.current?.focus(), 150); }}
+            whileTap={{ scale: 0.95 }}
+            className="flex-1 flex items-center justify-center gap-2 py-2.5 transition-colors hover:bg-secondary/60">
+            <MessageCircle className="w-[17px] h-[17px]" style={{ color: showComments ? '#4361EE' : '#8E87A8' }} />
+            <span className="text-[13px] font-semibold" style={{ color: showComments ? '#4361EE' : '#8E87A8' }}>Comentar</span>
+          </motion.button>
+
+          <div className="w-px h-7 bg-border/60" />
+
+          {/* Compartir */}
+          <motion.button
+            whileTap={{ scale: 0.95 }}
+            className="flex-1 flex items-center justify-center gap-2 py-2.5 transition-colors hover:bg-secondary/60"
+            onClick={() => { if (navigator.share) navigator.share({ text: post.content }); }}>
+            <ChevronRight className="w-[17px] h-[17px] rotate-[-45deg]" style={{ color: '#8E87A8' }} />
+            <span className="text-[13px] font-semibold text-muted-foreground">Compartir</span>
+          </motion.button>
+        </div>
+
+        {/* Comentarios */}
+        <AnimatePresence>
+          {showComments && (
+            <motion.div
+                initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.25, ease: [0.23, 1, 0.32, 1] }}
+              style={{ overflow: 'hidden' }}
+            >
+              {/* En escritorio los comentarios se desplazan dentro de su columna:
+                  sin tope, una publicacion con veinte comentarios estiraria la
+                  tarjeta y dejaria la imagen flotando con un vacio al lado. */}
+              <div className="px-4 pb-4 space-y-3 border-t border-border/40 pt-3 md:max-h-[320px] md:overflow-y-auto"
+                style={{ background: 'rgba(124,58,237,0.02)' }}>
+
+                {/* Lista de comentarios */}
+                {post.comments.length > 0 && (
+                  <div className="space-y-2.5">
+                    {post.comments.map(c => (
+                      <div key={c.id} className="flex items-start gap-2.5">
+                        <button
+                          type="button"
+                          onClick={() => c.authorClerkId && router.push(`/dashboard/perfil/${c.authorClerkId}`)}
+                          className={c.authorClerkId ? 'cursor-pointer shrink-0' : 'cursor-default shrink-0'}
+                        >
+                          <Avatar src={c.authorAvatar} name={c.authorName} size={28} role={c.authorRole} />
+                        </button>
+                        <div className="flex-1 min-w-0">
+                          {editingComment === c.id ? (
+                            /* ── Modo edición inline ── */
+                            <div className="rounded-2xl rounded-tl-sm px-3 py-2"
+                              style={{ background: '#fff', border: '1px solid rgba(124,58,237,0.18)' }}>
+                              <p className="text-[11px] font-semibold text-foreground mb-1">{c.authorName}</p>
+                              <textarea
+                                value={editText}
+                                onChange={e => setEditText(e.target.value)}
+                                onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSaveEdit(c.id); } if (e.key === 'Escape') setEditingComment(null); }}
+                                className="w-full text-[13px] text-foreground leading-snug outline-none bg-transparent resize-none"
+                                rows={2}
+                                autoFocus
+                              />
+                              <div className="flex items-center gap-1.5 mt-1.5">
+                                <button onClick={() => handleSaveEdit(c.id)} disabled={savingEdit || !editText.trim()}
+                                  className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full text-white disabled:opacity-40"
+                                  style={{ background: '#7C3AED' }}>
+                                  <ContenidoGuardado
+                                    estado={savingEdit ? 'guardando' : 'idle'}
+                                    textoIdle="Guardar"
+                                    textoGuardando="Guardando"
+                                    textoGuardado="Guardado"
+                                    color="#fff"
+                                  />
+                                </button>
+                                <button onClick={() => setEditingComment(null)}
+                                  className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full text-muted-foreground"
+                                  style={{ background: 'rgba(0,0,0,0.06)' }}>
+                                  Cancelar
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="rounded-2xl rounded-tl-sm px-3 py-2"
+                              style={{ background: '#fff', border: '1px solid rgba(124,58,237,0.08)' }}>
+                              <p className="text-[11px] font-semibold text-foreground mb-0.5">{c.authorName}</p>
+                              <p className="text-[13px] text-foreground leading-snug">{c.content}</p>
+                            </div>
+                          )}
+                          <p className="text-[10px] text-muted-foreground mt-0.5 pl-1">{timeAgo(c.createdAt)}</p>
+                        </div>
+
+                        {/* ── Botón ⋯ con dropdown ── */}
+                        {canDelete && editingComment !== c.id && (
+                          <div className="relative mt-1 shrink-0">
+                            <button
+                              onClick={() => setCommentMenu(commentMenu === c.id ? null : c.id)}
+                              className="w-6 h-6 rounded-full flex items-center justify-center transition-all"
+                              style={{ color: '#C4C2CF' }}
+                            >
+                              <MoreHorizontal className="w-3.5 h-3.5" />
+                            </button>
+                            <AnimatePresence>
+                              {commentMenu === c.id && (
+                                <>
+                                  {/* Overlay para cerrar */}
+                                  <div className="fixed inset-0 z-40" onClick={() => setCommentMenu(null)} />
+                                  <motion.div
+                                    initial={{ opacity: 0, scale: 0.92, y: -4 }}
+                                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                                    exit={{ opacity: 0, scale: 0.92, y: -4 }}
+                                    transition={{ duration: 0.15, ease: [0.23, 1, 0.32, 1] }}
+                                    className="absolute right-0 top-7 z-50 flex flex-col overflow-hidden"
+                                    style={{
+                                      background: '#fff',
+                                      border: '1px solid rgba(124,58,237,0.12)',
+                                      borderRadius: 12,
+                                      boxShadow: '0 8px 24px rgba(0,0,0,0.10)',
+                                      minWidth: 130,
+                                    }}
+                                  >
+                                    <button
+                                      onClick={() => { setCommentMenu(null); setEditingComment(c.id); setEditText(c.content); }}
+                                      className="flex items-center gap-2 px-3.5 py-2.5 text-[12px] font-semibold text-foreground hover:bg-secondary/60 transition-colors text-left"
+                                    >
+                                      <Pencil className="w-3.5 h-3.5 text-muted-foreground" /> Editar
+                                    </button>
+                                    <div style={{ height: 1, background: 'rgba(124,58,237,0.07)' }} />
+                                    <button
+                                      onClick={() => { setCommentMenu(null); onDeleteComment(post.id, c.id); }}
+                                      className="flex items-center gap-2 px-3.5 py-2.5 text-[12px] font-semibold text-red-500 hover:bg-red-50 transition-colors text-left"
+                                    >
+                                      <Trash2 className="w-3.5 h-3.5" /> Eliminar
+                                    </button>
+                                    <div style={{ height: 1, background: 'rgba(124,58,237,0.07)' }} />
+                                    <button
+                                      onClick={() => setCommentMenu(null)}
+                                      className="flex items-center gap-2 px-3.5 py-2.5 text-[12px] font-semibold text-muted-foreground hover:bg-secondary/60 transition-colors text-left"
+                                    >
+                                      <X className="w-3.5 h-3.5" /> Cancelar
+                                    </button>
+                                  </motion.div>
+                                </>
+                              )}
+                            </AnimatePresence>
                           </div>
                         )}
-                        <p className="text-[10px] text-muted-foreground mt-0.5 pl-1">{timeAgo(c.createdAt)}</p>
                       </div>
+                    ))}
+                  </div>
+                )}
 
-                      {/* ── Botón ⋯ con dropdown ── */}
-                      {canDelete && editingComment !== c.id && (
-                        <div className="relative mt-1 shrink-0">
-                          <button
-                            onClick={() => setCommentMenu(commentMenu === c.id ? null : c.id)}
-                            className="w-6 h-6 rounded-full flex items-center justify-center transition-all"
-                            style={{ color: '#C4C2CF' }}
-                          >
-                            <MoreHorizontal className="w-3.5 h-3.5" />
-                          </button>
-                          <AnimatePresence>
-                            {commentMenu === c.id && (
-                              <>
-                                {/* Overlay para cerrar */}
-                                <div className="fixed inset-0 z-40" onClick={() => setCommentMenu(null)} />
-                                <motion.div
-                                  initial={{ opacity: 0, scale: 0.92, y: -4 }}
-                                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                                  exit={{ opacity: 0, scale: 0.92, y: -4 }}
-                                  transition={{ duration: 0.15, ease: [0.23, 1, 0.32, 1] }}
-                                  className="absolute right-0 top-7 z-50 flex flex-col overflow-hidden"
-                                  style={{
-                                    background: '#fff',
-                                    border: '1px solid rgba(124,58,237,0.12)',
-                                    borderRadius: 12,
-                                    boxShadow: '0 8px 24px rgba(0,0,0,0.10)',
-                                    minWidth: 130,
-                                  }}
-                                >
-                                  <button
-                                    onClick={() => { setCommentMenu(null); setEditingComment(c.id); setEditText(c.content); }}
-                                    className="flex items-center gap-2 px-3.5 py-2.5 text-[12px] font-semibold text-foreground hover:bg-secondary/60 transition-colors text-left"
-                                  >
-                                    <Pencil className="w-3.5 h-3.5 text-muted-foreground" /> Editar
-                                  </button>
-                                  <div style={{ height: 1, background: 'rgba(124,58,237,0.07)' }} />
-                                  <button
-                                    onClick={() => { setCommentMenu(null); onDeleteComment(post.id, c.id); }}
-                                    className="flex items-center gap-2 px-3.5 py-2.5 text-[12px] font-semibold text-red-500 hover:bg-red-50 transition-colors text-left"
-                                  >
-                                    <Trash2 className="w-3.5 h-3.5" /> Eliminar
-                                  </button>
-                                  <div style={{ height: 1, background: 'rgba(124,58,237,0.07)' }} />
-                                  <button
-                                    onClick={() => setCommentMenu(null)}
-                                    className="flex items-center gap-2 px-3.5 py-2.5 text-[12px] font-semibold text-muted-foreground hover:bg-secondary/60 transition-colors text-left"
-                                  >
-                                    <X className="w-3.5 h-3.5" /> Cancelar
-                                  </button>
-                                </motion.div>
-                              </>
-                            )}
-                          </AnimatePresence>
-                        </div>
-                      )}
-                    </div>
-                  ))}
+                {/* Input nuevo comentario */}
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 flex items-center gap-2 rounded-full px-3 py-2"
+                    style={{ background: '#fff', border: '1px solid rgba(124,58,237,0.12)' }}>
+                    <input
+                      ref={commentInputRef}
+                      value={commentText}
+                      onChange={e => setCommentText(e.target.value)}
+                      onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleComment(); } }}
+                      placeholder="Escribe un comentario..."
+                      className="flex-1 text-[13px] text-foreground placeholder:text-muted-foreground/50 outline-none bg-transparent"
+                    />
+                  </div>
+                  <motion.button
+                    onClick={handleComment}
+                    disabled={!commentText.trim() || sendingComment}
+                    whileTap={{ scale: 0.9 }}
+                    className="w-8 h-8 rounded-full flex items-center justify-center disabled:opacity-40 transition-opacity"
+                    style={{ background: 'linear-gradient(135deg,#7C3AED,#4361EE)' }}>
+                    {sendingComment
+                      ? <div className="w-3.5 h-3.5 border-2 border-white/50 border-t-white rounded-full animate-spin" />
+                      : <SendHorizontal className="w-4 h-4 text-white" />
+                    }
+                  </motion.button>
                 </div>
-              )}
-
-              {/* Input nuevo comentario */}
-              <div className="flex items-center gap-2">
-                <div className="flex-1 flex items-center gap-2 rounded-full px-3 py-2"
-                  style={{ background: '#fff', border: '1px solid rgba(124,58,237,0.12)' }}>
-                  <input
-                    ref={commentInputRef}
-                    value={commentText}
-                    onChange={e => setCommentText(e.target.value)}
-                    onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleComment(); } }}
-                    placeholder="Escribe un comentario..."
-                    className="flex-1 text-[13px] text-foreground placeholder:text-muted-foreground/50 outline-none bg-transparent"
-                  />
-                </div>
-                <motion.button
-                  onClick={handleComment}
-                  disabled={!commentText.trim() || sendingComment}
-                  whileTap={{ scale: 0.9 }}
-                  className="w-8 h-8 rounded-full flex items-center justify-center disabled:opacity-40 transition-opacity"
-                  style={{ background: 'linear-gradient(135deg,#7C3AED,#4361EE)' }}>
-                  {sendingComment
-                    ? <div className="w-3.5 h-3.5 border-2 border-white/50 border-t-white rounded-full animate-spin" />
-                    : <SendHorizontal className="w-4 h-4 text-white" />
-                  }
-                </motion.button>
               </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
     </motion.div>
   );
 }

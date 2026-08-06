@@ -18,6 +18,7 @@ import {
   Clock, CheckSquare, Wallet,
 } from 'lucide-react';
 import { Slideshow } from '@/components/ui/slideshow';
+import { InicioHeaderMovil } from '@/components/ui/inicio-header-movil';
 
 // Ficha de resumen de Inicio en movil. Un numero grande y su contexto: lo
 // suficiente para saber si hay que entrar al modulo o no.
@@ -46,7 +47,7 @@ import { ContenidoGuardado, MS_GUARDADO, type EstadoGuardado } from '@/component
 
 interface MeResponse {
   status: 'ok' | 'superadmin' | 'complete_profile' | 'no_access' | 'needs_onboarding' | 'inactive' | 'member_inactive' | 'trial_expired';
-  user?: { name: string; role: string; picture?: string | null; club?: { name: string; logoUrl?: string } };
+  user?: { name: string; role: string; picture?: string | null; club?: { name: string; logoUrl?: string; verified?: boolean } };
   trial?: { daysLeft: number; endsAt: string } | null;
 }
 
@@ -896,7 +897,7 @@ export default function DashboardPage() {
   const [me, setMe]         = useState<MeResponse | null>(null);
   const [trial, setTrial]   = useState<{ daysLeft: number; endsAt: string } | null>(null);
   // Fichas de Inicio en movil: tres numeros que antes obligaban a entrar a cada modulo
-  const [resumen, setResumen] = useState<{ deportistas: number; asistenciaHoy: number; pagosAlDia: number | null } | null>(null);
+  const [resumen, setResumen] = useState<{ deportistas: number; asistenciaHoy: number; pagosAlDia?: number | null } | null>(null);
   const [loading, setLoading] = useState(true);
   // Sostiene el indicador un minimo de tiempo para que no parpadee
   const mostrarCarga = useCargaMinima(loading);
@@ -974,7 +975,7 @@ export default function DashboardPage() {
           apiFetch<{ posts: Post[] }>('/posts?scope=public', { token }),
           apiFetch<{ events: typeof upcomingEvents }>('/events/upcoming', { token }),
           apiFetch<{ birthdays: typeof birthdays }>('/members/birthdays', { token }),
-          apiFetch<{ deportistas: number; asistenciaHoy: number; pagosAlDia: number | null }>(
+          apiFetch<{ deportistas: number; asistenciaHoy: number; pagosAlDia?: number | null }>(
             `/clubs/resumen-inicio?fecha=${new Date().toLocaleDateString('en-CA')}`, { token },
           ),
         ]);
@@ -1125,13 +1126,14 @@ export default function DashboardPage() {
       <AnimatePresence>
         {trial !== null && role === 'ADMIN' && (
           <motion.div
+            className="hidden sm:block"
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
           >
             <div
-              className="hidden sm:block mx-4 mt-3 rounded-2xl px-4 py-3"
+              className="mx-4 mt-3 rounded-2xl px-4 py-3"
               style={{
                 background: trial.daysLeft <= 3 ? 'rgba(239,71,111,0.08)' : 'rgba(255,183,3,0.09)',
                 border: `1px solid ${trial.daysLeft <= 3 ? 'rgba(239,71,111,0.20)' : 'rgba(255,183,3,0.25)'}`,
@@ -1159,12 +1161,22 @@ export default function DashboardPage() {
         )}
       </AnimatePresence>
 
-      {/* ── Móvil: prueba y fichas, montadas sobre el degradado del encabezado ──
+      <InicioHeaderMovil
+        clubName={me?.user?.club?.name ?? null}
+        clubLogoUrl={me?.user?.club?.logoUrl ?? null}
+        userName={me?.user?.name ?? null}
+        verified={me?.user?.club?.verified}
+      />
+
+      {/* ── Móvil: prueba y fichas ──────────────────────────────────────────
           La tarjeta de prueba se encogio a proposito: la version de escritorio
           ocupa un bloque entero con un boton grande, y en un celular eso empuja
           el contenido real fuera de la pantalla. Aqui informa igual, con la
-          fecha exacta de fin en vez de solo los dias, sin gritar. */}
-      <div className="sm:hidden px-4 -mt-5 relative z-10 space-y-3">
+          fecha exacta de fin en vez de solo los dias, sin gritar.
+
+          No se monta sobre el degradado: el encabezado va fijo, asi que al
+          hacer scroll la tarjeta terminaria metiendose debajo de el. */}
+      <div className="sm:hidden px-4 pt-3 space-y-3">
         {trial !== null && role === 'ADMIN' && (
           <div
             className="rounded-2xl px-3.5 py-3 flex items-center gap-3 bg-white"
@@ -1205,13 +1217,16 @@ export default function DashboardPage() {
               valor={String(resumen.asistenciaHoy)}
               sufijo={`/${resumen.deportistas}`}
             />
-            {resumen.pagosAlDia !== null && (
-              <FichaInicio
-                icono={<Wallet className="w-[13px] h-[13px]" style={{ color: '#BA7517' }} />}
-                etiqueta="Al día"
-                valor={String(resumen.pagosAlDia)}
-                sufijo="%"
-              />
+            {/* Solo se oculta si el rol no ve finanzas. Si el mes aun no tiene
+                cobros, se muestra con guion: una ficha que desaparece se lee
+                como un error, no como "todavia no hay nada" */}
+            {resumen.pagosAlDia !== undefined && (
+            <FichaInicio
+              icono={<Wallet className="w-[13px] h-[13px]" style={{ color: '#BA7517' }} />}
+              etiqueta="Al día"
+              valor={resumen.pagosAlDia === null ? '—' : String(resumen.pagosAlDia)}
+              sufijo={resumen.pagosAlDia === null ? undefined : '%'}
+            />
             )}
             <FichaInicio
               icono={<CalendarDays className="w-[13px] h-[13px]" style={{ color: '#D4537E' }} />}

@@ -1,9 +1,11 @@
 'use client';
 
+import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Search, Settings, BadgeCheck } from 'lucide-react';
 import { NotificationsBell } from '@/components/ui/notifications-bell';
+import { SearchModal } from '@/components/ui/search-modal';
 import { useMembers } from '@/hooks/useVeloQuery';
 
 /**
@@ -29,7 +31,6 @@ interface Props {
   clubLogoUrl: string | null;
   userName: string | null;
   verified?: boolean;
-  onBuscar: () => void;
 }
 
 function iniciales(nombre: string): string {
@@ -38,7 +39,11 @@ function iniciales(nombre: string): string {
 
 const FONDOS = ['#F0997B', '#9FE1CB', '#FAC775', '#CECBF6', '#F4C0D1'];
 
-export function InicioHeaderMovil({ clubName, clubLogoUrl, userName, verified, onBuscar }: Props) {
+export function InicioHeaderMovil({ clubName, clubLogoUrl, userName, verified }: Props) {
+  // El buscador se abre desde aqui y no desde el layout: este encabezado se
+  // renderiza dentro de la pagina para que la tarjeta de la prueba pueda
+  // montarse sobre el degradado sin que el area con scroll la recorte.
+  const [buscarAbierto, setBuscarAbierto] = useState(false);
   const { data } = useMembers();
   const miembros = (data?.members ?? []) as MiembroMin[];
   const deportistas = miembros.filter(m => !m.role || m.role === 'STUDENT');
@@ -47,7 +52,7 @@ export function InicioHeaderMovil({ clubName, clubLogoUrl, userName, verified, o
 
   return (
     <header
-      className="md:hidden shrink-0 px-4 pt-3 pb-8"
+      className="md:hidden px-4 pt-3 pb-4 sticky top-0 z-30"
       style={{
         background: 'linear-gradient(150deg,#7C3AED 0%,#5B4AD8 45%,#4361EE 100%)',
         borderRadius: '0 0 24px 24px',
@@ -56,7 +61,7 @@ export function InicioHeaderMovil({ clubName, clubLogoUrl, userName, verified, o
       {/* Fila 1 — buscador como campo ancho, campana separada a la derecha */}
       <div className="flex items-center gap-2 mb-3.5">
         <button
-          onClick={onBuscar}
+          onClick={() => setBuscarAbierto(true)}
           className="flex-1 min-w-0 flex items-center gap-2 h-9 px-3 rounded-full text-left transition-colors"
           style={{ background: 'rgba(255,255,255,0.18)' }}
         >
@@ -159,6 +164,7 @@ export function InicioHeaderMovil({ clubName, clubLogoUrl, userName, verified, o
           </span>
         </div>
       )}
+      <SearchModal open={buscarAbierto} onClose={() => setBuscarAbierto(false)} />
     </header>
   );
 }

@@ -114,7 +114,6 @@ router.get('/trusted', async (_req, res) => {
   res.json(payload);
 });
 
-// GET /clubs/settings
 // GET /clubs/resumen-inicio?fecha=YYYY-MM-DD
 // Los tres numeros de las fichas de Inicio en una sola consulta. Pedirlos por
 // separado obligaba a traer la lista completa de pagos del mes solo para sacar
@@ -151,14 +150,19 @@ router.get('/resumen-inicio', requireAuth, async (req, res) => {
   res.json({
     deportistas,
     asistenciaHoy: asistieronHoy,
-    // null y no 0 cuando el mes todavia no tiene cobros generados: un 0% diria
-    // que nadie ha pagado, cuando lo cierto es que aun no hay nada que pagar
-    pagosAlDia: req.user.role === 'ADMIN' && pagosDelMes > 0
-      ? Math.round((pagosPagados / pagosDelMes) * 100)
-      : null,
+    // Tres estados distintos a proposito:
+    //   ausente  -> el entrenador no ve finanzas, la ficha no se muestra
+    //   null     -> el mes aun no tiene cobros generados, la ficha dice "—"
+    //   numero   -> el porcentaje real
+    // Un 0% diria que nadie ha pagado, cuando lo cierto es que todavia no hay
+    // nada que pagar.
+    ...(req.user.role === 'ADMIN'
+      ? { pagosAlDia: pagosDelMes > 0 ? Math.round((pagosPagados / pagosDelMes) * 100) : null }
+      : {}),
   });
 });
 
+// GET /clubs/settings
 router.get('/settings', requireAuth, async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'No autenticado' });
   const clubId = req.user.clubId ?? '';

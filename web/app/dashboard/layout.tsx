@@ -12,7 +12,6 @@ import LoadingScreen, { LoadingCurtain, CURTAIN_MS, esperarPantallaCarga } from 
 import { BottomCircleMenu } from '@/components/ui/bottom-circle-menu';
 import { SearchModal } from '@/components/ui/search-modal';
 import { NotificationsBell } from '@/components/ui/notifications-bell';
-import { InicioHeaderMovil } from '@/components/ui/inicio-header-movil';
 import TermsGateModal from '@/components/ui/terms-gate-modal';
 import {
   Settings,
@@ -173,7 +172,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [searchOpen, setSearchOpen] = useState(false);
   const [clubLogoUrl, setClubLogoUrl] = useState<string | null>(null);
   const [clubName, setClubName] = useState<string | null>(null);
-  const [clubVerified, setClubVerified] = useState(false);
   const [userName, setUserName] = useState<string | null>(null);
   const [userPicture, setUserPicture] = useState<string | null>(null);
   const [termsAccepted, setTermsAccepted] = useState(true);
@@ -288,7 +286,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         setRole(userRole);
         setClubLogoUrl(res.user?.club?.logoUrl ?? null);
         setClubName(res.user?.club?.name ?? null);
-        setClubVerified(!!res.user?.club?.verified);
         setUserName(res.user?.name ?? null);
         setUserPicture(res.user?.picture ?? null);
         setTermsAccepted(!!res.user?.termsAcceptedAt);
@@ -708,15 +705,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         {/* En Inicio el encabezado es el degradado con la identidad del club;
             en el resto de modulos, la barra compacta. Los dos llevan el
             buscador como campo ancho y la campana separada. */}
-        {enInicio ? (
-          <InicioHeaderMovil
-            clubName={clubName}
-            clubLogoUrl={clubLogoUrl}
-            userName={userName}
-            verified={clubVerified}
-            onBuscar={() => setSearchOpen(true)}
-          />
-        ) : (
+        {enInicio ? null : (
           <header className="md:hidden flex items-center gap-2 px-4 py-2.5 shrink-0 bg-background sticky top-0 z-30">
             {/* Logo del club — lleva a Inicio */}
             <Link href="/dashboard" aria-label="Ir a inicio" className="shrink-0">

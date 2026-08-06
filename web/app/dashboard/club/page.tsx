@@ -6,7 +6,7 @@ import { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { apiFetch } from '@/lib/api-client';
 import { MapPin, Camera, Pencil, Trash2, ImagePlus, BadgeCheck, Lock, CalendarDays, Phone, Mail, Building2, Check, X, UserPlus, UserCheck } from 'lucide-react';
-import { PostCard, Post, PostComment } from '@/components/ui/post-card';
+import { PostCard, Post, PostComment, LikeUser } from '@/components/ui/post-card';
 import { PhoneInput } from '@/components/ui/phone-input';
 import ModuleLoader, { useCargaMinima } from '@/components/ui/module-loader';
 import ModuleReveal from '@/components/ui/module-reveal';
@@ -252,6 +252,44 @@ export default function ClubProfilePage() {
     const token = await session?.getToken();
     await apiFetch(`/posts/${postId}`, { token, method: 'DELETE' });
     setPosts(prev => prev.filter(p => p.id !== postId));
+  }
+
+  async function handleUpdatePost(id: string, cambios: { content?: string; scope?: 'PUBLIC' | 'PRIVATE' }) {
+    const token = await session?.getToken();
+    const res = await apiFetch<{ post: Post }>(`/posts/${id}`, {
+      token, method: 'PATCH', body: JSON.stringify(cambios),
+    });
+    // Este feed es el de Mi club: si la publicacion pasa a publica ya no
+    // pertenece aca y desaparece de la lista.
+    setPosts(prev => cambios.scope === 'PUBLIC'
+      ? prev.filter(p => p.id !== id)
+      : prev.map(p => (p.id === id ? res.post : p)));
+  }
+
+  async function handleDeleteComment(postId: string, commentId: string) {
+    const token = await session?.getToken();
+    await apiFetch(`/posts/${postId}/comments/${commentId}`, { token, method: 'DELETE' });
+    setPosts(prev => prev.map(p =>
+      p.id === postId ? { ...p, comments: p.comments.filter(c => c.id !== commentId) } : p
+    ));
+  }
+
+  async function handleEditComment(postId: string, commentId: string, content: string) {
+    const token = await session?.getToken();
+    const res = await apiFetch<{ comment: PostComment }>(`/posts/${postId}/comments/${commentId}`, {
+      token, method: 'PATCH', body: JSON.stringify({ content }),
+    });
+    setPosts(prev => prev.map(p =>
+      p.id === postId
+        ? { ...p, comments: p.comments.map(c => (c.id === commentId ? res.comment : c)) }
+        : p
+    ));
+  }
+
+  async function handleFetchLikes(postId: string): Promise<LikeUser[]> {
+    const token = await session?.getToken();
+    const res = await apiFetch<{ users: LikeUser[] }>(`/posts/${postId}/likes`, { token });
+    return res.users;
   }
 
   async function handleFollow() {
@@ -634,6 +672,10 @@ export default function ClubProfilePage() {
                         onLike={handleLike}
                         onComment={handleComment}
                         onDelete={handleDelete}
+                        onUpdatePost={handleUpdatePost}
+                        onDeleteComment={handleDeleteComment}
+                        onEditComment={handleEditComment}
+                        onFetchLikes={handleFetchLikes}
                       />
                     ))}
                   </div>

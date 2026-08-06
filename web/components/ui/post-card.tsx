@@ -200,16 +200,24 @@ export function PostCard({ post, currentUserId, onLike, onComment, canDelete, on
       {/* Media */}
       {post.imageUrl && (
         <div className="mb-3 overflow-hidden">
+          {/* Misma proporcion que el feed de Inicio: 1:1 en fotos y 9:16 en
+              video, con la imagen completa (`contain`) sobre gris neutro. Asi
+              una publicacion se ve igual en Inicio, en Club y en Mi perfil. */}
           {isVideo
-            ? <video src={post.imageUrl} controls className="w-full" style={{ maxHeight: 520 }} />
+            ? (
+              <div className="w-full mx-auto" style={{ aspectRatio: '9 / 16', maxWidth: 360, background: '#f4f4f6' }}>
+                <video src={post.imageUrl} controls className="w-full h-full object-contain" />
+              </div>
+            )
             : (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={post.imageUrl} alt="Publicación"
-                className="w-full object-contain cursor-zoom-in"
-                style={{ maxHeight: 520, background: '#f4f4f6' }}
-                onClick={() => setLightbox(true)}
-              />
+              <div className="w-full mx-auto" style={{ aspectRatio: '1 / 1', maxWidth: 560, background: '#f4f4f6' }}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={post.imageUrl} alt="Publicación"
+                  className="w-full h-full object-contain cursor-zoom-in"
+                  onClick={() => setLightbox(true)}
+                />
+              </div>
             )
           }
         </div>

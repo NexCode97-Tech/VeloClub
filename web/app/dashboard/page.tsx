@@ -287,6 +287,9 @@ function PostCard({
   // Detectar si media es video por extensión o URL
   const isVideo = post.imageUrl && /\.(mp4|webm|mov|avi|mkv)(\?|$)/i.test(post.imageUrl);
   const isFile  = post.imageUrl && !isVideo && /\.(pdf|doc|docx|xls|xlsx|ppt|pptx|zip|rar)(\?|$)/i.test(post.imageUrl);
+  // Solo foto y video parten la tarjeta en dos: un adjunto es una fila de
+  // enlace y no llena una columna. Sin media, la tarjeta va a lo ancho.
+  const parteEnDos = !!post.imageUrl && !isFile;
 
   return (
     <motion.div
@@ -295,11 +298,12 @@ function PostCard({
       exit={{    opacity: 0, scale: 0.95, y: -8 }}
       transition={{ type: 'spring' as const, stiffness: 300, damping: 26 }}
       layout
-      className="bg-white border border-border rounded-2xl overflow-hidden"
+      className={`bg-white border border-border rounded-2xl overflow-hidden${
+        parteEnDos ? ' md:grid md:grid-cols-[minmax(0,360px)_1fr]' : ''}`}
       style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.08), inset 0 0 0 1px rgba(0,0,0,0.06)' }}
     >
       {/* Autor */}
-      <div className="flex items-center justify-between px-4 pt-4 pb-2">
+      <div className="flex items-center justify-between px-4 pt-4 pb-2 md:col-start-2">
         <div className="flex items-center gap-3">
           <button
             type="button"
@@ -406,13 +410,21 @@ function PostCard({
       </div>
 
       {/* Contenido */}
-      <p className="px-4 py-3 text-[14px] text-foreground leading-relaxed whitespace-pre-wrap">{post.content}</p>
+      <p className="px-4 py-3 text-[14px] text-foreground leading-relaxed whitespace-pre-wrap md:col-start-2">{post.content}</p>
 
-      {/* Media */}
+      {/* Media — proporcion fija para que el feed no salte de altura:
+          1:1 en fotos (como Instagram) y 9:16 en video. La imagen va completa
+          con `contain`, nunca recortada, y el sobrante queda en gris neutro.
+          En escritorio ocupa la columna izquierda de altura completa. */}
       {post.imageUrl && (
-        <div className="mb-3 overflow-hidden">
+        <div className={`overflow-hidden${
+          parteEnDos
+            ? ' mb-3 md:mb-0 md:col-start-1 md:row-start-1 md:row-span-full md:self-start'
+            : ' mb-3'}`}>
           {isVideo ? (
-            <video src={post.imageUrl} controls className="w-full" style={{ maxHeight: 360 }} />
+            <div className="w-full mx-auto" style={{ aspectRatio: '9 / 16', maxWidth: 360, background: '#f4f4f6' }}>
+              <video src={post.imageUrl} controls className="w-full h-full object-contain" />
+            </div>
           ) : isFile ? (
             <a href={post.imageUrl} target="_blank" rel="noopener noreferrer"
               className="flex items-center gap-3 mx-4 px-4 py-3 rounded-xl border border-border hover:bg-secondary transition-colors">
@@ -420,15 +432,17 @@ function PostCard({
               <span className="text-[13px] font-semibold text-foreground truncate">Ver archivo adjunto</span>
             </a>
           ) : (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={post.imageUrl} alt="Publicación" className="w-full object-contain" style={{ maxHeight: 600, background: '#f8f8f8' }} />
+            <div className="w-full mx-auto" style={{ aspectRatio: '1 / 1', maxWidth: 560, background: '#f4f4f6' }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={post.imageUrl} alt="Publicación" className="w-full h-full object-contain" />
+            </div>
           )}
         </div>
       )}
 
       {/* Contadores clicables */}
       {(likeCount > 0 || post.comments.length > 0) && (
-        <div className="relative flex items-center gap-3 px-4 pb-2">
+        <div className="relative flex items-center gap-3 px-4 pb-2 md:col-start-2">
           {likeCount > 0 && (
             <button
               ref={likesButtonRef}
@@ -507,7 +521,7 @@ function PostCard({
       )}
 
       {/* Acciones */}
-      <div className="flex items-center border-t border-border/60">
+      <div className="flex items-center border-t border-border/60 md:col-start-2">
         {/* Me gusta */}
         <motion.button onClick={handleLike} whileTap={{ scale: 0.95 }}
           transition={{ type: 'spring' as const, stiffness: 500, damping: 15 }}
@@ -546,13 +560,17 @@ function PostCard({
       <AnimatePresence>
         {showComments && (
           <motion.div
+            className="md:col-start-2"
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.25, ease: [0.23, 1, 0.32, 1] }}
             style={{ overflow: 'hidden' }}
           >
-            <div className="px-4 pb-4 space-y-3 border-t border-border/40 pt-3"
+            {/* En escritorio los comentarios se desplazan dentro de su columna:
+                sin tope, una publicacion con veinte comentarios estiraria la
+                tarjeta y dejaria la imagen flotando con un vacio al lado. */}
+            <div className="px-4 pb-4 space-y-3 border-t border-border/40 pt-3 md:max-h-[320px] md:overflow-y-auto"
               style={{ background: 'rgba(124,58,237,0.02)' }}>
 
               {/* Lista de comentarios */}

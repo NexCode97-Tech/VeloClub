@@ -290,8 +290,22 @@ function PostCard({
     }
   }
 
-  // Menú ⋯ por comentario
+  // Menú ⋯ por comentario. La posicion se guarda aparte porque el menu se
+  // dibuja en un portal: dentro de la lista quedaba recortado por el
+  // overflow del scroll, y contra un recorte por overflow el z-index no puede.
   const [commentMenu, setCommentMenu]       = useState<string | null>(null); // commentId con menú abierto
+  const [commentMenuPos, setCommentMenuPos] = useState<{ top: number; left: number } | null>(null);
+
+  function abrirMenuComentario(id: string, boton: HTMLElement) {
+    if (commentMenu === id) { setCommentMenu(null); return; }
+    const r = boton.getBoundingClientRect();
+    const ancho = 140;
+    // Se ancla a la derecha del boton y se limita al viewport para que no
+    // se salga por el borde cuando el comentario esta pegado al filo.
+    const left = Math.min(Math.max(8, r.right - ancho), window.innerWidth - ancho - 8);
+    setCommentMenuPos({ top: r.bottom + 6, left });
+    setCommentMenu(id);
+  }
   const [editingComment, setEditingComment] = useState<string | null>(null); // commentId en modo edición
   const [editText, setEditText]             = useState('');
   const [savingEdit, setSavingEdit]         = useState(false);
@@ -682,22 +696,26 @@ function PostCard({
               transition={{ duration: 0.25, ease: [0.23, 1, 0.32, 1] }}
               style={{ overflow: 'hidden' }}
               /* En escritorio los comentarios van entre la descripcion y el
-                 contador, por eso el order; en movil conservan su sitio abajo. */
-              className="md:order-1 md:min-h-0"
+                 contador, por eso el order; en movil conservan su sitio abajo.
+                 flex-1 + min-h-0: la lista es lo unico elastico de la columna,
+                 se queda con el alto que sobra despues de cabecera, descripcion,
+                 contador, acciones y campo de escribir. */
+              className="md:order-1 md:flex-1 md:min-h-0 md:flex md:flex-col"
             >
               {/* En escritorio los comentarios se desplazan dentro de su columna:
                   sin tope, una publicacion con veinte comentarios estiraria la
                   tarjeta y dejaria la imagen flotando con un vacio al lado. */}
-              <div className="px-4 pb-2 border-t border-border/40 pt-3 md:border-t-0 md:bg-transparent"
+              <div className="px-4 pb-2 border-t border-border/40 pt-3 md:border-t-0 md:bg-transparent md:flex-1 md:min-h-0 md:overflow-y-auto"
                 style={{ background: 'rgba(124,58,237,0.02)' }}>
 
-                {/* Lista de comentarios */}
-                {/* Scroll interno: sin tope, una publicacion con treinta
-                    comentarios estira la tarjeta hasta el infinito y en
-                    escritorio deja la imagen flotando con un vacio al lado.
-                    El campo de escribir queda fuera del scroll, siempre visible. */}
+                {/* Lista de comentarios.
+                    En escritorio el scroll lo hace el contenedor de arriba, que
+                    mide el hueco real que deja la imagen; aqui no hay tope fijo
+                    porque un tope en px sobra con imagenes altas y falta con
+                    imagenes bajas. En movil la tarjeta no tiene alto limite, asi
+                    que si hace falta un tope para que no crezca sin fin. */}
                 {post.comments.length > 0 && (
-                  <div className="space-y-2.5 max-h-[300px] overflow-y-auto pr-1"
+                  <div className="space-y-2.5 max-h-[300px] overflow-y-auto pr-1 md:max-h-none md:overflow-visible md:pr-0"
                     style={{ WebkitOverflowScrolling: 'touch', overscrollBehaviorY: 'contain' }}>
                     {post.comments.map(c => (
                       <div key={c.id} className="flex items-start gap-2.5 md:gap-2">
@@ -742,45 +760,53 @@ function PostCard({
                               </div>
                             </div>
                           ) : (
+                            /* En escritorio el nombre lleva la hora al lado y el
+                               texto va debajo: sin fondo ni borde, que con varios
+                               comentarios se leia como una lista de cajas. */
                             <div className="rounded-2xl rounded-tl-sm px-3 py-2 md:rounded-none md:px-0 md:py-0 md:border-0 md:bg-transparent"
                               style={{ background: '#fff', border: '1px solid rgba(124,58,237,0.08)' }}>
-                              <p className="text-[11px] font-semibold text-foreground mb-0.5 md:hidden">{c.authorName}</p>
-                              <p className="text-[13px] md:text-[12px] text-foreground leading-snug">
-                                <span className="hidden md:inline font-semibold">{c.authorName} </span>
-                                {c.content}
+                              <p className="text-[11px] font-semibold text-foreground mb-0.5 md:mb-[3px]">
+                                {c.authorName}
+                                <span className="hidden md:inline text-[10px] font-normal text-muted-foreground ml-2">{timeAgo(c.createdAt)}</span>
                               </p>
+                              <p className="text-[13px] md:text-[12px] text-foreground leading-snug">{c.content}</p>
                             </div>
                           )}
-                          <p className="text-[10px] text-muted-foreground mt-0.5 pl-1 md:pl-0">{timeAgo(c.createdAt)}</p>
+                          <p className="text-[10px] text-muted-foreground mt-0.5 pl-1 md:hidden">{timeAgo(c.createdAt)}</p>
                         </div>
 
                         {/* ── Botón ⋯ con dropdown ── */}
                         {canDelete && editingComment !== c.id && (
-                          <div className="relative mt-1 shrink-0">
+                          <div className="mt-1 shrink-0">
                             <button
-                              onClick={() => setCommentMenu(commentMenu === c.id ? null : c.id)}
+                              onClick={e => abrirMenuComentario(c.id, e.currentTarget)}
                               className="w-6 h-6 rounded-full flex items-center justify-center transition-all"
                               style={{ color: '#C4C2CF' }}
                             >
                               <MoreHorizontal className="w-3.5 h-3.5" />
                             </button>
-                            <AnimatePresence>
-                              {commentMenu === c.id && (
-                                <>
+                            {typeof document !== 'undefined' && createPortal(
+                              <AnimatePresence>
+                                {commentMenu === c.id && commentMenuPos && (
+                                <Fragment key={`menu-${c.id}`}>
                                   {/* Overlay para cerrar */}
-                                  <div className="fixed inset-0 z-40" onClick={() => setCommentMenu(null)} />
+                                  <div className="fixed inset-0 z-[9998]" onClick={() => setCommentMenu(null)} />
                                   <motion.div
                                     initial={{ opacity: 0, scale: 0.92, y: -4 }}
                                     animate={{ opacity: 1, scale: 1, y: 0 }}
                                     exit={{ opacity: 0, scale: 0.92, y: -4 }}
                                     transition={{ duration: 0.15, ease: [0.23, 1, 0.32, 1] }}
-                                    className="absolute right-0 top-7 z-50 flex flex-col overflow-hidden"
+                                    className="flex flex-col overflow-hidden"
                                     style={{
+                                      position: 'fixed',
+                                      top: commentMenuPos.top,
+                                      left: commentMenuPos.left,
+                                      zIndex: 9999,
                                       background: '#fff',
                                       border: '1px solid rgba(124,58,237,0.12)',
                                       borderRadius: 12,
                                       boxShadow: '0 8px 24px rgba(0,0,0,0.10)',
-                                      minWidth: 130,
+                                      minWidth: 140,
                                     }}
                                   >
                                     <button
@@ -804,9 +830,11 @@ function PostCard({
                                       <X className="w-3.5 h-3.5" /> Cancelar
                                     </button>
                                   </motion.div>
-                                </>
-                              )}
-                            </AnimatePresence>
+                                </Fragment>
+                                )}
+                              </AnimatePresence>,
+                              document.body
+                            )}
                           </div>
                         )}
                       </div>

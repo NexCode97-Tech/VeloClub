@@ -218,7 +218,7 @@ export default function AyudaPage() {
         {mostrarCarga ? (
           <ModuleLoader />
         ) : (
-          <div className="space-y-2 md:grid md:grid-cols-2 md:gap-3 md:space-y-0">
+          <div className="flex flex-col gap-2 md:grid md:grid-cols-2 md:gap-3">
             <ModuleReveal>
             {guides.map(g => (
               <HelpCard key={g.id} guide={g} />

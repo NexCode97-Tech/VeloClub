@@ -47,6 +47,16 @@ export default function ModuleReveal({ children }: { children: ReactNode }) {
           }
         }
       `}</style>
+      {/* `contents` hace que este div no genere caja, asi que los hijos se
+          comportan como si colgaran directamente del contenedor del modulo.
+          Es a proposito: sin el, un contenedor con grid o flex (Sedes,
+          Calendario) meteria todas las tarjetas en una sola celda.
+
+          ⚠️ Por eso el contenedor del modulo debe separar con `gap`, nunca con
+          `space-y-*`. `gap` es propiedad del contenedor flex/grid y si alcanza
+          a los hijos promovidos; `space-y-*` es el selector `> * + *`, que solo
+          ve a este div y por tanto no aplica ninguna separacion. Cuatro modulos
+          quedaron con las tarjetas pegadas por esto. */}
       <div className="vcmr contents">{children}</div>
     </>
   );

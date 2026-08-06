@@ -68,7 +68,7 @@ export function InicioHeaderMovil({ clubName, clubLogoUrl, userName, userPicture
         >
           <Search size={15} strokeWidth={2} className="shrink-0" style={{ color: 'rgba(255,255,255,0.9)' }} />
           <span className="text-[13px] truncate" style={{ color: 'rgba(255,255,255,0.9)' }}>
-            Buscar clubes, deportistas o entrenadores
+            Buscar clubes, deportistas
           </span>
         </button>
         <div

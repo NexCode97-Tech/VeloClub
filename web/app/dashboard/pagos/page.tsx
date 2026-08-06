@@ -537,7 +537,7 @@ export default function PagosPage() {
           </div>
           </ModuleReveal>
         ) : (
-          <div className="space-y-2 pb-4">
+          <div className="flex flex-col gap-2 pb-4">
             <ModuleReveal>
             {filtered.map(p => {
               const sc = STATUS_COLORS[p.status] ?? STATUS_COLORS.PENDING;

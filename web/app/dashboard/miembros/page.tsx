@@ -825,7 +825,7 @@ export default function MiembrosPage() {
           MOBILE LAYOUT
       ══════════════════════════════════════════════════════════════════ */}
       {mostrarCarga ? <div className="md:hidden"><ModuleLoader /></div> : (
-      <motion.div variants={pageStagger} initial="hidden" animate="show" className="md:hidden px-4 pt-4 space-y-3">
+      <motion.div variants={pageStagger} initial="hidden" animate="show" className="md:hidden px-4 pt-4 flex flex-col gap-3">
         <ModuleReveal>
         {/* Stats móvil como filtros */}
         <motion.div variants={pageCard} className="grid grid-cols-4 gap-2">

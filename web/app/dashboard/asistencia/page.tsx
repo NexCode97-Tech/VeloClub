@@ -527,7 +527,7 @@ export default function AsistenciaPage() {
         </DialogContent>
       </Dialog>
 
-      <motion.div variants={stagger} initial="hidden" animate="show" className="px-4 pt-4 lg:pt-6 space-y-3">
+      <motion.div variants={stagger} initial="hidden" animate="show" className="px-4 pt-4 lg:pt-6 flex flex-col gap-3">
         {mostrarCarga ? (
           <ModuleLoader />
         ) : (

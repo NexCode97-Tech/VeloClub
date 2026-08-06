@@ -30,6 +30,7 @@ interface Props {
   clubName: string | null;
   clubLogoUrl: string | null;
   userName: string | null;
+  userPicture?: string | null;
   verified?: boolean;
 }
 
@@ -39,7 +40,7 @@ function iniciales(nombre: string): string {
 
 const FONDOS = ['#F0997B', '#9FE1CB', '#FAC775', '#CECBF6', '#F4C0D1'];
 
-export function InicioHeaderMovil({ clubName, clubLogoUrl, userName, verified }: Props) {
+export function InicioHeaderMovil({ clubName, clubLogoUrl, userName, userPicture, verified }: Props) {
   // El buscador se abre desde aqui y no desde el layout: este encabezado se
   // renderiza dentro de la pagina para que la tarjeta de la prueba pueda
   // montarse sobre el degradado sin que el area con scroll la recorte.
@@ -67,7 +68,7 @@ export function InicioHeaderMovil({ clubName, clubLogoUrl, userName, verified }:
         >
           <Search size={15} strokeWidth={2} className="shrink-0" style={{ color: 'rgba(255,255,255,0.9)' }} />
           <span className="text-[13px] truncate" style={{ color: 'rgba(255,255,255,0.9)' }}>
-            Buscar deportistas, pagos...
+            Buscar clubes, deportistas o entrenadores
           </span>
         </button>
         <div
@@ -122,6 +123,20 @@ export function InicioHeaderMovil({ clubName, clubLogoUrl, userName, verified }:
             </p>
           )}
         </div>
+
+        {/* Mi perfil. Va aqui y no arriba para no dejar cuatro circulos
+            seguidos: el club a la izquierda, la persona a la derecha. Es la
+            unica entrada a /dashboard/perfil en movil. */}
+        <Link
+          href="/dashboard/perfil"
+          aria-label="Mi perfil"
+          className="shrink-0 rounded-full overflow-hidden flex items-center justify-center"
+          style={{ width: 34, height: 34, border: '2px solid rgba(255,255,255,0.45)', background: 'rgba(255,255,255,0.18)' }}
+        >
+          {userPicture
+            ? <img src={userPicture} alt="" className="w-full h-full object-cover" />
+            : <span className="text-[12px] font-semibold text-white">{userName ? iniciales(userName) : '?'}</span>}
+        </Link>
       </div>
 
       {/* Fila 3 — avatares apilados. Le dan cara al club en vez de solo un número */}

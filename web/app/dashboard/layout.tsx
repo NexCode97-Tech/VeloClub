@@ -170,7 +170,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   // Tooltip del sidebar colapsado (etiqueta con el nombre del módulo al hacer hover)
   const [navTip, setNavTip] = useState<{ label: string; top: number; left: number } | null>(null);
   const [searchOpen, setSearchOpen] = useState(false);
-  const [clubLogoUrl, setClubLogoUrl] = useState<string | null>(null);
   const [clubName, setClubName] = useState<string | null>(null);
   const [userName, setUserName] = useState<string | null>(null);
   const [userPicture, setUserPicture] = useState<string | null>(null);
@@ -284,7 +283,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         if (res.status === 'complete_profile') { router.replace('/completar-perfil'); return; }
         const userRole = res.user?.role ?? null;
         setRole(userRole);
-        setClubLogoUrl(res.user?.club?.logoUrl ?? null);
         setClubName(res.user?.club?.name ?? null);
         setUserName(res.user?.name ?? null);
         setUserPicture(res.user?.picture ?? null);
@@ -341,8 +339,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const sideNavItems = role ? (ROLE_NAV[role] ?? ROLE_NAV.STUDENT) : ROLE_NAV.STUDENT;
   const tabHrefs   = new Set(tabItems.map((t) => t.href));
   const isOnExtra  = !tabHrefs.has(pathname) && pathname !== '/dashboard' && pathname.startsWith('/dashboard/');
-
-  const enInicio = pathname === '/dashboard';
 
   function isTabActive(href: string) {
     if (href === '/dashboard/mas') return false; // el CircleMenu maneja su propio estado
@@ -689,71 +685,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       {/* ── Main content ────────────────────────────────────────────────── */}
       <div className="flex-1 flex flex-col overflow-hidden min-w-0">
 
-        {/* ── Encabezado móvil ──────────────────────────────────────────────
-            El buscador y las notificaciones vivian solo en el encabezado del
-            sidebar, que no se muestra en celular: no estaban escondidos, no
-            existian. Y el encabezado movil solo aparecia en Inicio.
-
-            Ahora acompana todos los modulos. El buscador va como campo ancho y
-            no como icono: una lupa redonda mas junto a los botones que ya
-            estaban dejaba cinco circulos iguales apretados.
-
-            Se quitan recargar y perfil para que la fila respire. Recargar es
-            redundante (la PWA ya tiene deslizar para actualizar y el panel se
-            refresca solo por SSE) y Mi perfil es una pestana dentro de Ajustes,
-            asi que se llega por el engrane. El menu flotante no se toca. */}
-        {/* En Inicio el encabezado es el degradado con la identidad del club;
-            en el resto de modulos, la barra compacta. Los dos llevan el
-            buscador como campo ancho y la campana separada. */}
-        {enInicio ? null : (
-          <header className="md:hidden flex items-center gap-2 px-4 py-2.5 shrink-0 bg-background sticky top-0 z-30">
-            {/* Logo del club — lleva a Inicio */}
-            <Link href="/dashboard" aria-label="Ir a inicio" className="shrink-0">
-              {clubLogoUrl ? (
-                <div style={{ width: 36, height: 36, borderRadius: '50%', overflow: 'hidden', border: '2px solid rgba(124,58,237,0.18)' }}>
-                  <Image
-                    src={clubLogoUrl}
-                    alt={clubName ?? 'Club'}
-                    width={36}
-                    height={36}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              ) : (
-                <div
-                  className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-semibold"
-                  style={{ background: 'rgba(124,58,237,0.10)', color: '#7C3AED' }}
-                >
-                  {clubName?.charAt(0)?.toUpperCase() ?? 'V'}
-                </div>
-              )}
-            </Link>
-
-            {/* Buscador — campo, no icono. Ocupa el espacio libre de la fila */}
-            <button
-              onClick={() => setSearchOpen(true)}
-              className="flex-1 min-w-0 flex items-center gap-2 h-9 px-3 rounded-full transition-colors text-left"
-              style={{ background: '#fff', boxShadow: '0 1px 4px rgba(0,0,0,0.06), inset 0 0 0 1px rgba(0,0,0,0.06)' }}
-            >
-              <Search size={16} strokeWidth={2} style={{ color: '#8E87A8' }} className="shrink-0" />
-              <span className="text-[13px] truncate" style={{ color: '#8E87A8' }}>Buscar</span>
-            </button>
-
-            {/* Notificaciones — separada del buscador, como en el diseño aprobado */}
-            <div className="shrink-0">
-              <NotificationsBell />
-            </div>
-
-            <Link
-              href="/dashboard/ajustes"
-              aria-label="Ajustes"
-              className="w-9 h-9 flex items-center justify-center rounded-full transition-colors shrink-0"
-              style={{ color: '#8E87A8', background: '#fff', boxShadow: '0 1px 4px rgba(0,0,0,0.08), inset 0 0 0 1px rgba(0,0,0,0.06)' }}
-            >
-              <Settings size={19} strokeWidth={1.8} />
-            </Link>
-          </header>
-        )}
+        {/* En movil el unico encabezado es el de Inicio, que lo pinta la propia
+            pagina. Los demas modulos no llevan barra superior: cada uno ya trae
+            su fila de titulo con sus acciones, y sumar otra encima dejaba dos
+            filas de chrome antes del contenido en la pantalla donde el alto es
+            lo mas escaso. El buscador y las notificaciones viven en Inicio (y
+            en el sidebar en escritorio). */}
 
         <main className="flex-1 overflow-y-auto pb-28 md:pb-0" style={{ WebkitOverflowScrolling: 'touch', overscrollBehaviorY: 'contain' }}>
           {children}

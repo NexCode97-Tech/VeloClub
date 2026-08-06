@@ -1165,6 +1165,7 @@ export default function DashboardPage() {
         clubName={me?.user?.club?.name ?? null}
         clubLogoUrl={me?.user?.club?.logoUrl ?? null}
         userName={me?.user?.name ?? null}
+        userPicture={me?.user?.picture ?? null}
         verified={me?.user?.club?.verified}
       />
 

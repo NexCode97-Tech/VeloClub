@@ -76,41 +76,7 @@ export default function GlassmorphismHero() {
         }
       `}</style>
 
-      {/* 1. Imagen de fondo — Next.js Image con priority para LCP */}
-      <div
-        className="absolute inset-0 z-0"
-        style={{
-          maskImage: 'linear-gradient(180deg, transparent, black 0%, black 70%, transparent)',
-          WebkitMaskImage: 'linear-gradient(180deg, transparent, black 0%, black 70%, transparent)',
-        }}
-      >
-        <Image
-          src="/hero-bg.webp"
-          alt=""
-          fill
-          priority
-          fetchPriority="high"
-          sizes="100vw"
-          className="object-cover object-center opacity-55"
-          style={{
-            transform: 'translateZ(0)',
-            WebkitTransform: 'translateZ(0)',
-            willChange: 'transform',
-            backfaceVisibility: 'hidden',
-            WebkitBackfaceVisibility: 'hidden',
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
-          }}
-        />
-      </div>
-
-      {/* 2. Fondo oscuro base */}
-      <div className="absolute inset-0 z-[1] bg-zinc-950/80" />
-
-      {/* 3. Glow violeta — centrado en mobile, desplazado en desktop */}
+      {/* 1. Glow violeta — centrado en mobile, desplazado en desktop */}
       <div
         className="absolute inset-0 z-[2] pointer-events-none"
         style={{
@@ -124,12 +90,12 @@ export default function GlassmorphismHero() {
         }}
       />
 
-      {/* 4. Corriente de partículas. Va encima del resplandor para que se lea,
+      {/* 2. Corriente de partículas. Va encima del resplandor para que se lea,
              y por debajo del contenido. Arranca cuando el navegador se
-             desocupa: el hero es el elemento que mide el LCP. */}
-      <VortexBackground className="z-[3]" />
+             desocupa, para no competir con el contenido en la primera carga. */}
+      <VortexBackground className="z-[3]" opacity={0.7} />
 
-      {/* 5. Sombra lateral derecha */}
+      {/* 3. Sombra lateral derecha */}
       <div
         className="absolute inset-0 z-[2] pointer-events-none hidden lg:block"
         style={{ background: 'linear-gradient(to right, transparent 35%, rgba(9,4,20,0.55) 100%)' }}
@@ -207,10 +173,10 @@ export default function GlassmorphismHero() {
               grilla, en movil cae debajo del texto y en escritorio ocupa la
               columna derecha, sin necesidad de duplicarla.
 
-              Sin `priority` a proposito: la unica imagen precargada debe ser el
-              fondo del hero, que es el elemento que mide el LCP. Con dos
-              preloads compitiendo, ninguna de las dos llega primero. Queda en
-              `eager` para que no se cargue perezosa estando sobre el pliegue.
+              Ahora si lleva `priority`. Antes no lo tenia porque la imagen de
+              fondo del hero era la que media el LCP y no convenia poner dos
+              preloads a competir. Al quitarse ese fondo, esta paso a ser la
+              imagen grande del hero, asi que es la que hay que precargar.
 
               Tampoco lleva `vc-fade`: esa clase arranca en opacity 0 y con el
               retardo d6 tarda ~1,3 s en verse. El LCP solo cuenta cuando el
@@ -223,7 +189,8 @@ export default function GlassmorphismHero() {
               alt="VeloClub versión móvil"
               width={780}
               height={540}
-              loading="eager"
+              priority
+              fetchPriority="high"
               sizes="(max-width: 639px) 20rem, (max-width: 1023px) 24rem, 42rem"
               className="w-full max-w-xs sm:max-w-sm lg:max-w-2xl object-contain drop-shadow-2xl lg:scale-110"
             />

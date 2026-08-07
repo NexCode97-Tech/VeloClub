@@ -104,6 +104,10 @@ export default function MiembrosPage() {
   const [saving, setSaving]     = useState(false);
   const [estadoGuardado, setEstadoGuardado] = useState<EstadoGuardado>('idle');
   const [error, setError]       = useState<string | null>(null);
+  // El error de arriba solo se ve dentro del panel de edición. Lo que falla desde
+  // la lista (eliminar, activar o desactivar) necesita su propio aviso, o el
+  // intento se pierde en silencio.
+  const [errorLista, setErrorLista] = useState<string | null>(null);
 
   // Solo el administrador gestiona miembros; el resto ve la lista sin editarla
   const [canManage, setCanManage] = useState(false);
@@ -241,11 +245,22 @@ export default function MiembrosPage() {
     }
   }
 
+  // Sin manejo de error, un borrado fallido no mostraba nada: la fila seguía en
+  // pantalla y el intento se perdía como promesa rechazada. Quien administraba
+  // volvía a pulsar sobre la misma fila una y otra vez sin entender por qué no
+  // pasaba nada. Si el miembro ya no existe, la lista está vieja: se refresca y
+  // la fila desaparece, que es lo que la persona quería lograr.
   async function handleDelete(id: string) {
     if (!confirm('¿Eliminar este miembro?')) return;
-    const token = await getToken();
-    await apiFetch(`/members/${id}`, { method: 'DELETE', token });
-    qc.invalidateQueries({ queryKey: QK.members() });
+    try {
+      const token = await getToken();
+      await apiFetch(`/members/${id}`, { method: 'DELETE', token });
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'No se pudo eliminar el miembro';
+      if (!msg.includes('no encontrado')) setErrorLista(msg);
+    } finally {
+      qc.invalidateQueries({ queryKey: QK.members() });
+    }
   }
 
   // Pausa temporal, no borrado: el deportista que se va de vacaciones conserva
@@ -265,7 +280,7 @@ export default function MiembrosPage() {
       });
       qc.invalidateQueries({ queryKey: QK.members() });
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'No se pudo cambiar el estado');
+      setErrorLista(e instanceof Error ? e.message : 'No se pudo cambiar el estado');
     } finally {
       setCambiandoEstado(null);
     }
@@ -367,6 +382,29 @@ export default function MiembrosPage() {
   // ── Render ───────────────────────────────────────────────────────────────────
   return (
     <div className="min-h-full" style={{ background: '#F7F7FB' }}>
+
+      {/* Avisos de acciones hechas desde la lista, no desde el panel de edición */}
+      <AnimatePresence>
+        {errorLista && (
+          <motion.div
+            initial={reducedMotion ? { opacity: 0 } : { opacity: 0, y: -6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={reducedMotion ? { opacity: 0 } : { opacity: 0, y: -6 }}
+            transition={{ duration: 0.2, ease: EASE_OUT }}
+            className="mx-5 mt-3 px-4 py-3 rounded-xl flex items-start gap-3"
+            style={{ background: 'rgba(239,71,111,0.10)' }}
+          >
+            <p className="flex-1 text-[12px] font-semibold m-0" style={{ color: '#EF476F' }}>{errorLista}</p>
+            <button
+              onClick={() => setErrorLista(null)}
+              className="shrink-0 text-[12px] font-semibold underline"
+              style={{ color: '#EF476F' }}
+            >
+              Cerrar
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* ══════════════════════════════════════════════════════════════════
           HEADER MOBILE

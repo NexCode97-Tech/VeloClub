@@ -661,6 +661,11 @@ export default function SuscripcionCard() {
                     background: '#fff',
                     border: activo ? '2px solid #7C3AED' : '1px solid rgba(26,16,40,0.10)',
                     padding: activo ? 13 : 14,
+                    // La etiqueta "Más popular" va anclada a la esquina superior
+                    // derecha, justo donde cae el precio. Sin esta franja la
+                    // etiqueta se monta encima y tacha la cifra. Solo la crece
+                    // la tarjeta que lleva etiqueta; las otras dos no cambian.
+                    paddingTop: destacado ? (activo ? 33 : 34) : undefined,
                     boxShadow: activo ? '0 6px 22px -12px rgba(124,58,237,0.5)' : undefined,
                   }}
                 >

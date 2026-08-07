@@ -4,6 +4,7 @@ import { GeistMono } from "geist/font/mono";
 import { ClerkProvider } from "@clerk/nextjs";
 import { esES } from "@clerk/localizations";
 import { Providers } from "./providers";
+import { ColorBarraEstado } from "@/components/ui/color-barra-estado";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
@@ -13,6 +14,9 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
+  // Valor de arranque, el del landing. ColorBarraEstado lo ajusta a la pantalla
+  // que se esté viendo, para que la barra de estado no corte con el contenido.
+  themeColor: '#09090B',
 };
 
 const SITE_URL = "https://www.veloclubtech.com";
@@ -58,6 +62,7 @@ export default function RootLayout({
           <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
         </head>
         <body className="min-h-full flex flex-col">
+          <ColorBarraEstado />
           <Providers>{children}</Providers>
           <Analytics />
           <SpeedInsights />

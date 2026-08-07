@@ -55,6 +55,12 @@ export function downloadMembersTemplate(locations: LocationOption[] = []) {
     '* Categoría y Nivel son opcionales (solo aplican a STUDENT)',
     '* Día de corte: número entre 1 y 31',
     '* Sede: selecciona de la lista desplegable (opcional)',
+    '',
+    'SOBRE LA FECHA DE NACIMIENTO',
+    '* Escríbela como prefieras: 15/03/2005, 2005-03-15, 15-03-05 o 15 de marzo de 2005.',
+    '* También sirve si Excel la convierte a fecha automáticamente.',
+    '* Si el día y el mes se pueden confundir (por ejemplo 05/03/2005), se toma como día/mes.',
+    '* Es un dato opcional: si lo dejas vacío, el deportista se importa igual.',
   ];
 
   const wb = XLSX.utils.book_new();
@@ -248,6 +254,49 @@ export function parseBirthDate(raw: unknown): string | undefined {
   return undefined;
 }
 
+/** Quita tildes, signos y espacios de más para comparar textos escritos a mano. */
+const normalizar = (s: string) =>
+  s.normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+
+/**
+ * Busca una columna aunque el encabezado venga con otra tilde, otra mayúscula o
+ * un espacio de más. Sin esto, retocar el encabezado dejaba la columna vacía sin
+ * ningún aviso.
+ */
+function columna(fila: Record<string, unknown>, ...nombres: string[]): unknown {
+  for (const n of nombres) {
+    if (n in fila) return fila[n];
+  }
+  const buscados = nombres.map(normalizar);
+  for (const clave of Object.keys(fila)) {
+    const k = normalizar(clave);
+    if (buscados.some(b => k === b || k.startsWith(b) || b.startsWith(k))) return fila[clave];
+  }
+  return undefined;
+}
+
+/**
+ * Lleva el tipo de documento al código que usa la app.
+ *
+ * La plantilla ofrece etiquetas legibles ("Pasaporte") mientras que la pantalla
+ * de miembros trabaja con códigos ("PA"). Sin esta conversión, un deportista
+ * importado quedaba con un tipo que el formulario de edición no reconocía y
+ * mostraba en blanco.
+ */
+export function normalizarTipoDoc(raw: unknown): string | undefined {
+  const v = normalizar(String(raw ?? ''));
+  if (!v) return undefined;
+  if (/^(cc|cedula|cedula de ciudadania|c c)$/.test(v)) return 'CC';
+  if (/^(ti|tarjeta de identidad)$/.test(v)) return 'TI';
+  if (/^(rc|registro civil)$/.test(v)) return 'RC';
+  if (/^(ce|cedula de extranjeria)$/.test(v)) return 'CE';
+  if (/^(pa|pasaporte|passport)$/.test(v)) return 'PA';
+  if (/^nit$/.test(v)) return 'NIT';
+  if (/^(otro|otra|other)$/.test(v)) return 'Otro';
+  return String(raw).trim() || undefined;
+}
+
 export function parseMembersExcel(
   file: File,
 ): Promise<{ rows: MemberImportRow[]; errors: string[]; warnings: string[] }> {
@@ -267,11 +316,14 @@ export function parseMembersExcel(
       const errors: string[] = [];
       const warnings: string[] = [];
 
+      const texto = (fila: Record<string, unknown>, ...nombres: string[]) =>
+        String(columna(fila, ...nombres) ?? '').trim() || undefined;
+
       raw.forEach((r, i) => {
         const rowNum = i + 2;
-        const fullName = String(r['Nombre Completo *'] ?? '').trim();
-        const email    = String(r['Correo electrónico *'] ?? '').trim();
-        const roleRaw  = String(r['Rol (ADMIN / COACH / STUDENT)'] ?? 'STUDENT').trim().toUpperCase();
+        const fullName = texto(r, 'Nombre Completo *', 'Nombre Completo', 'Nombre') ?? '';
+        const email    = texto(r, 'Correo electrónico *', 'Correo electrónico', 'Correo', 'Email') ?? '';
+        const roleRaw  = (texto(r, 'Rol (ADMIN / COACH / STUDENT)', 'Rol') ?? 'STUDENT').toUpperCase();
 
         if (!fullName) { errors.push(`Fila ${rowNum}: Nombre completo es obligatorio`); return; }
         if (!email)    { errors.push(`Fila ${rowNum}: Correo es obligatorio`); return; }
@@ -279,14 +331,14 @@ export function parseMembersExcel(
           errors.push(`Fila ${rowNum}: Rol inválido "${roleRaw}" — usa ADMIN, COACH o STUDENT`); return;
         }
 
-        const dueDayRaw = parseInt(String(r['Día de corte mensualidad (1-31)'] ?? ''));
+        const dueDayRaw = parseInt(texto(r, 'Día de corte mensualidad (1-31)', 'Día de corte') ?? '');
         const paymentDueDay = !isNaN(dueDayRaw) && dueDayRaw >= 1 && dueDayRaw <= 31 ? dueDayRaw : undefined;
 
-        const locationName = String(r['Sede'] ?? '').trim() || undefined;
+        const locationName = texto(r, 'Sede');
 
         // Si la celda traía algo y no se pudo interpretar, se avisa en vez de
         // descartar la fecha en silencio, que era lo que pasaba antes.
-        const fechaCruda = r['Fecha de nacimiento (YYYY-MM-DD)'];
+        const fechaCruda = columna(r, 'Fecha de nacimiento (YYYY-MM-DD)', 'Fecha de nacimiento');
         const birthDate = parseBirthDate(fechaCruda);
         if (!birthDate && fechaCruda !== '' && fechaCruda !== null && fechaCruda !== undefined) {
           const visible = fechaCruda instanceof Date ? fechaCruda.toLocaleDateString() : String(fechaCruda);
@@ -296,15 +348,15 @@ export function parseMembersExcel(
         rows.push({
           fullName,
           email:            email || undefined,
-          phone:            String(r['Teléfono'] ?? '').trim() || undefined,
+          phone:            texto(r, 'Teléfono'),
           birthDate,
-          docType:          String(r['Tipo de documento'] ?? '').trim() || undefined,
-          docNumber:        String(r['Número de documento'] ?? '').trim() || undefined,
-          emergencyContact: String(r['Contacto de emergencia'] ?? '').trim() || undefined,
-          emergencyPhone:   String(r['Teléfono de emergencia'] ?? '').trim() || undefined,
-          eps:              String(r['EPS'] ?? '').trim() || undefined,
-          category:         String(r['Categoría'] ?? '').trim() || undefined,
-          tipo:             String(r['Nivel / Tipo'] ?? '').trim() || undefined,
+          docType:          normalizarTipoDoc(columna(r, 'Tipo de documento')),
+          docNumber:        texto(r, 'Número de documento'),
+          emergencyContact: texto(r, 'Contacto de emergencia'),
+          emergencyPhone:   texto(r, 'Teléfono de emergencia'),
+          eps:              texto(r, 'EPS'),
+          category:         texto(r, 'Categoría'),
+          tipo:             texto(r, 'Nivel / Tipo'),
           role:             roleRaw as 'ADMIN' | 'COACH' | 'STUDENT',
           paymentDueDay,
           locationName,

@@ -129,6 +129,19 @@ const ADS = [
     color: '#06D6A0',
   },
   {
+    image: '/nexcode97.png',
+    label: 'Publicidad',
+    title: 'NexCode97, desarrollo de software a la medida',
+    description: 'Plataformas web y aplicaciones hechas a la medida de tu negocio. Quienes construyen VeloClub.',
+    url: 'https://wa.me/573006359008',
+    color: '#7C3AED',
+  },
+  // Los cupos libres cierran el carrusel. Van tres a proposito: mostrar varios
+  // seguidos comunica que el espacio esta abierto, que es justo lo que se
+  // quiere vender. Comparten el mismo dibujo, que no lleva fondo propio, y se
+  // distinguen por el color de la tarjeta para que no parezca un anuncio
+  // repetido tres veces.
+  {
     image: '/publicidad-disponible.svg',
     label: 'Espacio disponible',
     title: 'Tu publicidad aquí',
@@ -137,31 +150,25 @@ const ADS = [
     // url el boton no se muestra, que es mejor que mandar al numero de otro.
     url: '#',
     cta: 'Reservar espacio',
-    color: '#7C3AED',
+    bg: 'linear-gradient(135deg,#7C3AED 0%,#5B4BE8 55%,#4361EE 100%)',
   },
   {
-    image: '/foto-equipamiento.jpg',
-    label: 'Equipamiento',
-    title: 'Nueva colección deportiva 2025',
-    description: 'Descubre la línea de ropa técnica diseñada para ciclistas de alto rendimiento. Tejidos transpirables, corte aerodinámico y protección UV para cada etapa.',
+    image: '/publicidad-disponible.svg',
+    label: 'Espacio disponible',
+    title: 'Tu publicidad aquí',
+    description: 'Promociona tu marca o tu evento ante los clubes deportivos.',
     url: '#',
-    color: '#7C3AED',
+    cta: 'Reservar espacio',
+    bg: 'linear-gradient(135deg,#4361EE 0%,#2D7FF0 55%,#06B6D4 100%)',
   },
   {
-    image: '/foto-bicicleta.jpg',
-    label: 'Ciclismo',
-    title: 'Trek & Specialized — tienda oficial',
-    description: 'Las marcas líderes del ciclismo mundial en un solo lugar. Bicicletas de ruta, MTB, accesorios y componentes con garantía oficial y asesoría especializada.',
+    image: '/publicidad-disponible.svg',
+    label: 'Espacio disponible',
+    title: 'Tu publicidad aquí',
+    description: 'Promociona tu marca o tu evento ante los clubes deportivos.',
     url: '#',
-    color: '#EF476F',
-  },
-  {
-    image: '/foto-hidratacion.png',
-    label: 'Hidratación',
-    title: 'Hidratación profesional deportiva',
-    description: 'Isotónicos, geles energéticos y suplementos formulados para resistencia y recuperación. Soluciones probadas por atletas de élite para antes, durante y después del esfuerzo.',
-    url: '#',
-    color: '#FFB703',
+    cta: 'Reservar espacio',
+    bg: 'linear-gradient(135deg,#9333EA 0%,#A736D9 55%,#C026D3 100%)',
   },
 ];
 
@@ -994,7 +1001,7 @@ export default function DashboardPage() {
       {/* ── Slideshow publicitario — ancho completo ─────────────────────────── */}
       <div className="w-full px-6 pt-4">
         <Slideshow
-          slides={ADS.map(ad => ({ img: ad.image, label: ad.label, title: ad.title, description: ad.description, url: ad.url, cta: 'cta' in ad ? ad.cta : undefined }))}
+          slides={ADS.map(ad => ({ img: ad.image, label: ad.label, title: ad.title, description: ad.description, url: ad.url, cta: 'cta' in ad ? ad.cta : undefined, bg: 'bg' in ad ? ad.bg : undefined }))}
         />
       </div>
 

@@ -13,6 +13,13 @@ export interface SlideshowSlide {
   url?: string;
   /** Texto del botón. Por defecto "Contactar". */
   cta?: string;
+  /**
+   * Fondo de la tarjeta, detrás de la imagen. Solo se ve cuando la pieza tiene
+   * transparencia, que es el caso de los cupos libres: comparten el mismo dibujo
+   * y se distinguen por el color, sin duplicar el archivo. En los anuncios de
+   * los clientes la foto tapa toda la caja y este valor no cambia nada.
+   */
+  bg?: string;
 }
 
 // El tamaño no se recibe por props: el alto es el mismo en móvil, tablet y
@@ -86,12 +93,12 @@ function usePreloadImages(slides: SlideshowSlide[]) {
 
 function SlideCard({ slide, priority }: { slide: SlideshowSlide; priority?: boolean }) {
   return (
-    <div className="relative w-full h-full overflow-hidden rounded-2xl">
+    <div className="relative w-full h-full overflow-hidden rounded-2xl" style={{ background: slide.bg }}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={slide.img}
         alt={slide.title}
-        className="w-full h-full object-cover"
+        className="relative w-full h-full object-cover"
         loading={priority ? 'eager' : 'lazy'}
         decoding={priority ? 'sync' : 'async'}
       />
@@ -186,6 +193,7 @@ export function Slideshow({ slides, autoPlayMs = 5000 }: SlideshowProps) {
             exit="exit"
             transition={{ duration: 0.5, ease: [0.23, 1, 0.32, 1] }}
             className="absolute inset-0 touch-pan-y"
+            style={{ background: mobileSlide.bg }}
             // Deslizar con el dedo para adelantar o retroceder. El avance
             // automático sigue corriendo, pero se pausa unos segundos tras cada
             // gesto para no arrebatarle el control a quien está mirando.

@@ -112,6 +112,7 @@ export default function MiembrosPage() {
   const [importOpen, setImportOpen]     = useState(false);
   const [importing, setImporting]       = useState(false);
   const [importErrors, setImportErrors] = useState<string[]>([]);
+  const [importWarnings, setImportWarnings] = useState<string[]>([]);
 
   // ── Data con caché TanStack Query ───────────────────────────────────────────
   const { data: membersData, isLoading: loadingMembers } = useQuery({
@@ -280,9 +281,12 @@ export default function MiembrosPage() {
   }
 
   async function handleImport(file: File) {
-    setImporting(true); setImportErrors([]);
-    const { rows, errors } = await parseMembersExcel(file);
+    setImporting(true); setImportErrors([]); setImportWarnings([]);
+    const { rows, errors, warnings } = await parseMembersExcel(file);
     if (errors.length > 0) { setImportErrors(errors); setImporting(false); return; }
+    // Los avisos no detienen la importación: son datos sueltos que no se pudieron
+    // interpretar, no filas inválidas.
+    setImportWarnings(warnings);
     const token = await getToken();
     const failed: string[] = [];
     for (const row of rows) {
@@ -307,7 +311,9 @@ export default function MiembrosPage() {
       } catch (e) { failed.push(`${row.fullName}: ${e instanceof Error ? e.message : 'Error'}`); }
     }
     setImporting(false);
-    if (failed.length > 0) setImportErrors(failed); else setImportOpen(false);
+    // Con avisos pendientes el modal se queda abierto, para que alcancen a leerse
+    if (failed.length > 0) setImportErrors(failed);
+    else if (warnings.length === 0) setImportOpen(false);
     qc.invalidateQueries({ queryKey: QK.members() });
   }
 
@@ -1546,7 +1552,7 @@ export default function MiembrosPage() {
       </div>
 
       {/* ── Modal importar Excel ────────────────────────────────────────────── */}
-      <Dialog open={importOpen} onOpenChange={v => { if (!importing) { setImportOpen(v); setImportErrors([]); } }}>
+      <Dialog open={importOpen} onOpenChange={v => { if (!importing) { setImportOpen(v); setImportErrors([]); setImportWarnings([]); } }}>
         <DialogContent className="max-w-sm">
           <DialogHeader><DialogTitle>Importar desde Excel</DialogTitle></DialogHeader>
           <div className="space-y-4 mt-2">
@@ -1582,6 +1588,14 @@ export default function MiembrosPage() {
             {importErrors.length > 0 && (
               <div className="bg-red-50 rounded-xl p-3 space-y-1 max-h-40 overflow-y-auto">
                 {importErrors.map((e, i) => <p key={i} className="text-[11px] text-red-600">{e}</p>)}
+              </div>
+            )}
+            {importWarnings.length > 0 && (
+              <div className="bg-amber-50 rounded-xl p-3 space-y-1 max-h-40 overflow-y-auto">
+                <p className="text-[11px] font-semibold text-amber-800">
+                  Se importaron todos, pero revisa esto:
+                </p>
+                {importWarnings.map((w, i) => <p key={i} className="text-[11px] text-amber-700">{w}</p>)}
               </div>
             )}
             <button

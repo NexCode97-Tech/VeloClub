@@ -161,44 +161,111 @@ export interface MemberImportRow {
   locationName?: string;
 }
 
-function parseBirthDate(raw: unknown): string | undefined {
-  if (!raw) return undefined;
-  const str = String(raw).trim();
+const MESES: Record<string, number> = {
+  ene: 1, jan: 1, feb: 2, mar: 3, abr: 4, apr: 4, may: 5, jun: 6, jul: 7,
+  ago: 8, aug: 8, sep: 9, set: 9, oct: 10, nov: 11, dic: 12, dec: 12,
+};
+
+const armar = (y: number, m: number, d: number): string | undefined => {
+  if (m < 1 || m > 12 || d < 1 || d > 31) return undefined;
+  // Descarta combinaciones imposibles como el 31 de febrero
+  const prueba = new Date(Date.UTC(y, m - 1, d));
+  if (prueba.getUTCMonth() !== m - 1 || prueba.getUTCDate() !== d) return undefined;
+  return `${String(y).padStart(4, '0')}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+};
+
+/** Un año de dos cifras se interpreta como pasado: son fechas de nacimiento. */
+function anioCompleto(yy: number): number {
+  if (yy >= 100) return yy;
+  const corte = new Date().getFullYear() % 100;
+  return yy <= corte ? 2000 + yy : 1900 + yy;
+}
+
+/**
+ * Interpreta la fecha de nacimiento venga como venga desde Excel.
+ *
+ * El caso importante es la celda que Excel guarda como fecha de verdad: se lee
+ * con `cellDates`, así llega como objeto Date y su formato de pantalla deja de
+ * importar. Antes se leía el texto ya formateado, de modo que un mismo día podía
+ * llegar como "15/3/05", "3/15/05" o "15-Mar-05", y todos esos se perdían.
+ *
+ * Para las celdas escritas como texto se aceptan los separadores habituales, los
+ * años de dos cifras y los meses con nombre. Cuando el orden es ambiguo
+ * (11/10/2005) se asume día/mes, que es como se escribe en Colombia.
+ */
+export function parseBirthDate(raw: unknown): string | undefined {
+  if (raw === null || raw === undefined || raw === '') return undefined;
+
+  // Celda de fecha real: sin ambigüedad posible
+  if (raw instanceof Date && !isNaN(raw.getTime())) {
+    return armar(raw.getFullYear(), raw.getMonth() + 1, raw.getDate());
+  }
+
+  // Número suelto: serial de Excel
+  if (typeof raw === 'number' && isFinite(raw) && raw > 1000) {
+    const d = XLSX.SSF.parse_date_code(raw);
+    if (d) return armar(d.y, d.m, d.d);
+  }
+
+  let str = String(raw).trim();
   if (!str) return undefined;
 
-  // Serial numérico de Excel (ej: "45123" o 45123)
-  const serial = Number(str);
-  if (!isNaN(serial) && serial > 1000) {
-    const date = XLSX.SSF.parse_date_code(serial);
-    if (date) {
-      const mm = String(date.m).padStart(2, '0');
-      const dd = String(date.d).padStart(2, '0');
-      return `${date.y}-${mm}-${dd}`;
+  // Quita la hora si el formato la arrastró ("15/03/2005 05:00")
+  str = str.replace(/[T\s]+\d{1,2}:\d{2}(:\d{2})?(\.\d+)?\s*(a\.?m\.?|p\.?m\.?|Z)?$/i, '').trim();
+
+  // Serial de Excel escrito como texto
+  if (/^\d+(\.\d+)?$/.test(str)) {
+    const n = Number(str);
+    if (n > 1000) {
+      const d = XLSX.SSF.parse_date_code(n);
+      if (d) return armar(d.y, d.m, d.d);
     }
   }
 
-  // Formatos DD/MM/YYYY o DD-MM-YYYY
-  const dmY = str.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
-  if (dmY) return `${dmY[3]}-${dmY[2].padStart(2, '0')}-${dmY[1].padStart(2, '0')}`;
+  // Año primero: 2005-03-15, 2005/03/15
+  const aMd = str.match(/^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})$/);
+  if (aMd) return armar(+aMd[1], +aMd[2], +aMd[3]);
 
-  // Ya viene en YYYY-MM-DD
-  if (/^\d{4}-\d{2}-\d{2}$/.test(str)) return str;
+  // Mes con nombre: 15-Mar-05, 15 de marzo de 2005
+  const conNombre = str.match(/^(\d{1,2})[\s\-/.]+(?:de\s+)?([a-záéíóúñ]{3,})[\s\-/.]+(?:de\s+)?(\d{2,4})$/i);
+  if (conNombre) {
+    const mes = MESES[conNombre[2].slice(0, 3).toLowerCase()];
+    if (mes) return armar(anioCompleto(+conNombre[3]), mes, +conNombre[1]);
+  }
+
+  // Dos números y un año: separadores / - . o espacio
+  const partes = str.match(/^(\d{1,2})[-/.\s](\d{1,2})[-/.\s](\d{2,4})$/);
+  if (partes) {
+    const p1 = +partes[1];
+    const p2 = +partes[2];
+    const anio = anioCompleto(+partes[3]);
+    // Si un número pasa de 12 solo puede ser el día; si no, se asume día/mes
+    if (p1 > 12 && p2 <= 12) return armar(anio, p2, p1);
+    if (p2 > 12 && p1 <= 12) return armar(anio, p1, p2);
+    return armar(anio, p2, p1);
+  }
 
   return undefined;
 }
 
-export function parseMembersExcel(file: File): Promise<{ rows: MemberImportRow[]; errors: string[] }> {
+export function parseMembersExcel(
+  file: File,
+): Promise<{ rows: MemberImportRow[]; errors: string[]; warnings: string[] }> {
   return new Promise((resolve) => {
     const reader = new FileReader();
     reader.onload = (e) => {
       const data = new Uint8Array(e.target?.result as ArrayBuffer);
-      const wb = XLSX.read(data, { type: 'array' });
+      // cellDates + raw hacen que las celdas de fecha lleguen como Date en vez de
+      // como texto ya formateado, que era lo que hacía perder las fechas según el
+      // formato que tuviera la columna en Excel.
+      const wb = XLSX.read(data, { type: 'array', cellDates: true });
       // Leer siempre la hoja 'Deportistas' — si no existe, usar la primera
       const ws = wb.Sheets['Deportistas'] ?? wb.Sheets[wb.SheetNames[0]];
-      const raw = XLSX.utils.sheet_to_json<Record<string, unknown>>(ws, { defval: '', raw: false });
+      const raw = XLSX.utils.sheet_to_json<Record<string, unknown>>(ws, { defval: '', raw: true });
 
       const rows: MemberImportRow[] = [];
       const errors: string[] = [];
+      const warnings: string[] = [];
 
       raw.forEach((r, i) => {
         const rowNum = i + 2;
@@ -217,11 +284,20 @@ export function parseMembersExcel(file: File): Promise<{ rows: MemberImportRow[]
 
         const locationName = String(r['Sede'] ?? '').trim() || undefined;
 
+        // Si la celda traía algo y no se pudo interpretar, se avisa en vez de
+        // descartar la fecha en silencio, que era lo que pasaba antes.
+        const fechaCruda = r['Fecha de nacimiento (YYYY-MM-DD)'];
+        const birthDate = parseBirthDate(fechaCruda);
+        if (!birthDate && fechaCruda !== '' && fechaCruda !== null && fechaCruda !== undefined) {
+          const visible = fechaCruda instanceof Date ? fechaCruda.toLocaleDateString() : String(fechaCruda);
+          warnings.push(`Fila ${rowNum}: no se entendió la fecha "${visible}", el deportista se importa sin fecha de nacimiento`);
+        }
+
         rows.push({
           fullName,
           email:            email || undefined,
           phone:            String(r['Teléfono'] ?? '').trim() || undefined,
-          birthDate:        parseBirthDate(r['Fecha de nacimiento (YYYY-MM-DD)']),
+          birthDate,
           docType:          String(r['Tipo de documento'] ?? '').trim() || undefined,
           docNumber:        String(r['Número de documento'] ?? '').trim() || undefined,
           emergencyContact: String(r['Contacto de emergencia'] ?? '').trim() || undefined,
@@ -235,7 +311,7 @@ export function parseMembersExcel(file: File): Promise<{ rows: MemberImportRow[]
         });
       });
 
-      resolve({ rows, errors });
+      resolve({ rows, errors, warnings });
     };
     reader.readAsArrayBuffer(file);
   });

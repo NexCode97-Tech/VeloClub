@@ -1,8 +1,8 @@
 'use client';
 
 import * as React from 'react';
-import Image from 'next/image';
 import { apiFetch } from '@/lib/api-client';
+import { MarqueeLogos } from '@/components/ui/marquee-logos';
 
 interface TrustedClub {
   id: string;
@@ -15,7 +15,9 @@ export default function LandingTrustedBy() {
 
   React.useEffect(() => {
     apiFetch<{ clubs: TrustedClub[] }>('/clubs/trusted')
-      .then(r => setClubs(r.clubs))
+      // La API ya excluye los que no tienen logo, pero un logoUrl vacío pasaría
+      // el filtro y dejaría un hueco en la tira.
+      .then(r => setClubs(r.clubs.filter(c => c.logoUrl && c.logoUrl.trim() !== '')))
       .catch(() => setClubs([]));
   }, []);
 
@@ -33,28 +35,11 @@ export default function LandingTrustedBy() {
         </p>
       </div>
 
-      {/* Logos fijos y nítidos, cada uno con su nombre */}
-      <div className="mx-auto mt-12 flex max-w-5xl flex-wrap items-start justify-center gap-6 px-5 sm:gap-8 md:gap-10">
-        {clubs.map(club => (
-          <div
-            key={club.id}
-            className="flex w-20 shrink-0 flex-col items-center gap-2 sm:w-24"
-            title={club.name}
-          >
-            <span className="flex h-12 w-12 items-center justify-center sm:h-14 sm:w-14">
-              <Image
-                src={club.logoUrl}
-                alt={club.name}
-                width={72}
-                height={72}
-                className="h-full w-full rounded-full object-contain"
-              />
-            </span>
-            <span className="w-full select-none text-center text-[10px] font-medium leading-tight tracking-wide text-white/60 sm:text-[11px] [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2] overflow-hidden">
-              {club.name}
-            </span>
-          </div>
-        ))}
+      {/* Solo el logo, en movimiento continuo. Sin el nombre debajo: la fila de
+          textos cortados competía con los logos y la sección se leía como una
+          lista, no como una muestra de quiénes ya están adentro. */}
+      <div className="mt-12">
+        <MarqueeLogos logos={clubs} velocidad="normal" />
       </div>
     </section>
   );

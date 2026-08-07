@@ -915,7 +915,8 @@ export default function MiembrosPage() {
                 <motion.div key={m.id} layout
                   initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.2, ease: EASE_OUT }}
-                  className="bg-white border border-border rounded-xl px-3 py-3 flex items-center gap-3">
+                  className="bg-white border border-border rounded-xl px-3 py-3">
+                  <div className="flex items-center gap-3">
                   <MemberAvatar
                     name={m.fullName}
                     photoUrl={m.pictureUrl}
@@ -938,27 +939,64 @@ export default function MiembrosPage() {
                       </div>
                     )}
                   </div>
-                  <div className="flex flex-col gap-1">
-                    <button onClick={() => setViewMember(m)} className="w-7 h-7 rounded-lg bg-secondary flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors">
-                      <Eye className="w-3.5 h-3.5" />
-                    </button>
+                  </div>
+
+                  {/* Acciones: misma fila que la tarjeta de escritorio — Editar
+                      ancho con el degradado de marca y el resto como cuadrados
+                      de color propio. Antes iban apiladas al costado en botones
+                      de 28 px, que dejaban el nombre y el correo sin ancho y
+                      quedaban chicas para tocar sin apuntar. */}
+                  <div className="flex gap-2 mt-3 pt-3" style={{ borderTop: '1px solid rgba(26,16,40,0.07)' }}>
+                    {canManage && (
+                    <motion.button
+                      onClick={() => openEdit(m)}
+                      whileTap={reducedMotion ? {} : { scale: 0.97 }}
+                      transition={{ duration: 0.12, ease: EASE_OUT }}
+                      className="flex-1 h-10 rounded-xl text-[12px] font-semibold text-white flex items-center justify-center gap-1.5"
+                      style={{ background: 'linear-gradient(135deg,#7C3AED,#4361EE)', boxShadow: '0 3px 12px rgba(124,58,237,0.22)' }}
+                    >
+                      <Pencil className="w-3.5 h-3.5" /> Editar
+                    </motion.button>
+                    )}
+                    {/* Sin permisos de gestion, ver el detalle es la unica accion
+                        disponible, asi que ocupa toda la fila */}
+                    <motion.button
+                      onClick={() => setViewMember(m)}
+                      whileTap={reducedMotion ? {} : { scale: 0.95 }}
+                      transition={{ duration: 0.12, ease: EASE_OUT }}
+                      className={canManage
+                        ? 'w-10 h-10 rounded-xl flex items-center justify-center shrink-0'
+                        : 'flex-1 h-10 rounded-xl text-[12px] font-semibold flex items-center justify-center gap-1.5'}
+                      style={{ background: 'rgba(124,58,237,0.08)', color: '#7C3AED' }}
+                      aria-label="Ver miembro"
+                    >
+                      <Eye className="w-4 h-4" style={{ color: '#7C3AED' }} />
+                      {!canManage && 'Ver detalle'}
+                    </motion.button>
                     {canManage && (<>
-                    <button onClick={() => openEdit(m)} className="w-7 h-7 rounded-lg bg-secondary flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors">
-                      <Pencil className="w-3.5 h-3.5" />
-                    </button>
-                    <button
+                    <motion.button
                       onClick={() => handleToggleEstado(m)}
                       disabled={cambiandoEstado === m.id}
+                      whileTap={reducedMotion ? {} : { scale: 0.95 }}
+                      transition={{ duration: 0.12, ease: EASE_OUT }}
+                      className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 disabled:opacity-50"
+                      style={{ background: m.active === false ? 'rgba(6,214,160,0.10)' : 'rgba(142,135,168,0.12)' }}
                       aria-label={m.active === false ? 'Reactivar miembro' : 'Desactivar miembro'}
-                      className="w-7 h-7 rounded-lg bg-secondary flex items-center justify-center transition-colors disabled:opacity-50"
                     >
                       {m.active === false
-                        ? <PlayCircle className="w-3.5 h-3.5" style={{ color: '#06D6A0' }} />
-                        : <PauseCircle className="w-3.5 h-3.5" style={{ color: '#8E87A8' }} />}
-                    </button>
-                    <button onClick={() => handleDelete(m.id)} className="w-7 h-7 rounded-lg bg-red-50 flex items-center justify-center text-red-400 hover:text-red-600 transition-colors">
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
+                        ? <PlayCircle className="w-4 h-4" style={{ color: '#06D6A0' }} />
+                        : <PauseCircle className="w-4 h-4" style={{ color: '#5B5470' }} />}
+                    </motion.button>
+                    <motion.button
+                      onClick={() => handleDelete(m.id)}
+                      whileTap={reducedMotion ? {} : { scale: 0.95 }}
+                      transition={{ duration: 0.12, ease: EASE_OUT }}
+                      className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                      style={{ background: 'rgba(239,71,111,0.08)' }}
+                      aria-label="Eliminar miembro"
+                    >
+                      <Trash2 className="w-4 h-4" style={{ color: '#EF476F' }} />
+                    </motion.button>
                     </>)}
                   </div>
                 </motion.div>

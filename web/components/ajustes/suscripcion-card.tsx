@@ -678,9 +678,15 @@ export default function SuscripcionCard() {
                       Más popular
                     </span>
                   )}
-                  <div className="flex items-start gap-3">
+                  {/* Centrada y con alto minimo: las dos columnas no miden lo
+                      mismo (nombre + subtitulo contra precio + periodo), asi que
+                      ancladas arriba el nombre y el precio quedaban a distinta
+                      altura y la tarjeta mas corta pegada al borde. El alto fijo
+                      ademas empareja las plegadas entre si, sin importar cuanto
+                      mida el ahorro de cada club. */}
+                  <div className="flex items-center gap-3" style={{ minHeight: 52 }}>
                     <span
-                      className="w-[22px] h-[22px] rounded-full shrink-0 mt-0.5 grid place-items-center transition-colors"
+                      className="w-[22px] h-[22px] rounded-full shrink-0 grid place-items-center transition-colors"
                       style={{ border: `2px solid ${activo ? '#7C3AED' : 'rgba(26,16,40,0.16)'}` }}
                     >
                       <motion.span

@@ -3,6 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { VortexBackground } from '@/components/ui/vortex-background';
 
 export default function GlassmorphismHero() {
   return (
@@ -123,7 +124,12 @@ export default function GlassmorphismHero() {
         }}
       />
 
-      {/* 4. Sombra lateral derecha */}
+      {/* 4. Corriente de partículas. Va encima del resplandor para que se lea,
+             y por debajo del contenido. Arranca cuando el navegador se
+             desocupa: el hero es el elemento que mide el LCP. */}
+      <VortexBackground className="z-[3]" />
+
+      {/* 5. Sombra lateral derecha */}
       <div
         className="absolute inset-0 z-[2] pointer-events-none hidden lg:block"
         style={{ background: 'linear-gradient(to right, transparent 35%, rgba(9,4,20,0.55) 100%)' }}

@@ -412,7 +412,6 @@ export default function MiembrosPage() {
       <div className="md:hidden px-5 py-3 flex items-center justify-between" style={{ background: '#F7F7FB' }}>
         <div>
           <h1 className="text-[22px] font-semibold text-foreground" style={{ fontFamily: 'inherit', lineHeight: 1.1 }}>Miembros</h1>
-          <p className="text-xs text-muted-foreground mt-0.5">{members.length} miembro{members.length !== 1 ? 's' : ''}</p>
         </div>
         <div className="flex items-center gap-2">
           <button onClick={() => downloadMembersPDF(members, clubName)} disabled={members.length === 0}

@@ -5,9 +5,10 @@ import { useEffect, useRef, useState } from 'react';
 import Script from 'next/script';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { apiFetch } from '@/lib/api-client';
-import { CreditCard, ArrowLeft, Landmark, Banknote, Clock, RefreshCw, XCircle, Check, Star } from 'lucide-react';
+import { CreditCard, ArrowLeft, Landmark, Banknote, Clock, RefreshCw, XCircle, Check, Star, Users } from 'lucide-react';
 
 const fmt = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 });
+const cop = fmt.format.bind(fmt);
 const EASE = [0.23, 1, 0.32, 1] as const;
 
 // Deslizamiento horizontal entre formularios de pago (Tarjeta / PSE / Efecty),
@@ -366,6 +367,10 @@ export default function SuscripcionCard() {
   const [planes, setPlanes] = useState<PlanOpcion[] | null>(null);
   const [loadingPlanes, setLoadingPlanes] = useState(false);
   const [settingPlan, setSettingPlan] = useState<TipoPlan | null>(null);
+  // En móvil el plan se elige en dos pasos: primero se selecciona (la tarjeta se
+  // expande y muestra qué incluye) y luego se confirma. En escritorio las tres
+  // columnas ya muestran todo a la vez, así que se elige de un solo clic.
+  const [planEnfocado, setPlanEnfocado] = useState<TipoPlan>('TRIMESTRAL');
 
   async function loadPlanes() {
     setLoadingPlanes(true);
@@ -603,8 +608,25 @@ export default function SuscripcionCard() {
   if (!data.vigencia && !pickedPlan) {
     return (
       <div className="bg-white border border-border rounded-2xl p-5">
-        <p className="text-[11px] font-semibold text-muted-foreground tracking-wide mb-1">Sin plan activo · {data.cantidadDeportistas} deportistas</p>
-        <p className="text-[15px] font-semibold text-foreground mb-4">Elige tu plan</p>
+        <p className="text-[11px] font-semibold text-muted-foreground tracking-wide mb-1">
+          Sin plan activo<span className="hidden md:inline"> · {data.cantidadDeportistas} deportistas</span>
+        </p>
+        <p className="text-[20px] font-semibold text-foreground mb-1 md:text-[15px] md:mb-4">Elige tu plan</p>
+        <p className="text-[12px] text-muted-foreground mb-4 md:hidden">Tu club queda listo apenas pagues.</p>
+
+        {/* Resumen del club — en móvil explica de dónde sale el precio, que en
+            escritorio se entiende por el contexto de las tres columnas */}
+        <div className="flex items-center gap-3 rounded-2xl p-3 mb-4 md:hidden" style={{ background: 'rgba(120,80,200,0.06)' }}>
+          <div className="w-9 h-9 rounded-full shrink-0 grid place-items-center bg-white border border-border">
+            <Users className="w-[18px] h-[18px]" style={{ color: '#7C3AED' }} />
+          </div>
+          <div>
+            <p className="text-[13px] font-semibold text-foreground leading-tight">
+              {data.cantidadDeportistas} deportista{data.cantidadDeportistas !== 1 ? 's' : ''} registrado{data.cantidadDeportistas !== 1 ? 's' : ''}
+            </p>
+            <p className="text-[11.5px] text-muted-foreground mt-0.5">El precio se ajusta solo si cambia el número</p>
+          </div>
+        </div>
 
         {avisoReembolso && (
           <p className="text-[12px] rounded-lg p-2.5 mb-3" style={{ background: 'rgba(6,214,160,0.08)', color: '#06D6A0' }}>
@@ -618,7 +640,101 @@ export default function SuscripcionCard() {
             <div className="w-5 h-5 rounded-full border-2 border-primary border-t-transparent animate-spin" />
           </div>
         ) : (
-          <div className="space-y-2.5 md:space-y-0 md:grid md:grid-cols-3 md:gap-4 md:items-stretch">
+          <>
+          {/* ── Móvil: selección en dos pasos, la tarjeta activa se expande ── */}
+          <div className="md:hidden space-y-2.5" role="radiogroup" aria-label="Plan de suscripción">
+            {(() => { const precioMensualBase = planes.find(x => x.tipoPlan === 'MENSUAL')?.precio ?? 0; return planes.map(p => {
+              const activo = planEnfocado === p.tipoPlan;
+              const destacado = p.tipoPlan === 'TRIMESTRAL';
+              const precioMes = Math.round(p.precio / MESES_POR_PLAN[p.tipoPlan]);
+              const ahorroPesos = precioMensualBase * MESES_POR_PLAN[p.tipoPlan] - p.precio;
+              return (
+                <motion.button
+                  key={p.tipoPlan}
+                  role="radio"
+                  aria-checked={activo}
+                  onClick={() => setPlanEnfocado(p.tipoPlan)}
+                  whileTap={reduce ? {} : { scale: 0.99 }}
+                  transition={{ duration: 0.12, ease: EASE }}
+                  className="relative w-full text-left rounded-2xl overflow-hidden transition-colors"
+                  style={{
+                    background: '#fff',
+                    border: activo ? '2px solid #7C3AED' : '1px solid rgba(26,16,40,0.10)',
+                    padding: activo ? 13 : 14,
+                    boxShadow: activo ? '0 6px 22px -12px rgba(124,58,237,0.5)' : undefined,
+                  }}
+                >
+                  {destacado && (
+                    <span
+                      className="absolute top-0 right-0 inline-flex items-center gap-1 text-[10px] font-semibold px-2.5 py-1"
+                      style={{ background: '#7C3AED', color: '#fff', borderBottomLeftRadius: 12 }}
+                    >
+                      <Star className="w-2.5 h-2.5" style={{ color: '#FFD60A' }} fill="#FFD60A" />
+                      Más popular
+                    </span>
+                  )}
+                  <div className="flex items-start gap-3">
+                    <span
+                      className="w-[22px] h-[22px] rounded-full shrink-0 mt-0.5 grid place-items-center transition-colors"
+                      style={{ border: `2px solid ${activo ? '#7C3AED' : 'rgba(26,16,40,0.16)'}` }}
+                    >
+                      <motion.span
+                        animate={{ scale: activo ? 1 : 0 }}
+                        transition={reduce ? { duration: 0 } : { type: 'spring', stiffness: 420, damping: 22 }}
+                        style={{ width: 12, height: 12, borderRadius: '50%', background: '#7C3AED', display: 'block' }}
+                      />
+                    </span>
+                    <div>
+                      <p className="text-[15.5px] font-semibold text-foreground leading-tight">{PLAN_LABEL[p.tipoPlan]}</p>
+                      <p className="text-[12px] mt-0.5" style={{ color: ahorroPesos > 0 ? '#06D6A0' : 'var(--muted-foreground, #8E87A8)', fontWeight: ahorroPesos > 0 ? 600 : 400 }}>
+                        {ahorroPesos > 0 ? `Ahorras ${cop(ahorroPesos)}` : 'Se paga cada mes'}
+                      </p>
+                    </div>
+                    <div className="ml-auto text-right shrink-0">
+                      <p className="text-[17px] font-semibold text-foreground tabular-nums">{cop(p.precio)}</p>
+                      <p className="text-[11px] text-muted-foreground tabular-nums">
+                        {p.tipoPlan === 'MENSUAL' ? 'por mes' : `${cop(precioMes)} / mes`}
+                      </p>
+                    </div>
+                  </div>
+
+                  <Expand show={activo}>
+                    <ul className="flex flex-col gap-2.5 pt-4" style={{ paddingLeft: 34 }}>
+                      {BENEFICIOS_PLAN.map((b, i) => (
+                        <motion.li
+                          key={b}
+                          initial={reduce ? { opacity: 1 } : { opacity: 0, y: 4 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={reduce ? { duration: 0 } : { delay: i * 0.05, duration: 0.3, ease: EASE }}
+                          className="flex items-center gap-2.5 text-[12.5px]"
+                          style={{ color: 'rgba(26,16,40,0.78)' }}
+                        >
+                          <Check className="w-[15px] h-[15px] shrink-0" strokeWidth={3} style={{ color: '#06D6A0' }} />
+                          {b}
+                        </motion.li>
+                      ))}
+                    </ul>
+                  </Expand>
+                </motion.button>
+              );
+            }); })()}
+
+            <motion.button
+              onClick={() => handleElegirPlan(planEnfocado)}
+              disabled={settingPlan !== null}
+              whileTap={reduce ? {} : { scale: 0.985 }}
+              transition={{ duration: 0.12, ease: EASE }}
+              className="w-full py-3.5 rounded-2xl text-white text-[14px] font-semibold disabled:opacity-60"
+              style={{ background: '#7C3AED', marginTop: 14 }}
+            >
+              {settingPlan
+                ? 'Guardando...'
+                : <>Continuar con <PrecioAnimado valor={planes.find(x => x.tipoPlan === planEnfocado)?.precio ?? 0} /></>}
+            </motion.button>
+          </div>
+
+          {/* ── Escritorio: las tres columnas se comparan de un vistazo ────── */}
+          <div className="hidden md:grid md:grid-cols-3 md:gap-4 md:items-stretch">
             {(() => { const precioMensualBase = planes.find(x => x.tipoPlan === 'MENSUAL')?.precio ?? 0; return planes.map(p => {
               const destacado = p.tipoPlan === 'TRIMESTRAL';
               const precioMes = Math.round(p.precio / MESES_POR_PLAN[p.tipoPlan]);
@@ -687,6 +803,7 @@ export default function SuscripcionCard() {
               );
             }); })()}
           </div>
+          </>
         )}
 
         <p className="text-[11px] text-muted-foreground text-center mt-4">

@@ -126,7 +126,7 @@ const ADS = [
     color: '#4361EE',
   },
   {
-    image: '/cafe-orquidea-2.webp',
+    image: '/cafe-orquidea-3.webp',
     label: 'Publicidad',
     title: 'Café Orquídea de la Meseta',
     description: 'Café colombiano de la meseta santandereana en presentación de 450 gramos: energía para todo un mes.',

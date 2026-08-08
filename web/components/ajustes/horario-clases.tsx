@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { DIAS_SEMANA } from '@/lib/dias';
+import { CATEGORIAS } from '@/lib/categorias';
 
 interface Sede { id: string; name: string }
 
@@ -303,13 +304,50 @@ export default function HorarioClases() {
 
                 <div className="space-y-1.5">
                   <Label className="text-[12px]">Categoría (opcional)</Label>
-                  <Input
-                    value={editando.categoria ?? ''}
-                    onChange={e => setEditando({ ...editando, categoria: e.target.value })}
-                    placeholder="Menores, Mayores…"
-                  />
+                  {/* Desplegable y no texto libre: la categoria se compara letra
+                      por letra contra la del deportista. Escribir "Menores"
+                      donde el miembro dice "Menores 3-10 años" no da error, da
+                      una planilla vacia. */}
+                  <div className="flex flex-col gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => setEditando({ ...editando, categoria: '' })}
+                      className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-left transition-colors"
+                      style={!editando.categoria
+                        ? { background: 'rgba(124,58,237,0.06)', border: '1.5px solid rgba(124,58,237,0.35)' }
+                        : { background: '#fff', border: '1.5px solid rgba(26,16,40,0.08)' }}
+                    >
+                      <span className="w-4 h-4 rounded-full shrink-0 flex items-center justify-center"
+                        style={{ border: `1.5px solid ${!editando.categoria ? '#7C3AED' : 'rgba(26,16,40,0.20)'}` }}>
+                        {!editando.categoria && (
+                          <span className="w-2 h-2 rounded-full" style={{ background: '#7C3AED' }} />
+                        )}
+                      </span>
+                      <span className="text-[12.5px] font-medium text-foreground">Todas las categorías</span>
+                    </button>
+                    {CATEGORIAS.map(c => {
+                      const puesta = editando.categoria === c;
+                      return (
+                        <button
+                          key={c}
+                          type="button"
+                          onClick={() => setEditando({ ...editando, categoria: c })}
+                          className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-left transition-colors"
+                          style={puesta
+                            ? { background: 'rgba(124,58,237,0.06)', border: '1.5px solid rgba(124,58,237,0.35)' }
+                            : { background: '#fff', border: '1.5px solid rgba(26,16,40,0.08)' }}
+                        >
+                          <span className="w-4 h-4 rounded-full shrink-0 flex items-center justify-center"
+                            style={{ border: `1.5px solid ${puesta ? '#7C3AED' : 'rgba(26,16,40,0.20)'}` }}>
+                            {puesta && <span className="w-2 h-2 rounded-full" style={{ background: '#7C3AED' }} />}
+                          </span>
+                          <span className="text-[12.5px] font-medium text-foreground">{c}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
                   <p className="text-[10px] text-muted-foreground">
-                    Si la pones, en la planilla solo aparecen los deportistas de esa categoría.
+                    Con una categoría, la planilla solo trae a los deportistas de esa categoría.
                   </p>
                 </div>
               </div>

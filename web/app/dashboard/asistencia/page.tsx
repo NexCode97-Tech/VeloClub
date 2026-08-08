@@ -2,7 +2,7 @@
 
 import { useAuth } from '@clerk/nextjs';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { apiFetch } from '@/lib/api-client';
 import { QK } from '@/hooks/useVeloQuery';
@@ -355,24 +355,38 @@ export default function AsistenciaPage() {
   //
   // Un deportista en pausa nunca entra: quedaria ausente todos los dias de sus
   // vacaciones y le arruinaria el porcentaje del ano.
+  // Depende de la categoria y no de `claseActiva`: el objeto de la clase se
+  // reemplaza en cada refresco de la consulta aunque no haya cambiado nada, y
+  // eso arrastraba al efecto de abajo.
+  const categoriaClase = claseActiva?.categoria ?? null;
   const perteneceALaClase = useCallback((m: Member) => {
     if (m.active === false) return false;
     if (!m.locations.some(l => l.location.id === selectedLoc)) return false;
-    if (claseActiva?.categoria && m.category !== claseActiva.categoria) return false;
+    if (categoriaClase && m.category !== categoriaClase) return false;
     return true;
-  }, [selectedLoc, claseActiva]);
+  }, [selectedLoc, categoriaClase]);
+
+  // Identidad de la planilla: dia + clase + sede. Mientras no cambie, lo que el
+  // entrenador marco manda sobre lo que diga el servidor.
+  const planillaKey = `${selectedDate}|${claseSel ?? ''}|${selectedLoc}`;
+  const planillaSembrada = useRef('');
 
   useEffect(() => {
     if (!selectedLoc || !membersData || !attData) return;
-    // Un deportista en pausa no entra a la planilla: quedaría marcado ausente
-    // todos los días de sus vacaciones y le arruinaría el porcentaje del año.
+    // Solo al abrir una planilla distinta. Antes se volvia a sembrar en cada
+    // refresco de las consultas —y basta con volver a la pestaña, o con el
+    // refetch que dispara guardar— y eso pisaba las marcas recien tocadas con
+    // las del servidor: la tarjeta parecia no responder.
+    if (planillaSembrada.current === planillaKey) return;
+    planillaSembrada.current = planillaKey;
+
     const forLoc = membersData.members.filter(perteneceALaClase);
     // Todos arrancan Ausentes: el entrenador marca Presente a quienes asistieron
     const base = Object.fromEntries(forLoc.map(m => [m.id, 'ABSENT' as Status]));
     const existing: Record<string, Status> = {};
     for (const r of attData.records) existing[r.memberId] = r.status as Status;
     setAtt({ ...base, ...existing });
-  }, [selectedLoc, membersData, attData, perteneceALaClase]);
+  }, [planillaKey, selectedLoc, membersData, attData, perteneceALaClase]);
 
   const members = (membersData?.members ?? []).filter(perteneceALaClase);
 

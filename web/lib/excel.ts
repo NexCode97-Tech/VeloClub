@@ -1,3 +1,4 @@
+import { CATEGORIAS } from '@/lib/categorias';
 import * as XLSX from 'xlsx';
 
 interface LocationOption {
@@ -7,7 +8,7 @@ interface LocationOption {
 
 export function downloadMembersTemplate(locations: LocationOption[] = []) {
   const ROLES      = ['ADMIN', 'COACH', 'STUDENT'];
-  const CATEGORIAS = ['Menores 3-10 años', 'Transición 11-13 años', 'Mayores 14+ años'];
+
   const NIVELES    = ['Escuela', 'Novatos', 'Intermedio', 'Avanzados', 'Federados'];
   const SEDES      = locations.map(l => l.name);
 

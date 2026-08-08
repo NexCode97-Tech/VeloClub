@@ -1,5 +1,6 @@
 'use client';
 
+import { CATEGORIAS, NIVELES } from '@/lib/categorias';
 import { useAuth, useUser } from '@clerk/nextjs';
 import { useClubStream } from '@/hooks/useClubStream';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -1373,9 +1374,9 @@ export default function MiembrosPage() {
                             <span className="text-sm">{form.category || 'Seleccionar categoría'}</span>
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="Menores 3-10 años">Menores 3-10 años</SelectItem>
-                            <SelectItem value="Transición 11-13 años">Transición 11-13 años</SelectItem>
-                            <SelectItem value="Mayores 14+ años">Mayores 14+ años</SelectItem>
+                            {CATEGORIAS.map(c => (
+                              <SelectItem key={c} value={c}>{c}</SelectItem>
+                            ))}
                           </SelectContent>
                         </Select>
                       </div>
@@ -1386,7 +1387,7 @@ export default function MiembrosPage() {
                             <span className="text-sm">{form.tipo || 'Seleccionar nivel'}</span>
                           </SelectTrigger>
                           <SelectContent>
-                            {['Escuela','Novatos','Intermedio','Avanzados','Federados','Adultos'].map(t => (
+                            {NIVELES.map(t => (
                               <SelectItem key={t} value={t}>{t}</SelectItem>
                             ))}
                           </SelectContent>

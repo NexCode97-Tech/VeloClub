@@ -102,12 +102,6 @@ function SlideCard({ slide, priority }: { slide: SlideshowSlide; priority?: bool
         loading={priority ? 'eager' : 'lazy'}
         decoding={priority ? 'sync' : 'async'}
       />
-      {/* Velo corto y solo abajo: sin título ni descripción, únicamente tiene que
-          sostener el botón y los puntos sobre piezas de fondo claro. */}
-      <div
-        className="absolute inset-x-0 bottom-0"
-        style={{ height: '32%', background: 'linear-gradient(to top, rgba(10,5,20,0.62) 0%, transparent 100%)' }}
-      />
       {slide.label && (
         <div
           className="absolute top-3 left-3 flex items-center"
@@ -213,10 +207,6 @@ export function Slideshow({ slides, autoPlayMs = 5000 }: SlideshowProps) {
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={mobileSlide.img} alt={mobileSlide.title} className="w-full h-full object-cover" loading="eager" />
-            <div
-              className="absolute inset-x-0 bottom-0"
-              style={{ height: '32%', background: 'linear-gradient(to top, rgba(10,5,20,0.62) 0%, transparent 100%)' }}
-            />
             {mobileSlide.label && (
               <div
                 className="absolute top-3 left-3 flex items-center"

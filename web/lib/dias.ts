@@ -5,8 +5,9 @@
 // X para miercoles y S para sabado, el otro Mi y Sá. Dos circulos de dias uno
 // encima del otro con letras distintas se leen como dos cosas distintas.
 //
-// Dos letras y no una: con una sola, martes y miercoles compartian la M y
-// sabado y domingo la D, y habia que adivinar por la posicion.
+// Una sola letra, como venia siendo en "Dias sin entrenamiento". La X de
+// miercoles no es un descuido: es la convencion en espanol justamente para no
+// chocar con la M de martes.
 //
 // `valor` es 0 = domingo … 6 = sabado, igual que `Date.getDay()` y que
 // `Club.noAttendanceDays` en la base. El orden de la lista arranca en lunes
@@ -15,18 +16,18 @@
 export interface DiaSemana {
   valor: number;
   nombre: string;
-  /** La que va dentro del circulo: dos letras, solo la inicial en mayuscula */
+  /** La que va dentro del circulo */
   corto: string;
 }
 
 export const DIAS_SEMANA: DiaSemana[] = [
-  { valor: 1, nombre: 'Lunes',     corto: 'Lu' },
-  { valor: 2, nombre: 'Martes',    corto: 'Ma' },
-  { valor: 3, nombre: 'Miércoles', corto: 'Mi' },
-  { valor: 4, nombre: 'Jueves',    corto: 'Ju' },
-  { valor: 5, nombre: 'Viernes',   corto: 'Vi' },
-  { valor: 6, nombre: 'Sábado',    corto: 'Sá' },
-  { valor: 0, nombre: 'Domingo',   corto: 'Do' },
+  { valor: 1, nombre: 'Lunes',     corto: 'L' },
+  { valor: 2, nombre: 'Martes',    corto: 'M' },
+  { valor: 3, nombre: 'Miércoles', corto: 'X' },
+  { valor: 4, nombre: 'Jueves',    corto: 'J' },
+  { valor: 5, nombre: 'Viernes',   corto: 'V' },
+  { valor: 6, nombre: 'Sábado',    corto: 'S' },
+  { valor: 0, nombre: 'Domingo',   corto: 'D' },
 ];
 
 /** Abreviaturas de tres letras, para listas y reportes donde hay ancho. */

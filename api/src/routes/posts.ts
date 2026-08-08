@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { z } from 'zod';
 import { v2 as cloudinary } from 'cloudinary';
 import { requireAuth } from '../auth/middleware';
@@ -6,7 +6,7 @@ import { prisma } from '../db/client';
 import { emitToClub } from '../lib/sse';
 import { validarSubida, TipoSubida } from '../lib/upload-guard';
 import { resolverNombreAutor } from '../lib/nombre-autor';
-import { uploadLimiter } from '../lib/rate-limit';
+import { uploadLimiter, comunidadLimiter, reporteLimiter } from '../lib/rate-limit';
 import { notify } from '../lib/notify';
 
 cloudinary.config({
@@ -111,7 +111,7 @@ router.get('/', requireAuth, async (req, res) => {
 // y la comunidad quedaba en manos del cuerpo tecnico; la responsabilidad de lo
 // publicado es de quien lo publica, que es el unico que puede editarlo o
 // borrarlo despues.
-router.post('/', requireAuth, async (req, res) => {
+router.post('/', comunidadLimiter, requireAuth, async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'No autenticado' });
 
   const parsed = createPostSchema.safeParse(req.body);
@@ -271,7 +271,7 @@ router.get('/:id/comments', requireAuth, async (req, res) => {
 });
 
 // POST /posts/:id/comments
-router.post('/:id/comments', requireAuth, async (req, res) => {
+router.post('/:id/comments', comunidadLimiter, requireAuth, async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'No autenticado' });
   const postId = String(req.params.id);
 
@@ -389,5 +389,90 @@ router.delete('/:id/comments/:commentId', requireAuth, async (req, res) => {
   emitToClub(req.user.clubId ?? '', 'posts');
   res.json({ ok: true, eliminados: [comment.id, ...respuestas.map(r => r.id)] });
 });
+
+// ─── Reportar contenido ───────────────────────────────────────────────────────
+//
+// Los Terminos permiten retirar contenido "previa solicitud". Esto es la
+// solicitud: llega a la cola del superadmin, que es quien decide. Reportar no
+// oculta nada por si solo — que una denuncia baje contenido automaticamente
+// convierte el boton en un arma contra quien no cae bien.
+
+const reporteSchema = z.object({
+  motivo: z.enum([
+    'SPAM', 'ACOSO', 'ODIO', 'CONTENIDO_SEXUAL', 'VIOLENCIA',
+    'SUPLANTACION', 'DERECHOS_AUTOR', 'OTRO',
+  ]),
+  detalle: z.string().max(500).optional(),
+});
+
+// POST /posts/:id/report  ·  POST /posts/:id/comments/:commentId/report
+async function crearReporte(req: Request, res: Response, commentId: string | null) {
+  if (!req.auth?.clerkId) return res.status(401).json({ error: 'No autenticado' });
+
+  const parsed = reporteSchema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: parsed.error.issues });
+
+  const postId = String(req.params.id);
+  const post = await prisma.post.findUnique({
+    where: { id: postId },
+    select: { id: true, clubId: true, scope: true, content: true, authorClerkId: true, authorName: true },
+  });
+  if (!post) return res.status(404).json({ error: 'Publicación no encontrada' });
+  // Lo interno de otro club no se ve, asi que tampoco se reporta.
+  if (post.scope === 'PRIVATE' && post.clubId !== req.user?.clubId) {
+    return res.status(404).json({ error: 'Publicación no encontrada' });
+  }
+
+  let contenido = post.content;
+  let autorClerkId = post.authorClerkId;
+  let autorNombre  = post.authorName;
+
+  if (commentId) {
+    const comment = await prisma.postComment.findFirst({
+      where: { id: commentId, postId },
+      select: { content: true, authorClerkId: true, authorName: true },
+    });
+    if (!comment) return res.status(404).json({ error: 'Comentario no encontrado' });
+    contenido = comment.content;
+    autorClerkId = comment.authorClerkId;
+    autorNombre  = comment.authorName;
+  }
+
+  // Reportarse a uno mismo no tiene sentido: para eso esta borrar.
+  if (autorClerkId && autorClerkId === req.auth.clerkId) {
+    return res.status(400).json({ error: 'No puedes reportar tu propio contenido' });
+  }
+
+  try {
+    await prisma.reporte.create({
+      data: {
+        postId,
+        commentId,
+        reporterClerkId: req.auth.clerkId,
+        reporterName:    req.auth.name ?? 'Alguien',
+        clubId:          post.clubId,
+        motivo:          parsed.data.motivo,
+        detalle:         parsed.data.detalle?.trim() || null,
+        // Copia del texto: si el autor lo edita o lo borra, sin esto se
+        // revisaria un reporte sobre algo que ya no existe.
+        contenidoCopia:  contenido.slice(0, 2000),
+        autorClerkId,
+        autorNombre,
+      },
+    });
+  } catch (err) {
+    // Choque contra el indice unico: ya lo habia reportado. Se responde ok
+    // igual, para no confirmarle a nadie si su reporte anterior sigue en pie.
+    if (!(err && typeof err === 'object' && 'code' in err && err.code === 'P2002')) throw err;
+  }
+
+  res.status(201).json({ ok: true });
+}
+
+router.post('/:id/report', reporteLimiter, requireAuth, (req, res) =>
+  crearReporte(req, res, null));
+
+router.post('/:id/comments/:commentId/report', reporteLimiter, requireAuth, (req, res) =>
+  crearReporte(req, res, String(req.params.commentId)));
 
 export default router;

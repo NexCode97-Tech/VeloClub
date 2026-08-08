@@ -2,13 +2,15 @@
 
 import { useState, useRef, useEffect, Fragment } from 'react';
 import { useRouter } from 'next/navigation';
+import { useSession } from '@clerk/nextjs';
+import { apiFetch } from '@/lib/api-client';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MemberAvatar } from '@/components/ui/member-avatar';
 import { ContenidoGuardado } from '@/components/ui/save-button-state';
 import {
   Globe, Lock, Heart, MessageCircle, ChevronRight, MapPin, FileText,
-  SendHorizontal, X, Trash2, Pencil, MoreHorizontal,
+  SendHorizontal, X, Trash2, Pencil, MoreHorizontal, Flag,
 } from 'lucide-react';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -54,6 +56,20 @@ const roleLabels: Record<string, string> = {
   COACH:      'Entrenador',
   STUDENT:    'Deportista',
 };
+
+// Motivos de reporte. Salen de la seccion 5 de los Terminos, que es lo que el
+// usuario acepto: si un motivo no corresponde a una regla escrita, no hay con
+// que sustentar el retiro del contenido despues.
+const MOTIVOS: { valor: string; etiqueta: string }[] = [
+  { valor: 'SPAM',             etiqueta: 'Spam o publicidad engañosa' },
+  { valor: 'ACOSO',            etiqueta: 'Acoso, insultos o difamación' },
+  { valor: 'ODIO',             etiqueta: 'Discriminación u odio' },
+  { valor: 'CONTENIDO_SEXUAL', etiqueta: 'Contenido sexual u obsceno' },
+  { valor: 'VIOLENCIA',        etiqueta: 'Violencia o contenido perturbador' },
+  { valor: 'SUPLANTACION',     etiqueta: 'Suplantación de identidad' },
+  { valor: 'DERECHOS_AUTOR',   etiqueta: 'Uso de contenido sin permiso' },
+  { valor: 'OTRO',             etiqueta: 'Otro motivo' },
+];
 
 export function timeAgo(iso: string): string {
   const diff = (Date.now() - new Date(iso).getTime()) / 1000;
@@ -164,6 +180,42 @@ export function PostCard({
   const [commentText, setCommentText] = useState('');
   const [sendingComment, setSendingComment] = useState(false);
   const commentInputRef = useRef<HTMLInputElement>(null);
+  // ── Reportar ──────────────────────────────────────────────────────────────
+  // La llamada se hace aca dentro y no por prop como el resto: reportar es un
+  // trozo cerrado que no toca el estado del feed, y pasarlo por prop obligaba
+  // a repetir el mismo codigo en las cuatro pantallas que montan la tarjeta.
+  const { session: sesion } = useSession();
+  // Guarda el comentario reportado, o 'post' si es la publicacion
+  const [reportando, setReportando]   = useState<string | null>(null);
+  const [motivo, setMotivo]           = useState('');
+  const [detalle, setDetalle]         = useState('');
+  const [enviandoRep, setEnviandoRep] = useState(false);
+  const [reportado, setReportado]     = useState(false);
+
+  function abrirReporte(objetivo: string) {
+    setReportando(objetivo);
+    setMotivo('');
+    setDetalle('');
+    setReportado(false);
+  }
+
+  async function enviarReporte() {
+    if (!reportando || !motivo || enviandoRep) return;
+    setEnviandoRep(true);
+    try {
+      const token = await sesion?.getToken();
+      const ruta = reportando === 'post'
+        ? `/posts/${post.id}/report`
+        : `/posts/${post.id}/comments/${reportando}/report`;
+      await apiFetch(ruta, {
+        token, method: 'POST',
+        body: JSON.stringify({ motivo, detalle: detalle.trim() || undefined }),
+      });
+      setReportado(true);
+    } catch { /* el aviso de abajo no distingue: reportar no confirma nada */ }
+    finally { setEnviandoRep(false); }
+  }
+
   // Comentario al que se le esta respondiendo, si hay alguno
   const [respondiendoA, setRespondiendoA] = useState<{ id: string; nombre: string } | null>(null);
   // Hilos desplegados a mano, por id del comentario raiz
@@ -361,7 +413,7 @@ export function PostCard({
       </div>
 
       {/* ── Botón ⋯ con dropdown ── */}
-      {puedoTocar(c) && editingComment !== c.id && (
+      {(puedoTocar(c) || !esMio(c)) && editingComment !== c.id && (
         <div className="mt-1 shrink-0">
           <button
             onClick={e => abrirMenuComentario(c.id, e.currentTarget)}
@@ -394,6 +446,19 @@ export function PostCard({
                     minWidth: 140,
                   }}
                 >
+                  {!esMio(c) && (
+                    <>
+                      <button
+                        onClick={() => { setCommentMenu(null); abrirReporte(c.id); }}
+                        className="flex items-center gap-2 px-3.5 py-2.5 text-[12px] font-semibold text-foreground hover:bg-secondary/60 transition-colors text-left"
+                      >
+                        <Flag className="w-3.5 h-3.5 text-muted-foreground" /> Reportar
+                      </button>
+                      <div style={{ height: 1, background: 'rgba(124,58,237,0.07)' }} />
+                    </>
+                  )}
+                  {puedoTocar(c) && (
+                  <>
                   <button
                     onClick={() => { setCommentMenu(null); setEditingComment(c.id); setEditText(c.content); }}
                     className="flex items-center gap-2 px-3.5 py-2.5 text-[12px] font-semibold text-foreground hover:bg-secondary/60 transition-colors text-left"
@@ -408,6 +473,8 @@ export function PostCard({
                     <Trash2 className="w-3.5 h-3.5" /> Eliminar
                   </button>
                   <div style={{ height: 1, background: 'rgba(124,58,237,0.07)' }} />
+                  </>
+                  )}
                   <button
                     onClick={() => setCommentMenu(null)}
                     className="flex items-center gap-2 px-3.5 py-2.5 text-[12px] font-semibold text-muted-foreground hover:bg-secondary/60 transition-colors text-left"
@@ -505,7 +572,9 @@ export function PostCard({
               </p>
             </div>
           </div>
-          {esAutor && (
+          {/* El menu ya no es solo del autor: quien no lo es tambien lo abre,
+              y adentro encuentra Reportar en lugar de editar y borrar. */}
+          {(esAutor || !!post.authorClerkId) && (
             <div ref={postMenuRef} className="relative">
               <button
                 onClick={() => { setPostMenuOpen(v => !v); setConfirmDel(false); }}
@@ -530,15 +599,26 @@ export function PostCard({
                       minWidth: 178,
                     }}
                   >
+                    {!esAutor && (
+                      <button
+                        onClick={() => { setPostMenuOpen(false); abrirReporte('post'); }}
+                        className="w-full flex items-center gap-2.5 px-4 py-2.5 text-[13px] font-semibold text-foreground hover:bg-secondary transition-colors cursor-pointer"
+                      >
+                        <Flag className="w-3.5 h-3.5" /> Reportar
+                      </button>
+                    )}
+                    {esAutor && (
                     <button
                       onClick={() => { setPostMenuOpen(false); setEditandoPost(true); setTextoEdicion(post.content); }}
                       className="w-full flex items-center gap-2.5 px-4 py-2.5 text-[13px] font-semibold text-foreground hover:bg-secondary transition-colors cursor-pointer"
                     >
                       <Pencil className="w-3.5 h-3.5" /> Editar
                     </button>
+                    )}
                     {/* Mover cambia la pestaña donde aparece la publicacion:
                         de Publico a Mi club y al reves. El texto dice a donde
                         va, no donde esta, para que no haya que adivinar. */}
+                    {esAutor && (
                     <button
                       onClick={() => { setPostMenuOpen(false); handleMoverPost(); }}
                       disabled={moviendoPost}
@@ -548,12 +628,15 @@ export function PostCard({
                         ? <><Lock className="w-3.5 h-3.5 shrink-0" /> Mover a Mi club</>
                         : <><Globe className="w-3.5 h-3.5 shrink-0" /> Mover a Público</>}
                     </button>
+                    )}
+                    {esAutor && (
                     <button
                       onClick={() => { setPostMenuOpen(false); setConfirmDel(true); }}
                       className="w-full flex items-center gap-2.5 px-4 py-2.5 text-[13px] font-semibold text-red-500 hover:bg-red-50 transition-colors cursor-pointer border-t border-border/50"
                     >
                       <Trash2 className="w-3.5 h-3.5" /> Eliminar
                     </button>
+                    )}
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -929,6 +1012,117 @@ export function PostCard({
           )}
         </AnimatePresence>
       </div>
+
+      {/* ── Reportar ────────────────────────────────────────────────────────
+          En portal porque la tarjeta recorta por overflow y en escritorio
+          vive dentro de una columna con scroll propio. */}
+      {typeof document !== 'undefined' && createPortal(
+        <AnimatePresence>
+          {reportando && (
+            <motion.div
+              key="reporte"
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              transition={{ duration: 0.16 }}
+              onClick={() => setReportando(null)}
+              className="fixed inset-0 flex items-end sm:items-center justify-center p-0 sm:p-6"
+              style={{ background: 'rgba(20,12,36,0.55)', zIndex: 80 }}
+            >
+              <motion.div
+                initial={{ opacity: 0, y: 40, scale: 0.98 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 40, scale: 0.98 }}
+                transition={{ duration: 0.22, ease: [0.32, 0.72, 0, 1] }}
+                onClick={e => e.stopPropagation()}
+                className="bg-white w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl overflow-hidden"
+                style={{ maxHeight: '88dvh', display: 'flex', flexDirection: 'column' }}
+              >
+                {reportado ? (
+                  <div className="px-6 py-8 flex flex-col items-center text-center gap-2">
+                    <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-1"
+                      style={{ background: 'linear-gradient(135deg,#7C3AED,#4361EE)' }}>
+                      <Flag className="w-5 h-5 text-white" />
+                    </div>
+                    <p className="text-[15px] font-semibold text-foreground">Gracias por avisar</p>
+                    <p className="text-[13px] text-muted-foreground leading-relaxed max-w-[34ch]">
+                      Vamos a revisarlo y a retirarlo si incumple los Términos. No le contamos
+                      a nadie quién lo reportó.
+                    </p>
+                    <button
+                      onClick={() => setReportando(null)}
+                      className="mt-3 px-5 py-2.5 rounded-xl text-[13px] font-semibold text-white"
+                      style={{ background: 'linear-gradient(135deg,#7C3AED,#4361EE)' }}
+                    >
+                      Listo
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex items-center justify-between px-5 py-4 border-b border-border/60">
+                      <p className="text-[15px] font-semibold text-foreground">
+                        Reportar {reportando === 'post' ? 'publicación' : 'comentario'}
+                      </p>
+                      <button onClick={() => setReportando(null)} aria-label="Cerrar"
+                        className="w-8 h-8 rounded-full flex items-center justify-center text-muted-foreground hover:bg-secondary transition-colors">
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+
+                    <div className="px-5 py-4 overflow-y-auto flex flex-col gap-3">
+                      <p className="text-[12px] text-muted-foreground leading-relaxed">
+                        ¿Qué regla incumple? Reportar no lo oculta de inmediato: lo revisamos antes.
+                      </p>
+                      <div className="flex flex-col gap-1.5">
+                        {MOTIVOS.map(m => (
+                          <button
+                            key={m.valor}
+                            type="button"
+                            onClick={() => setMotivo(m.valor)}
+                            className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-colors"
+                            style={motivo === m.valor
+                              ? { background: 'rgba(124,58,237,0.08)', border: '1.5px solid rgba(124,58,237,0.35)' }
+                              : { background: '#fff', border: '1.5px solid rgba(26,16,40,0.08)' }}
+                          >
+                            <span className="w-4 h-4 rounded-full shrink-0 flex items-center justify-center"
+                              style={{ border: `1.5px solid ${motivo === m.valor ? '#7C3AED' : 'rgba(26,16,40,0.20)'}` }}>
+                              {motivo === m.valor && (
+                                <span className="w-2 h-2 rounded-full" style={{ background: '#7C3AED' }} />
+                              )}
+                            </span>
+                            <span className="text-[13px] font-medium text-foreground">{m.etiqueta}</span>
+                          </button>
+                        ))}
+                      </div>
+
+                      <textarea
+                        value={detalle}
+                        onChange={e => setDetalle(e.target.value)}
+                        maxLength={500}
+                        rows={3}
+                        placeholder="Contanos algo más (opcional)"
+                        className="w-full text-[13px] rounded-xl px-3 py-2.5 outline-none resize-none"
+                        style={{ border: '1.5px solid rgba(26,16,40,0.08)', background: '#fff' }}
+                      />
+                    </div>
+
+                    <div className="px-5 py-4 border-t border-border/60"
+                      style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}>
+                      <button
+                        onClick={enviarReporte}
+                        disabled={!motivo || enviandoRep}
+                        className="w-full py-3 rounded-xl text-[13px] font-semibold text-white disabled:opacity-40 transition-opacity"
+                        style={{ background: 'linear-gradient(135deg,#7C3AED,#4361EE)' }}
+                      >
+                        {enviandoRep ? 'Enviando…' : 'Enviar reporte'}
+                      </button>
+                    </div>
+                  </>
+                )}
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
     </motion.div>
   );
 }

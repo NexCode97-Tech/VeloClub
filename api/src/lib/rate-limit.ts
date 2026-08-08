@@ -66,3 +66,30 @@ export const createLimiter = rateLimit({
   legacyHeaders: false,
   message: mensaje,
 });
+
+/**
+ * Publicar y comentar en la comunidad. Los Terminos prohiben el spam pero
+ * nada lo impedia: se podian crear publicaciones en bucle. El tope es alto a
+ * proposito — una conversacion animada no debe chocar contra el —, lo que
+ * corta es la automatizacion.
+ */
+export const comunidadLimiter = rateLimit({
+  windowMs: VENTANA,
+  max: 80,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: mensaje,
+});
+
+/**
+ * Reportar contenido. Se limita fuerte: denunciar en masa a alguien es en si
+ * mismo una forma de acoso, y la unicidad por contenido no lo impide si el
+ * atacante recorre publicacion por publicacion.
+ */
+export const reporteLimiter = rateLimit({
+  windowMs: VENTANA,
+  max: 15,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: mensaje,
+});

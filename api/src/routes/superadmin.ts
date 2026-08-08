@@ -7,6 +7,7 @@ import { invalidarTrustedCache, diasDePrueba } from './clubs';
 import { cacheDel } from '../lib/redis';
 import { v2 as cloudinary } from 'cloudinary';
 import { validarSubida } from '../lib/upload-guard';
+import { emitToClub } from '../lib/sse';
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -727,6 +728,119 @@ router.delete('/cupones/:id', requireAuth, requireSuperadmin, async (req, res) =
   const actual = await prisma.cupon.findUnique({ where: { id: String(req.params.id) } });
   if (!actual) return res.status(404).json({ error: 'Cupón no encontrado' });
   await prisma.cupon.delete({ where: { id: actual.id } });
+  res.json({ ok: true });
+});
+
+// ─── Moderación de contenido ──────────────────────────────────────────────────
+//
+// La otra mitad de lo que prometen los Terminos: poder retirar contenido "de
+// oficio". Vive en el superadmin y no en el club porque el feed publico cruza
+// clubes, y darle a un club poder sobre lo que publica otro seria peor que no
+// tener moderacion.
+
+// GET /superadmin/reportes?estado=PENDIENTE
+router.get('/reportes', requireAuth, requireSuperadmin, async (req, res) => {
+  const estado = String(req.query.estado ?? 'PENDIENTE').toUpperCase();
+  const filtro = ['PENDIENTE', 'ELIMINADO', 'DESESTIMADO'].includes(estado)
+    ? { estado: estado as 'PENDIENTE' | 'ELIMINADO' | 'DESESTIMADO' }
+    : {};
+
+  const reportes = await prisma.reporte.findMany({
+    where: filtro,
+    orderBy: { createdAt: 'desc' },
+    take: 200,
+  });
+
+  // El contenido puede haber desaparecido —el autor lo borro— o haber cambiado
+  // desde que se reporto. Se marca para que el superadmin no juzgue a ciegas.
+  const postIds    = [...new Set(reportes.map(r => r.postId))];
+  const commentIds = reportes.map(r => r.commentId).filter((v): v is string => !!v);
+
+  const [posts, comments, clubes] = await Promise.all([
+    prisma.post.findMany({
+      where: { id: { in: postIds } },
+      select: { id: true, content: true, imageUrl: true, scope: true },
+    }),
+    commentIds.length
+      ? prisma.postComment.findMany({
+          where: { id: { in: commentIds } },
+          select: { id: true, content: true },
+        })
+      : Promise.resolve([]),
+    prisma.club.findMany({
+      where: { id: { in: [...new Set(reportes.map(r => r.clubId).filter((v): v is string => !!v))] } },
+      select: { id: true, name: true },
+    }),
+  ]);
+
+  const porPost    = new Map(posts.map(p => [p.id, p]));
+  const porComment = new Map(comments.map(c => [c.id, c]));
+  const porClub    = new Map(clubes.map(c => [c.id, c.name]));
+
+  res.json({
+    reportes: reportes.map(r => {
+      const actual = r.commentId ? porComment.get(r.commentId) : porPost.get(r.postId);
+      const post   = porPost.get(r.postId);
+      return {
+        ...r,
+        clubNombre:     r.clubId ? porClub.get(r.clubId) ?? null : null,
+        existe:         !!actual,
+        contenidoActual: actual?.content ?? null,
+        imagenUrl:      r.commentId ? null : post?.imageUrl ?? null,
+        alcance:        post?.scope ?? null,
+      };
+    }),
+    pendientes: await prisma.reporte.count({ where: { estado: 'PENDIENTE' } }),
+  });
+});
+
+const resolverSchema = z.object({
+  accion: z.enum(['ELIMINAR', 'DESESTIMAR']),
+});
+
+// PATCH /superadmin/reportes/:id — retirar el contenido o desestimar el reporte
+router.patch('/reportes/:id', requireAuth, requireSuperadmin, async (req, res) => {
+  const parsed = resolverSchema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: parsed.error.issues });
+
+  const reporte = await prisma.reporte.findUnique({ where: { id: String(req.params.id) } });
+  if (!reporte) return res.status(404).json({ error: 'Reporte no encontrado' });
+
+  if (parsed.data.accion === 'ELIMINAR') {
+    // Si el contenido ya no existe la operacion igual se da por hecha: el
+    // objetivo era que no siguiera publicado, y no lo esta.
+    if (reporte.commentId) {
+      await prisma.postComment.deleteMany({ where: { id: reporte.commentId } });
+    } else {
+      await prisma.post.deleteMany({ where: { id: reporte.postId } });
+    }
+    // Los demas reportes sobre lo mismo se cierran solos: ya no hay nada que
+    // revisar y dejarlos en la cola obliga a resolver dos veces.
+    await prisma.reporte.updateMany({
+      where: {
+        postId: reporte.postId,
+        commentId: reporte.commentId,
+        estado: 'PENDIENTE',
+      },
+      data: {
+        estado: 'ELIMINADO',
+        resueltoPor: req.auth?.email ?? null,
+        resueltoEn: new Date(),
+      },
+    });
+
+    if (reporte.clubId) emitToClub(reporte.clubId, 'posts');
+  } else {
+    await prisma.reporte.update({
+      where: { id: reporte.id },
+      data: {
+        estado: 'DESESTIMADO',
+        resueltoPor: req.auth?.email ?? null,
+        resueltoEn: new Date(),
+      },
+    });
+  }
+
   res.json({ ok: true });
 });
 

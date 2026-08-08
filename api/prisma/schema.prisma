@@ -476,6 +476,59 @@ model PostComment {
   @@index([parentId])
 }
 
+// ─── Reporte de contenido ─────────────────────────────────────────────────────
+//
+// Los Terminos dicen que VeloClub puede eliminar contenido que los incumpla
+// "previa solicitud o de oficio". Esta tabla es la solicitud: sin ella la
+// promesa no se podia cumplir, porque no habia forma de pedir nada.
+//
+// El contenido reportado NO se borra en cascada al resolverse: el reporte
+// sobrevive a la publicacion para dejar constancia de que se atendio.
+
+enum MotivoReporte {
+  SPAM
+  ACOSO          // difamatorio, insultos, hostigamiento
+  ODIO           // discriminatorio
+  CONTENIDO_SEXUAL
+  VIOLENCIA
+  SUPLANTACION
+  DERECHOS_AUTOR
+  OTRO
+}
+
+enum EstadoReporte {
+  PENDIENTE
+  ELIMINADO      // se le dio la razon y el contenido se retiro
+  DESESTIMADO    // se reviso y no incumplia
+}
+
+model Reporte {
+  id               String        @id @default(cuid())
+  // Que se reporto. `postId` viaja siempre, tambien cuando el reporte es de un
+  // comentario, para poder abrir la publicacion desde el panel.
+  postId           String
+  commentId        String?
+  reporterClerkId  String
+  reporterName     String
+  // Club del contenido reportado, para dar contexto al superadmin
+  clubId           String?
+  motivo           MotivoReporte
+  detalle          String?
+  estado           EstadoReporte @default(PENDIENTE)
+  // Copia del texto al momento de reportar: si el autor lo edita o lo borra,
+  // sin esto el superadmin revisaria un reporte sobre algo que ya no existe.
+  contenidoCopia   String        @default("")
+  autorClerkId     String?
+  autorNombre      String        @default("")
+  resueltoPor      String?
+  resueltoEn       DateTime?
+  createdAt        DateTime      @default(now())
+
+  // Nadie reporta dos veces lo mismo: inflaba la cola sin aportar nada.
+  @@unique([reporterClerkId, postId, commentId])
+  @@index([estado, createdAt])
+}
+
 // ─── Notificacion (SA global) ─────────────────────────────────────────────────
 
 model Notificacion {

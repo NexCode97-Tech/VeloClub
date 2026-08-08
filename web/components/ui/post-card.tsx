@@ -114,7 +114,12 @@ export function PostCard({
   // club. En el feed publico de Inicio aparecen publicaciones de otros clubes y
   // ahi el menu no debe salir: el servidor responde 404 a ese intento, asi que
   // mostrarlo solo prometia algo que no se puede hacer.
-  const moderaComentarios = canDelete && (!clubIdPropio || post.clubId === clubIdPropio);
+  // Moderar lo ajeno es un extra acotado del administrador y solo dentro de las
+  // publicaciones internas del club. El feed publico es de todos los clubes:
+  // ahi cada quien responde por lo suyo y nadie modera a nadie.
+  const moderaComentarios = canDelete
+    && post.scope === 'PRIVATE'
+    && (!clubIdPropio || post.clubId === clubIdPropio);
   // Lo propio se edita y se borra siempre, sin importar el rol: nadie tiene
   // que pedirle permiso a nadie para corregir o retirar lo que escribio.
   const esMio = (c: PostComment) => !!c.authorClerkId && c.authorClerkId === currentUserId;

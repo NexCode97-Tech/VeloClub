@@ -667,7 +667,11 @@ export default function DashboardPage() {
   const role      = user?.role ?? 'ADMIN';
   const firstName = user?.name?.split(' ')[0] ?? '';
   const rc        = roleColors[role] ?? roleColors.ADMIN;
-  const canPost   = role === 'ADMIN' || role === 'COACH';
+  // La comunidad es de todos: publica y comenta cualquiera, sin importar el
+  // rol. Lo que cada quien publica es suyo y solo el lo edita o lo borra.
+  // Moderar comentarios ajenos es un extra del administrador y solo dentro de
+  // las publicaciones internas del club; PostCard aplica esa segunda mitad.
+  const puedeModerar = role === 'ADMIN';
 
   return (
     <div className="min-h-full bg-background">
@@ -1069,16 +1073,13 @@ export default function DashboardPage() {
           </div>
         </motion.div>
 
-        {/* Composer — solo ADMIN y COACH */}
-        {canPost && (
-          <PostComposer
-            userName={user?.name ?? ''}
-            userRole={role}
-            userAvatar={user?.picture ?? null}
-            onSubmit={handleCreatePost}
-            loading={postsLoading}
-          />
-        )}
+        <PostComposer
+          userName={user?.name ?? ''}
+          userRole={role}
+          userAvatar={user?.picture ?? null}
+          onSubmit={handleCreatePost}
+          loading={postsLoading}
+        />
 
         {/* Feed */}
         {postsLoading && posts.length === 0 ? (
@@ -1103,13 +1104,9 @@ export default function DashboardPage() {
                 {feedScope === 'public' ? 'El feed público está vacío' : 'No hay publicaciones internas aún'}
               </p>
               <p className="text-[12px] text-muted-foreground leading-relaxed">
-                {canPost
-                  ? feedScope === 'public'
-                    ? 'Sé el primero en publicar algo visible para todos los clubes.'
-                    : 'Comparte noticias o novedades exclusivas para tu club.'
-                  : feedScope === 'public'
-                    ? 'Aún no hay publicaciones públicas. Vuelve pronto.'
-                    : 'Tu club no ha publicado nada aún.'}
+                {feedScope === 'public'
+                  ? 'Sé el primero en publicar algo visible para todos los clubes.'
+                  : 'Comparte noticias o novedades exclusivas para tu club.'}
               </p>
             </div>
           </motion.div>
@@ -1120,7 +1117,7 @@ export default function DashboardPage() {
                 key={post.id}
                 post={post}
                 currentUserId={currentUserId}
-                canDelete={canPost}
+                canDelete={puedeModerar}
                 clubIdPropio={me?.user?.clubId ?? null}
                 onLike={handleLike}
                 onDelete={handleDelete}

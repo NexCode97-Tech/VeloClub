@@ -29,17 +29,21 @@ const POST_INCLUDE = {
   comments: { select: COMMENT_SELECT, orderBy: { createdAt: 'asc' as const }, take: 100 },
 };
 
-// Quien puede editar o borrar un comentario: su autor, siempre, y el cuerpo
-// tecnico del club como moderacion. Antes solo mandaba el rol, asi que un
-// deportista no podia ni corregir una tilde de lo que acababa de escribir.
-// Quien llama ya comprobo que el comentario pertenece a su club.
+// Quien puede editar o borrar un comentario.
+//
+// La regla base es la de cualquier red social: cada quien manda sobre lo suyo
+// y nadie mas. La moderacion es un extra acotado — solo el administrador, y
+// solo dentro de las publicaciones internas del club. En el feed publico
+// aparecen publicaciones de todo el mundo y ahi no modera nadie.
 function puedeTocarComentario(
-  req: { user?: { role: string } | null; auth?: { clerkId?: string } | null },
+  req: { user?: { role: string; clubId?: string | null } | null; auth?: { clerkId?: string } | null },
   autorClerkId: string | null,
+  post: { clubId: string; scope: string },
 ): boolean {
-  const esAutor = !!autorClerkId && autorClerkId === req.auth?.clerkId;
-  const modera  = !!req.user && ['ADMIN', 'COACH'].includes(req.user.role);
-  return esAutor || modera;
+  if (autorClerkId && autorClerkId === req.auth?.clerkId) return true;
+  return req.user?.role === 'ADMIN'
+    && post.scope === 'PRIVATE'
+    && post.clubId === req.user?.clubId;
 }
 
 const createPostSchema = z.object({
@@ -61,7 +65,6 @@ const commentSchema = z.object({
 // POST /posts/upload-media — Subir imagen/video/archivo a Cloudinary
 router.post('/upload-media', uploadLimiter, requireAuth, async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'No autenticado' });
-  if (!['ADMIN', 'COACH'].includes(req.user.role)) return res.status(403).json({ error: 'Sin permisos' });
 
   const { data, type } = req.body as { data: string; type?: 'image' | 'video' | 'raw' };
 
@@ -104,9 +107,12 @@ router.get('/', requireAuth, async (req, res) => {
 });
 
 // POST /posts
+// Publica cualquiera, incluidos los deportistas. Antes se exigia ADMIN o COACH
+// y la comunidad quedaba en manos del cuerpo tecnico; la responsabilidad de lo
+// publicado es de quien lo publica, que es el unico que puede editarlo o
+// borrarlo despues.
 router.post('/', requireAuth, async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'No autenticado' });
-  if (!['ADMIN', 'COACH'].includes(req.user.role)) return res.status(403).json({ error: 'Sin permisos' });
 
   const parsed = createPostSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.issues });
@@ -148,7 +154,6 @@ const updatePostSchema = z.object({
 
 router.patch('/:id', requireAuth, async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'No autenticado' });
-  if (!['ADMIN', 'COACH'].includes(req.user.role)) return res.status(403).json({ error: 'Sin permisos' });
 
   const parsed = updatePostSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.issues });
@@ -182,7 +187,6 @@ router.patch('/:id', requireAuth, async (req, res) => {
 
 router.delete('/:id', requireAuth, async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'No autenticado' });
-  if (!['ADMIN', 'COACH'].includes(req.user.role)) return res.status(403).json({ error: 'Sin permisos' });
 
   const post = await prisma.post.findFirst({ where: { id: String(req.params.id), clubId: req.user.clubId ?? '' } });
   if (!post) return res.status(404).json({ error: 'Publicación no encontrada' });
@@ -338,17 +342,16 @@ router.patch('/:id/comments/:commentId', requireAuth, async (req, res) => {
   const content = String(req.body?.content ?? '').trim();
   if (!content) return res.status(400).json({ error: 'Contenido requerido' });
 
-  // El comentario se ata al post y al club: buscarlo solo por id permitía editar
-  // comentarios de otros clubes, cuyos ids viajan en los posts públicos.
+  // El comentario se ata a su post. El club ya no se filtra en la consulta:
+  // uno comenta en el feed publico, donde hay publicaciones de otros clubes, y
+  // atarlo aqui impedia borrar lo propio fuera del club. Quien decide es
+  // `puedeTocarComentario`, que si compara el club para moderar.
   const comment = await prisma.postComment.findFirst({
-    where: {
-      id: String(req.params.commentId),
-      postId: String(req.params.id),
-      post: { clubId: req.user.clubId ?? '' },
-    },
+    where: { id: String(req.params.commentId), postId: String(req.params.id) },
+    include: { post: { select: { clubId: true, scope: true } } },
   });
   if (!comment) return res.status(404).json({ error: 'Comentario no encontrado' });
-  if (!puedeTocarComentario(req, comment.authorClerkId)) {
+  if (!puedeTocarComentario(req, comment.authorClerkId, comment.post)) {
     return res.status(403).json({ error: 'Sin permisos' });
   }
 
@@ -365,15 +368,13 @@ router.patch('/:id/comments/:commentId', requireAuth, async (req, res) => {
 router.delete('/:id/comments/:commentId', requireAuth, async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'No autenticado' });
 
+  // Ver la nota en PATCH: el club no se filtra aca sino al decidir permisos.
   const comment = await prisma.postComment.findFirst({
-    where: {
-      id: String(req.params.commentId),
-      postId: String(req.params.id),
-      post: { clubId: req.user.clubId ?? '' },
-    },
+    where: { id: String(req.params.commentId), postId: String(req.params.id) },
+    include: { post: { select: { clubId: true, scope: true } } },
   });
   if (!comment) return res.status(404).json({ error: 'Comentario no encontrado' });
-  if (!puedeTocarComentario(req, comment.authorClerkId)) {
+  if (!puedeTocarComentario(req, comment.authorClerkId, comment.post)) {
     return res.status(403).json({ error: 'Sin permisos' });
   }
 

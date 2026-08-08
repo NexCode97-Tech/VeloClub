@@ -349,7 +349,9 @@ export default function PerfilPage() {
   const user  = me?.user;
   const role  = user?.role ?? 'ADMIN';
   const rc    = roleColors[role] ?? roleColors.ADMIN;
-  const canDelete = role === 'ADMIN' || role === 'COACH';
+  // Moderar comentarios ajenos es solo del administrador, y PostCard ademas lo
+  // limita a las publicaciones internas del club. Lo propio se toca siempre.
+  const canDelete = role === 'ADMIN';
 
   return (
     <>

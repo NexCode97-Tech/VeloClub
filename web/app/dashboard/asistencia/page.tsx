@@ -2,11 +2,12 @@
 
 import { useAuth } from '@clerk/nextjs';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { apiFetch } from '@/lib/api-client';
 import { QK } from '@/hooks/useVeloQuery';
 import { horaLegible } from '@/components/ajustes/horario-clases';
-import { Users, MapPin, CheckCircle2, Search, Download, FileSpreadsheet, FileText } from 'lucide-react';
+import { Users, MapPin, CheckCircle2, Search, Download, FileSpreadsheet, FileText, ChevronDown } from 'lucide-react';
 const EASE_OUT: [number,number,number,number] = [0.23, 1, 0.32, 1];
 import { MemberAvatar } from '@/components/ui/member-avatar';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
@@ -228,6 +229,9 @@ export default function AsistenciaPage() {
   // Clase del horario sobre la que se esta pasando lista. `null` = el club no
   // armo horario, o el dia no tiene clases: se marca por dia, como siempre.
   const [claseSel, setClaseSel]       = useState<string | null>(null);
+  // Hoja con las clases del dia. Se abre desde el selector que ocupa el lugar
+  // de la fila de sede: la clase ya trae su sede, asi que esa fila sobraba.
+  const [hojaClases, setHojaClases]   = useState(false);
 
   // Week streak state
   const [animatingToday, setAnimating]  = useState(false);
@@ -281,7 +285,10 @@ export default function AsistenciaPage() {
     },
     staleTime: 60 * 1000,
   });
-  const clasesHoy = clasesData?.clases ?? [];
+  // useMemo y no una expresion suelta: el arreglo entra como dependencia del
+  // efecto que elige la clase, y recrearlo en cada render lo hacia correr de
+  // nuevo cada vez sin que hubiera cambiado nada.
+  const clasesHoy = useMemo(() => clasesData?.clases ?? [], [clasesData]);
 
   // El horario completo alimenta el desplegable del reporte: ahi no interesa
   // el dia seleccionado sino todas las clases que dicta el club.
@@ -293,8 +300,9 @@ export default function AsistenciaPage() {
     },
     staleTime: 5 * 60 * 1000,
   });
-  const horario = horarioData?.clases ?? [];
+  const horario = useMemo(() => horarioData?.clases ?? [], [horarioData]);
   const claseActiva = clasesHoy.find(c => c.id === claseSel) ?? null;
+  const sinPasar    = clasesHoy.filter(c => !c.guardada).length;
 
   const { data: attData, isLoading: loadingAtt } = useQuery({
     queryKey: QK.attendance(selectedDate, claseSel),
@@ -308,7 +316,7 @@ export default function AsistenciaPage() {
     staleTime: 0,
   });
 
-  const locations = locsData?.locations ?? [];
+  const locations = useMemo(() => locsData?.locations ?? [], [locsData]);
   const loading   = loadingLocs || loadingMembers || loadingAtt;
   // Sostiene el indicador un minimo de tiempo para que no parpadee
   const mostrarCarga = useCargaMinima(loading);
@@ -366,7 +374,7 @@ export default function AsistenciaPage() {
     const existing: Record<string, Status> = {};
     for (const r of attData.records) existing[r.memberId] = r.status as Status;
     setAtt({ ...base, ...existing });
-  }, [selectedLoc, membersData, attData]);
+  }, [selectedLoc, membersData, attData, perteneceALaClase]);
 
   const members = (membersData?.members ?? []).filter(perteneceALaClase);
 
@@ -529,6 +537,75 @@ export default function AsistenciaPage() {
         </div>
       </div>
 
+      {/* ── Hoja de clases del día ─────────────────────────────────────────
+          En portal a document.body: dentro de la página queda atrapada en el
+          contexto de apilamiento de <main> y el menú flotante se le monta
+          encima por más z-index que se le ponga. */}
+      {typeof document !== 'undefined' && createPortal(
+        <AnimatePresence>
+          {hojaClases && (
+            <motion.div
+              key="hoja-clases"
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              transition={{ duration: 0.16 }}
+              onClick={() => setHojaClases(false)}
+              className="fixed inset-0 flex items-end sm:items-center justify-center p-0 sm:p-6"
+              style={{ background: 'rgba(20,12,36,0.55)', zIndex: 80 }}
+            >
+              <motion.div
+                initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 40 }}
+                transition={{ duration: 0.22, ease: [0.32, 0.72, 0, 1] }}
+                onClick={e => e.stopPropagation()}
+                className="bg-white w-full sm:max-w-sm rounded-t-2xl sm:rounded-2xl flex flex-col"
+                style={{ maxHeight: '80dvh' }}
+              >
+                <div className="px-5 pt-4 pb-2">
+                  <p className="text-[15px] font-semibold text-foreground">Clases de este día</p>
+                  <p className="text-[11px] text-muted-foreground">Toca una para pasar su lista.</p>
+                </div>
+                <div className="px-5 pb-5 overflow-y-auto flex flex-col gap-1.5"
+                  style={{ paddingBottom: 'max(1.25rem, env(safe-area-inset-bottom))' }}>
+                  {clasesHoy.map(c => {
+                    const activa = c.id === claseSel;
+                    return (
+                      <button
+                        key={c.id}
+                        onClick={() => { setClaseSel(c.id); setHojaClases(false); }}
+                        className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-colors"
+                        style={activa
+                          ? { background: 'rgba(124,58,237,0.05)', border: '1.5px solid #7C3AED' }
+                          : { background: '#fff', border: '1.5px solid rgba(120,80,200,0.14)' }}
+                      >
+                        <span className="w-4 h-4 rounded-full shrink-0 flex items-center justify-center"
+                          style={{ border: `1.5px solid ${activa ? '#7C3AED' : 'rgba(26,16,40,0.20)'}` }}>
+                          {activa && <span className="w-2 h-2 rounded-full" style={{ background: '#7C3AED' }} />}
+                        </span>
+                        <span className="flex-1 min-w-0">
+                          <span className="block text-[12.5px] font-bold text-foreground leading-tight"
+                            style={{ fontVariantNumeric: 'tabular-nums' }}>
+                            {horaLegible(c.hora)} · {c.nombre}
+                          </span>
+                          <span className="block text-[10px] truncate" style={{ color: '#8E87A8' }}>
+                            {c.location.name}
+                          </span>
+                        </span>
+                        <span className="text-[8.5px] font-bold px-2 py-0.5 rounded-full shrink-0"
+                          style={c.guardada
+                            ? { background: 'rgba(6,214,160,0.16)', color: '#057A5C' }
+                            : { background: 'rgba(255,183,3,0.18)', color: '#854F0B' }}>
+                          {c.guardada ? '✓ Guardada' : 'Sin pasar'}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
+
       {/* ── Modal de descarga ─────────────────────────────────────────────── */}
       <Dialog open={descargaAbierta} onOpenChange={setDescargaAbierta}>
         <DialogContent className="max-w-sm">
@@ -666,50 +743,6 @@ export default function AsistenciaPage() {
               />
             </motion.div>
 
-            {/* Clases de hoy. Con una sola no se muestra: un selector de una
-                opcion es ruido, y la clase ya se lee en la linea de abajo.
-                Sin horario armado no aparece nada y todo sigue como antes. */}
-            {!isBlocked && clasesHoy.length > 1 && (
-              <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
-                {clasesHoy.map(c => {
-                  const activa = c.id === claseSel;
-                  return (
-                    <button
-                      key={c.id}
-                      onClick={() => setClaseSel(c.id)}
-                      className="shrink-0 text-left rounded-xl px-3 py-2.5 transition-all"
-                      style={{
-                        minWidth: 132,
-                        background: activa ? 'rgba(124,58,237,0.05)' : '#fff',
-                        border: `1.5px solid ${activa ? '#7C3AED' : 'rgba(120,80,200,0.14)'}`,
-                      }}
-                    >
-                      <span className="block text-[12.5px] font-bold leading-tight"
-                        style={{ color: '#1A1028', fontVariantNumeric: 'tabular-nums' }}>
-                        {horaLegible(c.hora)}
-                      </span>
-                      <span className="block text-[9.5px] mt-0.5 truncate" style={{ color: '#8E87A8' }}>
-                        {c.nombre} · {c.location.name}
-                      </span>
-                      <span className="inline-block text-[8.5px] font-bold mt-1.5 px-1.5 py-0.5 rounded-full"
-                        style={c.guardada
-                          ? { background: 'rgba(6,214,160,0.14)', color: '#057A5C' }
-                          : { background: 'rgba(255,183,3,0.16)', color: '#854F0B' }}>
-                        {c.guardada ? '✓ Guardada' : 'Sin pasar'}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-
-            {/* Con una sola clase, se nombra sin obligar a elegirla */}
-            {!isBlocked && clasesHoy.length === 1 && claseActiva && (
-              <p className="text-[11.5px] text-muted-foreground -mt-1">
-                {horaLegible(claseActiva.hora)} · {claseActiva.nombre} · {claseActiva.location.name}
-              </p>
-            )}
-
             {isBlocked ? (
               <div className="bg-white border border-border rounded-xl px-4 py-12 text-center">
                 <div className="w-14 h-14 rounded-2xl mx-auto mb-4 flex items-center justify-center" style={{ background: 'rgba(239,71,111,0.08)' }}>
@@ -830,9 +863,38 @@ export default function AsistenciaPage() {
                     </div>
                   </div>
                 )}
-                  {/* Sede — al final */}
+                  {/* Clase o sede — al final.
+                      Cuando hay horario manda la clase y la fila de sede
+                      desaparece: la clase trae su sede y repetirla gastaba un
+                      renglon entero de la pantalla. El alto de este selector no
+                      cambia con la cantidad de clases, que es justo lo que se
+                      les iba de las manos a las tarjetas. */}
                   <div className="hidden md:block w-px h-6 bg-border shrink-0" />
-                  {locations.length > 1 && (
+                  {claseActiva ? (
+                    <button
+                      onClick={() => clasesHoy.length > 1 && setHojaClases(true)}
+                      disabled={clasesHoy.length <= 1}
+                      className="flex items-center gap-2.5 px-3 py-2 bg-white rounded-xl md:w-72 md:shrink-0 text-left disabled:cursor-default"
+                      style={{ border: `1.5px solid ${clasesHoy.length > 1 ? '#7C3AED' : 'rgba(120,80,200,0.14)'}` }}
+                    >
+                      <div className="flex-1 min-w-0">
+                        <span className="block text-[12.5px] font-bold text-foreground leading-tight"
+                          style={{ fontVariantNumeric: 'tabular-nums' }}>
+                          {horaLegible(claseActiva.hora)} · {claseActiva.nombre}
+                        </span>
+                        <span className="block text-[9.5px] truncate" style={{ color: '#8E87A8' }}>
+                          {claseActiva.location.name} · {claseActiva.guardada ? 'guardada' : 'sin pasar'}
+                        </span>
+                      </div>
+                      {sinPasar > 0 && (
+                        <span className="text-[8.5px] font-bold px-2 py-0.5 rounded-full shrink-0"
+                          style={{ background: 'rgba(255,183,3,0.18)', color: '#854F0B' }}>
+                          {sinPasar} sin pasar
+                        </span>
+                      )}
+                      {clasesHoy.length > 1 && <ChevronDown className="w-4 h-4 shrink-0" style={{ color: '#8E87A8' }} />}
+                    </button>
+                  ) : locations.length > 1 ? (
                     <div className="flex items-center gap-2 md:w-52 md:shrink-0">
                       <MapPin className="w-4 h-4 text-muted-foreground shrink-0" />
                       <Select value={selectedLoc} onValueChange={v => setSelectedLoc(v ?? selectedLoc)}>
@@ -848,13 +910,12 @@ export default function AsistenciaPage() {
                         </SelectContent>
                       </Select>
                     </div>
-                  )}
-                  {locations.length === 1 && (
+                  ) : locations.length === 1 ? (
                     <div className="flex items-center gap-2 px-3 py-2 bg-white border border-border rounded-xl md:shrink-0">
                       <MapPin className="w-4 h-4 shrink-0" style={{ color: '#4361EE' }} />
                       <span className="text-[13px] font-semibold text-foreground">{locations[0].name}</span>
                     </div>
-                  )}
+                  ) : null}
                 </motion.div>
 
 

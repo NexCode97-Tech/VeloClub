@@ -199,6 +199,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   // Se retira al bajar y vuelve en tres casos: al subir, al detenerse el
   // scroll, y en los dos extremos del recorrido. Asi nunca se queda escondida
   // esperando un gesto concreto.
+  //
+  // Depende de `checking`: mientras esta en true el layout devuelve la pantalla
+  // de carga y <main> todavia no existe, asi que en el primer montaje la
+  // referencia esta vacia. Sin esta dependencia el efecto no se volvia a
+  // ejecutar nunca y el detector no llegaba a conectarse.
   useEffect(() => {
     const cont = mainRef.current;
     if (!cont) return;
@@ -234,7 +239,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       cont.removeEventListener('scroll', alHacerScroll);
       clearTimeout(parada);
     };
-  }, []);
+  }, [checking]);
 
   // Con el megamenu abierto la barra es parte del menu: no puede irse.
   useEffect(() => { if (masMenuOpen) setNavOculta(false); }, [masMenuOpen]);

@@ -6,7 +6,7 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useAuth, useSession, useUser } from '@clerk/nextjs';
 import { useEffect, useState, useRef, Suspense } from 'react';
 import { createPortal } from 'react-dom';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { apiFetch } from '@/lib/api-client';
 import LoadingScreen, { LoadingCurtain, CURTAIN_MS, esperarPantallaCarga } from '@/components/ui/loading-screen';
 import { BottomCircleMenu } from '@/components/ui/bottom-circle-menu';
@@ -167,6 +167,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   // vuelva a ejecutar por cualquier motivo.
   const esperaHechaRef = useRef(false);
   const [masMenuOpen, setMasMenuOpen] = useState(false);
+  // La barra inferior se retira mientras se baja y vuelve al subir o al parar.
+  const [navOculta, setNavOculta] = useState(false);
+  const mainRef = useRef<HTMLElement>(null);
+  const reducedMotion = useReducedMotion();
   // Tooltip del sidebar colapsado (etiqueta con el nombre del módulo al hacer hover)
   const [navTip, setNavTip] = useState<{ label: string; top: number; left: number } | null>(null);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -187,6 +191,56 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     const t = setTimeout(() => setCurtain(false), CURTAIN_MS);
     return () => clearTimeout(t);
   }, [checking]);
+
+  // ── Barra inferior que se retira al bajar ─────────────────────────────────
+  // El scroll no ocurre en la ventana sino dentro de <main>, que tiene su
+  // propio desbordamiento: escuchar el scroll de window aqui no haria nada.
+  //
+  // Se retira al bajar y vuelve en tres casos: al subir, al detenerse el
+  // scroll, y en los dos extremos del recorrido. Asi nunca se queda escondida
+  // esperando un gesto concreto.
+  useEffect(() => {
+    const cont = mainRef.current;
+    if (!cont) return;
+
+    // Margen para que un temblor del dedo no dispare el cambio, y una zona
+    // inicial donde la barra no se mueve: en una lista corta, esconderla a los
+    // pocos pixeles se siente como un parpadeo.
+    const UMBRAL = 6;
+    const DESDE = 40;
+    const PARADA_MS = 400;
+
+    let previo = cont.scrollTop;
+    let parada: ReturnType<typeof setTimeout> | undefined;
+
+    const alHacerScroll = () => {
+      const y = cont.scrollTop;
+      const delta = y - previo;
+      previo = y;
+
+      const alFinal = y + cont.clientHeight >= cont.scrollHeight - 10;
+      if (y <= 8 || alFinal) setNavOculta(false);
+      else if (delta > UMBRAL && y > DESDE) setNavOculta(true);
+      else if (delta < -UMBRAL) setNavOculta(false);
+
+      // El scroll por inercia sigue emitiendo eventos, asi que el temporizador
+      // se reinicia solo hasta que el movimiento se detiene de verdad.
+      clearTimeout(parada);
+      parada = setTimeout(() => setNavOculta(false), PARADA_MS);
+    };
+
+    cont.addEventListener('scroll', alHacerScroll, { passive: true });
+    return () => {
+      cont.removeEventListener('scroll', alHacerScroll);
+      clearTimeout(parada);
+    };
+  }, []);
+
+  // Con el megamenu abierto la barra es parte del menu: no puede irse.
+  useEffect(() => { if (masMenuOpen) setNavOculta(false); }, [masMenuOpen]);
+
+  // Cada modulo arranca desde arriba, con la barra a la vista.
+  useEffect(() => { setNavOculta(false); }, [pathname]);
 
   // Ocultar el tooltip si el sidebar deja de estar colapsado
   useEffect(() => { if (!collapsed) setNavTip(null); }, [collapsed]);
@@ -710,7 +764,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             lo mas escaso. El buscador y las notificaciones viven en Inicio (y
             en el sidebar en escritorio). */}
 
-        <main className="flex-1 overflow-y-auto pb-28 md:pb-0" style={{ WebkitOverflowScrolling: 'touch', overscrollBehaviorY: 'contain' }}>
+        <main ref={mainRef} className="flex-1 overflow-y-auto pb-28 md:pb-0" style={{ WebkitOverflowScrolling: 'touch', overscrollBehaviorY: 'contain' }}>
           {children}
         </main>
 
@@ -731,9 +785,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </AnimatePresence>
 
         {/* ── Mobile bottom tab bar ── */}
-        <nav
+        <motion.nav
           className="md:hidden fixed bottom-0 left-0 right-0 z-30"
           style={{ padding: '0 16px 20px', pointerEvents: 'none' }}
+          animate={{ y: navOculta ? '150%' : '0%' }}
+          initial={false}
+          transition={reducedMotion ? { duration: 0 } : { duration: 0.34, ease: [0.32, 0.72, 0, 1] }}
         >
           {(() => {
             const totalSlots = tabItems.length;
@@ -850,7 +907,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               </div>
             );
           })()}
-        </nav>
+        </motion.nav>
       </div>
     </div>
     </>

@@ -795,7 +795,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           style={{ padding: '0 16px 20px', pointerEvents: 'none' }}
           animate={{ y: navOculta ? '150%' : '0%' }}
           initial={false}
-          transition={reducedMotion ? { duration: 0 } : { duration: 0.34, ease: [0.32, 0.72, 0, 1] }}
+          transition={reducedMotion ? { duration: 0 } : { duration: 0.7, ease: [0.32, 0.72, 0, 1] }}
         >
           {(() => {
             const totalSlots = tabItems.length;

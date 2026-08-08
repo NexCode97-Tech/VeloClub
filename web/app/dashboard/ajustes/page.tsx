@@ -589,6 +589,10 @@ function AjustesPageContent() {
           <Label className="text-[12px]">Fecha de fundación</Label>
           <Input
             type="date"
+            // En escritorio la tarjeta pasa de 900px y el campo se estiraba
+            // entera: el icono del calendario terminaba en la otra punta,
+            // lejisimos de la fecha. Una fecha no necesita mas de este ancho.
+            className="sm:max-w-[280px]"
             value={foundedAt}
             max={new Date().toISOString().slice(0, 10)}
             min="1800-01-01"

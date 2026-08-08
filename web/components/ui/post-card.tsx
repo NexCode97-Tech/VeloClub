@@ -115,6 +115,10 @@ export function PostCard({
   // ahi el menu no debe salir: el servidor responde 404 a ese intento, asi que
   // mostrarlo solo prometia algo que no se puede hacer.
   const moderaComentarios = canDelete && (!clubIdPropio || post.clubId === clubIdPropio);
+  // Lo propio se edita y se borra siempre, sin importar el rol: nadie tiene
+  // que pedirle permiso a nadie para corregir o retirar lo que escribio.
+  const esMio = (c: PostComment) => !!c.authorClerkId && c.authorClerkId === currentUserId;
+  const puedoTocar = (c: PostComment) => esMio(c) || moderaComentarios;
   const [postMenuOpen, setPostMenuOpen] = useState(false);
   // Editar solo cambia la descripcion. La foto, el autor y la fecha no se tocan.
   const [editandoPost, setEditandoPost] = useState(false);
@@ -170,7 +174,11 @@ export function PostCard({
   }
 
   function responderA(c: PostComment) {
-    setRespondiendoA({ id: c.parentId ?? c.id, nombre: c.authorName });
+    // Se manda el comentario que se toco, no la raiz del hilo. El backend ya
+    // cuelga la respuesta de la raiz por su cuenta, y necesita saber a quien
+    // se le contesta para avisarle: mandando la raiz, en un hilo propio el
+    // aviso no le llegaba a nadie.
+    setRespondiendoA({ id: c.id, nombre: c.authorName });
     setShowComments(true);
     // Al responder dentro de un hilo plegado, abrirlo: si no, la respuesta
     // recien escrita aterriza donde no se ve.
@@ -330,22 +338,25 @@ export function PostCard({
               <span className="text-[10px] font-normal text-muted-foreground ml-2">{timeAgo(c.createdAt)}</span>
             </p>
             <p className="text-[13px] md:text-[12px] text-foreground leading-snug">{c.content}</p>
-            {/* Responder va en violeta y "Me gusta" en gris a proposito:
-                responder es lo que queremos que la gente haga. */}
-            <button
-              type="button"
-              onClick={() => responderA(c)}
-              className="mt-1.5 text-[10.5px] font-bold transition-opacity hover:opacity-70"
-              style={{ color: '#7C3AED' }}
-            >
-              Responder
-            </button>
+            {/* Responder va en violeta a proposito: es lo que queremos que la
+                gente haga. No aparece sobre lo propio — "Respondiendo a ti
+                mismo" no significa nada; para eso esta el campo de abajo. */}
+            {!esMio(c) && (
+              <button
+                type="button"
+                onClick={() => responderA(c)}
+                className="mt-1.5 text-[10.5px] font-bold transition-opacity hover:opacity-70"
+                style={{ color: '#7C3AED' }}
+              >
+                Responder
+              </button>
+            )}
           </div>
         )}
       </div>
 
       {/* ── Botón ⋯ con dropdown ── */}
-      {moderaComentarios && editingComment !== c.id && (
+      {puedoTocar(c) && editingComment !== c.id && (
         <div className="mt-1 shrink-0">
           <button
             onClick={e => abrirMenuComentario(c.id, e.currentTarget)}

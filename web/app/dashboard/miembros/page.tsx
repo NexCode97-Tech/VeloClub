@@ -23,7 +23,7 @@ import {
   Plus, Pencil, Trash2, Users, Search, Download,
   FileSpreadsheet, Upload, X, ChevronRight, Eye,
   Phone, Mail, Calendar, MapPin, Shield, Heart, CreditCard,
-  ArrowUpDown, Tag, ChevronDown, PauseCircle, PlayCircle,
+  ArrowUpDown, Tag, ChevronDown, PauseCircle, PlayCircle, MoreVertical,
 } from 'lucide-react';
 import { MemberAvatar } from '@/components/ui/member-avatar';
 import { PhoneInput, parsePhoneDisplay, FlagImg } from '@/components/ui/phone-input';
@@ -108,6 +108,9 @@ export default function MiembrosPage() {
   // la lista (eliminar, activar o desactivar) necesita su propio aviso, o el
   // intento se pierde en silencio.
   const [errorLista, setErrorLista] = useState<string | null>(null);
+  // Miembro cuya hoja de acciones esta abierta en movil. En escritorio la
+  // tarjeta muestra sus botones directamente y esto no se usa.
+  const [accionesMember, setAccionesMember] = useState<Member | null>(null);
 
   // Solo el administrador gestiona miembros; el resto ve la lista sin editarla
   const [canManage, setCanManage] = useState(false);
@@ -939,80 +942,37 @@ export default function MiembrosPage() {
                       </div>
                     )}
                   </div>
-                  </div>
 
-                  {/* Acciones: solo el trazo del icono, sin caja de color. Con el
-                      boton ancho de Editar en cada fila, la lista se leia como
-                      una lista de botones y no de personas. Eliminar se separa al
-                      extremo derecho, detras de una linea, para que no caiga bajo
-                      el pulgar que venia tocando las otras tres.
-                      Cada uno lleva su etiqueta: los iconos solos no alcanzan a
-                      explicar que hace pausar. */}
-                  <div className="flex items-center gap-1.5 mt-2.5 pt-2.5" style={{ borderTop: '1px solid rgba(26,16,40,0.07)' }}>
-                    {canManage && (
+                  {/* Las acciones viven en la hoja inferior, no en la ficha. Con
+                      cuatro botones en cada fila la lista se leia como una lista
+                      de botones y cada ficha gastaba unos 45 px de mas: en un club
+                      de 40 deportistas, casi 1.800 px de recorrido.
+
+                      Sin permisos de gestion solo se puede ver el detalle, y una
+                      accion suelta no justifica un menu: el boton la ejecuta. */}
+                  {canManage ? (
                     <motion.button
-                      onClick={() => openEdit(m)}
+                      onClick={() => setAccionesMember(m)}
+                      whileTap={reducedMotion ? {} : { scale: 0.9 }}
+                      transition={{ duration: 0.12, ease: EASE_OUT }}
+                      className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
+                      style={{ color: '#8E87A8' }}
+                      aria-label={`Acciones de ${m.fullName}`}
+                    >
+                      <MoreVertical className="w-[18px] h-[18px]" />
+                    </motion.button>
+                  ) : (
+                    <motion.button
+                      onClick={() => setViewMember(m)}
                       whileTap={reducedMotion ? {} : { scale: 0.9 }}
                       transition={{ duration: 0.12, ease: EASE_OUT }}
                       className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
                       style={{ color: '#7C3AED' }}
-                      aria-label="Editar miembro"
-                      title="Editar"
+                      aria-label={`Ver a ${m.fullName}`}
                     >
-                      <Pencil className="w-[17px] h-[17px]" />
+                      <Eye className="w-[17px] h-[17px]" />
                     </motion.button>
-                    )}
-                    {/* Sin permisos de gestion, ver el detalle es la unica accion
-                        disponible: ocupa toda la fila y conserva su fondo, porque
-                        un boton solo y sin caja no se leeria como tal. */}
-                    <motion.button
-                      onClick={() => setViewMember(m)}
-                      whileTap={reducedMotion ? {} : { scale: canManage ? 0.9 : 0.97 }}
-                      transition={{ duration: 0.12, ease: EASE_OUT }}
-                      className={canManage
-                        ? 'w-9 h-9 rounded-lg flex items-center justify-center shrink-0'
-                        : 'flex-1 h-10 rounded-xl text-[12px] font-semibold flex items-center justify-center gap-1.5'}
-                      style={canManage
-                        ? { color: '#8E87A8' }
-                        : { background: 'rgba(124,58,237,0.08)', color: '#7C3AED' }}
-                      aria-label="Ver miembro"
-                      title="Ver"
-                    >
-                      <Eye className={canManage ? 'w-[17px] h-[17px]' : 'w-4 h-4'} />
-                      {!canManage && 'Ver detalle'}
-                    </motion.button>
-                    {canManage && (<>
-                    <motion.button
-                      onClick={() => handleToggleEstado(m)}
-                      disabled={cambiandoEstado === m.id}
-                      whileTap={reducedMotion ? {} : { scale: 0.9 }}
-                      transition={{ duration: 0.12, ease: EASE_OUT }}
-                      className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 disabled:opacity-50"
-                      style={{ color: m.active === false ? '#06D6A0' : '#8E87A8' }}
-                      aria-label={m.active === false ? 'Reactivar miembro' : 'Desactivar miembro'}
-                      title={m.active === false ? 'Reactivar' : 'Pausar'}
-                    >
-                      {m.active === false
-                        ? <PlayCircle className="w-[17px] h-[17px]" />
-                        : <PauseCircle className="w-[17px] h-[17px]" />}
-                    </motion.button>
-                    <span
-                      className="ml-auto self-stretch my-1 shrink-0"
-                      style={{ width: 1, background: 'rgba(26,16,40,0.10)' }}
-                      aria-hidden
-                    />
-                    <motion.button
-                      onClick={() => handleDelete(m.id)}
-                      whileTap={reducedMotion ? {} : { scale: 0.9 }}
-                      transition={{ duration: 0.12, ease: EASE_OUT }}
-                      className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
-                      style={{ color: '#EF476F' }}
-                      aria-label="Eliminar miembro"
-                      title="Eliminar"
-                    >
-                      <Trash2 className="w-[17px] h-[17px]" />
-                    </motion.button>
-                    </>)}
+                  )}
                   </div>
                 </motion.div>
               );
@@ -1022,6 +982,100 @@ export default function MiembrosPage() {
         </ModuleReveal>
       </motion.div>
       )}
+
+      {/* ── Hoja de acciones del miembro (móvil) ─────────────────────────────
+          Sube desde el borde inferior, que es donde el pulgar llega sin
+          reacomodar la mano. A diferencia de un menú flotante, acá hay espacio
+          para decir qué hace cada acción: "pausar" y "eliminar" no se explican
+          solos con un ícono, y la diferencia entre los dos importa. */}
+      <AnimatePresence>
+        {accionesMember && (
+          <>
+            <motion.div
+              key="acciones-velo"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.22, ease: EASE_OUT }}
+              className="md:hidden fixed inset-0"
+              style={{ background: 'rgba(15,10,30,0.5)', zIndex: 60 }}
+              onClick={() => setAccionesMember(null)}
+            />
+            <motion.div
+              key="acciones-hoja"
+              role="dialog"
+              aria-label={`Acciones de ${accionesMember.fullName}`}
+              initial={reducedMotion ? { opacity: 0 } : { y: '100%' }}
+              animate={reducedMotion ? { opacity: 1 } : { y: 0 }}
+              exit={reducedMotion ? { opacity: 0 } : { y: '100%' }}
+              transition={reducedMotion ? { duration: 0.15 } : { duration: 0.3, ease: EASE_IOS }}
+              className="md:hidden fixed left-0 right-0 bottom-0 bg-white"
+              style={{
+                zIndex: 61,
+                borderRadius: '22px 22px 0 0',
+                padding: '8px 12px calc(18px + env(safe-area-inset-bottom))',
+                boxShadow: '0 -8px 32px rgba(26,16,40,0.18)',
+              }}
+            >
+              <div className="mx-auto mb-3" style={{ width: 36, height: 4, borderRadius: 99, background: 'rgba(26,16,40,0.16)' }} />
+
+              <div className="flex items-center gap-3 px-1 pb-3 mb-1" style={{ borderBottom: '1px solid rgba(26,16,40,0.07)' }}>
+                <MemberAvatar
+                  name={accionesMember.fullName}
+                  photoUrl={accionesMember.pictureUrl}
+                  gradient={ROLE_GRADIENT[accionesMember.role] ?? ROLE_GRADIENT.STUDENT}
+                />
+                <div className="min-w-0">
+                  <p className="text-[14px] font-semibold text-foreground truncate">{accionesMember.fullName}</p>
+                  <p className="text-[11px] text-muted-foreground truncate lowercase">{accionesMember.email ?? '—'}</p>
+                </div>
+              </div>
+
+              {(() => {
+                const m = accionesMember;
+                const enPausa = m.active === false;
+                const cerrarY = (accion: () => void) => () => { setAccionesMember(null); accion(); };
+                const opciones = [
+                  { icon: Pencil, label: 'Editar', hint: 'Datos, sede y rol', color: '#5B5470', onClick: cerrarY(() => openEdit(m)) },
+                  { icon: Eye, label: 'Ver detalle', hint: 'Ficha completa', color: '#5B5470', onClick: cerrarY(() => setViewMember(m)) },
+                  enPausa
+                    ? { icon: PlayCircle, label: 'Reactivar', hint: 'Vuelve a la asistencia y a la cuota', color: '#06D6A0', onClick: cerrarY(() => handleToggleEstado(m)) }
+                    : { icon: PauseCircle, label: 'Pausar', hint: 'Deja de generar cuota, conserva su historial', color: '#5B5470', onClick: cerrarY(() => handleToggleEstado(m)) },
+                ];
+                return (
+                  <>
+                    {opciones.map(op => (
+                      <button
+                        key={op.label}
+                        onClick={op.onClick}
+                        className="w-full flex items-center gap-3 px-2 py-3 rounded-xl text-left active:bg-secondary transition-colors"
+                      >
+                        <op.icon className="w-[18px] h-[18px] shrink-0" style={{ color: op.color }} />
+                        <span className="min-w-0">
+                          <span className="block text-[13.5px] font-semibold text-foreground">{op.label}</span>
+                          <span className="block text-[11px] text-muted-foreground">{op.hint}</span>
+                        </span>
+                      </button>
+                    ))}
+                    <div className="my-1 mx-2" style={{ height: 1, background: 'rgba(26,16,40,0.07)' }} />
+                    <button
+                      onClick={cerrarY(() => handleDelete(m.id))}
+                      className="w-full flex items-center gap-3 px-2 py-3 rounded-xl text-left transition-colors"
+                      style={{ color: '#EF476F' }}
+                    >
+                      <Trash2 className="w-[18px] h-[18px] shrink-0" />
+                      <span className="min-w-0">
+                        <span className="block text-[13.5px] font-semibold">Eliminar</span>
+                        <span className="block text-[11px]" style={{ color: 'rgba(239,71,111,0.75)' }}>No se puede deshacer</span>
+                      </span>
+                    </button>
+                  </>
+                );
+              })()}
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
 
       {/* ═══════════════════════════════════════════════════════════════════
           NUEVO PANEL — bottom sheet multi-paso

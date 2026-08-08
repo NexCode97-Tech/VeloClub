@@ -110,9 +110,15 @@ function timeAgo(iso: string): string {
 
 // El orden importa: los dos anunciantes que pagan van primero, y el tercer
 // lugar lo ocupa el espacio disponible, que es el que vende el cupo.
+//
+// El sufijo -2 del archivo no es decorativo: el service worker guarda las
+// imagenes con StaleWhileRevalidate, asi que al reemplazar una pieza
+// conservando el nombre el dispositivo sigue mostrando la vieja hasta la
+// segunda visita. Cambiar el nombre la convierte en un recurso nuevo y entra
+// al instante. Al actualizar una pieza hay que subir ese numero.
 const ADS = [
   {
-    image: '/natural.webp',
+    image: '/natural-2.webp',
     label: 'Publicidad',
     title: 'Natural Ropa Deportiva, lycras para patinaje',
     description: 'Lycras y uniformes para patinaje, hechos para competir y entrenar. Confección a la medida del deportista y diseños personalizados para tu club.',
@@ -120,7 +126,7 @@ const ADS = [
     color: '#4361EE',
   },
   {
-    image: '/cafe-orquidea.webp',
+    image: '/cafe-orquidea-2.webp',
     label: 'Publicidad',
     title: 'Café Orquídea de la Meseta',
     description: 'Café colombiano de la meseta santandereana en presentación de 450 gramos: energía para todo un mes.',
@@ -129,7 +135,7 @@ const ADS = [
     color: '#06D6A0',
   },
   {
-    image: '/nexcode97.png',
+    image: '/nexcode97-2.webp',
     label: 'Publicidad',
     title: 'NexCode97, desarrollo de software a la medida',
     description: 'Plataformas web y aplicaciones hechas a la medida de tu negocio. Quienes construyen VeloClub.',

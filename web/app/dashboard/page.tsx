@@ -112,7 +112,7 @@ function timeAgo(iso: string): string {
 // lugar lo ocupa el espacio disponible, que es el que vende el cupo.
 const ADS = [
   {
-    image: '/natural.png',
+    image: '/natural.webp',
     label: 'Publicidad',
     title: 'Natural Ropa Deportiva, lycras para patinaje',
     description: 'Lycras y uniformes para patinaje, hechos para competir y entrenar. Confección a la medida del deportista y diseños personalizados para tu club.',

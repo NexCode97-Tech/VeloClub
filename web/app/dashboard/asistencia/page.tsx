@@ -938,12 +938,25 @@ export default function AsistenciaPage() {
                     const color = STATUS_COLOR[s];
                     const statusName = STATUS_NAME[s];
                     return (
+                      // Toca la tarjeta entera, no solo la franja de abajo. Esa
+                      // franja mide 28px de alto, muy por debajo de los 44
+                      // recomendados para un objetivo tactil, y la tarjeta ya
+                      // mostraba `cursor-pointer` en todo el borde: prometia algo
+                      // que no cumplia. Marcar asistencia se hace rapido y de
+                      // pie, y errarle era lo normal.
                       <motion.div
                         variants={cardVariant}
                         key={m.id}
+                        onClick={canManage ? () => toggle(m.id) : undefined}
+                        onKeyDown={canManage ? (e => {
+                          if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(m.id); }
+                        }) : undefined}
+                        role={canManage ? 'button' : undefined}
+                        tabIndex={canManage ? 0 : undefined}
+                        aria-label={canManage ? `${m.fullName}: ${statusName}. Tocar para cambiar` : undefined}
                         whileHover={reducedMotion ? {} : { y: -3, boxShadow: `0 12px 32px ${color}28`, transition: { duration: 0.22, ease: EASE_OUT } }}
                         whileTap={reducedMotion ? {} : { scale: 0.97, transition: { duration: 0.1 } }}
-                        className="bg-white rounded-2xl overflow-hidden flex flex-col cursor-pointer"
+                        className={`bg-white rounded-2xl overflow-hidden flex flex-col${canManage ? ' cursor-pointer' : ''}`}
                         style={{
                           border: `1.5px solid ${color}30`,
                           boxShadow: `0 2px 10px ${color}18`,
@@ -967,30 +980,20 @@ export default function AsistenciaPage() {
                           )}
                         </div>
 
-                        {canManage ? (
-                          <button
-                            onClick={() => toggle(m.id)}
-                            className="mt-auto w-full py-2 text-[11px] font-semibold tracking-wide transition-all active:scale-95 flex items-center justify-center gap-1"
-                            style={{
-                              background: `${color}18`,
-                              color,
-                              borderTop: `1.5px solid ${color}30`,
-                            }}
-                          >
-                            <span className="text-[11px]">{statusName}</span>
-                          </button>
-                        ) : (
-                          <div
-                            className="mt-auto w-full py-2 text-[11px] font-semibold tracking-wide flex items-center justify-center gap-1"
-                            style={{
-                              background: `${color}18`,
-                              color,
-                              borderTop: `1.5px solid ${color}30`,
-                            }}
-                          >
-                            <span className="text-[11px]">{statusName}</span>
-                          </div>
-                        )}
+                        {/* La franja se queda como indicador de estado, pero deja
+                            de ser un boton: anidar uno dentro de algo clicable
+                            dispara el toque dos veces y adelanta el ciclo de a
+                            dos estados. */}
+                        <div
+                          className="mt-auto w-full py-2 text-[11px] font-semibold tracking-wide flex items-center justify-center gap-1"
+                          style={{
+                            background: `${color}18`,
+                            color,
+                            borderTop: `1.5px solid ${color}30`,
+                          }}
+                        >
+                          <span className="text-[11px]">{statusName}</span>
+                        </div>
                       </motion.div>
                     );
                   })}

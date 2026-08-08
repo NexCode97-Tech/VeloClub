@@ -36,6 +36,9 @@ interface Member {
   pictureUrl?: string | null;
   locations: { location: { id: string; name: string } }[];
 }
+// 0 = domingo … 6 = sabado, igual que en el resto de la app
+const DIA_CORTO = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+
 interface ClaseDia {
   id: string;
   nombre: string;
@@ -43,7 +46,9 @@ interface ClaseDia {
   categoria: string | null;
   locationId: string;
   location: { id: string; name: string };
-  guardada: boolean;
+  diaSemana: number;
+  // Solo viene en /clases/dia; el horario completo no la trae.
+  guardada?: boolean;
 }
 
 interface Location { id: string; name: string }
@@ -277,6 +282,18 @@ export default function AsistenciaPage() {
     staleTime: 60 * 1000,
   });
   const clasesHoy = clasesData?.clases ?? [];
+
+  // El horario completo alimenta el desplegable del reporte: ahi no interesa
+  // el dia seleccionado sino todas las clases que dicta el club.
+  const { data: horarioData } = useQuery({
+    queryKey: ['horarioClases'],
+    queryFn: async () => {
+      const token = await getToken();
+      return apiFetch<{ clases: ClaseDia[] }>('/clases', { token });
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+  const horario = horarioData?.clases ?? [];
   const claseActiva = clasesHoy.find(c => c.id === claseSel) ?? null;
 
   const { data: attData, isLoading: loadingAtt } = useQuery({
@@ -399,6 +416,8 @@ export default function AsistenciaPage() {
   const [desde, setDesde]     = useState('');
   const [hasta, setHasta]     = useState('');
   const [sedeRep, setSedeRep] = useState('TODAS');
+  // Clase del reporte. 'TODAS' = el consolidado por dia de siempre.
+  const [claseRep, setClaseRep] = useState('TODAS');
   const [descargando, setDescargando] = useState<'pdf' | 'excel' | null>(null);
   const [errorDescarga, setErrorDescarga] = useState<string | null>(null);
 
@@ -421,15 +440,24 @@ export default function AsistenciaPage() {
     setErrorDescarga(null);
     try {
       const token = await getToken();
-      const sedeQuery = sedeRep !== 'TODAS' ? `&locationId=${sedeRep}` : '';
+      // La clase manda sobre la sede: ya la trae, y mandar las dos podria
+      // pedir una combinacion que no existe.
+      const sedeQuery = claseRep !== 'TODAS'
+        ? `&claseId=${claseRep}`
+        : sedeRep !== 'TODAS' ? `&locationId=${sedeRep}` : '';
       const rep = await apiFetch<ReporteAsistencia>(
         `/attendance/report?from=${desde}&to=${hasta}${sedeQuery}`, { token },
       );
       const opts = {
         clubName: clubSettings?.club?.name ?? 'Club',
-        sedeName: sedeRep === 'TODAS'
-          ? 'Todas las sedes'
-          : (locations.find(l => l.id === sedeRep)?.name ?? 'Sede'),
+        sedeName: claseRep !== 'TODAS'
+          ? (() => {
+              const c = horario.find(h => h.id === claseRep);
+              return c ? `${c.nombre} · ${horaLegible(c.hora)} · ${c.location.name}` : 'Clase';
+            })()
+          : sedeRep === 'TODAS'
+            ? 'Todas las sedes'
+            : (locations.find(l => l.id === sedeRep)?.name ?? 'Sede'),
         desde, hasta,
       };
       if (formato === 'pdf') descargarAsistenciaPDF(rep, opts);
@@ -540,6 +568,35 @@ export default function AsistenciaPage() {
                     {locations.map(l => <SelectItem key={l.id} value={l.id}>{l.name}</SelectItem>)}
                   </SelectContent>
                 </Select>
+              </div>
+            )}
+
+            {horario.length > 0 && (
+              <div className="space-y-2">
+                <Label>Clase</Label>
+                <Select value={claseRep} onValueChange={v => { if (v) setClaseRep(v); }}>
+                  <SelectTrigger className="w-full h-12 rounded-xl">
+                    <span className="text-sm">
+                      {claseRep === 'TODAS'
+                        ? 'Todas las clases'
+                        : (() => {
+                            const c = horario.find(h => h.id === claseRep);
+                            return c ? `${DIA_CORTO[c.diaSemana]} ${horaLegible(c.hora)} · ${c.nombre}` : 'Seleccionar clase';
+                          })()}
+                    </span>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="TODAS">Todas las clases</SelectItem>
+                    {horario.map(c => (
+                      <SelectItem key={c.id} value={c.id}>
+                        {DIA_CORTO[c.diaSemana]} {horaLegible(c.hora)} · {c.nombre} · {c.location.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-[10.5px] text-muted-foreground">
+                  Al elegir una clase el reporte se limita a sus días y a su sede.
+                </p>
               </div>
             )}
 

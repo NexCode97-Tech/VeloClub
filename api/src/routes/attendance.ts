@@ -192,6 +192,23 @@ router.get('/report', requireAuth, async (req, res) => {
     return res.status(403).json({ error: 'La sede no pertenece a este club' });
   }
 
+  // Filtrar por clase responde "como va la de las 6 a. m.", que es lo que un
+  // club mira para mover horarios. La clase ya trae su sede, asi que manda
+  // sobre `locationId` si llegan las dos.
+  const claseId = req.query.claseId ? String(req.query.claseId) : undefined;
+  let claseSede: string | undefined;
+  let claseCategoria: string | null = null;
+  if (claseId) {
+    const clase = await prisma.claseHorario.findFirst({
+      where: { id: claseId, clubId },
+      select: { locationId: true, categoria: true },
+    });
+    if (!clase) return res.status(403).json({ error: 'La clase no pertenece a este club' });
+    claseSede = clase.locationId;
+    claseCategoria = clase.categoria;
+  }
+  const sedeFiltro = claseSede ?? locationId;
+
   // Los miembros salen del club (no de los registros) para que un deportista
   // sin ninguna marca en el rango aparezca igual, con la fila en blanco. Si
   // solo se listaran los que tienen registros, el que nunca fue desapareceria
@@ -201,7 +218,10 @@ router.get('/report', requireAuth, async (req, res) => {
       clubId,
       role: 'STUDENT',
       active: true,
-      ...(locationId ? { locations: { some: { locationId } } } : {}),
+      ...(sedeFiltro ? { locations: { some: { locationId: sedeFiltro } } } : {}),
+      // La planilla de esa clase solo tiene a los de su categoria; el reporte
+      // debe listar exactamente a los mismos.
+      ...(claseCategoria ? { category: claseCategoria } : {}),
     },
     select: { id: true, fullName: true, category: true },
     orderBy: { fullName: 'asc' },
@@ -211,7 +231,7 @@ router.get('/report', requireAuth, async (req, res) => {
     where: {
       clubId,
       date: { gte: from, lte: to },
-      ...(locationId ? { locationId } : {}),
+      ...(claseId ? { claseId } : sedeFiltro ? { locationId: sedeFiltro } : {}),
       memberId: { in: members.map(m => m.id) },
     },
     select: { memberId: true, date: true, status: true },
@@ -224,10 +244,24 @@ router.get('/report', requireAuth, async (req, res) => {
     new Set(records.map(r => r.date.toISOString().slice(0, 10)))
   ).sort();
 
+  // Con horario, un deportista puede tener dos marcas el mismo dia (manana y
+  // tarde). Sin filtrar por clase el reporte es por dia, asi que hay que
+  // resolver el empate: manda la mejor marca del dia. Escribir la ultima que
+  // llegara haria que quien asistio en la manana y falto en la tarde figurara
+  // ausente, que es peor que injusto: es falso.
+  //
+  // Filtrando por clase no hay empate posible y esto no interviene.
+  const PRIORIDAD: Record<string, number> = {
+    PRESENT: 4, LATE: 3, MEDICAL_EXCUSE: 2, ABSENT: 1,
+  };
   const porMiembro: Record<string, Record<string, string>> = {};
   for (const r of records) {
     const dia = r.date.toISOString().slice(0, 10);
-    (porMiembro[r.memberId] ??= {})[dia] = r.status;
+    const delDia = (porMiembro[r.memberId] ??= {});
+    const previo = delDia[dia];
+    if (!previo || (PRIORIDAD[r.status] ?? 0) > (PRIORIDAD[previo] ?? 0)) {
+      delDia[dia] = r.status;
+    }
   }
 
   const filas = members.map(m => {

@@ -321,12 +321,16 @@ export default function HorarioClases() {
                 </div>
               </div>
 
-              <div className="px-5 py-4 border-t border-border/60"
-                style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}>
+              {/* El boton por defecto mide 32px de alto, que en una hoja a pantalla
+                  completa se ve aplastado. Y el relleno de abajo era 1rem: en
+                  iPhone la barra de gestos se le montaba encima, porque el area
+                  segura se suma al relleno, no lo reemplaza. */}
+              <div className="px-5 pt-4 border-t border-border/60"
+                style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 1.25rem)' }}>
                 <Button
                   onClick={guardar}
                   disabled={guardando || !editando.nombre?.trim() || !editando.locationId}
-                  className="w-full"
+                  className="w-full h-12 text-[14px]"
                 >
                   {guardando ? 'Guardando…' : editando.id ? 'Guardar cambios' : 'Agregar clase'}
                 </Button>

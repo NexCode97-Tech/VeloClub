@@ -4,11 +4,46 @@ import { prisma } from '../db/client';
 
 const router = Router();
 
+const COMMENT_SELECT = {
+  id: true, authorClerkId: true, authorName: true, authorRole: true,
+  authorAvatar: true, content: true, createdAt: true,
+};
+
+const POST_INCLUDE = {
+  likes:    { select: { userId: true } },
+  comments: { select: COMMENT_SELECT, orderBy: { createdAt: 'asc' as const }, take: 50 },
+};
+
+// Publicaciones de una persona, en el orden en que se ven en la comunidad.
+//
+// Se buscan por `authorClerkId` y no por el nombre: el nombre se repite entre
+// homonimos y cambia cuando alguien se corrige el suyo, asi que filtrar por el
+// mezclaba historiales ajenos y borraba el propio. Tampoco se exige que la
+// publicacion traiga imagen — una de solo texto tambien es una publicacion.
+//
+// El alcance importa: lo PUBLICO lo ve cualquiera, pero lo PRIVADO solo se
+// muestra a quien pertenece al mismo club que lo publico.
+async function publicacionesDe(clerkId: string, clubIdDelVisitante: string | null) {
+  return prisma.post.findMany({
+    where: {
+      authorClerkId: clerkId,
+      OR: [
+        { scope: 'PUBLIC' },
+        ...(clubIdDelVisitante ? [{ scope: 'PRIVATE' as const, clubId: clubIdDelVisitante }] : []),
+      ],
+    },
+    include: POST_INCLUDE,
+    orderBy: { createdAt: 'desc' },
+    take: 50,
+  });
+}
+
 // GET /profiles/:clerkId — perfil público de cualquier usuario/miembro
 router.get('/:clerkId', requireAuth, async (req, res) => {
   if (!req.auth) return res.status(401).json({ error: 'No autenticado' });
 
   const clerkId = String(req.params.clerkId);
+  const clubIdDelVisitante = req.user?.clubId ?? null;
 
   // Buscar como User (ADMIN, COACH)
   const user = await prisma.user.findUnique({
@@ -32,12 +67,7 @@ router.get('/:clerkId', requireAuth, async (req, res) => {
   });
 
   if (user) {
-    const postImages = await prisma.post.findMany({
-      where: { authorName: user.name, imageUrl: { not: null } },
-      orderBy: { createdAt: 'desc' },
-      take: 50,
-      select: { id: true, imageUrl: true, createdAt: true },
-    });
+    const posts = await publicacionesDe(clerkId, clubIdDelVisitante);
 
     const [followersCount, followingCount] = await Promise.all([
       prisma.follow.count({ where: { followingClerkId: clerkId } }),
@@ -54,7 +84,12 @@ router.get('/:clerkId', requireAuth, async (req, res) => {
         role: user.role,
         createdAt: user.createdAt,
         club: user.club,
-        postImages: postImages.map(p => ({ id: p.id, imageUrl: p.imageUrl! })),
+        posts,
+        // El mosaico solo necesita las que traen imagen, pero salen del mismo
+        // listado para que nunca se contradigan entre si.
+        postImages: posts
+          .filter(p => p.imageUrl)
+          .map(p => ({ id: p.id, imageUrl: p.imageUrl! })),
         followersCount,
         followingCount,
       },
@@ -82,12 +117,7 @@ router.get('/:clerkId', requireAuth, async (req, res) => {
 
   if (!member) return res.status(404).json({ error: 'Perfil no encontrado' });
 
-  const postImages = await prisma.post.findMany({
-    where: { authorName: member.fullName, imageUrl: { not: null } },
-    orderBy: { createdAt: 'desc' },
-    take: 50,
-    select: { id: true, imageUrl: true, createdAt: true },
-  });
+  const posts = await publicacionesDe(clerkId, clubIdDelVisitante);
 
   const [followersCount, followingCount] = await Promise.all([
     prisma.follow.count({ where: { followingClerkId: clerkId } }),
@@ -104,7 +134,10 @@ router.get('/:clerkId', requireAuth, async (req, res) => {
       role: member.role,
       createdAt: member.createdAt,
       club: member.club,
-      postImages: postImages.map(p => ({ id: p.id, imageUrl: p.imageUrl! })),
+      posts,
+      postImages: posts
+        .filter(p => p.imageUrl)
+        .map(p => ({ id: p.id, imageUrl: p.imageUrl! })),
       followersCount,
       followingCount,
     },

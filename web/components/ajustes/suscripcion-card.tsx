@@ -660,12 +660,17 @@ export default function SuscripcionCard() {
                   style={{
                     background: '#fff',
                     border: activo ? '2px solid #7C3AED' : '1px solid rgba(26,16,40,0.10)',
-                    padding: activo ? 13 : 14,
-                    // La etiqueta "Más popular" va anclada a la esquina superior
-                    // derecha, justo donde cae el precio. Sin esta franja la
-                    // etiqueta se monta encima y tacha la cifra. Solo la crece
-                    // la tarjeta que lleva etiqueta; las otras dos no cambian.
-                    paddingTop: destacado ? (activo ? 33 : 34) : undefined,
+                    // Un solo atajo, sin paddingTop aparte. Antes iban los dos, y
+                    // en las tarjetas sin etiqueta el segundo valia undefined: al
+                    // montar, React lo aplica igual y borra el relleno superior
+                    // que acababa de poner el atajo, asi que el contenido salia
+                    // pegado al borde de arriba. En los siguientes dibujados ya no
+                    // habia diferencia que aplicar y el relleno sobrevivia, por eso
+                    // se acomodaba solo despues de la primera seleccion.
+                    //
+                    // La franja de arriba es para la etiqueta "Mas popular", que va
+                    // anclada a esa esquina, justo donde cae el precio.
+                    padding: `${destacado ? (activo ? 33 : 34) : (activo ? 13 : 14)}px ${activo ? 13 : 14}px ${activo ? 13 : 14}px`,
                     boxShadow: activo ? '0 6px 22px -12px rgba(124,58,237,0.5)' : undefined,
                   }}
                 >

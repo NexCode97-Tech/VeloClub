@@ -5,6 +5,75 @@ Actualizar al final de cada sesión o cuando se complete un bloque de trabajo im
 
 ---
 
+## Sesión 2026-08-08
+
+**Modelo:** Claude Opus 5
+**Estado inicial:** `382bacc`, rama `main`, app en producción
+**Estado final:** `353813c`, todo desplegado
+
+### Interfaz
+
+- [x] **Tarjetas de plan en Mi suscripción** (móvil): diseño nuevo de selector, se
+  corrigió el badge de "Más popular" que tapaba el precio, y la desalineación
+  vertical entre Mensual y Anual.
+- [x] **Relleno perdido en el primer dibujado** de esas mismas tarjetas. El objeto
+  de estilos ponía el atajo `padding` y después `paddingTop`, que valía `undefined`
+  en las tarjetas sin etiqueta. Al montar, React lo aplica igual y vacía el relleno
+  que el atajo acababa de fijar; en los renders siguientes `paddingTop` no cambia y
+  no se vuelve a emitir, y por eso la tarjeta se arreglaba sola después de la
+  primera selección. Se colapsó en un solo atajo de tres valores.
+- [x] **Acciones de cada miembro** pasaron a un menú de tres puntos en hoja
+  inferior, montada con `createPortal` a `document.body`: el problema no era el
+  valor del z-index sino el contexto de apilamiento, que dejaba la hoja debajo del
+  menú flotante.
+- [x] **El menú flotante se esconde al bajar** y vuelve al subir o al detenerse. El
+  listener va sobre `<main>`, no sobre `window`, y el efecto depende de `checking`
+  porque en el primer montaje ese elemento todavía no existe.
+- [x] **Hero del landing** con partículas (Vortex) y sin foto de fondo; carrusel de
+  logos para "clientes que confían en nosotros", solo clubes con logo y sin texto.
+- [x] **Publicidad:** seis tarjetas, NexCode97 tercera, tres cupos libres con fondos
+  distintos, y sin el degradado oscuro al pie. Los archivos llevan sufijo de
+  versión porque el service worker sirve las imágenes con `StaleWhileRevalidate` y
+  sin cambiar el nombre no se actualizan nunca en los dispositivos ya instalados.
+
+### Reglas de negocio
+
+- [x] **Nadie puede eliminarse a sí mismo.** La opción no aparece y la API la
+  rechaza, comparando por `clerkId` y también por correo.
+
+### Perfil público de un miembro
+
+- [x] **Mostraba solo fotos.** No renderizaba publicaciones en ningún tamaño de
+  pantalla, y en escritorio la galería vivía en media pantalla con la otra mitad
+  reservada en blanco. Ahora: pestañas debajo de 1024px —que de paso resuelve la
+  tablet, donde a dos columnas la caja de comentarios quedaba comprimida— y feed
+  con costado de 1024 para arriba, donde tocar una foto abre su publicación en un
+  visor.
+- [x] **Se buscaban por `authorName`.** El nombre se repite entre homónimos y cambia
+  cuando alguien se corrige el suyo, así que mezclaba historiales ajenos y borraba
+  el propio. Pasa a `authorClerkId`, y deja de exigir que la publicación traiga
+  imagen: una de solo texto tampoco contaba en el número de publicaciones.
+
+### Fecha de fundación del club
+
+- [x] El perfil mostraba "Fundado en ..." con `createdAt`, que es cuando se
+  registraron en la plataforma. Se agregó `foundedAt` al modelo `Club`, editable en
+  Ajustes, guardado al mediodía UTC porque a medianoche el 1 de enero se lee como
+  31 de diciembre en Colombia. Sin declarar, se sigue mostrando la de registro pero
+  solo con mes y año.
+
+### Pendientes
+
+- **Biografía y portada de deportistas:** `bio` y `coverUrl` solo existen en `User`,
+  no en `Member`. Que un deportista pueda escribirlas es otra migración, sin decidir.
+- Los tres cupos de publicidad libres no tienen teléfono de reserva (su `url` es
+  `'#'`, así que no muestran botón).
+- El repo lleva `package-lock.json` y `pnpm-lock.yaml` a la vez.
+- Barrer el resto del código buscando la misma colisión de atajo y propiedad
+  individual en objetos de estilo.
+
+---
+
 ## Sesión 2026-07-30
 
 **Modelo:** Claude Sonnet 5

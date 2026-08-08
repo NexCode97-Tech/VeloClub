@@ -57,6 +57,7 @@ model Club {
   suscripcion    ClubSuscripcion?
   posts          Post[]
   cuponCanjes    CuponCanje[]
+  clases         ClaseHorario[]
 }
 
 // ─── User (staff: ADMIN, COACH, SUPERADMIN) ──────────────────────────────────
@@ -95,6 +96,7 @@ model Location {
   attendances      Attendance[]
   trainingSessions TrainingSession[]
   calendarEvents   CalendarEvent[]
+  clases           ClaseHorario[]
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt
 
@@ -171,11 +173,60 @@ model Attendance {
   date       DateTime         @db.Date
   status     AttendanceStatus
   notes      String?
+  // Clase del horario a la que corresponde. Es opcional porque las asistencias
+  // tomadas antes de que existiera el horario no pertenecen a ninguna, y
+  // porque un club puede no armar horario nunca y seguir marcando por dia.
+  claseId    String?
+  clase      ClaseHorario?    @relation(fields: [claseId], references: [id], onDelete: SetNull)
   createdAt  DateTime         @default(now())
 
-  @@unique([memberId, date])
+  // La unicidad NO se declara aca. Antes era @@unique([memberId, date]), que es
+  // justo lo que hacia que marcar en la segunda sede pisara la primera. Ahora
+  // son dos indices unicos parciales creados a mano en la migracion:
+  //
+  //   UNIQUE (memberId, date) WHERE claseId IS NULL
+  //   UNIQUE (memberId, date, claseId) WHERE claseId IS NOT NULL
+  //
+  // Hacen falta parciales porque Postgres considera que dos NULL son distintos:
+  // un unico compuesto con claseId dejaria entrar duplicados justo en las filas
+  // sin clase, que son todas las viejas. Prisma no sabe declarar indices
+  // parciales, y por eso viven solo en el SQL.
   @@index([clubId, date])
   @@index([memberId])
+  @@index([claseId, date])
+}
+
+// ─── Horario de clases ────────────────────────────────────────────────────────
+//
+// Lo que el club dicta cada semana: sede, dia, hora. La asistencia se toma
+// sobre una de estas, y por eso un deportista puede estar en la clase de la
+// mañana y en la de la tarde del mismo dia sin que una pise a la otra.
+//
+// Es opcional: un club que no arme su horario sigue marcando por dia como
+// siempre, y ni se entera de que la funcion existe.
+
+model ClaseHorario {
+  id         String       @id @default(cuid())
+  clubId     String
+  club       Club         @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  locationId String
+  location   Location     @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  nombre     String
+  // 0 = domingo … 6 = sabado. Mismo criterio que `Club.noAttendanceDays` y que
+  // `Date.getDay()`, para no tener dos convenciones de dia dando vueltas.
+  diaSemana  Int
+  // "HH:mm" en 24h. Texto y no DateTime: es una hora de reloj que se repite
+  // cada semana, no un instante, y guardarla como fecha arrastra husos.
+  hora       String
+  categoria  String?
+  // Quitar una clase del horario no borra su historial de asistencia: se
+  // desactiva y deja de aparecer de hoy en adelante.
+  activa     Boolean      @default(true)
+  attendances Attendance[]
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+
+  @@index([clubId, diaSemana, activa])
 }
 
 // ─── Payment (pagos de mensualidad) ──────────────────────────────────────────

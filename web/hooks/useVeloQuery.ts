@@ -18,7 +18,10 @@ export const QK = {
   clubSettings: () => ['club', 'settings'] as const,
   payments:     (month: number, year: number) => ['payments', month, year] as const,
   cashflow:     (month: number, year: number) => ['cashflow', month, year] as const,
-  attendance:   (date: string)  => ['attendance', date] as const,
+  // La clase entra en la clave: dos clases del mismo dia son dos planillas
+  // distintas y no pueden compartir cache.
+  attendance:   (date: string, claseId?: string | null) =>
+    ['attendance', date, claseId ?? 'sin-clase'] as const,
   competitions: () => ['competitions'] as const,
   training:     () => ['training'] as const,
   calendar:     (month: number, year: number) => ['calendar', month, year] as const,

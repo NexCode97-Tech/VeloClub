@@ -11,6 +11,8 @@ const router = Router();
 const bulkSchema = z.object({
   date:       z.string(),
   locationId: z.string().optional(),
+  // Clase del horario. Sin ella se guarda como siempre: una por dia.
+  claseId:    z.string().optional(),
   records: z.array(z.object({
     memberId: z.string(),
     status:   z.enum(['PRESENT', 'LATE', 'ABSENT', 'MEDICAL_EXCUSE']),
@@ -24,12 +26,15 @@ router.get('/', requireAuth, async (req, res) => {
   const clubId     = req.user.clubId ?? '';
   const dateStr    = String(req.query.date ?? '');
   const locationId = req.query.locationId ? String(req.query.locationId) : undefined;
+  // `claseId=null` pide expresamente las filas sin clase; omitirlo trae todas.
+  const claseParam = req.query.claseId !== undefined ? String(req.query.claseId) : undefined;
 
   if (!dateStr) return res.status(400).json({ error: 'date requerido' });
 
   const date = new Date(dateStr);
   const where: Record<string, unknown> = { clubId, date };
   if (locationId) where.locationId = locationId;
+  if (claseParam !== undefined) where.claseId = claseParam === 'null' ? null : claseParam;
 
   const records = await prisma.attendance.findMany({
     where,
@@ -248,11 +253,20 @@ router.post('/bulk', requireAuth, async (req, res) => {
   const parsed = bulkSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.issues });
 
-  const { date: dateStr, locationId, records } = parsed.data;
+  const { date: dateStr, locationId, claseId, records } = parsed.data;
   const date = new Date(dateStr);
 
   if (!await sedeEsDelClub(locationId, clubId)) {
     return res.status(403).json({ error: 'La sede no pertenece a este club' });
+  }
+
+  // La clase tiene que ser del club: los ids no se aceptan a ciegas.
+  if (claseId) {
+    const clase = await prisma.claseHorario.findFirst({
+      where: { id: claseId, clubId },
+      select: { id: true },
+    });
+    if (!clase) return res.status(403).json({ error: 'La clase no pertenece a este club' });
   }
 
   // Validar que todos los memberIds pertenecen al club (previene ataque cross-tenant)
@@ -270,8 +284,17 @@ router.post('/bulk', requireAuth, async (req, res) => {
 
   // Upsert en bloque: un upsert por registro generaba un N+1 (62 queries en una
   // sola jornada). Se resuelve leyendo los existentes y agrupando las escrituras.
+  //
+  // El filtro incluye la clase, y ese es el arreglo del bug. Antes se buscaba
+  // solo por dia y deportista: marcar en la segunda sede encontraba la fila de
+  // la primera, la trataba como actualizacion y le sobrescribia la sede. La
+  // asistencia de la manana se convertia en la de la tarde.
+  //
+  // `claseId: null` no es lo mismo que omitirlo: sin clase se busca justo la
+  // fila sin clase, que es la que protege el indice unico parcial.
+  const alcanceFila = { date, claseId: claseId ?? null };
   const existing = await prisma.attendance.findMany({
-    where: { date, memberId: { in: memberIds } },
+    where: { ...alcanceFila, memberId: { in: memberIds } },
     select: { memberId: true },
   });
   const existingIds = new Set(existing.map(a => a.memberId));
@@ -297,6 +320,7 @@ router.post('/bulk', requireAuth, async (req, res) => {
             clubId,
             memberId:   r.memberId,
             locationId: locationId ?? null,
+            claseId:    claseId ?? null,
             date,
             status:     r.status,
             notes:      r.notes ?? null,
@@ -305,7 +329,7 @@ router.post('/bulk', requireAuth, async (req, res) => {
       : []),
     ...Array.from(updateGroups.values()).map(g =>
       prisma.attendance.updateMany({
-        where: { date, memberId: { in: g.memberIds } },
+        where: { ...alcanceFila, memberId: { in: g.memberIds } },
         data: { status: g.status, locationId: locationId ?? null, notes: g.notes },
       })
     ),

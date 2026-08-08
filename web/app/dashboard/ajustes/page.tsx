@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { IconClub, IconPerfil, IconSuscripcion } from '@/components/ui/custom-icons';
 import SuscripcionCard from '@/components/ajustes/suscripcion-card';
+import HorarioClases from '@/components/ajustes/horario-clases';
 import { PhoneInput } from '@/components/ui/phone-input';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -607,6 +608,10 @@ function AjustesPageContent() {
           </p>
         </div>
       </div>
+
+      {/* Horario de clases — junto a los días sin entrenamiento porque son lo
+          mismo: reglas del club que gobiernan la asistencia. */}
+      <HorarioClases />
 
       {/* Días sin entrenamiento */}
       <div className="space-y-3">

@@ -2,9 +2,10 @@
 
 import { useAuth } from '@clerk/nextjs';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { apiFetch } from '@/lib/api-client';
 import { QK } from '@/hooks/useVeloQuery';
+import { horaLegible } from '@/components/ajustes/horario-clases';
 import { Users, MapPin, CheckCircle2, Search, Download, FileSpreadsheet, FileText } from 'lucide-react';
 const EASE_OUT: [number,number,number,number] = [0.23, 1, 0.32, 1];
 import { MemberAvatar } from '@/components/ui/member-avatar';
@@ -35,6 +36,16 @@ interface Member {
   pictureUrl?: string | null;
   locations: { location: { id: string; name: string } }[];
 }
+interface ClaseDia {
+  id: string;
+  nombre: string;
+  hora: string;
+  categoria: string | null;
+  locationId: string;
+  location: { id: string; name: string };
+  guardada: boolean;
+}
+
 interface Location { id: string; name: string }
 interface AttRecord { memberId: string; status: Status }
 
@@ -209,6 +220,9 @@ export default function AsistenciaPage() {
   const [saved, setSaved]             = useState(false);
   const [role, setRole]               = useState('');
   const [noAttDays, setNoAttDays]     = useState<number[]>([]);
+  // Clase del horario sobre la que se esta pasando lista. `null` = el club no
+  // armo horario, o el dia no tiene clases: se marca por dia, como siempre.
+  const [claseSel, setClaseSel]       = useState<string | null>(null);
 
   // Week streak state
   const [animatingToday, setAnimating]  = useState(false);
@@ -250,9 +264,30 @@ export default function AsistenciaPage() {
     queryKey: QK.members(),
     queryFn: async () => { const token = await getToken(); return apiFetch<{ members: Member[] }>('/members', { token }); },
   });
+  // Las clases que toca ese dia. Salen del horario del club: no se le pregunta
+  // nada al entrenador, la app ya sabe que hay hoy.
+  const { data: clasesData } = useQuery({
+    queryKey: ['clasesDia', selectedDate],
+    queryFn: async () => {
+      const token = await getToken();
+      return apiFetch<{ clases: ClaseDia[]; diaSinEntrenamiento: boolean }>(
+        `/clases/dia?fecha=${selectedDate}`, { token },
+      );
+    },
+    staleTime: 60 * 1000,
+  });
+  const clasesHoy = clasesData?.clases ?? [];
+  const claseActiva = clasesHoy.find(c => c.id === claseSel) ?? null;
+
   const { data: attData, isLoading: loadingAtt } = useQuery({
-    queryKey: QK.attendance(selectedDate),
-    queryFn: async () => { const token = await getToken(); return apiFetch<{ records: AttRecord[] }>(`/attendance?date=${selectedDate}`, { token }); },
+    queryKey: QK.attendance(selectedDate, claseSel),
+    queryFn: async () => {
+      const token = await getToken();
+      // `claseId=null` pide justo las filas sin clase. Omitirlo traeria las de
+      // todas las clases mezcladas, que es el bug que estamos cerrando.
+      const q = claseSel ? `&claseId=${claseSel}` : '&claseId=null';
+      return apiFetch<{ records: AttRecord[] }>(`/attendance?date=${selectedDate}${q}`, { token });
+    },
     staleTime: 0,
   });
 
@@ -264,6 +299,20 @@ export default function AsistenciaPage() {
   useEffect(() => {
     if (locations.length > 0 && !selectedLoc) setSelectedLoc(locations[0].id);
   }, [locations, selectedLoc]);
+
+  // Al cambiar de dia se propone la primera clase sin pasar; si ya estan todas
+  // guardadas, la primera. Asi el entrenador entra y marca sin elegir nada.
+  useEffect(() => {
+    if (clasesHoy.length === 0) { setClaseSel(null); return; }
+    if (claseSel && clasesHoy.some(c => c.id === claseSel)) return;
+    setClaseSel((clasesHoy.find(c => !c.guardada) ?? clasesHoy[0]).id);
+  }, [clasesHoy, claseSel]);
+
+  // La sede la manda la clase: no tiene sentido pasar lista de la clase de El
+  // Bosque con la planilla de La Flora.
+  useEffect(() => {
+    if (claseActiva) setSelectedLoc(claseActiva.locationId);
+  }, [claseActiva]);
 
   useEffect(() => {
     getToken().then(async token => {
@@ -277,13 +326,24 @@ export default function AsistenciaPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Quien entra a la planilla. La sede sale de la clase (o del selector, si el
+  // club no tiene horario) y la categoria solo filtra cuando la clase la
+  // declara: sin eso, una clase sin categoria dejaria la planilla vacia.
+  //
+  // Un deportista en pausa nunca entra: quedaria ausente todos los dias de sus
+  // vacaciones y le arruinaria el porcentaje del ano.
+  const perteneceALaClase = useCallback((m: Member) => {
+    if (m.active === false) return false;
+    if (!m.locations.some(l => l.location.id === selectedLoc)) return false;
+    if (claseActiva?.categoria && m.category !== claseActiva.categoria) return false;
+    return true;
+  }, [selectedLoc, claseActiva]);
+
   useEffect(() => {
     if (!selectedLoc || !membersData || !attData) return;
     // Un deportista en pausa no entra a la planilla: quedaría marcado ausente
     // todos los días de sus vacaciones y le arruinaría el porcentaje del año.
-    const forLoc = membersData.members.filter(
-      m => m.active !== false && m.locations.some(l => l.location.id === selectedLoc)
-    );
+    const forLoc = membersData.members.filter(perteneceALaClase);
     // Todos arrancan Ausentes: el entrenador marca Presente a quienes asistieron
     const base = Object.fromEntries(forLoc.map(m => [m.id, 'ABSENT' as Status]));
     const existing: Record<string, Status> = {};
@@ -291,9 +351,7 @@ export default function AsistenciaPage() {
     setAtt({ ...base, ...existing });
   }, [selectedLoc, membersData, attData]);
 
-  const members = (membersData?.members ?? []).filter(
-    m => m.active !== false && m.locations.some(l => l.location.id === selectedLoc)
-  );
+  const members = (membersData?.members ?? []).filter(perteneceALaClase);
 
   function toggle(id: string) {
     setAtt(prev => {
@@ -312,12 +370,16 @@ export default function AsistenciaPage() {
         body: JSON.stringify({
           date:       selectedDate,
           locationId: selectedLoc,
+          // Sin clase el backend guarda una fila por dia, como siempre.
+          claseId:    claseSel ?? undefined,
           records:    Object.entries(att).map(([memberId, status]) => ({ memberId, status })),
         }),
       });
       setSaved(true);
       // Marcar el día guardado + lanzar animación (solo si es hoy)
       queryClient.setQueryData(['weekSaved', weekDates[0]], (old: Set<string> | undefined) => new Set([...(old ?? []), selectedDate]));
+      // Para que el selector marque la clase como pasada sin recargar
+      queryClient.invalidateQueries({ queryKey: ['clasesDia', selectedDate] });
       if (selectedDate === todayStr) {
         setAnimating(true);
         setTimeout(() => setAnimating(false), 800);
@@ -546,6 +608,50 @@ export default function AsistenciaPage() {
                 animatingToday={animatingToday}
               />
             </motion.div>
+
+            {/* Clases de hoy. Con una sola no se muestra: un selector de una
+                opcion es ruido, y la clase ya se lee en la linea de abajo.
+                Sin horario armado no aparece nada y todo sigue como antes. */}
+            {!isBlocked && clasesHoy.length > 1 && (
+              <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
+                {clasesHoy.map(c => {
+                  const activa = c.id === claseSel;
+                  return (
+                    <button
+                      key={c.id}
+                      onClick={() => setClaseSel(c.id)}
+                      className="shrink-0 text-left rounded-xl px-3 py-2.5 transition-all"
+                      style={{
+                        minWidth: 132,
+                        background: activa ? 'rgba(124,58,237,0.05)' : '#fff',
+                        border: `1.5px solid ${activa ? '#7C3AED' : 'rgba(120,80,200,0.14)'}`,
+                      }}
+                    >
+                      <span className="block text-[12.5px] font-bold leading-tight"
+                        style={{ color: '#1A1028', fontVariantNumeric: 'tabular-nums' }}>
+                        {horaLegible(c.hora)}
+                      </span>
+                      <span className="block text-[9.5px] mt-0.5 truncate" style={{ color: '#8E87A8' }}>
+                        {c.nombre} · {c.location.name}
+                      </span>
+                      <span className="inline-block text-[8.5px] font-bold mt-1.5 px-1.5 py-0.5 rounded-full"
+                        style={c.guardada
+                          ? { background: 'rgba(6,214,160,0.14)', color: '#057A5C' }
+                          : { background: 'rgba(255,183,3,0.16)', color: '#854F0B' }}>
+                        {c.guardada ? '✓ Guardada' : 'Sin pasar'}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Con una sola clase, se nombra sin obligar a elegirla */}
+            {!isBlocked && clasesHoy.length === 1 && claseActiva && (
+              <p className="text-[11.5px] text-muted-foreground -mt-1">
+                {horaLegible(claseActiva.hora)} · {claseActiva.nombre} · {claseActiva.location.name}
+              </p>
+            )}
 
             {isBlocked ? (
               <div className="bg-white border border-border rounded-xl px-4 py-12 text-center">

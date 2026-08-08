@@ -213,7 +213,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     // pocos pixeles se siente como un parpadeo.
     const UMBRAL = 6;
     const DESDE = 40;
-    const PARADA_MS = 400;
+    // Algo mas que la animacion de salida (700 ms). Con una espera mas corta,
+    // frenar de golpe traia la barra de vuelta antes de que terminara de irse y
+    // parecia que nunca alcanzaba a esconderse.
+    const PARADA_MS = 800;
 
     let previo = cont.scrollTop;
     let parada: ReturnType<typeof setTimeout> | undefined;

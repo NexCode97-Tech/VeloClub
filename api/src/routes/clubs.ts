@@ -84,6 +84,9 @@ const settingsSchema = z.object({
   city:             z.string().max(100).optional(),
   department:       z.string().max(100).optional(),
   noAttendanceDays: z.array(z.number().min(0).max(6)).optional(),
+  // Fecha de fundacion en YYYY-MM-DD. null la borra y devuelve el perfil a
+  // mostrar la fecha de registro.
+  foundedAt:        z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional(),
 });
 
 // Invalida la caché de la sección "confían en nosotros" del landing. Debe
@@ -180,7 +183,7 @@ router.get('/settings', requireAuth, async (req, res) => {
     select: {
       id: true, name: true, city: true, department: true,
       logoUrl: true, coverUrl: true, verified: true,
-      noAttendanceDays: true, createdAt: true,
+      noAttendanceDays: true, createdAt: true, foundedAt: true,
       suscripcion: { select: { tipoPlan: true, createdAt: true } },
     },
   });
@@ -202,12 +205,34 @@ router.patch('/settings', requireAuth, async (req, res) => {
   if (parsed.data.city             !== undefined) data.city             = parsed.data.city;
   if (parsed.data.department       !== undefined) data.department       = parsed.data.department;
   if (parsed.data.noAttendanceDays !== undefined) data.noAttendanceDays = parsed.data.noAttendanceDays;
+  if (parsed.data.foundedAt !== undefined) {
+    if (parsed.data.foundedAt === null) {
+      data.foundedAt = null;
+    } else {
+      // Al mediodia UTC: guardarla a medianoche hace que en Colombia (UTC-5)
+      // el 1 de enero se lea como 31 de diciembre del año anterior.
+      const fecha = new Date(`${parsed.data.foundedAt}T12:00:00.000Z`);
+      if (Number.isNaN(fecha.getTime())) {
+        return res.status(400).json({ error: 'La fecha de fundación no es válida' });
+      }
+      if (fecha.getTime() > Date.now()) {
+        return res.status(400).json({ error: 'La fecha de fundación no puede estar en el futuro' });
+      }
+      if (fecha.getUTCFullYear() < 1800) {
+        return res.status(400).json({ error: 'La fecha de fundación no es válida' });
+      }
+      data.foundedAt = fecha;
+    }
+  }
 
   const clubId = req.user.clubId ?? '';
   const club = await prisma.club.update({
     where: { id: clubId },
     data,
-    select: { id: true, name: true, city: true, department: true, logoUrl: true, noAttendanceDays: true },
+    select: {
+      id: true, name: true, city: true, department: true,
+      logoUrl: true, noAttendanceDays: true, foundedAt: true,
+    },
   });
   await cacheDel(`club:settings:${clubId}`);
   await cacheDel(`club:profile:${clubId}`);
@@ -290,7 +315,7 @@ router.get('/profile', requireAuth, async (req, res) => {
     where: { id: clubId },
     select: {
       id: true, name: true, city: true, department: true, deporte: true,
-      logoUrl: true, coverUrl: true, verified: true, createdAt: true,
+      logoUrl: true, coverUrl: true, verified: true, createdAt: true, foundedAt: true,
       description: true, phone: true, email: true,
       _count: { select: { members: true } },
     },
@@ -333,7 +358,7 @@ router.get('/:id/public', requireAuth, async (req, res) => {
     select: {
       id: true, name: true, city: true, department: true, deporte: true,
       logoUrl: true, coverUrl: true, verified: true, description: true, createdAt: true,
-      phone: true, email: true,
+      foundedAt: true, phone: true, email: true,
       _count: { select: { members: true } },
     },
   });

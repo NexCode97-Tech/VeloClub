@@ -35,6 +35,8 @@ const DAYS = [
 interface Club {
   id: string; name: string; city?: string; department?: string;
   logoUrl?: string; noAttendanceDays: number[];
+  // Fecha real de fundacion declarada por el club, no la de registro
+  foundedAt?: string | null;
 }
 interface MemberMe {
   id: string; fullName: string; role: string; pictureUrl?: string;
@@ -169,6 +171,8 @@ function AjustesPageContent() {
   const [club, setClub]             = useState<Club | null>(null);
   const [name, setName]             = useState('');
   const [department, setDepartment] = useState('');
+  // YYYY-MM-DD, cadena vacia = sin declarar
+  const [foundedAt, setFoundedAt]   = useState('');
   const [city, setCity]             = useState('');
   const [noAttDays, setNoAttDays]   = useState<number[]>([]);
   const [loading, setLoading]       = useState(true);
@@ -233,6 +237,7 @@ function AjustesPageContent() {
         setDepartment(res.club.department ?? '');
         setCity(res.club.city ?? '');
         setNoAttDays(res.club.noAttendanceDays ?? []);
+        setFoundedAt(res.club.foundedAt ? res.club.foundedAt.slice(0, 10) : '');
       }
       setLoading(false);
     })();
@@ -249,7 +254,14 @@ function AjustesPageContent() {
       const token = await getToken();
       const res = await apiFetch<{ club: Club }>('/clubs/settings', {
         method: 'PATCH', token,
-        body: JSON.stringify({ name: name.trim(), department: department || undefined, city: city || undefined, noAttendanceDays: noAttDays }),
+        body: JSON.stringify({
+          name: name.trim(),
+          department: department || undefined,
+          city: city || undefined,
+          noAttendanceDays: noAttDays,
+          // null borra la fecha y devuelve el perfil a mostrar la de registro
+          foundedAt: foundedAt || null,
+        }),
       });
       setClub(res.club);
       window.dispatchEvent(new Event('vc:me-updated'));
@@ -572,6 +584,21 @@ function AjustesPageContent() {
             placeholder={department ? 'Ciudad' : '— primero depto —'}
             onChange={v => { setCity(v); setSaved(false); }}
           />
+        </div>
+        <div className="space-y-1.5">
+          <Label className="text-[12px]">Fecha de fundación</Label>
+          <Input
+            type="date"
+            value={foundedAt}
+            max={new Date().toISOString().slice(0, 10)}
+            min="1800-01-01"
+            onChange={e => { setFoundedAt(e.target.value); setSaved(false); }}
+          />
+          <p className="text-[10px] text-muted-foreground">
+            {foundedAt
+              ? 'Es la que aparece en el perfil del club.'
+              : 'Sin declarar, el perfil muestra la fecha en que se registraron en VeloClub.'}
+          </p>
         </div>
       </div>
 

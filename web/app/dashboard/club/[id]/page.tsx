@@ -12,11 +12,13 @@ import {
 } from 'lucide-react';
 import ModuleLoader, { useCargaMinima } from '@/components/ui/module-loader';
 import ModuleReveal from '@/components/ui/module-reveal';
+import { textoFundacion } from '@/lib/fundacion';
 
 interface PublicClub {
   id: string; name: string; city?: string | null; department?: string | null;
   deporte?: string | null; logoUrl?: string | null; coverUrl?: string | null;
   verified?: boolean; description?: string | null; createdAt?: string | null;
+  foundedAt?: string | null;
   phone?: string | null; email?: string | null;
   _count: { members: number };
 }
@@ -193,11 +195,11 @@ export default function PublicClubPage() {
                 </span>
               </div>
             )}
-            {club.createdAt && (
+            {textoFundacion(club.foundedAt, club.createdAt) && (
               <div className="flex items-center gap-1.5">
                 <CalendarDays className="w-3.5 h-3.5 shrink-0" style={{ color: '#8E87A8' }} />
                 <span className="text-[12px] text-muted-foreground">
-                  Fundado en {new Date(club.createdAt).toLocaleDateString('es-CO', { month: 'long', year: 'numeric' })}
+                  {textoFundacion(club.foundedAt, club.createdAt)}
                 </span>
               </div>
             )}

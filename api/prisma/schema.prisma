@@ -35,6 +35,10 @@ model Club {
   activadoManualmente Boolean @default(false)
   trialEndsAt       DateTime?
   deporte           String?
+  // Fecha real de fundacion del club, la que el admin declara en Ajustes. No
+  // confundir con createdAt, que es cuando se registraron en la plataforma.
+  // Se guarda al mediodia UTC para que ningun huso corra el mes mostrado.
+  foundedAt         DateTime?
   description       String?
   phone             String?
   email             String?

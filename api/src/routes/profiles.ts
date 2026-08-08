@@ -6,12 +6,12 @@ const router = Router();
 
 const COMMENT_SELECT = {
   id: true, authorClerkId: true, authorName: true, authorRole: true,
-  authorAvatar: true, content: true, createdAt: true,
+  authorAvatar: true, content: true, createdAt: true, parentId: true,
 };
 
 const POST_INCLUDE = {
   likes:    { select: { userId: true } },
-  comments: { select: COMMENT_SELECT, orderBy: { createdAt: 'asc' as const }, take: 50 },
+  comments: { select: COMMENT_SELECT, orderBy: { createdAt: 'asc' as const }, take: 100 },
 };
 
 // Publicaciones de una persona, en el orden en que se ven en la comunidad.

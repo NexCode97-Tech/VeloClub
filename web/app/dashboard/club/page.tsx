@@ -239,10 +239,10 @@ export default function ClubProfilePage() {
     }));
   }
 
-  async function handleComment(postId: string, content: string) {
+  async function handleComment(postId: string, content: string, parentId?: string) {
     const token = await session?.getToken();
     const res = await apiFetch<{ comment: PostComment }>(`/posts/${postId}/comments`, {
-      token, method: 'POST', body: JSON.stringify({ content }),
+      token, method: 'POST', body: JSON.stringify({ content, parentId }),
     });
     setPosts(prev => prev.map(p =>
       p.id === postId ? { ...p, comments: [...p.comments, res.comment] } : p
@@ -269,9 +269,14 @@ export default function ClubProfilePage() {
 
   async function handleDeleteComment(postId: string, commentId: string) {
     const token = await session?.getToken();
-    await apiFetch(`/posts/${postId}/comments/${commentId}`, { token, method: 'DELETE' });
+    // El backend borra tambien las respuestas del comentario y devuelve todos
+    // los ids: sin esto quedaban en la lista colgando de un padre inexistente.
+    const res = await apiFetch<{ eliminados?: string[] }>(
+      `/posts/${postId}/comments/${commentId}`, { token, method: 'DELETE' }
+    );
+    const fuera = new Set(res.eliminados ?? [commentId]);
     setPosts(prev => prev.map(p =>
-      p.id === postId ? { ...p, comments: p.comments.filter(c => c.id !== commentId) } : p
+      p.id === postId ? { ...p, comments: p.comments.filter(c => !fuera.has(c.id)) } : p
     ));
   }
 

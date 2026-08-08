@@ -130,7 +130,6 @@ export default function PerfilPage() {
   const [deletingCover, setDeletingCover]   = useState(false);
   const coverInputRef = useRef<HTMLInputElement>(null);
 
-  const [postImages, setPostImages]   = useState<PostImage[]>([]);
   const [followStats, setFollowStats] = useState<FollowStats>({ followersCount: 0, followingCount: 0, isFollowing: false });
   const [myClerkId, setMyClerkId]     = useState<string>('');
   const [bio, setBio]                 = useState('');
@@ -144,17 +143,31 @@ export default function PerfilPage() {
   const [savingContact, setSavingContact]   = useState(false);
   const [savingBio, setSavingBio]     = useState(false);
 
-  // Referencia al nombre del usuario para filtrar posts (evita re-renders)
-  const myNameRef = useRef<string>('');
+  // Mis publicaciones dentro del feed publico.
+  //
+  // Se filtra por `authorClerkId`, que es la identidad. Antes se comparaba el
+  // nombre del autor, que se repite entre homonimos y cambia cuando alguien se
+  // corrige el suyo. Sin identidad no se muestra nada: es preferible un perfil
+  // vacio a uno con publicaciones de otras personas.
+  const mios = (todos: Post[]) =>
+    userId ? todos.filter(p => p.authorClerkId === userId) : [];
 
   const loadPosts = async () => {
     if (!isSignedIn) return;
     try {
       const token = await session?.getToken();
       const postsRes = await apiFetch<{ posts: Post[] }>('/posts?scope=public', { token });
-      setPosts(postsRes.posts.filter(p => !myNameRef.current || p.authorName === myNameRef.current));
+      setPosts(mios(postsRes.posts));
     } catch { /* silencioso */ }
   };
+
+  // La galeria sale de MIS publicaciones y se deriva del feed, no de un estado
+  // aparte: antes salia del feed completo sin filtrar por autor, asi que en
+  // Fotos aparecian imagenes de todos los clubes aunque uno no hubiera
+  // publicado nada.
+  const postImages: PostImage[] = posts
+    .filter(p => p.imageUrl)
+    .map(p => ({ id: p.id, imageUrl: p.imageUrl! }));
 
   useEffect(() => {
     if (!isLoaded) return;
@@ -171,11 +184,9 @@ export default function PerfilPage() {
           setMe(meRes.value);
           setCoverUrl(meRes.value.user?.coverUrl ?? null);
           setBio(meRes.value.user?.bio ?? '');
-          myNameRef.current = meRes.value.user?.name ?? '';
         }
-        if (postsRes.status === 'fulfilled') {
-          setPosts(postsRes.value.posts.filter(p => !myNameRef.current || p.authorName === myNameRef.current));
-        }
+        const misPosts = postsRes.status === 'fulfilled' ? mios(postsRes.value.posts) : [];
+        setPosts(misPosts);
         if (memberMeRes.status === 'fulfilled' && memberMeRes.value.member) {
           setMemberMe(memberMeRes.value.member);
         }
@@ -189,13 +200,6 @@ export default function PerfilPage() {
             const statsRes = await apiFetch<FollowStats>(`/follows/stats/${clerkId}`, { token: token2 });
             setFollowStats(statsRes);
           } catch { /* silencioso */ }
-        }
-        // Post images para galería
-        if (postsRes.status === 'fulfilled') {
-          const imgs = postsRes.value.posts
-            .filter(p => p.imageUrl)
-            .map(p => ({ id: p.id, imageUrl: p.imageUrl! }));
-          setPostImages(imgs);
         }
       } catch { /* silencioso */ } finally { setLoading(false); }
     })();
@@ -220,10 +224,10 @@ export default function PerfilPage() {
     }));
   }
 
-  async function handleComment(postId: string, content: string) {
+  async function handleComment(postId: string, content: string, parentId?: string) {
     const token = await session?.getToken();
     const res = await apiFetch<{ comment: PostComment }>(`/posts/${postId}/comments`, {
-      token, method: 'POST', body: JSON.stringify({ content }),
+      token, method: 'POST', body: JSON.stringify({ content, parentId }),
     });
     setPosts(prev => prev.map(p =>
       p.id === postId ? { ...p, comments: [...p.comments, res.comment] } : p
@@ -307,9 +311,14 @@ export default function PerfilPage() {
 
   async function handleDeleteComment(postId: string, commentId: string) {
     const token = await session?.getToken();
-    await apiFetch(`/posts/${postId}/comments/${commentId}`, { token, method: 'DELETE' });
+    // El backend borra tambien las respuestas del comentario y devuelve todos
+    // los ids: sin esto quedaban en la lista colgando de un padre inexistente.
+    const res = await apiFetch<{ eliminados?: string[] }>(
+      `/posts/${postId}/comments/${commentId}`, { token, method: 'DELETE' }
+    );
+    const fuera = new Set(res.eliminados ?? [commentId]);
     setPosts(prev => prev.map(p =>
-      p.id === postId ? { ...p, comments: p.comments.filter(c => c.id !== commentId) } : p
+      p.id === postId ? { ...p, comments: p.comments.filter(c => !fuera.has(c.id)) } : p
     ));
   }
 

@@ -18,6 +18,9 @@ export interface LikeUser { name: string; picture?: string | null; role?: string
 export interface PostComment {
   id: string; authorClerkId?: string | null; authorName: string; authorRole: string;
   authorAvatar?: string | null; content: string; createdAt: string;
+  // Comentario raiz al que responde. Solo hay un nivel: el backend cuelga toda
+  // respuesta del raiz, asi que un comentario con parentId nunca tiene hijos.
+  parentId?: string | null;
 }
 export interface Post {
   id: string; clubId: string; clubName: string;
@@ -95,7 +98,7 @@ export function PostCard({
   onLike: (id: string) => void;
   onDelete: (id: string) => void;
   onUpdatePost: (id: string, cambios: { content?: string; scope?: 'PUBLIC' | 'PRIVATE' }) => Promise<void>;
-  onComment: (postId: string, content: string) => Promise<void>;
+  onComment: (postId: string, content: string, parentId?: string) => Promise<void>;
   onDeleteComment: (postId: string, commentId: string) => void;
   onEditComment: (postId: string, commentId: string, content: string) => Promise<void>;
   onFetchLikes: (postId: string) => Promise<LikeUser[]>;
@@ -152,6 +155,28 @@ export function PostCard({
   const [commentText, setCommentText] = useState('');
   const [sendingComment, setSendingComment] = useState(false);
   const commentInputRef = useRef<HTMLInputElement>(null);
+  // Comentario al que se le esta respondiendo, si hay alguno
+  const [respondiendoA, setRespondiendoA] = useState<{ id: string; nombre: string } | null>(null);
+  // Hilos desplegados a mano, por id del comentario raiz
+  const [hilosAbiertos, setHilosAbiertos] = useState<Set<string>>(new Set());
+
+  function alternarHilo(raizId: string) {
+    setHilosAbiertos(prev => {
+      const siguiente = new Set(prev);
+      if (siguiente.has(raizId)) siguiente.delete(raizId);
+      else siguiente.add(raizId);
+      return siguiente;
+    });
+  }
+
+  function responderA(c: PostComment) {
+    setRespondiendoA({ id: c.parentId ?? c.id, nombre: c.authorName });
+    setShowComments(true);
+    // Al responder dentro de un hilo plegado, abrirlo: si no, la respuesta
+    // recien escrita aterriza donde no se ve.
+    setHilosAbiertos(prev => new Set(prev).add(c.parentId ?? c.id));
+    setTimeout(() => commentInputRef.current?.focus(), 150);
+  }
 
   // Popover de likes
   const [showLikesPopover, setShowLikesPopover] = useState(false);
@@ -217,8 +242,9 @@ export function PostCard({
     if (!text) return;
     setSendingComment(true);
     try {
-      await onComment(post.id, text);
+      await onComment(post.id, text, respondiendoA?.id);
       setCommentText('');
+      setRespondiendoA(null);
     } finally { setSendingComment(false); }
   }
 
@@ -248,6 +274,164 @@ export function PostCard({
   // Con el diseño compacto los comentarios arrancan cerrados, como en movil:
   // no hay columna derecha que llenar.
   const comentariosVisibles = showComments || (esEscritorio && !compacto);
+
+  // Un comentario, ya sea raiz o respuesta. Se comparte entre los dos para que
+  // editar, moderar y responder se comporten igual en ambos niveles.
+  function renderComentario(c: PostComment, esRespuesta: boolean) {
+    const tam = esRespuesta ? 22 : 28;
+    return (
+      <div key={c.id} className="flex items-start gap-2.5 md:gap-2">
+        <button
+          type="button"
+          onClick={() => c.authorClerkId && router.push(`/dashboard/perfil/${c.authorClerkId}`)}
+          className={c.authorClerkId ? 'cursor-pointer shrink-0' : 'cursor-default shrink-0'}
+        >
+          <Avatar src={c.authorAvatar} name={c.authorName} size={tam} role={c.authorRole} />
+        </button>
+      <div className="flex-1 min-w-0">
+        {editingComment === c.id ? (
+          /* ── Modo edición inline ── */
+          <div className="rounded-2xl rounded-tl-sm px-3 py-2"
+            style={{ background: '#fff', border: '1px solid rgba(124,58,237,0.18)' }}>
+            <p className="text-[11px] font-semibold text-foreground mb-1">{c.authorName}</p>
+            <textarea
+              value={editText}
+              onChange={e => setEditText(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSaveEdit(c.id); } if (e.key === 'Escape') setEditingComment(null); }}
+              className="w-full text-[13px] text-foreground leading-snug outline-none bg-transparent resize-none"
+              rows={2}
+              autoFocus
+            />
+            <div className="flex items-center gap-1.5 mt-1.5">
+              <button onClick={() => handleSaveEdit(c.id)} disabled={savingEdit || !editText.trim()}
+                className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full text-white disabled:opacity-40"
+                style={{ background: '#7C3AED' }}>
+                <ContenidoGuardado
+                  estado={savingEdit ? 'guardando' : 'idle'}
+                  textoIdle="Guardar"
+                  textoGuardando="Guardando"
+                  textoGuardado="Guardado"
+                  color="#fff"
+                />
+              </button>
+              <button onClick={() => setEditingComment(null)}
+                className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full text-muted-foreground"
+                style={{ background: 'rgba(0,0,0,0.06)' }}>
+                Cancelar
+              </button>
+            </div>
+          </div>
+        ) : (
+          /* Mismo comentario en todos los tamaños: sin burbuja,
+             el nombre con la hora al lado y el texto debajo. */
+          <div>
+            <p className="text-[12px] md:text-[11px] font-semibold text-foreground mb-[3px]">
+              {c.authorName}
+              <span className="text-[10px] font-normal text-muted-foreground ml-2">{timeAgo(c.createdAt)}</span>
+            </p>
+            <p className="text-[13px] md:text-[12px] text-foreground leading-snug">{c.content}</p>
+            {/* Responder va en violeta y "Me gusta" en gris a proposito:
+                responder es lo que queremos que la gente haga. */}
+            <button
+              type="button"
+              onClick={() => responderA(c)}
+              className="mt-1.5 text-[10.5px] font-bold transition-opacity hover:opacity-70"
+              style={{ color: '#7C3AED' }}
+            >
+              Responder
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* ── Botón ⋯ con dropdown ── */}
+      {moderaComentarios && editingComment !== c.id && (
+        <div className="mt-1 shrink-0">
+          <button
+            onClick={e => abrirMenuComentario(c.id, e.currentTarget)}
+            className="w-6 h-6 rounded-full flex items-center justify-center transition-all"
+            style={{ color: '#C4C2CF' }}
+          >
+            <MoreHorizontal className="w-3.5 h-3.5" />
+          </button>
+          {typeof document !== 'undefined' && createPortal(
+            <AnimatePresence>
+              {commentMenu === c.id && commentMenuPos && (
+              <Fragment key={`menu-${c.id}`}>
+                {/* Overlay para cerrar */}
+                <div className="fixed inset-0 z-[9998]" onClick={() => setCommentMenu(null)} />
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.92, y: -4 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.92, y: -4 }}
+                  transition={{ duration: 0.15, ease: [0.23, 1, 0.32, 1] }}
+                  className="flex flex-col overflow-hidden"
+                  style={{
+                    position: 'fixed',
+                    top: commentMenuPos.top,
+                    left: commentMenuPos.left,
+                    zIndex: 9999,
+                    background: '#fff',
+                    border: '1px solid rgba(124,58,237,0.12)',
+                    borderRadius: 12,
+                    boxShadow: '0 8px 24px rgba(0,0,0,0.10)',
+                    minWidth: 140,
+                  }}
+                >
+                  <button
+                    onClick={() => { setCommentMenu(null); setEditingComment(c.id); setEditText(c.content); }}
+                    className="flex items-center gap-2 px-3.5 py-2.5 text-[12px] font-semibold text-foreground hover:bg-secondary/60 transition-colors text-left"
+                  >
+                    <Pencil className="w-3.5 h-3.5 text-muted-foreground" /> Editar
+                  </button>
+                  <div style={{ height: 1, background: 'rgba(124,58,237,0.07)' }} />
+                  <button
+                    onClick={() => { setCommentMenu(null); onDeleteComment(post.id, c.id); }}
+                    className="flex items-center gap-2 px-3.5 py-2.5 text-[12px] font-semibold text-red-500 hover:bg-red-50 transition-colors text-left"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" /> Eliminar
+                  </button>
+                  <div style={{ height: 1, background: 'rgba(124,58,237,0.07)' }} />
+                  <button
+                    onClick={() => setCommentMenu(null)}
+                    className="flex items-center gap-2 px-3.5 py-2.5 text-[12px] font-semibold text-muted-foreground hover:bg-secondary/60 transition-colors text-left"
+                  >
+                    <X className="w-3.5 h-3.5" /> Cancelar
+                  </button>
+                </motion.div>
+              </Fragment>
+              )}
+            </AnimatePresence>,
+            document.body
+          )}
+        </div>
+      )}
+      </div>
+    );
+  }
+
+
+  // ── Hilos ───────────────────────────────────────────────────────────────
+  // La API devuelve la conversacion plana; aca se arma en dos niveles. Una
+  // respuesta cuyo padre no vino en el lote —el listado se corta en 100— se
+  // trata como raiz: es preferible verla suelta a que desaparezca.
+  const respuestasPorRaiz = new Map<string, PostComment[]>();
+  const idsPresentes = new Set(post.comments.map(c => c.id));
+  const comentariosRaiz: PostComment[] = [];
+  for (const c of post.comments) {
+    if (c.parentId && idsPresentes.has(c.parentId)) {
+      const hilo = respuestasPorRaiz.get(c.parentId) ?? [];
+      hilo.push(c);
+      respuestasPorRaiz.set(c.parentId, hilo);
+    } else {
+      comentariosRaiz.push(c);
+    }
+  }
+
+  // Cuantas respuestas se ven sin desplegar. En movil ninguna: un hilo abierto
+  // empuja el resto de la conversacion fuera de la pantalla. Con la tarjeta
+  // partida en dos los comentarios tienen columna propia y caben todas.
+  const respuestasALaVista = dosColumnas ? Infinity : (esEscritorio ? 3 : 0);
 
   return (
     <motion.div
@@ -466,7 +650,7 @@ export function PostCard({
 
         {/* Contadores clicables */}
         {(likeCount > 0 || post.comments.length > 0) && (
-          <div className={`relative flex items-center gap-3 px-4 pb-1.5${dosColumnas ? ' md:order-2 md:mt-auto' : ''}`}>
+          <div className={`relative flex items-center gap-3 px-4 pt-0.5 pb-3${dosColumnas ? ' md:order-2 md:mt-auto' : ''}`}>
             {likeCount > 0 && (
               <button
                 ref={likesButtonRef}
@@ -611,125 +795,47 @@ export function PostCard({
                 {post.comments.length > 0 && (
                   <div className={`space-y-2.5 max-h-[300px] overflow-y-auto pr-1${dosColumnas ? ' md:max-h-none md:overflow-visible md:pr-0' : ''}`}
                     style={{ WebkitOverflowScrolling: 'touch', overscrollBehaviorY: 'contain' }}>
-                    {post.comments.map(c => (
-                      <div key={c.id} className="flex items-start gap-2.5 md:gap-2">
-                        <button
-                          type="button"
-                          onClick={() => c.authorClerkId && router.push(`/dashboard/perfil/${c.authorClerkId}`)}
-                          className={c.authorClerkId ? 'cursor-pointer shrink-0' : 'cursor-default shrink-0'}
-                        >
-                          <Avatar src={c.authorAvatar} name={c.authorName} size={28} role={c.authorRole} />
-                        </button>
-                        <div className="flex-1 min-w-0">
-                          {editingComment === c.id ? (
-                            /* ── Modo edición inline ── */
-                            <div className="rounded-2xl rounded-tl-sm px-3 py-2"
-                              style={{ background: '#fff', border: '1px solid rgba(124,58,237,0.18)' }}>
-                              <p className="text-[11px] font-semibold text-foreground mb-1">{c.authorName}</p>
-                              <textarea
-                                value={editText}
-                                onChange={e => setEditText(e.target.value)}
-                                onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSaveEdit(c.id); } if (e.key === 'Escape') setEditingComment(null); }}
-                                className="w-full text-[13px] text-foreground leading-snug outline-none bg-transparent resize-none"
-                                rows={2}
-                                autoFocus
-                              />
-                              <div className="flex items-center gap-1.5 mt-1.5">
-                                <button onClick={() => handleSaveEdit(c.id)} disabled={savingEdit || !editText.trim()}
-                                  className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full text-white disabled:opacity-40"
-                                  style={{ background: '#7C3AED' }}>
-                                  <ContenidoGuardado
-                                    estado={savingEdit ? 'guardando' : 'idle'}
-                                    textoIdle="Guardar"
-                                    textoGuardando="Guardando"
-                                    textoGuardado="Guardado"
-                                    color="#fff"
-                                  />
-                                </button>
-                                <button onClick={() => setEditingComment(null)}
-                                  className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full text-muted-foreground"
-                                  style={{ background: 'rgba(0,0,0,0.06)' }}>
-                                  Cancelar
-                                </button>
-                              </div>
-                            </div>
-                          ) : (
-                            /* Mismo comentario en todos los tamaños: sin burbuja,
-                               el nombre con la hora al lado y el texto debajo. */
-                            <div>
-                              <p className="text-[12px] md:text-[11px] font-semibold text-foreground mb-[3px]">
-                                {c.authorName}
-                                <span className="text-[10px] font-normal text-muted-foreground ml-2">{timeAgo(c.createdAt)}</span>
-                              </p>
-                              <p className="text-[13px] md:text-[12px] text-foreground leading-snug">{c.content}</p>
+                    {comentariosRaiz.map(raiz => {
+                      const hilo = respuestasPorRaiz.get(raiz.id) ?? [];
+                      const abierto = hilosAbiertos.has(raiz.id);
+                      const visibles = abierto ? hilo : hilo.slice(0, respuestasALaVista);
+                      const ocultas  = hilo.length - visibles.length;
+                      return (
+                        <div key={raiz.id}>
+                          {renderComentario(raiz, false)}
+                          {hilo.length > 0 && (
+                            /* La guia vertical es lo que deja ver de un vistazo
+                               donde empieza y termina cada conversacion. */
+                            <div className="mt-2 ml-[34px] md:ml-[30px] pl-3 flex flex-col gap-2.5"
+                              style={{ borderLeft: '2px solid rgba(124,58,237,0.16)' }}>
+                              {visibles.map(r => renderComentario(r, true))}
                             </div>
                           )}
-                        </div>
-
-                        {/* ── Botón ⋯ con dropdown ── */}
-                        {moderaComentarios && editingComment !== c.id && (
-                          <div className="mt-1 shrink-0">
+                          {ocultas > 0 && (
                             <button
-                              onClick={e => abrirMenuComentario(c.id, e.currentTarget)}
-                              className="w-6 h-6 rounded-full flex items-center justify-center transition-all"
-                              style={{ color: '#C4C2CF' }}
+                              type="button"
+                              onClick={() => alternarHilo(raiz.id)}
+                              className="flex items-center gap-2 mt-2 ml-[34px] md:ml-[30px] text-[10.5px] font-bold transition-opacity hover:opacity-70"
+                              style={{ color: '#7C3AED' }}
                             >
-                              <MoreHorizontal className="w-3.5 h-3.5" />
+                              <span className="block w-[18px] h-[2px] rounded-full" style={{ background: 'rgba(124,58,237,0.28)' }} />
+                              Ver {ocultas} respuesta{ocultas !== 1 ? 's' : ''}
                             </button>
-                            {typeof document !== 'undefined' && createPortal(
-                              <AnimatePresence>
-                                {commentMenu === c.id && commentMenuPos && (
-                                <Fragment key={`menu-${c.id}`}>
-                                  {/* Overlay para cerrar */}
-                                  <div className="fixed inset-0 z-[9998]" onClick={() => setCommentMenu(null)} />
-                                  <motion.div
-                                    initial={{ opacity: 0, scale: 0.92, y: -4 }}
-                                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                                    exit={{ opacity: 0, scale: 0.92, y: -4 }}
-                                    transition={{ duration: 0.15, ease: [0.23, 1, 0.32, 1] }}
-                                    className="flex flex-col overflow-hidden"
-                                    style={{
-                                      position: 'fixed',
-                                      top: commentMenuPos.top,
-                                      left: commentMenuPos.left,
-                                      zIndex: 9999,
-                                      background: '#fff',
-                                      border: '1px solid rgba(124,58,237,0.12)',
-                                      borderRadius: 12,
-                                      boxShadow: '0 8px 24px rgba(0,0,0,0.10)',
-                                      minWidth: 140,
-                                    }}
-                                  >
-                                    <button
-                                      onClick={() => { setCommentMenu(null); setEditingComment(c.id); setEditText(c.content); }}
-                                      className="flex items-center gap-2 px-3.5 py-2.5 text-[12px] font-semibold text-foreground hover:bg-secondary/60 transition-colors text-left"
-                                    >
-                                      <Pencil className="w-3.5 h-3.5 text-muted-foreground" /> Editar
-                                    </button>
-                                    <div style={{ height: 1, background: 'rgba(124,58,237,0.07)' }} />
-                                    <button
-                                      onClick={() => { setCommentMenu(null); onDeleteComment(post.id, c.id); }}
-                                      className="flex items-center gap-2 px-3.5 py-2.5 text-[12px] font-semibold text-red-500 hover:bg-red-50 transition-colors text-left"
-                                    >
-                                      <Trash2 className="w-3.5 h-3.5" /> Eliminar
-                                    </button>
-                                    <div style={{ height: 1, background: 'rgba(124,58,237,0.07)' }} />
-                                    <button
-                                      onClick={() => setCommentMenu(null)}
-                                      className="flex items-center gap-2 px-3.5 py-2.5 text-[12px] font-semibold text-muted-foreground hover:bg-secondary/60 transition-colors text-left"
-                                    >
-                                      <X className="w-3.5 h-3.5" /> Cancelar
-                                    </button>
-                                  </motion.div>
-                                </Fragment>
-                                )}
-                              </AnimatePresence>,
-                              document.body
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    ))}
+                          )}
+                          {abierto && hilo.length > respuestasALaVista && (
+                            <button
+                              type="button"
+                              onClick={() => alternarHilo(raiz.id)}
+                              className="flex items-center gap-2 mt-2 ml-[34px] md:ml-[30px] text-[10.5px] font-bold transition-opacity hover:opacity-70"
+                              style={{ color: '#8E87A8' }}
+                            >
+                              <span className="block w-[18px] h-[2px] rounded-full" style={{ background: 'rgba(142,135,168,0.35)' }} />
+                              Ocultar respuestas
+                            </button>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
 
@@ -754,6 +860,25 @@ export function PostCard({
             >
               <div className={`px-4 pb-4 pt-1${dosColumnas ? ' md:pt-2.5 md:pb-2.5 md:border-t md:border-border/60' : ''}`}
                 style={{ background: 'rgba(124,58,237,0.02)' }}>
+                {/* Sin esta pastilla, en un hilo largo se pierde de vista a
+                    quien le estas contestando. */}
+                {respondiendoA && (
+                  <div className="flex items-center gap-2 mb-2 rounded-full pl-3 pr-1 py-1 self-start w-fit"
+                    style={{ background: 'rgba(124,58,237,0.09)' }}>
+                    <span className="text-[10.5px] font-bold" style={{ color: '#7C3AED' }}>
+                      Respondiendo a {respondiendoA.nombre}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setRespondiendoA(null)}
+                      aria-label="Cancelar la respuesta"
+                      className="w-4 h-4 rounded-full flex items-center justify-center shrink-0"
+                      style={{ background: 'rgba(124,58,237,0.18)', color: '#7C3AED' }}
+                    >
+                      <X className="w-2.5 h-2.5" />
+                    </button>
+                  </div>
+                )}
                 <div className="flex items-center gap-2">
                   <div className="flex-1 flex items-center gap-2 rounded-full px-3 py-2"
                     style={{ background: '#fff', border: '1px solid rgba(124,58,237,0.12)' }}>
@@ -761,8 +886,13 @@ export function PostCard({
                       ref={commentInputRef}
                       value={commentText}
                       onChange={e => setCommentText(e.target.value)}
-                      onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleComment(); } }}
-                      placeholder="Escribe un comentario..."
+                      onKeyDown={e => {
+                        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleComment(); }
+                        // Escape con el campo vacio suelta la respuesta y
+                        // vuelve a comentar la publicacion.
+                        if (e.key === 'Escape' && !commentText) setRespondiendoA(null);
+                      }}
+                      placeholder={respondiendoA ? `Respondiendo a ${respondiendoA.nombre}...` : 'Escribe un comentario...'}
                       className="flex-1 text-[13px] text-foreground placeholder:text-muted-foreground/50 outline-none bg-transparent"
                     />
                   </div>

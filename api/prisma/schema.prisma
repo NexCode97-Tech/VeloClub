@@ -462,10 +462,18 @@ model PostComment {
   authorRole  String
   authorAvatar String?
   content     String
+  // Respuesta a otro comentario del mismo post. Un solo nivel: si alguien le
+  // responde a una respuesta, el backend la cuelga del mismo padre en vez de
+  // abrir otro escalon. Cuatro niveles anidados dejan el texto en una franja
+  // de 90px en movil, ilegible.
+  parentId    String?
+  parent      PostComment?  @relation("RespuestasDeComentario", fields: [parentId], references: [id], onDelete: Cascade)
+  respuestas  PostComment[] @relation("RespuestasDeComentario")
   createdAt   DateTime @default(now())
 
   @@index([postId])
   @@index([postId, createdAt])
+  @@index([parentId])
 }
 
 // ─── Notificacion (SA global) ─────────────────────────────────────────────────

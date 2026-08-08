@@ -18,12 +18,14 @@ const router = Router();
 
 const COMMENT_SELECT = {
   id: true, authorClerkId: true, authorName: true, authorRole: true,
-  authorAvatar: true, content: true, createdAt: true,
+  authorAvatar: true, content: true, createdAt: true, parentId: true,
 };
 
 const POST_INCLUDE = {
   likes:    { select: { userId: true } },
-  comments: { select: COMMENT_SELECT, orderBy: { createdAt: 'asc' as const }, take: 50 },
+  // Sube de 50 a 100 porque ahora las respuestas comparten el cupo con los
+  // comentarios raiz: un hilo largo dejaba fuera conversaciones enteras.
+  comments: { select: COMMENT_SELECT, orderBy: { createdAt: 'asc' as const }, take: 100 },
 };
 
 const createPostSchema = z.object({
@@ -38,7 +40,8 @@ const createPostSchema = z.object({
 });
 
 const commentSchema = z.object({
-  content: z.string().min(1).max(1000),
+  content:  z.string().min(1).max(1000),
+  parentId: z.string().min(1).max(60).optional(),
 });
 
 // POST /posts/upload-media — Subir imagen/video/archivo a Cloudinary
@@ -261,6 +264,20 @@ router.post('/:id/comments', requireAuth, async (req, res) => {
   if (!post) return res.status(404).json({ error: 'Publicación no encontrada' });
   if (post.scope === 'PRIVATE' && post.clubId !== req.user.clubId) return res.status(403).json({ error: 'Sin permisos' });
 
+  // Resolver a quien cuelga la respuesta. El padre tiene que ser del mismo
+  // post: los ids de comentario viajan en los posts publicos, y sin esta
+  // comprobacion se podria colgar una respuesta de un hilo de otro club.
+  let parentId: string | null = null;
+  if (parsed.data.parentId) {
+    const padre = await prisma.postComment.findFirst({
+      where: { id: parsed.data.parentId, postId },
+      select: { id: true, parentId: true },
+    });
+    if (!padre) return res.status(404).json({ error: 'El comentario que respondes ya no existe' });
+    // Un solo nivel: responderle a una respuesta cuelga del mismo raiz.
+    parentId = padre.parentId ?? padre.id;
+  }
+
   const comment = await prisma.postComment.create({
     data: {
       postId,
@@ -269,6 +286,7 @@ router.post('/:id/comments', requireAuth, async (req, res) => {
       authorRole:   req.user.role,
       authorAvatar: req.auth?.picture ?? null,
       content:      parsed.data.content,
+      parentId,
     },
     select: COMMENT_SELECT,
   });
@@ -319,9 +337,16 @@ router.delete('/:id/comments/:commentId', requireAuth, async (req, res) => {
   });
   if (!comment) return res.status(404).json({ error: 'Comentario no encontrado' });
 
+  // Las respuestas se van con el comentario (cascada en la FK). Se devuelven
+  // los ids para que la lista del cliente los quite sin recargar el post.
+  const respuestas = await prisma.postComment.findMany({
+    where: { parentId: comment.id },
+    select: { id: true },
+  });
+
   await prisma.postComment.delete({ where: { id: String(req.params.commentId) } });
   emitToClub(req.user.clubId ?? '', 'posts');
-  res.json({ ok: true });
+  res.json({ ok: true, eliminados: [comment.id, ...respuestas.map(r => r.id)] });
 });
 
 export default router;

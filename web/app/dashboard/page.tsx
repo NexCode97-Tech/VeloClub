@@ -61,6 +61,8 @@ interface PostComment {
   authorAvatar?: string | null;
   content: string;
   createdAt: string;
+  // Comentario raiz al que responde, si es una respuesta
+  parentId?: string | null;
 }
 interface Post {
   id: string;
@@ -590,11 +592,11 @@ export default function DashboardPage() {
       : prev.map(p => (p.id === id ? res.post : p)));
   }
 
-  async function handleComment(postId: string, content: string) {
+  async function handleComment(postId: string, content: string, parentId?: string) {
     const token = await session?.getToken();
     const res = await apiFetch<{ comment: PostComment }>(`/posts/${postId}/comments`, {
       token, method: 'POST',
-      body: JSON.stringify({ content }),
+      body: JSON.stringify({ content, parentId }),
     });
     setPosts(prev => prev.map(p =>
       p.id === postId ? { ...p, comments: [...p.comments, res.comment] } : p
@@ -605,8 +607,12 @@ export default function DashboardPage() {
     session?.getToken().then(token => {
       apiFetch(`/posts/${postId}/comments/${commentId}`, { token, method: 'DELETE' }).catch(() => {});
     });
+    // Optimista, como estaba: aca las respuestas se quitan en el cliente
+    // porque no se espera la respuesta del servidor.
     setPosts(prev => prev.map(p =>
-      p.id === postId ? { ...p, comments: p.comments.filter(c => c.id !== commentId) } : p
+      p.id === postId
+        ? { ...p, comments: p.comments.filter(c => c.id !== commentId && c.parentId !== commentId) }
+        : p
     ));
   }
 

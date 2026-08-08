@@ -941,61 +941,76 @@ export default function MiembrosPage() {
                   </div>
                   </div>
 
-                  {/* Acciones: misma fila que la tarjeta de escritorio — Editar
-                      ancho con el degradado de marca y el resto como cuadrados
-                      de color propio. Antes iban apiladas al costado en botones
-                      de 28 px, que dejaban el nombre y el correo sin ancho y
-                      quedaban chicas para tocar sin apuntar. */}
-                  <div className="flex gap-2 mt-3 pt-3" style={{ borderTop: '1px solid rgba(26,16,40,0.07)' }}>
+                  {/* Acciones: solo el trazo del icono, sin caja de color. Con el
+                      boton ancho de Editar en cada fila, la lista se leia como
+                      una lista de botones y no de personas. Eliminar se separa al
+                      extremo derecho, detras de una linea, para que no caiga bajo
+                      el pulgar que venia tocando las otras tres.
+                      Cada uno lleva su etiqueta: los iconos solos no alcanzan a
+                      explicar que hace pausar. */}
+                  <div className="flex items-center gap-1.5 mt-2.5 pt-2.5" style={{ borderTop: '1px solid rgba(26,16,40,0.07)' }}>
                     {canManage && (
                     <motion.button
                       onClick={() => openEdit(m)}
-                      whileTap={reducedMotion ? {} : { scale: 0.97 }}
+                      whileTap={reducedMotion ? {} : { scale: 0.9 }}
                       transition={{ duration: 0.12, ease: EASE_OUT }}
-                      className="flex-1 h-10 rounded-xl text-[12px] font-semibold text-white flex items-center justify-center gap-1.5"
-                      style={{ background: 'linear-gradient(135deg,#7C3AED,#4361EE)', boxShadow: '0 3px 12px rgba(124,58,237,0.22)' }}
+                      className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
+                      style={{ color: '#7C3AED' }}
+                      aria-label="Editar miembro"
+                      title="Editar"
                     >
-                      <Pencil className="w-3.5 h-3.5" /> Editar
+                      <Pencil className="w-[17px] h-[17px]" />
                     </motion.button>
                     )}
                     {/* Sin permisos de gestion, ver el detalle es la unica accion
-                        disponible, asi que ocupa toda la fila */}
+                        disponible: ocupa toda la fila y conserva su fondo, porque
+                        un boton solo y sin caja no se leeria como tal. */}
                     <motion.button
                       onClick={() => setViewMember(m)}
-                      whileTap={reducedMotion ? {} : { scale: 0.95 }}
+                      whileTap={reducedMotion ? {} : { scale: canManage ? 0.9 : 0.97 }}
                       transition={{ duration: 0.12, ease: EASE_OUT }}
                       className={canManage
-                        ? 'w-10 h-10 rounded-xl flex items-center justify-center shrink-0'
+                        ? 'w-9 h-9 rounded-lg flex items-center justify-center shrink-0'
                         : 'flex-1 h-10 rounded-xl text-[12px] font-semibold flex items-center justify-center gap-1.5'}
-                      style={{ background: 'rgba(124,58,237,0.08)', color: '#7C3AED' }}
+                      style={canManage
+                        ? { color: '#8E87A8' }
+                        : { background: 'rgba(124,58,237,0.08)', color: '#7C3AED' }}
                       aria-label="Ver miembro"
+                      title="Ver"
                     >
-                      <Eye className="w-4 h-4" style={{ color: '#7C3AED' }} />
+                      <Eye className={canManage ? 'w-[17px] h-[17px]' : 'w-4 h-4'} />
                       {!canManage && 'Ver detalle'}
                     </motion.button>
                     {canManage && (<>
                     <motion.button
                       onClick={() => handleToggleEstado(m)}
                       disabled={cambiandoEstado === m.id}
-                      whileTap={reducedMotion ? {} : { scale: 0.95 }}
+                      whileTap={reducedMotion ? {} : { scale: 0.9 }}
                       transition={{ duration: 0.12, ease: EASE_OUT }}
-                      className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 disabled:opacity-50"
-                      style={{ background: m.active === false ? 'rgba(6,214,160,0.10)' : 'rgba(142,135,168,0.12)' }}
+                      className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 disabled:opacity-50"
+                      style={{ color: m.active === false ? '#06D6A0' : '#8E87A8' }}
                       aria-label={m.active === false ? 'Reactivar miembro' : 'Desactivar miembro'}
+                      title={m.active === false ? 'Reactivar' : 'Pausar'}
                     >
                       {m.active === false
-                        ? <PlayCircle className="w-4 h-4" style={{ color: '#06D6A0' }} />
-                        : <PauseCircle className="w-4 h-4" style={{ color: '#5B5470' }} />}
+                        ? <PlayCircle className="w-[17px] h-[17px]" />
+                        : <PauseCircle className="w-[17px] h-[17px]" />}
                     </motion.button>
+                    <span
+                      className="ml-auto self-stretch my-1 shrink-0"
+                      style={{ width: 1, background: 'rgba(26,16,40,0.10)' }}
+                      aria-hidden
+                    />
                     <motion.button
                       onClick={() => handleDelete(m.id)}
-                      whileTap={reducedMotion ? {} : { scale: 0.95 }}
+                      whileTap={reducedMotion ? {} : { scale: 0.9 }}
                       transition={{ duration: 0.12, ease: EASE_OUT }}
-                      className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-                      style={{ background: 'rgba(239,71,111,0.08)' }}
+                      className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
+                      style={{ color: '#EF476F' }}
                       aria-label="Eliminar miembro"
+                      title="Eliminar"
                     >
-                      <Trash2 className="w-4 h-4" style={{ color: '#EF476F' }} />
+                      <Trash2 className="w-[17px] h-[17px]" />
                     </motion.button>
                     </>)}
                   </div>

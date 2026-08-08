@@ -7,6 +7,7 @@ import { emitToClub } from '../lib/sse';
 import { validarSubida, TipoSubida } from '../lib/upload-guard';
 import { resolverNombreAutor } from '../lib/nombre-autor';
 import { uploadLimiter } from '../lib/rate-limit';
+import { notify } from '../lib/notify';
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME?.trim(),
@@ -268,14 +269,17 @@ router.post('/:id/comments', requireAuth, async (req, res) => {
   // post: los ids de comentario viajan en los posts publicos, y sin esta
   // comprobacion se podria colgar una respuesta de un hilo de otro club.
   let parentId: string | null = null;
+  // A quien se le contesta: es quien recibe el aviso, no el dueño del hilo.
+  let destinatario: string | null = null;
   if (parsed.data.parentId) {
     const padre = await prisma.postComment.findFirst({
       where: { id: parsed.data.parentId, postId },
-      select: { id: true, parentId: true },
+      select: { id: true, parentId: true, authorClerkId: true },
     });
     if (!padre) return res.status(404).json({ error: 'El comentario que respondes ya no existe' });
     // Un solo nivel: responderle a una respuesta cuelga del mismo raiz.
     parentId = padre.parentId ?? padre.id;
+    destinatario = padre.authorClerkId;
   }
 
   const comment = await prisma.postComment.create({
@@ -290,6 +294,25 @@ router.post('/:id/comments', requireAuth, async (req, res) => {
     },
     select: COMMENT_SELECT,
   });
+
+  // Aviso a quien corresponda. Una respuesta le llega a quien se le contesta;
+  // un comentario suelto, al dueño de la publicacion. Nunca a uno mismo:
+  // nadie necesita que le avisen de lo que acaba de escribir.
+  //
+  // Si es respuesta NO se avisa ademas al dueño del post: en un hilo de diez
+  // mensajes recibiria diez avisos de una conversacion que no es con el.
+  const aQuien = parentId ? destinatario : post.authorClerkId;
+  if (aQuien && aQuien !== req.auth?.clerkId) {
+    const recorte = comment.content.length > 80
+      ? `${comment.content.slice(0, 80).trimEnd()}…`
+      : comment.content;
+    await notify(aQuien, post.clubId, {
+      tipo:   parentId ? 'COMMENT_REPLY' : 'POST_COMMENT',
+      titulo: parentId ? 'Respondieron tu comentario' : 'Comentaron tu publicación',
+      cuerpo: `${comment.authorName}: ${recorte}`,
+      link:   post.scope === 'PUBLIC' ? '/dashboard' : '/dashboard/club',
+    });
+  }
 
   emitToClub(req.user.clubId ?? '', 'posts');
   res.status(201).json({ comment });

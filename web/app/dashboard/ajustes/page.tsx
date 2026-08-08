@@ -592,7 +592,9 @@ function AjustesPageContent() {
             // En escritorio la tarjeta pasa de 900px y el campo se estiraba
             // entera: el icono del calendario terminaba en la otra punta,
             // lejisimos de la fecha. Una fecha no necesita mas de este ancho.
-            className="sm:max-w-[280px]"
+            // El desbordamiento en movil no se arregla aca sino en globals.css:
+            // iOS ignora el ancho de los campos de fecha.
+            className="w-full sm:max-w-[280px]"
             value={foundedAt}
             max={new Date().toISOString().slice(0, 10)}
             min="1800-01-01"

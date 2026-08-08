@@ -162,6 +162,25 @@
     -webkit-tap-highlight-color: transparent;
   }
 
+  /* iOS dimensiona los campos de fecha por su propio contenido y se salta el
+     ancho que uno les da: la caja termina mas ancha que su contenedor y se
+     sale por la derecha, y de paso mas alta que los demas campos. Con
+     appearance:none vuelven a comportarse como un campo normal y respetan el
+     ancho y el alto de la hoja de estilos. */
+  input[type="date"] {
+    -webkit-appearance: none;
+    appearance: none;
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  /* El valor viene centrado y con alto propio en Safari; se alinea a la
+     izquierda como el texto de cualquier otro campo. */
+  input[type="date"]::-webkit-date-and-time-value {
+    text-align: left;
+    min-height: 1.3em;
+  }
+
   /* Eliminar delay de 300ms en todos los elementos interactivos */
   a, button, [role="button"], input, select, textarea, label {
     touch-action: manipulation;

@@ -8,6 +8,7 @@ import { apiFetch } from '@/lib/api-client';
 import { useClubStream } from '@/hooks/useClubStream';
 import {
   Bell, CheckCheck, DollarSign, UserPlus, Users, Trophy, CalendarDays, Receipt, Bell as BellIcon,
+  MessageCircle, CornerDownRight,
 } from 'lucide-react';
 
 interface Notif {
@@ -23,6 +24,8 @@ const ICON_BY_TYPE: Record<string, React.ElementType> = {
   NEW_COMPETITION:  Trophy,
   NEW_EVENT:        CalendarDays,
   RECEIPT_UPLOADED: Receipt,
+  POST_COMMENT:     MessageCircle,
+  COMMENT_REPLY:    CornerDownRight,
 };
 const COLOR_BY_TYPE: Record<string, string> = {
   PAYMENT_RECEIVED: '#06D6A0',
@@ -32,6 +35,8 @@ const COLOR_BY_TYPE: Record<string, string> = {
   NEW_COMPETITION:  '#F59E0B',
   NEW_EVENT:        '#4361EE',
   RECEIPT_UPLOADED: '#FFB703',
+  POST_COMMENT:     '#4361EE',
+  COMMENT_REPLY:    '#7C3AED',
 };
 
 function timeAgo(iso: string): string {

@@ -987,7 +987,14 @@ export default function MiembrosPage() {
           Sube desde el borde inferior, que es donde el pulgar llega sin
           reacomodar la mano. A diferencia de un menú flotante, acá hay espacio
           para decir qué hace cada acción: "pausar" y "eliminar" no se explican
-          solos con un ícono, y la diferencia entre los dos importa. */}
+          solos con un ícono, y la diferencia entre los dos importa.
+
+          Va en un portal al body a proposito. Dentro de la pagina, la hoja
+          queda encerrada en el contexto de apilamiento del <main>, asi que su
+          z-index compite solo ahi adentro y la barra de navegacion del layout
+          le pasa por encima tapando las ultimas opciones. Montada en la raiz
+          del documento, el z-index vuelve a valer contra la barra. */}
+      {typeof document !== 'undefined' && createPortal(
       <AnimatePresence>
         {accionesMember && (
           <>
@@ -1075,7 +1082,8 @@ export default function MiembrosPage() {
             </motion.div>
           </>
         )}
-      </AnimatePresence>
+      </AnimatePresence>,
+      document.body)}
 
       {/* ═══════════════════════════════════════════════════════════════════
           NUEVO PANEL — bottom sheet multi-paso

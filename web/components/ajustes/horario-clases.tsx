@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useAuth } from '@clerk/nextjs';
 import { motion, AnimatePresence } from 'framer-motion';
 import { apiFetch } from '@/lib/api-client';
@@ -211,7 +212,11 @@ export default function HorarioClases() {
         </>
       )}
 
-      {/* ── Alta y edición ─────────────────────────────────────────────────── */}
+      {/* ── Alta y edición ───────────────────────────────────────────────────
+          En portal a document.body: dentro de la pagina el modal queda
+          atrapado en el contexto de apilamiento de <main> y el menu flotante
+          se le monta encima por mas z-index que se le ponga. */}
+      {typeof document !== 'undefined' && createPortal(
       <AnimatePresence>
         {editando && (
           <motion.div
@@ -329,9 +334,12 @@ export default function HorarioClases() {
             </motion.div>
           </motion.div>
         )}
-      </AnimatePresence>
+      </AnimatePresence>,
+      document.body
+      )}
 
       {/* ── Confirmar quitar ───────────────────────────────────────────────── */}
+      {typeof document !== 'undefined' && createPortal(
       <AnimatePresence>
         {porBorrar && (
           <motion.div
@@ -368,7 +376,9 @@ export default function HorarioClases() {
             </motion.div>
           </motion.div>
         )}
-      </AnimatePresence>
+      </AnimatePresence>,
+      document.body
+      )}
     </div>
   );
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, type CSSProperties } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Phone } from 'lucide-react';
 
@@ -43,11 +43,28 @@ const SWIPE_VELOCIDAD = 400;
 const ALTO_MAX = 200;
 
 /**
- * Botón de contacto del anuncio.
+ * Acabado único de las dos pastillas que van sobre el anuncio: la etiqueta de
+ * la esquina superior y el botón de contacto.
  *
- * Acabado de vidrio, el mismo lenguaje que la etiqueta de la esquina superior:
- * así la tarjeta se lee como una sola pieza y se tapa lo mínimo de la imagen del
- * anunciante, que es lo que él paga por mostrar.
+ * Antes cada una tenía el suyo, y la etiqueta ni siquiera coincidía entre móvil
+ * y escritorio. Definido en un solo lugar, la tarjeta se lee como una pieza y
+ * cualquier ajuste futuro se hace una vez.
+ *
+ * El fondo oscuro también carga con el trabajo que hacía el velo inferior, ya
+ * retirado: sostiene el texto blanco sobre piezas de fondo claro sin taparle
+ * nada al anunciante.
+ */
+const PASTILLA: CSSProperties = {
+  background: 'rgba(15,15,15,0.72)',
+  border: '1px solid rgba(255,255,255,0.15)',
+  borderRadius: 20,
+  padding: '4px 10px',
+  backdropFilter: 'blur(10px)',
+  WebkitBackdropFilter: 'blur(10px)',
+};
+
+/**
+ * Botón de contacto del anuncio.
  *
  * Solo aparece cuando el anuncio tiene un destino real; los de muestra siguen sin
  * botón en lugar de ofrecer un enlace que no lleva a ninguna parte.
@@ -62,18 +79,8 @@ function BotonContacto({ slide }: { slide: SlideshowSlide }) {
       // Evita que el toque se interprete como interacción con el carrusel
       onClick={e => e.stopPropagation()}
       onPointerDownCapture={e => e.stopPropagation()}
-      // Mismo tamaño que la etiqueta de la esquina superior, para que las dos
-      // piezas de la tarjeta se lean como una sola familia.
-      className="inline-flex items-center gap-1.5 rounded-full text-white font-semibold transition-colors"
-      style={{
-        padding: '4px 10px',
-        fontSize: 10,
-        lineHeight: 1,
-        background: 'rgba(255,255,255,0.14)',
-        border: '1px solid rgba(255,255,255,0.28)',
-        backdropFilter: 'blur(12px)',
-        WebkitBackdropFilter: 'blur(12px)',
-      }}
+      className="inline-flex items-center gap-1.5 text-white/90 font-semibold transition-colors"
+      style={{ ...PASTILLA, fontSize: 10, lineHeight: 1 }}
     >
       <Phone className="w-3 h-3" aria-hidden />
       {slide.cta ?? 'Contactar'}
@@ -105,12 +112,7 @@ function SlideCard({ slide, priority }: { slide: SlideshowSlide; priority?: bool
       {slide.label && (
         <div
           className="absolute top-3 left-3 flex items-center"
-          style={{
-            background: 'rgba(10,8,20,0.75)',
-            border: '1px solid rgba(255,255,255,0.12)',
-            borderRadius: 20,
-            padding: '4px 10px',
-          }}
+          style={PASTILLA}
         >
           <span className="text-[10px] font-semibold text-white/90 tracking-wide leading-none">
             {slide.label}
@@ -210,14 +212,7 @@ export function Slideshow({ slides, autoPlayMs = 5000 }: SlideshowProps) {
             {mobileSlide.label && (
               <div
                 className="absolute top-3 left-3 flex items-center"
-                style={{
-                  background: 'rgba(15,15,15,0.70)',
-                  backdropFilter: 'blur(10px)',
-                  WebkitBackdropFilter: 'blur(10px)',
-                  border: '1px solid rgba(255,255,255,0.15)',
-                  borderRadius: 20,
-                  padding: '4px 10px',
-                }}
+                style={PASTILLA}
               >
                 <span className="text-[10px] font-semibold text-white/90 tracking-wide leading-none">
                   {mobileSlide.label}

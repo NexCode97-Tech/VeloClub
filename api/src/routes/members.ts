@@ -442,6 +442,23 @@ router.delete('/:id', requireAuth, async (req, res) => {
   });
   if (!existing) return res.status(404).json({ error: 'Miembro no encontrado' });
 
+  // Nadie puede borrarse a si mismo. El borrado revoca el acceso en Clerk y
+  // banea la cuenta, asi que quien lo hiciera quedaria fuera de su propio club
+  // sin forma de volver a entrar; y si era el unico administrador, el club se
+  // queda sin nadie que pueda gestionarlo.
+  //
+  // Se compara por clerkId, como en el endpoint de estado, y ademas por correo:
+  // un miembro invitado que todavia no vinculo su cuenta no tiene clerkId, pero
+  // sigue siendo la misma persona.
+  const mismoClerk = !!existing.clerkId && existing.clerkId === req.auth?.clerkId;
+  const mismoCorreo = !!existing.email && !!req.auth?.email
+    && existing.email.trim().toLowerCase() === req.auth.email.trim().toLowerCase();
+  if (mismoClerk || mismoCorreo) {
+    return res.status(400).json({
+      error: 'No puedes eliminar tu propio usuario. Pídele a otro administrador que lo haga.',
+    });
+  }
+
   // Revocar acceso Clerk: quitar del allowlist + banear cuenta si existe
   if (existing.email) {
     try { await removeFromAllowlist(existing.email); } catch { /* ignorar */ }

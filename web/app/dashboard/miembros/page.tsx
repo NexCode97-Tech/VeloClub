@@ -289,6 +289,15 @@ export default function MiembrosPage() {
     }
   }
 
+  // Nadie puede eliminarse a si mismo: borrarse revoca el propio acceso y banea
+  // la cuenta. La API lo rechaza, pero la opcion tampoco deberia ofrecerse.
+  // Se compara por correo, que es la identidad que trae la ficha del miembro.
+  function esUnoMismo(m: Member): boolean {
+    const propio = user?.primaryEmailAddress?.emailAddress;
+    if (!propio || !m.email) return false;
+    return m.email.trim().toLowerCase() === propio.trim().toLowerCase();
+  }
+
   function toggleLocation(id: string) {
     setForm(f => ({
       ...f,
@@ -827,7 +836,7 @@ export default function MiembrosPage() {
                         <Eye className="w-4 h-4" style={{ color: '#7C3AED' }} />
                         {!canManage && 'Ver detalle'}
                       </motion.button>
-                      {canManage && (
+                      {canManage && !esUnoMismo(m) && (
                       <motion.button
                         onClick={() => handleToggleEstado(m)}
                         disabled={cambiandoEstado === m.id}
@@ -843,7 +852,9 @@ export default function MiembrosPage() {
                           : <PauseCircle className="w-4 h-4" style={{ color: '#5B5470' }} />}
                       </motion.button>
                       )}
-                      {canManage && (
+                      {/* Ni eliminar ni pausar la propia cuenta: las dos dejan a
+                          quien las usa fuera de su club. La API ya rechaza ambas. */}
+                      {canManage && !esUnoMismo(m) && (
                       <motion.button
                         onClick={() => handleDelete(m.id)}
                         whileHover={reducedMotion ? {} : { scale: 1.05 }}
@@ -1042,12 +1053,18 @@ export default function MiembrosPage() {
                 const m = accionesMember;
                 const enPausa = m.active === false;
                 const cerrarY = (accion: () => void) => () => { setAccionesMember(null); accion(); };
+                // Pausarse a uno mismo deja fuera del club igual que borrarse, y
+                // la API tambien lo rechaza: ofrecer el boton solo lleva a un
+                // error seguro.
+                const propio = esUnoMismo(m);
                 const opciones = [
                   { icon: Pencil, label: 'Editar', hint: 'Datos, sede y rol', color: '#5B5470', onClick: cerrarY(() => openEdit(m)) },
                   { icon: Eye, label: 'Ver detalle', hint: 'Ficha completa', color: '#5B5470', onClick: cerrarY(() => setViewMember(m)) },
-                  enPausa
-                    ? { icon: PlayCircle, label: 'Reactivar', hint: 'Vuelve a la asistencia y a la cuota', color: '#06D6A0', onClick: cerrarY(() => handleToggleEstado(m)) }
-                    : { icon: PauseCircle, label: 'Pausar', hint: 'Deja de generar cuota, conserva su historial', color: '#5B5470', onClick: cerrarY(() => handleToggleEstado(m)) },
+                  ...(propio ? [] : [
+                    enPausa
+                      ? { icon: PlayCircle, label: 'Reactivar', hint: 'Vuelve a la asistencia y a la cuota', color: '#06D6A0', onClick: cerrarY(() => handleToggleEstado(m)) }
+                      : { icon: PauseCircle, label: 'Pausar', hint: 'Deja de generar cuota, conserva su historial', color: '#5B5470', onClick: cerrarY(() => handleToggleEstado(m)) },
+                  ]),
                 ];
                 return (
                   <>
@@ -1064,6 +1081,10 @@ export default function MiembrosPage() {
                         </span>
                       </button>
                     ))}
+                    {/* La propia cuenta no se puede eliminar: hacerlo revoca el
+                        acceso y banea al que la borro. La API lo rechaza; aca ni
+                        siquiera se ofrece. */}
+                    {!propio && (<>
                     <div className="my-1 mx-2" style={{ height: 1, background: 'rgba(26,16,40,0.07)' }} />
                     <button
                       onClick={cerrarY(() => handleDelete(m.id))}
@@ -1076,6 +1097,7 @@ export default function MiembrosPage() {
                         <span className="block text-[11px]" style={{ color: 'rgba(239,71,111,0.75)' }}>No se puede deshacer</span>
                       </span>
                     </button>
+                    </>)}
                   </>
                 );
               })()}

@@ -12,6 +12,7 @@ import {
 import { IconClub, IconPerfil, IconSuscripcion } from '@/components/ui/custom-icons';
 import SuscripcionCard from '@/components/ajustes/suscripcion-card';
 import HorarioClases from '@/components/ajustes/horario-clases';
+import { DIAS_SEMANA } from '@/lib/dias';
 import { PhoneInput } from '@/components/ui/phone-input';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -22,16 +23,6 @@ import ReactCrop, { type Crop as CropType, centerCrop, makeAspectCrop } from 're
 import 'react-image-crop/dist/ReactCrop.css';
 import ModuleLoader, { useCargaMinima } from '@/components/ui/module-loader';
 import ModuleReveal from '@/components/ui/module-reveal';
-
-const DAYS = [
-  { label: 'Lunes',     short: 'L', value: 1 },
-  { label: 'Martes',    short: 'M', value: 2 },
-  { label: 'Miércoles', short: 'X', value: 3 },
-  { label: 'Jueves',    short: 'J', value: 4 },
-  { label: 'Viernes',   short: 'V', value: 5 },
-  { label: 'Sábado',    short: 'S', value: 6 },
-  { label: 'Domingo',   short: 'D', value: 0 },
-];
 
 interface Club {
   id: string; name: string; city?: string; department?: string;
@@ -620,7 +611,7 @@ function AjustesPageContent() {
         </p>
         <p className="text-[11px] text-muted-foreground -mt-2">La asistencia no se registrará estos días</p>
         <div className="flex gap-2 flex-wrap">
-          {DAYS.map(({ short, value }) => {
+          {DIAS_SEMANA.map(({ corto, valor: value, nombre }) => {
             const active = noAttDays.includes(value);
             return (
               <button
@@ -633,7 +624,7 @@ function AjustesPageContent() {
                   : { background: '#fff', borderColor: 'rgba(120,80,200,0.15)', color: '#8E87A8' }
                 }
               >
-                {short}
+                {corto}
               </button>
             );
           })}

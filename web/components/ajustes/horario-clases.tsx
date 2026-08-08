@@ -9,18 +9,7 @@ import { Plus, Pencil, Trash2, X, MapPin, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-
-// 0 = domingo … 6 = sabado, igual que `Club.noAttendanceDays` y `getDay()`.
-// El orden de la lista arranca en lunes porque asi se lee un horario.
-const DIAS = [
-  { valor: 1, nombre: 'Lunes' },
-  { valor: 2, nombre: 'Martes' },
-  { valor: 3, nombre: 'Miércoles' },
-  { valor: 4, nombre: 'Jueves' },
-  { valor: 5, nombre: 'Viernes' },
-  { valor: 6, nombre: 'Sábado' },
-  { valor: 0, nombre: 'Domingo' },
-];
+import { DIAS_SEMANA } from '@/lib/dias';
 
 interface Sede { id: string; name: string }
 
@@ -112,7 +101,7 @@ export default function HorarioClases() {
     }
   }
 
-  const porDia = DIAS
+  const porDia = DIAS_SEMANA
     .map(d => ({ ...d, clases: clases.filter(c => c.diaSemana === d.valor) }))
     .filter(d => d.clases.length > 0);
 
@@ -257,17 +246,21 @@ export default function HorarioClases() {
                 <div className="space-y-1.5">
                   <Label className="text-[12px]">Día</Label>
                   <div className="flex gap-1.5 flex-wrap">
-                    {DIAS.map(d => (
+                    {/* Mismo circulo que "Dias sin entrenamiento": 40px, borde
+                        de 2 y la misma abreviatura. Solo cambia el color, y a
+                        proposito — el rojo de alla significa "no se entrena". */}
+                    {DIAS_SEMANA.map(d => (
                       <button
                         key={d.valor}
                         type="button"
+                        aria-label={d.nombre}
                         onClick={() => setEditando({ ...editando, diaSemana: d.valor })}
-                        className="w-9 h-9 rounded-full text-[11px] font-bold transition-all"
+                        className="w-10 h-10 rounded-full text-[12px] font-semibold border-2 transition-all flex items-center justify-center"
                         style={editando.diaSemana === d.valor
-                          ? { background: 'rgba(124,58,237,0.10)', border: '2px solid #7C3AED', color: '#7C3AED' }
-                          : { background: '#fff', border: '2px solid rgba(120,80,200,0.15)', color: '#8E87A8' }}
+                          ? { background: 'rgba(124,58,237,0.08)', borderColor: '#7C3AED', color: '#7C3AED' }
+                          : { background: '#fff', borderColor: 'rgba(120,80,200,0.15)', color: '#8E87A8' }}
                       >
-                        {d.nombre.slice(0, 1)}{d.valor === 3 ? 'i' : d.valor === 6 ? 'á' : ''}
+                        {d.corto}
                       </button>
                     ))}
                   </div>

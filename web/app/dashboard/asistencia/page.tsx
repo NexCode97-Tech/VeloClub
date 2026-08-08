@@ -7,6 +7,7 @@ import { createPortal } from 'react-dom';
 import { apiFetch } from '@/lib/api-client';
 import { QK } from '@/hooks/useVeloQuery';
 import { horaLegible } from '@/components/ajustes/horario-clases';
+import { DIA_CORTO_3 } from '@/lib/dias';
 import { Users, MapPin, CheckCircle2, Search, Download, FileSpreadsheet, FileText, ChevronDown } from 'lucide-react';
 const EASE_OUT: [number,number,number,number] = [0.23, 1, 0.32, 1];
 import { MemberAvatar } from '@/components/ui/member-avatar';
@@ -37,9 +38,6 @@ interface Member {
   pictureUrl?: string | null;
   locations: { location: { id: string; name: string } }[];
 }
-// 0 = domingo … 6 = sabado, igual que en el resto de la app
-const DIA_CORTO = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
-
 interface ClaseDia {
   id: string;
   nombre: string;
@@ -69,7 +67,7 @@ const ROLE_BG: Record<string, string> = {
 };
 
 const DAY_NAMES   = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
-const DAY_LABELS  = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+const DAY_LABELS  = DIA_CORTO_3;
 
 function todayISO() {
   const d = new Date();
@@ -658,7 +656,7 @@ export default function AsistenciaPage() {
                         ? 'Todas las clases'
                         : (() => {
                             const c = horario.find(h => h.id === claseRep);
-                            return c ? `${DIA_CORTO[c.diaSemana]} ${horaLegible(c.hora)} · ${c.nombre}` : 'Seleccionar clase';
+                            return c ? `${DIA_CORTO_3[c.diaSemana]} ${horaLegible(c.hora)} · ${c.nombre}` : 'Seleccionar clase';
                           })()}
                     </span>
                   </SelectTrigger>
@@ -666,7 +664,7 @@ export default function AsistenciaPage() {
                     <SelectItem value="TODAS">Todas las clases</SelectItem>
                     {horario.map(c => (
                       <SelectItem key={c.id} value={c.id}>
-                        {DIA_CORTO[c.diaSemana]} {horaLegible(c.hora)} · {c.nombre} · {c.location.name}
+                        {DIA_CORTO_3[c.diaSemana]} {horaLegible(c.hora)} · {c.nombre} · {c.location.name}
                       </SelectItem>
                     ))}
                   </SelectContent>

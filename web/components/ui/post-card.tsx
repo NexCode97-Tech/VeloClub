@@ -8,6 +8,7 @@ import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MemberAvatar } from '@/components/ui/member-avatar';
 import { ContenidoGuardado } from '@/components/ui/save-button-state';
+import { VisorImagen } from '@/components/ui/visor-imagen';
 import {
   Globe, Lock, Heart, MessageCircle, ChevronRight, MapPin, FileText,
   SendHorizontal, X, Trash2, Pencil, MoreHorizontal, Flag,
@@ -180,6 +181,9 @@ export function PostCard({
   const [commentText, setCommentText] = useState('');
   const [sendingComment, setSendingComment] = useState(false);
   const commentInputRef = useRef<HTMLInputElement>(null);
+  // Solo para fotos: el video ya trae su reproductor y el adjunto se descarga.
+  const [visorAbierto, setVisorAbierto] = useState(false);
+
   // ── Reportar ──────────────────────────────────────────────────────────────
   // La llamada se hace aca dentro y no por prop como el resto: reportar es un
   // trozo cerrado que no toca el estado del feed, y pasarlo por prop obligaba
@@ -735,10 +739,16 @@ export function PostCard({
               <span className="text-[13px] font-semibold text-foreground truncate">Ver archivo adjunto</span>
             </a>
           ) : (
-            <div className="w-full mx-auto" style={{ aspectRatio: '1 / 1', maxWidth: 560, background: '#f4f4f6' }}>
+            <button
+              type="button"
+              onClick={() => setVisorAbierto(true)}
+              aria-label="Ver la foto en grande"
+              className="w-full mx-auto block cursor-zoom-in"
+              style={{ aspectRatio: '1 / 1', maxWidth: 560, background: '#f4f4f6' }}
+            >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={post.imageUrl} alt="Publicación" className="w-full h-full object-contain" />
-            </div>
+            </button>
           )}
         </div>
       )}
@@ -1012,6 +1022,15 @@ export function PostCard({
           )}
         </AnimatePresence>
       </div>
+
+      {post.imageUrl && !isVideo && !isFile && (
+        <VisorImagen
+          url={post.imageUrl}
+          alt={`Foto de la publicación de ${post.authorName}`}
+          abierto={visorAbierto}
+          onCerrar={() => setVisorAbierto(false)}
+        />
+      )}
 
       {/* ── Reportar ────────────────────────────────────────────────────────
           En portal porque la tarjeta recorta por overflow y en escritorio

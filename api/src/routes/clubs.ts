@@ -366,7 +366,10 @@ router.get('/:id/public', requireAuth, async (req, res) => {
 
   const [followersCount, postsCount, mainLocation] = await Promise.all([
     prisma.follow.count({ where: { followingClerkId: `club:${id}` } }),
-    prisma.post.count({ where: { clubId: id } }),
+    // Solo las publicas. Contarlas todas revelaba a cualquiera de otro club
+    // cuanta actividad interna tiene este: no se veia el contenido, pero el
+    // numero delataba lo privado.
+    prisma.post.count({ where: { clubId: id, scope: 'PUBLIC' } }),
     prisma.location.findFirst({
       where: { clubId: id },
       select: { id: true, name: true, address: true },

@@ -69,6 +69,9 @@ router.post('/generate-payments', requireCronSecret, async (_req, res) => {
     select: {
       id: true, fullName: true, clubId: true,
       monthlyFee: true, paymentDueDay: true,
+      // Para atribuirle la cuota a su sede. Solo sirve si tiene una: con
+      // varias no hay forma de saber a que disciplina corresponde.
+      locations: { select: { locationId: true }, take: 2 },
       payments: {
         where: { month, year },
         select: { id: true },
@@ -94,6 +97,7 @@ router.post('/generate-payments', requireCronSecret, async (_req, res) => {
         year,
         status:  'PENDING',
         dueDate,
+        locationId: m.locations.length === 1 ? m.locations[0].locationId : null,
       },
     });
 

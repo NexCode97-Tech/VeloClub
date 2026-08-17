@@ -97,6 +97,8 @@ model Location {
   trainingSessions TrainingSession[]
   calendarEvents   CalendarEvent[]
   clases           ClaseHorario[]
+  payments         Payment[]
+  cashEntries      CashEntry[]
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt
 
@@ -246,6 +248,12 @@ model Payment {
   notes           String?
   receiptUrl      String?
   receiptPublicId String?
+  // Sede a la que corresponde esta mensualidad. Se GUARDA, no se deduce del
+  // miembro: deducirla haria que al cambiar alguien de sede se reescribiera
+  // todo el historico solo y un reporte de marzo dejara de cuadrar.
+  // Opcional porque lo registrado antes de esto no la tiene.
+  locationId      String?
+  location        Location?     @relation(fields: [locationId], references: [id], onDelete: SetNull)
   cashEntry       CashEntry?
   createdAt       DateTime      @default(now())
   updatedAt DateTime      @updatedAt
@@ -254,6 +262,7 @@ model Payment {
   @@index([memberId])
   @@index([clubId, year, month])
   @@index([clubId, status])
+  @@index([clubId, locationId])
 }
 
 // ─── CashEntry (flujo de caja) ───────────────────────────────────────────────
@@ -266,12 +275,18 @@ model CashEntry {
   amount      Float
   description String
   date        DateTime      @default(now())
+  // Sede del movimiento. NULL = "General": lo que no es de ninguna disciplina
+  // en particular (la suscripcion a VeloClub, la contabilidad, la publicidad),
+  // y tambien todo lo registrado antes de que existiera este campo.
+  locationId  String?
+  location    Location?     @relation(fields: [locationId], references: [id], onDelete: SetNull)
   paymentId   String?       @unique
   payment     Payment?      @relation(fields: [paymentId], references: [id])
   createdAt   DateTime      @default(now())
 
   @@index([clubId])
   @@index([clubId, date])
+  @@index([clubId, locationId])
 }
 
 // ─── Competition + Events + Results (logros) ─────────────────────────────────

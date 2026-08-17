@@ -33,6 +33,9 @@ const paymentSchema = z.object({
   paidAt: z.string().optional(),
   status: z.enum(['PENDING', 'PAID', 'OVERDUE', 'REFUNDED']).default('PENDING'),
   notes: z.string().optional(),
+  // Sede a la que corresponde la mensualidad. Si no llega, se deduce del
+  // deportista cuando tiene una sola.
+  locationId: z.string().nullable().optional(),
 });
 
 // Todos los campos son opcionales porque es un PATCH, pero los que lleguen deben
@@ -44,7 +47,23 @@ const patchPaymentSchema = z.object({
   paidAt: z.string().datetime().optional(),
 });
 
-async function createCashEntry(clubId: string, paymentId: string, amount: number, memberName: string, month: number, year: number, paidAt?: Date | null) {
+/**
+ * Sede de un deportista, solo si tiene UNA.
+ *
+ * Con varias devuelve null a proposito: no hay forma de saber a que disciplina
+ * correspondia esa mensualidad, y elegir una al azar ensucia justo los numeros
+ * que el club va a mirar. El administrador la elige a mano en esos casos.
+ */
+async function sedeDelMiembro(memberId: string): Promise<string | null> {
+  const sedes = await prisma.memberLocation.findMany({
+    where: { memberId },
+    select: { locationId: true },
+    take: 2,
+  });
+  return sedes.length === 1 ? sedes[0].locationId : null;
+}
+
+async function createCashEntry(clubId: string, paymentId: string, amount: number, memberName: string, month: number, year: number, paidAt?: Date | null, locationId?: string | null) {
   const existing = await prisma.cashEntry.findUnique({ where: { paymentId } });
   if (existing) {
     // Ya existe el ingreso: mantener el monto sincronizado si cambió la tarifa del pago.
@@ -65,6 +84,9 @@ async function createCashEntry(clubId: string, paymentId: string, amount: number
       amount,
       description: `Mensualidad ${memberName} — ${MONTH_NAMES[month - 1]} ${year}`,
       paymentId,
+      // El ingreso hereda la sede del pago: si no, el filtro de Finanzas
+      // mostraria la mensualidad en Mensualidades pero no en Flujo de caja.
+      locationId: locationId ?? null,
       date,
     },
   });
@@ -139,12 +161,15 @@ router.get('/', requireAuth, async (req, res) => {
   const status   = req.query.status ? String(req.query.status)           : null;
   // Filtro por deportista: trae su historial completo para el panel de Finanzas
   const memberId = req.query.memberId ? String(req.query.memberId)       : null;
+  // 'GENERAL' pide las cuotas sin sede; omitirlo trae todas.
+  const sede     = req.query.locationId ? String(req.query.locationId)   : null;
 
   const where: Record<string, unknown> = { clubId };
   if (month  !== null) where.month  = month;
   if (year   !== null) where.year   = year;
   if (status)          where.status = status;
   if (memberId)        where.memberId = memberId;
+  if (sede)            where.locationId = sede === 'GENERAL' ? null : sede;
 
   // Un STUDENT solo puede ver su propio historial. Antes se devolvían todos los
   // pagos del club (con email y teléfono de cada miembro) y el filtrado ocurría
@@ -166,7 +191,10 @@ router.get('/', requireAuth, async (req, res) => {
 
   const payments = await prisma.payment.findMany({
     where,
-    include: { member: { select: { id: true, fullName: true, email: true, phone: true } } },
+    include: {
+      member:   { select: { id: true, fullName: true, email: true, phone: true } },
+      location: { select: { id: true, name: true } },
+    },
     // Para el historial de un deportista importa el orden cronológico del período
     orderBy: memberId ? [{ year: 'desc' }, { month: 'desc' }] : { createdAt: 'desc' },
   });
@@ -188,6 +216,7 @@ router.post('/', requireAuth, async (req, res) => {
     data: {
       ...rest,
       clubId,
+      locationId: rest.locationId ?? await sedeDelMiembro(rest.memberId),
       dueDate: dueDate ? new Date(dueDate) : null,
       paidAt:  paidAt  ? new Date(paidAt)  : rest.status === 'PAID' ? new Date() : null,
     },
@@ -195,7 +224,7 @@ router.post('/', requireAuth, async (req, res) => {
   });
 
   if (payment.status === 'PAID') {
-    await createCashEntry(clubId, payment.id, payment.amount, payment.member.fullName, payment.month, payment.year, payment.paidAt);
+    await createCashEntry(clubId, payment.id, payment.amount, payment.member.fullName, payment.month, payment.year, payment.paidAt, payment.locationId);
     await notifyClubStaff(clubId, {
       tipo: 'PAYMENT_RECEIVED',
       titulo: 'Pago recibido',
@@ -234,6 +263,13 @@ router.patch('/:id', requireAuth, async (req, res) => {
   if (paidAt)               data.paidAt = new Date(paidAt);
   else if (status === 'PAID' && !existing.paidAt) data.paidAt = new Date();
 
+  // Si la cuota quedo sin sede —se genero antes de que existiera el campo, o el
+  // deportista tenia varias y ahora tiene una—, se intenta deducir al pagarla.
+  if (!existing.locationId) {
+    const sede = await sedeDelMiembro(existing.memberId);
+    if (sede) data.locationId = sede;
+  }
+
   const payment = await prisma.payment.update({
     where: { id },
     data,
@@ -246,7 +282,8 @@ router.patch('/:id', requireAuth, async (req, res) => {
       payment.amount,
       existing.member.fullName,
       payment.month, payment.year,
-      payment.paidAt
+      payment.paidAt,
+      payment.locationId
     );
     // Notificar solo cuando el pago pasa a PAID (no si ya lo estaba)
     if (existing.status !== 'PAID') {

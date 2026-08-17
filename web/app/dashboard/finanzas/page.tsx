@@ -7,11 +7,12 @@ import { useEffect, useState, useMemo } from 'react';
 import { apiFetch } from '@/lib/api-client';
 import { parseLocalDate } from '@/lib/utils';
 import { QK } from '@/hooks/useVeloQuery';
+import { HojaInferior, OpcionHoja } from '@/components/ui/hoja-inferior';
 import {
   CreditCard, Plus, Trash2, CheckCircle2, Clock, AlertCircle,
   TrendingUp, TrendingDown, Wallet, Download, MessageCircle, Check,
   PhoneOff, Settings, Zap, ChevronUp, Pencil, Search, Receipt, ExternalLink,
-  Eye, EyeOff,
+  Eye, EyeOff, ChevronDown,
 } from 'lucide-react';
 import { downloadInvoicePDF } from '@/lib/pdf';
 import MemberHistoryPanel from '@/components/finanzas/member-history-panel';
@@ -75,11 +76,20 @@ interface Payment {
   receiptUrl?: string | null;
   receiptPublicId?: string | null;
   member: { id: string; fullName: string; email?: string; phone?: string };
+  location?: { id: string; name: string } | null;
 }
 interface CashEntry {
   id: string; type: 'INCOME' | 'EXPENSE'; amount: number;
   description: string; date: string; paymentId?: string | null;
+  // null = General: no corresponde a ninguna sede en particular
+  location?: { id: string; name: string } | null;
 }
+interface Sede { id: string; name: string }
+
+// Valor del filtro cuando no se filtra, y cuando se piden los movimientos que
+// no son de ninguna sede.
+const SEDE_TODAS = 'TODAS';
+const SEDE_GENERAL = 'GENERAL';
 
 const now = new Date();
 
@@ -380,7 +390,10 @@ export default function FinanzasPage() {
   const [savingPay, setSavingPay]   = useState(false);
   const [payError, setPayError]     = useState<string | null>(null);
   const [flowOpen, setFlowOpen]     = useState(false);
-  const [flowForm, setFlowForm]     = useState({ type: 'INCOME', amount: '', description: '', date: '' });
+  const [flowForm, setFlowForm]     = useState({ type: 'INCOME', amount: '', description: '', date: '', locationId: '' });
+  // Filtro por sede. Aplica a las dos pestañas y a los tres totales.
+  const [filterSede, setFilterSede] = useState<string>(SEDE_TODAS);
+  const [hojaSede, setHojaSede]     = useState(false);
   const [savingFlow, setSavingFlow] = useState(false);
   const [flowError, setFlowError]   = useState<string | null>(null);
   const [deletingFlow, setDeletingFlow] = useState<string | null>(null);
@@ -411,12 +424,34 @@ export default function FinanzasPage() {
     queryFn: async () => { const token = await getToken(); return apiFetch<{ members: Member[] }>('/members', { token }); },
   });
   const { data: paymentsData, isLoading: loadingPay } = useQuery({
-    queryKey: QK.payments(filterMonth, filterYear),
-    queryFn: async () => { const token = await getToken(); return apiFetch<{ payments: Payment[] }>(`/payments?month=${filterMonth}&year=${filterYear}`, { token }); },
+    queryKey: [...QK.payments(filterMonth, filterYear), filterSede],
+    queryFn: async () => {
+      const token = await getToken();
+      const q = filterSede === SEDE_TODAS ? '' : `&locationId=${filterSede}`;
+      return apiFetch<{ payments: Payment[] }>(`/payments?month=${filterMonth}&year=${filterYear}${q}`, { token });
+    },
   });
+  const { data: sedesData } = useQuery({
+    queryKey: QK.locations(),
+    queryFn: async () => { const token = await getToken(); return apiFetch<{ locations: Sede[] }>('/locations', { token }); },
+    staleTime: 5 * 60 * 1000,
+  });
+  // Con una sola sede no hay nada que filtrar ni que elegir: el selector no
+  // aparece y todo queda igual que antes.
+  const sedes = useMemo(() => sedesData?.locations ?? [], [sedesData]);
+  const hayVariasSedes = sedes.length > 1;
+  const nombreSede = (id: string) =>
+    id === SEDE_TODAS ? 'Todas las sedes'
+    : id === SEDE_GENERAL ? 'General'
+    : sedes.find(x => x.id === id)?.name ?? 'Sede';
+
   const { data: cashflowData, isLoading: loadingFlow } = useQuery({
-    queryKey: QK.cashflow(filterMonth, filterYear),
-    queryFn: async () => { const token = await getToken(); return apiFetch<{ entries: CashEntry[] }>(`/cashflow?month=${filterMonth}&year=${filterYear}`, { token }); },
+    queryKey: [...QK.cashflow(filterMonth, filterYear), filterSede],
+    queryFn: async () => {
+      const token = await getToken();
+      const q = filterSede === SEDE_TODAS ? '' : `&locationId=${filterSede}`;
+      return apiFetch<{ entries: CashEntry[] }>(`/cashflow?month=${filterMonth}&year=${filterYear}${q}`, { token });
+    },
   });
 
   // Sostiene el indicador un mínimo de tiempo para que no parpadee
@@ -623,10 +658,17 @@ export default function FinanzasPage() {
       const token = await getToken();
       await apiFetch('/cashflow', {
         method: 'POST', token,
-        body: JSON.stringify({ type: flowForm.type, amount: parseFloat(flowForm.amount), description: flowForm.description, date: flowForm.date || undefined }),
+        body: JSON.stringify({
+          type: flowForm.type,
+          amount: parseFloat(flowForm.amount),
+          description: flowForm.description,
+          date: flowForm.date || undefined,
+          // Cadena vacía = General
+          locationId: flowForm.locationId || null,
+        }),
       });
       setFlowOpen(false);
-      setFlowForm({ type: 'INCOME', amount: '', description: '', date: '' });
+      setFlowForm({ type: 'INCOME', amount: '', description: '', date: '', locationId: '' });
       invalidateFlow();
     } catch (e) { setFlowError(e instanceof Error ? e.message : 'Error'); }
     finally { setSavingFlow(false); }
@@ -768,11 +810,24 @@ export default function FinanzasPage() {
                 ))}
               </SelectContent>
             </Select>
+            {/* Sede — desde tablet entra en esta misma fila. En movil baja al
+                renglon de abajo: mes, ano y "Nuevo" ya la llenan, y apretarla
+                aca la volveria ilegible. */}
+            {hayVariasSedes && (
+              <button
+                onClick={() => setHojaSede(true)}
+                className="hidden md:flex items-center justify-between gap-2 h-9 px-3 rounded-xl bg-white text-[13px] font-semibold shrink-0"
+                style={{ border: '1.5px solid #7C3AED', color: '#7C3AED', minWidth: 132 }}
+              >
+                <span className="truncate">{nombreSede(filterSede)}</span>
+                <ChevronDown className="w-3.5 h-3.5 shrink-0" />
+              </button>
+            )}
             {tab === 'flujo' && (
               <motion.button
                 whileTap={reducedMotion ? {} : { scale: 0.96 }}
                 transition={{ duration: 0.12, ease: EASE_OUT }}
-                onClick={() => { setFlowForm({ type: 'INCOME', amount: '', description: '', date: '' }); setFlowError(null); setFlowOpen(true); }}
+                onClick={() => { setFlowForm({ type: 'INCOME', amount: '', description: '', date: '', locationId: '' }); setFlowError(null); setFlowOpen(true); }}
                 className="flex items-center justify-center gap-1.5 px-3 h-9 rounded-xl text-[12px] font-semibold cursor-pointer shrink-0"
                 style={{ background: 'rgba(6,214,160,0.08)', color: '#06D6A0', border: '1.5px dashed rgba(6,214,160,0.25)' }}
               >
@@ -809,6 +864,19 @@ export default function FinanzasPage() {
             )}
           </div>
         </motion.div>
+
+        {/* Sede en móvil — su propio renglón */}
+        {hayVariasSedes && (
+          <motion.button
+            variants={pageCard}
+            onClick={() => setHojaSede(true)}
+            className="md:hidden flex items-center justify-between gap-2 w-full h-10 px-3 rounded-xl bg-white text-[13px] font-semibold"
+            style={{ border: '1.5px solid #7C3AED', color: '#7C3AED' }}
+          >
+            <span className="truncate">{nombreSede(filterSede)}</span>
+            <ChevronDown className="w-4 h-4 shrink-0" />
+          </motion.button>
+        )}
 
         {/* ── MENSUALIDADES ─────────────────────────────────────────────────── */}
         {tab === 'mensualidades' && (
@@ -1096,6 +1164,16 @@ export default function FinanzasPage() {
                               Auto
                             </span>
                           )}
+                          {/* La sede en cada fila es lo que deja auditar con
+                              «Todas» puesto, sin cambiar el filtro cinco veces. */}
+                          {hayVariasSedes && (
+                            <span className="text-[9px] px-1.5 py-0.5 rounded-full font-semibold truncate"
+                              style={e.location
+                                ? { background: 'rgba(124,58,237,0.10)', color: '#6D28D9' }
+                                : { background: 'rgba(26,16,40,0.06)', color: '#6B6580' }}>
+                              {e.location?.name ?? 'General'}
+                            </span>
+                          )}
                         </div>
                       </div>
                       {!isAuto && (
@@ -1236,6 +1314,42 @@ export default function FinanzasPage() {
         </DialogContent>
       </Dialog>
 
+      {/* Filtro por sede — hoja compartida, ya viene en portal */}
+      <HojaInferior
+        abierta={hojaSede}
+        onCerrar={() => setHojaSede(false)}
+        titulo="Filtrar por sede"
+        ayuda="Se aplica a los totales y a las dos pestañas."
+      >
+        <div className="flex flex-col gap-1.5">
+          <OpcionHoja
+            activa={filterSede === SEDE_TODAS}
+            onClick={() => { setFilterSede(SEDE_TODAS); setHojaSede(false); }}
+          >
+            Todas las sedes
+          </OpcionHoja>
+          {sedes.map(x => (
+            <OpcionHoja
+              key={x.id}
+              activa={filterSede === x.id}
+              onClick={() => { setFilterSede(x.id); setHojaSede(false); }}
+            >
+              {x.name}
+            </OpcionHoja>
+          ))}
+          <OpcionHoja
+            activa={filterSede === SEDE_GENERAL}
+            onClick={() => { setFilterSede(SEDE_GENERAL); setHojaSede(false); }}
+          >
+            General
+          </OpcionHoja>
+        </div>
+        <p className="text-[10.5px] text-muted-foreground mt-3 leading-relaxed">
+          Sumar las sedes puede no dar el total: lo registrado antes de este cambio, y las
+          cuotas de quienes están en varias sedes, aparecen solo en «Todas».
+        </p>
+      </HojaInferior>
+
       {/* Modal agregar movimiento manual */}
       <Dialog open={flowOpen} onOpenChange={setFlowOpen}>
         <DialogContent className="max-w-sm">
@@ -1270,6 +1384,33 @@ export default function FinanzasPage() {
                 placeholder="ej. 80.000"
               />
             </div>
+            {/* Sede — solo si el club tiene más de una. Con una sola no hay
+                nada que elegir y el campo sería estorbo. */}
+            {hayVariasSedes && (
+              <div className="space-y-2">
+                <Label>Sede</Label>
+                <div className="flex flex-col gap-1.5">
+                  <OpcionHoja
+                    activa={!flowForm.locationId}
+                    onClick={() => setFlowForm(f => ({ ...f, locationId: '' }))}
+                  >
+                    General
+                  </OpcionHoja>
+                  {sedes.map(x => (
+                    <OpcionHoja
+                      key={x.id}
+                      activa={flowForm.locationId === x.id}
+                      onClick={() => setFlowForm(f => ({ ...f, locationId: x.id }))}
+                    >
+                      {x.name}
+                    </OpcionHoja>
+                  ))}
+                </div>
+                <p className="text-[10px] text-muted-foreground">
+                  «General» es para lo que no pertenece a una disciplina: la suscripción, la contabilidad, la publicidad.
+                </p>
+              </div>
+            )}
             <div className="space-y-2">
               <Label>Fecha</Label>
               <DatePicker value={flowForm.date} onChange={v => setFlowForm(f => ({ ...f, date: v }))} />

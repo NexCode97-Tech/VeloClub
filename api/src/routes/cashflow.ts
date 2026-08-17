@@ -14,6 +14,8 @@ const entrySchema = z.object({
   amount:      z.number().positive(),
   description: z.string().min(1).max(300),
   date:        z.string().optional(),
+  // Sede del movimiento. Ausente o null = General.
+  locationId:  z.string().nullable().optional(),
 });
 
 // GET /cashflow?month=&year=
@@ -24,8 +26,11 @@ router.get('/', requireAuth, async (req, res) => {
 
   const month = req.query.month ? parseInt(String(req.query.month)) : null;
   const year  = req.query.year  ? parseInt(String(req.query.year))  : null;
+  // 'GENERAL' pide lo que no es de ninguna sede; omitirlo trae todo.
+  const sede  = req.query.locationId ? String(req.query.locationId) : undefined;
 
   const where: Record<string, unknown> = { clubId };
+  if (sede) where.locationId = sede === 'GENERAL' ? null : sede;
   if (month !== null && year !== null) {
     // Los ingresos de mensualidad se agrupan por el mes/año de la CUOTA (no por su fecha),
     // para que coincidan con "Cobrado {mes}". Las entradas manuales sí van por su fecha real.
@@ -37,7 +42,10 @@ router.get('/', requireAuth, async (req, res) => {
 
   const entries = await prisma.cashEntry.findMany({
     where,
-    include: { payment: { include: { member: { select: { fullName: true } } } } },
+    include: {
+      payment: { include: { member: { select: { fullName: true } } } },
+      location: { select: { id: true, name: true } },
+    },
     orderBy: { date: 'desc' },
   });
 
@@ -57,8 +65,11 @@ router.post('/', requireAuth, async (req, res) => {
       type:        parsed.data.type,
       amount:      parsed.data.amount,
       description: parsed.data.description,
+      // null = General: lo que no corresponde a ninguna disciplina
+      locationId:  parsed.data.locationId ?? null,
       date:        parsed.data.date ? new Date(parsed.data.date) : new Date(),
     },
+    include: { location: { select: { id: true, name: true } } },
   });
 
   emitToClub(req.user.clubId ?? '', 'cashflow');
@@ -83,8 +94,10 @@ router.patch('/:id', requireAuth, async (req, res) => {
       type:        parsed.data.type,
       amount:      parsed.data.amount,
       description: parsed.data.description,
+      locationId:  parsed.data.locationId ?? null,
       date:        parsed.data.date ? new Date(parsed.data.date) : undefined,
     },
+    include: { location: { select: { id: true, name: true } } },
   });
 
   emitToClub(req.user.clubId ?? '', 'cashflow');

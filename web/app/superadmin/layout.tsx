@@ -8,7 +8,7 @@ import { apiFetch } from '@/lib/api-client';
 import LoadingScreen, { LoadingCurtain, CURTAIN_MS, esperarPantallaCarga } from '@/components/ui/loading-screen';
 import Link from 'next/link';
 import Image from 'next/image';
-import { LayoutDashboard, Building2, LogOut, Ticket, Info, CircleDollarSign, ArrowLeft, Flag, ShieldAlert } from 'lucide-react';
+import { LayoutDashboard, Building2, LogOut, Ticket, Info, CircleDollarSign, ArrowLeft, Flag } from 'lucide-react';
 import { IconAjustes } from '@/components/ui/custom-icons';
 import { motion, AnimatePresence } from 'framer-motion';
 import { idClubDeRuta } from './club-context';
@@ -22,9 +22,6 @@ const TABS = [
   // desde donde se hace. Vive en el superadmin porque el feed publico cruza
   // clubes y ninguno puede mandar sobre lo que publica otro.
   { href: '/superadmin/reportes', label: 'Reportes',  exact: false, Icon: Flag             },
-  // Bitacora de lo irreversible. Nace porque se borraron cinco clubes y no
-  // quedo forma de saber quien, cuando ni con que.
-  { href: '/superadmin/auditoria', label: 'Auditoría', exact: false, Icon: ShieldAlert      },
 ];
 
 const SCREEN_LABELS: Record<string, string> = {
@@ -32,7 +29,6 @@ const SCREEN_LABELS: Record<string, string> = {
   '/superadmin/clubs':    'Clubes',
   '/superadmin/cupones':  'Cupones',
   '/superadmin/reportes': 'Reportes',
-  '/superadmin/auditoria': 'Auditoría',
 };
 
 // Modulos de un club. Dentro del detalle, estos reemplazan a TABS tanto en el

@@ -8,7 +8,6 @@ import { cacheDel } from '../lib/redis';
 import { v2 as cloudinary } from 'cloudinary';
 import { validarSubida } from '../lib/upload-guard';
 import { emitToClub } from '../lib/sse';
-import { auditar } from '../lib/auditoria';
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -129,15 +128,6 @@ router.patch('/clubs/:id/toggle', requireAuth, requireSuperadmin, async (req, re
     await crearNotificacion('CLUB_DESACTIVADO', 'Club desactivado', `${club.name} fue desactivado.`);
   }
 
-  await auditar(req, {
-    accion:     updated.active ? 'CLUB_ACTIVADO' : 'CLUB_DESACTIVADO',
-    entidad:    'Club',
-    entidadId:  id,
-    resumen:    `${updated.active ? 'Se activó' : 'Se desactivó'} el club «${club.name}».`,
-    clubId:     id,
-    clubNombre: club.name,
-    datos:      { antes: { active: club.active }, despues: { active: updated.active } },
-  });
 
   await invalidarTrustedCache(); // activar/desactivar cambia quién aparece en el landing
   res.json({ club: updated });
@@ -333,16 +323,6 @@ router.delete('/clubs/:id', requireAuth, requireSuperadmin, async (req, res) => 
 
   await prisma.club.delete({ where: { id } });
 
-  await auditar(req, {
-    accion:     'CLUB_ELIMINADO',
-    entidad:    'Club',
-    entidadId:  id,
-    resumen:    `Se eliminó el club «${club.name}» con ${club._count.members} miembros, ` +
-                `${club._count.payments} pagos y ${club._count.attendances} asistencias.`,
-    clubId:     id,
-    clubNombre: club.name,
-    datos:      { club: { ...club, _count: undefined }, miembros },
-  });
 
   res.json({ ok: true });
 });
@@ -400,15 +380,6 @@ router.patch('/clubs/:clubId/miembros/:memberId', requireAuth, requireSuperadmin
   });
   const member = await prisma.member.update({ where: { id: memberId }, data: { role } });
 
-  await auditar(req, {
-    accion:     'ROL_CAMBIADO',
-    entidad:    'Member',
-    entidadId:  memberId,
-    resumen:    `${antes?.fullName ?? 'Un miembro'} pasó de ${antes?.role ?? '—'} a ${role}.`,
-    clubId:     antes?.clubId,
-    clubNombre: antes?.club?.name,
-    datos:      { antes: { role: antes?.role }, despues: { role } },
-  });
 
   res.json({ member });
 });
@@ -441,16 +412,6 @@ router.delete('/clubs/:clubId/miembros/:memberId', requireAuth, requireSuperadmi
   if (member.email) await removeFromAllowlist(member.email);
   await prisma.member.delete({ where: { id: memberId } });
 
-  await auditar(req, {
-    accion:     'MIEMBRO_ELIMINADO',
-    entidad:    'Member',
-    entidadId:  memberId,
-    resumen:    `Se eliminó a ${member.fullName} de «${member.club?.name ?? 'su club'}», ` +
-                `con ${member._count.payments} pagos y ${member._count.attendances} asistencias.`,
-    clubId:     member.clubId,
-    clubNombre: member.club?.name,
-    datos:      { ...member, _count: undefined },
-  });
 
   res.json({ ok: true });
 });
@@ -916,15 +877,6 @@ router.patch('/reportes/:id', requireAuth, requireSuperadmin, async (req, res) =
       },
     });
 
-    await auditar(req, {
-      accion:     'CONTENIDO_RETIRADO',
-      entidad:    reporte.commentId ? 'PostComment' : 'Post',
-      entidadId:  reporte.commentId ?? reporte.postId,
-      resumen:    `Se retiró ${reporte.commentId ? 'un comentario' : 'una publicación'} ` +
-                  `de ${reporte.autorNombre || 'alguien'} por ${reporte.motivo}.`,
-      clubId:     reporte.clubId,
-      datos:      { motivo: reporte.motivo, detalle: reporte.detalle, contenido: reporte.contenidoCopia },
-    });
 
     if (reporte.clubId) emitToClub(reporte.clubId, 'posts');
   } else {
@@ -939,43 +891,6 @@ router.patch('/reportes/:id', requireAuth, requireSuperadmin, async (req, res) =
   }
 
   res.json({ ok: true });
-});
-
-// ─── Auditoría ────────────────────────────────────────────────────────────────
-//
-// Solo lectura. No hay endpoint para editarla ni para borrarla a proposito: un
-// registro que se puede alterar no sirve como registro.
-
-// GET /superadmin/auditoria?accion=&clubId=&desde=&hasta=
-router.get('/auditoria', requireAuth, requireSuperadmin, async (req, res) => {
-  const accion = req.query.accion ? String(req.query.accion) : undefined;
-  const clubId = req.query.clubId ? String(req.query.clubId) : undefined;
-  const desde  = req.query.desde  ? new Date(String(req.query.desde) + 'T00:00:00.000Z') : undefined;
-  const hasta  = req.query.hasta  ? new Date(String(req.query.hasta) + 'T23:59:59.999Z') : undefined;
-
-  const where: Record<string, unknown> = {};
-  if (accion) where.accion = accion;
-  if (clubId) where.clubId = clubId;
-  if (desde || hasta) where.createdAt = { ...(desde ? { gte: desde } : {}), ...(hasta ? { lte: hasta } : {}) };
-
-  const [registros, total] = await Promise.all([
-    prisma.auditoria.findMany({ where, orderBy: { createdAt: 'desc' }, take: 300 }),
-    prisma.auditoria.count({ where }),
-  ]);
-
-  // Las acciones presentes, para armar el filtro sin una lista fija que se
-  // desactualice cada vez que se audita algo nuevo.
-  const acciones = await prisma.auditoria.groupBy({
-    by: ['accion'],
-    _count: { _all: true },
-    orderBy: { _count: { accion: 'desc' } },
-  });
-
-  res.json({
-    registros,
-    total,
-    acciones: acciones.map(a => ({ accion: a.accion, total: a._count._all })),
-  });
 });
 
 export default router;

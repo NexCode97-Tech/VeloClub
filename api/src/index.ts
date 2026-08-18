@@ -1,4 +1,5 @@
 import './instrument'; // Sentry — debe ser el primer import
+import { contextoPeticion } from './lib/contexto-peticion';
 import * as Sentry from '@sentry/node';
 import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
@@ -53,6 +54,11 @@ app.use(cors({ origin: allowedOrigins, credentials: true }));
 
 // Límite ampliado para soportar upload de imágenes en base64
 app.use(express.json({ limit: '10mb' }));
+
+// Contexto de la peticion, para que la auditoria sepa quien actua sin que cada
+// consulta a la base tenga que recibir el `req`. Va antes de las rutas; el
+// actor lo completa `requireAuth`, que corre despues.
+app.use(contextoPeticion);
 
 // Rate limiting global: 1000 req / 15min por IP
 const globalLimiter = rateLimit({

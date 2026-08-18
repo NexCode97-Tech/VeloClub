@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import { fijarActor } from '../lib/contexto-peticion';
 import { createClerkClient, verifyToken } from '@clerk/backend';
 import { prisma } from '../db/client';
 import { audienciaEsValida } from '../lib/clerk-audiencia';
@@ -75,6 +76,17 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
     if (user) {
       req.user = { id: user.id, clubId: user.clubId, role: user.role };
     }
+
+    // Le pasa la identidad al contexto de la peticion: es de ahi que la
+    // auditoria saca quien hizo cada cambio, sin que las rutas la reenvien.
+    fijarActor({
+      clerkId,
+      email:  req.auth.email,
+      nombre: req.auth.name,
+      rol:    user?.role ?? null,
+      clubId: user?.clubId ?? null,
+    });
+
     next();
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);

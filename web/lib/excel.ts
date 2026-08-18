@@ -16,7 +16,7 @@ export function downloadMembersTemplate(locations: LocationOption[] = []) {
 
   const headers = [
     'Nombre Completo *',
-    'Correo electrónico *',
+    'Correo electrónico',
     'Teléfono',
     'Fecha de nacimiento (YYYY-MM-DD)',
     'Tipo de documento',
@@ -50,7 +50,8 @@ export function downloadMembersTemplate(locations: LocationOption[] = []) {
 
   const notes = [
     '* Campos obligatorios',
-    '* El correo debe ser único por deportista',
+    '* El correo es opcional, pero sin él no se le puede enviar la invitación a la app',
+    '* Si lo pones, debe ser único por deportista',
     '* Rol: ADMIN = Administrador, COACH = Entrenador, STUDENT = Deportista',
     '* Tipo de documento: CC, TI, RC (Registro Civil), CE, Pasaporte, NIT u Otro',
     '* Categoría y Nivel son opcionales (solo aplican a STUDENT)',
@@ -327,7 +328,17 @@ export function parseMembersExcel(
         const roleRaw  = (texto(r, 'Rol (ADMIN / COACH / STUDENT)', 'Rol') ?? 'STUDENT').toUpperCase();
 
         if (!fullName) { errors.push(`Fila ${rowNum}: Nombre completo es obligatorio`); return; }
-        if (!email)    { errors.push(`Fila ${rowNum}: Correo es obligatorio`); return; }
+        // Un correo mal escrito si se rechaza: importarlo dejaria una
+        // invitacion que nunca llega y nadie sabria por que.
+        if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
+          errors.push(`Fila ${rowNum}: el correo "${email}" no es válido`); return;
+        }
+        // El correo NO es obligatorio: en la base `Member.email` es opcional y
+        // creando a mano se puede dejar vacio. Exigirlo solo aca hacia que la
+        // importacion fuera mas estricta que el propio producto, y justo en el
+        // caso que mas lo necesita: un club cargando de una vez la lista de
+        // ninos de seis anos, de los que nadie tiene correo. Sin correo el
+        // deportista queda registrado pero no se le puede enviar la invitacion.
         if (!['ADMIN', 'COACH', 'STUDENT'].includes(roleRaw)) {
           errors.push(`Fila ${rowNum}: Rol inválido "${roleRaw}" — usa ADMIN, COACH o STUDENT`); return;
         }
@@ -363,6 +374,18 @@ export function parseMembersExcel(
           locationName,
         });
       });
+
+      // Quien no trae correo se importa igual, pero conviene decir cuantos
+      // son: sin el no se les puede mandar la invitacion a la app, y el club
+      // deberia enterarse ahora y no cuando intente invitarlos.
+      const sinCorreo = rows.filter(r => !r.email).length;
+      if (sinCorreo > 0) {
+        warnings.push(
+          sinCorreo === 1
+            ? '1 deportista quedó sin correo: podrás registrarlo y llevarle asistencia y pagos, pero no invitarlo a la app hasta que se lo agregues.'
+            : `${sinCorreo} deportistas quedaron sin correo: podrás registrarlos y llevarles asistencia y pagos, pero no invitarlos a la app hasta que se los agregues.`
+        );
+      }
 
       resolve({ rows, errors, warnings });
     };

@@ -13,7 +13,7 @@ import { Label } from '@/components/ui/label';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog';
-import { Plus, Pencil, Trash2, MapPin, LocateFixed, X, ChevronRight, ChevronDown, AlertCircle } from 'lucide-react';
+import { Plus, Pencil, Trash2, MapPin, LocateFixed, X, ChevronRight, ChevronDown, AlertCircle, AlertTriangle } from 'lucide-react';
 import ModuleLoader, { useCargaMinima } from '@/components/ui/module-loader';
 import ModuleReveal from '@/components/ui/module-reveal';
 
@@ -85,6 +85,9 @@ export default function SedesPage() {
   const [lat, setLat] = useState<number | null>(null);
   const [lng, setLng] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
+  // Un fallo al borrar tiene que verse. Antes no habia donde mostrarlo y la
+  // pantalla se quedaba igual, como si no hubiera pasado nada.
+  const [errorSede, setErrorSede] = useState('');
   const [error, setError] = useState<string | null>(null);
 
   // Selector municipio
@@ -187,10 +190,27 @@ export default function SedesPage() {
   }
 
   async function handleDelete(id: string) {
-    if (!confirm('¿Eliminar esta sede?')) return;
-    const token = await getToken();
-    await apiFetch(`/locations/${id}`, { method: 'DELETE', token });
-    await load();
+    const sede = locations.find(l => l.id === id);
+    // La confirmacion dice lo que de verdad pasa. Borrar una sede no es solo
+    // quitarla del listado: se lleva por delante las clases de su horario,
+    // desasigna a los deportistas, y la asistencia, los pagos y los
+    // movimientos de caja que tenia atribuidos quedan sin sede.
+    const aviso =
+      `¿Eliminar la sede «${sede?.name ?? ''}»?\n\n` +
+      '• Se eliminan las clases de su horario.\n' +
+      '• Los deportistas dejan de estar asignados a ella.\n' +
+      '• La asistencia, los pagos y los movimientos de caja se conservan, pero quedan sin sede.\n\n' +
+      'Esto no se puede deshacer.';
+    if (!confirm(aviso)) return;
+
+    setErrorSede('');
+    try {
+      const token = await getToken();
+      await apiFetch(`/locations/${id}`, { method: 'DELETE', token });
+      await load();
+    } catch (err) {
+      setErrorSede(err instanceof Error ? err.message : 'No se pudo eliminar la sede');
+    }
   }
 
   return (
@@ -213,6 +233,16 @@ export default function SedesPage() {
           </button>
         )}
       </div>
+
+      {errorSede && (
+        <div className="mx-5 mt-3 flex items-start gap-2 rounded-xl px-4 py-3"
+          style={{ background: 'rgba(239,71,111,0.08)', border: '1px solid rgba(239,71,111,0.20)' }}>
+          <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" style={{ color: '#EF476F' }} />
+          <p className="flex-1 text-[12.5px]" style={{ color: '#B02A47' }}>{errorSede}</p>
+          <button onClick={() => setErrorSede('')} aria-label="Cerrar aviso"
+            className="text-[11px] font-bold shrink-0" style={{ color: '#B02A47' }}>Cerrar</button>
+        </div>
+      )}
 
       {/* Dialog crear/editar sede */}
       <Dialog open={open} onOpenChange={setOpen}>

@@ -595,6 +595,50 @@ model Reporte {
   @@index([estado, createdAt])
 }
 
+// ─── Auditoria ────────────────────────────────────────────────────────────────
+//
+// Bitacora de las acciones que no se pueden deshacer. Nace porque se borraron
+// cinco clubes y no quedo forma de saber quien, cuando ni con que. El endpoint
+// borraba, respondia ok y no escribia nada en ninguna parte.
+//
+// Tres decisiones que la hacen util y no decorativa:
+//
+// 1. `datos` guarda una copia de lo eliminado. Sin eso el registro dice que
+//    algo se perdio pero no permite recuperarlo, que es justo lo que hizo
+//    falta. Con la copia, rehacer un club borrado es leer un JSON.
+// 2. Nunca tumba la operacion principal: si el registro falla, la accion sigue.
+//    Un fallo al auditar no puede impedir que un admin trabaje.
+// 3. No hay endpoint para editarla ni para borrarla. Un registro que se puede
+//    alterar no sirve como registro.
+
+model Auditoria {
+  id           String   @id @default(cuid())
+  // Que paso, en texto estable: CLUB_ELIMINADO, MIEMBRO_ELIMINADO, ROL_CAMBIADO…
+  accion       String
+  // Sobre que: 'Club', 'Member', 'Payment', 'CashEntry', 'Post'…
+  entidad      String
+  entidadId    String?
+  // Frase legible, para leer la bitacora sin interpretar ids
+  resumen      String
+  // Quien lo hizo. Se copian nombre y correo del momento: si esa cuenta se
+  // borra despues, el registro tiene que seguir diciendo quien fue.
+  actorClerkId String?
+  actorEmail   String?
+  actorNombre  String?
+  actorRol     String?
+  // Club afectado, para poder filtrar por club
+  clubId       String?
+  clubNombre   String?
+  // Copia de lo borrado o del antes/despues de un cambio
+  datos        Json?
+  ip           String?
+  createdAt    DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([accion, createdAt])
+  @@index([clubId, createdAt])
+}
+
 // ─── Notificacion (SA global) ─────────────────────────────────────────────────
 
 model Notificacion {

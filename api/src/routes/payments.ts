@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { requireAuth } from '../auth/middleware';
 import { prisma } from '../db/client';
+import { auditar } from '../lib/auditoria';
 import { emitToClub } from '../lib/sse';
 import { notifyClubStaff } from '../lib/notify';
 import { v2 as cloudinary } from 'cloudinary';
@@ -311,6 +312,17 @@ router.delete('/:id', requireAuth, async (req, res) => {
 
   await prisma.cashEntry.deleteMany({ where: { paymentId: id } });
   await prisma.payment.delete({ where: { id } });
+
+  await auditar(req, {
+    accion:    'PAGO_ELIMINADO',
+    entidad:   'Payment',
+    entidadId: id,
+    resumen:   `Se eliminó un pago de ${fmtCOP(existing.amount)} ` +
+               `(${MONTH_NAMES[existing.month - 1]} ${existing.year}, estado ${existing.status}).`,
+    clubId:    existing.clubId,
+    datos:     existing,
+  });
+
   emitToClub(req.user.clubId ?? '', 'payments');
   res.json({ ok: true });
 });

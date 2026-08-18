@@ -4,6 +4,7 @@ import { Prisma } from '@prisma/client';
 import { v2 as cloudinary } from 'cloudinary';
 import { requireAuth } from '../auth/middleware';
 import { prisma } from '../db/client';
+import { auditar } from '../lib/auditoria';
 import { emitToClub } from '../lib/sse';
 import { addToAllowlist, removeFromAllowlist, revokeClerkAccess, revokeClerkSessions } from '../lib/clerk-allowlist';
 import { notifyClubStaff } from '../lib/notify';
@@ -467,7 +468,31 @@ router.delete('/:id', requireAuth, async (req, res) => {
     await revokeClerkAccess(existing.clerkId);
   }
 
+  const resumenPrevio = await prisma.member.findUnique({
+    where: { id },
+    select: { _count: { select: { payments: true, attendances: true } } },
+  }).catch(() => null);
+
   await prisma.member.delete({ where: { id } });
+
+  await auditar(req, {
+    accion:    'MIEMBRO_ELIMINADO',
+    entidad:   'Member',
+    entidadId: id,
+    resumen:   `Se eliminó a ${existing.fullName}` +
+               (resumenPrevio
+                 ? `, con ${resumenPrevio._count.payments} pagos y ${resumenPrevio._count.attendances} asistencias.`
+                 : '.'),
+    clubId:    existing.clubId,
+    // Copia con lo justo para reconstruirlo. Documento, EPS y archivos
+    // adjuntos quedan fuera: son datos sensibles y la bitacora no es su lugar.
+    datos: {
+      fullName: existing.fullName, email: existing.email, phone: existing.phone,
+      role: existing.role, category: existing.category, tipo: existing.tipo,
+      monthlyFee: existing.monthlyFee, paymentDueDay: existing.paymentDueDay,
+      clerkId: existing.clerkId,
+    },
+  });
 
   // Desvincular el User (cuenta de login) si seguía apuntando a este club — si no se
   // limpia, un correo reutilizado en otro club queda con el login "fantasma" del club

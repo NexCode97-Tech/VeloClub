@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { requireAuth } from '../auth/middleware';
 import { prisma } from '../db/client';
+import { auditar } from '../lib/auditoria';
 import { emitToClub } from '../lib/sse';
 
 const router = Router();
@@ -114,6 +115,17 @@ router.delete('/:id', requireAuth, async (req, res) => {
   if (!entry) return res.status(404).json({ error: 'Entrada no encontrada' });
 
   await prisma.cashEntry.delete({ where: { id } });
+
+  await auditar(req, {
+    accion:    'MOVIMIENTO_ELIMINADO',
+    entidad:   'CashEntry',
+    entidadId: id,
+    resumen:   `Se eliminó un movimiento de caja: ${entry.description} ` +
+               `(${entry.type === 'INCOME' ? 'ingreso' : 'egreso'} de ${entry.amount}).`,
+    clubId:    entry.clubId,
+    datos:     entry,
+  });
+
   emitToClub(req.user.clubId ?? '', 'cashflow');
   res.json({ ok: true });
 });

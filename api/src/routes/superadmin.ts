@@ -633,6 +633,42 @@ router.post('/suscripciones/pagos/:pagoId/rechazar', requireAuth, requireSuperad
   res.json({ ok: true });
 });
 
+// ─── Pagos rechazados ────────────────────────────────────────────────────────
+//
+// Un rechazo no crea ninguna fila de pago, así que antes no quedaba en ningún
+// lado: cuando un club decía "no me deja pagar" había que ir a consultarle a
+// Mercado Pago con credenciales de producción. Ahora se registra en la bitácora
+// y esto lo devuelve para verlo desde el panel.
+
+// GET /superadmin/pagos-rechazados
+router.get('/pagos-rechazados', requireAuth, requireSuperadmin, async (req, res) => {
+  const dias = Math.min(90, Math.max(1, Number(req.query.dias ?? 7)));
+  const desde = new Date(Date.now() - dias * 86_400_000);
+
+  const registros = await prisma.auditoria.findMany({
+    where: { accion: 'PAGO_RECHAZADO', createdAt: { gte: desde } },
+    orderBy: { createdAt: 'desc' },
+    take: 50,
+  });
+
+  res.json({
+    dias,
+    rechazos: registros.map(r => {
+      const d = (r.datos ?? {}) as Record<string, unknown>;
+      return {
+        id: r.id,
+        cuando: r.createdAt,
+        club: r.clubNombre,
+        clubId: r.clubId,
+        medio: String(d.medio ?? '—'),
+        motivo: String(d.motivo ?? '—'),
+        monto: Number(d.monto ?? 0),
+        bancoId: d.bancoId ? String(d.bancoId) : null,
+      };
+    }),
+  });
+});
+
 // ─── Comprobantes de SuscripcionPago ─────────────────────────────────────────
 
 // POST /superadmin/suscripciones/pagos/:pagoId/receipt

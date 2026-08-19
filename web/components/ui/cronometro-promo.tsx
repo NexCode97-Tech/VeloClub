@@ -41,17 +41,20 @@ export function CronometroPromo() {
         Quedan {dias} días para que cierre la promoción de dos meses gratis.
       </span>
 
+      {/* Sin monoespaciada: la del sistema no combina con la tipografía del
+          titular y el bloque se leía como pegado de otra página. `tabular-nums`
+          basta para que los dígitos no cambien de ancho al bajar el conteo. */}
       <span
         aria-hidden="true"
         suppressHydrationWarning
-        className="font-mono font-semibold text-[1.6rem] sm:text-[1.75rem] leading-[0.9] tracking-tight text-white tabular-nums"
+        className="font-semibold text-[1.6rem] sm:text-[1.75rem] leading-[0.9] tracking-tight text-white tabular-nums"
       >
-        {dias}<span className="text-[0.95rem] text-zinc-500 mx-px">d</span>
-        {' '}{dosDigitos(horas)}<span className="text-[0.95rem] text-zinc-500 mx-px">h</span>
-        {' '}{dosDigitos(minutos)}<span className="text-[0.95rem] text-zinc-500 mx-px">m</span>
+        {dias}<span className="text-[0.95rem] font-medium text-zinc-500 mx-px">d</span>
+        {' '}{dosDigitos(horas)}<span className="text-[0.95rem] font-medium text-zinc-500 mx-px">h</span>
+        {' '}{dosDigitos(minutos)}<span className="text-[0.95rem] font-medium text-zinc-500 mx-px">m</span>
       </span>
 
-      <span aria-hidden="true" className="pb-[3px] text-[11px] uppercase tracking-[0.15em] text-zinc-400">
+      <span aria-hidden="true" className="pb-[3px] text-[12px] text-zinc-400">
         para que cierre
       </span>
     </div>

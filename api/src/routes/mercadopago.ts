@@ -13,6 +13,7 @@ import {
 import { v2 as cloudinary } from 'cloudinary';
 import { validarSubida } from '../lib/upload-guard';
 import { datosBreb, referenciaDe, conceptoBreb } from '../lib/breb';
+import { registrarEvento } from '../lib/auditoria';
 import { guessLimiter, paymentLimiter } from '../lib/rate-limit';
 import { activarClubTrasPago } from '../lib/sync-suscripciones';
 import { validarCupon, descuentoCupon, registrarCanje } from '../lib/cupones';
@@ -244,6 +245,16 @@ const RECHAZO_MSG: Record<string, string> = {
   cc_rejected_high_risk:             'El pago fue rechazado por seguridad. Intenta con otro medio de pago.',
   cc_rejected_max_attempts:          'Llegaste al límite de intentos. Intenta con otra tarjeta.',
   cc_rejected_duplicated_payment:    'Ya hiciste un pago por este valor hace poco. Espera unos minutos.',
+
+  // PSE y transferencias. Faltaban todos, así que el rechazo más común de PSE
+  // —el banco falla— caía en el mensaje genérico "intenta con otro medio", que
+  // no dice lo único que resuelve el problema: que el banco es el que está
+  // fallando y que cambiando de banco el pago pasa. Un club lo intentó cinco
+  // veces seguidas con el mismo banco por no saberlo.
+  bank_error:                        'Tu banco rechazó la transferencia. Vuelve a intentar eligiendo otro banco, o paga con tarjeta.',
+  rejected_by_bank:                  'Tu banco rechazó el pago. Comunícate con ellos o intenta con otro medio.',
+  cc_rejected_other_reason:          'El pago fue rechazado. Intenta con otro medio de pago.',
+  expired:                           'La transacción expiró antes de completarse. Vuelve a intentarlo.',
 };
 
 router.post('/pagar', paymentLimiter, requireAuth, async (req, res) => {
@@ -453,6 +464,29 @@ router.post('/pagar', paymentLimiter, requireAuth, async (req, res) => {
         redirectUrl: pago.transaction_details?.external_resource_url ?? null,
       });
     }
+
+    // Un rechazo no crea ninguna fila, así que sin esto no dejaba rastro: ni en
+    // la base, ni en Sentry, ni en consola. Cuando un club decía "no me deja
+    // pagar" no había nada que mirar y tocaba consultar la API de Mercado Pago
+    // con credenciales de producción para saber siquiera el motivo.
+    await registrarEvento({
+      accion:  'PAGO_RECHAZADO',
+      entidad: 'SuscripcionPago',
+      entidadId: String(pago.id),
+      resumen: `Mercado Pago rechazó $${monto.toLocaleString('es-CO')} de ${club?.name ?? 'el club'} por ${metodo} (${pago.status_detail}).`,
+      clubId,
+      clubNombre: club?.name ?? null,
+      datos: {
+        medio: metodo,
+        motivo: pago.status_detail,
+        monto,
+        mpPaymentId: String(pago.id),
+        // El banco es el dato que resuelve los rechazos de PSE: sin él no se
+        // puede ver que los cinco intentos fueron todos contra el mismo.
+        ...(metodo === 'PSE' ? { bancoId } : {}),
+      },
+    });
+    console.warn(`[mercadopago/pagar] rechazado ${metodo}/${pago.status_detail} — ${club?.name ?? clubId} $${monto}`);
 
     const msg = RECHAZO_MSG[pago.status_detail] ?? 'El pago fue rechazado. Intenta con otro medio de pago.';
     return res.status(402).json({ error: msg });

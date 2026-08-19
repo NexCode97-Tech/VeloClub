@@ -127,6 +127,41 @@ async function guardar(fila: Prisma.AuditoriaCreateInput): Promise<void> {
   }
 }
 
+/**
+ * Registra en la bitácora algo que NO es una escritura a la base.
+ *
+ * La extensión de arriba cubre todo lo que cambia datos, pero hay hechos que
+ * importan justamente porque nada cambió: un pago rechazado es el caso claro
+ * — no se crea ninguna fila, así que no dejaba rastro en ninguna parte y la
+ * única forma de saber por qué un club no pudo pagar era irle a preguntar a
+ * Mercado Pago con credenciales de producción.
+ */
+export async function registrarEvento(evento: {
+  accion: string;
+  entidad: string;
+  entidadId?: string | null;
+  resumen: string;
+  clubId?: string | null;
+  clubNombre?: string | null;
+  datos?: Record<string, unknown>;
+}): Promise<void> {
+  const actor = actorActual();
+  await guardar({
+    accion:    evento.accion,
+    entidad:   evento.entidad,
+    entidadId: evento.entidadId ?? null,
+    resumen:   evento.resumen,
+    actorClerkId: actor?.clerkId ?? null,
+    actorEmail:   actor?.email   ?? null,
+    actorNombre:  actor?.nombre  ?? null,
+    actorRol:     actor?.rol     ?? null,
+    clubId:     evento.clubId ?? actor?.clubId ?? null,
+    clubNombre: evento.clubNombre ?? null,
+    datos: (evento.datos ? limpiar(evento.datos) : null) as never,
+    ip: actor?.ip ?? null,
+  });
+}
+
 export function extensionAuditoria() {
   return Prisma.defineExtension(cliente =>
     cliente.$extends({

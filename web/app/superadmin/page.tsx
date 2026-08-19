@@ -10,6 +10,7 @@ import { Users, Building2, CircleDollarSign, ChevronRight, ArrowUpRight, BadgeAl
 import { motion, type Variants, useReducedMotion } from 'framer-motion';
 import { stagger, cardVariant } from '@/lib/page-animations';
 import { PagosPorVerificar } from '@/components/superadmin/pagos-por-verificar';
+import { PagosRechazados } from '@/components/superadmin/pagos-rechazados';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 
 // ── Formateo ──────────────────────────────────────────────────────────────────
@@ -266,6 +267,10 @@ export default function SuperadminDashboard() {
         {/* Pagos por Bre-B esperando confirmacion: van primero porque un club
             con el plan vencido esta esperando a que alguien mire esto. */}
         <PagosPorVerificar />
+
+        {/* Rechazos recientes: un club que reintenta y falla es una venta a punto
+            de perderse. Solo se pinta si hubo alguno. */}
+        <PagosRechazados />
 
         {/* ── Banner: clubes por verificar (auto-registro self-serve) ──────── */}
         {porVerificar.length > 0 && (

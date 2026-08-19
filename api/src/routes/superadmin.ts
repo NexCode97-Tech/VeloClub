@@ -8,6 +8,8 @@ import { cacheDel } from '../lib/redis';
 import { v2 as cloudinary } from 'cloudinary';
 import { validarSubida } from '../lib/upload-guard';
 import { emitToClub } from '../lib/sse';
+import { notifyClubStaff } from '../lib/notify';
+import { activarClubTrasPago } from '../lib/sync-suscripciones';
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -528,6 +530,106 @@ router.patch('/suscripciones/pagos/:pagoId', requireAuth, requireSuperadmin, asy
 router.delete('/suscripciones/pagos/:pagoId', requireAuth, requireSuperadmin, async (req, res) => {
   const pagoId = String(req.params.pagoId);
   await prisma.suscripcionPago.delete({ where: { id: pagoId } });
+  res.json({ ok: true });
+});
+
+// ─── Pagos por Bre-B pendientes de verificación ──────────────────────────────
+//
+// Una transferencia a una llave Bre-B no le avisa a nadie: no hay webhook que
+// pueda acreditarla. Estos pagos nacen PENDING con el comprobante que subió el
+// club y solo salen de ahí por decisión de un superadministrador.
+//
+// La regla de oro es que subir un comprobante no activa nada. Si activara,
+// bastaría con subir cualquier imagen para tener el plan gratis.
+
+// GET /superadmin/suscripciones/breb-pendientes
+router.get('/suscripciones/breb-pendientes', requireAuth, requireSuperadmin, async (_req, res) => {
+  const pagos = await prisma.suscripcionPago.findMany({
+    // mpPaymentId nulo es lo que los distingue: un PENDING de PSE o Efecty sí
+    // tiene id de Mercado Pago y lo acredita el webhook, no una persona.
+    where: { estado: 'PENDING', mpPaymentId: null },
+    orderBy: { createdAt: 'asc' },   // primero el que más lleva esperando
+    include: { suscripcion: { include: { club: { select: { id: true, name: true, email: true } } } } },
+  });
+
+  res.json({
+    pagos: pagos.map(p => ({
+      id: p.id,
+      concepto: p.concepto,
+      monto: p.monto,
+      creadoEn: p.createdAt,
+      comprobanteUrl: p.receiptUrl,
+      club: p.suscripcion.club,
+      tipoPlan: p.suscripcion.tipoPlan,
+    })),
+  });
+});
+
+// POST /superadmin/suscripciones/pagos/:pagoId/aprobar
+router.post('/suscripciones/pagos/:pagoId/aprobar', requireAuth, requireSuperadmin, async (req, res) => {
+  const pagoId = String(req.params.pagoId);
+
+  const pago = await prisma.suscripcionPago.findUnique({
+    where: { id: pagoId },
+    include: { suscripcion: { include: { club: { select: { id: true, name: true, trialEndsAt: true } } } } },
+  });
+  if (!pago) return res.status(404).json({ error: 'Pago no encontrado' });
+  if (pago.estado === 'PAID') return res.status(409).json({ error: 'Ese pago ya estaba aprobado' });
+
+  const club = pago.suscripcion.club;
+
+  // Igual que en los otros medios: si el club todavía está en su prueba, el
+  // período pagado arranca cuando la prueba termina, para no comerse días
+  // gratis que ya se habían prometido.
+  const ahora = new Date();
+  const fecha = club.trialEndsAt && club.trialEndsAt > ahora ? club.trialEndsAt : ahora;
+
+  const actualizado = await prisma.suscripcionPago.update({
+    where: { id: pagoId },
+    data: { estado: 'PAID', fecha },
+  });
+
+  await activarClubTrasPago(club.id);
+
+  await notifyClubStaff(club.id, {
+    tipo: 'suscripcion',
+    titulo: 'Pago verificado',
+    cuerpo: `Confirmamos tu transferencia por $${pago.monto.toLocaleString('es-CO')}. Tu plan quedó activo.`,
+    link: '/dashboard/ajustes?tab=suscripcion',
+  });
+
+  res.json({ pago: actualizado });
+});
+
+// POST /superadmin/suscripciones/pagos/:pagoId/rechazar
+router.post('/suscripciones/pagos/:pagoId/rechazar', requireAuth, requireSuperadmin, async (req, res) => {
+  const pagoId = String(req.params.pagoId);
+  const { motivo } = req.body as { motivo?: string };
+
+  const pago = await prisma.suscripcionPago.findUnique({
+    where: { id: pagoId },
+    include: { suscripcion: { select: { clubId: true } } },
+  });
+  if (!pago) return res.status(404).json({ error: 'Pago no encontrado' });
+  if (pago.estado === 'PAID') return res.status(409).json({ error: 'Ese pago ya fue aprobado' });
+
+  // Se borra en vez de marcarse rechazado: así el club puede volver a intentar
+  // (el bloqueo es "un pendiente a la vez") y no le queda un registro de deuda
+  // que no debe. Qué se borró y quién lo borró queda en la bitácora.
+  if (pago.receiptPublicId) {
+    try { await cloudinary.uploader.destroy(pago.receiptPublicId, { resource_type: 'image' }); } catch { /* ignorar */ }
+  }
+  await prisma.suscripcionPago.delete({ where: { id: pagoId } });
+
+  await notifyClubStaff(pago.suscripcion.clubId, {
+    tipo: 'suscripcion',
+    titulo: 'No pudimos verificar tu pago',
+    cuerpo: motivo?.trim()
+      ? `${motivo.trim()} Puedes intentar de nuevo desde Ajustes.`
+      : 'No encontramos la transferencia. Revisa el comprobante e intenta de nuevo desde Ajustes.',
+    link: '/dashboard/ajustes?tab=suscripcion',
+  });
+
   res.json({ ok: true });
 });
 

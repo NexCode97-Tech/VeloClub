@@ -10,9 +10,18 @@ import {
   obtenerPago, obtenerPreapproval, verificarFirmaWebhook, buscarPagoPorReferencia,
   listarMediosPago, crearPagoDirecto, reembolsarPago, type MedioPago,
 } from '../lib/mercadopago';
+import { v2 as cloudinary } from 'cloudinary';
+import { validarSubida } from '../lib/upload-guard';
+import { datosBreb, referenciaDe, conceptoBreb } from '../lib/breb';
 import { guessLimiter, paymentLimiter } from '../lib/rate-limit';
 import { activarClubTrasPago } from '../lib/sync-suscripciones';
 import { validarCupon, descuentoCupon, registrarCanje } from '../lib/cupones';
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key:    process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
 const router = Router();
 
@@ -451,6 +460,127 @@ router.post('/pagar', paymentLimiter, requireAuth, async (req, res) => {
     console.error('[mercadopago/pagar]', err instanceof Error ? err.message : err);
     Sentry.captureException(err, { tags: { route: 'mercadopago/pagar', metodo }, extra: { clubId } });
     res.status(500).json({ error: 'No se pudo procesar el pago. Intenta de nuevo.' });
+  }
+});
+
+// ── Pago por Bre-B ───────────────────────────────────────────────────────────
+//
+// Vive en este archivo aunque no toque Mercado Pago: es un medio más para pagar
+// la suscripción y comparte todo lo de alrededor (precio, plan, activación del
+// club). Separarlo obligaría a exportar media docena de ayudantes privados.
+//
+// La diferencia de fondo con los otros medios es que este NO se acredita solo.
+// La llave receptora es una cuenta común y no emite webhooks, así que nadie
+// puede avisarle al sistema que la plata llegó: el pago nace PENDING y solo
+// un superadministrador lo pasa a PAID después de verlo en su cuenta.
+
+// GET /mercadopago/breb — datos para transferir y estado del pago en curso
+router.get('/breb', requireAuth, async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  const clubId = req.user!.clubId ?? '';
+
+  const datos = datosBreb();
+  if (!datos) return res.json({ disponible: false });
+
+  const [suscripcion, cantidadDeportistas] = await Promise.all([
+    leerSuscripcion(clubId),
+    contarDeportistasFacturables(clubId),
+  ]);
+  const tipoPlan = (suscripcion?.tipoPlan ?? 'MENSUAL') as TipoPlan;
+
+  // El 5% por tarjeta no aplica: es el incentivo del único medio que habilita
+  // la renovación automática, y una transferencia no la habilita.
+  const monto = calcularPrecioPlan(cantidadDeportistas, tipoPlan, false);
+
+  // Un solo pago en revisión a la vez. Sin esto, un club impaciente sube cinco
+  // comprobantes del mismo pago y la bandeja del superadmin queda ilegible.
+  const pendiente = suscripcion
+    ? await prisma.suscripcionPago.findFirst({
+        where: { suscripcionId: suscripcion.id, estado: 'PENDING', mpPaymentId: null },
+        orderBy: { createdAt: 'desc' },
+      })
+    : null;
+
+  res.json({
+    disponible: true,
+    llave: datos.llave,
+    titular: datos.titular,
+    referencia: referenciaDe(clubId),
+    monto,
+    pendiente: pendiente
+      ? { id: pendiente.id, monto: pendiente.monto, creadoEn: pendiente.createdAt, comprobanteUrl: pendiente.receiptUrl }
+      : null,
+  });
+});
+
+// POST /mercadopago/breb — registrar la transferencia con su comprobante
+router.post('/breb', paymentLimiter, requireAuth, async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  const clubId = req.user!.clubId ?? '';
+
+  const datos = datosBreb();
+  if (!datos) return res.status(400).json({ error: 'El pago por Bre-B no está disponible en este momento.' });
+
+  const { base64, aceptaTerminos } = req.body as { base64?: string; aceptaTerminos?: boolean };
+  if (!aceptaTerminos) {
+    return res.status(400).json({ error: 'Debes aceptar los términos y condiciones para continuar' });
+  }
+
+  // El comprobante es obligatorio: sin él no hay nada que verificar y el pago
+  // quedaría esperando para siempre.
+  const vComprobante = validarSubida(base64, 'doc');
+  if (!vComprobante.ok) return res.status(400).json({ error: vComprobante.error });
+
+  const [suscripcion, club] = await Promise.all([
+    asegurarSuscripcion(clubId),
+    prisma.club.findUnique({ where: { id: clubId }, select: { name: true, trialEndsAt: true } }),
+  ]);
+  const cantidadDeportistas = await contarDeportistasFacturables(clubId);
+  const monto = calcularPrecioPlan(cantidadDeportistas, suscripcion.tipoPlan as TipoPlan, false);
+
+  const yaHayPendiente = await prisma.suscripcionPago.findFirst({
+    where: { suscripcionId: suscripcion.id, estado: 'PENDING', mpPaymentId: null },
+  });
+  if (yaHayPendiente) {
+    return res.status(409).json({ error: 'Ya tienes un pago en revisión. Te avisamos apenas quede verificado.' });
+  }
+
+  try {
+    const subido = await cloudinary.uploader.upload(vComprobante.data, {
+      folder: 'veloclub/comprobantes-suscripcion',
+      public_id: `breb_${clubId}_${Date.now()}`,
+      resource_type: 'image',
+    });
+
+    await prisma.clubSuscripcion.update({
+      where: { id: suscripcion.id },
+      data: { consentimientoPagoAt: new Date() },
+    });
+
+    // Nace PENDING y sin fecha: la fecha se pone al aprobarlo, porque hasta
+    // entonces no se sabe si el dinero llegó de verdad. `fecha` es lo que usa
+    // vigencia() para contar el período, así que ponerla antes le regalaría
+    // el plan a cualquiera que suba una imagen.
+    const pago = await prisma.suscripcionPago.create({
+      data: {
+        suscripcionId: suscripcion.id,
+        concepto: conceptoBreb(clubId),
+        monto,
+        estado: 'PENDING',
+        receiptUrl: subido.secure_url,
+        receiptPublicId: subido.public_id,
+      },
+    });
+
+    console.log(`[breb] ${club?.name ?? clubId} envió comprobante por $${monto} (${referenciaDe(clubId)})`);
+
+    res.json({
+      pago: { id: pago.id, monto: pago.monto, creadoEn: pago.createdAt, comprobanteUrl: pago.receiptUrl },
+    });
+  } catch (err) {
+    console.error('[mercadopago/breb]', err instanceof Error ? err.message : err);
+    Sentry.captureException(err, { tags: { route: 'mercadopago/breb' }, extra: { clubId } });
+    res.status(500).json({ error: 'No se pudo registrar el comprobante. Intenta de nuevo.' });
   }
 });
 

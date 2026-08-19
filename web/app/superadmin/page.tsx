@@ -9,6 +9,7 @@ import Link from 'next/link';
 import { Users, Building2, CircleDollarSign, ChevronRight, ArrowUpRight, BadgeAlert } from 'lucide-react';
 import { motion, type Variants, useReducedMotion } from 'framer-motion';
 import { stagger, cardVariant } from '@/lib/page-animations';
+import { PagosPorVerificar } from '@/components/superadmin/pagos-por-verificar';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 
 // ── Formateo ──────────────────────────────────────────────────────────────────
@@ -262,6 +263,10 @@ export default function SuperadminDashboard() {
         animate="show"
         style={{ padding: '0 16px 100px' }}
       >
+        {/* Pagos por Bre-B esperando confirmacion: van primero porque un club
+            con el plan vencido esta esperando a que alguien mire esto. */}
+        <PagosPorVerificar />
+
         {/* ── Banner: clubes por verificar (auto-registro self-serve) ──────── */}
         {porVerificar.length > 0 && (
           <motion.div variants={cardVariant}>

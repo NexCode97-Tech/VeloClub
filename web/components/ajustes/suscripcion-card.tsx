@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from 'react';
 import Script from 'next/script';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { apiFetch } from '@/lib/api-client';
-import { CreditCard, ArrowLeft, Landmark, Banknote, Clock, RefreshCw, XCircle, Check, Star, Users } from 'lucide-react';
+import { CreditCard, ArrowLeft, Landmark, Banknote, Clock, RefreshCw, XCircle, Check, Star, Users, Zap, Copy, Upload } from 'lucide-react';
 
 const fmt = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 });
 const cop = fmt.format.bind(fmt);
@@ -74,7 +74,18 @@ declare global {
   interface Window { MercadoPago?: new (publicKey: string) => MpInstance; MP_DEVICE_SESSION_ID?: string }
 }
 
-type MetodoPago = 'CARD' | 'PSE' | 'EFECTY';
+type MetodoPago = 'CARD' | 'PSE' | 'EFECTY' | 'BREB';
+
+// Datos para transferir por Bre-B. La llave vive en el backend (variable de
+// entorno), nunca en el bundle: es un dato personal y puede cambiar.
+interface DatosBreb {
+  disponible: boolean;
+  llave?: string;
+  titular?: string;
+  referencia?: string;
+  monto?: number;
+  pendiente?: { id: string; monto: number; creadoEn: string; comprobanteUrl: string | null } | null;
+}
 interface MetodosDisponibles {
   tarjeta: boolean;
   pse: { disponible: boolean; bancos: Array<{ id: string; description: string }> };
@@ -345,10 +356,11 @@ export default function SuscripcionCard() {
   const [metodo, setMetodo] = useState<MetodoPago>('CARD');
 
   // Dirección del deslizamiento entre formularios de pago: hacia la derecha si
-  // el nuevo medio está más a la derecha en el selector (Tarjeta → PSE → Efecty),
+  // el nuevo medio está más a la derecha en el selector (Tarjeta → PSE → Efecty → Bre-B),
   // hacia la izquierda si es al revés.
-  const METODO_ORDEN: MetodoPago[] = ['CARD', 'PSE', 'EFECTY'];
+  const METODO_ORDEN: MetodoPago[] = ['CARD', 'PSE', 'EFECTY', 'BREB'];
   const metodoEfectivo: MetodoPago = activarAutoRenovacion ? 'CARD' : metodo;
+  const esBreb = metodoEfectivo === 'BREB';
   const prevMetodoRef = useRef(metodoEfectivo);
   const direccionSlide = METODO_ORDEN.indexOf(metodoEfectivo) >= METODO_ORDEN.indexOf(prevMetodoRef.current) ? 1 : -1;
   useEffect(() => { prevMetodoRef.current = metodoEfectivo; });
@@ -358,6 +370,9 @@ export default function SuscripcionCard() {
     direccion: '', numeroDireccion: '', codigoPostal: '', barrio: '', ciudad: '',
   });
   const [efecty, setEfecty] = useState({ docType: 'CC', docNumber: '' });
+  const [breb, setBreb] = useState<DatosBreb | null>(null);
+  const [comprobante, setComprobante] = useState<{ base64: string; nombre: string } | null>(null);
+  const [copiado, setCopiado] = useState<string | null>(null);
   const [aceptaTerminos, setAceptaTerminos] = useState(false);
   const [payPending, setPayPending] = useState(false);
   const [voucherUrl, setVoucherUrl] = useState<string | null>(null);
@@ -440,11 +455,64 @@ export default function SuscripcionCard() {
     setLoadingMetodos(true);
     try {
       const token = await getToken();
-      const res = await apiFetch<MetodosDisponibles>('/mercadopago/metodos-pago', { token });
+      // Bre-B se consulta aparte y no bloquea: si falla, quedan los medios de
+      // Mercado Pago, que son los que cubren el caso normal.
+      const [res, datosBreb] = await Promise.all([
+        apiFetch<MetodosDisponibles>('/mercadopago/metodos-pago', { token }),
+        apiFetch<DatosBreb>('/mercadopago/breb', { token }).catch(() => null),
+      ]);
       setMetodos(res);
+      if (datosBreb) setBreb(datosBreb);
       if (!res.tarjeta) setMetodo(res.pse.disponible ? 'PSE' : 'EFECTY');
     } catch { /* la sección de pago mostrará solo tarjeta como fallback */ }
     finally { setLoadingMetodos(false); }
+  }
+
+  /** Lee el comprobante como data URL, que es lo que espera el backend. */
+  function tomarComprobante(archivo: File | null) {
+    if (!archivo) { setComprobante(null); return; }
+    // Cloudinary y el guard del backend rechazan lo grande; avisar aquí evita
+    // que alguien espere una subida que ya se sabe que va a fallar.
+    if (archivo.size > 5 * 1024 * 1024) {
+      setError('El comprobante no puede pesar más de 5 MB.');
+      return;
+    }
+    const lector = new FileReader();
+    lector.onload = () => {
+      setError(null);
+      setComprobante({ base64: String(lector.result), nombre: archivo.name });
+    };
+    lector.onerror = () => setError('No se pudo leer el archivo. Intenta con otro.');
+    lector.readAsDataURL(archivo);
+  }
+
+  async function copiar(texto: string, cual: string) {
+    try {
+      await navigator.clipboard.writeText(texto);
+      setCopiado(cual);
+      setTimeout(() => setCopiado(null), 1800);
+    } catch { /* sin portapapeles el dato sigue visible para copiarlo a mano */ }
+  }
+
+  /** Registra la transferencia por Bre-B. No activa el club: queda en revisión. */
+  async function enviarBreb() {
+    if (!comprobante) { setError('Sube el comprobante de la transferencia.'); return; }
+    setPaying(true);
+    setError(null);
+    try {
+      const token = await getToken();
+      await apiFetch('/mercadopago/breb', {
+        method: 'POST', token,
+        body: JSON.stringify({ base64: comprobante.base64, aceptaTerminos }),
+      });
+      setComprobante(null);
+      const actualizado = await apiFetch<DatosBreb>('/mercadopago/breb', { token });
+      setBreb(actualizado);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'No se pudo enviar el comprobante.');
+    } finally {
+      setPaying(false);
+    }
   }
 
   // Cargar los medios de pago cuando hay algo por pagar
@@ -1120,11 +1188,14 @@ export default function SuscripcionCard() {
 
                 {/* Selector de medio — oculto cuando la renovación automática está activa (solo tarjeta) */}
                 <Expand show={!activarAutoRenovacion}>
-                  <div className="grid grid-cols-3 gap-2 pb-0.5">
+                  {/* Cuatro medios ya no caben en una fila en movil: 2x2 abajo,
+                      una sola fila desde tablet. */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pb-0.5">
                     {([
                       { key: 'CARD'   as MetodoPago, label: 'Tarjeta', icon: CreditCard, disponible: metodos?.tarjeta ?? true },
                       { key: 'PSE'    as MetodoPago, label: 'PSE',     icon: Landmark,   disponible: metodos?.pse.disponible ?? false },
                       { key: 'EFECTY' as MetodoPago, label: 'Efecty',  icon: Banknote,   disponible: metodos?.efecty ?? false },
+                      { key: 'BREB'   as MetodoPago, label: 'Bre-B',   icon: Zap,        disponible: breb?.disponible ?? false },
                     ]).filter(m => m.disponible).map(({ key, label, icon: Icon }) => {
                       const active = metodo === key;
                       return (
@@ -1143,6 +1214,9 @@ export default function SuscripcionCard() {
                           <span className="relative z-10">{label}</span>
                           {key === 'CARD' && (
                             <span className="relative z-10 text-[9px] font-medium opacity-70 -mt-0.5">Débito/Crédito</span>
+                          )}
+                          {key === 'BREB' && (
+                            <span className="relative z-10 text-[9px] font-medium opacity-70 -mt-0.5">Transferencia</span>
                           )}
                         </button>
                       );
@@ -1247,10 +1321,112 @@ export default function SuscripcionCard() {
                     <p className="text-[11px] text-muted-foreground">Generaremos un cupón para que pagues en efectivo en cualquier punto Efecty. Tu plan se activa cuando pagues.</p>
                   </motion.div>
                 )}
+
+                {metodoEfectivo === 'BREB' && (
+                  <motion.div
+                    key="form-breb"
+                    custom={direccionSlide}
+                    variants={SLIDE_VARIANTS}
+                    initial={reduce ? false : 'enter'}
+                    animate="center"
+                    exit={reduce ? undefined : 'exit'}
+                    transition={{ duration: 0.2, ease: EASE }}
+                    className="space-y-2.5"
+                  >
+                    {breb?.pendiente ? (
+                      /* Ya envió uno: en vez del formulario ve en qué va, para que no
+                         vuelva a transferir creyendo que no quedó registrado. */
+                      <div className="rounded-xl border border-border p-3 space-y-3">
+                        <div className="flex items-center justify-between gap-2">
+                          <p className="text-[13px] font-semibold text-foreground m-0">Pago en verificación</p>
+                          <span className="shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-full"
+                            style={{ background: 'rgba(240,180,41,0.14)', color: '#8A6216' }}>
+                            En revisión
+                          </span>
+                        </div>
+                        <ol className="m-0 pl-4 space-y-1.5 text-[11.5px] text-muted-foreground">
+                          <li><b className="text-foreground">Comprobante recibido.</b> {new Date(breb.pendiente.creadoEn).toLocaleString('es-CO', { dateStyle: 'medium', timeStyle: 'short' })}</li>
+                          <li><b className="text-foreground">Verificando el pago.</b> Normalmente unas horas, máximo un día hábil.</li>
+                          <li>Plan activado. Te llega una notificación.</li>
+                        </ol>
+                        <p className="text-[11px] text-muted-foreground m-0">
+                          Tu club sigue funcionando normal mientras tanto. No hace falta que pagues de nuevo.
+                        </p>
+                        {breb.pendiente.comprobanteUrl && (
+                          <a href={breb.pendiente.comprobanteUrl} target="_blank" rel="noopener noreferrer"
+                            className="block text-center text-[12px] font-semibold text-primary underline">
+                            Ver el comprobante que enviaste
+                          </a>
+                        )}
+                      </div>
+                    ) : (
+                      <>
+                        <div className="rounded-xl border border-border p-3 space-y-2">
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="min-w-0">
+                              <p className="text-[10px] uppercase tracking-wider text-muted-foreground m-0">Llave Bre-B</p>
+                              <p className="text-[15px] font-bold text-foreground m-0 tabular-nums">{breb?.llave}</p>
+                            </div>
+                            <button type="button" onClick={() => copiar(breb?.llave ?? '', 'llave')}
+                              className="shrink-0 flex items-center gap-1 text-[11px] font-semibold text-primary px-2.5 py-1.5 rounded-lg border border-primary/30 cursor-pointer">
+                              {copiado === 'llave' ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                              {copiado === 'llave' ? 'Copiada' : 'Copiar'}
+                            </button>
+                          </div>
+                          <p className="text-[11.5px] text-muted-foreground m-0">
+                            A nombre de <b className="text-foreground">{breb?.titular}</b>
+                          </p>
+
+                          <div className="flex items-center justify-between gap-2 pt-1">
+                            <div className="min-w-0">
+                              <p className="text-[10px] uppercase tracking-wider text-muted-foreground m-0">
+                                Referencia — escríbela en la nota
+                              </p>
+                              <p className="text-[14px] font-bold text-foreground m-0">{breb?.referencia}</p>
+                            </div>
+                            <button type="button" onClick={() => copiar(breb?.referencia ?? '', 'ref')}
+                              className="shrink-0 flex items-center gap-1 text-[11px] font-semibold text-primary px-2.5 py-1.5 rounded-lg border border-primary/30 cursor-pointer">
+                              {copiado === 'ref' ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                              {copiado === 'ref' ? 'Copiada' : 'Copiar'}
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* El aviso va ANTES de que transfiera: si se entera de la
+                            demora cuando ya pagó, escribe preocupado. */}
+                        <div className="rounded-xl p-3 flex gap-2"
+                          style={{ background: 'rgba(240,180,41,0.10)', border: '1px solid rgba(240,180,41,0.30)' }}>
+                          <Clock className="w-4 h-4 shrink-0 mt-0.5" style={{ color: '#8A6216' }} />
+                          <p className="text-[11.5px] m-0 leading-relaxed" style={{ color: '#8A6216' }}>
+                            <b>La verificación puede tomar unas horas.</b> Tu transferencia llega en
+                            segundos, pero confirmamos manualmente que entró antes de activar el plan.
+                            Te avisamos apenas quede lista — no tienes que volver a pagar.
+                          </p>
+                        </div>
+
+                        <label className="block rounded-xl p-4 text-center cursor-pointer"
+                          style={{ border: '1.5px dashed rgba(120,80,200,0.30)', background: 'rgba(124,58,237,0.03)' }}>
+                          <input type="file" accept="image/*,application/pdf" className="hidden"
+                            onChange={e => tomarComprobante(e.target.files?.[0] ?? null)} />
+                          <Upload className="w-4 h-4 mx-auto mb-1 text-primary" />
+                          <span className="block text-[12.5px] font-semibold text-foreground">
+                            {comprobante ? comprobante.nombre : 'Subir comprobante'}
+                          </span>
+                          <span className="block text-[11px] text-muted-foreground mt-0.5">
+                            {comprobante ? 'Toca para cambiarlo' : 'Foto o PDF · hasta 5 MB'}
+                          </span>
+                        </label>
+                      </>
+                    )}
+                  </motion.div>
+                )}
                 </AnimatePresence>
 
-                {/* Cupón de descuento — solo para pago único (no renovación automática) */}
-                {!activarAutoRenovacion && (
+                {/* Cupón de descuento — solo para pago único (no renovación automática).
+                    Queda fuera de Bre-B: el canje se registraría al enviar el
+                    comprobante, y un pago que despues no se verifica dejaria el
+                    cupon quemado sin que el club recibiera nada. */}
+                {!activarAutoRenovacion && !esBreb && (
                   <div className="rounded-xl border border-border p-3">
                     {cuponActivo ? (
                       <div className="flex items-center justify-between gap-2">
@@ -1297,6 +1473,10 @@ export default function SuscripcionCard() {
                 )}
 
                 {/* Términos — el texto cambia si activa renovación automática */}
+                {/* Con un comprobante ya en revision no hay nada que aceptar ni que
+                    enviar: el formulario de arriba muestra en que va. */}
+                {!(esBreb && breb?.pendiente) && (
+                <>
                 <label className="flex items-start gap-2 cursor-pointer">
                   <input type="checkbox" checked={aceptaTerminos} onChange={e => setAceptaTerminos(e.target.checked)} className="mt-0.5 shrink-0" />
                   <span className="text-[11px] text-muted-foreground leading-relaxed">
@@ -1310,17 +1490,29 @@ export default function SuscripcionCard() {
                 </label>
 
                 <motion.button
-                  onClick={handlePagar}
-                  disabled={paying || !aceptaTerminos || ((activarAutoRenovacion || metodo === 'CARD') && !sdkReady)}
+                  onClick={esBreb ? enviarBreb : handlePagar}
+                  disabled={
+                    paying || !aceptaTerminos ||
+                    ((activarAutoRenovacion || metodo === 'CARD') && !sdkReady) ||
+                    (esBreb && !comprobante)
+                  }
                   whileTap={reduce ? {} : { scale: 0.98 }}
                   transition={{ duration: 0.12, ease: EASE }}
                   className="w-full py-3 rounded-xl bg-primary text-white text-[13px] font-semibold disabled:opacity-60"
                 >
-                  {paying ? 'Procesando pago...' : <>Pagar <PrecioAnimado valor={precioFinal} /></>}
+                  {paying
+                    ? (esBreb ? 'Enviando...' : 'Procesando pago...')
+                    : esBreb
+                      ? 'Ya transferí, enviar para verificación'
+                      : <>Pagar <PrecioAnimado valor={precioFinal} /></>}
                 </motion.button>
                 <p className="text-[10px] text-muted-foreground text-center">
-                  Pago procesado de forma segura por Mercado Pago. Tus datos nunca se guardan en VeloClub.
+                  {esBreb
+                    ? 'Transferencia directa a la llave Bre-B. Verificamos manualmente antes de activar el plan.'
+                    : 'Pago procesado de forma segura por Mercado Pago. Tus datos nunca se guardan en VeloClub.'}
                 </p>
+                </>
+                )}
               </>
             )}
           </div>

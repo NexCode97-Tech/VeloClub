@@ -27,12 +27,32 @@ import { actorActual } from './contexto-peticion';
  */
 const MODELOS_AUDITADOS = new Set([
   'Club', 'User', 'Member', 'MemberLocation', 'Location',
-  'Payment', 'CashEntry', 'ClubSuscripcion', 'PagoSuscripcion',
+  // Ojo con los nombres: tienen que ser EXACTAMENTE los del esquema. Esta lista
+  // decía 'PagoSuscripcion' y el modelo se llama 'SuscripcionPago', así que los
+  // pagos de suscripción —el dinero de la plataforma— llevaban desde el primer
+  // día sin auditar, y la bitácora aparentaba cubrirlos.
+  'Payment', 'CashEntry', 'ClubSuscripcion', 'SuscripcionPago',
   'Post', 'PostComment', 'Reporte',
   'Competition', 'CompetitionEvent', 'EventResult',
   'TrainingSession', 'TrainingResult', 'CalendarEvent',
   'ClaseHorario', 'Cupon', 'CuponCanje',
 ]);
+
+/**
+ * Un nombre mal escrito en la lista de arriba no falla: simplemente no coincide
+ * con ningún modelo y esa entidad deja de auditarse, en silencio y para siempre.
+ * Ya pasó con 'PagoSuscripcion' (el modelo es 'SuscripcionPago'). Al arrancar se
+ * contrasta contra el esquema para que el error se vea el primer día.
+ */
+{
+  const delEsquema = new Set(Prisma.dmmf.datamodel.models.map(m => m.name));
+  const inexistentes = [...MODELOS_AUDITADOS].filter(m => !delEsquema.has(m));
+  if (inexistentes.length > 0) {
+    console.error(
+      `[auditoria] estos modelos no existen en el esquema y NO se están auditando: ${inexistentes.join(', ')}`
+    );
+  }
+}
 
 /** Campos que nunca se copian a la bitacora, aunque cambien. */
 const CAMPOS_SENSIBLES = new Set([

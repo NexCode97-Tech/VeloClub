@@ -5,6 +5,172 @@ Actualizar al final de cada sesión o cuando se complete un bloque de trabajo im
 
 ---
 
+## Sesión 2026-08-19
+
+**Modelo:** Claude Opus 5
+**Estado inicial:** `ef3e2e6`, rama `main`, app en producción
+**Estado final:** `e3c1918`, todo desplegado
+
+Sesión disparada por un cliente que no podía pagar. De ahí salió casi todo lo
+demás: un medio de pago nuevo, el registro de los rechazos y dos fallos de
+fondo que llevaban meses invisibles.
+
+### El pago que no entraba — Bont Skate Santander
+
+Cinco intentos rechazados, no tres. Todos por **PSE contra Nequi**, todos con
+`bank_error`, todos por $162.000. El detalle del pago en Mercado Pago confirma
+que la transacción se creaba bien (con su `transaction_id` y su URL al banco):
+lo que fallaba era el banco, no nuestros datos ni el monto.
+
+Hubo que consultarle a la API de Mercado Pago con credenciales de producción
+para saberlo, porque **el backend no guardaba los rechazos** — ver más abajo.
+
+- [x] **Pago registrado a mano** ($162.000, concepto `Bre-B · VC-8O9O`). El
+  trimestre arranca el 6 de octubre y no el día del pago: el club seguía en
+  período de prueba y `fechaEfectivaPago` respeta los días gratis prometidos.
+  Se usó `activarClubTrasPago`, no escritura directa, para que el registro
+  quedara idéntico a uno del flujo normal.
+
+### Pago por Bre-B, con verificación humana
+
+Cuarto medio junto a Tarjeta, PSE y Efecty. Nace de este caso: PSE se cae y no
+había ningún camino dentro del producto para cobrarle a ese club.
+
+Bre-B mueve el dinero en segundos y sin comisión, pero **la llave receptora es
+una cuenta común: no emite webhooks**. Nadie puede avisarle al sistema que la
+plata entró, así que este medio no se acredita solo.
+
+- [x] El club ve la llave, el titular, el monto y una referencia derivada de su
+  `clubId` — estable, visible **antes** de transferir y que no cambia si
+  reintenta.
+- [x] Sube el comprobante y el pago nace `PENDING` **sin fecha**. La fecha es lo
+  que usa `vigencia()` para contar el período: ponerla antes de verificar le
+  regalaría el plan a cualquiera que suba una imagen.
+- [x] El aviso de la demora va **antes** de que transfiera. Enterarse de que hay
+  que esperar cuando uno ya pagó es lo que genera el "me cobraron y no me
+  activaron".
+- [x] Bandeja en el panel de superadmin, no en una pantalla aparte: es trabajo
+  que caduca, hay un club esperando la activación.
+- [x] Un pendiente a la vez. Rechazar borra el registro (para que pueda volver a
+  intentar) y el borrado queda en la bitácora.
+- [x] Sin cupones: el canje se registraría al enviar el comprobante y un pago que
+  luego no se verifica dejaría el cupón quemado sin contraprestación.
+- [x] `BREB_LLAVE` y `BREB_TITULAR` en Railway. La llave es un dato personal y
+  puede cambiar: no va en el código ni en el historial de git.
+
+Sin migración — `SuscripcionPago` ya tenía `estado`, `receiptUrl` y `concepto`.
+
+**Riesgo abierto:** la plata entra a una cuenta personal, no empresarial. El
+cliente ve un nombre propio en vez de una razón social. Conviene revisarlo con
+un contador ahora que está disponible para todos los clubes.
+
+### Los rechazos de pago ya no se pierden
+
+El hueco que obligó a la investigación manual: `/pagar` respondía el error y ahí
+moría. Sin fila en la base, sin Sentry, sin log.
+
+- [x] Cada rechazo queda en la bitácora con medio, motivo, monto y —en PSE— el
+  **banco**, que es el dato que resuelve el caso.
+- [x] `registrarEvento()` en `lib/auditoria.ts`: la extensión de Prisma solo ve
+  escrituras, y un rechazo importa justamente porque nada cambió.
+- [x] El panel de superadmin muestra los de 7 días y **marca a quien lleva 3 o
+  más intentos**. Un club que reintenta y falla es una venta a punto de
+  perderse, no una estadística.
+- [x] **Faltaban todos los mensajes de PSE.** Su rechazo más común (`bank_error`)
+  caía en el genérico "intenta con otro medio", que no dice lo único que
+  resuelve el problema: que cambiando de banco el pago pasa. Por eso el club
+  insistió cinco veces contra el mismo banco.
+
+### Los pagos de suscripción nunca se auditaron
+
+La lista de modelos auditados decía `PagoSuscripcion`; el modelo se llama
+`SuscripcionPago`. **Un nombre que no coincide no falla: esa entidad queda
+fuera, en silencio.** El dinero de la plataforma llevaba desde el primer día
+sin registrarse mientras la bitácora aparentaba cubrirlo.
+
+- [x] Corregido, y se contrasta la lista contra `Prisma.dmmf` al cargar el
+  módulo: el error era invisible por definición y solo aparecía leyendo las dos
+  listas en paralelo.
+- [x] Cierra además los PSE abandonados: la reconciliación los borra cuando
+  Mercado Pago los da por rechazados, y ese borrado ya queda con copia.
+
+### Interfaz
+
+- [x] **Cronómetro en el hero** en lugar de la pastilla con el punto que late:
+  esa forma es la más repetida del software actual y se leía como plantilla
+  antes de que alguien alcanzara a leer las palabras, además de repetir lo que
+  el titular ya dice en 52px. El cronómetro sale del mundo del cliente y baja
+  solo. `web/lib/promo.ts` espeja `PROMO_FIN` del backend — si el frontend
+  anunciara un día más, alguien se registraría creyendo en 60 días y recibiría
+  15. Vencida la promoción no se pinta nada.
+  *Correcciones sobre la marcha:* fuera la monoespaciada (no combina con el
+  titular) y fuera el uppercase — en la interfaz no se grita.
+- [x] **Feed sin interacciones.** El espacio bajo el texto y el anclaje al fondo
+  en escritorio vivían los dos en el bloque de contadores; un post sin likes ni
+  comentarios no lo renderizaba y perdía las dos cosas de golpe. Ahora el
+  contenedor se pinta siempre y lo condicional son los botones.
+- [x] **Sub-menú de Ajustes con el sidebar comprimido.** Solo aparecía expandido,
+  así que quien trabaja con el sidebar angosto no tenía por dónde llegar a Mi
+  club ni a Mi suscripción. Mismo arreglo en Rendimiento.
+- [x] **Logo de la tarjeta de Finanzas** de 56 a 44 px, incluido el de respaldo.
+- [x] Sede: el logo de VeloClub y el del club conservan su tratamiento distinto.
+
+### Nombre del usuario — tres copias, dos lugares de edición
+
+Un administrador figuraba en el sidebar como "ADMINISTRADOR VELOCLUB" (su
+nombre en Clerk) mientras Miembros, el feed y Mi perfil lo llamaban por su
+nombre real.
+
+- [x] **Gana el lado donde de verdad lo cambiaron.** La señal es comparar Clerk
+  contra la última copia guardada en `User`: si difieren, la edición fue en
+  Clerk; si coinciden, manda el registro de miembro. Con una regla fija uno de
+  los dos caminos siempre perdía.
+- [x] El nombre baja también a **publicaciones y comentarios**, filtrando por
+  `authorClerkId` y no por nombre (dos personas del mismo club pueden llamarse
+  igual). Se hace en `PATCH /me/name` además de en `/me`, porque para cuando
+  `/me` vuelva a correr ya no queda señal de que hubo un cambio que propagar.
+
+### Cuentas y permisos
+
+- [x] **`/me` buscaba el registro de miembro solo por correo** al crear la
+  cuenta. Un miembro ya vinculado sin `User` caía en `needs_onboarding` y
+  terminaba creándose otro club, aunque el suyo lo tuviera de administrador.
+  Ahora busca por `clerkId` además de por correo.
+- [x] **Joseph Samuel Beltrán (SBM Barbosa) revinculado.** Su `Member` apuntaba a
+  un `clerkId` borrado, mientras su cuenta real existía con otro id. Barrido
+  completo: 98 miembros vinculados, **0 desalineados, 0 sin cuenta**.
+
+### Decisión: no se migra de pasarela (por ahora)
+
+Se evaluaron Wompi, Bold, ePayco, PayU, DRUO, MOVii contra Mercado Pago.
+
+- **Bre-B por API no existe para cobrar** salvo el QR de Bold, y sin recurrencia.
+- **El ahorro en comisiones (~$17.000 por club al año) no justifica migrar.**
+- Lo que sí lo justificaría es que **Wompi tokeniza Nequi, DaviPlata y
+  Bancolombia** para cobro recurrente, mientras el `preapproval` de Mercado Pago
+  es solo con tarjeta: hoy la renovación automática solo sirve a los clubes con
+  tarjeta de crédito, y ese es el techo real.
+- Tarifas de Bold y Wompi **sin confirmar** — sus páginas de precios cargan por
+  JavaScript. Verificar con un comercial antes de mover nada.
+
+### Scripts
+
+De 28 a 21, organizados **por la pregunta que responden** en vez de por el caso
+que los originó, con `scripts/README.md` que los indexa y marca cuáles escriben.
+Se fue `estado-cuenta.ts` (tenía un correo escrito a mano adentro) y
+`registrar-pago-manual.ts`: Bre-B ya hace eso desde la interfaz y mantenerlo
+dejaba un camino paralelo para escribir pagos que nadie revisa igual.
+
+### Pendiente
+
+- Confirmar tarifas reales de Wompi y si Bre-B queda expuesto por API.
+- El riesgo de la cuenta personal como receptora de los pagos por Bre-B.
+- Los tres espacios de publicidad siguen con `url: '#'`.
+- El repo rastrea `package-lock.json` y `pnpm-lock.yaml` a la vez.
+- `bio` y `coverUrl` para `Member` (migración aparte, sin decidir).
+
+---
+
 ## Sesión 2026-08-08
 
 **Modelo:** Claude Opus 5

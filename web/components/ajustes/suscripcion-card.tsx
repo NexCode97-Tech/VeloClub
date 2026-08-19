@@ -1374,7 +1374,7 @@ export default function SuscripcionCard() {
                             </button>
                           </div>
                           <p className="text-[11.5px] text-muted-foreground m-0">
-                            A nombre de <b className="text-foreground">{breb?.titular}</b>
+                            A nombre de <b className="text-foreground">{breb?.titular}</b> · solo Colombia
                           </p>
 
                           <div className="flex items-center justify-between gap-2 pt-1">
@@ -1508,7 +1508,7 @@ export default function SuscripcionCard() {
                 </motion.button>
                 <p className="text-[10px] text-muted-foreground text-center">
                   {esBreb
-                    ? 'Transferencia directa a la llave Bre-B. Verificamos manualmente antes de activar el plan.'
+                    ? 'Bre-B solo funciona entre cuentas y billeteras de Colombia. Verificamos la transferencia manualmente antes de activar el plan.'
                     : 'Pago procesado de forma segura por Mercado Pago. Tus datos nunca se guardan en VeloClub.'}
                 </p>
                 </>

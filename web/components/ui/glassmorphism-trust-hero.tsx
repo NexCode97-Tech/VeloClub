@@ -4,6 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { VortexBackground } from '@/components/ui/vortex-background';
+import { CronometroPromo } from '@/components/ui/cronometro-promo';
 
 export default function GlassmorphismHero() {
   return (
@@ -51,14 +52,6 @@ export default function GlassmorphismHero() {
           animation: vcSweep 4.5s cubic-bezier(.4,0,.2,1) 1.2s infinite;
         }
 
-        /* Latido del punto de la pastilla: un halo que se expande y se apaga */
-        @keyframes vcPing {
-          0%   { transform: scale(1);   opacity: .65 }
-          70%  { transform: scale(2.6); opacity: 0 }
-          100% { transform: scale(2.6); opacity: 0 }
-        }
-        .vc-ping { animation: vcPing 2.4s cubic-bezier(0,0,.2,1) infinite }
-
         /* El halo del boton respira. Va en box-shadow y no en transform para no
            mover el boton mientras alguien intenta tocarlo. */
         @keyframes vcGlow {
@@ -71,7 +64,6 @@ export default function GlassmorphismHero() {
           .vc-cta { animation: none; box-shadow: 0 6px 24px rgba(124,58,237,.32) }
           .vc-line { animation: fadeSlideIn .5s ease-out both }
           .vc-promo-text { animation: none; color: #E9D5FF; background: none; -webkit-text-fill-color: currentColor }
-          .vc-ping { animation: none; opacity: .4 }
           .vc-marquee { animation: none }
         }
       `}</style>
@@ -108,16 +100,13 @@ export default function GlassmorphismHero() {
           {/* COLUMNA — texto */}
           <div className="lg:col-span-7 flex flex-col items-center lg:items-start space-y-5 text-center lg:text-left">
 
-            {/* Pastilla de campaña — el punto late para que el ojo la registre
-                antes de leerla */}
-            <div className="vc-fade d1 inline-flex items-center gap-2.5 rounded-full px-3.5 py-1.5"
-              style={{ background: 'rgba(124,58,237,0.16)', border: '1px solid rgba(168,85,247,0.35)' }}>
-              <span className="relative inline-flex w-1.5 h-1.5 shrink-0">
-                <span className="vc-ping absolute inset-0 rounded-full" style={{ background: '#A855F7' }} />
-                <span className="relative inline-block w-1.5 h-1.5 rounded-full" style={{ background: '#A855F7' }} />
-              </span>
-              <span className="text-[12px] font-semibold text-white">Promoción de lanzamiento</span>
-              <span className="text-[12px] text-zinc-400">hasta el 31 de octubre</span>
+            {/* Cronómetro de campaña. Reemplaza a la pastilla con punto: esa
+                forma es la más repetida del software actual y se leía como
+                plantilla antes de que alguien alcanzara a leer las palabras.
+                El cronómetro sale del mundo del cliente y aprieta solo — el
+                número baja sin que nadie despliegue nada. */}
+            <div className="vc-fade d1">
+              <CronometroPromo />
             </div>
 
             {/* Titular — la promoción es la tercera línea y remata la frase, así

@@ -93,20 +93,66 @@ if (superadminEmails.includes(email.toLowerCase())) {
       }
     }
 
-    // Update name/picture if changed in Clerk
-    let resolvedName = name || user.name;
-    if (!resolvedName || resolvedName === 'Usuario') {
-      const member = await prisma.member.findFirst({
-        where: { OR: [{ clerkId }, { email: { equals: email, mode: 'insensitive' } }] },
+    // Nombre visible: gana el lado donde de verdad lo cambiaron.
+    //
+    // Hay tres copias del nombre — Clerk, User y Member — y se puede editar
+    // desde dos sitios: Ajustes de VeloClub y el modal de cuenta de Clerk. Con
+    // una regla fija ("manda Clerk" o "manda el club") uno de los dos caminos
+    // siempre pierde: editabas en un lado y al recargar volvía el otro valor.
+    //
+    // La señal de quién cambió es comparar Clerk contra la última copia que
+    // guardamos en User: si difieren, la edición fue en Clerk. Si coinciden, en
+    // Clerk no tocaron nada y manda el registro de miembro, que es donde el
+    // club administra el nombre y de donde sale el resto de la interfaz.
+    //
+    // Esto además corrige lo que ya estaba en producción: un administrador con
+    // «ADMINISTRADOR VELOCLUB» en Clerk aparecía así en el sidebar mientras
+    // Miembros, el feed y Mi perfil lo llamaban por su nombre real.
+    const miembroVinculado = await prisma.member.findFirst({
+      where: { OR: [{ clerkId }, { email: { equals: email, mode: 'insensitive' } }] },
+      select: { id: true, fullName: true },
+    });
+    const cambiadoEnClerk = !!name && name !== user.name;
+    const resolvedName = cambiadoEnClerk
+      ? name
+      : (miembroVinculado?.fullName || user.name || name);
+
+    // El nombre elegido baja al registro de miembro para que las tres copias
+    // queden iguales; si no, la próxima carga volvería a verlas distintas y
+    // reabriría el mismo desacuerdo.
+    if (miembroVinculado && resolvedName && miembroVinculado.fullName !== resolvedName) {
+      await prisma.member.update({
+        where: { id: miembroVinculado.id },
+        data: { fullName: resolvedName },
       });
-      if (member?.fullName) resolvedName = member.fullName;
     }
     if (user.name !== resolvedName || user.picture !== picture) {
+      const nombreCambio = user.name !== resolvedName;
       user = await prisma.user.update({
         where: { clerkId },
         data: { name: resolvedName, picture },
         include: { club: true },
       });
+
+      // El nombre también firma lo ya publicado. Sin esto, cambiarlo lo dejaba
+      // corregido en el perfil pero con el nombre viejo en cada publicación y
+      // comentario, que es donde más lo ven los demás.
+      //
+      // Se filtra por authorClerkId y no por authorName: dos personas del mismo
+      // club pueden llamarse igual, y renombrar por nombre le cambiaría la firma
+      // a la publicación de otro.
+      if (nombreCambio && resolvedName) {
+        await Promise.all([
+          prisma.post.updateMany({
+            where: { authorClerkId: clerkId, authorName: { not: resolvedName } },
+            data: { authorName: resolvedName },
+          }),
+          prisma.postComment.updateMany({
+            where: { authorClerkId: clerkId, authorName: { not: resolvedName } },
+            data: { authorName: resolvedName },
+          }),
+        ]);
+      }
     }
 
     // Sincronizar foto de Clerk/Google al Member, Posts y Comentarios si cambió
@@ -269,6 +315,20 @@ router.patch('/name', requireAuth, async (req, res) => {
   if (member) {
     await prisma.member.update({ where: { id: member.id }, data: { fullName: name } });
   }
+
+  // La firma de lo ya publicado también es el nombre. Se hace acá y no solo en
+  // /me porque para cuando /me vuelva a correr, User y Clerk ya coinciden con el
+  // nombre nuevo y no queda señal de que hubo un cambio que propagar.
+  await Promise.all([
+    prisma.post.updateMany({
+      where: { authorClerkId: req.auth.clerkId, authorName: { not: name } },
+      data: { authorName: name },
+    }),
+    prisma.postComment.updateMany({
+      where: { authorClerkId: req.auth.clerkId, authorName: { not: name } },
+      data: { authorName: name },
+    }),
+  ]);
 
   // Sincronizar en Clerk (si falla, User/Member ya quedaron actualizados)
   try {

@@ -458,8 +458,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   // desliza hacia adentro; Volver desliza de regreso). El ref y el efecto que
   // rastrean la dirección viven arriba (antes del return temprano) para no
   // romper el orden de los hooks.
+  // El sub-menu se muestra tambien con el sidebar comprimido, en iconos. Antes
+  // solo aparecia expandido, asi que quien trabajaba con el sidebar angosto no
+  // tenia por donde llegar a Mi club ni a Mi suscripcion: las secciones
+  // desaparecian de la navegacion segun como tuviera el sidebar.
   const navView: 'ajustes' | 'logros' | 'main' =
-    (!collapsed && onAjustes) ? 'ajustes' : (!collapsed && onLogros) ? 'logros' : 'main';
+    onAjustes ? 'ajustes' : onLogros ? 'logros' : 'main';
   const navDepth = navView === 'main' ? 0 : 1;
   const navDir = navDepth >= prevNavDepthRef.current ? 1 : -1;
 
@@ -569,28 +573,50 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 <div>
                   <Link
                     href="/dashboard"
-                    className="flex items-center gap-3 rounded-xl text-sm font-semibold transition-colors hover:bg-secondary mb-2"
-                    style={{ height: 40, paddingLeft: 12, paddingRight: 12, color: '#8E87A8' }}
+                    className="flex items-center rounded-xl text-sm font-semibold transition-colors hover:bg-secondary mb-2"
+                    style={{
+                      height: 40, color: '#8E87A8',
+                      gap: collapsed ? 0 : 12,
+                      paddingLeft: collapsed ? 0 : 12,
+                      paddingRight: collapsed ? 0 : 12,
+                      justifyContent: collapsed ? 'center' : undefined,
+                    }}
+                    onMouseEnter={collapsed ? (e) => {
+                      const r = e.currentTarget.getBoundingClientRect();
+                      setNavTip({ label: 'Volver', top: r.top + r.height / 2, left: r.right + 3 });
+                    } : undefined}
+                    onMouseLeave={collapsed ? () => setNavTip(null) : undefined}
                   >
                     <ArrowLeft className="w-[16px] h-[16px] shrink-0" />
-                    <span>Volver</span>
+                    {!collapsed && <span>Volver</span>}
                   </Link>
                   <Suspense fallback={null}>
-                    <AjustesSubNavLinks items={AJUSTES_SUBNAV} accentColor={accentColor} accentBg={accentBg} />
+                    <AjustesSubNavLinks items={AJUSTES_SUBNAV} accentColor={accentColor} accentBg={accentBg} collapsed={collapsed} onTip={setNavTip} />
                   </Suspense>
                 </div>
               ) : navView === 'logros' ? (
                 <div>
                   <Link
                     href="/dashboard"
-                    className="flex items-center gap-3 rounded-xl text-sm font-semibold transition-colors hover:bg-secondary mb-2"
-                    style={{ height: 40, paddingLeft: 12, paddingRight: 12, color: '#8E87A8' }}
+                    className="flex items-center rounded-xl text-sm font-semibold transition-colors hover:bg-secondary mb-2"
+                    style={{
+                      height: 40, color: '#8E87A8',
+                      gap: collapsed ? 0 : 12,
+                      paddingLeft: collapsed ? 0 : 12,
+                      paddingRight: collapsed ? 0 : 12,
+                      justifyContent: collapsed ? 'center' : undefined,
+                    }}
+                    onMouseEnter={collapsed ? (e) => {
+                      const r = e.currentTarget.getBoundingClientRect();
+                      setNavTip({ label: 'Volver', top: r.top + r.height / 2, left: r.right + 3 });
+                    } : undefined}
+                    onMouseLeave={collapsed ? () => setNavTip(null) : undefined}
                   >
                     <ArrowLeft className="w-[16px] h-[16px] shrink-0" />
-                    <span>Volver</span>
+                    {!collapsed && <span>Volver</span>}
                   </Link>
                   <Suspense fallback={null}>
-                    <LogrosSubNavLinks items={LOGROS_SUBNAV} accentColor={accentColor} accentBg={accentBg} />
+                    <LogrosSubNavLinks items={LOGROS_SUBNAV} accentColor={accentColor} accentBg={accentBg} collapsed={collapsed} onTip={setNavTip} />
                   </Suspense>
                 </div>
               ) : (
@@ -925,10 +951,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 // Lee el tab activo (?tab=) para resaltar el link correcto del sub-menú de
 // Ajustes. Aislado en su propio componente porque useSearchParams() exige un
 // límite <Suspense> alrededor cuando se usa dentro de un layout.
-function AjustesSubNavLinks({ items, accentColor, accentBg }: {
+function AjustesSubNavLinks({ items, accentColor, accentBg, collapsed, onTip }: {
   items: { key: string; label: string; icon: React.ElementType }[];
   accentColor: string;
   accentBg: string;
+  collapsed: boolean;
+  onTip: (t: { label: string; top: number; left: number } | null) => void;
 }) {
   const searchParams = useSearchParams();
   const ajustesTab = searchParams.get('tab') ?? 'perfil';
@@ -936,7 +964,9 @@ function AjustesSubNavLinks({ items, accentColor, accentBg }: {
 
   return (
     <div className="space-y-1 relative">
-      {activeIndex >= 0 && (
+      {/* Comprimido el fondo lo pinta cada item: la barra deslizante ocupa todo
+          el ancho y en 64px se ve como una franja, no como un boton. */}
+      {!collapsed && activeIndex >= 0 && (
         <div
           className="absolute left-0 right-0 rounded-xl pointer-events-none"
           style={{
@@ -953,11 +983,24 @@ function AjustesSubNavLinks({ items, accentColor, accentBg }: {
           <Link
             key={key}
             href={`/dashboard/ajustes?tab=${key}`}
-            className={`flex items-center gap-3 rounded-xl text-sm font-semibold transition-colors relative z-10 ${active ? '' : 'hover:bg-secondary'}`}
-            style={{ height: 44, paddingLeft: 12, paddingRight: 12, color: active ? accentColor : '#8E87A8' }}
+            className={`flex items-center rounded-xl text-sm font-semibold transition-colors relative z-10 ${active ? '' : 'hover:bg-secondary'}`}
+            style={{
+              height: 44,
+              color: active ? accentColor : '#8E87A8',
+              gap: collapsed ? 0 : 12,
+              paddingLeft: collapsed ? 0 : 12,
+              paddingRight: collapsed ? 0 : 12,
+              justifyContent: collapsed ? 'center' : undefined,
+              background: collapsed && active ? accentBg : undefined,
+            }}
+            onMouseEnter={collapsed ? (e) => {
+              const r = e.currentTarget.getBoundingClientRect();
+              onTip({ label, top: r.top + r.height / 2, left: r.right + 3 });
+            } : undefined}
+            onMouseLeave={collapsed ? () => onTip(null) : undefined}
           >
             <Icon className="w-[18px] h-[18px] shrink-0" strokeWidth={active ? 2.5 : 2} />
-            <span>{label}</span>
+            {!collapsed && <span>{label}</span>}
           </Link>
         );
       })}
@@ -967,10 +1010,12 @@ function AjustesSubNavLinks({ items, accentColor, accentBg }: {
 
 // Sub-menú de Rendimiento (Competencias / Entrenamientos) para el sidebar
 // expandido. Lee ?tab= para resaltar el link activo, igual que Ajustes.
-function LogrosSubNavLinks({ items, accentColor, accentBg }: {
+function LogrosSubNavLinks({ items, accentColor, accentBg, collapsed, onTip }: {
   items: { key: string; label: string; icon: React.ElementType }[];
   accentColor: string;
   accentBg: string;
+  collapsed: boolean;
+  onTip: (t: { label: string; top: number; left: number } | null) => void;
 }) {
   const searchParams = useSearchParams();
   const pathname     = usePathname();
@@ -985,7 +1030,9 @@ function LogrosSubNavLinks({ items, accentColor, accentBg }: {
 
   return (
     <div className="space-y-1 relative">
-      {activeIndex >= 0 && (
+      {/* Comprimido el fondo lo pinta cada item: la barra deslizante ocupa todo
+          el ancho y en 64px se ve como una franja, no como un boton. */}
+      {!collapsed && activeIndex >= 0 && (
         <div
           className="absolute left-0 right-0 rounded-xl pointer-events-none"
           style={{
@@ -1002,11 +1049,24 @@ function LogrosSubNavLinks({ items, accentColor, accentBg }: {
           <Link
             key={key}
             href={`/dashboard/logros?tab=${key}`}
-            className={`flex items-center gap-3 rounded-xl text-sm font-semibold transition-colors relative z-10 ${active ? '' : 'hover:bg-secondary'}`}
-            style={{ height: 44, paddingLeft: 12, paddingRight: 12, color: active ? accentColor : '#8E87A8' }}
+            className={`flex items-center rounded-xl text-sm font-semibold transition-colors relative z-10 ${active ? '' : 'hover:bg-secondary'}`}
+            style={{
+              height: 44,
+              color: active ? accentColor : '#8E87A8',
+              gap: collapsed ? 0 : 12,
+              paddingLeft: collapsed ? 0 : 12,
+              paddingRight: collapsed ? 0 : 12,
+              justifyContent: collapsed ? 'center' : undefined,
+              background: collapsed && active ? accentBg : undefined,
+            }}
+            onMouseEnter={collapsed ? (e) => {
+              const r = e.currentTarget.getBoundingClientRect();
+              onTip({ label, top: r.top + r.height / 2, left: r.right + 3 });
+            } : undefined}
+            onMouseLeave={collapsed ? () => onTip(null) : undefined}
           >
             <Icon className="w-[18px] h-[18px] shrink-0" strokeWidth={active ? 2.5 : 2} />
-            <span>{label}</span>
+            {!collapsed && <span>{label}</span>}
           </Link>
         );
       })}

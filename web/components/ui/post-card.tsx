@@ -757,9 +757,15 @@ export function PostCard({
           restante para que los botones queden anclados al fondo. */}
       <div className={dosColumnas ? 'md:col-start-2 md:row-start-2 md:min-w-0 md:flex md:flex-col' : ''}>
 
-        {/* Contadores clicables */}
-        {(likeCount > 0 || post.comments.length > 0) && (
-          <div className={`relative flex items-center gap-3 px-4 pt-0.5 pb-3${dosColumnas ? ' md:order-2 md:mt-auto' : ''}`}>
+        {/* Contadores clicables.
+            El contenedor se pinta SIEMPRE, aunque no haya nada que contar: es
+            suyo el `pb-3` que separa el texto de los botones y el `md:mt-auto`
+            que ancla el bloque al fondo en escritorio. Cuando dependía de que
+            hubiera interacciones, un post sin likes ni comentarios perdía las
+            dos cosas de golpe — la fila de acciones subía a pegarse al texto y
+            en dos columnas quedaba un hueco debajo. Los que cambian son los
+            botones de adentro, no el espacio. */}
+        <div className={`relative flex items-center gap-3 px-4 pt-0.5 pb-3${dosColumnas ? ' md:order-2 md:mt-auto' : ''}`}>
             {likeCount > 0 && (
               <button
                 ref={likesButtonRef}
@@ -834,8 +840,7 @@ export function PostCard({
               </AnimatePresence>,
               document.body
             )}
-          </div>
-        )}
+        </div>
 
         {/* Acciones */}
         <div className={`flex items-center border-t border-border/60${dosColumnas ? ' md:order-3 md:gap-6 md:px-4 md:py-1' : ''}`}>

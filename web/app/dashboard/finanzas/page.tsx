@@ -986,7 +986,7 @@ export default function FinanzasPage() {
                       lo borraria, porque cada uno trae su propio fondo. */}
                   {clubLogoUrl ? (
                     <div
-                      className="w-14 h-14 rounded-full overflow-hidden shrink-0 flex items-center justify-center"
+                      className="w-11 h-11 rounded-full overflow-hidden shrink-0 flex items-center justify-center"
                       style={{ background: '#fff', boxShadow: '0 2px 10px rgba(0,0,0,0.18)' }}
                     >
                       <img
@@ -999,7 +999,7 @@ export default function FinanzasPage() {
                     <img
                       src="/icon-desktop-192.png"
                       alt="VeloClub"
-                      className="w-14 h-14 object-contain"
+                      className="w-11 h-11 object-contain"
                       style={{ mixBlendMode: 'multiply', opacity: 0.92 }}
                     />
                   )}

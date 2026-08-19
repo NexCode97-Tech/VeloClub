@@ -187,9 +187,24 @@ if (superadminEmails.includes(email.toLowerCase())) {
   }
 
   // New user — check if email was pre-registered as a Member (case-insensitive)
+  //
+  // Se busca por clerkId ADEMÁS de por correo. Un miembro ya vinculado que se
+  // quedó sin registro de User (o cuyo correo en Clerk dejó de coincidir con el
+  // que tiene en el club) caía en `needs_onboarding` y terminaba creándose otro
+  // club, aunque el suyo lo tuviera como administrador. Le pasó a un
+  // administrador de SBM Barbosa: Member con rol ADMIN, clerkId vinculado y sin
+  // User, así que el backend nunca lo vio como administrador.
+  //
+  // Es el mismo criterio que ya usa la autorreparación de arriba; aquí faltaba.
   const member = await prisma.member.findFirst({
-    where: { email: { equals: email, mode: 'insensitive' } },
+    where: {
+      OR: [
+        { clerkId },
+        ...(email ? [{ email: { equals: email, mode: 'insensitive' as const } }] : []),
+      ],
+    },
     include: { club: true },
+    orderBy: { createdAt: 'desc' },
   });
 
   if (!member) {

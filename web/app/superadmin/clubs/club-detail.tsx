@@ -787,7 +787,7 @@ export default function ClubDetail({ club, suscripcion, tab, onReload, onDeleted
             {club.verificationStatus === 'REJECTED' && (
               <motion.button onClick={verificarClub} whileTap={{ scale: 0.97 }}
                 style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, padding: '10px 0', borderRadius: 10, border: '1px solid rgba(120,80,200,0.14)', background: 'transparent', color: '#6B6580', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
-                <BadgeCheck size={14} /> Rechazado — verificar de todos modos
+                <BadgeCheck size={14} /> Rechazado, verificar de todos modos
               </motion.button>
             )}
           </div>

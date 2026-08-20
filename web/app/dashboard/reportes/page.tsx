@@ -346,7 +346,7 @@ export default function ReportesPage() {
           {/* Distribución de pagos */}
           <div className="bg-white border border-border rounded-xl p-4">
             <p style={{ fontSize: 11, fontWeight: 600, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 16 }}>
-              Estado de pagos — {paymentPeriodLabel}
+              Estado de pagos · {paymentPeriodLabel}
             </p>
             {loading ? (
               <div className="flex items-center justify-center h-[160px]">
@@ -425,7 +425,7 @@ export default function ReportesPage() {
             {selectedDateRange ? (
               <div>
                 <p className="text-[10px] text-muted-foreground mb-3">
-                  {format(selectedDateRange.start, 'd MMM', { locale: es })} — {format(selectedDateRange.end, 'd MMM yyyy', { locale: es })}
+                  {format(selectedDateRange.start, 'd MMM', { locale: es })} a {format(selectedDateRange.end, 'd MMM yyyy', { locale: es })}
                   {' · '}
                   <button
                     onClick={() => { setSelectedDateRange(null); setSelectedMonth(null); }}

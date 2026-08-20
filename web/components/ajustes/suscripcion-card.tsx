@@ -1234,7 +1234,7 @@ export default function SuscripcionCard() {
                 )}
                 <button onClick={() => { setPayPending(false); setVoucherUrl(null); load(); }}
                   className="block text-[12px] font-semibold text-muted-foreground underline cursor-pointer">
-                  Ya pagué — actualizar estado
+                  Ya pagué, actualizar estado
                 </button>
               </div>
             ) : loadingMetodos ? (
@@ -1243,7 +1243,12 @@ export default function SuscripcionCard() {
               </div>
             ) : (
               <>
-                {/* Toggle de renovación automática como descuento */}
+                {/* Toggle de renovación automática como descuento.
+                    No se ofrece con Bre-B: el cobro recurrente se hace con la
+                    tarjeta tokenizada en Mercado Pago, y una transferencia no
+                    deja nada que volver a cobrar. Tampoco con un comprobante en
+                    revisión, que es un pago que todavía no termina. */}
+                {metodo !== 'BREB' && !breb?.pendiente && (
                 <div className="rounded-xl p-3 flex items-center justify-between gap-3"
                   style={{ background: activarAutoRenovacion ? 'rgba(6,214,160,0.08)' : 'rgba(120,80,200,0.05)', transition: 'background 0.25s cubic-bezier(0.23,1,0.32,1)' }}>
                   <div className="flex items-center gap-2.5">
@@ -1265,6 +1270,7 @@ export default function SuscripcionCard() {
                     }}
                   />
                 </div>
+                )}
 
                 {enTrial && (
                   <p className="text-[11px] text-muted-foreground rounded-lg p-2.5" style={{ background: 'rgba(67,97,238,0.06)' }}>
@@ -1474,7 +1480,7 @@ export default function SuscripcionCard() {
                           <div className="flex items-center justify-between gap-2 pt-1">
                             <div className="min-w-0">
                               <p className="text-[10px] uppercase tracking-wider text-muted-foreground m-0">
-                                Referencia — escríbela en la nota
+                                Referencia, escríbela en la nota
                               </p>
                               <p className="text-[14px] font-bold text-foreground m-0">{breb?.referencia}</p>
                             </div>
@@ -1494,7 +1500,7 @@ export default function SuscripcionCard() {
                           <p className="text-[11.5px] m-0 leading-relaxed" style={{ color: '#8A6216' }}>
                             <b>La verificación puede tomar unas horas.</b> Tu transferencia llega en
                             segundos, pero confirmamos manualmente que entró antes de activar el plan.
-                            Te avisamos apenas quede lista — no tienes que volver a pagar.
+                            Te avisamos apenas quede lista. No tienes que volver a pagar.
                           </p>
                         </div>
 
@@ -1601,7 +1607,7 @@ export default function SuscripcionCard() {
                 </motion.button>
                 <p className="text-[10px] text-muted-foreground text-center">
                   {esBreb
-                    ? 'Bre-B solo funciona entre cuentas y billeteras de Colombia. Verificamos la transferencia manualmente antes de activar el plan.'
+                    ? 'Bre-B solo funciona entre cuentas y billeteras de Colombia. Verificamos la transferencia manualmente antes de activar el plan, y no permite renovación automática: para eso paga con tarjeta.'
                     : 'Pago procesado de forma segura por Mercado Pago. Tus datos nunca se guardan en VeloClub.'}
                 </p>
                 </>

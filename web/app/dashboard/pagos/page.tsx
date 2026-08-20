@@ -486,7 +486,7 @@ export default function PagosPage() {
           style={{ background: 'linear-gradient(135deg,#4361EE,#7209B7)' }}
         >
           <p className="text-[10px] font-semibold tracking-widest opacity-80 uppercase mb-1">
-            Cobrado — {MONTH_NAMES[filterMonth - 1]} {filterYear}
+            Cobrado en {MONTH_NAMES[filterMonth - 1]} {filterYear}
           </p>
           <p className="text-4xl font-semibold mb-3" style={{ fontFamily: 'inherit' }}>
             {fmt.format(totalPaid)}

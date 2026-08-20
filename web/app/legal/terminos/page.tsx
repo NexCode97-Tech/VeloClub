@@ -107,13 +107,13 @@ Estos Términos y Condiciones se rigen por las leyes de la República de Colombi
 *Documento redactado con fines de referencia inicial. Debe ser revisado y validado por un abogado antes de su publicación.*
 `;
 
-export const metadata = { title: 'Términos y Condiciones — VeloClub' };
+export const metadata = { title: 'Términos y Condiciones de VeloClub' };
 
 export default function TerminosPage() {
   return (
     <LegalDoc
       title="Términos y Condiciones de Uso"
-      subtitle="VeloClub — Plataforma de gestión para clubes deportivos"
+      subtitle="VeloClub, plataforma de gestión para clubes deportivos"
       updatedAt="Julio de 2026"
       markdown={MARKDOWN}
     />

@@ -69,7 +69,7 @@ export function PagosPorVerificar() {
     if (accion === 'rechazar') {
       const escrito = prompt(
         `Rechazar el pago de ${pago.club.name}.\n\n` +
-        '¿Qué le decimos? (opcional — se le envía tal cual)'
+        '¿Qué le decimos? (opcional, se le envía tal cual)'
       );
       if (escrito === null) return;   // canceló el diálogo
       motivo = escrito.trim() || undefined;

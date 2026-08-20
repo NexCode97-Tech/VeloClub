@@ -71,7 +71,7 @@ export default function InactivoPage() {
 
           <div className="flex items-center justify-center gap-4 mt-6">
             <Button variant="outline" onClick={() => router.push('/dashboard')} className="gap-1.5">
-              Ya activé mi plan — entrar al panel <ArrowRight className="w-3.5 h-3.5" />
+              Ya activé mi plan <ArrowRight className="w-3.5 h-3.5" />
             </Button>
             <button
               onClick={() => signOut({ redirectUrl: '/' })}

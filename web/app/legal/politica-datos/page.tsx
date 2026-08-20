@@ -119,13 +119,13 @@ Los Titulares que consideren vulnerados sus derechos pueden presentar una queja 
 *Documento redactado con fines de referencia inicial. Debe ser revisado y validado por un abogado antes de su publicación, y complementado con los datos reales de identificación del Responsable del tratamiento.*
 `;
 
-export const metadata = { title: 'Política de Tratamiento de Datos — VeloClub' };
+export const metadata = { title: 'Política de Tratamiento de Datos de VeloClub' };
 
 export default function PoliticaDatosPage() {
   return (
     <LegalDoc
       title="Política de Tratamiento de Datos Personales"
-      subtitle="VeloClub — Plataforma de gestión para clubes deportivos"
+      subtitle="VeloClub, plataforma de gestión para clubes deportivos"
       updatedAt="Julio de 2026"
       markdown={MARKDOWN}
     />

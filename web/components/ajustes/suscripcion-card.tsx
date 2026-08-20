@@ -251,6 +251,94 @@ function Expand({ show, children }: { show: boolean; children: React.ReactNode }
   );
 }
 
+/**
+ * Los tres pasos por los que pasa un pago de Bre-B.
+ *
+ * El punto activo lleva halo ademas de color: quien no distingue verde de ambar
+ * necesita una segunda senal para saber donde esta el pago.
+ */
+function PasosVerificacion({ recibidoEn, comprobanteUrl }: {
+  recibidoEn: string;
+  comprobanteUrl: string | null;
+}) {
+  const pasos = [
+    {
+      titulo: 'Comprobante recibido',
+      detalle: new Date(recibidoEn).toLocaleString('es-CO', { dateStyle: 'medium', timeStyle: 'short' }),
+      estado: 'hecho' as const,
+    },
+    {
+      titulo: 'Verificando el pago',
+      detalle: 'Unas horas, máximo un día hábil',
+      estado: 'ahora' as const,
+    },
+    {
+      titulo: 'Plan activado',
+      detalle: 'Te llega una notificación',
+      estado: 'falta' as const,
+    },
+  ];
+
+  const COLOR = { hecho: '#0E7C57', ahora: '#D9A22B', falta: '#D8D3E4' };
+
+  return (
+    <div className="mt-1">
+      <ol className="list-none m-0 p-0 flex flex-col gap-3 md:grid md:grid-cols-3 md:gap-0">
+        {pasos.map((paso, i) => {
+          const ultimo = i === pasos.length - 1;
+          return (
+            <li key={paso.titulo} className="relative pl-6 md:pl-0 md:pr-3.5">
+              {/* Riel. En movil baja desde el punto hasta el siguiente; en
+                  escritorio corre hacia la derecha, y el tramo ya recorrido va
+                  en verde atenuado — lo que debe resaltar es donde esta el pago
+                  ahora, no lo que ya paso. */}
+              {!ultimo && (
+                <span
+                  aria-hidden="true"
+                  className="absolute left-[4px] top-[15px] bottom-[-12px] w-0.5 rounded-full md:left-[14px] md:right-0 md:top-[4px] md:bottom-auto md:h-0.5 md:w-auto"
+                  style={{
+                    background: paso.estado === 'hecho' ? 'rgba(14,124,87,0.35)' : '#E8E4F0',
+                  }}
+                />
+              )}
+              <span
+                aria-hidden="true"
+                className="absolute left-0 top-[5px] w-2.5 h-2.5 rounded-full md:top-0"
+                style={{
+                  background: COLOR[paso.estado],
+                  boxShadow: paso.estado === 'ahora'
+                    ? '0 0 0 3px rgba(240,180,41,0.20)'
+                    : '0 0 0 3px #fff',
+                }}
+              />
+              <span className={`block text-[12.5px] leading-tight md:mt-[19px] ${paso.estado === 'falta' ? 'font-medium text-muted-foreground' : 'font-semibold text-foreground'}`}>
+                {paso.titulo}
+              </span>
+              <span className="block text-[11.5px] text-muted-foreground leading-snug mt-0.5">
+                {paso.detalle}
+              </span>
+            </li>
+          );
+        })}
+      </ol>
+
+      {/* El aviso y el enlace comparten fila cuando hay ancho: el enlace suelto
+          y centrado se leia como el boton principal de la tarjeta. */}
+      <div className="mt-3.5 pt-3 border-t border-border/60 flex flex-wrap items-center justify-between gap-2">
+        <p className="text-[11px] text-muted-foreground m-0 flex-1 min-w-[180px]">
+          Tu club sigue funcionando normal. No hace falta que pagues de nuevo.
+        </p>
+        {comprobanteUrl && (
+          <a href={comprobanteUrl} target="_blank" rel="noopener noreferrer"
+            className="shrink-0 text-[12px] font-semibold text-primary underline">
+            Ver el comprobante
+          </a>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function SuscripcionCard() {
   const { getToken } = useAuth();
   const reduce = useReducedMotion();
@@ -1203,20 +1291,15 @@ export default function SuscripcionCard() {
                     <p className="text-[11.5px] text-muted-foreground m-0">
                       {cop(breb.pendiente.monto)} · enviado por Bre-B
                     </p>
-                    <ol className="m-0 pl-4 space-y-1.5 text-[11.5px] text-muted-foreground">
-                      <li><b className="text-foreground">Comprobante recibido.</b> {new Date(breb.pendiente.creadoEn).toLocaleString('es-CO', { dateStyle: 'medium', timeStyle: 'short' })}</li>
-                      <li><b className="text-foreground">Verificando el pago.</b> Normalmente unas horas, máximo un día hábil.</li>
-                      <li>Plan activado. Te llega una notificación.</li>
-                    </ol>
-                    <p className="text-[11px] text-muted-foreground m-0">
-                      Tu club sigue funcionando normal mientras tanto. No hace falta que pagues de nuevo.
-                    </p>
-                    {breb.pendiente.comprobanteUrl && (
-                      <a href={breb.pendiente.comprobanteUrl} target="_blank" rel="noopener noreferrer"
-                        className="block text-center text-[12px] font-semibold text-primary underline">
-                        Ver el comprobante que enviaste
-                      </a>
-                    )}
+                    {/* Los marcadores por defecto de una lista se pierden contra
+                        el fondo blanco: quedaban tres frases del mismo peso y nada
+                        decía en cuál de los tres pasos está el pago. Vertical en
+                        movil; en escritorio el recorrido se lee de izquierda a
+                        derecha, que es donde el ancho deja de sobrar. */}
+                    <PasosVerificacion
+                      recibidoEn={breb.pendiente.creadoEn}
+                      comprobanteUrl={breb.pendiente.comprobanteUrl}
+                    />
                   </div>
                 )}
 

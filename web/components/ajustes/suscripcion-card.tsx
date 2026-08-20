@@ -1184,10 +1184,48 @@ export default function SuscripcionCard() {
                   </p>
                 )}
 
+                {/* Un comprobante en revisión es lo primero que tiene que ver: es
+                    su plata. Vivía dentro de la pestaña Bre-B, y como al recargar
+                    el medio por defecto es Tarjeta, el estado quedaba escondido
+                    detrás de una pestaña que nadie tenía por qué volver a abrir —
+                    justo el escenario en el que alguien paga dos veces creyendo
+                    que el primer envío no quedó. Va arriba y no depende del medio
+                    seleccionado. */}
+                {breb?.pendiente && (
+                  <div className="rounded-xl border border-border p-3 space-y-3">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-[13px] font-semibold text-foreground m-0">Pago en verificación</p>
+                      <span className="shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-full"
+                        style={{ background: 'rgba(240,180,41,0.14)', color: '#8A6216' }}>
+                        En revisión
+                      </span>
+                    </div>
+                    <p className="text-[11.5px] text-muted-foreground m-0">
+                      {cop(breb.pendiente.monto)} · enviado por Bre-B
+                    </p>
+                    <ol className="m-0 pl-4 space-y-1.5 text-[11.5px] text-muted-foreground">
+                      <li><b className="text-foreground">Comprobante recibido.</b> {new Date(breb.pendiente.creadoEn).toLocaleString('es-CO', { dateStyle: 'medium', timeStyle: 'short' })}</li>
+                      <li><b className="text-foreground">Verificando el pago.</b> Normalmente unas horas, máximo un día hábil.</li>
+                      <li>Plan activado. Te llega una notificación.</li>
+                    </ol>
+                    <p className="text-[11px] text-muted-foreground m-0">
+                      Tu club sigue funcionando normal mientras tanto. No hace falta que pagues de nuevo.
+                    </p>
+                    {breb.pendiente.comprobanteUrl && (
+                      <a href={breb.pendiente.comprobanteUrl} target="_blank" rel="noopener noreferrer"
+                        className="block text-center text-[12px] font-semibold text-primary underline">
+                        Ver el comprobante que enviaste
+                      </a>
+                    )}
+                  </div>
+                )}
+
+                {!breb?.pendiente && (
                 <p className="text-[13px] font-semibold text-foreground">Paga tu suscripción</p>
+                )}
 
                 {/* Selector de medio — oculto cuando la renovación automática está activa (solo tarjeta) */}
-                <Expand show={!activarAutoRenovacion}>
+                <Expand show={!activarAutoRenovacion && !breb?.pendiente}>
                   {/* Cuatro medios ya no caben en una fila en movil: 2x2 abajo,
                       una sola fila desde tablet. */}
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pb-0.5">
@@ -1226,7 +1264,7 @@ export default function SuscripcionCard() {
 
                 {/* Formularios según medio (o tarjeta forzada si auto-renovación) */}
                 <AnimatePresence mode="wait" custom={direccionSlide} initial={false}>
-                {metodoEfectivo === 'CARD' && (
+                {!breb?.pendiente && metodoEfectivo === 'CARD' && (
                   <motion.div
                     key="form-card"
                     custom={direccionSlide}
@@ -1245,7 +1283,7 @@ export default function SuscripcionCard() {
                   </motion.div>
                 )}
 
-                {metodoEfectivo === 'PSE' && (
+                {!breb?.pendiente && metodoEfectivo === 'PSE' && (
                   <motion.div
                     key="form-pse"
                     custom={direccionSlide}
@@ -1299,7 +1337,7 @@ export default function SuscripcionCard() {
                   </motion.div>
                 )}
 
-                {metodoEfectivo === 'EFECTY' && (
+                {!breb?.pendiente && metodoEfectivo === 'EFECTY' && (
                   <motion.div
                     key="form-efecty"
                     custom={direccionSlide}
@@ -1322,7 +1360,7 @@ export default function SuscripcionCard() {
                   </motion.div>
                 )}
 
-                {metodoEfectivo === 'BREB' && (
+                {!breb?.pendiente && metodoEfectivo === 'BREB' && (
                   <motion.div
                     key="form-breb"
                     custom={direccionSlide}
@@ -1333,33 +1371,6 @@ export default function SuscripcionCard() {
                     transition={{ duration: 0.2, ease: EASE }}
                     className="space-y-2.5"
                   >
-                    {breb?.pendiente ? (
-                      /* Ya envió uno: en vez del formulario ve en qué va, para que no
-                         vuelva a transferir creyendo que no quedó registrado. */
-                      <div className="rounded-xl border border-border p-3 space-y-3">
-                        <div className="flex items-center justify-between gap-2">
-                          <p className="text-[13px] font-semibold text-foreground m-0">Pago en verificación</p>
-                          <span className="shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-full"
-                            style={{ background: 'rgba(240,180,41,0.14)', color: '#8A6216' }}>
-                            En revisión
-                          </span>
-                        </div>
-                        <ol className="m-0 pl-4 space-y-1.5 text-[11.5px] text-muted-foreground">
-                          <li><b className="text-foreground">Comprobante recibido.</b> {new Date(breb.pendiente.creadoEn).toLocaleString('es-CO', { dateStyle: 'medium', timeStyle: 'short' })}</li>
-                          <li><b className="text-foreground">Verificando el pago.</b> Normalmente unas horas, máximo un día hábil.</li>
-                          <li>Plan activado. Te llega una notificación.</li>
-                        </ol>
-                        <p className="text-[11px] text-muted-foreground m-0">
-                          Tu club sigue funcionando normal mientras tanto. No hace falta que pagues de nuevo.
-                        </p>
-                        {breb.pendiente.comprobanteUrl && (
-                          <a href={breb.pendiente.comprobanteUrl} target="_blank" rel="noopener noreferrer"
-                            className="block text-center text-[12px] font-semibold text-primary underline">
-                            Ver el comprobante que enviaste
-                          </a>
-                        )}
-                      </div>
-                    ) : (
                       <>
                         <div className="rounded-xl border border-border p-3 space-y-2">
                           <div className="flex items-center justify-between gap-2">
@@ -1417,7 +1428,6 @@ export default function SuscripcionCard() {
                           </span>
                         </label>
                       </>
-                    )}
                   </motion.div>
                 )}
                 </AnimatePresence>
@@ -1475,7 +1485,7 @@ export default function SuscripcionCard() {
                 {/* Términos — el texto cambia si activa renovación automática */}
                 {/* Con un comprobante ya en revision no hay nada que aceptar ni que
                     enviar: el formulario de arriba muestra en que va. */}
-                {!(esBreb && breb?.pendiente) && (
+                {!breb?.pendiente && (
                 <>
                 <label className="flex items-start gap-2 cursor-pointer">
                   <input type="checkbox" checked={aceptaTerminos} onChange={e => setAceptaTerminos(e.target.checked)} className="mt-0.5 shrink-0" />

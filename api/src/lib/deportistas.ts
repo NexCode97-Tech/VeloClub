@@ -1,4 +1,5 @@
 import { prisma } from '../db/client';
+import { cacheDel } from './redis';
 
 /**
  * Conteo de deportistas de un club.
@@ -11,9 +12,29 @@ import { prisma } from '../db/client';
  * cualquiera que se olvidara de filtrar cobraba de mas.
  */
 
-/** Deportistas activos ahora mismo. Para mostrar en pantalla. */
+/**
+ * Deportistas activos ahora mismo. Para mostrar en pantalla.
+ *
+ * Los que se inscribieron por el enlace y todavia esperan visto bueno NO
+ * cuentan: no entran a la app, y cobrarle al club por gente que no ha aceptado
+ * seria cobrarle por trabajo que no ha hecho.
+ */
 export async function contarDeportistasActivos(clubId: string): Promise<number> {
-  return prisma.member.count({ where: { clubId, role: 'STUDENT', active: true } });
+  return prisma.member.count({
+    where: { clubId, role: 'STUDENT', active: true, inscripcion: 'APROBADO' },
+  });
+}
+
+/**
+ * El listado se cachea en dos versiones segun el alcance de datos que ve el
+ * rol, asi que cualquier cambio debe invalidar ambas. Vive aca y no en la ruta
+ * de miembros porque la inscripcion por enlace tambien crea deportistas.
+ */
+export async function invalidateMembersCache(clubId: string): Promise<void> {
+  await Promise.all([
+    cacheDel(`members:${clubId}:staff`),
+    cacheDel(`members:${clubId}:student`),
+  ]);
 }
 
 /**

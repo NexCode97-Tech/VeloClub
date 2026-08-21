@@ -12,6 +12,7 @@ import meRouter from './routes/me';
 import clubsRouter from './routes/clubs';
 import locationsRouter from './routes/locations';
 import membersRouter from './routes/members';
+import inscripcionRouter from './routes/inscripcion';
 import superadminRouter from './routes/superadmin';
 import eventsRouter from './routes/events';
 import paymentsRouter from './routes/payments';
@@ -156,6 +157,9 @@ app.use('/me', meLimiter, meRouter);
 app.use('/clubs', clubsRouter);
 app.use('/locations', locationsRouter);
 app.use('/members', membersRouter);
+// La inscripcion por enlace tiene rutas publicas: el limitador va adentro, por
+// endpoint, en vez de exigir sesion en todo el router.
+app.use('/inscripcion', inscripcionRouter);
 app.use('/superadmin', superadminLimiter, superadminRouter);
 app.use('/events', eventsRouter);
 app.use('/payments', paymentsRouter);

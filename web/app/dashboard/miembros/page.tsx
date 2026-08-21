@@ -12,8 +12,6 @@ import { apiFetch } from '@/lib/api-client';
 import { parseLocalDate } from '@/lib/utils';
 import { QK } from '@/hooks/useVeloQuery';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import {
   Select, SelectContent, SelectItem, SelectTrigger,
 } from '@/components/ui/select';
@@ -22,14 +20,18 @@ import {
 } from '@/components/ui/dialog';
 import {
   Plus, Pencil, Trash2, Users, Search, Download,
-  FileSpreadsheet, Upload, X, ChevronRight, Eye,
+  FileSpreadsheet, Upload, X, Eye,
   Phone, Mail, Calendar, MapPin, Shield, Heart, CreditCard,
-  ArrowUpDown, Tag, ChevronDown, PauseCircle, PlayCircle, MoreVertical,
+  ArrowUpDown, Tag, PauseCircle, PlayCircle, MoreVertical,
 } from 'lucide-react';
 import { MemberAvatar } from '@/components/ui/member-avatar';
 import { PhoneInput, parsePhoneDisplay, FlagImg } from '@/components/ui/phone-input';
-import { DatePicker } from '@/components/ui/date-picker';
 import { downloadMembersPDF } from '@/lib/pdf';
+import { FichaDeportista } from '@/components/miembros/ficha-deportista';
+import { FICHA_VACIA, validarFicha, type DatosFicha, type ErroresFicha } from '@/lib/ficha-deportista';
+import { MenuImportar } from '@/components/miembros/menu-importar';
+import { PanelInscripcion } from '@/components/miembros/panel-inscripcion';
+import { PendientesInscripcion } from '@/components/miembros/pendientes-inscripcion';
 import { downloadMembersTemplate, parseMembersExcel } from '@/lib/excel';
 import ModuleLoader, { useCargaMinima } from '@/components/ui/module-loader';
 import ModuleReveal from '@/components/ui/module-reveal';
@@ -43,6 +45,8 @@ interface Member {
   emergencyContact?: string; emergencyPhone?: string; eps?: string;
   paymentDueDay?: number | null; monthlyFee?: number | null;
   pictureUrl?: string | null; docType?: string | null; docNumber?: string | null;
+  docFileUrl?: string | null; insuranceFileUrl?: string | null;
+  guardianRelation?: string | null; guardianDocNumber?: string | null;
   createdAt?: string;
   role: string;
   active?: boolean;
@@ -64,15 +68,10 @@ const ROLE_GRADIENT: Record<string, string> = {
 };
 
 // ── Empty form ─────────────────────────────────────────────────────────────────
-const DOC_TYPES = ['CC', 'TI', 'RC', 'CE', 'PA', 'NIT', 'Otro'] as const;
 
-const emptyForm = {
-  fullName: '', email: '', phone: '', birthDate: '',
-  docType: '', docNumber: '',
-  category: '', tipo: '',
-  guardianName: '', guardianPhone: '',
-  eps: '', role: 'STUDENT', locationIds: [] as string[],
-};
+// La forma de la ficha vive en lib/ficha-deportista: la comparten el formulario
+// del club y el publico, para que los dos pidan exactamente lo mismo.
+const emptyForm: DatosFicha = FICHA_VACIA;
 
 // ── Animations ─────────────────────────────────────────────────────────────────
 const EASE_OUT: [number, number, number, number] = [0.23, 1, 0.32, 1];
@@ -99,9 +98,15 @@ export default function MiembrosPage() {
   // Panel state
   const [open, setOpen]         = useState(false);
   const [editing, setEditing]   = useState<Member | null>(null);
-  const [form, setForm]         = useState(emptyForm);
-  const [step, setStep]         = useState(0);
-  const [stepDir, setStepDir]   = useState(1);
+  const [form, setForm]         = useState<DatosFicha>(emptyForm);
+  // Importar abre un menu con las dos formas de traer una lista completa. El
+  // anclaje guarda donde se apreto, para colgarle el menu al boton.
+  const [menuImportar, setMenuImportar] = useState<{ top: number; right: number } | null>(null);
+  const [inscripcionAbierta, setInscripcionAbierta] = useState(false);
+  // Lo que responde el servidor por campo, y los archivos que esperan para
+  // subirse: al crear todavia no existe el deportista al que colgarselos.
+  const [erroresCampo, setErroresCampo] = useState<ErroresFicha>({});
+  const [archivos, setArchivos] = useState<{ doc?: File; insurance?: File }>({});
   const [saving, setSaving]     = useState(false);
   const [estadoGuardado, setEstadoGuardado] = useState<EstadoGuardado>('idle');
   const [error, setError]       = useState<string | null>(null);
@@ -150,20 +155,11 @@ export default function MiembrosPage() {
   }, []);
 
   // Steps definition (después de declarar locations)
-  const steps = useMemo(() => {
-    const s = [
-      { id: 'identity', label: 'Identidad' },
-      { id: 'contact',  label: 'Contacto' },
-    ];
-    if (form.role === 'STUDENT') {
-      s.push({ id: 'guardian', label: 'Acudiente' });
-      s.push({ id: 'sport',    label: 'Deportiva' });
-    }
-    if (locations.length > 0 && form.role !== 'ADMIN') {
-      s.push({ id: 'locations', label: 'Sedes' });
-    }
-    return s;
-  }, [form.role, locations.length]);
+  // Al crear se exigen los obligatorios; al editar a alguien que ya existe sin
+  // ellos se avisa pero se deja guardar, o no se le podria corregir ni el
+  // telefono.
+  const puedeGuardar = Object.keys(validarFicha(form, !editing)).length === 0;
+
   const loading   = loadingMembers || loadingLocs;
   // Sostiene el indicador un mínimo de tiempo para que no parpadee
   const mostrarCarga = useCargaMinima(loading);
@@ -183,7 +179,8 @@ export default function MiembrosPage() {
 
   // ── Panel actions ───────────────────────────────────────────────────────────
   function openNew() {
-    setEditing(null); setForm(emptyForm); setStep(0); setError(null); setOpen(true);
+    setEditing(null); setForm(emptyForm); setError(null);
+    setErroresCampo({}); setArchivos({}); setOpen(true);
   }
 
   function openEdit(m: Member) {
@@ -196,18 +193,59 @@ export default function MiembrosPage() {
       category: m.category ?? '', tipo: m.tipo ?? '',
       guardianName: m.emergencyContact ?? '',
       guardianPhone: m.emergencyPhone ?? '',
-      eps: m.eps ?? '', role: m.role,
+      guardianRelation: m.guardianRelation ?? '',
+      guardianDocNumber: m.guardianDocNumber ?? '',
+      eps: m.eps ?? '', role: (m.role as DatosFicha['role']),
       locationIds: m.locations.map(l => l.location.id),
     });
-    setStep(0); setError(null); setOpen(true);
+    setError(null); setErroresCampo({}); setArchivos({}); setOpen(true);
   }
 
-  function nextStep() { setStepDir(1); setStep(s => Math.min(s + 1, steps.length - 1)); }
-  function prevStep() { setStepDir(-1); setStep(s => Math.max(s - 1, 0)); }
+  /**
+   * Pregunta si el correo o el documento ya estan usados en el club.
+   *
+   * Es el aviso que sale mientras alguien escribe. Nunca reemplaza la revision
+   * del guardado: dos pestanas abiertas pueden pasar las dos por aca.
+   */
+  async function verificarDuplicado(campo: 'email' | 'docNumber', valor: string): Promise<boolean> {
+    try {
+      const token = await getToken();
+      const params = new URLSearchParams({ [campo]: valor });
+      if (editing) params.set('excepto', editing.id);
+      const r = await apiFetch<{ correo: boolean; documento: boolean }>(
+        `/members/verificar?${params.toString()}`, { token }
+      );
+      return campo === 'email' ? r.correo : r.documento;
+    } catch {
+      // Si la consulta falla no se inventa un aviso: el guardado revisa igual.
+      return false;
+    }
+  }
+
+
+  /**
+   * Sube un adjunto a Cloudinary y lo cuelga del deportista.
+   *
+   * Se llama despues de guardar y no antes: al crear todavia no existe el
+   * miembro al que colgarselo, asi que el archivo espera en memoria.
+   */
+  async function subirAdjunto(memberId: string, campo: 'doc' | 'insurance', archivo: File) {
+    const token = await getToken();
+    const base64 = await new Promise<string>((resolve, reject) => {
+      const lector = new FileReader();
+      lector.onload = () => resolve(String(lector.result));
+      lector.onerror = () => reject(new Error('No se pudo leer el archivo'));
+      lector.readAsDataURL(archivo);
+    });
+    await apiFetch(`/members/${memberId}/archivo`, {
+      method: 'POST', token,
+      body: JSON.stringify({ campo, base64 }),
+    });
+  }
 
   async function handleSave() {
-    if (!form.fullName.trim()) return;
-    setSaving(true); setEstadoGuardado('guardando'); setError(null);
+    if (!puedeGuardar) return;
+    setSaving(true); setEstadoGuardado('guardando'); setError(null); setErroresCampo({});
     try {
       const token = await getToken();
       const body = JSON.stringify({
@@ -221,10 +259,15 @@ export default function MiembrosPage() {
         tipo: form.tipo || undefined,
         emergencyContact: form.guardianName || undefined,
         emergencyPhone: form.guardianPhone || undefined,
+        guardianRelation: form.guardianRelation || undefined,
+        guardianDocNumber: form.guardianDocNumber || undefined,
         eps: form.eps || undefined,
         role: form.role,
         locationIds: form.locationIds,
       });
+
+      let memberId = editing?.id ?? null;
+
       if (editing) {
         const roleChanged = editing.role !== form.role;
         const isSelf = editing.email && user?.primaryEmailAddress?.emailAddress
@@ -232,8 +275,21 @@ export default function MiembrosPage() {
         await apiFetch(`/members/${editing.id}`, { method: 'PUT', token, body });
         if (roleChanged && isSelf) { window.location.href = '/dashboard'; return; }
       } else {
-        await apiFetch('/members', { method: 'POST', token, body });
+        const creado = await apiFetch<{ member: { id: string } }>('/members', { method: 'POST', token, body });
+        memberId = creado.member.id;
       }
+
+      // Los adjuntos van despues, y un fallo aca no puede perder el deportista
+      // que ya quedo creado: se avisa y se deja seguir.
+      if (memberId) {
+        try {
+          if (archivos.doc) await subirAdjunto(memberId, 'doc', archivos.doc);
+          if (archivos.insurance) await subirAdjunto(memberId, 'insurance', archivos.insurance);
+        } catch {
+          setError('El deportista quedó guardado, pero no se pudo subir algún archivo. Vuelve a intentarlo desde su ficha.');
+        }
+      }
+
       // Confirma antes de cerrar: si el panel se cierra de una, la persona no
       // alcanza a ver que el cambio quedo guardado.
       setEstadoGuardado('guardado');
@@ -241,8 +297,13 @@ export default function MiembrosPage() {
       await new Promise(r => setTimeout(r, MS_GUARDADO));
       setOpen(false);
       setEstadoGuardado('idle');
+      setArchivos({});
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Error al guardar');
+      // El servidor dice que campo choca, asi que el aviso se pinta ahi mismo
+      // en vez de quedar como un error suelto al pie del formulario.
+      const err = e as { campo?: keyof ErroresFicha; message?: string };
+      if (err.campo) setErroresCampo({ [err.campo]: err.message ?? 'Ese dato ya está usado' });
+      else setError(e instanceof Error ? e.message : 'Error al guardar');
       setEstadoGuardado('idle');
     } finally {
       setSaving(false);
@@ -299,14 +360,6 @@ export default function MiembrosPage() {
     return m.email.trim().toLowerCase() === propio.trim().toLowerCase();
   }
 
-  function toggleLocation(id: string) {
-    setForm(f => ({
-      ...f,
-      locationIds: f.locationIds.includes(id)
-        ? f.locationIds.filter(l => l !== id)
-        : [...f.locationIds, id],
-    }));
-  }
 
   async function handleImport(file: File) {
     setImporting(true); setImportErrors([]); setImportWarnings([]);
@@ -382,7 +435,6 @@ export default function MiembrosPage() {
   }
 
   // ── Step content renderer ────────────────────────────────────────────────────
-  const currentStep = steps[step]?.id;
 
   // ── Stats desktop (también actúan como filtros) ──────────────────────────────
   const statsDesktop: { label: string; value: number; color: string; bg: string; filter: 'ALL'|'STUDENT'|'COACH'|'ADMIN' }[] = [
@@ -432,7 +484,10 @@ export default function MiembrosPage() {
             <Download className="w-4 h-4" /><span className="hidden sm:inline">PDF</span>
           </button>
           {canManage && (<>
-          <button onClick={() => setImportOpen(true)}
+          <button onClick={e => {
+              const r = e.currentTarget.getBoundingClientRect();
+              setMenuImportar({ top: r.bottom + 6, right: window.innerWidth - r.right });
+            }}
             className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold border border-border text-muted-foreground hover:bg-secondary active:scale-95 transition-all">
             <Upload className="w-4 h-4" /><span className="hidden sm:inline">Importar</span>
           </button>
@@ -468,6 +523,10 @@ export default function MiembrosPage() {
         {mostrarCarga ? <ModuleLoader /> : (
         <ModuleReveal>
         <div className="px-5 pt-6">
+          <PendientesInscripcion
+            puedeAprobar={canManage}
+            onCambio={() => qc.invalidateQueries({ queryKey: QK.members() })}
+          />
           {/* ── Stats strip ── */}
           <div className="grid grid-cols-4 gap-3 mb-6">
             {statsDesktop.map(s => {
@@ -595,7 +654,10 @@ export default function MiembrosPage() {
 
             <div className="flex items-center gap-2 ml-auto">
               {canManage && (
-              <button onClick={() => setImportOpen(true)}
+              <button onClick={e => {
+                  const r = e.currentTarget.getBoundingClientRect();
+                  setMenuImportar({ top: r.bottom + 6, right: window.innerWidth - r.right });
+                }}
                 className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-[13px] font-semibold transition-all hover:bg-white cursor-pointer"
                 style={{ color: '#8E87A8', border: '1px solid rgba(120,80,200,0.12)' }}>
                 <Upload className="w-4 h-4" /> Importar
@@ -885,6 +947,10 @@ export default function MiembrosPage() {
       {mostrarCarga ? <div className="md:hidden"><ModuleLoader /></div> : (
       <motion.div variants={pageStagger} initial="hidden" animate="show" className="md:hidden px-4 pt-4 flex flex-col gap-3">
         <ModuleReveal>
+        <PendientesInscripcion
+          puedeAprobar={canManage}
+          onCambio={() => qc.invalidateQueries({ queryKey: QK.members() })}
+        />
         {/* Stats móvil como filtros */}
         <motion.div variants={pageCard} className="grid grid-cols-4 gap-2">
           {statsDesktop.map(s => {
@@ -1141,7 +1207,7 @@ export default function MiembrosPage() {
             <motion.div
               className="bg-white flex flex-col w-full"
               style={{
-                maxWidth: 480,
+                maxWidth: 720,
                 borderRadius: 28,
                 maxHeight: '92dvh',
                 boxShadow: '0 24px 64px rgba(124,58,237,0.18), 0 4px 16px rgba(0,0,0,0.08)',
@@ -1160,7 +1226,7 @@ export default function MiembrosPage() {
                   {editing ? 'Editar miembro' : 'Nuevo miembro'}
                 </p>
                 <h2 className="text-[22px] font-semibold text-foreground leading-tight mt-0.5" style={{ fontFamily: 'inherit' }}>
-                  {steps[step]?.label}
+                  {editing ? editing.fullName : 'Datos del deportista'}
                 </h2>
               </div>
               <motion.button
@@ -1174,308 +1240,49 @@ export default function MiembrosPage() {
               </motion.button>
             </div>
 
-            {/* Step indicator */}
-            <div className="px-6 pb-4 flex gap-1.5 shrink-0">
-              {steps.map((s, i) => (
-                <motion.div
-                  key={s.id}
-                  className="h-1 rounded-full"
-                  animate={{
-                    background: i < step ? '#7C3AED' : i === step ? '#7C3AED' : 'rgba(124,58,237,0.15)',
-                    flex: i === step ? 2 : 1,
-                    opacity: i > step ? 0.4 : 1,
-                  }}
-                  transition={{ duration: 0.28, ease: EASE_OUT }}
-                />
-              ))}
+            {/* El formulario. Todo a la vista, en secciones: con pasos, corregir
+                algo de la primera pantalla obligaba a recorrer el resto de nuevo
+                y no habia forma de ver cuanto faltaba. */}
+            <div className="flex-1 overflow-y-auto px-6 pb-4">
+              <FichaDeportista
+                datos={form}
+                onCambio={setForm}
+                sedes={locations}
+                esNuevo={!editing}
+                erroresServidor={erroresCampo}
+                verificar={verificarDuplicado}
+                archivos={{
+                  doc: editing?.docFileUrl ?? undefined,
+                  insurance: editing?.insuranceFileUrl ?? undefined,
+                }}
+                onArchivo={(campo, archivo) => setArchivos(a => ({ ...a, [campo]: archivo }))}
+              />
             </div>
 
-            {/* Step content — scrollable */}
-            <div className="flex-1 overflow-y-auto">
-              <AnimatePresence mode="wait" custom={stepDir}>
-                <motion.div
-                  key={`${step}-${currentStep}`}
-                  custom={stepDir}
-                  variants={{
-                    enter:  (d: number) => ({ x: reducedMotion ? 0 : d * 48, opacity: 0 }),
-                    center: { x: 0, opacity: 1 },
-                    exit:   (d: number) => ({ x: reducedMotion ? 0 : d * -48, opacity: 0 }),
-                  }}
-                  initial="enter"
-                  animate="center"
-                  exit="exit"
-                  transition={{ duration: 0.22, ease: EASE_OUT }}
-                  className="px-6 pb-6"
-                >
-
-                  {/* ── STEP: IDENTIDAD ───────────────────────────────── */}
-                  {currentStep === 'identity' && (
-                    <div className="space-y-5">
-                      {/* Avatar preview */}
-                      <AnimatePresence>
-                        {form.fullName && (
-                          <motion.div
-                            initial={{ opacity: 0, scale: 0.95, y: -8 }}
-                            animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.95 }}
-                            transition={{ duration: 0.2, ease: EASE_OUT }}
-                            className="flex items-center gap-3 px-4 py-3 rounded-2xl"
-                            style={{ background: 'rgba(124,58,237,0.06)' }}
-                          >
-                            <div
-                              className="w-11 h-11 rounded-full flex items-center justify-center text-sm font-semibold text-white shrink-0"
-                              style={{ background: ROLE_GRADIENT[form.role] ?? ROLE_GRADIENT.STUDENT }}
-                            >
-                              {initials(form.fullName)}
-                            </div>
-                            <div>
-                              <p className="font-semibold text-foreground text-[14px]">{form.fullName}</p>
-                              <p className="text-[11px]" style={{ color: '#7C3AED' }}>{ROLES[form.role]}</p>
-                            </div>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-
-                      <div>
-                        <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest block mb-2">
-                          Nombre completo *
-                        </label>
-                        <Input
-                          placeholder="ej. Juan Pérez López"
-                          value={form.fullName}
-                          autoFocus
-                          className="h-12 text-[15px] rounded-xl border-border"
-                          onChange={e => setForm(f => ({ ...f, fullName: e.target.value }))}
-                        />
-                      </div>
-
-                      <div>
-                        <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest block mb-2">
-                          Rol
-                        </label>
-                        <div className="grid grid-cols-3 gap-2">
-                          {([['STUDENT','Deportista'],['COACH','Entrenador'],['ADMIN','Admin']] as const).map(([val, label]) => (
-                            <motion.button
-                              key={val}
-                              whileTap={reducedMotion ? {} : { scale: 0.96 }}
-                              transition={{ duration: 0.1 }}
-                              onClick={() => { setForm(f => ({ ...f, role: val })); }}
-                              className="py-3 rounded-2xl text-[13px] font-semibold border-2 transition-all"
-                              style={form.role === val
-                                ? { background: '#7C3AED', color: '#fff', borderColor: '#7C3AED' }
-                                : { background: '#fff', color: '#8E87A8', borderColor: 'rgba(124,58,237,0.15)' }
-                              }
-                            >
-                              {label}
-                            </motion.button>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Documento */}
-                      <div>
-                        <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest block mb-2">
-                          Documento
-                        </label>
-                        <div className="flex gap-2">
-                          {/* Tipo de documento */}
-                          <div className="flex gap-1 flex-wrap shrink-0">
-                            {DOC_TYPES.map(t => (
-                              <button
-                                key={t}
-                                type="button"
-                                onClick={() => setForm(f => ({ ...f, docType: f.docType === t ? '' : t }))}
-                                className="h-9 px-2.5 rounded-lg text-[11px] font-semibold border-2 transition-all"
-                                style={form.docType === t
-                                  ? { background: '#7C3AED', color: '#fff', borderColor: '#7C3AED' }
-                                  : { background: '#fff', color: '#8E87A8', borderColor: 'rgba(124,58,237,0.15)' }
-                                }
-                              >
-                                {t}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                        <div className="mt-2">
-                          <Input
-                            placeholder={form.docType ? `Número de ${form.docType}` : 'Selecciona primero el tipo'}
-                            value={form.docNumber}
-                            disabled={!form.docType}
-                            className="h-11 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
-                            onChange={e => setForm(f => ({ ...f, docNumber: e.target.value }))}
-                          />
-                        </div>
-                      </div>
-
-                    </div>
-                  )}
-
-                  {/* ── STEP: CONTACTO ────────────────────────────────── */}
-                  {currentStep === 'contact' && (
-                    <div className="space-y-4">
-                      <div>
-                        <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest block mb-2">Correo electrónico</label>
-                        <Input type="email" placeholder="correo@ejemplo.com" value={form.email} className="h-12 rounded-xl"
-                          onChange={e => setForm(f => ({ ...f, email: e.target.value }))} />
-                      </div>
-                      <div>
-                        <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest block mb-2">Teléfono</label>
-                        <PhoneInput
-                          value={form.phone}
-                          onChange={v => setForm(f => ({ ...f, phone: v }))}
-                          placeholder="Número de teléfono"
-                        />
-                      </div>
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest block mb-2">Nacimiento</label>
-                          <DatePicker value={form.birthDate} onChange={v => setForm(f => ({ ...f, birthDate: v }))} placeholder="Fecha de nacimiento" />
-                        </div>
-                        <div>
-                          <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest block mb-2">EPS</label>
-                          <Input placeholder="Nombre de la EPS" value={form.eps} className="h-12 rounded-xl"
-                            onChange={e => setForm(f => ({ ...f, eps: e.target.value }))} />
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* ── STEP: ACUDIENTE ───────────────────────────────── */}
-                  {currentStep === 'guardian' && (
-                    <div className="space-y-5">
-                      <div className="px-4 py-3 rounded-2xl" style={{ background: 'rgba(67,97,238,0.06)' }}>
-                        <p className="text-[12px] font-semibold" style={{ color: '#4361EE' }}>
-                          El recordatorio de pago se enviará a este número por WhatsApp
-                        </p>
-                      </div>
-                      <div>
-                        <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest block mb-2">Nombre del acudiente</label>
-                        <Input placeholder="ej. María López" value={form.guardianName} className="h-12 rounded-xl"
-                          onChange={e => setForm(f => ({ ...f, guardianName: e.target.value }))} />
-                      </div>
-                      <div>
-                        <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest block mb-2">Teléfono del acudiente</label>
-                        <PhoneInput
-                          value={form.guardianPhone}
-                          onChange={v => setForm(f => ({ ...f, guardianPhone: v }))}
-                          placeholder="Número del acudiente"
-                        />
-                      </div>
-                    </div>
-                  )}
-
-                  {/* ── STEP: INFO DEPORTIVA ──────────────────────────── */}
-                  {currentStep === 'sport' && (
-                    <div className="space-y-4">
-                      <div>
-                        <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest block mb-2">Categoría</label>
-                        <Select value={form.category} onValueChange={v => setForm(f => ({ ...f, category: v ?? '' }))}>
-                          <SelectTrigger className="h-12 rounded-xl">
-                            <span className="text-sm">{form.category || 'Seleccionar categoría'}</span>
-                          </SelectTrigger>
-                          <SelectContent>
-                            {CATEGORIAS.map(c => (
-                              <SelectItem key={c} value={c}>{c}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div>
-                        <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest block mb-2">Nivel</label>
-                        <Select value={form.tipo} onValueChange={v => setForm(f => ({ ...f, tipo: v ?? '' }))}>
-                          <SelectTrigger className="h-12 rounded-xl">
-                            <span className="text-sm">{form.tipo || 'Seleccionar nivel'}</span>
-                          </SelectTrigger>
-                          <SelectContent>
-                            {NIVELES.map(t => (
-                              <SelectItem key={t} value={t}>{t}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* ── STEP: SEDES ───────────────────────────────────── */}
-                  {currentStep === 'locations' && (
-                    <div className="space-y-4">
-                      {locations.length === 0 ? (
-                        <p className="text-[13px] text-muted-foreground">No hay sedes registradas aún.</p>
-                      ) : (
-                        <div className="flex flex-wrap gap-2">
-                          {locations.map(loc => {
-                            const selected = form.locationIds.includes(loc.id);
-                            return (
-                              <motion.button
-                                key={loc.id}
-                                whileTap={reducedMotion ? {} : { scale: 0.96 }}
-                                transition={{ duration: 0.1 }}
-                                onClick={() => toggleLocation(loc.id)}
-                                className="px-4 py-2.5 rounded-2xl text-[13px] font-semibold border-2 transition-all"
-                                style={selected
-                                  ? { background: '#7C3AED', color: '#fff', borderColor: '#7C3AED' }
-                                  : { background: '#fff', color: '#8E87A8', borderColor: 'rgba(124,58,237,0.18)' }
-                                }
-                              >
-                                {loc.name}
-                              </motion.button>
-                            );
-                          })}
-                        </div>
-                      )}
-
-                      {/* Error display on last step */}
-                      {error && (
-                        <motion.div
-                          initial={{ opacity: 0, y: 4 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          className="px-4 py-3 rounded-xl"
-                          style={{ background: 'rgba(239,71,111,0.10)' }}
-                        >
-                          <p className="text-[12px] font-semibold" style={{ color: '#EF476F' }}>{error}</p>
-                        </motion.div>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Error display if only 2 steps (ADMIN) */}
-                  {currentStep === 'contact' && steps.length === 2 && error && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 4 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="mt-4 px-4 py-3 rounded-xl"
-                      style={{ background: 'rgba(239,71,111,0.10)' }}
-                    >
-                      <p className="text-[12px] font-semibold" style={{ color: '#EF476F' }}>{error}</p>
-                    </motion.div>
-                  )}
-
-                </motion.div>
-              </AnimatePresence>
-            </div>
-
-            {/* ── Navigation ─────────────────────────────────────────── */}
-            <div
-              className="px-6 pt-4 flex gap-3 shrink-0 border-t border-border"
-              style={{ paddingBottom: 'calc(1rem + env(safe-area-inset-bottom))' }}
-            >
-              {step > 0 && (
-                <motion.button
-                  whileTap={reducedMotion ? {} : { scale: 0.97 }}
-                  transition={{ duration: 0.12, ease: EASE_OUT }}
-                  onClick={prevStep}
-                  className="flex-1 py-3.5 rounded-2xl font-semibold text-[14px] border-2 transition-colors"
-                  style={{ borderColor: 'rgba(124,58,237,0.18)', color: '#7C3AED' }}
-                >
-                  Atrás
-                </motion.button>
+            {/* Pie */}
+            <div className="px-6 py-4 border-t border-border shrink-0 flex items-center gap-2.5">
+              {error && (
+                <p className="flex-1 text-[11.5px] m-0" style={{ color: '#EF476F' }}>{error}</p>
+              )}
+              {!error && (
+                <p className="flex-1 text-[11.5px] text-muted-foreground m-0">
+                  {editing ? 'Los cambios se guardan al confirmar.' : 'Nombre, nacimiento, documento y correo son obligatorios.'}
+                </p>
               )}
               <motion.button
                 whileTap={reducedMotion ? {} : { scale: 0.97 }}
                 transition={{ duration: 0.12, ease: EASE_OUT }}
-                onClick={step < steps.length - 1 ? nextStep : handleSave}
-                disabled={saving || (step === 0 && !form.fullName.trim())}
-                className="flex-[2] py-3.5 rounded-2xl font-semibold text-[14px] text-white flex items-center justify-center gap-2 transition-opacity disabled:opacity-50"
+                onClick={() => !saving && setOpen(false)}
+                className="px-4 py-3 rounded-2xl font-semibold text-[13px] text-muted-foreground border border-border shrink-0"
+              >
+                Cancelar
+              </motion.button>
+              <motion.button
+                whileTap={reducedMotion ? {} : { scale: 0.97 }}
+                transition={{ duration: 0.12, ease: EASE_OUT }}
+                onClick={handleSave}
+                disabled={saving || !puedeGuardar}
+                className="px-5 py-3 rounded-2xl font-semibold text-[13.5px] text-white flex items-center justify-center gap-2 transition-opacity disabled:opacity-50 shrink-0"
                 style={{ background: 'linear-gradient(135deg, #7C3AED, #4361EE)' }}
               >
                 <ContenidoGuardado
@@ -1483,12 +1290,7 @@ export default function MiembrosPage() {
                   textoGuardando="Guardando"
                   textoGuardado="Guardado"
                   color="#fff"
-                  textoIdle={step < steps.length - 1 ? (
-                    <>
-                      Continuar
-                      <ChevronRight className="w-4 h-4" />
-                    </>
-                  ) : editing ? 'Guardar cambios' : 'Crear miembro'}
+                  textoIdle={editing ? 'Guardar cambios' : 'Crear miembro'}
                 />
               </motion.button>
             </div>
@@ -1727,6 +1529,19 @@ export default function MiembrosPage() {
       </div>
 
       {/* ── Modal importar Excel ────────────────────────────────────────────── */}
+      {/* Las dos formas de traer una lista completa, colgadas del boton */}
+      <MenuImportar
+        abierto={menuImportar !== null}
+        anclaje={menuImportar}
+        onCerrar={() => setMenuImportar(null)}
+        onFormulario={() => setInscripcionAbierta(true)}
+        onExcel={() => setImportOpen(true)}
+      />
+      <PanelInscripcion
+        abierto={inscripcionAbierta}
+        onCerrar={() => setInscripcionAbierta(false)}
+      />
+
       <Dialog open={importOpen} onOpenChange={v => { if (!importing) { setImportOpen(v); setImportErrors([]); setImportWarnings([]); } }}>
         <DialogContent className="max-w-sm">
           <DialogHeader><DialogTitle>Importar desde Excel</DialogTitle></DialogHeader>

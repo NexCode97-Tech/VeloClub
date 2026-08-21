@@ -9,6 +9,8 @@ import { addToAllowlist, removeFromAllowlist, revokeClerkAccess, revokeClerkSess
 import { notifyClubStaff } from '../lib/notify';
 import { cacheGet, cacheSet, cacheDel } from '../lib/redis';
 import { sedesSonDelClub } from '../lib/sedes';
+import { invalidateMembersCache } from '../lib/deportistas';
+import { yaExiste } from '../lib/inscripcion';
 import { validarSubida } from '../lib/upload-guard';
 import { uploadLimiter, createLimiter } from '../lib/rate-limit';
 
@@ -29,6 +31,8 @@ const memberSchema = z.object({
   docNumber: z.string().optional(),
   emergencyContact: z.string().optional(),
   emergencyPhone: z.string().optional(),
+  guardianRelation: z.string().max(40).optional(),
+  guardianDocNumber: z.string().max(30).optional(),
   eps: z.string().optional(),
   category: z.string().optional(),
   tipo: z.string().optional(),
@@ -57,15 +61,6 @@ function esAdmin(req: Request): boolean {
   return req.user?.role === 'ADMIN';
 }
 
-// El listado se cachea en dos versiones según el alcance de datos que ve el rol,
-// así que cualquier cambio debe invalidar ambas.
-async function invalidateMembersCache(clubId: string): Promise<void> {
-  await Promise.all([
-    cacheDel(`members:${clubId}:staff`),
-    cacheDel(`members:${clubId}:student`),
-  ]);
-}
-
 function toTitleCase(str: string): string {
   return str
     .toLowerCase()
@@ -90,15 +85,30 @@ router.get('/', requireAuth, async (req, res) => {
   const cached = await cacheGet<{ members: unknown[] }>(cacheKey);
   if (cached) return res.json(cached);
 
+  // Los que llegaron por el enlace y esperan visto bueno no salen en la lista:
+  // viven en su propia bandeja hasta que alguien los acepte. Si aparecieran
+  // aca, el club los contaria como suyos y les pasaria asistencia sin haberlos
+  // aceptado.
+  const soloAprobados = { clubId, inscripcion: 'APROBADO' as const };
+
   const members = isStudent
     ? await prisma.member.findMany({
-        where: { clubId },
+        where: soloAprobados,
         select: { id: true, fullName: true, pictureUrl: true, role: true, category: true, tipo: true, active: true },
         orderBy: { fullName: 'asc' },
       })
     : await prisma.member.findMany({
-        where: { clubId },
-        include: { locations: { include: { location: true } } },
+        where: soloAprobados,
+        select: {
+          id: true, fullName: true, email: true, phone: true, birthDate: true,
+          pictureUrl: true, docType: true, docNumber: true, docFileUrl: true,
+          insuranceFileUrl: true, emergencyContact: true, emergencyPhone: true,
+          guardianRelation: true, guardianDocNumber: true, eps: true,
+          category: true, tipo: true, paymentDueDay: true, monthlyFee: true,
+          role: true, active: true, clerkId: true, inviteStatus: true,
+          origen: true, aprobadoAt: true, createdAt: true,
+          locations: { include: { location: true } },
+        },
         orderBy: { fullName: 'asc' },
       });
 
@@ -166,6 +176,30 @@ router.get('/:id', requireAuth, async (req, res) => {
   res.json({ member });
 });
 
+/**
+ * GET /members/verificar — ¿este correo o este documento ya están usados?
+ *
+ * La usa el formulario mientras alguien escribe, para avisar en el momento en
+ * vez de al guardar, cuando ya llenó toda la ficha. Devuelve si está ocupado y
+ * nada más: decir de quién es le mostraría a un administrador el dato de otra
+ * persona, y bastaría con probar números para ir sacando nombres.
+ *
+ * Nunca reemplaza la comprobación del guardado. Dos pestañas abiertas pueden
+ * pasar las dos por acá y chocar después; la que manda es la de POST y PATCH.
+ */
+router.get('/verificar', requireAuth, async (req, res) => {
+  if (!req.user) return res.status(401).json({ error: 'No autenticado' });
+  const clubId = req.user.clubId ?? '';
+  if (!clubId) return res.json({ correo: false, documento: false });
+
+  const email = typeof req.query.email === 'string' ? req.query.email : undefined;
+  const docNumber = typeof req.query.docNumber === 'string' ? req.query.docNumber : undefined;
+  const excepto = typeof req.query.excepto === 'string' ? req.query.excepto : undefined;
+
+  const ocupado = await yaExiste({ clubId, email, docNumber, exceptoMemberId: excepto });
+  res.json(ocupado);
+});
+
 // POST /members
 router.post('/', requireAuth, async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'No autenticado' });
@@ -178,6 +212,20 @@ router.post('/', requireAuth, async (req, res) => {
 
   if (locationIds && !await sedesSonDelClub(locationIds, req.user.clubId ?? '')) {
     return res.status(403).json({ error: 'Una o más sedes no pertenecen a este club' });
+  }
+
+  // Correo y documento no se repiten dentro del club. La base todavia no lo
+  // garantiza con un indice, asi que la comprobacion de verdad es esta.
+  const ocupado = await yaExiste({
+    clubId: req.user.clubId ?? '',
+    email: rest.email,
+    docNumber: rest.docNumber,
+  });
+  if (ocupado.documento) {
+    return res.status(409).json({ campo: 'docNumber', error: 'Ese documento ya está registrado en este club' });
+  }
+  if (ocupado.correo) {
+    return res.status(409).json({ campo: 'email', error: 'Ese correo ya está registrado en este club' });
   }
 
   let member;
@@ -196,7 +244,7 @@ router.post('/', requireAuth, async (req, res) => {
     });
   } catch (err) {
     if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
-      return res.status(409).json({ error: `El correo "${rest.email}" ya está registrado en este club` });
+      return res.status(409).json({ error: 'Ese correo ya está registrado en este club' });
     }
     const msg = err instanceof Error ? err.message : 'Error al crear el miembro';
     return res.status(500).json({ error: msg });
@@ -278,6 +326,22 @@ router.put('/:id', requireAuth, async (req, res) => {
 
   if (locationIds && !await sedesSonDelClub(locationIds, req.user.clubId ?? '')) {
     return res.status(403).json({ error: 'Una o más sedes no pertenecen a este club' });
+  }
+
+  // Al editar, el propio miembro no cuenta como choque consigo mismo. Y solo se
+  // revisa lo que de verdad cambio: si alguien viejo ya venia con el correo
+  // repetido, corregirle el telefono no puede quedar bloqueado por eso.
+  const ocupadoEd = await yaExiste({
+    clubId: req.user.clubId ?? '',
+    email:     rest.email     !== existing.email     ? rest.email     : undefined,
+    docNumber: rest.docNumber !== existing.docNumber ? rest.docNumber : undefined,
+    exceptoMemberId: id,
+  });
+  if (ocupadoEd.documento) {
+    return res.status(409).json({ campo: 'docNumber', error: 'Ese documento ya está registrado en este club' });
+  }
+  if (ocupadoEd.correo) {
+    return res.status(409).json({ campo: 'email', error: 'Ese correo ya está registrado en este club' });
   }
 
   if (locationIds !== undefined) {
@@ -572,6 +636,67 @@ router.post('/me/picture', uploadLimiter, requireAuth, async (req, res) => {
     res.json({ pictureUrl: updated.pictureUrl });
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'Error al subir imagen';
+    res.status(500).json({ error: msg });
+  }
+});
+
+/**
+ * POST /members/:id/archivo — el club sube el documento o la póliza.
+ *
+ * Recibe el archivo en base64 y lo sube desde el servidor, igual que la foto de
+ * perfil. El endpoint viejo de arriba espera una url ya subida a Cloudinary, lo
+ * que obligaría al navegador a hablar con Cloudinary por su cuenta; este sigue
+ * el camino que usa el resto del proyecto.
+ */
+router.post('/:id/archivo', uploadLimiter, requireAuth, async (req, res) => {
+  if (!req.user) return res.status(401).json({ error: 'No autenticado' });
+  if (!esAdmin(req)) return res.status(403).json({ error: 'Solo administradores' });
+  const id = getId(req);
+
+  const parsed = z.object({
+    campo:  z.enum(['doc', 'insurance']),
+    base64: z.string().min(1),
+  }).safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: parsed.error.issues });
+
+  const { campo, base64 } = parsed.data;
+
+  // Un documento puede llegar como foto o como PDF, así que se valida con el
+  // criterio de documento y no con el de imagen.
+  const v = validarSubida(base64, 'doc');
+  if (!v.ok) return res.status(400).json({ error: v.error });
+
+  const member = await prisma.member.findFirst({
+    where: { id, clubId: req.user.clubId ?? '' },
+    select: { id: true, docFilePublicId: true, insurancePublicId: true },
+  });
+  if (!member) return res.status(404).json({ error: 'Miembro no encontrado' });
+
+  try {
+    // El anterior se borra: si no, cada reemplazo deja basura pagada en
+    // Cloudinary que nadie va a volver a mirar.
+    const anterior = campo === 'doc' ? member.docFilePublicId : member.insurancePublicId;
+    if (anterior) {
+      await cloudinary.uploader.destroy(anterior, { resource_type: 'image' }).catch(() => {});
+    }
+
+    const subido = await cloudinary.uploader.upload(base64, {
+      folder: 'veloclub/documentos',
+      resource_type: 'auto',
+    });
+
+    const datos = campo === 'doc'
+      ? { docFileUrl: subido.secure_url, docFilePublicId: subido.public_id }
+      : { insuranceFileUrl: subido.secure_url, insurancePublicId: subido.public_id };
+
+    const actualizado = await prisma.member.update({ where: { id }, data: datos });
+    await invalidateMembersCache(req.user.clubId ?? '');
+
+    res.json({
+      url: campo === 'doc' ? actualizado.docFileUrl : actualizado.insuranceFileUrl,
+    });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : 'Error al subir el archivo';
     res.status(500).json({ error: msg });
   }
 });

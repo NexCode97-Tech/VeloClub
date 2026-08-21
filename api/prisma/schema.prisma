@@ -10,74 +10,81 @@ datasource db {
 // ─── Club ────────────────────────────────────────────────────────────────────
 
 model Club {
-  id                String          @id @default(cuid())
-  name              String
-  city              String?
-  department        String?
-  logoUrl           String?
-  logoPublicId      String?
-  coverUrl          String?         // portada del club
-  coverPublicId     String?         // public_id de Cloudinary
-  verified          Boolean         @default(false)  // club verificado (sello) — espejo de verificationStatus == VERIFIED
-  verificationStatus ClubVerification @default(PENDING) // estado de revisión del club auto-registrado
-  nameFlagged       Boolean         @default(false)  // el nombre chocó con uno existente → priorizar en la cola
-  memberCountApprox Int?                             // # aprox de miembros declarado al registrarse
-  rejectionReason   String?                          // motivo si el superadmin lo rechaza
-  reviewedAt        DateTime?                        // cuándo se verificó/rechazó
-  active            Boolean         @default(true)
+  id                        String            @id @default(cuid())
+  name                      String
+  city                      String?
+  department                String?
+  logoUrl                   String?
+  logoPublicId              String?
+  coverUrl                  String? // portada del club
+  coverPublicId             String? // public_id de Cloudinary
+  verified                  Boolean           @default(false) // club verificado (sello) — espejo de verificationStatus == VERIFIED
+  verificationStatus        ClubVerification  @default(PENDING) // estado de revisión del club auto-registrado
+  nameFlagged               Boolean           @default(false) // el nombre chocó con uno existente → priorizar en la cola
+  memberCountApprox         Int? // # aprox de miembros declarado al registrarse
+  rejectionReason           String? // motivo si el superadmin lo rechaza
+  reviewedAt                DateTime? // cuándo se verificó/rechazó
+  active                    Boolean           @default(true)
   // true solo cuando NOSOTROS desactivamos el club por falta de pago — permite
   // reactivarlo automaticamente al pagar sin pisar una desactivacion manual
   // hecha por el superadmin por otro motivo (abuso, etc.)
-  desactivadoPorVencimiento Boolean @default(false)
+  desactivadoPorVencimiento Boolean           @default(false)
   // Activacion manual del superadmin: mientras este en true, el chequeo de
   // vencimiento NO vuelve a desactivar el club (la decision manual manda).
   // Se limpia al registrar un pago real o al desactivar manualmente.
-  activadoManualmente Boolean @default(false)
-  trialEndsAt       DateTime?
-  deporte           String?
+  activadoManualmente       Boolean           @default(false)
+  trialEndsAt               DateTime?
+  deporte                   String?
   // Fecha real de fundacion del club, la que el admin declara en Ajustes. No
   // confundir con createdAt, que es cuando se registraron en la plataforma.
   // Se guarda al mediodia UTC para que ningun huso corra el mes mostrado.
-  foundedAt         DateTime?
-  description       String?
-  phone             String?
-  email             String?
-  noAttendanceDays  Int[]
-  createdAt         DateTime        @default(now())
-  updatedAt         DateTime        @updatedAt
-  users          User[]
-  locations      Location[]
-  members        Member[]
-  payments       Payment[]
-  cashEntries    CashEntry[]
-  competitions      Competition[]
-  trainingSessions  TrainingSession[]
-  calendarEvents    CalendarEvent[]
-  attendances    Attendance[]
-  suscripcion    ClubSuscripcion?
-  posts          Post[]
-  cuponCanjes    CuponCanje[]
-  clases         ClaseHorario[]
+  foundedAt                 DateTime?
+  description               String?
+  phone                     String?
+  email                     String?
+  noAttendanceDays          Int[]
+  // Inscripcion por enlace. El token es aleatorio y no derivado del nombre: con
+  // una url adivinable, cualquiera encontraria el formulario de cualquier club
+  // probando nombres. Si se filtra, se regenera y el enlace viejo muere.
+  inscripcionToken          String?           @unique
+  inscripcionAbierta        Boolean           @default(false)
+  // Cuantos deportistas espera el club, para poder decirle cuantos faltan.
+  inscripcionEsperados      Int?
+  createdAt                 DateTime          @default(now())
+  updatedAt                 DateTime          @updatedAt
+  users                     User[]
+  locations                 Location[]
+  members                   Member[]
+  payments                  Payment[]
+  cashEntries               CashEntry[]
+  competitions              Competition[]
+  trainingSessions          TrainingSession[]
+  calendarEvents            CalendarEvent[]
+  attendances               Attendance[]
+  suscripcion               ClubSuscripcion?
+  posts                     Post[]
+  cuponCanjes               CuponCanje[]
+  clases                    ClaseHorario[]
 }
 
 // ─── User (staff: ADMIN, COACH, SUPERADMIN) ──────────────────────────────────
 
 model User {
-  id              String   @id @default(cuid())
-  clerkId         String   @unique
-  email           String   @unique
+  id              String    @id @default(cuid())
+  clerkId         String    @unique
+  email           String    @unique
   name            String
   picture         String?
   coverUrl        String?
   coverPublicId   String?
   bio             String?
-  role            Role     @default(ADMIN)
-  profileComplete Boolean  @default(false)
+  role            Role      @default(ADMIN)
+  profileComplete Boolean   @default(false)
   termsAcceptedAt DateTime?
   clubId          String?
-  club            Club?    @relation(fields: [clubId], references: [id], onDelete: Cascade)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  club            Club?     @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
   @@index([clubId])
 }
@@ -85,13 +92,13 @@ model User {
 // ─── Location (sedes) ────────────────────────────────────────────────────────
 
 model Location {
-  id             String           @id @default(cuid())
-  name           String
-  address        String?
-  latitude       Float?
-  longitude      Float?
-  clubId         String
-  club           Club             @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  id               String            @id @default(cuid())
+  name             String
+  address          String?
+  latitude         Float?
+  longitude        Float?
+  clubId           String
+  club             Club              @relation(fields: [clubId], references: [id], onDelete: Cascade)
   members          MemberLocation[]
   attendances      Attendance[]
   trainingSessions TrainingSession[]
@@ -99,8 +106,8 @@ model Location {
   clases           ClaseHorario[]
   payments         Payment[]
   cashEntries      CashEntry[]
-  createdAt      DateTime         @default(now())
-  updatedAt      DateTime         @updatedAt
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
 
   @@index([clubId])
 }
@@ -108,9 +115,9 @@ model Location {
 // ─── Member (deportistas) ────────────────────────────────────────────────────
 
 model Member {
-  id                String           @id @default(cuid())
+  id                String            @id @default(cuid())
   clubId            String
-  club              Club             @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  club              Club              @relation(fields: [clubId], references: [id], onDelete: Cascade)
   fullName          String
   email             String?
   phone             String?
@@ -123,8 +130,14 @@ model Member {
   docFilePublicId   String?
   insuranceFileUrl  String?
   insurancePublicId String?
+  // Acudiente. Para un deportista menor de edad son los datos de quien responde
+  // por el; para un adulto, los de su contacto de emergencia. Es la misma pareja
+  // de campos de siempre, lo que cambia es como se presenta, mas el parentesco y
+  // la cedula, que solo se piden cuando es menor.
   emergencyContact  String?
   emergencyPhone    String?
+  guardianRelation  String?
+  guardianDocNumber String?
   eps               String?
   category          String?
   tipo              String?
@@ -135,22 +148,34 @@ model Member {
   payments          Payment[]
   eventResults      EventResult[]
   trainingResults   TrainingResult[]
-  inviteStatus      InviteStatus     @default(PENDING)
-  clerkId           String?          @unique
-  role              Role             @default(STUDENT)
+  inviteStatus      InviteStatus      @default(PENDING)
+  // Quien lo trajo. Solo se marca lo que entra por el formulario publico: es lo
+  // unico que necesita revision y lo unico que se muestra como recien llegado.
+  origen            OrigenMiembro     @default(MANUAL)
+  // Los que llegan por el formulario nacen PENDIENTE y no entran a la app hasta
+  // que el club los acepta. Todo lo demas nace aprobado, incluido lo que ya
+  // existe: sin ese default, una migracion dejaria a todo el mundo afuera.
+  inscripcion       EstadoInscripcion @default(APROBADO)
+  aprobadoAt        DateTime?
+  clerkId           String?           @unique
+  role              Role              @default(STUDENT)
   // Pausa temporal, no borrado. Los deportistas se van de vacaciones en
   // noviembre y vuelven en febrero: mientras esten inactivos no se les genera
   // cuota, no cuentan para el precio del plan del club y no entran a la app,
   // pero conservan asistencias, resultados y pagos anteriores.
-  active            Boolean          @default(true)
+  active            Boolean           @default(true)
   desactivadoAt     DateTime?
-  createdAt         DateTime         @default(now())
-  updatedAt         DateTime         @updatedAt
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
 
   @@index([clubId])
   @@index([email])
   @@index([clubId, inviteStatus])
   @@index([clubId, active])
+  // La bandeja de pendientes y el aviso de documento repetido se consultan a
+  // cada rato y siempre acotados al club.
+  @@index([clubId, inscripcion])
+  @@index([clubId, docNumber])
 }
 
 model MemberLocation {
@@ -208,25 +233,25 @@ model Attendance {
 // siempre, y ni se entera de que la funcion existe.
 
 model ClaseHorario {
-  id         String       @id @default(cuid())
-  clubId     String
-  club       Club         @relation(fields: [clubId], references: [id], onDelete: Cascade)
-  locationId String
-  location   Location     @relation(fields: [locationId], references: [id], onDelete: Cascade)
-  nombre     String
+  id          String       @id @default(cuid())
+  clubId      String
+  club        Club         @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  locationId  String
+  location    Location     @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  nombre      String
   // 0 = domingo … 6 = sabado. Mismo criterio que `Club.noAttendanceDays` y que
   // `Date.getDay()`, para no tener dos convenciones de dia dando vueltas.
-  diaSemana  Int
+  diaSemana   Int
   // "HH:mm" en 24h. Texto y no DateTime: es una hora de reloj que se repite
   // cada semana, no un instante, y guardarla como fecha arrastra husos.
-  hora       String
-  categoria  String?
+  hora        String
+  categoria   String?
   // Quitar una clase del horario no borra su historial de asistencia: se
   // desactiva y deja de aparecer de hoy en adelante.
-  activa     Boolean      @default(true)
+  activa      Boolean      @default(true)
   attendances Attendance[]
-  createdAt  DateTime     @default(now())
-  updatedAt  DateTime     @updatedAt
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
 
   @@index([clubId, diaSemana, activa])
 }
@@ -234,17 +259,17 @@ model ClaseHorario {
 // ─── Payment (pagos de mensualidad) ──────────────────────────────────────────
 
 model Payment {
-  id        String        @id @default(cuid())
-  clubId    String
-  club      Club          @relation(fields: [clubId], references: [id], onDelete: Cascade)
-  memberId  String
-  member    Member        @relation(fields: [memberId], references: [id], onDelete: Cascade)
-  amount    Float
-  month     Int
-  year      Int
-  dueDate   DateTime?
-  paidAt    DateTime?
-  status    PaymentStatus @default(PENDING)
+  id              String        @id @default(cuid())
+  clubId          String
+  club            Club          @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  memberId        String
+  member          Member        @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  amount          Float
+  month           Int
+  year            Int
+  dueDate         DateTime?
+  paidAt          DateTime?
+  status          PaymentStatus @default(PENDING)
   notes           String?
   receiptUrl      String?
   receiptPublicId String?
@@ -256,7 +281,7 @@ model Payment {
   location        Location?     @relation(fields: [locationId], references: [id], onDelete: SetNull)
   cashEntry       CashEntry?
   createdAt       DateTime      @default(now())
-  updatedAt DateTime      @updatedAt
+  updatedAt       DateTime      @updatedAt
 
   @@index([clubId])
   @@index([memberId])
@@ -355,24 +380,24 @@ model TrainingSession {
 }
 
 model TrainingResult {
-  id          String          @id @default(cuid())
-  sessionId   String
-  session     TrainingSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  memberId    String
-  member      Member          @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  id           String          @id @default(cuid())
+  sessionId    String
+  session      TrainingSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  memberId     String
+  member       Member          @relation(fields: [memberId], references: [id], onDelete: Cascade)
   // Campos de pista
-  time        String?
-  distance    String?
-  laps        Int?
+  time         String?
+  distance     String?
+  laps         Int?
   // Campos de gimnasio. La marca queda como texto libre porque no todo se mide
   // en kilos: hay salto vertical en centimetros y planchas en segundos.
-  exercise    String?
-  weight      String?
-  sets        Int?
-  reps        Int?
-  mark        String?
+  exercise     String?
+  weight       String?
+  sets         Int?
+  reps         Int?
+  mark         String?
   observations String?
-  createdAt   DateTime        @default(now())
+  createdAt    DateTime        @default(now())
 
   @@unique([sessionId, memberId])
   @@index([memberId])
@@ -404,34 +429,34 @@ model CalendarEvent {
 // ─── ClubSuscripcion (cobros de plataforma por club) ─────────────────────────
 
 model ClubSuscripcion {
-  id                     String              @id @default(cuid())
-  clubId                 String              @unique
-  club                   Club                @relation(fields: [clubId], references: [id], onDelete: Cascade)
-  planMonto              Float               @default(450000)
-  tipoPlan               TipoPlan            @default(MENSUAL)
-  año                    Int
-  pagos                  SuscripcionPago[]
+  id                         String            @id @default(cuid())
+  clubId                     String            @unique
+  club                       Club              @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  planMonto                  Float             @default(450000)
+  tipoPlan                   TipoPlan          @default(MENSUAL)
+  año                       Int
+  pagos                      SuscripcionPago[]
   // Mercado Pago — renovación automática
-  autoRenew              Boolean             @default(false)
-  mpPreapprovalId        String?
-  mpPayerEmail           String?
-  ultimoMontoSincronizado Float?
+  autoRenew                  Boolean           @default(false)
+  mpPreapprovalId            String?
+  mpPayerEmail               String?
+  ultimoMontoSincronizado    Float?
   // Tope de deportistas activos alcanzado en el ciclo de facturacion en curso.
   // Sin esto, un club podria desactivar a todos la vispera del cobro y
   // reactivarlos al dia siguiente para caer al tramo mas barato. El precio usa
   // el tope, asi que una baja real de deportistas se refleja en el ciclo
   // siguiente y no a mitad del que ya se esta cobrando.
-  picoDeportistas        Int?
-  intentosFallidos       Int                 @default(0)
-  ultimoIntentoFallidoAt DateTime?
+  picoDeportistas            Int?
+  intentosFallidos           Int               @default(0)
+  ultimoIntentoFallidoAt     DateTime?
   // Cancelación explícita del admin: se apaga la renovación pero el club sigue
   // activo hasta que venza la vigencia. Se limpia al registrar un nuevo pago.
-  canceladaAt            DateTime?
+  canceladaAt                DateTime?
   // Consentimientos legales (Ley 1480 de 2011 — Estatuto del Consumidor)
   consentimientoPagoAt       DateTime?
   consentimientoRecurrenteAt DateTime?
-  createdAt              DateTime            @default(now())
-  updatedAt              DateTime            @updatedAt
+  createdAt                  DateTime          @default(now())
+  updatedAt                  DateTime          @updatedAt
 
   @@index([clubId])
 }
@@ -457,11 +482,11 @@ model SuscripcionPago {
 
 model Cupon {
   id           String       @id @default(cuid())
-  codigo       String       @unique   // guardado y comparado en MAYÚSCULAS
-  porcentaje   Int                    // 1..100
+  codigo       String       @unique // guardado y comparado en MAYÚSCULAS
+  porcentaje   Int // 1..100
   activo       Boolean      @default(true)
-  expiraEn     DateTime?              // null = sin expiración
-  maxUsos      Int?                   // null = ilimitado (total de canjes permitidos)
+  expiraEn     DateTime? // null = sin expiración
+  maxUsos      Int? // null = ilimitado (total de canjes permitidos)
   usosActuales Int          @default(0)
   canjes       CuponCanje[]
   createdAt    DateTime     @default(now())
@@ -474,35 +499,35 @@ model CuponCanje {
   cupon           Cupon    @relation(fields: [cuponId], references: [id], onDelete: Cascade)
   clubId          String
   club            Club     @relation(fields: [clubId], references: [id], onDelete: Cascade)
-  montoDescontado Int                 // pesos descontados en el pago, para trazabilidad
+  montoDescontado Int // pesos descontados en el pago, para trazabilidad
   createdAt       DateTime @default(now())
 
-  @@unique([cuponId, clubId])         // un club no puede usar el mismo cupón dos veces
+  @@unique([cuponId, clubId]) // un club no puede usar el mismo cupón dos veces
   @@index([clubId])
 }
 
 // ─── Post (feed comunitario) ─────────────────────────────────────────────────
 
 model Post {
-  id              String     @id @default(cuid())
-  clubId          String
-  club            Club       @relation(fields: [clubId], references: [id], onDelete: Cascade)
-  clubName        String     @default("")
-  authorClerkId   String?
-  authorName      String
-  authorRole      String
-  authorAvatar    String?
-  content         String
-  imageUrl        String?
-  imagePublicId   String?
+  id            String        @id @default(cuid())
+  clubId        String
+  club          Club          @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  clubName      String        @default("")
+  authorClerkId String?
+  authorName    String
+  authorRole    String
+  authorAvatar  String?
+  content       String
+  imageUrl      String?
+  imagePublicId String?
   // Texto libre escrito por el autor. No es un lugar de mapas ni una sede del
   // club: solo la etiqueta que quiso ponerle a la publicacion.
-  ubicacion       String?
-  scope           PostScope  @default(PRIVATE)
-  likes           PostLike[]
-  comments        PostComment[]
-  createdAt       DateTime   @default(now())
-  updatedAt       DateTime   @updatedAt
+  ubicacion     String?
+  scope         PostScope     @default(PRIVATE)
+  likes         PostLike[]
+  comments      PostComment[]
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
 
   @@index([clubId])
   @@index([scope, createdAt])
@@ -520,22 +545,22 @@ model PostLike {
 }
 
 model PostComment {
-  id          String   @id @default(cuid())
-  postId      String
-  post        Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  id            String        @id @default(cuid())
+  postId        String
+  post          Post          @relation(fields: [postId], references: [id], onDelete: Cascade)
   authorClerkId String?
-  authorName  String
-  authorRole  String
-  authorAvatar String?
-  content     String
+  authorName    String
+  authorRole    String
+  authorAvatar  String?
+  content       String
   // Respuesta a otro comentario del mismo post. Un solo nivel: si alguien le
   // responde a una respuesta, el backend la cuelga del mismo padre en vez de
   // abrir otro escalon. Cuatro niveles anidados dejan el texto en una franja
   // de 90px en movil, ilegible.
-  parentId    String?
-  parent      PostComment?  @relation("RespuestasDeComentario", fields: [parentId], references: [id], onDelete: Cascade)
-  respuestas  PostComment[] @relation("RespuestasDeComentario")
-  createdAt   DateTime @default(now())
+  parentId      String?
+  parent        PostComment?  @relation("RespuestasDeComentario", fields: [parentId], references: [id], onDelete: Cascade)
+  respuestas    PostComment[] @relation("RespuestasDeComentario")
+  createdAt     DateTime      @default(now())
 
   @@index([postId])
   @@index([postId, createdAt])
@@ -553,8 +578,8 @@ model PostComment {
 
 enum MotivoReporte {
   SPAM
-  ACOSO          // difamatorio, insultos, hostigamiento
-  ODIO           // discriminatorio
+  ACOSO // difamatorio, insultos, hostigamiento
+  ODIO // discriminatorio
   CONTENIDO_SEXUAL
   VIOLENCIA
   SUPLANTACION
@@ -564,31 +589,31 @@ enum MotivoReporte {
 
 enum EstadoReporte {
   PENDIENTE
-  ELIMINADO      // se le dio la razon y el contenido se retiro
-  DESESTIMADO    // se reviso y no incumplia
+  ELIMINADO // se le dio la razon y el contenido se retiro
+  DESESTIMADO // se reviso y no incumplia
 }
 
 model Reporte {
-  id               String        @id @default(cuid())
+  id              String        @id @default(cuid())
   // Que se reporto. `postId` viaja siempre, tambien cuando el reporte es de un
   // comentario, para poder abrir la publicacion desde el panel.
-  postId           String
-  commentId        String?
-  reporterClerkId  String
-  reporterName     String
+  postId          String
+  commentId       String?
+  reporterClerkId String
+  reporterName    String
   // Club del contenido reportado, para dar contexto al superadmin
-  clubId           String?
-  motivo           MotivoReporte
-  detalle          String?
-  estado           EstadoReporte @default(PENDIENTE)
+  clubId          String?
+  motivo          MotivoReporte
+  detalle         String?
+  estado          EstadoReporte @default(PENDIENTE)
   // Copia del texto al momento de reportar: si el autor lo edita o lo borra,
   // sin esto el superadmin revisaria un reporte sobre algo que ya no existe.
-  contenidoCopia   String        @default("")
-  autorClerkId     String?
-  autorNombre      String        @default("")
-  resueltoPor      String?
-  resueltoEn       DateTime?
-  createdAt        DateTime      @default(now())
+  contenidoCopia  String        @default("")
+  autorClerkId    String?
+  autorNombre     String        @default("")
+  resueltoPor     String?
+  resueltoEn      DateTime?
+  createdAt       DateTime      @default(now())
 
   // Nadie reporta dos veces lo mismo: inflaba la cola sin aportar nada.
   @@unique([reporterClerkId, postId, commentId])
@@ -657,12 +682,12 @@ model Notificacion {
 // NEW_MEMBER, NEW_FOLLOWER, NEW_COMPETITION, NEW_EVENT, ...).
 model Notification {
   id               String   @id @default(cuid())
-  recipientClerkId String   // a quién va dirigida
-  clubId           String?  // contexto (para el refresco en vivo por SSE)
+  recipientClerkId String // a quién va dirigida
+  clubId           String? // contexto (para el refresco en vivo por SSE)
   tipo             String
   titulo           String
   cuerpo           String
-  link             String?  // ruta interna a la que navega al hacer clic
+  link             String? // ruta interna a la que navega al hacer clic
   leida            Boolean  @default(false)
   createdAt        DateTime @default(now())
 
@@ -689,6 +714,17 @@ enum Role {
   ADMIN
   COACH
   STUDENT
+}
+
+enum OrigenMiembro {
+  MANUAL
+  EXCEL
+  FORMULARIO
+}
+
+enum EstadoInscripcion {
+  PENDIENTE
+  APROBADO
 }
 
 enum InviteStatus {

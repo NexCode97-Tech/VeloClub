@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { User } from 'lucide-react';
 import { Adjunto, Ayuda, Campo, Chips, Desplegable, entrada } from '@/components/miembros/campos';
+import { PhoneInput } from '@/components/ui/phone-input';
 import {
   CATEGORIAS, NIVELES, DOC_TIPOS, PARENTESCOS,
   type DatosFicha, type ErroresFicha, type Seccion,
@@ -121,7 +122,9 @@ export function FichaDeportista({
                     className="w-[7px] h-[7px] rounded-full shrink-0"
                     style={{ background: llenos > 0 ? '#0E7C57' : activa ? '#7C3AED' : '#D8D3E4' }}
                   />
-                  <span className="flex-1 text-left">{TITULO_SECCION[s]}</span>
+                  <span className="flex-1 text-left">
+                    {s === 'acudiente' && !menor ? 'Emergencia' : TITULO_SECCION[s]}
+                  </span>
                   <span className="text-[9.5px] tabular-nums opacity-60">{llenos}/{total}</span>
                 </button>
               </li>
@@ -227,13 +230,7 @@ export function FichaDeportista({
               <Ayuda>Con este correo entra a la app. No se puede repetir el de otro deportista.</Ayuda>
             </Campo>
             <Campo etiqueta="Celular">
-              <input
-                value={datos.phone}
-                onChange={e => set('phone', e.target.value)}
-                inputMode="tel"
-                placeholder="300 000 0000"
-                className={entrada(false)}
-              />
+              <PhoneInput value={datos.phone} onChange={v => set('phone', v)} />
             </Campo>
           </div>
           <Campo etiqueta="EPS">
@@ -271,13 +268,7 @@ export function FichaDeportista({
                 />
               </Campo>
               <Campo etiqueta="Celular">
-                <input
-                  value={datos.guardianPhone}
-                  onChange={e => set('guardianPhone', e.target.value)}
-                  inputMode="tel"
-                  placeholder="300 000 0000"
-                  className={entrada(false)}
-                />
+                <PhoneInput value={datos.guardianPhone} onChange={v => set('guardianPhone', v)} />
               </Campo>
             </div>
             {menor && (
@@ -375,12 +366,12 @@ function Seccion({ id, titulo, n, onVer, children }: {
       onFocusCapture={() => onVer(id)}
       className="pt-4 mt-3 border-t border-border/60 first:border-t-0 first:pt-0 first:mt-0 scroll-mt-4"
     >
-      <p className="flex items-center gap-2 text-[10px] font-mono uppercase tracking-[0.11em] text-muted-foreground mb-2.5 m-0">
-        <span className="w-[17px] h-[17px] rounded-[5px] bg-primary/10 text-primary text-[9px] flex items-center justify-center shrink-0">
+      <h3 className="flex items-center gap-2 text-[13px] font-semibold text-foreground mb-2.5 mt-0">
+        <span className="w-[18px] h-[18px] rounded-md bg-primary/10 text-primary text-[9.5px] font-semibold flex items-center justify-center shrink-0">
           {n}
         </span>
         {titulo}
-      </p>
+      </h3>
       {children}
     </section>
   );

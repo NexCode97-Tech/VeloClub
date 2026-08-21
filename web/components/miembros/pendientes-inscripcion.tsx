@@ -187,12 +187,12 @@ export function PendientesInscripcion({ puedeAprobar, onCambio }: {
                 key="hoja"
                 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }}
                 transition={{ duration: 0.22, ease: [0.23, 1, 0.32, 1] }}
-                className="fixed left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-[560px] bg-white rounded-2xl border border-border flex flex-col"
-                style={{ zIndex: 121, top: '50%', transform: 'translate(-50%,-50%)', maxHeight: '82vh' }}
+                className="fixed w-[calc(100%-2rem)] max-w-[560px] bg-white rounded-2xl border border-border flex flex-col"
+                style={{ zIndex: 121, left: '50%', top: '50%', transform: 'translate(-50%,-50%)', maxHeight: '88dvh' }}
               >
                 <div className="flex items-start justify-between gap-3 px-5 pt-5 pb-3 border-b border-border">
                   <div className="min-w-0">
-                    <p className="text-[16px] font-bold text-foreground m-0 tracking-tight">Esperando visto bueno</p>
+                    <h2 className="text-[17px] font-semibold text-foreground m-0 tracking-tight">Esperando visto bueno</h2>
                     <p className="text-[12px] text-muted-foreground m-0 mt-0.5">
                       Revisa los datos antes de darles acceso.
                     </p>

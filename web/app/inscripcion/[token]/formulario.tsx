@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
 import { Check, ChevronLeft, User } from 'lucide-react';
 import { Campo, Ayuda, Desplegable, entrada } from '@/components/miembros/campos';
+import { PhoneInput } from '@/components/ui/phone-input';
 import {
   DOC_TIPOS, PARENTESCOS, CATEGORIAS, NIVELES,
   edadDe, esMenorDeEdad,
@@ -174,7 +175,7 @@ export default function FormularioInscripcion({ token }: { token: string }) {
     return (
       <Marco>
         <div className="bg-white rounded-2xl border border-border p-6 text-center">
-          <p className="text-[15px] font-semibold text-foreground m-0 mb-1.5">Esta inscripción no está disponible</p>
+          <h2 className="text-[16px] font-semibold text-foreground m-0 mb-1.5 tracking-tight">Esta inscripción no está disponible</h2>
           <p className="text-[13px] text-muted-foreground m-0">
             Puede que el club haya cerrado las inscripciones o que el enlace ya no sirva.
             Escríbele al club para que te pase el enlace nuevo.
@@ -191,9 +192,9 @@ export default function FormularioInscripcion({ token }: { token: string }) {
           <div className="w-11 h-11 rounded-full bg-[#0E7C57]/10 flex items-center justify-center mb-3">
             <Check className="w-5 h-5 text-[#0E7C57]" />
           </div>
-          <p className="text-[16px] font-bold text-foreground m-0 mb-1.5">
+          <h2 className="text-[17px] font-semibold text-foreground m-0 mb-1.5 tracking-tight">
             Listo, {listo.split(' ')[0]} quedó inscrito
-          </p>
+          </h2>
           <p className="text-[13px] text-muted-foreground m-0">
             Cuando {config.club.nombre} le dé el visto bueno podrá entrar a la app con su
             correo y la contraseña que acabas de crear.
@@ -222,10 +223,10 @@ export default function FormularioInscripcion({ token }: { token: string }) {
             />
           ))}
         </div>
-        <p className="text-[10px] font-mono uppercase tracking-[0.1em] text-muted-foreground m-0 mb-0.5">
+        <p className="text-[11.5px] font-medium text-muted-foreground m-0 mb-0.5">
           Paso {paso + 1} de {PASOS.length}
         </p>
-        <p className="text-[16px] font-bold text-foreground m-0 mb-3.5 tracking-tight">{PASOS[paso]}</p>
+        <h2 className="text-[17px] font-semibold text-foreground m-0 mb-3.5 tracking-tight">{PASOS[paso]}</h2>
 
         {errores.general && (
           <p className="text-[12px] rounded-lg px-3 py-2 mb-3" style={{ background: 'rgba(239,71,111,0.1)', color: '#A33A4E' }}>
@@ -261,8 +262,7 @@ export default function FormularioInscripcion({ token }: { token: string }) {
               </div>
             </div>
             <Campo etiqueta="Celular" obligatorio error={errores.phone}>
-              <input value={d.phone} onChange={e => set('phone', e.target.value)}
-                inputMode="tel" placeholder="300 000 0000" className={entrada(!!errores.phone)} />
+              <PhoneInput value={d.phone} onChange={v => set('phone', v)} />
               <Ayuda>Del deportista o de quien responde por él.</Ayuda>
             </Campo>
           </>
@@ -311,8 +311,7 @@ export default function FormularioInscripcion({ token }: { token: string }) {
                   </Campo>
                 </div>
                 <Campo etiqueta="Celular del acudiente">
-                  <input value={d.guardianPhone} onChange={e => set('guardianPhone', e.target.value)}
-                    inputMode="tel" placeholder="300 000 0000" className={entrada(false)} />
+                  <PhoneInput value={d.guardianPhone} onChange={v => set('guardianPhone', v)} />
                 </Campo>
               </>
             )}
@@ -413,7 +412,7 @@ function Marco({ club, children }: {
               )
               : <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#7C3AED] to-[#4361EE] shrink-0" />}
             <div className="min-w-0">
-              <p className="text-[15px] font-bold text-foreground m-0 leading-tight truncate">{club.nombre}</p>
+              <h1 className="text-[16px] font-semibold text-foreground m-0 leading-tight truncate tracking-tight">{club.nombre}</h1>
               <p className="text-[12px] text-muted-foreground m-0">Inscripción de deportistas</p>
             </div>
           </div>

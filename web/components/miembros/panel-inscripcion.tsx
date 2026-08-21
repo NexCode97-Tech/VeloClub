@@ -114,18 +114,22 @@ export function PanelInscripcion({ abierto, onCerrar }: { abierto: boolean; onCe
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 18, scale: 0.98 }}
             transition={{ duration: 0.22, ease: [0.23, 1, 0.32, 1] }}
-            className="fixed left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-[440px] bg-white rounded-2xl border border-border overflow-hidden"
+            className="fixed w-[calc(100%-2rem)] max-w-[440px] bg-white rounded-2xl border border-border flex flex-col"
             style={{
               zIndex: 121,
+              left: '50%',
               top: '50%',
               transform: 'translate(-50%, -50%)',
-              // El área segura del teléfono se suma al respiro, no lo reemplaza.
-              paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 0px)',
+              // Sin tope de alto, un contenido largo se sale por debajo del
+              // borde de la ventana y no hay forma de llegar al resto. En dvh
+              // y no vh: en el celular, vh cuenta la barra de direcciones como
+              // espacio disponible aunque esté tapando la pantalla.
+              maxHeight: '88dvh',
             }}
           >
-            <div className="flex items-start justify-between gap-3 px-5 pt-5 pb-3">
+            <div className="flex items-start justify-between gap-3 px-5 pt-5 pb-3 shrink-0">
               <div className="min-w-0">
-                <p className="text-[16px] font-bold text-foreground m-0 tracking-tight">Inscripción por enlace</p>
+                <h2 className="text-[17px] font-semibold text-foreground m-0 tracking-tight">Inscripción por enlace</h2>
                 <p className="text-[12px] text-muted-foreground m-0 mt-0.5">
                   Compártelo y cada familia llena sus propios datos.
                 </p>
@@ -135,7 +139,10 @@ export function PanelInscripcion({ abierto, onCerrar }: { abierto: boolean; onCe
               </button>
             </div>
 
-            <div className="px-5 pb-5">
+            <div
+              className="px-5 overflow-y-auto"
+              style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 1.25rem)' }}
+            >
               {error && (
                 <p className="text-[12px] rounded-lg px-3 py-2 mb-3" style={{ background: 'rgba(239,71,111,0.1)', color: '#A33A4E' }}>
                   {error}

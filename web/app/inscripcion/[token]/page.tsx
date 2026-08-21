@@ -4,8 +4,9 @@ import FormularioInscripcion from './formulario';
 /**
  * Inscripción por enlace, pública.
  *
- * No lleva sesión ni layout de dashboard: la abre una familia desde un WhatsApp,
- * sin cuenta y casi siempre desde el celular.
+ * No lleva sesión ni layout de dashboard: se abre desde un WhatsApp, sin cuenta
+ * y casi siempre desde el celular. Quien la llena es el deportista, o su
+ * acudiente cuando es menor.
  */
 
 export const metadata: Metadata = {

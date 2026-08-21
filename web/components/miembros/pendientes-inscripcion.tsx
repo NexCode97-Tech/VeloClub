@@ -11,8 +11,8 @@ import { apiFetch } from '@/lib/api-client';
  * Los que se inscribieron por el enlace y esperan el visto bueno del club.
  *
  * Sale arriba de la lista de miembros y solo cuando hay alguien: es trabajo que
- * caduca, porque del otro lado hay una familia que ya entregó sus datos y no
- * puede entrar hasta que alguien apruebe.
+ * caduca, porque del otro lado hay alguien que ya entregó sus datos y no puede
+ * entrar hasta que el club apruebe.
  */
 
 interface Pendiente {

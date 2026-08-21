@@ -11,7 +11,7 @@ import {
 } from '@/lib/ficha-deportista';
 
 /**
- * El formulario que llena la familia.
+ * El formulario del deportista.
  *
  * Va en pasos y no todo a la vista, al revés que la ficha del club: acá lo llena
  * una sola vez alguien que no conoce la app, casi siempre desde el celular, y un
@@ -123,7 +123,7 @@ export default function FormularioInscripcion({ token }: { token: string }) {
     if (Object.keys(e).length > 0) return;
 
     // Al terminar identidad se pregunta de quién es ese documento. Sin esto, la
-    // familia llenaría los cuatro pasos para enterarse al final de que ya estaba.
+    // llenaría los cuatro pasos para enterarse al final de que ya estaba.
     if (paso === 0) {
       setEnviando(true);
       try {

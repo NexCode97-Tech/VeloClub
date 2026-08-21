@@ -63,7 +63,7 @@ export function MenuImportar({ abierto, onCerrar, anclaje, onFormulario, onExcel
             <Opcion
               icono={<Link2 className="w-4 h-4" />}
               titulo="Con un formulario"
-              detalle="Compartes un enlace y cada familia llena sus datos"
+              detalle="Compartes un enlace y cada deportista llena sus datos"
               onClick={() => { onCerrar(); onFormulario(); }}
             />
             <Opcion

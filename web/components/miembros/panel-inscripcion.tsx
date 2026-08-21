@@ -133,7 +133,7 @@ export function PanelInscripcion({ abierto, onCerrar }: { abierto: boolean; onCe
               <div className="min-w-0">
                 <h2 className="text-[17px] font-semibold text-foreground m-0 tracking-tight">Inscripción por enlace</h2>
                 <p className="text-[12px] text-muted-foreground m-0 mt-0.5">
-                  Compártelo y cada familia llena sus propios datos.
+                  Compártelo y cada deportista llena sus propios datos.
                 </p>
               </div>
               <button onClick={onCerrar} className="w-7 h-7 rounded-full bg-secondary flex items-center justify-center shrink-0">
@@ -230,7 +230,7 @@ export function PanelInscripcion({ abierto, onCerrar }: { abierto: boolean; onCe
                           className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[13px] outline-none focus:border-primary"
                         />
                         <p className="text-[10.5px] text-muted-foreground mt-1 m-0">
-                          Sirve para saber cuántas familias faltan por responder.
+                          Sirve para saber cuántos faltan por responder.
                         </p>
                       </div>
 

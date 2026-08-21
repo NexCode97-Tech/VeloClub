@@ -108,18 +108,20 @@ export function PanelInscripcion({ abierto, onCerrar }: { abierto: boolean; onCe
             className="fixed inset-0"
             style={{ background: 'rgba(15,10,30,0.5)', backdropFilter: 'blur(3px)', zIndex: 120 }}
           />
+          {/* El centrado va por flex y no por `translate(-50%,-50%)`: framer-motion
+              escribe `transform` para animar y pisaba ese translate, asi que la
+              esquina del panel quedaba en el centro en vez del panel. */}
+          <div className="fixed inset-0 flex items-center justify-center px-4"
+            style={{ zIndex: 121, pointerEvents: 'none' }}>
           <motion.div
             key="panel"
             initial={{ opacity: 0, y: 18, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 18, scale: 0.98 }}
             transition={{ duration: 0.22, ease: [0.23, 1, 0.32, 1] }}
-            className="fixed w-[calc(100%-2rem)] max-w-[440px] bg-white rounded-2xl border border-border flex flex-col"
+            className="w-full max-w-[440px] bg-white rounded-2xl border border-border flex flex-col"
             style={{
-              zIndex: 121,
-              left: '50%',
-              top: '50%',
-              transform: 'translate(-50%, -50%)',
+              pointerEvents: 'auto',
               // Sin tope de alto, un contenido largo se sale por debajo del
               // borde de la ventana y no hay forma de llegar al resto. En dvh
               // y no vh: en el celular, vh cuenta la barra de direcciones como
@@ -246,6 +248,7 @@ export function PanelInscripcion({ abierto, onCerrar }: { abierto: boolean; onCe
               )}
             </div>
           </motion.div>
+          </div>
         </>
       )}
     </AnimatePresence>,

@@ -183,12 +183,14 @@ export function PendientesInscripcion({ puedeAprobar, onCambio }: {
                 className="fixed inset-0"
                 style={{ background: 'rgba(15,10,30,0.5)', backdropFilter: 'blur(3px)', zIndex: 120 }}
               />
+              <div className="fixed inset-0 flex items-center justify-center px-4"
+                style={{ zIndex: 121, pointerEvents: 'none' }}>
               <motion.div
                 key="hoja"
                 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }}
                 transition={{ duration: 0.22, ease: [0.23, 1, 0.32, 1] }}
-                className="fixed w-[calc(100%-2rem)] max-w-[560px] bg-white rounded-2xl border border-border flex flex-col"
-                style={{ zIndex: 121, left: '50%', top: '50%', transform: 'translate(-50%,-50%)', maxHeight: '88dvh' }}
+                className="w-full max-w-[560px] bg-white rounded-2xl border border-border flex flex-col"
+                style={{ pointerEvents: 'auto', maxHeight: '88dvh' }}
               >
                 <div className="flex items-start justify-between gap-3 px-5 pt-5 pb-3 border-b border-border">
                   <div className="min-w-0">
@@ -268,6 +270,7 @@ export function PendientesInscripcion({ puedeAprobar, onCambio }: {
                   </div>
                 )}
               </motion.div>
+              </div>
             </>
           )}
         </AnimatePresence>,

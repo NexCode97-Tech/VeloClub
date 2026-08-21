@@ -352,7 +352,10 @@ export function PhoneInput({ value, onChange, placeholder = 'Número de teléfon
   );
 
   return (
-    <div className={`relative flex h-12 rounded-xl border border-input bg-background focus-within:ring-2 focus-within:ring-primary/30 focus-within:border-primary transition-all ${className}`}>
+    // La altura sale la ultima en la cadena para que un `h-` recibido por
+    // `className` la pise: en un formulario donde todos los campos miden 42, uno
+    // clavado en 48 se nota de una.
+    <div className={`relative flex rounded-xl border border-input bg-background focus-within:ring-2 focus-within:ring-primary/30 focus-within:border-primary transition-all h-12 ${className}`}>
       {/* Selector de país */}
       <div ref={dropdownRef} className="relative flex-shrink-0">
         <button

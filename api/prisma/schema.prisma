@@ -139,6 +139,16 @@ model Member {
   guardianRelation  String?
   guardianDocNumber String?
   eps               String?
+  // Rama con la que compite. Las competencias de patinaje se dividen por sexo y
+  // el dato no existia en ninguna parte: el club lo sabia de memoria, asi que
+  // los resultados no se podian separar ni filtrar.
+  gender            String?
+  // Datos de emergencia. Es un deporte de caidas, con menores, y muchas veces
+  // sin un adulto de la familia presente: si un nino se golpea, el entrenador
+  // tenia la EPS y el telefono del acudiente, pero ni el tipo de sangre ni si
+  // era alergico a algo.
+  rh                String?
+  allergies         String?
   category          String?
   tipo              String?
   paymentDueDay     Int?

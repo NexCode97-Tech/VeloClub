@@ -85,6 +85,9 @@ const inscripcionSchema = z.object({
   category:   z.string().max(60).optional(),
   tipo:       z.string().max(40).optional(),
   eps:        z.string().max(80).optional(),
+  gender:     z.string().max(20).optional(),
+  rh:         z.string().max(5).optional(),
+  allergies:  z.string().max(500).optional(),
   aceptaTerminos: z.literal(true),
 });
 
@@ -192,6 +195,9 @@ router.post('/:token', strictLimiter, async (req, res) => {
         guardianRelation:  d.guardianRelation?.trim() || null,
         guardianDocNumber: d.guardianDocNumber?.trim() || null,
         eps: d.eps?.trim() || null,
+        gender: d.gender || null,
+        rh: d.rh || null,
+        allergies: d.allergies?.trim() || null,
         category: d.category || null,
         tipo: d.tipo || null,
         role: 'STUDENT',
@@ -331,6 +337,7 @@ router.get('/club/pendientes', requireAuth, async (req, res) => {
     select: {
       id: true, fullName: true, email: true, phone: true, birthDate: true,
       docType: true, docNumber: true, category: true, tipo: true, eps: true,
+      gender: true, rh: true, allergies: true,
       emergencyContact: true, emergencyPhone: true, guardianRelation: true,
       pictureUrl: true, createdAt: true,
       locations: { select: { location: { select: { id: true, name: true } } } },

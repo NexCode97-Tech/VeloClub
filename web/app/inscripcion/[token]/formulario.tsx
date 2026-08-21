@@ -6,7 +6,7 @@ import { Check, ChevronLeft, User } from 'lucide-react';
 import { Campo, Ayuda, Desplegable, entrada } from '@/components/miembros/campos';
 import { PhoneInput } from '@/components/ui/phone-input';
 import {
-  DOC_TIPOS, PARENTESCOS, CATEGORIAS, NIVELES,
+  DOC_TIPOS, PARENTESCOS, CATEGORIAS, NIVELES, GENEROS, RH_TIPOS,
   edadDe, esMenorDeEdad,
 } from '@/lib/ficha-deportista';
 
@@ -22,7 +22,10 @@ import {
  */
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? '';
-const PASOS = ['Datos del deportista', 'Acceso a la app', 'Entrenamiento', 'Salud y permisos'];
+// Los mismos cuatro de la ficha del club, cambiando solo lo que le corresponde
+// al formulario publico: el paso 2 tambien crea la contrasena y el 4 termina con
+// la autorizacion de datos.
+const PASOS = ['Identidad', 'Acceso y contacto', 'Entrenamiento', 'Salud y permisos'];
 
 interface Config {
   club: { nombre: string; logoUrl: string | null };
@@ -33,7 +36,8 @@ interface Datos {
   fullName: string; birthDate: string; docType: string; docNumber: string; phone: string;
   email: string; password: string; password2: string;
   guardianName: string; guardianRelation: string; guardianDocNumber: string; guardianPhone: string;
-  locationId: string; category: string; tipo: string; eps: string;
+  locationId: string; category: string; tipo: string;
+  eps: string; gender: string; rh: string; allergies: string;
   aceptaTerminos: boolean;
 }
 
@@ -41,7 +45,8 @@ const VACIO: Datos = {
   fullName: '', birthDate: '', docType: '', docNumber: '', phone: '',
   email: '', password: '', password2: '',
   guardianName: '', guardianRelation: '', guardianDocNumber: '', guardianPhone: '',
-  locationId: '', category: '', tipo: '', eps: '',
+  locationId: '', category: '', tipo: '',
+  eps: '', gender: '', rh: '', allergies: '',
   aceptaTerminos: false,
 };
 
@@ -84,12 +89,12 @@ export default function FormularioInscripcion({ token }: { token: string }) {
       else if (new Date(d.birthDate) > new Date()) e.birthDate = 'Esa fecha todavía no llega';
       if (!d.docType) e.docType = 'Elige el tipo';
       if (!d.docNumber.trim()) e.docNumber = 'Falta el número de documento';
-      if (!d.phone.trim()) e.phone = 'Falta un celular de contacto';
     }
     if (paso === 1) {
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(d.email.trim())) e.email = 'Ese correo no se ve bien escrito';
       if (d.password.length < 8) e.password = 'Mínimo 8 caracteres';
       if (d.password !== d.password2) e.password2 = 'Las dos contraseñas no coinciden';
+      if (!d.phone.trim()) e.phone = 'Falta un celular de contacto';
       if (menor && !d.guardianName.trim()) e.guardianName = 'Falta el nombre del acudiente';
     }
     if (paso === 2) {
@@ -127,6 +132,9 @@ export default function FormularioInscripcion({ token }: { token: string }) {
           category: d.category || undefined,
           tipo: d.tipo || undefined,
           eps: d.eps || undefined,
+          gender: d.gender || undefined,
+          rh: d.rh || undefined,
+          allergies: d.allergies || undefined,
           aceptaTerminos: true,
         }),
       });
@@ -139,7 +147,7 @@ export default function FormularioInscripcion({ token }: { token: string }) {
           setErrores({ [res.campo]: res.error });
           const pasoDelCampo: Record<string, number> = {
             docNumber: 0, fullName: 0, birthDate: 0,
-            email: 1, password: 1,
+            email: 1, password: 1, phone: 1,
             locationId: 2,
           };
           const destino = pasoDelCampo[res.campo];
@@ -261,9 +269,21 @@ export default function FormularioInscripcion({ token }: { token: string }) {
                 </Campo>
               </div>
             </div>
-            <Campo etiqueta="Celular" obligatorio error={errores.phone}>
-              <PhoneInput value={d.phone} onChange={v => set('phone', v)} />
-              <Ayuda>Del deportista o de quien responde por él.</Ayuda>
+            <Campo etiqueta="Género">
+              <div className="flex gap-1.5">
+                {GENEROS.map(g => (
+                  <button key={g} type="button"
+                    onClick={() => set('gender', d.gender === g ? '' : g)}
+                    className={`flex-1 text-[12.5px] font-semibold py-2.5 rounded-lg border transition-colors ${
+                      d.gender === g
+                        ? 'bg-primary/10 border-primary text-primary'
+                        : 'bg-background border-border text-muted-foreground'
+                    }`}>
+                    {g}
+                  </button>
+                ))}
+              </div>
+              <Ayuda>Es la rama con la que compite.</Ayuda>
             </Campo>
           </>
         )}
@@ -284,6 +304,11 @@ export default function FormularioInscripcion({ token }: { token: string }) {
             <Campo etiqueta="Repite la contraseña" obligatorio error={errores.password2}>
               <input type="password" value={d.password2} onChange={e => set('password2', e.target.value)}
                 placeholder="La misma de arriba" className={entrada(!!errores.password2)} />
+            </Campo>
+
+            <Campo etiqueta="Celular" obligatorio error={errores.phone}>
+              <PhoneInput value={d.phone} onChange={v => set('phone', v)} className="h-[42px]" />
+              <Ayuda>Del deportista o de quien responde por él.</Ayuda>
             </Campo>
 
             {menor && (
@@ -345,9 +370,22 @@ export default function FormularioInscripcion({ token }: { token: string }) {
         {/* ── 4 · Salud y permisos ───────────────────────────────────────── */}
         {paso === 3 && (
           <>
-            <Campo etiqueta="EPS">
-              <input value={d.eps} onChange={e => set('eps', e.target.value)}
-                placeholder="Entidad de salud" className={entrada(false)} />
+            <div className="grid grid-cols-2 gap-2.5">
+              <Campo etiqueta="EPS">
+                <input value={d.eps} onChange={e => set('eps', e.target.value)}
+                  placeholder="Entidad de salud" className={entrada(false)} />
+              </Campo>
+              <Campo etiqueta="RH">
+                <Desplegable valor={d.rh} opciones={[...RH_TIPOS]} vacio="Elegir"
+                  onElegir={v => set('rh', v)} />
+              </Campo>
+            </div>
+
+            <Campo etiqueta="Alergias o condiciones médicas">
+              <textarea value={d.allergies} onChange={e => set('allergies', e.target.value)}
+                rows={2} placeholder="Por ejemplo: alérgico a la penicilina, usa inhalador"
+                className={`${entrada(false)} resize-none py-2.5 leading-snug`} />
+              <Ayuda>Lo que un entrenador tendría que saber antes de que pase algo.</Ayuda>
             </Campo>
 
             <label className="flex gap-2.5 items-start cursor-pointer mt-4">

@@ -12,6 +12,11 @@ import { CATEGORIAS, NIVELES } from '@/lib/categorias';
 
 export const DOC_TIPOS = ['CC', 'TI', 'RC', 'CE', 'PA', 'NIT', 'Otro'] as const;
 
+/** Rama con la que compite. Las competencias de patinaje se dividen por sexo. */
+export const GENEROS = ['Femenino', 'Masculino'] as const;
+
+export const RH_TIPOS = ['O+', 'O-', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-'] as const;
+
 export const PARENTESCOS = [
   'Padre', 'Madre', 'Abuelo', 'Abuela', 'Tío', 'Tía', 'Hermano', 'Hermana', 'Otro',
 ] as const;
@@ -30,6 +35,9 @@ export interface DatosFicha {
   guardianDocNumber: string;
   guardianPhone: string;
   eps: string;
+  gender: string;
+  rh: string;
+  allergies: string;
   category: string;
   tipo: string;
   role: 'ADMIN' | 'COACH' | 'STUDENT';
@@ -40,7 +48,7 @@ export const FICHA_VACIA: DatosFicha = {
   fullName: '', email: '', phone: '', birthDate: '',
   docType: '', docNumber: '',
   guardianName: '', guardianRelation: '', guardianDocNumber: '', guardianPhone: '',
-  eps: '', category: '', tipo: '',
+  eps: '', gender: '', rh: '', allergies: '', category: '', tipo: '',
   role: 'STUDENT', locationIds: [],
 };
 

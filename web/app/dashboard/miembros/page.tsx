@@ -47,6 +47,7 @@ interface Member {
   pictureUrl?: string | null; docType?: string | null; docNumber?: string | null;
   docFileUrl?: string | null; insuranceFileUrl?: string | null;
   guardianRelation?: string | null; guardianDocNumber?: string | null;
+  gender?: string | null; rh?: string | null; allergies?: string | null;
   createdAt?: string;
   role: string;
   active?: boolean;
@@ -195,7 +196,9 @@ export default function MiembrosPage() {
       guardianPhone: m.emergencyPhone ?? '',
       guardianRelation: m.guardianRelation ?? '',
       guardianDocNumber: m.guardianDocNumber ?? '',
-      eps: m.eps ?? '', role: (m.role as DatosFicha['role']),
+      eps: m.eps ?? '',
+      gender: m.gender ?? '', rh: m.rh ?? '', allergies: m.allergies ?? '',
+      role: (m.role as DatosFicha['role']),
       locationIds: m.locations.map(l => l.location.id),
     });
     setError(null); setErroresCampo({}); setArchivos({}); setOpen(true);
@@ -262,6 +265,9 @@ export default function MiembrosPage() {
         guardianRelation: form.guardianRelation || undefined,
         guardianDocNumber: form.guardianDocNumber || undefined,
         eps: form.eps || undefined,
+        gender: form.gender || undefined,
+        rh: form.rh || undefined,
+        allergies: form.allergies || undefined,
         role: form.role,
         locationIds: form.locationIds,
       });
@@ -1207,7 +1213,7 @@ export default function MiembrosPage() {
             <motion.div
               className="bg-white flex flex-col w-full"
               style={{
-                maxWidth: 720,
+                maxWidth: 760,
                 borderRadius: 28,
                 maxHeight: '92dvh',
                 boxShadow: '0 24px 64px rgba(124,58,237,0.18), 0 4px 16px rgba(0,0,0,0.08)',
@@ -1240,51 +1246,25 @@ export default function MiembrosPage() {
               </motion.button>
             </div>
 
-            {/* El formulario. Todo a la vista, en secciones: con pasos, corregir
-                algo de la primera pantalla obligaba a recorrer el resto de nuevo
-                y no habia forma de ver cuanto faltaba. */}
-            <div className="flex-1 overflow-y-auto px-6 pb-4">
-              <FichaDeportista
-                datos={form}
-                onCambio={setForm}
-                sedes={locations}
-                esNuevo={!editing}
-                erroresServidor={erroresCampo}
-                verificar={verificarDuplicado}
-                archivos={{
-                  doc: editing?.docFileUrl ?? undefined,
-                  insurance: editing?.insuranceFileUrl ?? undefined,
-                }}
-                onArchivo={(campo, archivo) => setArchivos(a => ({ ...a, [campo]: archivo }))}
-              />
-            </div>
-
-            {/* Pie */}
-            <div className="px-6 py-4 border-t border-border shrink-0 flex items-center gap-2.5">
-              {error && (
-                <p className="flex-1 text-[11.5px] m-0" style={{ color: '#EF476F' }}>{error}</p>
-              )}
-              {!error && (
-                <p className="flex-1 text-[11.5px] text-muted-foreground m-0">
-                  {editing ? 'Los cambios se guardan al confirmar.' : 'Nombre, nacimiento, documento y correo son obligatorios.'}
-                </p>
-              )}
-              <motion.button
-                whileTap={reducedMotion ? {} : { scale: 0.97 }}
-                transition={{ duration: 0.12, ease: EASE_OUT }}
-                onClick={() => !saving && setOpen(false)}
-                className="px-4 py-3 rounded-2xl font-semibold text-[13px] text-muted-foreground border border-border shrink-0"
-              >
-                Cancelar
-              </motion.button>
-              <motion.button
-                whileTap={reducedMotion ? {} : { scale: 0.97 }}
-                transition={{ duration: 0.12, ease: EASE_OUT }}
-                onClick={handleSave}
-                disabled={saving || !puedeGuardar}
-                className="px-5 py-3 rounded-2xl font-semibold text-[13.5px] text-white flex items-center justify-center gap-2 transition-opacity disabled:opacity-50 shrink-0"
-                style={{ background: 'linear-gradient(135deg, #7C3AED, #4361EE)' }}
-              >
+            {/* El formulario trae sus propios pasos y su pie: es el mismo
+                recorrido que el formulario publico, para que quien llene uno
+                reconozca el otro. */}
+            <FichaDeportista
+              datos={form}
+              onCambio={setForm}
+              sedes={locations}
+              esNuevo={!editing}
+              erroresServidor={erroresCampo}
+              verificar={verificarDuplicado}
+              archivos={{
+                doc: editing?.docFileUrl ?? undefined,
+                insurance: editing?.insuranceFileUrl ?? undefined,
+              }}
+              onArchivo={(campo, archivo) => setArchivos(a => ({ ...a, [campo]: archivo }))}
+              onGuardar={handleSave}
+              guardando={saving}
+              onCancelar={() => !saving && setOpen(false)}
+              botonGuardar={
                 <ContenidoGuardado
                   estado={estadoGuardado}
                   textoGuardando="Guardando"
@@ -1292,8 +1272,12 @@ export default function MiembrosPage() {
                   color="#fff"
                   textoIdle={editing ? 'Guardar cambios' : 'Crear miembro'}
                 />
-              </motion.button>
-            </div>
+              }
+            />
+
+            {error && (
+              <p className="px-6 pb-4 text-[11.5px] m-0" style={{ color: '#EF476F' }}>{error}</p>
+            )}
             </motion.div>
           </motion.div>
         )}

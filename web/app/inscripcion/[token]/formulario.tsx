@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
-import { Check, ChevronLeft, User } from 'lucide-react';
+import { Check, ChevronLeft, Info, User } from 'lucide-react';
 import { Campo, Ayuda, Desplegable, entrada } from '@/components/miembros/campos';
 import { PhoneInput } from '@/components/ui/phone-input';
 import {
@@ -60,6 +60,12 @@ export default function FormularioInscripcion({ token }: { token: string }) {
   const [errores, setErrores] = useState<Record<string, string>>({});
   const [enviando, setEnviando] = useState(false);
   const [listo, setListo] = useState<string | null>(null);
+  const [resultado, setResultado] = useState<'nuevo' | 'actualiza' | 'sin_cambios'>('nuevo');
+  // Al salir del primer paso se pregunta si ese documento ya está en el club.
+  // Si está, lo que sigue actualiza su ficha en vez de crear una nueva.
+  const [modo, setModo] = useState<{
+    tipo: 'nuevo' | 'actualiza'; nombre?: string; tieneCuenta?: boolean;
+  }>({ tipo: 'nuevo' });
 
   const set = <K extends keyof Datos>(k: K, v: Datos[K]) => {
     setD(p => ({ ...p, [k]: v }));
@@ -79,6 +85,7 @@ export default function FormularioInscripcion({ token }: { token: string }) {
 
   const menor = esMenorDeEdad(d.birthDate);
   const años = edadDe(d.birthDate);
+  const yaTieneCuenta = modo.tipo === 'actualiza' && modo.tieneCuenta === true;
 
   /** Lo que falta en el paso actual. Se revisa acá y de nuevo en el servidor. */
   const revisarPaso = useCallback((): Record<string, string> => {
@@ -91,9 +98,13 @@ export default function FormularioInscripcion({ token }: { token: string }) {
       if (!d.docNumber.trim()) e.docNumber = 'Falta el número de documento';
     }
     if (paso === 1) {
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(d.email.trim())) e.email = 'Ese correo no se ve bien escrito';
-      if (d.password.length < 8) e.password = 'Mínimo 8 caracteres';
-      if (d.password !== d.password2) e.password2 = 'Las dos contraseñas no coinciden';
+      // Quien ya tiene cuenta no vuelve a poner correo ni contraseña: su acceso
+      // no se cambia desde acá.
+      if (!yaTieneCuenta) {
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(d.email.trim())) e.email = 'Ese correo no se ve bien escrito';
+        if (d.password.length < 8) e.password = 'Mínimo 8 caracteres';
+        if (d.password !== d.password2) e.password2 = 'Las dos contraseñas no coinciden';
+      }
       if (!d.phone.trim()) e.phone = 'Falta un celular de contacto';
       if (menor && !d.guardianName.trim()) e.guardianName = 'Falta el nombre del acudiente';
     }
@@ -104,12 +115,36 @@ export default function FormularioInscripcion({ token }: { token: string }) {
       if (!d.aceptaTerminos) e.aceptaTerminos = 'Necesitamos tu autorización para continuar';
     }
     return e;
-  }, [paso, d, menor]);
+  }, [paso, d, menor, yaTieneCuenta]);
 
-  function siguiente() {
+  async function siguiente() {
     const e = revisarPaso();
     setErrores(e);
     if (Object.keys(e).length > 0) return;
+
+    // Al terminar identidad se pregunta de quién es ese documento. Sin esto, la
+    // familia llenaría los cuatro pasos para enterarse al final de que ya estaba.
+    if (paso === 0) {
+      setEnviando(true);
+      try {
+        const r = await fetch(`${API}/inscripcion/${token}/reconocer`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ docNumber: d.docNumber, birthDate: d.birthDate }),
+        });
+        const res = await r.json();
+        if (!r.ok) { setErrores({ [res.campo ?? 'docNumber']: res.error }); return; }
+        setModo(res.modo === 'actualiza'
+          ? { tipo: 'actualiza', nombre: res.nombre, tieneCuenta: res.tieneCuenta }
+          : { tipo: 'nuevo' });
+      } catch {
+        setErrores({ general: 'No se pudo conectar. Revisa tu internet e intenta de nuevo.' });
+        return;
+      } finally {
+        setEnviando(false);
+      }
+    }
+
     if (paso < PASOS.length - 1) { setPaso(p => p + 1); window.scrollTo({ top: 0, behavior: 'smooth' }); }
     else enviar();
   }
@@ -123,7 +158,8 @@ export default function FormularioInscripcion({ token }: { token: string }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           fullName: d.fullName, birthDate: d.birthDate, docType: d.docType,
-          docNumber: d.docNumber, phone: d.phone, email: d.email, password: d.password,
+          docNumber: d.docNumber, phone: d.phone,
+          ...(yaTieneCuenta ? {} : { email: d.email, password: d.password }),
           guardianName: d.guardianName || undefined,
           guardianRelation: d.guardianRelation || undefined,
           guardianDocNumber: d.guardianDocNumber || undefined,
@@ -160,6 +196,7 @@ export default function FormularioInscripcion({ token }: { token: string }) {
       }
 
       setListo(res.nombre ?? d.fullName);
+      setResultado(res.modo === 'actualiza' ? 'actualiza' : res.modo === 'sin_cambios' ? 'sin_cambios' : 'nuevo');
     } catch {
       setErrores({ general: 'No se pudo conectar. Revisa tu internet e intenta de nuevo.' });
     } finally {
@@ -201,15 +238,22 @@ export default function FormularioInscripcion({ token }: { token: string }) {
             <Check className="w-5 h-5 text-[#0E7C57]" />
           </div>
           <h2 className="text-[17px] font-semibold text-foreground m-0 mb-1.5 tracking-tight">
-            Listo, {listo.split(' ')[0]} quedó inscrito
+            {resultado === 'nuevo'
+              ? `Listo, ${listo.split(' ')[0]} quedó inscrito`
+              : resultado === 'sin_cambios'
+                ? 'No había nada que cambiar'
+                : `Listo, enviamos los cambios de ${listo.split(' ')[0]}`}
           </h2>
           <p className="text-[13px] text-muted-foreground m-0">
-            Cuando {config.club.nombre} le dé el visto bueno podrá entrar a la app con su
-            correo y la contraseña que acabas de crear.
+            {resultado === 'nuevo'
+              ? `Cuando ${config.club.nombre} le dé el visto bueno podrá entrar a la app con su correo y la contraseña que acabas de crear.`
+              : resultado === 'sin_cambios'
+                ? `Los datos que enviaste son los mismos que ${config.club.nombre} ya tiene, así que no hay nada pendiente.`
+                : `${config.club.nombre} los revisa y los aplica a su ficha.`}
           </p>
           <button
             type="button"
-            onClick={() => { setD(VACIO); setPaso(0); setListo(null); }}
+            onClick={() => { setD(VACIO); setPaso(0); setListo(null); setModo({ tipo: 'nuevo' }); }}
             className="w-full mt-5 py-3 rounded-xl border border-primary/30 text-primary text-[13.5px] font-semibold"
           >
             Inscribir a otro deportista
@@ -291,6 +335,25 @@ export default function FormularioInscripcion({ token }: { token: string }) {
         {/* ── 2 · Cuenta y acudiente ─────────────────────────────────────── */}
         {paso === 1 && (
           <>
+            {modo.tipo === 'actualiza' && (
+              <p className="flex gap-2 items-start text-[12px] rounded-lg px-3 py-2.5 mb-3"
+                style={{ background: 'rgba(42,82,190,0.08)', color: '#2A52BE' }}>
+                <Info className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                <span>
+                  <b>{modo.nombre?.split(' ')[0]} ya está en {config.club.nombre}.</b>{' '}
+                  Lo que llenes de aquí en adelante actualiza su ficha, y el club revisa
+                  los cambios antes de aplicarlos.
+                </span>
+              </p>
+            )}
+
+            {yaTieneCuenta ? (
+              <p className="text-[12px] text-muted-foreground rounded-lg px-3 py-2.5 mb-3 bg-secondary/60">
+                Ya tiene una cuenta para entrar a la app, así que su correo y su
+                contraseña no se cambian desde aquí.
+              </p>
+            ) : (
+            <>
             <Campo etiqueta="Correo del deportista" obligatorio error={errores.email}>
               <input type="email" value={d.email} onChange={e => set('email', e.target.value)}
                 placeholder="correo@ejemplo.com" className={entrada(!!errores.email)} />
@@ -305,6 +368,8 @@ export default function FormularioInscripcion({ token }: { token: string }) {
               <input type="password" value={d.password2} onChange={e => set('password2', e.target.value)}
                 placeholder="La misma de arriba" className={entrada(!!errores.password2)} />
             </Campo>
+            </>
+            )}
 
             <Campo etiqueta="Celular" obligatorio error={errores.phone}>
               <PhoneInput value={d.phone} onChange={v => set('phone', v)} className="h-[42px]" />
@@ -416,10 +481,12 @@ export default function FormularioInscripcion({ token }: { token: string }) {
           <button type="button" onClick={siguiente} disabled={enviando}
             className="flex-1 py-3 rounded-xl bg-primary text-white text-[13.5px] font-bold disabled:opacity-60">
             {enviando
-              ? 'Inscribiendo...'
+              ? (paso === 0 ? 'Revisando...' : modo.tipo === 'actualiza' ? 'Enviando...' : 'Inscribiendo...')
               : paso < PASOS.length - 1
                 ? 'Continuar'
-                : `Inscribir a ${d.fullName.split(' ')[0] || 'este deportista'}`}
+                : modo.tipo === 'actualiza'
+                  ? 'Enviar los cambios'
+                  : `Inscribir a ${d.fullName.split(' ')[0] || 'este deportista'}`}
           </button>
         </div>
       </div>

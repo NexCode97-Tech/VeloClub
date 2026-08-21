@@ -56,12 +56,29 @@ function iniciales(nombre: string): string {
   return nombre.split(' ').filter(Boolean).slice(0, 2).map(p => p[0]).join('').toUpperCase();
 }
 
+interface Actualizacion {
+  id: string;
+  fullName: string;
+  pictureUrl: string | null;
+  birthDate: string | null;
+  enviadoEn: string;
+  locations: { location: { id: string; name: string } }[];
+  cambios: { campo: string; etiqueta: string; antes: unknown; despues: unknown }[];
+}
+
+/** Un valor vacío se muestra como «sin dato», no como una comilla suelta. */
+function valorDe(v: unknown): string {
+  if (v === null || v === undefined || v === '') return 'sin dato';
+  return String(v);
+}
+
 export function PendientesInscripcion({ puedeAprobar, onCambio }: {
   puedeAprobar: boolean;
   onCambio: () => void;
 }) {
   const { getToken } = useAuth();
   const [pendientes, setPendientes] = useState<Pendiente[]>([]);
+  const [actualizaciones, setActualizaciones] = useState<Actualizacion[]>([]);
   const [abierto, setAbierto] = useState(false);
   const [trabajando, setTrabajando] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -69,8 +86,11 @@ export function PendientesInscripcion({ puedeAprobar, onCambio }: {
   const cargar = useCallback(async () => {
     try {
       const token = await getToken();
-      const r = await apiFetch<{ pendientes: Pendiente[] }>('/inscripcion/club/pendientes', { token });
+      const r = await apiFetch<{ pendientes: Pendiente[]; actualizaciones: Actualizacion[] }>(
+        '/inscripcion/club/pendientes', { token }
+      );
       setPendientes(r.pendientes);
+      setActualizaciones(r.actualizaciones ?? []);
     } catch { /* la lista de miembros no puede caerse por esto */ }
   }, [getToken]);
 
@@ -125,6 +145,35 @@ export function PendientesInscripcion({ puedeAprobar, onCambio }: {
     }
   }
 
+  async function aplicar(a: Actualizacion) {
+    setTrabajando(a.id);
+    setError(null);
+    try {
+      const token = await getToken();
+      await apiFetch(`/inscripcion/club/${a.id}/aplicar`, { method: 'POST', token });
+      setActualizaciones(x => x.filter(y => y.id !== a.id));
+      onCambio();
+    } catch {
+      setError('No se pudieron aplicar los cambios. Intenta de nuevo.');
+    } finally {
+      setTrabajando(null);
+    }
+  }
+
+  async function descartar(a: Actualizacion) {
+    if (!confirm(`¿Descartar los cambios que envió ${a.fullName}?\n\nSu ficha se queda como está.`)) return;
+    setTrabajando(a.id);
+    try {
+      const token = await getToken();
+      await apiFetch(`/inscripcion/club/${a.id}/cambios`, { method: 'DELETE', token });
+      setActualizaciones(x => x.filter(y => y.id !== a.id));
+    } catch {
+      setError('No se pudieron descartar. Intenta de nuevo.');
+    } finally {
+      setTrabajando(null);
+    }
+  }
+
   async function aprobarTodos() {
     if (!confirm(`¿Aceptar a los ${pendientes.length} que están esperando?`)) return;
     setTrabajando('todos');
@@ -141,7 +190,8 @@ export function PendientesInscripcion({ puedeAprobar, onCambio }: {
     }
   }
 
-  if (pendientes.length === 0) return null;
+  const total = pendientes.length + actualizaciones.length;
+  if (total === 0) return null;
 
   return (
     <>
@@ -156,12 +206,14 @@ export function PendientesInscripcion({ puedeAprobar, onCambio }: {
         </div>
         <div className="flex-1 min-w-[170px]">
           <p className="text-[13px] font-semibold m-0" style={{ color: '#8A6216' }}>
-            {pendientes.length === 1
-              ? '1 persona esperando tu visto bueno'
-              : `${pendientes.length} personas esperando tu visto bueno`}
+            {total === 1 ? '1 cosa esperando tu visto bueno' : `${total} cosas esperando tu visto bueno`}
           </p>
           <p className="text-[11.5px] m-0" style={{ color: '#B8862A' }}>
-            Se inscribieron por el enlace y no entran hasta que las aceptes.
+            {pendientes.length > 0 && actualizaciones.length > 0
+              ? `${pendientes.length} inscripción(es) nueva(s) y ${actualizaciones.length} actualización(es) de datos.`
+              : pendientes.length > 0
+                ? 'Se inscribieron por el enlace y no entran hasta que las aceptes.'
+                : 'Enviaron cambios en su ficha por el enlace.'}
           </p>
         </div>
         <button onClick={() => setAbierto(true)}
@@ -211,6 +263,67 @@ export function PendientesInscripcion({ puedeAprobar, onCambio }: {
                 )}
 
                 <div className="flex-1 overflow-y-auto px-5 py-2">
+                  {actualizaciones.map(a => {
+                    const ocupado = trabajando === a.id;
+                    return (
+                      <div key={a.id} className="py-3 border-b border-border/60 last:border-b-0">
+                        <div className="flex items-start gap-3">
+                          <span className="w-9 h-9 rounded-full bg-primary/10 text-primary text-[11px] font-bold flex items-center justify-center shrink-0">
+                            {iniciales(a.fullName)}
+                          </span>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <p className="text-[13.5px] font-semibold text-foreground m-0 truncate">{a.fullName}</p>
+                              <span className="text-[9.5px] font-bold px-2 py-0.5 rounded-full shrink-0"
+                                style={{ background: 'rgba(42,82,190,0.1)', color: '#2A52BE' }}>
+                                actualiza {a.cambios.length}
+                              </span>
+                            </div>
+                            <p className="text-[11.5px] text-muted-foreground m-0">
+                              Ya está en el club · {haceCuanto(a.enviadoEn)}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Solo lo que se mueve: la ficha entera obligaría a
+                            comparar veinte campos para hallar los tres nuevos. */}
+                        <div className="mt-2 pl-12">
+                          {a.cambios.map(c => (
+                            <div key={c.campo} className="grid grid-cols-[92px_1fr] gap-2.5 py-1.5 border-b border-border/40 last:border-b-0">
+                              <span className="text-[11px] text-muted-foreground pt-0.5">{c.etiqueta}</span>
+                              <span className="min-w-0">
+                                <span className={`block text-[11.5px] ${
+                                  valorDe(c.antes) === 'sin dato'
+                                    ? 'text-muted-foreground italic'
+                                    : 'text-[#A33A4E] line-through decoration-[#A33A4E]/40'
+                                }`}>
+                                  {valorDe(c.antes)}
+                                </span>
+                                <span className="block text-[12.5px] font-semibold text-[#0E7C57] break-words">
+                                  {valorDe(c.despues)}
+                                </span>
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+
+                        {puedeAprobar && (
+                          <div className="flex gap-2 mt-2.5 pl-12">
+                            <button onClick={() => descartar(a)} disabled={ocupado}
+                              className="text-[11.5px] font-semibold px-3 py-1.5 rounded-lg text-[#A33A4E] bg-[#EF476F]/8 disabled:opacity-50">
+                              Descartar
+                            </button>
+                            <button onClick={() => aplicar(a)} disabled={ocupado}
+                              className="flex items-center gap-1.5 text-[11.5px] font-semibold px-3 py-1.5 rounded-lg text-white bg-[#0E7C57] disabled:opacity-50">
+                              <Check className="w-3 h-3" />
+                              {ocupado ? 'Aplicando...' : `Aplicar ${a.cambios.length === 1 ? 'el cambio' : `los ${a.cambios.length} cambios`}`}
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+
                   {pendientes.map(p => {
                     const años = añosDe(p.birthDate);
                     const sede = p.locations[0]?.location.name;
@@ -222,7 +335,12 @@ export function PendientesInscripcion({ puedeAprobar, onCambio }: {
                             {iniciales(p.fullName)}
                           </span>
                           <div className="flex-1 min-w-0">
-                            <p className="text-[13.5px] font-semibold text-foreground m-0 truncate">{p.fullName}</p>
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <p className="text-[13.5px] font-semibold text-foreground m-0 truncate">{p.fullName}</p>
+                              <span className="text-[9.5px] font-bold px-2 py-0.5 rounded-full shrink-0 bg-primary/10 text-primary">
+                                nueva
+                              </span>
+                            </div>
                             <p className="text-[11.5px] text-muted-foreground m-0">
                               {[
                                 años !== null ? `${años} años` : null,

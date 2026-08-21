@@ -1,9 +1,13 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import * as Sentry from '@sentry/node';
+import { Prisma } from '@prisma/client';
 import { prisma } from '../db/client';
 import { requireAuth } from '../auth/middleware';
-import { asegurarToken, rotarToken, urlDeInscripcion, esMenor, yaExiste } from '../lib/inscripcion';
+import {
+  asegurarToken, rotarToken, urlDeInscripcion, esMenor, yaExiste,
+  reconocerPorDocumento, soloLoQueCambia, NOMBRE_CAMPO,
+} from '../lib/inscripcion';
 import { CATEGORIAS, NIVELES } from '../lib/catalogos';
 import { strictLimiter, guessLimiter } from '../lib/rate-limit';
 import { registrarEvento } from '../lib/auditoria';
@@ -67,14 +71,53 @@ router.get('/:token', guessLimiter, async (req, res) => {
   });
 });
 
+/**
+ * POST /inscripcion/:token/reconocer — ¿este documento ya está en el club?
+ *
+ * La llama el formulario al salir del primer paso, para saber si lo que sigue
+ * es una inscripción nueva o una actualización. Devuelve el nombre solo cuando
+ * documento y fecha coinciden: si respondiera con el nombre viendo solo el
+ * documento, sería una forma de sacar nombres probando cédulas.
+ */
+router.post('/:token/reconocer', guessLimiter, async (req, res) => {
+  const club = await prisma.club.findUnique({
+    where: { inscripcionToken: String(req.params.token) },
+    select: { id: true, active: true, inscripcionAbierta: true },
+  });
+  if (!club || !club.active || !club.inscripcionAbierta) {
+    return res.status(404).json({ error: 'Esta inscripción no está disponible.' });
+  }
+
+  const parsed = z.object({
+    docNumber: z.string().min(3).max(30),
+    birthDate: z.string().min(8),
+  }).safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: 'Datos incompletos.' });
+
+  const quien = await reconocerPorDocumento({ clubId: club.id, ...parsed.data });
+
+  if (quien.estado === 'ajeno') {
+    return res.status(409).json({
+      campo: 'docNumber',
+      error: 'Ese documento ya está registrado en este club y los datos no coinciden. Si crees que es un error, habla con el club.',
+    });
+  }
+
+  res.json(quien.estado === 'nuevo'
+    ? { modo: 'nuevo' }
+    : { modo: 'actualiza', nombre: quien.nombre, tieneCuenta: quien.tieneCuenta });
+});
+
 const inscripcionSchema = z.object({
   fullName:  z.string().min(2).max(100),
   birthDate: z.string().min(8),
   docType:   z.string().min(1).max(10),
   docNumber: z.string().min(3).max(30),
   phone:     z.string().min(5).max(30),
-  email:     z.string().email().max(120),
-  password:  z.string().min(8).max(100),
+  // Quien ya esta en el club y tiene cuenta no los manda: su acceso no se toca
+  // desde el formulario. Se exigen mas abajo, cuando la inscripcion es nueva.
+  email:     z.string().email().max(120).optional(),
+  password:  z.string().min(8).max(100).optional(),
   // Del acudiente. Solo se exigen cuando el deportista es menor, y eso se
   // decide aca con la fecha, no confiando en lo que diga el cliente.
   guardianName:      z.string().max(100).optional(),
@@ -134,13 +177,92 @@ router.post('/:token', strictLimiter, async (req, res) => {
   });
   if (!sede) return res.status(400).json({ error: 'La sede seleccionada no existe.' });
 
-  const choque = await yaExiste({ clubId: club.id, email: d.email, docNumber: d.docNumber });
-  if (choque.documento) {
+  // ¿Es alguien que ya está en el club completando sus datos, o alguien nuevo?
+  const quien = await reconocerPorDocumento({
+    clubId: club.id, docNumber: d.docNumber, birthDate: d.birthDate,
+  });
+
+  if (quien.estado === 'ajeno') {
     return res.status(409).json({
       campo: 'docNumber',
-      error: 'Ese documento ya está registrado en este club. Si crees que es un error, habla con el club.',
+      error: 'Ese documento ya está registrado en este club y los datos no coinciden. Si crees que es un error, habla con el club.',
     });
   }
+
+  // ── Ya está en el club: se guarda lo que cambia y espera visto bueno ──────
+  if (quien.estado === 'reconocido') {
+    const actual = await prisma.member.findUnique({
+      where: { id: quien.id },
+      select: {
+        fullName: true, phone: true, docType: true, docNumber: true, birthDate: true,
+        emergencyContact: true, emergencyPhone: true, guardianRelation: true,
+        guardianDocNumber: true, eps: true, gender: true, rh: true, allergies: true,
+        category: true, tipo: true, active: true, email: true,
+      },
+    });
+    if (!actual) return res.status(404).json({ error: 'Ese deportista ya no está en el club.' });
+
+    const cambios = soloLoQueCambia(actual as Record<string, unknown>, {
+      fullName: tituloDe(d.fullName),
+      phone: d.phone,
+      docType: d.docType,
+      birthDate: d.birthDate,
+      emergencyContact: d.guardianName?.trim(),
+      emergencyPhone: d.guardianPhone?.trim(),
+      guardianRelation: d.guardianRelation?.trim(),
+      guardianDocNumber: d.guardianDocNumber?.trim(),
+      eps: d.eps?.trim(),
+      gender: d.gender,
+      rh: d.rh,
+      allergies: d.allergies?.trim(),
+      category: d.category,
+      tipo: d.tipo,
+      // El correo solo entra si todavía no tiene: cambiar el de alguien con
+      // cuenta sería quedarse con su acceso.
+      ...(actual.email || quien.tieneCuenta ? {} : { email: d.email?.trim().toLowerCase() }),
+    });
+
+    if (Object.keys(cambios).length === 0) {
+      return res.json({ ok: true, modo: 'sin_cambios', nombre: actual.fullName });
+    }
+
+    // Una sola actualización a la vez: la nueva reemplaza a la anterior, para
+    // que el club revise lo último que mandaron y no una fila de versiones.
+    await prisma.member.update({
+      where: { id: quien.id },
+      data: { cambiosPendientes: { enviadoEn: new Date().toISOString(), cambios } },
+    });
+
+    await registrarEvento({
+      accion: 'ACTUALIZACION_RECIBIDA',
+      entidad: 'Member',
+      entidadId: quien.id,
+      resumen: `${actual.fullName} envió ${Object.keys(cambios).length} cambio(s) por el enlace de ${club.name}.`,
+      clubId: club.id,
+      clubNombre: club.name,
+      datos: { campos: Object.keys(cambios) },
+    });
+
+    await notifyClubStaff(club.id, {
+      tipo: 'ACTUALIZACION_RECIBIDA',
+      titulo: 'Datos actualizados',
+      cuerpo: `${actual.fullName} envió cambios en su ficha y esperan tu visto bueno.`,
+      link: '/dashboard/miembros',
+    }).catch(() => { /* el aviso no puede tumbar la actualizacion */ });
+
+    emitToClub(club.id, 'members');
+    return res.json({ ok: true, modo: 'actualiza', nombre: actual.fullName });
+  }
+
+  // ── Inscripción nueva: acá sí hacen falta correo y contraseña ────────────
+  if (!d.email || !d.password) {
+    return res.status(400).json({
+      campo: !d.email ? 'email' : 'password',
+      error: !d.email ? 'Falta el correo.' : 'Falta la contraseña.',
+    });
+  }
+
+  const choque = await yaExiste({ clubId: club.id, email: d.email });
   if (choque.correo) {
     return res.status(409).json({
       campo: 'email',
@@ -156,8 +278,8 @@ router.post('/:token', strictLimiter, async (req, res) => {
     const clerk = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY! });
     const [nombre, ...resto] = tituloDe(d.fullName).split(' ');
     const cuenta = await clerk.users.createUser({
-      emailAddress: [d.email.trim()],
-      password: d.password,
+      emailAddress: [d.email!.trim()],
+      password: d.password!,
       firstName: nombre,
       lastName: resto.join(' ') || undefined,
       skipPasswordChecks: false,
@@ -185,7 +307,7 @@ router.post('/:token', strictLimiter, async (req, res) => {
       data: {
         clubId: club.id,
         fullName: tituloDe(d.fullName),
-        email: d.email.trim().toLowerCase(),
+        email: d.email!.trim().toLowerCase(),
         phone: d.phone,
         birthDate: nacimiento,
         docType: d.docType,
@@ -268,7 +390,12 @@ router.get('/club/estado', requireAuth, async (req, res) => {
       where: { id: clubId },
       select: { inscripcionToken: true, inscripcionAbierta: true, inscripcionEsperados: true },
     }),
-    prisma.member.count({ where: { clubId, inscripcion: 'PENDIENTE' } }),
+    prisma.member.count({
+      where: {
+        clubId,
+        OR: [{ inscripcion: 'PENDIENTE' }, { cambiosPendientes: { not: Prisma.DbNull } }],
+      },
+    }),
     prisma.member.count({ where: { clubId, inscripcion: 'APROBADO', origen: 'FORMULARIO' } }),
   ]);
 
@@ -326,25 +453,112 @@ router.post('/club/rotar', requireAuth, strictLimiter, async (req, res) => {
   res.json({ url: urlDeInscripcion(token) });
 });
 
-/** GET /inscripcion/club/pendientes — quienes esperan visto bueno. */
+/**
+ * GET /inscripcion/club/pendientes — lo que espera visto bueno.
+ *
+ * Dos cosas distintas en la misma bandeja: inscripciones nuevas y cambios que
+ * mandó alguien que ya estaba en el club. Van juntas porque para el director es
+ * el mismo trabajo, revisar y decidir; lo que cambia es qué se le muestra.
+ */
 router.get('/club/pendientes', requireAuth, async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'No autenticado' });
   const clubId = req.user.clubId ?? '';
 
-  const pendientes = await prisma.member.findMany({
-    where: { clubId, inscripcion: 'PENDIENTE' },
-    orderBy: { createdAt: 'asc' },
-    select: {
-      id: true, fullName: true, email: true, phone: true, birthDate: true,
-      docType: true, docNumber: true, category: true, tipo: true, eps: true,
-      gender: true, rh: true, allergies: true,
-      emergencyContact: true, emergencyPhone: true, guardianRelation: true,
-      pictureUrl: true, createdAt: true,
-      locations: { select: { location: { select: { id: true, name: true } } } },
-    },
+  const campos = {
+    id: true, fullName: true, email: true, phone: true, birthDate: true,
+    docType: true, docNumber: true, category: true, tipo: true, eps: true,
+    gender: true, rh: true, allergies: true,
+    emergencyContact: true, emergencyPhone: true, guardianRelation: true,
+    pictureUrl: true, createdAt: true,
+    locations: { select: { location: { select: { id: true, name: true } } } },
+  } as const;
+
+  const [nuevas, actualizaciones] = await Promise.all([
+    prisma.member.findMany({
+      where: { clubId, inscripcion: 'PENDIENTE' },
+      orderBy: { createdAt: 'asc' },
+      select: campos,
+    }),
+    prisma.member.findMany({
+      where: { clubId, cambiosPendientes: { not: Prisma.DbNull } },
+      orderBy: { updatedAt: 'asc' },
+      select: { ...campos, cambiosPendientes: true, updatedAt: true },
+    }),
+  ]);
+
+  res.json({
+    pendientes: nuevas.map(p => ({ ...p, modo: 'nuevo' as const })),
+    // El club no necesita la ficha entera para decidir: necesita ver qué se
+    // mueve. Cada cambio llega con su nombre legible ya resuelto.
+    actualizaciones: actualizaciones.map(m => {
+      const guardado = (m.cambiosPendientes ?? {}) as { enviadoEn?: string; cambios?: Record<string, { antes: unknown; despues: unknown }> };
+      const cambios = guardado.cambios ?? {};
+      return {
+        id: m.id,
+        fullName: m.fullName,
+        pictureUrl: m.pictureUrl,
+        birthDate: m.birthDate,
+        enviadoEn: guardado.enviadoEn ?? m.updatedAt.toISOString(),
+        locations: m.locations,
+        cambios: Object.entries(cambios).map(([campo, v]) => ({
+          campo,
+          etiqueta: NOMBRE_CAMPO[campo] ?? campo,
+          antes: v.antes,
+          despues: v.despues,
+        })),
+      };
+    }),
+  });
+});
+
+/** POST /inscripcion/club/:id/aplicar — el club acepta los cambios. */
+router.post('/club/:id/aplicar', requireAuth, async (req, res) => {
+  if (!soloAdmin(req, res)) return;
+  const clubId = req.user!.clubId ?? '';
+  const id = String(req.params.id);
+
+  const miembro = await prisma.member.findFirst({
+    where: { id, clubId, cambiosPendientes: { not: Prisma.DbNull } },
+    select: { id: true, fullName: true, cambiosPendientes: true },
+  });
+  if (!miembro) return res.status(404).json({ error: 'Ese deportista no tiene cambios esperando.' });
+
+  const guardado = (miembro.cambiosPendientes ?? {}) as { cambios?: Record<string, { despues: unknown }> };
+  const cambios = guardado.cambios ?? {};
+
+  // Se aplica campo por campo y solo lo que se guardó como cambio: nunca el
+  // cuerpo de la petición, que podría traer cualquier cosa.
+  const datos: Record<string, unknown> = {};
+  for (const [campo, v] of Object.entries(cambios)) {
+    datos[campo] = campo === 'birthDate' && typeof v.despues === 'string'
+      ? new Date(v.despues)
+      : v.despues;
+  }
+
+  await prisma.member.update({
+    where: { id },
+    data: { ...datos, cambiosPendientes: Prisma.DbNull },
   });
 
-  res.json({ pendientes });
+  await invalidateMembersCache(clubId);
+  emitToClub(clubId, 'members');
+  res.json({ ok: true, aplicados: Object.keys(cambios).length });
+});
+
+/** DELETE /inscripcion/club/:id/cambios — el club los descarta. */
+router.delete('/club/:id/cambios', requireAuth, async (req, res) => {
+  if (!soloAdmin(req, res)) return;
+  const clubId = req.user!.clubId ?? '';
+  const id = String(req.params.id);
+
+  const { count } = await prisma.member.updateMany({
+    where: { id, clubId, cambiosPendientes: { not: Prisma.DbNull } },
+    data: { cambiosPendientes: Prisma.DbNull },
+  });
+  if (count === 0) return res.status(404).json({ error: 'Ese deportista no tiene cambios esperando.' });
+
+  emitToClub(clubId, 'members');
+  res.json({ ok: true });
 });
 
 /** POST /inscripcion/club/:id/aprobar — le da acceso a la plataforma. */

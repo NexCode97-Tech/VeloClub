@@ -167,6 +167,11 @@ model Member {
   // existe: sin ese default, una migracion dejaria a todo el mundo afuera.
   inscripcion       EstadoInscripcion @default(APROBADO)
   aprobadoAt        DateTime?
+  // Cambios que una familia mando por el enlace para un deportista que ya
+  // estaba en el club. NO se aplican solos: viven aca hasta que el club los
+  // revisa. Sin ese paso, saber una cedula y una fecha alcanzaria para
+  // reescribir la ficha de otro.
+  cambiosPendientes Json?
   clerkId           String?           @unique
   role              Role              @default(STUDENT)
   // Pausa temporal, no borrado. Los deportistas se van de vacaciones en

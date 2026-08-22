@@ -16,6 +16,7 @@ import { stagger, cardVariant } from '@/lib/page-animations';
 import {
   Select, SelectContent, SelectItem, SelectTrigger,
 } from '@/components/ui/select';
+import { Desplegable } from '@/components/ui/desplegable';
 import { BotonFiltros, ChipsFiltros, type GrupoFiltro } from '@/components/ui/filtros';
 import ModuleLoader, { useCargaMinima } from '@/components/ui/module-loader';
 import ModuleReveal from '@/components/ui/module-reveal';
@@ -883,6 +884,24 @@ export default function AsistenciaPage() {
                       />
                     </div>
 
+                    {/* La sede, cuadrada y solo en el celular. Se queda en la
+                        fila porque decide de quien se pasa lista, pero sin su
+                        nombre no cabria la busqueda: el nombre baja a la linea
+                        de contexto, que pesa 18px en vez de un renglon. */}
+                    {!claseActiva && locations.length > 1 && (
+                      <Desplegable
+                        compacto
+                        className="md:hidden"
+                        tono="#4361EE"
+                        icono={<MapPin className="w-4 h-4" />}
+                        valor={selectedLoc}
+                        opciones={locations.map(l => ({ valor: l.id, texto: l.name }))}
+                        vacio="Sede"
+                        titulo="Dónde estás pasando lista"
+                        onElegir={v => setSelectedLoc(v)}
+                      />
+                    )}
+
                     {/* Todos los filtros en un control. Las pastillas sueltas se
                         salian de la pantalla en cuanto el club tenia cinco
                         categorias. */}
@@ -890,6 +909,7 @@ export default function AsistenciaPage() {
                       grupos={gruposFiltro}
                       resultados={{ mostrados: visibleMembers.length, total: members.length, sustantivo: 'deportistas' }}
                       alto={42}
+                      soloIcono="movil"
                     />
                   </div>
 
@@ -925,7 +945,7 @@ export default function AsistenciaPage() {
                       {clasesHoy.length > 1 && <ChevronDown className="w-4 h-4 shrink-0" style={{ color: '#8E87A8' }} />}
                     </button>
                   ) : locations.length > 1 ? (
-                    <div className="flex items-center gap-2 md:w-52 md:shrink-0">
+                    <div className="hidden md:flex items-center gap-2 md:w-52 md:shrink-0">
                       <MapPin className="w-4 h-4 text-muted-foreground shrink-0" />
                       <Select value={selectedLoc} onValueChange={v => setSelectedLoc(v ?? selectedLoc)}>
                         <SelectTrigger className="bg-white flex-1">
@@ -941,12 +961,25 @@ export default function AsistenciaPage() {
                       </Select>
                     </div>
                   ) : locations.length === 1 ? (
-                    <div className="flex items-center gap-2 px-3 py-2 bg-white border border-border rounded-xl md:shrink-0">
+                    <div className="hidden md:flex items-center gap-2 px-3 py-2 bg-white border border-border rounded-xl md:shrink-0">
                       <MapPin className="w-4 h-4 shrink-0" style={{ color: '#4361EE' }} />
                       <span className="text-[13px] font-semibold text-foreground">{locations[0].name}</span>
                     </div>
                   ) : null}
                 </motion.div>
+
+                {/* Donde se esta pasando lista, en texto plano. Sin esto, el
+                    boton en puro icono deja al entrenador sin saber en que sede
+                    esta marcando, que es el error que se paga caro. */}
+                {!claseActiva && locations.length > 0 && (
+                  <p className="md:hidden flex items-center gap-1 text-[11px] m-0" style={{ color: '#8E87A8' }}>
+                    <MapPin className="w-3 h-3 shrink-0" />
+                    <span className="truncate">
+                      {locations.find(l => l.id === selectedLoc)?.name ?? locations[0].name}
+                    </span>
+                    <span className="shrink-0">· {visibleMembers.length} de {members.length}</span>
+                  </p>
+                )}
 
                 {/* Lo que está puesto, fuera del panel: si solo se viera al
                     abrirlo, la planilla podría estar recortada sin que nada en

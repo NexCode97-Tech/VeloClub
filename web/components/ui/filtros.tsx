@@ -52,6 +52,18 @@ const TONOS = {
   gris:    { fondo: 'rgba(142,135,168,0.12)', borde: 'rgba(142,135,168,0.28)', texto: '#5B5470' },
 } as const;
 
+/** El contador colgado de la esquina, para cuando el botón es solo ícono. */
+function Globo({ n }: { n: number }) {
+  return (
+    <span
+      className="absolute -top-1.5 -right-1.5 text-[10px] font-bold text-white rounded-full px-1 min-w-[16px] h-[16px] flex items-center justify-center"
+      style={{ background: '#7C3AED', border: '2px solid #fff' }}
+    >
+      {n}
+    </span>
+  );
+}
+
 /** Los grupos que están filtrando de verdad. */
 function activos(grupos: GrupoFiltro[]): GrupoFiltro[] {
   return grupos.filter(g => !g.noCuenta && g.valor !== g.neutro);
@@ -65,11 +77,17 @@ function textoDe(g: GrupoFiltro): string {
  * El botón. Trae el número de filtros puestos, para que no haya que abrirlo
  * para saber si la lista está recortada.
  */
-export function BotonFiltros({ grupos, resultados, alto = 42 }: {
+export function BotonFiltros({ grupos, resultados, alto = 42, soloIcono }: {
   grupos: GrupoFiltro[];
   /** Lo que dice el pie del panel: «14 de 41 miembros». */
   resultados: { mostrados: number; total: number; sustantivo: string };
   alto?: number;
+  /**
+   * Cuadrado y sin la palabra «Filtros». `'movil'` lo deja así solo en pantalla
+   * angosta, donde el texto le quita ancho a la búsqueda; de tablet para arriba
+   * vuelve con su etiqueta.
+   */
+  soloIcono?: boolean | 'movil';
 }) {
   const [abierto, setAbierto] = useState(false);
   const [coords, setCoords] = useState<{ left: number; top: number; maxHeight: number } | null>(null);
@@ -214,7 +232,14 @@ export function BotonFiltros({ grupos, resultados, alto = 42 }: {
         type="button"
         onClick={() => setAbierto(a => !a)}
         aria-expanded={abierto}
-        className="flex items-center gap-1.5 px-3 rounded-xl text-[12px] font-semibold shrink-0 transition-colors"
+        aria-label={soloIcono ? 'Filtros' : undefined}
+        className={`relative flex items-center justify-center gap-1.5 rounded-xl text-[12px] font-semibold shrink-0 transition-colors ${
+          soloIcono === true
+            ? 'w-[42px] px-0'
+            : soloIcono === 'movil'
+              ? 'w-[42px] px-0 md:w-auto md:px-3'
+              : 'px-3'
+        }`}
         style={{
           height: alto,
           background: puestos > 0 ? 'rgba(124,58,237,0.08)' : '#fff',
@@ -222,13 +247,30 @@ export function BotonFiltros({ grupos, resultados, alto = 42 }: {
           color: puestos > 0 ? '#6D28D9' : '#1A1028',
         }}
       >
-        <SlidersHorizontal className="w-3.5 h-3.5 shrink-0" style={{ color: puestos > 0 ? '#6D28D9' : '#8E87A8' }} />
-        Filtros
+        <SlidersHorizontal className="w-4 h-4 shrink-0" style={{ color: puestos > 0 ? '#6D28D9' : '#8E87A8' }} />
+        {soloIcono !== true && (
+          <span className={soloIcono === 'movil' ? 'hidden md:inline' : undefined}>Filtros</span>
+        )}
+
+        {/* Sin la palabra al lado, el contador se sale del botón: es lo único
+            que avisa que la lista está recortada. */}
         {puestos > 0 && (
-          <span className="text-[10.5px] font-bold text-white rounded-full px-1.5 min-w-[17px] h-[17px] flex items-center justify-center"
-            style={{ background: '#7C3AED' }}>
-            {puestos}
-          </span>
+          soloIcono === true ? (
+            <Globo n={puestos} />
+          ) : soloIcono === 'movil' ? (
+            <>
+              <span className="md:hidden"><Globo n={puestos} /></span>
+              <span className="hidden md:flex text-[10.5px] font-bold text-white rounded-full px-1.5 min-w-[17px] h-[17px] items-center justify-center"
+                style={{ background: '#7C3AED' }}>
+                {puestos}
+              </span>
+            </>
+          ) : (
+            <span className="text-[10.5px] font-bold text-white rounded-full px-1.5 min-w-[17px] h-[17px] flex items-center justify-center"
+              style={{ background: '#7C3AED' }}>
+              {puestos}
+            </span>
+          )
         )}
       </button>
 

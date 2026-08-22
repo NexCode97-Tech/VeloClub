@@ -1016,6 +1016,7 @@ export default function MiembrosPage() {
               grupos={gruposFiltro}
               resultados={{ mostrados: filtered.length, total: members.length, sustantivo: 'miembros' }}
               alto={40}
+              soloIcono
             />
           </div>
           <ChipsFiltros grupos={gruposFiltro} />

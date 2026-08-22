@@ -41,7 +41,8 @@ interface Coordenadas {
 }
 
 export function Desplegable({
-  valor, opciones, vacio, error, falta, deshabilitado, titulo, className, onElegir,
+  valor, opciones, vacio, error, falta, deshabilitado, titulo, className,
+  icono, compacto, tono, onElegir,
 }: {
   valor: string;
   opciones: OpcionDesplegable[];
@@ -54,6 +55,12 @@ export function Desplegable({
   /** Encabezado de la hoja en el celular. Por defecto usa `vacio`. */
   titulo?: string;
   className?: string;
+  /** Ícono a la izquierda. En modo compacto es lo único que se ve. */
+  icono?: React.ReactNode;
+  /** Cuadrado y sin texto, para una barra de herramientas apretada. */
+  compacto?: boolean;
+  /** Color del ícono y del borde en modo compacto. */
+  tono?: string;
   onElegir: (v: string) => void;
 }) {
   const [abierto, setAbierto] = useState(false);
@@ -248,19 +255,29 @@ export function Desplegable({
         disabled={deshabilitado}
         onClick={() => (abierto ? setAbierto(false) : abrir())}
         onKeyDown={alTeclear}
-        className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg border bg-background text-[13px] text-left outline-none transition-colors disabled:opacity-60 ${className ?? ''}`}
+        aria-label={compacto ? (titulo ?? vacio) : undefined}
+        className={
+          compacto
+            ? `w-[42px] h-[42px] shrink-0 grid place-items-center rounded-xl border outline-none transition-colors disabled:opacity-60 ${className ?? ''}`
+            : `w-full flex items-center gap-2 px-3 py-2 rounded-lg border bg-background text-[13px] text-left outline-none transition-colors disabled:opacity-60 ${className ?? ''}`
+        }
         style={{
-          borderColor: borde,
-          background: falta && !error ? '#FDF7E8' : undefined,
+          borderColor: compacto && tono ? `${tono}4D` : borde,
+          background: falta && !error ? '#FDF7E8' : compacto ? '#fff' : undefined,
           boxShadow: abierto ? '0 0 0 3px rgba(124,58,237,0.12)' : undefined,
-          color: elegida ? '#1A1028' : '#8E87A8',
+          color: compacto ? (tono ?? '#8E87A8') : elegida ? '#1A1028' : '#8E87A8',
         }}
       >
-        <span className="flex-1 truncate">{elegida?.texto ?? vacio}</span>
-        <ChevronDown
-          className="w-3.5 h-3.5 shrink-0 transition-transform"
-          style={{ color: abierto ? '#7C3AED' : '#8E87A8', transform: abierto ? 'rotate(180deg)' : undefined }}
-        />
+        {compacto ? icono : (
+          <>
+            {icono}
+            <span className="flex-1 truncate">{elegida?.texto ?? vacio}</span>
+            <ChevronDown
+              className="w-3.5 h-3.5 shrink-0 transition-transform"
+              style={{ color: abierto ? '#7C3AED' : '#8E87A8', transform: abierto ? 'rotate(180deg)' : undefined }}
+            />
+          </>
+        )}
       </button>
 
       {typeof document !== 'undefined' && createPortal(

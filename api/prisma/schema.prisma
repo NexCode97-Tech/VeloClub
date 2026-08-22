@@ -50,6 +50,10 @@ model Club {
   inscripcionAbierta        Boolean           @default(false)
   // Cuantos deportistas espera el club, para poder decirle cuantos faltan.
   inscripcionEsperados      Int?
+  // Cierre automatico. Opcional: si esta puesta, pasada esa fecha el enlace deja
+  // de recibir. El token NO cambia, asi que al reabrir sirve el mismo enlace y
+  // no toca repartirlo otra vez.
+  inscripcionVenceAt        DateTime?
   createdAt                 DateTime          @default(now())
   updatedAt                 DateTime          @updatedAt
   users                     User[]

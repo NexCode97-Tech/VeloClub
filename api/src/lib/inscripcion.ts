@@ -66,19 +66,16 @@ export function esMenor(nacimiento: Date | null | undefined): boolean {
   return edad(nacimiento) < MAYORIA_DE_EDAD;
 }
 
-/** Campos que una familia puede tocar desde el enlace. */
-export const CAMPOS_ACTUALIZABLES = [
-  'fullName', 'phone', 'docType', 'docNumber', 'birthDate',
-  'emergencyContact', 'emergencyPhone', 'guardianRelation', 'guardianDocNumber',
-  'eps', 'gender', 'rh', 'allergies', 'category', 'tipo',
-] as const;
-
-export type CampoActualizable = typeof CAMPOS_ACTUALIZABLES[number];
-
-/** Como se llama cada campo cuando el club lee la lista de cambios. */
+/**
+ * Como se llama cada campo cuando el club lee la lista de cambios.
+ *
+ * Que un campo se pueda tocar desde el enlace no se decide aca sino en la ruta,
+ * que es la que arma lo propuesto. Una lista aparte se desincronizaria y
+ * parecería mandar sin mandar.
+ */
 export const NOMBRE_CAMPO: Record<string, string> = {
   fullName: 'Nombre', phone: 'Celular', docType: 'Tipo de documento',
-  docNumber: 'Documento', birthDate: 'Nacimiento',
+  docNumber: 'Documento', birthDate: 'Nacimiento', email: 'Correo',
   emergencyContact: 'Acudiente', emergencyPhone: 'Celular del acudiente',
   guardianRelation: 'Parentesco', guardianDocNumber: 'Cédula del acudiente',
   eps: 'EPS', gender: 'Género', rh: 'RH', allergies: 'Alergias',
@@ -156,41 +153,102 @@ export async function yaExiste(params: {
   return { correo: !!correo, documento: !!documento };
 }
 
+/** Lo que el club tiene guardado y el formulario vuelve a mostrar. */
+const FICHA = {
+  id: true, fullName: true, email: true, phone: true, birthDate: true,
+  docType: true, docNumber: true, clerkId: true,
+  emergencyContact: true, emergencyPhone: true, guardianRelation: true,
+  guardianDocNumber: true, eps: true, gender: true, rh: true, allergies: true,
+  category: true, tipo: true,
+  locations: { select: { locationId: true } },
+} as const;
+
+export interface FichaPublica {
+  fullName: string; email: string; phone: string; birthDate: string;
+  docType: string; docNumber: string;
+  guardianName: string; guardianRelation: string; guardianDocNumber: string;
+  guardianPhone: string; eps: string; gender: string; rh: string;
+  allergies: string; category: string; tipo: string; locationId: string;
+}
+
+/** Una fecha se devuelve como aaaa-mm-dd, que es lo que espera un input date. */
+function soloFecha(d: Date | null): string {
+  return d ? d.toISOString().slice(0, 10) : '';
+}
+
 /**
- * A quien corresponde ese documento dentro del club, si los datos coinciden.
+ * Quien es el dueno de ese documento dentro del club.
  *
- * El documento solo NO alcanza para reconocer a alguien: si bastara, quien sepa
- * una cedula podria reescribir esa ficha, y cambiarle el correo es quedarse con
- * su cuenta. Se exige tambien la fecha de nacimiento.
+ * El documento es la identificacion de la persona y es lo unico que el club
+ * seguro tiene de todos, asi que es la llave. Tres desenlaces:
+ *
+ * - `nuevo`: no esta, se inscribe de cero.
+ * - `reconocido`: esta una sola vez, y se le devuelve su ficha para completarla.
+ * - `ambiguo`: el mismo numero esta en dos o mas fichas, casi siempre por un
+ *   error viejo de digitacion o por un documento de relleno tipo «123456789».
+ *   No se puede saber cual de las dos es, asi que no se reconoce a nadie: sigue
+ *   como inscripcion nueva y el club decide despues.
  */
-export async function reconocerPorDocumento(params: {
+export async function buscarPorDocumento(params: {
   clubId: string;
   docNumber: string;
-  birthDate: string;
 }): Promise<
   | { estado: 'nuevo' }
-  | { estado: 'reconocido'; id: string; nombre: string; tieneCuenta: boolean }
-  | { estado: 'ajeno' }
+  | { estado: 'reconocido'; id: string; tieneCuenta: boolean; ficha: FichaPublica }
+  | { estado: 'ambiguo'; cuantos: number }
 > {
-  const existente = await prisma.member.findFirst({
-    where: { clubId: params.clubId, docNumber: params.docNumber.trim() },
-    select: { id: true, fullName: true, birthDate: true, clerkId: true, email: true },
+  const doc = params.docNumber.trim();
+  if (!doc) return { estado: 'nuevo' };
+
+  const encontrados = await prisma.member.findMany({
+    where: { clubId: params.clubId, docNumber: doc },
+    select: FICHA,
+    take: 5,
   });
 
-  if (!existente) return { estado: 'nuevo' };
+  if (encontrados.length === 0) return { estado: 'nuevo' };
+  if (encontrados.length > 1) return { estado: 'ambiguo', cuantos: encontrados.length };
 
-  // Sin fecha guardada no hay con que confirmar la identidad, asi que se trata
-  // como ajeno: es mas seguro pedirle al club que lo resuelva.
-  if (!existente.birthDate) return { estado: 'ajeno' };
-
-  const laDelClub = existente.birthDate.toISOString().slice(0, 10);
-  const laEnviada = params.birthDate.slice(0, 10);
-  if (laDelClub !== laEnviada) return { estado: 'ajeno' };
-
+  const m = encontrados[0];
   return {
     estado: 'reconocido',
-    id: existente.id,
-    nombre: existente.fullName,
-    tieneCuenta: !!existente.clerkId || !!existente.email,
+    id: m.id,
+    tieneCuenta: !!m.clerkId,
+    ficha: {
+      fullName: m.fullName ?? '',
+      email: m.email ?? '',
+      phone: m.phone ?? '',
+      birthDate: soloFecha(m.birthDate),
+      docType: m.docType ?? '',
+      docNumber: m.docNumber ?? doc,
+      guardianName: m.emergencyContact ?? '',
+      guardianRelation: m.guardianRelation ?? '',
+      guardianDocNumber: m.guardianDocNumber ?? '',
+      guardianPhone: m.emergencyPhone ?? '',
+      eps: m.eps ?? '',
+      gender: m.gender ?? '',
+      rh: m.rh ?? '',
+      allergies: m.allergies ?? '',
+      category: m.category ?? '',
+      tipo: m.tipo ?? '',
+      locationId: m.locations[0]?.locationId ?? '',
+    },
   };
+}
+
+/**
+ * Si el enlace esta recibiendo ahora mismo.
+ *
+ * El vencimiento no apaga el interruptor en la base: solo deja de responder. Asi
+ * el club puede correr la fecha y el enlace vuelve a servir, con el mismo token
+ * que ya repartio.
+ */
+export function inscripcionVigente(club: {
+  active: boolean;
+  inscripcionAbierta: boolean;
+  inscripcionVenceAt: Date | null;
+}): boolean {
+  if (!club.active || !club.inscripcionAbierta) return false;
+  if (club.inscripcionVenceAt && club.inscripcionVenceAt < new Date()) return false;
+  return true;
 }

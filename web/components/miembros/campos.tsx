@@ -11,20 +11,49 @@ import { Check, ChevronDown, Paperclip } from 'lucide-react';
  * aspecto de un campo no puede depender de cuál de los dos lo esté pintando.
  */
 
-export function entrada(hayError: boolean): string {
-  return `w-full px-3 py-2 rounded-lg border bg-background text-[13px] outline-none transition-colors ${
-    hayError ? 'border-[#EF476F]' : 'border-border focus:border-primary'
-  }`;
+/**
+ * El aspecto de una casilla.
+ *
+ * `falta` es para el formulario público cuando alguien vuelve a completar su
+ * ficha: la casilla vacía se pinta en ámbar para que se vea de un vistazo qué
+ * le falta, sin tener que leer campo por campo. No es un error, así que no usa
+ * el rojo: nadie hizo nada mal, simplemente ese dato nunca se llenó.
+ */
+export function entrada(hayError: boolean, falta?: boolean): string {
+  const borde = hayError
+    ? 'border-[#EF476F]'
+    : falta
+      ? 'border-[#D9A227] bg-[#FDF7E8] focus:border-primary'
+      : 'border-border focus:border-primary';
+  return `w-full px-3 py-2 rounded-lg border text-[13px] outline-none transition-colors ${
+    falta && !hayError ? '' : 'bg-background'
+  } ${borde}`;
 }
 
-export function Campo({ etiqueta, obligatorio, error, children }: {
-  etiqueta: string; obligatorio?: boolean; error?: string | null; children: React.ReactNode;
+export function Campo({ etiqueta, obligatorio, error, falta, listo, children }: {
+  etiqueta: string;
+  obligatorio?: boolean;
+  error?: string | null;
+  /** Vacío en la ficha que el club ya tiene. */
+  falta?: boolean;
+  /** Ya venía lleno del club. */
+  listo?: boolean;
+  children: React.ReactNode;
 }) {
   return (
     <div className="mb-2.5">
-      <label className="block text-[11px] font-semibold text-muted-foreground mb-1">
-        {etiqueta}
-        {obligatorio && <span className="text-[#EF476F] ml-0.5">*</span>}
+      <label className="flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground mb-1">
+        <span>
+          {etiqueta}
+          {obligatorio && <span className="text-[#EF476F] ml-0.5">*</span>}
+        </span>
+        {falta && (
+          <span className="text-[9.5px] font-bold px-1.5 py-px rounded"
+            style={{ background: '#F7E9C4', color: '#8A6216' }}>
+            Falta
+          </span>
+        )}
+        {listo && !falta && <Check className="w-3 h-3 text-[#0E7C57]" />}
       </label>
       {children}
       {error && <p className="text-[11px] text-[#EF476F] mt-1 m-0">{error}</p>}
@@ -43,13 +72,14 @@ export function Ayuda({ children }: { children: React.ReactNode }) {
  */
 export type Opcion = string | { valor: string; texto: string };
 
-export function Desplegable({ valor, opciones, vacio, error, onElegir }: {
+export function Desplegable({ valor, opciones, vacio, error, falta, onElegir }: {
   valor: string;
   /** Un catálogo de textos, o pares valor/texto cuando lo que se guarda no es
    *  lo que se lee: las sedes guardan un id y muestran su nombre. */
   opciones: Opcion[];
   vacio: string;
   error?: boolean;
+  falta?: boolean;
   onElegir: (v: string) => void;
 }) {
   const normal = opciones.map(o => (typeof o === 'string' ? { valor: o, texto: o } : o));
@@ -58,7 +88,7 @@ export function Desplegable({ valor, opciones, vacio, error, onElegir }: {
       <select
         value={valor}
         onChange={e => onElegir(e.target.value)}
-        className={`${entrada(!!error)} appearance-none pr-8 ${valor ? '' : 'text-muted-foreground'}`}
+        className={`${entrada(!!error, falta)} appearance-none pr-8 ${valor ? '' : 'text-muted-foreground'}`}
       >
         <option value="">{vacio}</option>
         {normal.map(o => <option key={o.valor} value={o.valor}>{o.texto}</option>)}

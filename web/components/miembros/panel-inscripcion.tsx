@@ -17,9 +17,34 @@ import { apiFetch } from '@/lib/api-client';
 interface Estado {
   abierta: boolean;
   esperados: number | null;
+  /** aaaa-mm-dd, o null si el enlace no se cierra solo. */
+  vence: string | null;
+  vencido: boolean;
   url: string | null;
   pendientes: number;
   recibidos: number;
+}
+
+/** «30 de septiembre de 2026», leyendo la fecha como día calendario. */
+function enPalabras(iso: string): string {
+  const [a, m, d] = iso.split('-').map(Number);
+  return new Date(a, m - 1, d).toLocaleDateString('es-CO', {
+    day: 'numeric', month: 'long', year: 'numeric',
+  });
+}
+
+/** Cuántos días faltan para esa fecha, contando desde hoy. */
+function diasHasta(iso: string): number {
+  const [a, m, d] = iso.split('-').map(Number);
+  const hoy = new Date();
+  const cero = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
+  return Math.round((new Date(a, m - 1, d).getTime() - cero.getTime()) / 86_400_000);
+}
+
+/** Hoy en aaaa-mm-dd local, para que el selector no ofrezca ayer. */
+function hoyISO(): string {
+  const h = new Date();
+  return `${h.getFullYear()}-${String(h.getMonth() + 1).padStart(2, '0')}-${String(h.getDate()).padStart(2, '0')}`;
 }
 
 export function PanelInscripcion({ abierto, onCerrar }: { abierto: boolean; onCerrar: () => void }) {
@@ -53,7 +78,7 @@ export function PanelInscripcion({ abierto, onCerrar }: { abierto: boolean; onCe
     };
   }, [abierto, onCerrar]);
 
-  async function cambiar(datos: { abierta?: boolean; esperados?: number | null }) {
+  async function cambiar(datos: { abierta?: boolean; esperados?: number | null; vence?: string | null }) {
     setGuardando(true);
     setError(null);
     try {
@@ -161,7 +186,11 @@ export function PanelInscripcion({ abierto, onCerrar }: { abierto: boolean; onCe
                     <div className="min-w-0">
                       <p className="text-[13px] font-semibold text-foreground m-0">Recibir inscripciones</p>
                       <p className="text-[11px] text-muted-foreground m-0">
-                        {estado.abierta ? 'El enlace está activo' : 'Nadie puede inscribirse ahora'}
+                        {!estado.abierta
+                          ? 'Nadie puede inscribirse ahora'
+                          : estado.vencido
+                            ? 'Se cerró en la fecha que pusiste'
+                            : 'El enlace está activo'}
                       </p>
                     </div>
                     <button
@@ -232,6 +261,56 @@ export function PanelInscripcion({ abierto, onCerrar }: { abierto: boolean; onCe
                         <p className="text-[10.5px] text-muted-foreground mt-1 m-0">
                           Sirve para saber cuántos faltan por responder.
                         </p>
+                      </div>
+
+                      {/* Cierre automático. Apaga el enlace sin cambiarlo: al
+                          correr la fecha vuelve a servir el mismo, y el club no
+                          tiene que repartirlo otra vez. */}
+                      <div className="mt-4 pt-3.5 border-t border-border">
+                        <label className="block text-[11px] font-semibold text-muted-foreground mb-1">
+                          Cerrar automáticamente <span className="font-normal opacity-70">· opcional</span>
+                        </label>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="date"
+                            min={hoyISO()}
+                            value={estado.vence ?? ''}
+                            onChange={e => cambiar({ vence: e.target.value || null })}
+                            disabled={guardando}
+                            style={{ appearance: 'none', WebkitAppearance: 'none' }}
+                            className="flex-1 min-w-0 px-3 py-2 rounded-lg border border-border bg-background text-[13px] outline-none focus:border-primary disabled:opacity-50"
+                          />
+                          {estado.vence && (
+                            <button onClick={() => cambiar({ vence: null })} disabled={guardando}
+                              className="shrink-0 text-[11.5px] font-semibold px-2.5 py-2 rounded-lg text-[#A33A4E] disabled:opacity-50"
+                              style={{ border: '1px solid rgba(163,58,78,0.28)' }}>
+                              Quitar
+                            </button>
+                          )}
+                        </div>
+                        {estado.vence ? (
+                          <div className="flex items-center gap-2 flex-wrap mt-1.5">
+                            <span className="text-[10.5px] text-muted-foreground">
+                              Cierra el {enPalabras(estado.vence)}
+                            </span>
+                            <span className="text-[10.5px] font-semibold px-1.5 py-px rounded"
+                              style={
+                                estado.vencido
+                                  ? { background: 'rgba(239,71,111,0.1)', color: '#A33A4E' }
+                                  : { background: '#FDF7E8', color: '#8A6216' }
+                              }>
+                              {estado.vencido
+                                ? 'Ya venció'
+                                : diasHasta(estado.vence) === 0
+                                  ? 'Hoy es el último día'
+                                  : `Faltan ${diasHasta(estado.vence)} días`}
+                            </span>
+                          </div>
+                        ) : (
+                          <p className="text-[10.5px] text-muted-foreground mt-1 m-0">
+                            Sin fecha, el enlace queda abierto hasta que lo apagues.
+                          </p>
+                        )}
                       </div>
 
                       <button onClick={rotar} disabled={guardando}

@@ -660,8 +660,9 @@ export default function MiembrosPage() {
           <div
             className="flex items-center gap-2 mb-4 flex-wrap"
           >
-            {/* Barra de búsqueda */}
-            <div className="relative flex-1 min-w-[180px] max-w-sm">
+            {/* Barra de búsqueda. Sin tope de ancho: se estira hasta topar con
+                los botones, para que no quede un hueco en la mitad de la fila. */}
+            <div className="relative flex-1 min-w-[180px]">
               <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: '#8E87A8' }} />
               <input
                 className="w-full pl-10 pr-4 py-2.5 rounded-xl text-[13px] outline-none transition-all"
@@ -677,11 +678,8 @@ export default function MiembrosPage() {
               grupos={gruposFiltro}
               resultados={{ mostrados: filtered.length, total: members.length, sustantivo: 'miembros' }}
             />
-            <p className="text-[12px] font-semibold whitespace-nowrap" style={{ color: '#8E87A8' }}>
-              {filtered.length} resultado{filtered.length !== 1 ? 's' : ''}
-            </p>
 
-            <div className="flex items-center gap-2 ml-auto">
+            <div className="flex items-center gap-2">
               {canManage && (
               <button onClick={e => {
                   const r = e.currentTarget.getBoundingClientRect();

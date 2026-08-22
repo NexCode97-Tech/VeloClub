@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from 'react';
 import Script from 'next/script';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { apiFetch } from '@/lib/api-client';
+import { Desplegable } from '@/components/ui/desplegable';
 import { CreditCard, ArrowLeft, Landmark, Banknote, Clock, RefreshCw, XCircle, Check, Star, Users, Zap, Copy, Upload } from 'lucide-react';
 
 const fmt = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 });
@@ -1029,15 +1030,13 @@ export default function SuscripcionCard() {
         <p className="text-[11px] text-muted-foreground">Tarjeta débito detectada. El pago se hace en 1 solo cobro.</p>
       )}
       {!loadingCuotas && cardTipo === 'credit_card' && cuotas.length > 1 && (
-        <select
-          value={cuotasSeleccionadas}
-          onChange={e => setCuotasSeleccionadas(Number(e.target.value))}
-          className="w-full px-3 py-2 rounded-lg border border-input text-sm bg-white"
-        >
-          {cuotas.map(c => (
-            <option key={c.installments} value={c.installments}>{c.recommended_message}</option>
-          ))}
-        </select>
+        <Desplegable
+          valor={String(cuotasSeleccionadas)}
+          opciones={cuotas.map(c => ({ valor: String(c.installments), texto: c.recommended_message }))}
+          vacio="Elegir cuotas"
+          titulo="En cuántas cuotas"
+          onElegir={v => setCuotasSeleccionadas(Number(v))}
+        />
       )}
     </div>
   );
@@ -1382,21 +1381,31 @@ export default function SuscripcionCard() {
                     exit={reduce ? undefined : 'exit'}
                     transition={{ duration: 0.2, ease: EASE }}
                     className="space-y-2.5">
-                    <select value={pse.bancoId} onChange={e => setPse(p => ({ ...p, bancoId: e.target.value }))}
-                      className="w-full px-3 py-2 rounded-lg border border-input text-sm bg-white">
-                      <option value="">Selecciona tu banco</option>
-                      {(metodos?.pse.bancos ?? []).map(b => (<option key={b.id} value={b.id}>{b.description}</option>))}
-                    </select>
+                    <Desplegable
+                      valor={pse.bancoId}
+                      opciones={(metodos?.pse.bancos ?? []).map(b => ({ valor: String(b.id), texto: b.description }))}
+                      vacio="Selecciona tu banco"
+                      titulo="Tu banco"
+                      onElegir={v => setPse(p => ({ ...p, bancoId: v }))}
+                    />
                     <div className="grid grid-cols-2 gap-2">
-                      <select value={pse.personType} onChange={e => setPse(p => ({ ...p, personType: e.target.value }))}
-                        className="px-3 py-2 rounded-lg border border-input text-sm bg-white">
-                        <option value="natural">Persona natural</option>
-                        <option value="juridica">Persona jurídica</option>
-                      </select>
-                      <select value={pse.docType} onChange={e => setPse(p => ({ ...p, docType: e.target.value }))}
-                        className="px-3 py-2 rounded-lg border border-input text-sm bg-white">
-                        {DOC_TYPES.map(d => <option key={d} value={d}>{d}</option>)}
-                      </select>
+                      <Desplegable
+                        valor={pse.personType}
+                        opciones={[
+                          { valor: 'natural',  texto: 'Persona natural' },
+                          { valor: 'juridica', texto: 'Persona jurídica' },
+                        ]}
+                        vacio="Tipo de persona"
+                        titulo="Tipo de persona"
+                        onElegir={v => setPse(p => ({ ...p, personType: v }))}
+                      />
+                      <Desplegable
+                        valor={pse.docType}
+                        opciones={DOC_TYPES.map(d => ({ valor: d, texto: d }))}
+                        vacio="Documento"
+                        titulo="Tipo de documento"
+                        onElegir={v => setPse(p => ({ ...p, docType: v }))}
+                      />
                     </div>
                     <input placeholder="Número de documento" value={pse.docNumber} onChange={e => setPse(p => ({ ...p, docNumber: e.target.value }))}
                       className="w-full px-3 py-2 rounded-lg border border-input text-sm" inputMode="numeric" />
@@ -1438,10 +1447,13 @@ export default function SuscripcionCard() {
                     className="space-y-2.5"
                   >
                     <div className="grid grid-cols-2 gap-2">
-                      <select value={efecty.docType} onChange={e => setEfecty(p => ({ ...p, docType: e.target.value }))}
-                        className="px-3 py-2 rounded-lg border border-input text-sm bg-white">
-                        {DOC_TYPES.map(d => <option key={d} value={d}>{d}</option>)}
-                      </select>
+                      <Desplegable
+                        valor={efecty.docType}
+                        opciones={DOC_TYPES.map(d => ({ valor: d, texto: d }))}
+                        vacio="Documento"
+                        titulo="Tipo de documento"
+                        onElegir={v => setEfecty(p => ({ ...p, docType: v }))}
+                      />
                       <input placeholder="Número de documento" value={efecty.docNumber} onChange={e => setEfecty(p => ({ ...p, docNumber: e.target.value }))}
                         className="px-3 py-2 rounded-lg border border-input text-sm" inputMode="numeric" />
                     </div>

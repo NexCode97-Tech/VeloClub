@@ -6,7 +6,7 @@ import { Check, ChevronLeft, Info, Lock, User } from 'lucide-react';
 import { Campo, Ayuda, Desplegable, entrada } from '@/components/miembros/campos';
 import { PhoneInput } from '@/components/ui/phone-input';
 import {
-  DOC_TIPOS, PARENTESCOS, CATEGORIAS, NIVELES, GENEROS, RH_TIPOS,
+  DOC_TIPOS_CON_NOTA, PARENTESCOS, CATEGORIAS, NIVELES, GENEROS, RH_TIPOS,
   edadDe, esMenorDeEdad,
 } from '@/lib/ficha-deportista';
 
@@ -351,7 +351,8 @@ export default function FormularioInscripcion({ token }: { token: string }) {
 
           <div className="grid grid-cols-3 gap-2">
             <Campo etiqueta="Tipo" obligatorio error={errores.docType}>
-              <Desplegable valor={d.docType} opciones={[...DOC_TIPOS]} vacio="Tipo"
+              <Desplegable valor={d.docType} opciones={DOC_TIPOS_CON_NOTA} vacio="Tipo"
+                titulo="Tipo de documento"
                 error={!!errores.docType} onElegir={v => set('docType', v)} />
             </Campo>
             <div className="col-span-2">

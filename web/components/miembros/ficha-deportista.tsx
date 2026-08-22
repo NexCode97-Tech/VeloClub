@@ -5,7 +5,7 @@ import { ChevronLeft, ChevronRight, User } from 'lucide-react';
 import { Adjunto, Ayuda, Campo, Chips, Desplegable, entrada } from '@/components/miembros/campos';
 import { PhoneInput } from '@/components/ui/phone-input';
 import {
-  CATEGORIAS, NIVELES, DOC_TIPOS, PARENTESCOS, GENEROS, RH_TIPOS,
+  CATEGORIAS, NIVELES, DOC_TIPOS_CON_NOTA, PARENTESCOS, GENEROS, RH_TIPOS,
   type DatosFicha, type ErroresFicha,
   edadDe, esMenorDeEdad, validarFicha, faltantesDe,
 } from '@/lib/ficha-deportista';
@@ -190,7 +190,8 @@ export function FichaDeportista({
                   className={entrada(!!errorDe('birthDate'))} />
               </Campo>
               <Campo etiqueta="Documento" obligatorio={esNuevo}>
-                <Desplegable valor={datos.docType} opciones={[...DOC_TIPOS]} vacio="Tipo"
+                <Desplegable valor={datos.docType} opciones={DOC_TIPOS_CON_NOTA} vacio="Tipo"
+                  titulo="Tipo de documento"
                   onElegir={v => set('docType', v)} />
               </Campo>
               <Campo etiqueta="Número" obligatorio={esNuevo} error={errorDe('docNumber')}>

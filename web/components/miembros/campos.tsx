@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { Check, ChevronDown, Paperclip } from 'lucide-react';
+import { Check, Paperclip } from 'lucide-react';
+import { Desplegable as DesplegableUI } from '@/components/ui/desplegable';
 
 /**
  * Los campos de la ficha de un deportista.
@@ -66,13 +67,15 @@ export function Ayuda({ children }: { children: React.ReactNode }) {
 }
 
 /**
- * Desplegable de catálogo. Es un `select` de verdad y no un menú dibujado a
- * mano: en móvil abre la rueda nativa, que es más rápida de usar que cualquier
- * lista propia, y no hay que resolverle el recorte ni el apilamiento.
+ * Desplegable de catálogo.
+ *
+ * Es el desplegable propio del proyecto y no un `select` nativo: el nativo se ve
+ * bien cerrado, pero al abrirlo el navegador pinta su lista con su fuente y su
+ * resaltado azul de sistema. Acá solo se traduce el catálogo y se delega.
  */
-export type Opcion = string | { valor: string; texto: string };
+export type Opcion = string | { valor: string; texto: string; nota?: string };
 
-export function Desplegable({ valor, opciones, vacio, error, falta, onElegir }: {
+export function Desplegable({ valor, opciones, vacio, error, falta, titulo, onElegir }: {
   valor: string;
   /** Un catálogo de textos, o pares valor/texto cuando lo que se guarda no es
    *  lo que se lee: las sedes guardan un id y muestran su nombre. */
@@ -80,21 +83,21 @@ export function Desplegable({ valor, opciones, vacio, error, falta, onElegir }: 
   vacio: string;
   error?: boolean;
   falta?: boolean;
+  /** Encabezado de la hoja en el celular. Por defecto usa `vacio`. */
+  titulo?: string;
   onElegir: (v: string) => void;
 }) {
   const normal = opciones.map(o => (typeof o === 'string' ? { valor: o, texto: o } : o));
   return (
-    <div className="relative">
-      <select
-        value={valor}
-        onChange={e => onElegir(e.target.value)}
-        className={`${entrada(!!error, falta)} appearance-none pr-8 ${valor ? '' : 'text-muted-foreground'}`}
-      >
-        <option value="">{vacio}</option>
-        {normal.map(o => <option key={o.valor} value={o.valor}>{o.texto}</option>)}
-      </select>
-      <ChevronDown className="w-3.5 h-3.5 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground" />
-    </div>
+    <DesplegableUI
+      valor={valor}
+      opciones={normal}
+      vacio={vacio}
+      error={error}
+      falta={falta}
+      titulo={titulo}
+      onElegir={onElegir}
+    />
   );
 }
 

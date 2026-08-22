@@ -16,6 +16,7 @@ import { stagger, cardVariant } from '@/lib/page-animations';
 import {
   Select, SelectContent, SelectItem, SelectTrigger,
 } from '@/components/ui/select';
+import { BotonFiltros, ChipsFiltros, type GrupoFiltro } from '@/components/ui/filtros';
 import ModuleLoader, { useCargaMinima } from '@/components/ui/module-loader';
 import ModuleReveal from '@/components/ui/module-reveal';
 import { ContenidoGuardado } from '@/components/ui/save-button-state';
@@ -494,7 +495,10 @@ export default function AsistenciaPage() {
 
   const [search, setSearch]       = useState('');
   const [catFilter, setCatFilter] = useState<string>('TODOS');
-  const categories = ['TODOS', ...Array.from(new Set(members.map(m => m.category).filter(Boolean) as string[])).sort()];
+  const categories = useMemo(
+    () => ['TODOS', ...Array.from(new Set(members.map(m => m.category).filter(Boolean) as string[])).sort()],
+    [members],
+  );
   const visibleMembers = members
     .filter(m => catFilter === 'TODOS' || m.category === catFilter)
     .filter(m => !statusFilter || (att[m.id] ?? 'ABSENT') === statusFilter)
@@ -505,6 +509,62 @@ export default function AsistenciaPage() {
     if (cat === 'TODOS') return 'Todos';
     return cat.charAt(0).toUpperCase() + cat.slice(1).toLowerCase();
   }
+
+  /**
+   * Los filtros de la planilla, en un control.
+   *
+   * La clase y la sede no entran acá a propósito: no filtran lo que se ve, sino
+   * que deciden de quién se está pasando lista. Metidas en un panel que hay que
+   * abrir, se pierde el dato más importante de la pantalla.
+   */
+  const gruposFiltro: GrupoFiltro[] = useMemo(() => {
+    const porBusqueda = (m: Member) =>
+      !search.trim() || m.fullName.toLowerCase().includes(search.toLowerCase().trim());
+    const porCat    = (m: Member) => catFilter === 'TODOS' || m.category === catFilter;
+    const porEstado = (m: Member) => !statusFilter || (att[m.id] ?? 'ABSENT') === statusFilter;
+
+    const paraCat    = members.filter(m => porBusqueda(m) && porEstado(m));
+    const paraEstado = members.filter(m => porBusqueda(m) && porCat(m));
+
+    const grupos: GrupoFiltro[] = [];
+
+    if (categories.length > 1) {
+      grupos.push({
+        id: 'categoria',
+        titulo: 'Categoría',
+        valor: catFilter,
+        neutro: 'TODOS',
+        tono: 'violeta',
+        onElegir: setCatFilter,
+        opciones: categories.map(c => ({
+          valor: c,
+          texto: toLabel(c),
+          n: c === 'TODOS' ? paraCat.length : paraCat.filter(m => m.category === c).length,
+        })),
+      });
+    }
+
+    // Sirve para repasar solo a los ausentes antes de guardar, que es el
+    // momento en que se cometen los errores.
+    grupos.push({
+      id: 'estado',
+      titulo: 'Cómo están marcados',
+      valor: statusFilter ?? 'TODOS',
+      neutro: 'TODOS',
+      tono: 'azul',
+      onElegir: v => setStatusFilter(v === 'TODOS' ? null : (v as Status)),
+      opciones: [
+        { valor: 'TODOS', texto: 'Todos', n: paraEstado.length },
+        ...(['PRESENT', 'LATE', 'ABSENT', 'MEDICAL_EXCUSE'] as Status[]).map(s => ({
+          valor: s,
+          texto: { PRESENT: 'Presentes', LATE: 'Tarde', ABSENT: 'Ausentes', MEDICAL_EXCUSE: 'Excusa médica' }[s],
+          n: paraEstado.filter(m => (att[m.id] ?? 'ABSENT') === s).length,
+        })),
+      ],
+    });
+
+    return grupos;
+  }, [members, categories, catFilter, statusFilter, search, att]);
 
   return (
     <div className="min-h-full bg-background">
@@ -819,62 +879,14 @@ export default function AsistenciaPage() {
                     />
                   </div>
 
-                {/* Filtro por categoría */}
-                {categories.length > 1 && (
-                  <div>
-                    {/* Dropdown — solo en móvil */}
-                    <div className="sm:hidden">
-                      <Select value={catFilter} onValueChange={(v) => { if (v) setCatFilter(v); }}>
-                        <SelectTrigger className="w-full h-9 text-[12px] font-semibold rounded-xl" style={{ borderColor: 'rgba(124,58,237,0.25)', color: '#7C3AED' }}>
-                          <span>
-                            {toLabel(catFilter)}
-                            {catFilter !== 'TODOS' && (
-                              <span className="ml-1.5 text-[10px] opacity-60">
-                                {members.filter(m => m.category === catFilter).length}
-                              </span>
-                            )}
-                          </span>
-                        </SelectTrigger>
-                        <SelectContent>
-                          {categories.map(cat => (
-                            <SelectItem key={cat} value={cat} className="text-[12px] font-semibold">
-                              {toLabel(cat)}
-                              {cat !== 'TODOS' && (
-                                <span className="ml-1.5 text-[10px] text-muted-foreground">
-                                  {members.filter(m => m.category === cat).length}
-                                </span>
-                              )}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    {/* Pills — solo en sm+ */}
-                    <div className="hidden sm:flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
-                      {categories.map(cat => (
-                        <motion.button
-                          key={cat}
-                          onClick={() => setCatFilter(cat)}
-                          whileTap={reducedMotion ? {} : { scale: 0.95 }}
-                          transition={{ duration: 0.1 }}
-                          className="shrink-0 px-3 py-1.5 rounded-full text-[11px] font-semibold transition-all cursor-pointer"
-                          style={catFilter === cat
-                            ? { background: '#7C3AED', color: '#fff', boxShadow: '0 2px 8px rgba(124,58,237,0.30)' }
-                            : { background: '#fff', color: '#8E87A8', border: '1px solid rgba(120,80,200,0.15)' }
-                          }
-                        >
-                          {toLabel(cat)}
-                          {cat !== 'TODOS' && (
-                            <span className="ml-1.5 text-[9px] opacity-70">
-                              {members.filter(m => m.category === cat).length}
-                            </span>
-                          )}
-                        </motion.button>
-                      ))}
-                    </div>
-                  </div>
-                )}
+                {/* Todos los filtros en un control. Las pastillas sueltas se
+                    salian de la pantalla en cuanto el club tenia cinco
+                    categorias. */}
+                <BotonFiltros
+                  grupos={gruposFiltro}
+                  resultados={{ mostrados: visibleMembers.length, total: members.length, sustantivo: 'deportistas' }}
+                  alto={38}
+                />
                   {/* Clase o sede — al final.
                       Cuando hay horario manda la clase y la fila de sede
                       desaparece: la clase trae su sede y repetirla gastaba un
@@ -930,6 +942,10 @@ export default function AsistenciaPage() {
                   ) : null}
                 </motion.div>
 
+                {/* Lo que está puesto, fuera del panel: si solo se viera al
+                    abrirlo, la planilla podría estar recortada sin que nada en
+                    pantalla lo diga, y se guardaría creyendo que están todos. */}
+                <ChipsFiltros grupos={gruposFiltro} />
 
                 {/* Grid de tarjetas compactas */}
                 <div className="grid grid-cols-3 gap-2 pb-24 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 sm:gap-3">

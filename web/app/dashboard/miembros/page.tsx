@@ -13,16 +13,13 @@ import { parseLocalDate } from '@/lib/utils';
 import { QK } from '@/hooks/useVeloQuery';
 import { Input } from '@/components/ui/input';
 import {
-  Select, SelectContent, SelectItem, SelectTrigger,
-} from '@/components/ui/select';
-import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog';
 import {
   Plus, Pencil, Trash2, Users, Search, Download,
   FileSpreadsheet, Upload, X, Eye,
   Phone, Mail, Calendar, MapPin, Shield, Heart, CreditCard,
-  ArrowUpDown, Tag, PauseCircle, PlayCircle, MoreVertical,
+  PauseCircle, PlayCircle, MoreVertical,
 } from 'lucide-react';
 import { MemberAvatar } from '@/components/ui/member-avatar';
 import { PhoneInput, parsePhoneDisplay, FlagImg } from '@/components/ui/phone-input';
@@ -31,6 +28,7 @@ import { FichaDeportista } from '@/components/miembros/ficha-deportista';
 import { FICHA_VACIA, validarFicha, type DatosFicha, type ErroresFicha } from '@/lib/ficha-deportista';
 import { MenuImportar } from '@/components/miembros/menu-importar';
 import { PanelInscripcion } from '@/components/miembros/panel-inscripcion';
+import { BotonFiltros, ChipsFiltros, type GrupoFiltro } from '@/components/ui/filtros';
 import { PendientesInscripcion } from '@/components/miembros/pendientes-inscripcion';
 import { downloadMembersTemplate, parseMembersExcel } from '@/lib/excel';
 import ModuleLoader, { useCargaMinima } from '@/components/ui/module-loader';
@@ -144,8 +142,10 @@ export default function MiembrosPage() {
     },
   });
 
-  const members   = membersData?.members   ?? [];
-  const locations = locsData?.locations    ?? [];
+  // Memorizados porque el `??` crea un arreglo nuevo en cada render, y de estos
+  // dos cuelgan los filtros y sus conteos: sin esto se recalculan siempre.
+  const members   = useMemo(() => membersData?.members ?? [], [membersData]);
+  const locations = useMemo(() => locsData?.locations  ?? [], [locsData]);
 
   useEffect(() => {
     getToken().then(async token => {
@@ -435,6 +435,106 @@ export default function MiembrosPage() {
 
   const totalPausados = useMemo(() => members.filter(m => m.active === false).length, [members]);
 
+  /**
+   * Los filtros de la pantalla, con el conteo de cada opción.
+   *
+   * Cada grupo cuenta sobre los que pasan todos los demás filtros menos el
+   * suyo. Contar sobre la lista ya filtrada mostraría cero en todo lo que no
+   * está elegido, y contar sobre el total prometería resultados que no salen.
+   */
+  const gruposFiltro: GrupoFiltro[] = useMemo(() => {
+    const q = search.toLowerCase().trim();
+    const porBusqueda = (m: Member) => !q || m.fullName.toLowerCase().includes(q) || !!m.email?.toLowerCase().includes(q);
+    const porRol      = (m: Member) => roleFilter === 'ALL' || m.role === roleFilter;
+    const porCat      = (m: Member) => catFilter === 'ALL' || m.category === catFilter;
+    const porSede     = (m: Member) => locFilter === 'ALL'
+      || (locFilter === 'SIN_SEDE' ? m.locations.length === 0 : m.locations.some(l => l.location.id === locFilter));
+    const porEstado   = (m: Member) => estadoFilter === 'TODOS'
+      || (estadoFilter === 'ACTIVOS' ? m.active !== false : m.active === false);
+
+    const salvo = (...reglas: ((m: Member) => boolean)[]) =>
+      members.filter(m => reglas.every(r => r(m)));
+
+    const paraCat    = salvo(porBusqueda, porRol, porSede, porEstado);
+    const paraSede   = salvo(porBusqueda, porRol, porCat, porEstado);
+    const paraEstado = salvo(porBusqueda, porRol, porCat, porSede);
+
+    const grupos: GrupoFiltro[] = [
+      {
+        id: 'orden',
+        titulo: 'Ordenar por',
+        valor: sortOrder,
+        neutro: 'recent',
+        segmentado: true,
+        noCuenta: true,
+        onElegir: v => setSortOrder(v as typeof sortOrder),
+        opciones: [
+          { valor: 'recent', texto: 'Reciente' },
+          { valor: 'oldest', texto: 'Más antiguo' },
+          { valor: 'az',     texto: 'A–Z' },
+          { valor: 'za',     texto: 'Z–A' },
+        ],
+      },
+    ];
+
+    if (allCategories.length > 0) {
+      grupos.push({
+        id: 'categoria',
+        titulo: 'Categoría',
+        valor: catFilter,
+        neutro: 'ALL',
+        tono: 'violeta',
+        onElegir: setCatFilter,
+        opciones: [
+          { valor: 'ALL', texto: 'Todas', n: paraCat.length },
+          ...allCategories.map(c => ({
+            valor: c,
+            texto: c.charAt(0).toUpperCase() + c.slice(1).toLowerCase(),
+            n: paraCat.filter(m => m.category === c).length,
+          })),
+        ],
+      });
+    }
+
+    grupos.push({
+      id: 'sede',
+      titulo: 'Sede',
+      valor: locFilter,
+      neutro: 'ALL',
+      tono: 'azul',
+      onElegir: setLocFilter,
+      opciones: [
+        { valor: 'ALL', texto: 'Todas', n: paraSede.length },
+        ...locations.map(l => ({
+          valor: l.id,
+          texto: l.name,
+          n: paraSede.filter(m => m.locations.some(x => x.location.id === l.id)).length,
+        })),
+        { valor: 'SIN_SEDE', texto: 'Sin sede', n: paraSede.filter(m => m.locations.length === 0).length },
+      ],
+    });
+
+    // El estado solo aparece cuando el club ya pausó a alguien, para no agregar
+    // un filtro más a quienes nunca lo van a usar.
+    if (totalPausados > 0 || estadoFilter !== 'ACTIVOS') {
+      grupos.push({
+        id: 'estado',
+        titulo: 'Estado',
+        valor: estadoFilter,
+        neutro: 'ACTIVOS',
+        tono: 'gris',
+        onElegir: v => setEstadoFilter(v as typeof estadoFilter),
+        opciones: [
+          { valor: 'ACTIVOS',  texto: 'Activos',  n: paraEstado.filter(m => m.active !== false).length },
+          { valor: 'PAUSADOS', texto: 'En pausa', n: paraEstado.filter(m => m.active === false).length },
+          { valor: 'TODOS',    texto: 'Todos',    n: paraEstado.length },
+        ],
+      });
+    }
+
+    return grupos;
+  }, [members, search, roleFilter, catFilter, locFilter, estadoFilter, sortOrder, allCategories, locations, totalPausados]);
+
   // ── Initials ─────────────────────────────────────────────────────────────────
   function initials(name: string) {
     return name.split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase();
@@ -571,89 +671,12 @@ export default function MiembrosPage() {
               />
             </div>
 
-            {/* Ordenar */}
-            <Select value={sortOrder} onValueChange={v => { if (v) setSortOrder(v as typeof sortOrder); }}>
-              <SelectTrigger className="px-3 rounded-xl text-[12px] font-semibold gap-1.5 cursor-pointer"
-                style={{ height: 42, background: '#fff', border: '1px solid rgba(120,80,200,0.12)', color: '#1A1028', width: 'auto', minWidth: 130 }}>
-                <ArrowUpDown className="w-3.5 h-3.5 shrink-0" style={{ color: '#8E87A8' }} />
-                <span>{{ az: 'A–Z', za: 'Z–A', recent: 'Reciente', oldest: 'Más antiguo' }[sortOrder]}</span>
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="recent">Reciente</SelectItem>
-                <SelectItem value="oldest">Más antiguo</SelectItem>
-                <SelectItem value="az">A–Z</SelectItem>
-                <SelectItem value="za">Z–A</SelectItem>
-              </SelectContent>
-            </Select>
-
-            {/* Categoría — solo si existen */}
-            {allCategories.length > 0 && (
-              <Select value={catFilter} onValueChange={v => { if (v) setCatFilter(v); }}>
-                <SelectTrigger className="px-3 rounded-xl text-[12px] font-semibold gap-1.5 cursor-pointer"
-                  style={{ height: 42, background: catFilter !== 'ALL' ? 'rgba(124,58,237,0.08)' : '#fff', border: catFilter !== 'ALL' ? '1px solid rgba(124,58,237,0.30)' : '1px solid rgba(120,80,200,0.12)', color: catFilter !== 'ALL' ? '#7C3AED' : '#1A1028', width: 'auto', minWidth: 130 }}>
-                  <Tag className="w-3.5 h-3.5 shrink-0" style={{ color: catFilter !== 'ALL' ? '#7C3AED' : '#8E87A8' }} />
-                  <span>{catFilter === 'ALL' ? 'Categoría' : catFilter.charAt(0).toUpperCase() + catFilter.slice(1).toLowerCase()}</span>
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="ALL">Todas las categorías</SelectItem>
-                  {allCategories.map(c => (
-                    <SelectItem key={c} value={c}>{c.charAt(0).toUpperCase() + c.slice(1).toLowerCase()}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-
-            {/* Sede — todas las sedes + sin sede */}
-            <Select value={locFilter} onValueChange={v => { if (v) setLocFilter(v); }}>
-              <SelectTrigger className="px-3 rounded-xl text-[12px] font-semibold gap-1.5 cursor-pointer"
-                style={{
-                  height: 42,
-                  background: locFilter !== 'ALL' ? 'rgba(67,97,238,0.08)' : '#fff',
-                  border: locFilter !== 'ALL' ? '1px solid rgba(67,97,238,0.30)' : '1px solid rgba(120,80,200,0.12)',
-                  color: locFilter !== 'ALL' ? '#4361EE' : '#1A1028',
-                  width: 'fit-content',
-                }}>
-                <MapPin className="w-3.5 h-3.5 shrink-0" style={{ color: locFilter !== 'ALL' ? '#4361EE' : '#8E87A8' }} />
-                <span>
-                  {locFilter === 'ALL'
-                    ? 'Sede'
-                    : locFilter === 'SIN_SEDE'
-                      ? 'Sin sede'
-                      : (locations.find(l => l.id === locFilter)?.name ?? 'Sede')}
-                </span>
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="ALL">Todas las sedes</SelectItem>
-                {locations.map(l => (
-                  <SelectItem key={l.id} value={l.id}>{l.name}</SelectItem>
-                ))}
-                <SelectItem value="SIN_SEDE">Sin sede</SelectItem>
-              </SelectContent>
-            </Select>
-
-            {/* Estado — solo aparece cuando el club ya pausó a alguien, para no
-                agregar un filtro más a quienes nunca lo van a usar */}
-            {(totalPausados > 0 || estadoFilter !== 'ACTIVOS') && (
-              <Select value={estadoFilter} onValueChange={v => { if (v) setEstadoFilter(v as typeof estadoFilter); }}>
-                <SelectTrigger className="px-3 rounded-xl text-[12px] font-semibold gap-1.5 cursor-pointer"
-                  style={{
-                    height: 42,
-                    background: estadoFilter !== 'ACTIVOS' ? 'rgba(142,135,168,0.10)' : '#fff',
-                    border: estadoFilter !== 'ACTIVOS' ? '1px solid rgba(142,135,168,0.35)' : '1px solid rgba(120,80,200,0.12)',
-                    color: estadoFilter !== 'ACTIVOS' ? '#5B5470' : '#1A1028',
-                    width: 'fit-content',
-                  }}>
-                  <PauseCircle className="w-3.5 h-3.5 shrink-0" style={{ color: estadoFilter !== 'ACTIVOS' ? '#5B5470' : '#8E87A8' }} />
-                  <span>{{ ACTIVOS: 'Activos', PAUSADOS: `En pausa (${totalPausados})`, TODOS: 'Todos' }[estadoFilter]}</span>
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="ACTIVOS">Activos</SelectItem>
-                  <SelectItem value="PAUSADOS">En pausa ({totalPausados})</SelectItem>
-                  <SelectItem value="TODOS">Todos</SelectItem>
-                </SelectContent>
-              </Select>
-            )}
-
+            {/* Todos los filtros en un control. Sueltos se comian la fila
+                entera y empujaban los botones a un segundo renglon. */}
+            <BotonFiltros
+              grupos={gruposFiltro}
+              resultados={{ mostrados: filtered.length, total: members.length, sustantivo: 'miembros' }}
+            />
             <p className="text-[12px] font-semibold whitespace-nowrap" style={{ color: '#8E87A8' }}>
               {filtered.length} resultado{filtered.length !== 1 ? 's' : ''}
             </p>
@@ -686,6 +709,10 @@ export default function MiembrosPage() {
               )}
             </div>
           </div>
+
+          {/* Lo que está puesto, fuera del panel: si solo se viera al abrirlo,
+              la lista podría estar recortada sin que nada lo diga. */}
+          <ChipsFiltros grupos={gruposFiltro} />
         </div>
 
         {/* ── Grid de tarjetas ── */}

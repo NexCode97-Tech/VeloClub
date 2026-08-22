@@ -12,6 +12,23 @@ import { CATEGORIAS, NIVELES } from '@/lib/categorias';
 
 export const DOC_TIPOS = ['CC', 'TI', 'RC', 'CE', 'PA', 'NIT', 'Otro'] as const;
 
+/**
+ * Qué es cada sigla.
+ *
+ * Se muestra al lado en el desplegable: quien llena el formulario no tiene por
+ * qué saber que RC es registro civil, y elegir mal el tipo obliga después a que
+ * el club lo corrija a mano.
+ */
+export const DOC_TIPOS_CON_NOTA = [
+  { valor: 'CC',  texto: 'CC',  nota: 'Cédula' },
+  { valor: 'TI',  texto: 'TI',  nota: 'Tarjeta de identidad' },
+  { valor: 'RC',  texto: 'RC',  nota: 'Registro civil' },
+  { valor: 'CE',  texto: 'CE',  nota: 'Cédula de extranjería' },
+  { valor: 'PA',  texto: 'PA',  nota: 'Pasaporte' },
+  { valor: 'NIT', texto: 'NIT', nota: 'Empresa' },
+  { valor: 'Otro', texto: 'Otro' },
+];
+
 /** Rama con la que compite. Las competencias de patinaje se dividen por sexo. */
 export const GENEROS = ['Femenino', 'Masculino'] as const;
 

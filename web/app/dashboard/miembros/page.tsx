@@ -1004,9 +1004,21 @@ export default function MiembrosPage() {
           })}
         </motion.div>
 
-        <motion.div variants={pageCard} className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input className="pl-9 bg-white border-border rounded-xl" placeholder="Buscar miembro..." value={search} onChange={e => setSearch(e.target.value)} />
+        {/* Búsqueda y filtros en la misma fila: en el celular cada uno en su
+            renglón gastaba dos franjas de la pantalla antes de la lista. */}
+        <motion.div variants={pageCard}>
+          <div className="flex items-center gap-2">
+            <div className="relative flex-1 min-w-0">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input className="pl-9 bg-white border-border rounded-xl" placeholder="Buscar miembro..." value={search} onChange={e => setSearch(e.target.value)} />
+            </div>
+            <BotonFiltros
+              grupos={gruposFiltro}
+              resultados={{ mostrados: filtered.length, total: members.length, sustantivo: 'miembros' }}
+              alto={40}
+            />
+          </div>
+          <ChipsFiltros grupos={gruposFiltro} />
         </motion.div>
 
         {filtered.length === 0 ? (

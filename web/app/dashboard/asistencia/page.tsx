@@ -865,28 +865,34 @@ export default function AsistenciaPage() {
                   })}
                 </motion.div>
 
-                {/* Búsqueda + categorías + sede — misma fila en desktop */}
+                {/* Búsqueda + filtros + sede — misma fila en desktop */}
                 <motion.div variants={cardVariant} className="flex flex-col gap-2 md:flex-row md:items-center md:gap-3">
-                  {/* Buscador */}
-                  <div className="relative md:flex-1">
-                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: '#8E87A8' }} />
-                    <input
-                      className="w-full pl-10 pr-4 py-2.5 rounded-xl text-[13px] outline-none transition-all"
-                      style={{ background: '#fff', border: '1px solid rgba(120,80,200,0.12)', color: '#1A1028' }}
-                      placeholder="Buscar por nombre..."
-                      value={search}
-                      onChange={e => setSearch(e.target.value)}
+                  {/* Buscar y filtrar van juntos también en el celular: cada uno
+                      en su renglón gastaba dos franjas antes de la planilla. En
+                      escritorio el `contents` los devuelve a la fila de arriba,
+                      para que la búsqueda siga estirándose. */}
+                  <div className="flex items-center gap-2 md:contents">
+                    <div className="relative flex-1 min-w-0 md:flex-1">
+                      <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: '#8E87A8' }} />
+                      <input
+                        className="w-full pl-10 pr-4 py-2.5 rounded-xl text-[13px] outline-none transition-all"
+                        style={{ background: '#fff', border: '1px solid rgba(120,80,200,0.12)', color: '#1A1028' }}
+                        placeholder="Buscar por nombre..."
+                        value={search}
+                        onChange={e => setSearch(e.target.value)}
+                      />
+                    </div>
+
+                    {/* Todos los filtros en un control. Las pastillas sueltas se
+                        salian de la pantalla en cuanto el club tenia cinco
+                        categorias. */}
+                    <BotonFiltros
+                      grupos={gruposFiltro}
+                      resultados={{ mostrados: visibleMembers.length, total: members.length, sustantivo: 'deportistas' }}
+                      alto={42}
                     />
                   </div>
 
-                {/* Todos los filtros en un control. Las pastillas sueltas se
-                    salian de la pantalla en cuanto el club tenia cinco
-                    categorias. */}
-                <BotonFiltros
-                  grupos={gruposFiltro}
-                  resultados={{ mostrados: visibleMembers.length, total: members.length, sustantivo: 'deportistas' }}
-                  alto={38}
-                />
                   {/* Clase o sede — al final.
                       Cuando hay horario manda la clase y la fila de sede
                       desaparece: la clase trae su sede y repetirla gastaba un

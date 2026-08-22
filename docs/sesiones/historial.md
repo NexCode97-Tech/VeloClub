@@ -5,6 +5,152 @@ Actualizar al final de cada sesión o cuando se complete un bloque de trabajo im
 
 ---
 
+## Sesión 2026-08-20 a 2026-08-22
+
+**Modelo:** Claude Opus 5
+**Estado inicial:** `e3c1918`, rama `main`
+**Estado final:** `1adc660`, todo desplegado
+
+El problema de arranque: varios clubes no tenían la lista de sus deportistas en
+Excel, así que cargarlos era pedirle a alguien del club que escribiera cuarenta
+fichas a mano. De ahí salió la inscripción por enlace, y de probarla salió todo
+lo demás.
+
+### Cierre de la sesión anterior
+
+Cinco commits del 19 de agosto que quedaron fuera del registro pasado:
+
+- Fuera el guion largo de los textos que ve el usuario, y Bre-B sin renovación
+  automática: la llave receptora no puede cobrar sola.
+- El pago en verificación salió de la pestaña de Bre-B. Vivía dentro de ella,
+  así que cambiar de medio de pago escondía el aviso de que había un pago
+  esperando.
+- Bre-B avisa que solo funciona entre cuentas de Colombia.
+
+### Inscripción por enlace
+
+Cada club comparte una url y el deportista llena sus propios datos. Cuatro pasos
+en vez de una pantalla de veinte campos: lo abre alguien que no conoce la app,
+casi siempre desde el celular, y un formulario largo se abandona a la mitad.
+
+- Token aleatorio de 10 caracteres (~49 bits) sobre un alfabeto sin letras que
+  se confundan al dictarlo por teléfono. **No derivado del nombre del club**: con
+  una url adivinable, cualquiera encontraría el formulario de cualquier club.
+- Un club que no existe, uno cerrado y uno vencido responden lo mismo, para que
+  un enlace viejo no confirme que el club existe.
+- Lo que entra queda en `PENDIENTE` y no cuenta para la facturación hasta que el
+  club apruebe.
+- **Un envío es un deportista.** No hay «agregar otro hijo»: cada uno necesita su
+  perfil, su correo y su cuenta. Decisión explícita del usuario, aunque implique
+  que dos de tres hermanos queden sin acceso hasta tener correo propio.
+
+### Actualizar por el mismo enlace
+
+Quien ya está en el club y vuelve a abrirlo entra a completar su ficha, no a
+inscribirse de cero. Los cambios quedan en `cambiosPendientes` y el club los
+aprueba campo por campo, con lo viejo tachado y lo nuevo en verde.
+
+**La llave es el documento solo.** Primero se pedía documento más fecha de
+nacimiento, y ahí se cayó todo: **371 de 1.550 fichas no tienen fecha guardada**
+(150 en Alianza, 44 en THE HOPE, 40 en LANDI). A una de cada cuatro personas le
+salía «ese documento ya está registrado y los datos no coinciden», sin salida.
+
+El usuario decidió que el documento es la identificación de la persona y alcanza
+solo. Con eso:
+
+- El documento **no está** → inscripción normal.
+- **Está una vez** → se le devuelve su ficha precargada y editable, con lo vacío
+  marcado «Falta» y un contador de cuántos datos le quedan. Ahí corrige el correo
+  de relleno que le pusieron.
+- **Está en dos o más fichas** → no se puede saber cuál es, así que sigue como
+  inscripción nueva y al club le llega marcada «Revisar».
+
+Ese último caso es real: **10 documentos repetidos, 73 fichas**. `VELOPRO` en 38
+deportistas de Bont Skate, `123456789` en 17, y hermanas de Alianza con la misma
+cédula copiada.
+
+### Las cuentas
+
+Quien no tiene cuenta la crea al enviar, pero el `clerkId` y el correo solo se
+pegan a la ficha cuando el club aprueba: antes de eso la cuenta existe y no
+lleva a ningún lado. Si el club descarta, se borra en Clerk.
+
+Antes de esto había un hueco: **155 deportistas sin correo ni cuenta** llenaban
+el formulario completo, elegían contraseña, y el backend guardaba el correo como
+cambio pendiente y botaba la contraseña. Nunca quedaban con acceso.
+
+Quien ya tenía cuenta y cambia su correo lo ve moverse también en Clerk, que es
+donde inicia sesión.
+
+### La bandeja del club
+
+Pasó de tarjetas apiladas a lista: una fila por persona, casillas para aceptar
+en lote y el detalle al tocar. Con cuarenta inscripciones de un día para otro,
+la ficha entera de cada una no dejaba ver ni la tercera. El lote va una por una
+y no en paralelo, porque veinte peticiones simultáneas chocan con el límite.
+
+### El enlace con vencimiento
+
+Campo `inscripcionVenceAt` opcional. Corta al final de ese día en hora de
+Colombia, no al empezarlo. **El token no cambia al vencer**: al reabrirlo vale el
+mismo enlace y el club no tiene que repartirlo otra vez.
+
+Se descartó rotar el enlace automáticamente al copiarlo: copiar es el uso normal,
+y el segundo copiar mataría el enlace que ya está en el grupo de WhatsApp.
+
+### Desplegables y filtros
+
+- **Ningún `select` nativo queda en el proyecto.** Se ve bien cerrado, pero al
+  abrirlo el navegador pinta su lista con Arial y el azul de sistema. El nuevo va
+  en portal a `document.body` con la posición calculada desde el disparador, para
+  que no lo recorte un contenedor con overflow ni lo tape un modal. En pantalla
+  angosta sube desde abajo. Se cambiaron también los tres del flujo de pago
+  (banco de PSE, tipo de persona, documento), que son los peores para dejar
+  crudos porque salen mientras alguien paga.
+- Los filtros sueltos pasaron a un control. En Miembros eran cuatro y empujaban
+  Importar, PDF y Nuevo miembro a un segundo renglón; en el celular no existían
+  del todo. Cada opción trae su conteo, calculado sobre los que pasan todos los
+  demás filtros menos el suyo.
+- En el celular la búsqueda, la sede y los filtros van en una fila, con los dos
+  botones en puro ícono. El nombre de la sede baja a una línea de texto plano:
+  cuesta 18 píxeles en vez de los 50 de un renglón, y sin él nadie sabría en qué
+  sede está marcando asistencia.
+
+### Cambios en la base
+
+| Migración | Qué agrega |
+|---|---|
+| `20260820140000_inscripcion_por_enlace` | token, abierta, esperados, origen, estado, `cambiosPendientes` |
+| `20260821100000_genero_y_salud` | `gender`, `rh`, `allergies` |
+| `20260821120000_actualizar_por_enlace` | parentesco y cédula del acudiente |
+| `20260821150000_vencimiento_del_enlace` | `inscripcionVenceAt` |
+
+Las restricciones de unicidad sobre `docNumber` siguen **sin declarar**, a
+propósito: con 73 fichas de documento repetido, crearlas ahora fallaría.
+
+### Decisiones del usuario
+
+- Los datos viejos mal creados **se omiten**. Las reglas nuevas son para lo que
+  entre de ahora en adelante.
+- El número de documento es privado y alcanza como identificación. La ficha
+  precargada se muestra con solo ese dato, asumido y explicado.
+- Ningún desplegable puede quedar con la lista nativa. Regla permanente.
+
+### Pendiente
+
+- **Las sedes no son sedes.** Los clubes usan `Location` como grupo o nivel:
+  *NIVEL I*, *ESCUELA ADULTOS*, *MAYORES*, *PITUFITOS*, *MARTES JUEVES AM*. Solo
+  4 de 18 clubes tienen una sola. La palabra ya no describe lo que hacen con eso
+  y compite con `category` y con las clases del horario. **Aplazado a futuro** por
+  decisión del usuario.
+- Confirmar tarifas reales de Wompi y Bold con un asesor.
+- El riesgo de recibir el dinero de Bre-B en una cuenta personal.
+- Los tres espacios de publicidad siguen en `url: '#'`.
+- Dos lockfiles en el repositorio.
+- `payments.test.ts` tiene 2 pruebas en rojo, anteriores a esta sesión.
+
+---
+
 ## Sesión 2026-08-19
 
 **Modelo:** Claude Opus 5

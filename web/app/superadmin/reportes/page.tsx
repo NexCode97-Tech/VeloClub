@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { apiFetch } from '@/lib/api-client';
 import { Flag, Trash2, ShieldCheck, Globe, Lock, AlertTriangle } from 'lucide-react';
+import { AccionesCabecera } from '@/components/superadmin/acciones-cabecera';
 import ModuleLoader, { useCargaMinima } from '@/components/ui/module-loader';
 
 type Estado = 'PENDIENTE' | 'ELIMINADO' | 'DESESTIMADO';
@@ -96,25 +97,18 @@ export default function ReportesPage() {
 
   return (
     <div className="min-h-full bg-background">
-      <div className="px-5 py-3 bg-background flex items-center justify-between md:border-b"
-        style={{ minHeight: 58, borderColor: 'rgba(0,0,0,0.07)' }}>
-        <h1 className="text-[22px] font-semibold text-foreground" style={{ lineHeight: 1.1 }}>
-          Reportes
-        </h1>
-        {pendientes > 0 && (
+      {/* El nombre de la pantalla ya lo dice la barra de arriba. Acá solo sube
+          cuántos quedan sin revisar, que es el dato que hace volver. */}
+      {pendientes > 0 && (
+        <AccionesCabecera>
           <span className="text-[11px] font-bold px-2.5 py-1 rounded-full"
             style={{ background: 'rgba(239,71,111,0.12)', color: '#EF476F' }}>
             {pendientes} sin revisar
           </span>
-        )}
-      </div>
+        </AccionesCabecera>
+      )}
 
       <div className="px-5 pt-4 pb-8 max-w-3xl mx-auto w-full flex flex-col gap-4">
-        <p className="text-[12.5px] text-muted-foreground leading-relaxed">
-          Los Términos permiten retirar contenido que los incumpla. Retirar es definitivo
-          y también borra las respuestas del comentario.
-        </p>
-
         <div className="flex gap-2">
           {PESTANAS.map(p => (
             <button

@@ -4,6 +4,7 @@ import { useAuth } from '@clerk/nextjs';
 import { useEffect, useState } from 'react';
 import { apiFetch } from '@/lib/api-client';
 import { motion, AnimatePresence } from 'framer-motion';
+import { AccionesCabecera } from '@/components/superadmin/acciones-cabecera';
 import { Plus, Trash2, Ticket, X } from 'lucide-react';
 
 const EASE = [0.23, 1, 0.32, 1] as [number, number, number, number];
@@ -116,16 +117,17 @@ export default function CuponesPage() {
   return (
     <div style={{ background: '#F7F7FB', minHeight: '100%' }}>
       <div style={{ padding: '12px 16px 80px' }}>
-        <div className="flex items-center justify-between mb-4" style={{ gap: 8, flexWrap: 'wrap' }}>
-          <div>
-            <p className="text-[17px] font-semibold m-0" style={{ color: '#1A1028' }}>Cupones de descuento</p>
-            <p className="text-[12px] m-0" style={{ color: '#8E87A8' }}>{cupones.length} {cupones.length === 1 ? 'cupón' : 'cupones'}</p>
-          </div>
+        {/* El nombre de la pantalla ya lo dice la barra de arriba, asi que acá
+            solo van el conteo y el boton, en esa misma fila. */}
+        <AccionesCabecera>
+          <span className="text-[12px] hidden sm:block" style={{ color: '#8E87A8' }}>
+            {cupones.length} {cupones.length === 1 ? 'cupón' : 'cupones'}
+          </span>
           <motion.button
             onClick={() => { setShowForm(s => !s); setError(null); }}
             whileTap={{ scale: 0.95 }}
             transition={{ duration: 0.12, ease: EASE }}
-            className="inline-flex items-center gap-1.5 text-white"
+            className="inline-flex items-center gap-1.5 shrink-0"
             style={{
               background: showForm ? 'rgba(239,71,111,0.10)' : ACCENT,
               border: showForm ? '1.5px solid rgba(239,71,111,0.25)' : 'none',
@@ -138,7 +140,7 @@ export default function CuponesPage() {
             {showForm ? <X size={14} /> : <Plus size={14} />}
             {showForm ? 'Cancelar' : 'Nuevo cupón'}
           </motion.button>
-        </div>
+        </AccionesCabecera>
 
         {error && (
           <div className="mb-3 px-3 py-2 rounded-lg text-[12px]" style={{ background: 'rgba(239,71,111,0.10)', color: '#EF476F' }}>

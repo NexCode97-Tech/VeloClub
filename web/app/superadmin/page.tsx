@@ -134,7 +134,7 @@ function MiniBarChart({ data }: { data: number[] }) {
 }
 
 // ── Componente principal ───────────────────────────────────────────────────────
-export default function SuperadminDashboard() {
+export default function InicioSuperadmin() {
   const { getToken, isLoaded, isSignedIn } = useAuth();
   const router = useRouter();
   const shouldReduceMotion = useReducedMotion();

@@ -8,14 +8,15 @@ import { apiFetch } from '@/lib/api-client';
 import LoadingScreen, { LoadingCurtain, CURTAIN_MS, esperarPantallaCarga } from '@/components/ui/loading-screen';
 import Link from 'next/link';
 import Image from 'next/image';
-import { LayoutDashboard, Building2, LogOut, Ticket, Info, CircleDollarSign, ArrowLeft, Flag } from 'lucide-react';
+import { Home, Building2, LogOut, Ticket, Info, CircleDollarSign, ArrowLeft, Flag } from 'lucide-react';
 import { IconAjustes } from '@/components/ui/custom-icons';
 import { motion, AnimatePresence } from 'framer-motion';
 import { idClubDeRuta } from './club-context';
+import { ID_ACCIONES } from '@/components/superadmin/acciones-cabecera';
 
 // Config fue fusionado con Perfil (UserButton) — 3 tabs + UserButton = 4 slots
 const TABS = [
-  { href: '/superadmin',          label: 'Inicio',    exact: true,  Icon: LayoutDashboard  },
+  { href: '/superadmin',          label: 'Inicio',    exact: true,  Icon: Home             },
   { href: '/superadmin/clubs',    label: 'Clubes',    exact: false, Icon: Building2        },
   { href: '/superadmin/cupones',  label: 'Cupones',   exact: false, Icon: Ticket           },
   // Los Terminos prometen retirar contenido que los incumpla; esta es la cola
@@ -165,7 +166,9 @@ const SuperadminSidebar = memo(function SuperadminSidebar({ pathname, noLeidas, 
       <div className="flex items-center shrink-0" style={{ borderBottom: '1px solid rgba(0,0,0,0.06)', minHeight: 58, padding: '0 14px', gap: 9, justifyContent: collapsed ? 'center' : undefined }}>
         <Image src="/logo.png" alt="VeloClub" width={28} height={28} className="object-contain shrink-0" style={{ borderRadius: 7 }} />
         {!collapsed && <span className="text-[15px] font-semibold" style={{ color: '#1A1028' }}>VeloClub</span>}
-        {!collapsed && (
+        {/* Igual que en la barra de arriba: estas dos son acciones del panel
+            entero, asi que solo salen en Inicio. */}
+        {!collapsed && pathname === '/superadmin' && (
           <div className="flex items-center gap-1 ml-auto">
             <button
               onClick={handleRefresh}
@@ -428,6 +431,8 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
     ? 'Clubes'
     : (SCREEN_LABELS[pathname] ?? 'VeloClub');
   const noLeidas = notifs.filter(n => !n.leida).length;
+  // Actualizar y notificaciones viven solo en Inicio.
+  const enInicio = pathname === '/superadmin';
 
   return (
     <>
@@ -451,9 +456,19 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
       {/* Misma altura (58px) y color de borde que la fila del logo del sidebar,
           para que la línea divisoria se vea continua — igual que en el dashboard */}
       <div className="flex items-center gap-2 shrink-0" style={{ minHeight: 58, padding: '0 16px', background: '#F7F7FB', borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
-        <h2 className="flex-1 m-0 text-[17px] font-semibold" style={{ fontFamily: 'inherit', color: '#1A1028' }}>
+        <h2 className="m-0 text-[17px] font-semibold" style={{ fontFamily: 'inherit', color: '#1A1028' }}>
           {title}
         </h2>
+
+        {/* Hueco para las acciones del módulo. Cada página mete acá sus botones
+            con `AccionesCabecera`, en vez de dibujarse un encabezado propio y
+            repetir el nombre de la pantalla. */}
+        <div id={ID_ACCIONES} className="flex-1 flex items-center justify-end gap-2 min-w-0" />
+
+        {/* Actualizar y notificaciones solo en Inicio: son acciones del panel
+            entero, no de la pantalla en la que estés parado. */}
+        {enInicio && (
+        <>
         {/* Refresh — solo móvil: en md+ vive en la fila del logo del sidebar */}
         <motion.button
           onClick={() => { setSpin(true); setTimeout(() => { setSpin(false); window.location.reload(); }, 400); }}
@@ -484,6 +499,8 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
             </div>
           )}
         </motion.button>
+        </>
+        )}
       </div>
 
       {/* Notification Panel */}

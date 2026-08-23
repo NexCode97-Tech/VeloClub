@@ -34,6 +34,16 @@ vi.mock('../auth/middleware', () => ({
   requireRole: vi.fn(() => (_req: express.Request, _res: express.Response, next: express.NextFunction) => next()),
 }));
 
+// Marcar un pago como pagado avisa al staff del club. Sin este doble, la
+// notificacion sale a buscar usuarios en una tabla que este archivo no simula y
+// la ruta responde 500 por algo que no tiene que ver con lo que se esta
+// probando.
+vi.mock('../lib/notify', () => ({
+  notify: vi.fn(),
+  notifyClubStaff: vi.fn(),
+  notifyClubStudents: vi.fn(),
+}));
+
 vi.mock('../lib/sse', () => ({
   emitToClub: vi.fn(),
 }));
@@ -137,6 +147,9 @@ describe('PATCH /payments/:id', () => {
   });
 
   it('retorna 200 al cambiar status a PAID', async () => {
+    // El molde traia el pago sin `memberId` ni `locationId`, de cuando esos
+    // campos no existian. Sin sede, la ruta sale a deducirla del miembro y toca
+    // una tabla que este archivo no simula.
     const existingPayment = {
       id: 'pay-1',
       amount: 50000,
@@ -144,6 +157,8 @@ describe('PATCH /payments/:id', () => {
       month: 6,
       year: 2025,
       clubId: 'club-test-id',
+      memberId: 'member-1',
+      locationId: 'loc-1',
       paidAt: null,
       receiptPublicId: null,
       member: { fullName: 'Juan Pérez' },

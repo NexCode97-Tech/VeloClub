@@ -29,11 +29,13 @@ beforeEach(() => {
 });
 
 describe('contarDeportistasActivos', () => {
-  it('solo cuenta deportistas activos', async () => {
+  it('solo cuenta deportistas activos y aprobados', async () => {
     count.mockResolvedValue(35);
     await contarDeportistasActivos('club-1');
+    // `inscripcion: APROBADO` importa para la factura: quien se inscribio por
+    // el enlace y espera el visto bueno del club todavia no se cobra.
     expect(count).toHaveBeenCalledWith({
-      where: { clubId: 'club-1', role: 'STUDENT', active: true },
+      where: { clubId: 'club-1', role: 'STUDENT', active: true, inscripcion: 'APROBADO' },
     });
   });
 });

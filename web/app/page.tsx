@@ -235,16 +235,22 @@ export default function HomePage() {
       {/* Hero glassmorphism */}
       <GlassmorphismHero />
 
-      {/* Features */}
-      <section id="funcionalidades" className="px-5 py-16 max-w-5xl mx-auto">
-        <p className="text-xs font-semibold uppercase tracking-widest text-[#8E87A8] text-center mb-3">Funcionalidades</p>
-        <h2
-          className="text-2xl sm:text-3xl font-semibold text-[#1A1028] text-center mb-10 tracking-tight"
-        >
-          Todo lo que necesitas
-        </h2>
-        <LandingFeaturesTabs features={features} />
-      </section>
+      {/* Features — segundo tramo del amanecer. Recibe el color exacto en el
+          que termina el héroe y lo lleva hasta el claro de la página, así que
+          entre las dos secciones no hay borde que ver.
+
+          El encabezado va en claro porque cae sobre la parte todavía oscura;
+          las pestañas de abajo son una tarjeta blanca opaca y se leen igual en
+          cualquier punto del degradado. */}
+      <div style={{ background: 'linear-gradient(180deg, #46306F 0%, #7C6AA8 26%, #B7ADD3 52%, #D6D0E7 78%, #E9E6F2 100%)' }}>
+        <section id="funcionalidades" className="px-5 py-16 max-w-5xl mx-auto">
+          <p className="text-xs font-semibold uppercase tracking-widest text-[#C4B5FD] text-center mb-3">Funcionalidades</p>
+          <h2 className="text-2xl sm:text-3xl font-semibold text-white text-center mb-10 tracking-tight">
+            Todo lo que necesitas
+          </h2>
+          <LandingFeaturesTabs features={features} />
+        </section>
+      </div>
 
       {/* Clubes que confían en VeloClub */}
       <LandingTrustedBy />

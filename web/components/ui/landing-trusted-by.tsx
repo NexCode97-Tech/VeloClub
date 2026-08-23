@@ -24,13 +24,19 @@ export default function LandingTrustedBy() {
   if (clubs.length === 0) return null;
 
   return (
-    <section className="relative w-full overflow-hidden py-16 bg-[#0D0520]">
+    /* Último tramo del amanecer: recibe el color donde termina Funcionalidades
+       y llega al claro de la página. Antes esta franja era casi negra y
+       aparecía como un rectángulo pegado en la mitad del scroll.
+       De paso resuelve los logos: casi todos vienen con fondo blanco, que sobre
+       oscuro obligaba a un círculo claro detrás y sobre claro entra solo. */
+    <section
+      className="relative w-full overflow-hidden py-16"
+      style={{ background: 'linear-gradient(180deg, #E9E6F2 0%, #F2F0F8 55%, #F7F7FB 100%)' }}
+    >
       <div className="mx-auto w-full max-w-2xl px-5">
-        <p
-          className="text-center text-2xl sm:text-3xl font-semibold text-white tracking-tight"
-        >
+        <p className="text-center text-2xl sm:text-3xl font-semibold text-[#1A1028] tracking-tight">
           Clubes que ya confían en{' '}
-          <span className="text-[#A78BFA]">VeloClub</span>
+          <span className="text-[#7C3AED]">VeloClub</span>
         </p>
       </div>
 

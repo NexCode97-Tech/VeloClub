@@ -64,11 +64,14 @@ export default function LandingFeaturesTabs({ features }: { features: FeatureTab
           probado y confirmado por el usuario, se deja así a propósito.
           Esquinas de abajo planas para que toque sin espacio la tarjeta
           blanca de sub-pestañas + contenido de más abajo. */}
+      {/* La tira es opaca y no translúcida: detrás hay un degradado que va de
+          violeta oscuro a casi blanco, y un fondo semitransparente dejaría las
+          pestañas inactivas ilegibles en la parte alta. */}
       <div
         role="tablist"
         aria-label="Funcionalidades de VeloClub"
         className="relative flex items-center gap-2 rounded-t-2xl p-1.5 overflow-x-auto no-scrollbar w-full"
-        style={{ background: 'rgba(124,58,237,0.06)' }}
+        style={{ background: '#F1EEF9', boxShadow: '0 -1px 0 rgba(120,80,200,0.10) inset' }}
       >
         {features.map((f, i) => {
           const isActive = f.key === mainKey;

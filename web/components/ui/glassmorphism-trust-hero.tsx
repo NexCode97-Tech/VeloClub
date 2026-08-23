@@ -123,8 +123,14 @@ export default function GlassmorphismHero() {
                 objeción de quien lleva años con su archivo, que no arranca de
                 cero. Cuando la campaña termine se borra esa línea y el titular
                 sigue en pie solo. */}
-            <h1 className="text-[2.4rem] sm:text-5xl lg:text-[3.25rem] font-semibold tracking-tighter leading-[0.92] text-white">
-              <span className="vc-line" style={{ animationDelay: '.14s' }}>
+            {/* El cuerpo baja de 3.25rem a 2.85rem: la columna esta topada en
+                unos 546px por el `max-w-5xl` del contenedor, y a la medida
+                anterior la frase no cabia en un renglon.
+                `text-balance` es la otra mitad del arreglo: donde igual tenga
+                que partirse, reparte las dos lineas en vez de dejar «Excel.»
+                solo abajo. */}
+            <h1 className="text-[2.05rem] sm:text-[2.5rem] lg:text-[2.85rem] font-semibold tracking-tighter leading-[0.95] text-white">
+              <span className="vc-line text-balance" style={{ animationDelay: '.14s' }}>
                 Tu club ya no cabe{' '}
                 <span className="bg-gradient-to-br from-white via-white to-[#A855F7] bg-clip-text text-transparent">
                   en un Excel.

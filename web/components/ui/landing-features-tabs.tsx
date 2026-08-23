@@ -172,7 +172,7 @@ export default function LandingFeaturesTabs({ features }: { features: FeatureTab
               <main.icon className="w-5 h-5" style={{ color: main.color }} />
             </div>
             <div>
-              <p className="font-semibold text-[#1A1028] text-[15.5px] mb-1" style={{ fontFamily: 'Open Sans, sans-serif' }}>
+              <p className="font-semibold text-[#1A1028] text-[15.5px] mb-1">
                 {sub.label}
               </p>
               <p className="text-[13px] text-[#6B6580] leading-relaxed max-w-md">

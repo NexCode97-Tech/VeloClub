@@ -98,7 +98,12 @@ GET/PATCH  /clubs/:id               # configuración del club
 - Background: `#F7F7FB` | Cards: `#fff` | Border: `rgba(120,80,200,0.10)`
 - Accent ADMIN: `#4361EE` | Accent COACH: `#06D6A0` | Accent STUDENT: `#7C3AED`
 - Muted: `#8E87A8` | Text: `#1A1028`
-- Fuentes: **Space Grotesk** (headings, `font-bold`) — **Plus Jakarta Sans** (body)
+- Fuente: **Geist Sans**, la única de toda la plataforma. Se carga en `app/layout.tsx`
+  con `geist/font/sans`, no desde Google Fonts. Títulos y cuerpo son la misma familia:
+  lo que los separa es el peso y el `letter-spacing`. **Nunca escribir un nombre de
+  fuente suelto** en `style` ni en una clase; si no se carga, el navegador cae al sans
+  del sistema y la pantalla se ve distinta en cada computador. Para código y cifras
+  alineadas, **Geist Mono** vía `font-mono`.
 - Mobile-first PWA con bottom tab bar por rol. Desktop con sidebar fijo de 240px.
 - Íconos: solo Lucide React.
 

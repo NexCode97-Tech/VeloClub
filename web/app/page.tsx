@@ -240,7 +240,6 @@ export default function HomePage() {
         <p className="text-xs font-semibold uppercase tracking-widest text-[#8E87A8] text-center mb-3">Funcionalidades</p>
         <h2
           className="text-2xl sm:text-3xl font-semibold text-[#1A1028] text-center mb-10 tracking-tight"
-          style={{ fontFamily: 'Open Sans, sans-serif' }}
         >
           Todo lo que necesitas
         </h2>
@@ -256,7 +255,6 @@ export default function HomePage() {
           <p className="text-xs font-semibold uppercase tracking-widest text-[#8E87A8] mb-3">¿Por qué VeloClub?</p>
           <h2
             className="text-2xl font-semibold text-[#1A1028] mb-8 tracking-tight"
-            style={{ fontFamily: 'Open Sans, sans-serif' }}
           >
             Diseñado para clubes reales
           </h2>
@@ -284,7 +282,6 @@ export default function HomePage() {
           />
           <h2
             className="text-2xl sm:text-3xl font-semibold mb-3 tracking-tight relative"
-            style={{ fontFamily: 'Open Sans, sans-serif' }}
           >
             ¿Listo para empezar?
           </h2>

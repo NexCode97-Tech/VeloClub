@@ -145,7 +145,7 @@ function BrandLogo({ brand }: { brand: Exclude<CardBrand, null> }) {
     return (
       <svg viewBox="0 0 44 24" height="20" role="img" aria-label="American Express">
         <rect width="44" height="24" rx="3" fill="#2E77BC" />
-        <text x="22" y="16" textAnchor="middle" fontFamily="Arial, Helvetica, sans-serif"
+        <text x="22" y="16" textAnchor="middle"
           fontSize="9" fontWeight="600" letterSpacing="0.3" fill="#fff">AMEX</text>
       </svg>
     );

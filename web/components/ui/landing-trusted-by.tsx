@@ -28,7 +28,6 @@ export default function LandingTrustedBy() {
       <div className="mx-auto w-full max-w-2xl px-5">
         <p
           className="text-center text-2xl sm:text-3xl font-semibold text-white tracking-tight"
-          style={{ fontFamily: 'Open Sans, sans-serif' }}
         >
           Clubes que ya confían en{' '}
           <span className="text-[#A78BFA]">VeloClub</span>

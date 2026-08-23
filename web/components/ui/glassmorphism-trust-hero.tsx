@@ -109,28 +109,37 @@ export default function GlassmorphismHero() {
               <CronometroPromo />
             </div>
 
-            {/* Titular — la promoción es la tercera línea y remata la frase, así
-                que se lee de corrido: "Gestiona tu club, enfócate en el deporte,
-                con 2 meses gratis". Cada línea entra por separado, con un
-                desenfoque que se disipa: el texto parece enfocarse al llegar.
-                Cuando la promoción termine se borra esa línea y el titular
-                sigue teniendo sentido por sí solo. */}
+            {/* Titular — nombra el enemigo en vez de describir la categoría.
+                «Gestiona tu club» era lo que hace el producto, no lo que le pasa
+                a quien lo compra, y cualquier competidor podía firmar esa frase.
+                Todo club que todavía no compra está usando un Excel, un cuaderno
+                o un grupo de WhatsApp, y al leerlo se reconoce solo.
+
+                La frase va de corrido y no partida: es una sola idea, y cortarla
+                obligaba a leerla en dos tiempos. En pantalla angosta baja sola
+                donde le toque.
+
+                La promoción es la segunda línea y remata: «múdalo» responde la
+                objeción de quien lleva años con su archivo, que no arranca de
+                cero. Cuando la campaña termine se borra esa línea y el titular
+                sigue en pie solo. */}
             <h1 className="text-[2.4rem] sm:text-5xl lg:text-[3.25rem] font-semibold tracking-tighter leading-[0.92] text-white">
-              <span className="vc-line" style={{ animationDelay: '.14s' }}>Gestiona tu club.</span>
-              <span className="vc-line" style={{ animationDelay: '.26s' }}>
+              <span className="vc-line" style={{ animationDelay: '.14s' }}>
+                Tu club ya no cabe{' '}
                 <span className="bg-gradient-to-br from-white via-white to-[#A855F7] bg-clip-text text-transparent">
-                  Enfócate en el deporte.
+                  en un Excel.
                 </span>
               </span>
-              <span className="vc-line" style={{ animationDelay: '.42s' }}>
-                <span className="vc-promo-text">Con 2 meses gratis.</span>
+              <span className="vc-line" style={{ animationDelay: '.30s' }}>
+                <span className="vc-promo-text">Múdalo gratis 2 meses.</span>
               </span>
             </h1>
 
-            {/* Descripción */}
+            {/* Descripción — nombra lo que reemplaza, en vez de «todo en uno»,
+                que es la promesa más repetida del software y no dice nada. */}
             <p className="vc-fade d4 text-sm text-zinc-400 leading-relaxed mx-auto lg:mx-0 max-w-sm lg:max-w-md">
-              La plataforma todo-en-uno para gestionar miembros, asistencia, pagos y
-              competencias. Pruébala dos meses sin costo y sin tarjeta.
+              Las listas, las mensualidades, la asistencia y los resultados dejan
+              de vivir en cuadernos y grupos de WhatsApp. Sin costo y sin tarjeta.
             </p>
 
             {/* CTA */}
@@ -140,7 +149,7 @@ export default function GlassmorphismHero() {
                 className="vc-cta inline-flex items-center justify-center gap-2 rounded-full w-full sm:w-auto px-8 py-3 text-sm font-semibold text-white transition-all hover:scale-[1.02] active:scale-[0.98]"
                 style={{ background: 'linear-gradient(135deg, #7C3AED, #9333EA)' }}
               >
-                Empezar 2 meses gratis
+                Crear mi club gratis
               </Link>
               <a
                 href="https://wa.me/573006359008"
@@ -148,7 +157,7 @@ export default function GlassmorphismHero() {
                 rel="noopener noreferrer"
                 className="inline-flex items-center justify-center gap-2 rounded-full w-full sm:w-auto px-8 py-3 text-sm font-semibold text-white/90 border border-white/25 hover:bg-white/10 transition-all active:scale-[0.98]"
               >
-                Contáctanos
+                Hablar por WhatsApp
               </a>
             </div>
 

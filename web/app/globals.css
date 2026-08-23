@@ -7,9 +7,15 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  /* Geist Sans es la unica familia de la plataforma. Titulos y cuerpo son la
+     misma: lo que los separa es el peso y el espaciado, no la tipografia.
+     `--font-heading` existe para no repetir la pila en cada regla, no para
+     abrir la puerta a una segunda fuente. No escribir nombres de fuente sueltos
+     en `style` ni en clases: si no se carga, el navegador cae al sans del
+     sistema y la pantalla se ve distinta en cada computador. */
   --font-sans: var(--font-geist-sans), "Geist", ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), "Geist Mono", ui-monospace, monospace;
-  --font-heading: var(--font-geist-sans), "Geist", ui-sans-serif, system-ui, sans-serif;
+  --font-heading: var(--font-sans);
 
   /* VeloClub brand tokens */
   --color-vc-accent: #7C3AED;

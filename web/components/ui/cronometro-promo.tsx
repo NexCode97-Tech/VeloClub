@@ -60,7 +60,7 @@ export function CronometroPromo() {
       {/* El conteo cambia solo; leerlo en voz alta cada minuto sería ruido.
           El lector de pantalla recibe la frase completa una vez. */}
       <span className="sr-only">
-        Quedan {dias} días para que cierre la promoción de dos meses gratis.
+        Quedan {dias} días para que finalice la promoción de dos meses gratis.
       </span>
 
       <span
@@ -74,7 +74,7 @@ export function CronometroPromo() {
       </span>
 
       <span aria-hidden="true" className="text-[12px] text-zinc-400">
-        para que cierre
+        para que finalice
       </span>
     </div>
   );

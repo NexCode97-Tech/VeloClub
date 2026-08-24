@@ -95,16 +95,17 @@ export default function GlassmorphismHero() {
 
       {/* 4. El amanecer. Va encima del resplandor y de las partículas, y por
              debajo del contenido: el fondo se aclara sin que el texto pierda su
-             contraste, porque el degradado no empieza hasta el 58%, muy por
-             debajo de los botones.
+             contraste, porque el degradado no arranca hasta pasados los botones.
 
-             Termina en un color opaco, no en transparente: es el que recibe la
-             siguiente sección, y asi la costura entre el héroe y el resto de la
-             página deja de existir. */}
+             Empieza y termina dentro del héroe, en el blanco de la página. Que
+             se estire más abajo no lo hace mejor: cruzando el pliegue deja de
+             leerse como una transición y se lee como si media página fuera
+             morada. Acá muere justo donde acaba la primera pantalla, y de ahí
+             para abajo todo es blanco. */}
       <div
         className="absolute inset-0 z-[4] pointer-events-none"
         style={{
-          background: 'linear-gradient(180deg, rgba(9,9,11,0) 0%, rgba(9,9,11,0) 58%, rgba(28,17,52,0.72) 78%, rgba(56,38,92,0.94) 92%, #46306F 100%)',
+          background: 'linear-gradient(180deg, rgba(9,9,11,0) 0%, rgba(9,9,11,0) 46%, rgba(42,26,78,0.78) 66%, rgba(122,106,166,0.94) 84%, rgba(219,215,233,1) 94%, #FFFFFF 100%)',
         }}
       />
 

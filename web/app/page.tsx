@@ -106,7 +106,7 @@ export default function HomePage() {
   }, [menuOpen]);
 
   return (
-    <main className="min-h-dvh bg-[#F7F7FB] [overflow-x:clip]">
+    <main className="min-h-dvh bg-white [overflow-x:clip]">
 
       {/* Nav — transparente, encima del hero */}
       <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? 'bg-[#0D0520]/95 backdrop-blur-md border-b border-white/5 shadow-lg shadow-black/30' : ''}`}>
@@ -235,29 +235,24 @@ export default function HomePage() {
       {/* Hero glassmorphism */}
       <GlassmorphismHero />
 
-      {/* Features — segundo tramo del amanecer. Recibe el color exacto en el
-          que termina el héroe y lo lleva hasta el claro de la página, así que
-          entre las dos secciones no hay borde que ver.
-
-          El encabezado va en claro porque cae sobre la parte todavía oscura;
-          las pestañas de abajo son una tarjeta blanca opaca y se leen igual en
-          cualquier punto del degradado. */}
-      <div style={{ background: 'linear-gradient(180deg, #46306F 0%, #7C6AA8 26%, #B7ADD3 52%, #D6D0E7 78%, #E9E6F2 100%)' }}>
-        <section id="funcionalidades" className="px-5 py-16 max-w-5xl mx-auto">
-          <p className="text-xs font-semibold uppercase tracking-widest text-[#C4B5FD] text-center mb-3">Funcionalidades</p>
-          <h2 className="text-2xl sm:text-3xl font-semibold text-white text-center mb-10 tracking-tight">
-            Todo lo que necesitas
-          </h2>
-          <LandingFeaturesTabs features={features} />
-        </section>
-      </div>
+      {/* Features — ya en blanco. El amanecer entero pasa dentro del héroe, así
+          que de acá para abajo no queda rastro del degradado. */}
+      <section id="funcionalidades" className="px-5 py-16 max-w-5xl mx-auto">
+        <p className="text-xs font-semibold uppercase tracking-widest text-[#8E87A8] text-center mb-3">Funcionalidades</p>
+        <h2 className="text-2xl sm:text-3xl font-semibold text-[#1A1028] text-center mb-10 tracking-tight">
+          Todo lo que necesitas
+        </h2>
+        <LandingFeaturesTabs features={features} />
+      </section>
 
       {/* Clubes que confían en VeloClub */}
       <LandingTrustedBy />
 
       {/* Benefits */}
       <section id="por-que" className="px-5 py-16 max-w-5xl mx-auto">
-        <div className="bg-white rounded-3xl border border-[rgba(120,80,200,0.08)] shadow-sm p-7 sm:p-10">
+        {/* Gris sobre blanco, al reves que antes: con la pagina en blanco puro
+            una tarjeta blanca no se separaria del fondo. */}
+        <div className="bg-[#F4F3F8] rounded-3xl border border-[rgba(26,16,40,0.05)] p-7 sm:p-10">
           <p className="text-xs font-semibold uppercase tracking-widest text-[#8E87A8] mb-3">¿Por qué VeloClub?</p>
           <h2
             className="text-2xl font-semibold text-[#1A1028] mb-8 tracking-tight"
@@ -267,7 +262,9 @@ export default function HomePage() {
           <ul className="space-y-4">
             {benefits.map(({ icon: Icon, text }) => (
               <li key={text} className="flex items-start gap-3">
-                <div className="w-7 h-7 rounded-lg bg-[rgba(124,58,237,0.08)] flex items-center justify-center shrink-0 mt-0.5">
+                {/* Blanco solido: el violeta translucido que habia se perdia
+                    dentro del gris de la tarjeta. */}
+                <div className="w-7 h-7 rounded-lg bg-white flex items-center justify-center shrink-0 mt-0.5">
                   <Icon className="w-3.5 h-3.5 text-[#7C3AED]" />
                 </div>
                 <p className="text-sm text-[#4A4060] leading-relaxed">{text}</p>

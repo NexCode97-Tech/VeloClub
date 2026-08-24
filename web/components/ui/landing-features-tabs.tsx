@@ -64,14 +64,15 @@ export default function LandingFeaturesTabs({ features }: { features: FeatureTab
           probado y confirmado por el usuario, se deja así a propósito.
           Esquinas de abajo planas para que toque sin espacio la tarjeta
           blanca de sub-pestañas + contenido de más abajo. */}
-      {/* La tira es opaca y no translúcida: detrás hay un degradado que va de
-          violeta oscuro a casi blanco, y un fondo semitransparente dejaría las
-          pestañas inactivas ilegibles en la parte alta. */}
+      {/* Toda la pieza es gris sobre el blanco de la página, al revés que
+          antes: con el fondo en blanco puro, una tarjeta blanca no se separa.
+          La tira va un punto más oscura que el panel, para que se lea como la
+          pestaña de una carpeta y no como parte de la tarjeta. */}
       <div
         role="tablist"
         aria-label="Funcionalidades de VeloClub"
         className="relative flex items-center gap-2 rounded-t-2xl p-1.5 overflow-x-auto no-scrollbar w-full"
-        style={{ background: '#F1EEF9', boxShadow: '0 -1px 0 rgba(120,80,200,0.10) inset' }}
+        style={{ background: '#ECEAF3' }}
       >
         {features.map((f, i) => {
           const isActive = f.key === mainKey;
@@ -123,8 +124,8 @@ export default function LandingFeaturesTabs({ features }: { features: FeatureTab
 
       {/* Tarjeta blanca continua: sub-pestañas + panel de contenido, pegada
           sin espacio a las pestañas principales de arriba. */}
-      <div className="relative overflow-hidden rounded-b-2xl bg-white border border-[rgba(120,80,200,0.10)]" style={{ minHeight: 150 }}>
-        <div role="tablist" aria-label={`Aspectos de ${main.label}`} className="flex flex-wrap gap-1 px-6 sm:px-7 pt-4 pb-3 border-b border-[rgba(120,80,200,0.10)]">
+      <div className="relative overflow-hidden rounded-b-2xl bg-[#F4F3F8] border border-[rgba(26,16,40,0.05)]" style={{ minHeight: 150 }}>
+        <div role="tablist" aria-label={`Aspectos de ${main.label}`} className="flex flex-wrap gap-1 px-6 sm:px-7 pt-4 pb-3 border-b border-[rgba(26,16,40,0.06)]">
           <AnimatePresence mode="popLayout" initial={false}>
             {main.sub.map(s => {
               const isActive = s.key === subKey;
@@ -140,7 +141,7 @@ export default function LandingFeaturesTabs({ features }: { features: FeatureTab
                   aria-selected={isActive}
                   onClick={() => setSubKey(s.key)}
                   className={`relative inline-flex items-center px-2.5 py-1.5 rounded-lg text-[11.5px] font-medium cursor-pointer overflow-hidden transition-colors duration-200 ${
-                    isActive ? '' : 'hover:bg-[rgba(124,58,237,0.05)]'
+                    isActive ? '' : 'hover:bg-[rgba(255,255,255,0.6)]'
                   }`}
                   style={{ color: isActive ? '#1A1028' : '#9B95AC' }}
                 >
@@ -148,7 +149,7 @@ export default function LandingFeaturesTabs({ features }: { features: FeatureTab
                     <motion.div
                       layoutId="feature-subtab-pill"
                       className="absolute inset-0 rounded-lg"
-                      style={{ background: 'rgba(124,58,237,0.08)', zIndex: 0 }}
+                      style={{ background: '#fff', boxShadow: '0 1px 2px rgba(26,16,40,0.06)', zIndex: 0 }}
                       transition={reducedMotion ? { duration: 0 } : { type: 'spring', stiffness: 420, damping: 34, mass: 0.9 }}
                     />
                   )}

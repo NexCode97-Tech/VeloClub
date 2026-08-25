@@ -16,6 +16,26 @@ const TRAMOS: Tramo[] = [
 const MESES_POR_PLAN: Record<TipoPlan, number> = { MENSUAL: 1, TRIMESTRAL: 3, ANUAL: 12 };
 const DESCUENTO_POR_PLAN: Record<TipoPlan, number> = { MENSUAL: 0, TRIMESTRAL: 0.10, ANUAL: 0.20 };
 
+// ── La campaña de lanzamiento ───────────────────────────────────────────────
+//
+// Mientras dura, el trimestre vale lo mismo para todos: 180.000, sin tramos y
+// sin el descuento del plan. Es la promoción que acompaña a los dos meses
+// gratis, y por eso comparte su fecha de corte.
+//
+// Sin esto la plataforma cobraba su tarifa por tramos —entre 127.500 y
+// 162.000— y la diferencia hasta los 180.000 habia que perseguirla por fuera,
+// club por club. Con doce clubes saliendo de prueba eran 418.500 a cobrar a
+// mano.
+//
+// El mensual y el anual no entran: siguen con su tarifa de siempre.
+export const CAMPANA_FIN = new Date('2026-11-01T00:00:00-05:00');
+export const TRIMESTRE_CAMPANA = 180_000;
+
+/** ¿El cobro cae dentro de la campaña? */
+export function enCampana(referencia = new Date()): boolean {
+  return referencia < CAMPANA_FIN;
+}
+
 // Descuento adicional por activar la renovación automática — se suma (no
 // reemplaza) al descuento propio del plan.
 export const DESCUENTO_AUTO_RENOVACION = 0.05;
@@ -25,8 +45,23 @@ export function tarifaMensualPorDeportistas(cantidadDeportistas: number): number
   return tramo.mensual;
 }
 
-/** Precio total del período (no el "por mes"), ya con los descuentos aplicados. */
-export function calcularPrecioPlan(cantidadDeportistas: number, tipoPlan: TipoPlan, autoRenew = false): number {
+/**
+ * Precio total del período (no el "por mes"), ya con los descuentos aplicados.
+ *
+ * El precio de campaña se resuelve acá adentro y no en cada sitio que cobra:
+ * la función se llama desde once lugares —el checkout, la renovación, el
+ * preapproval, la sincronización— y dejar la regla afuera garantizaba que
+ * alguno se quedara con la tarifa vieja.
+ */
+export function calcularPrecioPlan(
+  cantidadDeportistas: number,
+  tipoPlan: TipoPlan,
+  autoRenew = false,
+  referencia = new Date(),
+): number {
+  // Plano: ni tramos ni descuentos, tampoco el de renovación automática.
+  if (tipoPlan === 'TRIMESTRAL' && enCampana(referencia)) return TRIMESTRE_CAMPANA;
+
   const base = tarifaMensualPorDeportistas(cantidadDeportistas) * MESES_POR_PLAN[tipoPlan];
   const descuento = DESCUENTO_POR_PLAN[tipoPlan] + (autoRenew ? DESCUENTO_AUTO_RENOVACION : 0);
   return Math.round(base * (1 - descuento));

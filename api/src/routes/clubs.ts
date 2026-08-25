@@ -7,6 +7,7 @@ import { cacheGet, cacheSet, cacheDel } from '../lib/redis';
 import { addToAllowlist } from '../lib/clerk-allowlist';
 import { validarSubida } from '../lib/upload-guard';
 import { uploadLimiter, createLimiter } from '../lib/rate-limit';
+import { enCampana } from '../lib/pricing';
 
 // ── Normalización y similitud de nombres de club (anti-suplantación) ──────────
 // Quita tildes, pasa a minúsculas y colapsa espacios/puntuación para comparar
@@ -521,19 +522,21 @@ router.get('/name-availability', requireAuth, async (req, res) => {
 // prueba en vez de 15. Al vencer la promoción vuelve solo al período normal sin
 // necesidad de desplegar nada: la fecha manda.
 //
-// Se hace alargando el período de prueba y NO tocando los precios, para no
-// mover nada de la pasarela de pagos. Los clubes que ya estaban en prueba
-// cuando arrancó la promoción recibieron los 60 días sumados a lo que les
-// quedaba (ver scripts/promo-dos-meses.mjs).
+// Los clubes que ya estaban en prueba cuando arrancó recibieron los 60 días
+// sumados a lo que les quedaba (ver scripts/promo-dos-meses.mjs).
+//
+// La campaña también fija el trimestre en 180.000 planos — eso vive en
+// lib/pricing.ts, que es donde se cobra. La fecha de corte es la misma y por
+// eso se importa de allá en vez de repetirla: dos constantes iguales en dos
+// archivos terminan separándose el día que una se mueve.
 //
 // El corte es a medianoche del 1 de noviembre en hora de Colombia, así que un
 // club que se registre el 31 de octubre a las 11 de la noche todavía alcanza.
-const PROMO_FIN = new Date('2026-11-01T00:00:00-05:00');
 const DIAS_PRUEBA_PROMO  = 60;
 const DIAS_PRUEBA_NORMAL = 15;
 
 export function diasDePrueba(referencia = new Date()): number {
-  return referencia < PROMO_FIN ? DIAS_PRUEBA_PROMO : DIAS_PRUEBA_NORMAL;
+  return enCampana(referencia) ? DIAS_PRUEBA_PROMO : DIAS_PRUEBA_NORMAL;
 }
 
 // POST /clubs  — auto-registro de club (self-serve). El usuario ya está

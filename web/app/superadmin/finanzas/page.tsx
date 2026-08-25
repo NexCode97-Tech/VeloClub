@@ -259,18 +259,15 @@ export default function FinanzasSuperadmin() {
             <Tarjeta>
               <div className="flex items-baseline gap-2 flex-wrap">
                 <h2 className="text-[15px] font-semibold text-foreground m-0">
-                  {datos.granularidad === 'dia' ? 'Entra y sale, día a día' : 'Entra y sale, mes a mes'}
+                  {datos.granularidad === 'dia' ? 'Ingresos y gastos por día' : 'Ingresos y gastos por mes'}
                 </h2>
                 {/* Con dos series la leyenda va siempre: la identidad no puede
                     depender solo del color. */}
                 <span className="ml-auto flex gap-3">
-                  <Punto color={ENTRA}>Entra</Punto>
-                  <Punto color={SALE}>Sale</Punto>
+                  <Punto color={ENTRA}>Ingresos</Punto>
+                  <Punto color={SALE}>Gastos</Punto>
                 </span>
               </div>
-              <p className="text-[11.5px] text-muted-foreground m-0 mb-1">
-                La línea de ceros marca el punto de equilibrio.
-              </p>
               <GraficaMeses meses={datos.meses} />
             </Tarjeta>
 
@@ -333,15 +330,15 @@ export default function FinanzasSuperadmin() {
             <div className="grid gap-3 lg:grid-cols-2">
               <Tarjeta>
                 {/* Una sola serie: sin caja de leyenda, el título la nombra. */}
-                <h2 className="text-[15px] font-semibold text-foreground m-0">De dónde viene</h2>
-                <p className="text-[11.5px] text-muted-foreground m-0">Total pagado por club, desde que arrancó</p>
+                <h2 className="text-[15px] font-semibold text-foreground m-0">Ingresos por club</h2>
+                <p className="text-[11.5px] text-muted-foreground m-0">Total pagado desde el primer día</p>
                 <Ranking colores="#7C3AED"
                   filas={datos.clubes.map(c => ({ nombre: c.nombre, valor: c.total }))} />
               </Tarjeta>
 
               <Tarjeta>
-                <h2 className="text-[15px] font-semibold text-foreground m-0">En qué se va</h2>
-                <p className="text-[11.5px] text-muted-foreground m-0">Gastos del periodo, por categoría</p>
+                <h2 className="text-[15px] font-semibold text-foreground m-0">Gastos por categoría</h2>
+                <p className="text-[11.5px] text-muted-foreground m-0">Dentro del periodo seleccionado</p>
                 <Ranking
                   filas={datos.categorias.map(c => ({
                     nombre: CATEGORIAS.find(x => x.valor === c.categoria)?.texto ?? c.categoria,

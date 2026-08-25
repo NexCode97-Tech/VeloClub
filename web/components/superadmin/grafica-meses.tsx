@@ -132,8 +132,8 @@ export function GraficaMeses({ meses }: { meses: MesFinanzas[] }) {
   const promedio = meses.reduce((t, m) => t + m.entra, 0) / meses.length;
 
   const series = ([
-    { clave: 'entra', color: ENTRA, nombre: 'Entró' },
-    { clave: 'sale', color: SALE, nombre: 'Salió' },
+    { clave: 'entra', color: ENTRA, nombre: 'Ingresos' },
+    { clave: 'sale', color: SALE, nombre: 'Gastos' },
   ] as const).map(se => {
     const pts = meses.map((m, i) => [x(i), y(m[se.clave])] as [number, number]);
     const d = curva(pts);
@@ -155,7 +155,7 @@ export function GraficaMeses({ meses }: { meses: MesFinanzas[] }) {
           gris, tapando la gráfica. El lector de pantalla lee las dos igual. */}
       <svg viewBox={`0 0 ${W} ${H}`} className="block w-full overflow-visible"
         role="img"
-        aria-label={`Lo que entra y lo que sale, de ${tituloDe(meses[0].mes)} a ${tituloDe(meses[meses.length - 1].mes)}`}>
+        aria-label={`Ingresos y gastos, de ${tituloDe(meses[0].mes)} a ${tituloDe(meses[meses.length - 1].mes)}`}>
 
         <defs>
           {/* La rejilla se ve por dentro del relleno y lo cruza. Esta máscara la
@@ -266,7 +266,7 @@ export function GraficaMeses({ meses }: { meses: MesFinanzas[] }) {
           x={PAD_I} y={PAD_S} width={anchoUtil} height={altoUtil}
           fill="transparent" tabIndex={0} className="outline-none focus-visible:fill-primary/5"
           aria-label={m
-            ? `${tituloDe(m.mes)}: entró ${pesos(m.entra)}, salió ${pesos(m.sale)}, queda ${pesos(neto)}`
+            ? `${tituloDe(m.mes)}: ingresos ${pesos(m.entra)}, gastos ${pesos(m.sale)}, saldo ${pesos(neto)}`
             : 'Recorré el periodo con las flechas'}
           onMouseMove={e => {
             const r = caja.current?.getBoundingClientRect();
@@ -311,14 +311,14 @@ export function GraficaMeses({ meses }: { meses: MesFinanzas[] }) {
           <p className="font-bold m-0 mb-0.5">{tituloDe(m.mes)}</p>
           <p className="m-0 flex items-center gap-1.5">
             <span className="w-2 h-2 rounded-sm shrink-0" style={{ background: ENTRA }} />
-            Entró <b className="tabular-nums font-semibold">{pesos(m.entra)}</b>
+            Ingresos <b className="tabular-nums font-semibold ml-auto">{pesos(m.entra)}</b>
           </p>
           <p className="m-0 flex items-center gap-1.5">
             <span className="w-2 h-2 rounded-sm shrink-0" style={{ background: SALE }} />
-            Salió <b className="tabular-nums font-semibold">{pesos(m.sale)}</b>
+            Gastos <b className="tabular-nums font-semibold ml-auto">{pesos(m.sale)}</b>
           </p>
-          <p className="m-0 mt-1 pt-1 border-t border-white/20">
-            Queda <b className="tabular-nums font-semibold">{neto < 0 ? '-' : ''}{pesos(Math.abs(neto))}</b>
+          <p className="m-0 mt-1 pt-1 border-t border-white/20 flex items-center gap-1.5">
+            Saldo <b className="tabular-nums font-semibold ml-auto">{neto < 0 ? '-' : ''}{pesos(Math.abs(neto))}</b>
           </p>
         </div>
       )}

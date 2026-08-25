@@ -7,6 +7,7 @@ import { Plus, Trash2, X } from 'lucide-react';
 import { apiFetch } from '@/lib/api-client';
 import { AccionesCabecera } from '@/components/superadmin/acciones-cabecera';
 import { Desplegable } from '@/components/ui/desplegable';
+import { MonthPicker, type DateRange } from '@/components/ui/month-picker';
 import { GraficaMeses, Ranking, ENTRA, SALE, type MesFinanzas } from '@/components/superadmin/grafica-meses';
 
 /**
@@ -38,11 +39,15 @@ const COLOR_CATEGORIA: Record<string, string> = {
   OTROS:           '#A33A4E',
 };
 
+/**
+ * Ninguno se sale del año en curso: al decir «este año» o «los últimos seis
+ * meses» nadie se refiere a septiembre del año pasado. Para mirar más atrás
+ * está el selector de fechas.
+ */
 const RANGOS = [
-  { meses: 1,  texto: 'Mes' },
-  { meses: 6,  texto: '6 meses' },
-  { meses: 12, texto: 'Año' },
-  { meses: 36, texto: 'Todo' },
+  { clave: 'mes',  texto: 'Mes' },
+  { clave: '6m',   texto: '6 meses' },
+  { clave: 'anio', texto: 'Año' },
 ];
 
 interface Gasto {
@@ -53,11 +58,27 @@ interface Gasto {
   descripcion: string;
 }
 
+interface Pulso {
+  totalAcumulado: number;
+  clubesNuevosPorMes: number;
+  clubesTotal: number;
+  clubesQuePagan: number;
+  enPrueba: number;
+  promedioPorClub: number;
+  deportistas: number;
+}
+
 interface Finanzas {
   meses: MesFinanzas[];
   categorias: { categoria: string; monto: number }[];
   clubes: { clubId: string; nombre: string; total: number }[];
   mensual: { monto: number; clubes: number };
+  pulso: Pulso;
+}
+
+/** Una fecha local a aaaa-mm-dd, sin pasar por UTC. */
+function aISO(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
 const pesos = (n: number) => '$' + Math.round(n).toLocaleString('es-CO');
@@ -71,7 +92,12 @@ const VACIO = { fecha: hoyISO(), monto: '', categoria: 'INFRAESTRUCTURA', descri
 
 export default function FinanzasSuperadmin() {
   const { getToken } = useAuth();
-  const [rango, setRango] = useState(6);
+  const [rango, setRango] = useState('6m');
+  // El mismo selector de Analíticas: un solo control que da un mes o un rango
+  // de días. Elegir acá apaga los tres botones, y tocar un botón lo limpia:
+  // nunca quedan dos filtros peleando por el mismo periodo.
+  const [mesElegido, setMesElegido] = useState<string | null>(null);
+  const [rangoFechas, setRangoFechas] = useState<DateRange | null>(null);
   const [datos, setDatos] = useState<Finanzas | null>(null);
   const [gastos, setGastos] = useState<Gasto[]>([]);
   const [cargando, setCargando] = useState(true);
@@ -84,8 +110,14 @@ export default function FinanzasSuperadmin() {
   const cargar = useCallback(async () => {
     try {
       const token = await getToken();
+      // Un rango a mano manda sobre el botón; si no hay, va el preajuste.
+      const busqueda = rangoFechas
+        ? `desde=${aISO(rangoFechas.start)}&hasta=${aISO(rangoFechas.end)}`
+        : mesElegido
+          ? `desde=${mesElegido}-01&hasta=${mesElegido}-28`
+          : `rango=${rango}`;
       const [f, g] = await Promise.all([
-        apiFetch<Finanzas>(`/superadmin/finanzas?meses=${rango}`, { token }),
+        apiFetch<Finanzas>(`/superadmin/finanzas?${busqueda}`, { token }),
         apiFetch<{ gastos: Gasto[] }>('/superadmin/finanzas/gastos', { token }),
       ]);
       setDatos(f);
@@ -96,18 +128,26 @@ export default function FinanzasSuperadmin() {
     } finally {
       setCargando(false);
     }
-  }, [getToken, rango]);
+  }, [getToken, rango, mesElegido, rangoFechas]);
 
   useEffect(() => { cargar(); }, [cargar]);
 
-  // El mes en curso es el último del arreglo: el backend siembra todos los del
-  // rango, incluso los vacíos, así que siempre está.
-  const mes = datos?.meses[datos.meses.length - 1];
-  const neto = mes ? mes.entra - mes.sale : 0;
-  const gastosDelMes = useMemo(() => {
-    if (!mes) return 0;
-    return gastos.filter(g => g.fecha.slice(0, 7) === mes.mes).length;
-  }, [gastos, mes]);
+  // Las cifras son del periodo completo que se está viendo, no del mes en
+  // curso: al mover el filtro, unas tarjetas que no cambian confunden más de lo
+  // que informan.
+  const periodo = useMemo(
+    () => (datos?.meses ?? []).reduce(
+      (t, m) => ({ entra: t.entra + m.entra, sale: t.sale + m.sale }),
+      { entra: 0, sale: 0 },
+    ),
+    [datos],
+  );
+  const saldo = periodo.entra - periodo.sale;
+
+  const gastosDelPeriodo = useMemo(() => {
+    const dentro = new Set((datos?.meses ?? []).map(m => m.mes));
+    return gastos.filter(g => dentro.has(g.fecha.slice(0, 7))).length;
+  }, [gastos, datos]);
 
   async function guardar() {
     const monto = Number(nuevo.monto.replace(/[^\d]/g, ''));
@@ -147,16 +187,6 @@ export default function FinanzasSuperadmin() {
   return (
     <div style={{ background: '#F7F7FB', minHeight: '100%' }}>
       <AccionesCabecera>
-        <div className="flex items-center gap-1 p-[2px] rounded-[10px] bg-white border border-border">
-          {RANGOS.map(r => (
-            <button key={r.meses} type="button" onClick={() => setRango(r.meses)}
-              className={`text-[11.5px] font-semibold px-2.5 py-1 rounded-lg transition-colors ${
-                rango === r.meses ? 'text-primary bg-secondary' : 'text-muted-foreground'
-              }`}>
-              {r.texto}
-            </button>
-          ))}
-        </div>
         <button type="button" onClick={() => setAbierto(a => !a)}
           className="inline-flex items-center gap-1.5 text-white text-[12px] font-semibold px-3 py-2 rounded-xl shrink-0"
           style={{ background: abierto ? '#8E87A8' : '#7C3AED' }}>
@@ -174,6 +204,32 @@ export default function FinanzasSuperadmin() {
           </p>
         )}
 
+        {/* El rango vive acá y no en la cabecera: ahí quedaba apretado contra
+            el título y no cabía el selector de fechas. */}
+        <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-1 p-[2px] rounded-[10px] bg-white border border-border">
+            {RANGOS.map(r => (
+              <button key={r.clave} type="button"
+                onClick={() => { setRango(r.clave); setMesElegido(null); setRangoFechas(null); }}
+                className={`text-[12px] font-semibold px-3 py-1.5 rounded-lg transition-colors ${
+                  rango === r.clave && !mesElegido && !rangoFechas
+                    ? 'text-primary bg-primary/10' : 'text-muted-foreground'
+                }`}>
+                {r.texto}
+              </button>
+            ))}
+          </div>
+          <div className="ml-auto">
+            <MonthPicker
+              value={mesElegido}
+              currentMonth={new Date().toISOString().slice(0, 7)}
+              dateRange={rangoFechas}
+              onChange={(mes, r) => { setMesElegido(mes); setRangoFechas(r); }}
+              alignRight
+            />
+          </div>
+        </div>
+
         {cargando ? (
           <div className="h-40 flex items-center justify-center">
             <div className="w-6 h-6 rounded-full border-2 border-primary border-t-transparent animate-spin" />
@@ -184,14 +240,19 @@ export default function FinanzasSuperadmin() {
                 titular es responder «cuánto» de un vistazo, y dibujarle una
                 gráfica a un solo dato le quita velocidad sin agregar nada. */}
             <div className="grid gap-2 grid-cols-2 lg:grid-cols-4">
-              <Cifra rotulo="Entró este mes" valor={pesos(mes?.entra ?? 0)} color={ENTRA}
-                nota={`${mes?.clubes ?? 0} ${mes?.clubes === 1 ? 'club pagó' : 'clubes pagaron'}`} />
-              <Cifra rotulo="Salió este mes" valor={pesos(mes?.sale ?? 0)} color={SALE}
-                nota={`${gastosDelMes} ${gastosDelMes === 1 ? 'gasto registrado' : 'gastos registrados'}`} />
-              <Cifra rotulo="Queda" valor={`${neto < 0 ? '-' : ''}${pesos(Math.abs(neto))}`}
-                nota={mes && mes.entra > 0 ? `${Math.round((neto / mes.entra) * 100)}% de lo que entró` : 'sin ingresos este mes'} />
-              <Cifra rotulo="Ingreso mensual" valor={pesos(datos.mensual.monto)}
-                nota={`${datos.mensual.clubes} clubes al día, plan a mes`} />
+              <Cifra rotulo="Ingresos" valor={pesos(periodo.entra)} color={ENTRA}
+                nota={`${datos.pulso.clubesQuePagan} clubes, ${datos.meses.length} ${datos.meses.length === 1 ? 'mes' : 'meses'}`} />
+              <Cifra rotulo="Gastos" valor={pesos(periodo.sale)} color={SALE}
+                nota={`${gastosDelPeriodo} ${gastosDelPeriodo === 1 ? 'gasto registrado' : 'gastos registrados'}`} />
+              <Cifra rotulo="Saldo del periodo"
+                valor={`${saldo < 0 ? '-' : ''}${pesos(Math.abs(saldo))}`}
+                pastilla={periodo.entra > 0
+                  ? { texto: `${Math.round((saldo / periodo.entra) * 100)}% de margen`, bien: saldo >= 0 }
+                  : undefined}
+                nota={periodo.entra > 0 ? undefined : 'sin ingresos en el periodo'} />
+              <Cifra rotulo="Total acumulado"
+                valor={`${datos.pulso.totalAcumulado < 0 ? '-' : ''}${pesos(Math.abs(datos.pulso.totalAcumulado))}`}
+                nota="toda la historia, sin importar el filtro" />
             </div>
 
             <Tarjeta>
@@ -208,6 +269,25 @@ export default function FinanzasSuperadmin() {
                 La línea de ceros marca el punto de equilibrio.
               </p>
               <GraficaMeses meses={datos.meses} />
+            </Tarjeta>
+
+            {/* El pulso: lo que no cuentan las cifras de arriba. No depende del
+                filtro, porque son preguntas sobre el negocio entero. */}
+            <Tarjeta>
+              <div className="flex items-baseline gap-2 flex-wrap">
+                <h2 className="text-[15px] font-semibold text-foreground m-0">El pulso del negocio</h2>
+                <span className="text-[11.5px] text-muted-foreground ml-auto">
+                  Lo que no cuentan las cifras de arriba
+                </span>
+              </div>
+              <div className="grid gap-x-5 gap-y-3 mt-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-6">
+                <Dato n={datos.pulso.clubesNuevosPorMes.toLocaleString('es-CO')} q="Clubes nuevos por mes" />
+                <Dato n={pesos(datos.mensual.monto)} q="Ingreso recurrente" />
+                <Dato n={`${datos.pulso.clubesQuePagan} de ${datos.pulso.clubesTotal}`} q="Clubes que pagan" />
+                <Dato n={String(datos.pulso.enPrueba)} q="En periodo de prueba" />
+                <Dato n={pesos(datos.pulso.promedioPorClub)} q="Promedio por club" />
+                <Dato n={datos.pulso.deportistas.toLocaleString('es-CO')} q="Deportistas" />
+              </div>
             </Tarjeta>
 
             <div className="grid gap-3 lg:grid-cols-2">
@@ -343,20 +423,49 @@ function Tarjeta({ children, sinAire }: { children: React.ReactNode; sinAire?: b
   );
 }
 
-function Cifra({ rotulo, valor, nota, color }: {
-  rotulo: string; valor: string; nota: string; color?: string;
+/**
+ * Una cifra de cabecera.
+ *
+ * El rótulo va en minúscula y no en versalitas: en este proyecto no se usa
+ * `uppercase` en ningún rótulo, y era justo lo que hacía ver estas tarjetas
+ * como una plantilla ajena.
+ */
+function Cifra({ rotulo, valor, nota, color, pastilla }: {
+  rotulo: string;
+  valor: string;
+  nota?: string;
+  color?: string;
+  pastilla?: { texto: string; bien: boolean };
 }) {
   return (
-    <div className="bg-white rounded-2xl border border-border p-3.5 flex flex-col gap-0.5">
-      <span className="text-[10.5px] font-semibold tracking-[0.06em] uppercase text-muted-foreground flex items-center gap-1.5">
+    <div className="bg-white rounded-2xl border border-border p-3.5 flex flex-col">
+      <span className="text-[12px] font-medium text-muted-foreground flex items-center gap-1.5">
         {color && <span className="w-2 h-2 rounded-sm shrink-0" style={{ background: color }} />}
         {rotulo}
       </span>
-      <b className="text-[22px] font-bold tracking-tight tabular-nums leading-tight" style={{ color }}>
+      <b className="text-[24px] font-bold tracking-tight tabular-nums leading-tight mt-0.5" style={{ color }}>
         {valor}
       </b>
-      <span className="text-[11px] text-muted-foreground">{nota}</span>
+      {pastilla && (
+        <span className="text-[11px] font-bold rounded-full px-2 py-0.5 mt-1 self-start"
+          style={pastilla.bien
+            ? { background: 'rgba(14,124,87,0.1)', color: ENTRA }
+            : { background: 'rgba(194,65,12,0.1)', color: SALE }}>
+          {pastilla.texto}
+        </span>
+      )}
+      {nota && <span className="text-[11.5px] text-muted-foreground mt-0.5">{nota}</span>}
     </div>
+  );
+}
+
+/** Un número del pulso: la cifra grande y qué mide, debajo. */
+function Dato({ n, q }: { n: string; q: string }) {
+  return (
+    <span className="flex flex-col">
+      <b className="text-[17px] font-bold tracking-tight tabular-nums leading-tight">{n}</b>
+      <span className="text-[11.5px] text-muted-foreground">{q}</span>
+    </span>
   );
 }
 

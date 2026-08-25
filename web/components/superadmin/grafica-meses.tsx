@@ -74,6 +74,11 @@ export function GraficaMeses({ meses }: { meses: MesFinanzas[] }) {
   const m = encima !== null ? meses[encima] : null;
   const neto = m ? m.entra - m.sale : 0;
 
+  // Lo que entró en promedio por mes. Los totales del periodo los llevan las
+  // tarjetas de arriba; acá solo hace falta el promedio, que es contra lo que
+  // se compara cada barra. Cuenta los meses en cero: también son parte.
+  const promedio = meses.reduce((t, x) => t + x.entra, 0) / meses.length;
+
   return (
     <div ref={caja} className="relative">
       <svg viewBox={`0 0 ${W} ${H}`} className="block w-full overflow-visible"
@@ -94,6 +99,20 @@ export function GraficaMeses({ meses }: { meses: MesFinanzas[] }) {
             </text>
           </g>
         ))}
+
+        {/* La raya del promedio. Una barra sola no dice si el mes fue bueno o
+            malo; contra el promedio, sí. Va punteada y en el color de lo que
+            entra, para que se lea como referencia y no como una serie más. */}
+        {promedio > 0 && (
+          <g>
+            <line x1={PAD_I} x2={W - PAD_D} y1={y(promedio)} y2={y(promedio)}
+              stroke={ENTRA} strokeWidth={1.5} strokeDasharray="5 4" opacity={0.55} />
+            <text x={W - PAD_D} y={y(promedio) - 5} textAnchor="end"
+              style={{ fontSize: 9, fill: ENTRA, fontWeight: 600 }}>
+              promedio {corto(promedio)}
+            </text>
+          </g>
+        )}
 
         {meses.map((mes, i) => {
           const centro = PAD_I + paso * i + paso / 2;

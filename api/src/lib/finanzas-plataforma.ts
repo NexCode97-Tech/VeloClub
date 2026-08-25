@@ -144,3 +144,67 @@ export async function ingresoMensual(): Promise<{ monto: number; clubes: number 
 
   return { monto: Math.round(monto), clubes: suscripciones.length };
 }
+
+export interface PulsoDelNegocio {
+  /** Toda la historia: lo que entró menos lo que salió, desde el primer día. */
+  totalAcumulado: number;
+  recaudadoSiempre: number;
+  gastadoSiempre: number;
+  /** Cuántos clubes se registran al mes, en promedio. */
+  clubesNuevosPorMes: number;
+  clubesTotal: number;
+  clubesQuePagan: number;
+  enPrueba: number;
+  /** Cuánto ha dejado cada club que paga, en promedio. */
+  promedioPorClub: number;
+  deportistas: number;
+}
+
+/**
+ * El estado del negocio, sin depender del rango que se esté mirando.
+ *
+ * Son las preguntas que no cambian al mover el filtro: cuánta plata hay
+ * acumulada desde el primer día, a qué ritmo entran clubes, cuántos ya pagan y
+ * cuántos siguen probando.
+ */
+export async function pulsoDelNegocio(): Promise<PulsoDelNegocio> {
+  const ahora = new Date();
+
+  const [recaudado, gastado, clubes, clubesQuePaganN, enPrueba, deportistas, primerClub] =
+    await Promise.all([
+      prisma.suscripcionPago.aggregate({ where: { estado: 'PAID' }, _sum: { monto: true } }),
+      prisma.gastoPlataforma.aggregate({ _sum: { monto: true } }),
+      prisma.club.count(),
+      prisma.clubSuscripcion.count({ where: { pagos: { some: { estado: 'PAID' } } } }),
+      prisma.club.count({ where: { trialEndsAt: { gt: ahora } } }),
+      prisma.member.count(),
+      prisma.club.findFirst({ orderBy: { createdAt: 'asc' }, select: { createdAt: true } }),
+    ]);
+
+  const recaudadoSiempre = recaudado._sum.monto ?? 0;
+  const gastadoSiempre = gastado._sum.monto ?? 0;
+
+  // Meses transcurridos desde que se registró el primer club, contando el
+  // actual. Nunca menos de uno: dividir por cero da infinito, y en el primer
+  // mes de vida el promedio es sencillamente todo lo que ha entrado.
+  let mesesDeVida = 1;
+  if (primerClub) {
+    const p = primerClub.createdAt;
+    mesesDeVida = Math.max(
+      1,
+      (ahora.getUTCFullYear() - p.getUTCFullYear()) * 12 + (ahora.getUTCMonth() - p.getUTCMonth()) + 1,
+    );
+  }
+
+  return {
+    totalAcumulado: recaudadoSiempre - gastadoSiempre,
+    recaudadoSiempre,
+    gastadoSiempre,
+    clubesNuevosPorMes: Math.round((clubes / mesesDeVida) * 10) / 10,
+    clubesTotal: clubes,
+    clubesQuePagan: clubesQuePaganN,
+    enPrueba,
+    promedioPorClub: clubesQuePaganN > 0 ? Math.round(recaudadoSiempre / clubesQuePaganN) : 0,
+    deportistas,
+  };
+}

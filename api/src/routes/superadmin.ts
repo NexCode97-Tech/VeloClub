@@ -6,7 +6,7 @@ import { addToAllowlist, removeFromAllowlist } from '../lib/clerk-allowlist';
 import { invalidarTrustedCache, diasDePrueba } from './clubs';
 import { cacheDel } from '../lib/redis';
 import {
-  mesesDe, gastosPorCategoria, clubesQuePagan, ingresoMensual,
+  mesesDe, gastosPorCategoria, clubesQuePagan, ingresoMensual, pulsoDelNegocio,
 } from '../lib/finanzas-plataforma';
 import { v2 as cloudinary } from 'cloudinary';
 import { validarSubida } from '../lib/upload-guard';
@@ -1040,33 +1040,67 @@ router.patch('/reportes/:id', requireAuth, requireSuperadmin, async (req, res) =
 // que sale por sostenerlo. Nada de esto se cruza con el flujo de caja de un
 // club, que es plata de otra persona.
 
-/** El primer dia del mes, N meses atras, en UTC. */
-function mesesAtras(n: number): Date {
-  const hoy = new Date();
-  return new Date(Date.UTC(hoy.getUTCFullYear(), hoy.getUTCMonth() - n + 1, 1));
+/** El primer dia de ese mes, en UTC. */
+function inicioDeMes(d: Date): Date {
+  return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1));
 }
 
+const FECHA = /^\d{4}-\d{2}-\d{2}$/;
+
 /**
- * GET /superadmin/finanzas?meses=6
+ * GET /superadmin/finanzas?rango=mes|6m|anio  ·  o desde=&hasta=
  *
- * Todo ya sumado. Traer los pagos crudos para agregarlos en el navegador
+ * Ninguno de los rangos se sale del ano en curso: al decir «este ano» o «los
+ * ultimos seis meses» nadie se refiere a septiembre del ano pasado. Para mirar
+ * mas atras estan `desde` y `hasta`, que es justo lo que hacen los selectores
+ * de fecha de la pantalla.
+ *
+ * Todo llega ya sumado. Traer los pagos crudos para agregarlos en el navegador
  * funciona con nueve filas y se cae con mil.
  */
 router.get('/finanzas', requireAuth, requireSuperadmin, async (req, res) => {
-  const meses = Math.min(Math.max(Number(req.query.meses) || 6, 1), 36);
-  const desde = mesesAtras(meses);
-  // Hasta el primer dia del mes que viene: asi el mes en curso entra completo.
   const ahora = new Date();
-  const hasta = new Date(Date.UTC(ahora.getUTCFullYear(), ahora.getUTCMonth() + 1, 1));
+  const enero = new Date(Date.UTC(ahora.getUTCFullYear(), 0, 1));
+  const finDeEsteMes = new Date(Date.UTC(ahora.getUTCFullYear(), ahora.getUTCMonth() + 1, 1));
 
-  const [porMes, categorias, clubes, mensual] = await Promise.all([
+  const qDesde = String(req.query.desde ?? '');
+  const qHasta = String(req.query.hasta ?? '');
+  const aMano = FECHA.test(qDesde) && FECHA.test(qHasta);
+
+  const rango = aMano ? 'fechas' : String(req.query.rango ?? '6m');
+
+  let desde: Date, hasta: Date;
+  if (aMano) {
+    desde = inicioDeMes(new Date(`${qDesde}T12:00:00Z`));
+    const h = new Date(`${qHasta}T12:00:00Z`);
+    // Hasta el primer dia del mes siguiente al elegido, para que ese mes entre
+    // completo y no cortado por el dia que se haya escogido.
+    hasta = new Date(Date.UTC(h.getUTCFullYear(), h.getUTCMonth() + 1, 1));
+    if (Number.isNaN(desde.getTime()) || Number.isNaN(hasta.getTime()) || hasta <= desde) {
+      return res.status(400).json({ error: 'Ese rango de fechas no es válido.' });
+    }
+  } else {
+    hasta = finDeEsteMes;
+    if (rango === 'mes') {
+      desde = inicioDeMes(ahora);
+    } else if (rango === 'anio') {
+      desde = enero;
+    } else {
+      // Seis meses contando el actual, pero sin salirse del ano.
+      const seis = new Date(Date.UTC(ahora.getUTCFullYear(), ahora.getUTCMonth() - 5, 1));
+      desde = seis < enero ? enero : seis;
+    }
+  }
+
+  const [porMes, categorias, clubes, mensual, pulso] = await Promise.all([
     mesesDe(desde, hasta),
     gastosPorCategoria(desde, hasta),
     clubesQuePagan(),
     ingresoMensual(),
+    pulsoDelNegocio(),
   ]);
 
-  res.json({ meses: porMes, categorias, clubes, mensual, desde, hasta });
+  res.json({ meses: porMes, categorias, clubes, mensual, pulso, rango, desde, hasta });
 });
 
 const gastoSchema = z.object({

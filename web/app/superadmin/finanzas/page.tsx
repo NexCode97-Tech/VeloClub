@@ -298,7 +298,7 @@ export default function FinanzasSuperadmin() {
             className="inline-flex items-center gap-1.5 text-white text-[12.5px] font-semibold px-3.5 h-9 rounded-xl shrink-0 whitespace-nowrap"
             style={{ background: '#7C3AED' }}>
             <Plus className="w-3.5 h-3.5 shrink-0" />
-            Registrar movimiento
+            Registrar
           </button>
         </div>
 

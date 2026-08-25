@@ -66,11 +66,16 @@ function topeDe(valores: number[]): number {
 }
 
 /**
- * Curva monótona.
+ * Curva monótona, con el límite de Fritsch y Carlson.
  *
  * Un spline corriente se pasa de largo entre dos puntos y dibuja subidas que el
- * dato no tiene. Con plata eso es mentir, así que la pendiente en cada punto se
- * recorta para que la curva nunca sobrepase a sus vecinos.
+ * dato no tiene. Con plata eso es mentir: la línea de gastos llegó a bajar de
+ * cero en meses sin un solo gasto.
+ *
+ * Poner la pendiente en cero cuando cambia el signo no alcanza —así estaba y se
+ * salía cinco píxeles y medio—. También hay que recortar las pendientes cuando
+ * son grandes frente al tramo: si la suma de sus cuadrados pasa de nueve, las
+ * dos se encogen. Con eso la curva no sobrepasa nunca a sus vecinos.
  */
 function curva(pts: [number, number][]): string {
   if (pts.length < 2) return pts.length ? `M${pts[0][0]},${pts[0][1]}` : '';
@@ -81,6 +86,19 @@ function curva(pts: [number, number][]): string {
   m.push(d[0]);
   for (let i = 1; i < n - 1; i++) m.push(d[i - 1] * d[i] <= 0 ? 0 : (d[i - 1] + d[i]) / 2);
   m.push(d[n - 2]);
+
+  for (let i = 0; i < n - 1; i++) {
+    // Tramo plano: los dos extremos quedan planos o la curva se abomba.
+    if (d[i] === 0) { m[i] = 0; m[i + 1] = 0; continue; }
+    const a = m[i] / d[i];
+    const b = m[i + 1] / d[i];
+    const s = a * a + b * b;
+    if (s > 9) {
+      const t = 3 / Math.sqrt(s);
+      m[i] = t * a * d[i];
+      m[i + 1] = t * b * d[i];
+    }
+  }
 
   let p = `M${pts[0][0]},${pts[0][1]}`;
   for (let i = 0; i < n - 1; i++) {
@@ -207,10 +225,7 @@ export function GraficaMeses({ meses }: { meses: MesFinanzas[] }) {
             <line x1={PAD_I} x2={W - PAD_D} y1={y(promedio)} y2={y(promedio)}
               stroke="#6B6383" strokeWidth={1.4} strokeDasharray="5 4" opacity={0.8} />
             <text x={W - PAD_D - 4} y={y(promedio) - 5} textAnchor="end"
-              style={{
-                fontSize: 9.5, fill: '#4A4360', fontWeight: 600,
-                stroke: '#fff', strokeWidth: 3, paintOrder: 'stroke',
-              }}>
+              style={{ fontSize: 9.5, fill: '#4A4360', fontWeight: 600 }}>
               promedio {corto(promedio)}
             </text>
           </g>

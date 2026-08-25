@@ -33,6 +33,14 @@ export interface OpcionDesplegable {
   nota?: string;
   /** Cuántos hay, cuando el desplegable filtra una lista. */
   n?: number;
+  /**
+   * El color con el que esta opción se muestra en el resto de la pantalla.
+   *
+   * No es adorno: si una categoría aparece en una gráfica con su color, el
+   * desplegable donde se elige tiene que enseñar el mismo, o hay que aprenderse
+   * la correspondencia de memoria.
+   */
+  color?: string;
 }
 
 interface Coordenadas {
@@ -223,6 +231,9 @@ export function Desplegable({
                 : resaltada === i ? 'rgba(124,58,237,0.05)' : 'transparent',
             }}
           >
+            {o.color && (
+              <span className="w-2.5 h-2.5 rounded-sm shrink-0" style={{ background: o.color }} />
+            )}
             <span className="truncate">{o.texto}</span>
             {o.nota && (
               <span className="text-[11px] truncate" style={{ color: puesta ? 'rgba(109,40,217,0.7)' : '#8E87A8' }}>
@@ -271,6 +282,9 @@ export function Desplegable({
         {compacto ? icono : (
           <>
             {icono}
+            {elegida?.color && (
+              <span className="w-2.5 h-2.5 rounded-sm shrink-0" style={{ background: elegida.color }} />
+            )}
             <span className="flex-1 truncate">{elegida?.texto ?? vacio}</span>
             <ChevronDown
               className="w-3.5 h-3.5 shrink-0 transition-transform"

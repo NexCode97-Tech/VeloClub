@@ -114,6 +114,25 @@ export function MonthPicker({
     setOpen(false);
   }
 
+  /**
+   * El año entero, de un toque.
+   *
+   * Del año en curso no se ofrecen los meses que todavía no pasaron: dejarían
+   * media gráfica en blanco fingiendo que hubo meses sin movimiento.
+   */
+  function elegirAnio() {
+    const ahora = new Date();
+    const esEsteAnio = viewYear === ahora.getFullYear();
+    const ultimo = esEsteAnio ? ahora.getMonth() : 11;
+    onChange(`${viewYear}-01`, {
+      start: new Date(viewYear, 0, 1),
+      end: new Date(viewYear, ultimo + 1, 0),
+    });
+    setMesInicio(null);
+    setMesEncima(null);
+    setOpen(false);
+  }
+
   function handleSelectMonth(monthKey: string) {
     if (modo === 'meses') return elegirMesEnRango(monthKey);
 
@@ -234,7 +253,17 @@ export function MonthPicker({
                 >
                   <ChevronLeft className="w-4 h-4" />
                 </button>
-                <span className="text-[13px] font-semibold text-foreground">{viewYear}</span>
+                {modo === 'meses' ? (
+                  <button
+                    onClick={elegirAnio}
+                    title={`Ver todo ${viewYear}`}
+                    className="text-[13px] font-semibold text-foreground px-2.5 py-1 rounded-lg cursor-pointer transition-colors hover:bg-primary/10 hover:text-primary"
+                  >
+                    {viewYear}
+                  </button>
+                ) : (
+                  <span className="text-[13px] font-semibold text-foreground">{viewYear}</span>
+                )}
                 <button
                   onClick={() => setViewYear(y => y + 1)}
                   disabled={viewYear >= new Date().getFullYear()}
@@ -283,7 +312,7 @@ export function MonthPicker({
                 <p className="mt-3 mb-0 text-[11px] text-muted-foreground text-center leading-snug">
                   {mesInicio
                     ? 'Elegí el mes final, o tocá el mismo para ver solo ese'
-                    : 'Un mes, o dos para ver el rango entre ellos'}
+                    : 'Un mes, dos para el rango entre ellos, o el año para verlo entero'}
                 </p>
               ) : value !== null && (
                 <button

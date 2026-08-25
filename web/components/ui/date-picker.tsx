@@ -49,6 +49,11 @@ interface DatePickerProps {
   /** Pinta el borde de error, como el resto de los campos del proyecto. */
   error?: boolean;
   /**
+   * Si se puede dejar vacío. En un campo obligatorio la X no va: al tocarla, la
+   * pantalla vuelve a poner un valor por defecto y parece que no hizo nada.
+   */
+  limpiable?: boolean;
+  /**
    * El ámbar de «esto lo trajimos vacío y falta llenarlo», el mismo que usa
    * `entrada()` en los formularios de miembros e inscripción.
    */
@@ -68,6 +73,7 @@ export function DatePicker({
   compacto = false,
   error = false,
   falta = false,
+  limpiable = true,
 }: DatePickerProps) {
   const parsed   = value ? new Date(value + 'T00:00:00') : null;
   const [open, setOpen]         = useState(false);
@@ -185,7 +191,7 @@ export function DatePicker({
         <span className={`flex-1 ${compacto ? 'text-[13px]' : 'text-sm'} ${parsed ? 'text-foreground' : 'text-muted-foreground'}`}>
           {label}
         </span>
-        {parsed && (
+        {parsed && limpiable && (
           <button
             type="button"
             onClick={handleClear}

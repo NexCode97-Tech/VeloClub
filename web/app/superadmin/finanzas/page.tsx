@@ -22,15 +22,7 @@ import { GraficaMeses, Ranking, ENTRA, SALE, type MesFinanzas } from '@/componen
  * sistema pueda leer.
  */
 
-const CATEGORIAS = [
-  { valor: 'INFRAESTRUCTURA', texto: 'Infraestructura', nota: 'Servidores, base de datos, imágenes' },
-  { valor: 'COMISIONES',      texto: 'Comisiones',      nota: 'Lo que cobra la pasarela de pagos' },
-  { valor: 'PUBLICIDAD',      texto: 'Publicidad',      nota: 'Pauta y promoción' },
-  { valor: 'HERRAMIENTAS',    texto: 'Herramientas',    nota: 'Programas y servicios de trabajo' },
-  { valor: 'OTROS',           texto: 'Otros' },
-];
-
-/** El color de cada categoría, en el orden fijo de arriba. Nunca se ciclan. */
+/** El color de cada categoría, en un orden fijo. Nunca se ciclan. */
 const COLOR_CATEGORIA: Record<string, string> = {
   INFRAESTRUCTURA: '#7C3AED',
   COMISIONES:      '#DC2626',
@@ -38,6 +30,19 @@ const COLOR_CATEGORIA: Record<string, string> = {
   HERRAMIENTAS:    '#0E7C57',
   OTROS:           '#A33A4E',
 };
+
+/**
+ * Cada categoría lleva su color al desplegable: es el mismo con el que sale en
+ * el ranking «En qué se va» y en la pastilla de la tabla. Sin eso hay que
+ * aprenderse la correspondencia de memoria.
+ */
+const CATEGORIAS = [
+  { valor: 'INFRAESTRUCTURA', texto: 'Infraestructura', nota: 'Servidores, base de datos, imágenes' },
+  { valor: 'COMISIONES',      texto: 'Comisiones',      nota: 'Lo que cobra la pasarela de pagos' },
+  { valor: 'PUBLICIDAD',      texto: 'Publicidad',      nota: 'Pauta y promoción' },
+  { valor: 'HERRAMIENTAS',    texto: 'Herramientas',    nota: 'Programas y servicios de trabajo' },
+  { valor: 'OTROS',           texto: 'Otros' },
+].map(c => ({ ...c, color: COLOR_CATEGORIA[c.valor] }));
 
 /**
  * Con qué se abre la pantalla, mientras nadie toque el selector: los últimos
@@ -147,7 +152,11 @@ export default function FinanzasSuperadmin() {
   const saldo = periodo.entra - periodo.sale;
 
   const gastosDelPeriodo = useMemo(() => {
-    const dentro = new Set((datos?.meses ?? []).map(m => m.mes));
+    // Los tramos vienen por mes o por día según el rango, así que se recortan a
+    // `aaaa-mm` para comparar. Sin esto, al ver un mes en días la clave era
+    // `2026-08-14` contra `2026-08` y la tarjeta decía «0 gastos registrados»
+    // con la cifra de gastos al lado.
+    const dentro = new Set((datos?.meses ?? []).map(m => m.mes.slice(0, 7)));
     return gastos.filter(g => dentro.has(g.fecha.slice(0, 7))).length;
   }, [gastos, datos]);
 
@@ -422,6 +431,8 @@ export default function FinanzasSuperadmin() {
               value={nuevo.fecha}
               onChange={v => setNuevo(n => ({ ...n, fecha: v || hoyISO() }))}
               maxDate={new Date()}
+              compacto
+              limpiable={false}
             />
           </Campo>
           <Campo etiqueta="Monto">

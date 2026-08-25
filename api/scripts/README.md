@@ -28,7 +28,6 @@ railway run --service VeloClub -- npx tsx scripts/<script>.ts
 | `suscripciones-fantasma.mjs` | ¿Qué clubes tienen suscripción sin haber pagado nunca? |
 | `estado-trials.mjs` | ¿A quién se le vence la prueba? |
 | `revisar-club-trial-y-plan.ts` | ¿En qué va el plan de un club? |
-| `breb-saldos-campana.ts` | **Escribe.** Anota los saldos que los cuatro clubes de la campaña pagaron por Bre-B, cuando el checkout todavía cobraba por tramos. Se borra cuando cumpla. |
 
 Los rechazos de pago ya no necesitan script: quedan en la bitácora y se ven en
 el panel de superadmin. `pagos-mercadopago.ts` es la segunda opinión, para el

@@ -299,13 +299,21 @@ export default function FinanzasSuperadmin() {
                   llegaron a pagar. Cada etapa lleva su cifra y su porcentaje
                   escritos, así que el color nunca es el único indicio. */}
               <div className="grid gap-2.5 grid-cols-1 sm:grid-cols-3">
+                {/* Los tres colores son los que ya usa el superadmin en su
+                    pantalla de inicio: el amarillo de «Total clubes» y el verde
+                    de «Total recaudado». Y de paso arman una progresión que se
+                    lee sola: amarillo lo que apenas llegó, ámbar lo que está en
+                    camino, verde lo que ya cerró.
+
+                    Los dos son claros y sobre blanco tienen poco contraste, así
+                    que la cifra y el porcentaje van escritos al lado: el color
+                    acompaña la lectura, nunca la sostiene solo. */}
                 <Etapa
                   icono={<Building2 className="w-3.5 h-3.5 shrink-0" />}
                   titulo="Se registraron"
                   n={datos.pulso.clubesTotal}
                   pct={100}
-                  color="#7C3AED"
-                  tenue
+                  color="#FFB703"
                   glosa="Clubes creados desde el primer día"
                 />
                 <Etapa
@@ -322,7 +330,7 @@ export default function FinanzasSuperadmin() {
                   titulo="Ya pagan"
                   n={datos.pulso.clubesQuePagan}
                   pct={porcentaje(datos.pulso.clubesQuePagan, datos.pulso.clubesTotal)}
-                  color="#7C3AED"
+                  color="#06D6A0"
                   glosa="Con al menos un pago acreditado"
                   destacado
                   demora={160}
@@ -544,15 +552,13 @@ function porcentaje(parte: number, total: number): number {
  * El riel es la proporción y la cifra es el dato: van juntos a propósito, para
  * que quien no distinga los colores igual lea la etapa completa.
  */
-function Etapa({ icono, titulo, n, pct, color, glosa, tenue, destacado, demora = 0 }: {
+function Etapa({ icono, titulo, n, pct, color, glosa, destacado, demora = 0 }: {
   icono: React.ReactNode;
   titulo: string;
   n: number;
   pct: number;
   color: string;
   glosa: string;
-  /** La primera etapa es el total: su riel va apagado, no compite. */
-  tenue?: boolean;
   /** La última lleva el porcentaje en pastilla: es la pregunta del bloque. */
   destacado?: boolean;
   demora?: number;
@@ -571,14 +577,14 @@ function Etapa({ icono, titulo, n, pct, color, glosa, tenue, destacado, demora =
           </span>
         ) : (
           <span className="text-[11.5px] font-semibold tabular-nums"
-            style={{ color: tenue ? '#8E87A8' : color }}>
+            style={{ color: pct === 100 ? '#8E87A8' : color }}>
             {pct}%
           </span>
         )}
       </span>
       <span className="h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(26,16,40,0.05)' }}>
         <i className="vc-franja block h-full rounded-full"
-          style={{ width: `${pct}%`, background: color, opacity: tenue ? 0.35 : 1, animationDelay: `${demora}ms` }} />
+          style={{ width: `${pct}%`, background: color, animationDelay: `${demora}ms` }} />
       </span>
       <span className="text-[11px] text-muted-foreground leading-snug">{glosa}</span>
     </div>

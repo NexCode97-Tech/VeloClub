@@ -150,11 +150,12 @@ export function GraficaMeses({ meses }: { meses: MesFinanzas[] }) {
 
   return (
     <div ref={caja} className="relative">
+      {/* La descripción va en aria-label y no en <title>: el <title> de un SVG
+          el navegador lo pinta encima como su propio tooltip, con su marco
+          gris, tapando la gráfica. El lector de pantalla lee las dos igual. */}
       <svg viewBox={`0 0 ${W} ${H}`} className="block w-full overflow-visible"
-        role="img" aria-labelledby={`t${id}`}>
-        <title id={`t${id}`}>
-          Lo que entra y lo que sale, de {tituloDe(meses[0].mes)} a {tituloDe(meses[meses.length - 1].mes)}
-        </title>
+        role="img"
+        aria-label={`Lo que entra y lo que sale, de ${tituloDe(meses[0].mes)} a ${tituloDe(meses[meses.length - 1].mes)}`}>
 
         <defs>
           {/* La rejilla se ve por dentro del relleno y lo cruza. Esta máscara la
@@ -288,16 +289,22 @@ export function GraficaMeses({ meses }: { meses: MesFinanzas[] }) {
         />
       </svg>
 
+      {/* El globo se apoya en el punto más alto del tramo, centrado y siempre a
+          la misma distancia. Arriba y nunca debajo —abajo hay que buscarlo con
+          la vista y tapa la línea que se está leyendo— y sin tope: en el pico
+          más alto se sale de la tarjeta, y así debe ser. Uno que a veces se
+          apoya en el punto y a veces salta a otro sitio se lee como un error.
+
+          El centrado es `translate(-50%, -100%)` y no una resta del ancho: así
+          no hay que medir el globo ni acertarle de memoria. */}
       {m && (
         <div
-          className="absolute pointer-events-none rounded-[10px] px-2.5 py-2 text-[11.5px] leading-relaxed whitespace-nowrap z-10"
+          className="absolute pointer-events-none rounded-[10px] px-2.5 py-2 text-[11.5px] leading-relaxed whitespace-nowrap z-20"
           style={{
             background: '#1A1028', color: '#fff',
-            top: Math.max(0, (y(Math.max(m.entra, m.sale)) / H) * (caja.current?.clientHeight ?? H) - 74),
-            left: Math.min(
-              Math.max((x(encima!) / W) * (caja.current?.clientWidth ?? W) - 70, 0),
-              Math.max(0, (caja.current?.clientWidth ?? 200) - 172),
-            ),
+            left: `${(x(encima!) / W) * 100}%`,
+            top: `${(y(Math.max(m.entra, m.sale)) / H) * 100}%`,
+            transform: 'translate(-50%, calc(-100% - 12px))',
             boxShadow: '0 8px 22px -8px rgba(26,16,40,0.55)',
           }}
         >

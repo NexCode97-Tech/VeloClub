@@ -157,10 +157,15 @@
      hasta dónde llega. Quien pidió menos movimiento las ve ya puestas. */
   .vc-barra { transform-origin: bottom; transform: scaleY(0); animation: vcCrecer .7s cubic-bezier(.23,1,.32,1) forwards; }
   .vc-franja { transform-origin: left; transform: scaleX(0); animation: vcEstirar .7s cubic-bezier(.23,1,.32,1) forwards; }
+  /* La línea se dibuja de izquierda a derecha, que es el sentido en que se lee
+     el tiempo. El guion largo cubre cualquier trazo sin tener que medirlo. */
+  .vc-linea { stroke-dasharray: 3000; stroke-dashoffset: 3000; animation: vcTrazar 1s cubic-bezier(.22,1,.36,1) forwards; }
   @keyframes vcCrecer  { to { transform: scaleY(1); } }
   @keyframes vcEstirar { to { transform: scaleX(1); } }
+  @keyframes vcTrazar  { to { stroke-dashoffset: 0; } }
   @media (prefers-reduced-motion: reduce) {
     .vc-barra, .vc-franja { animation: none; transform: none; }
+    .vc-linea { animation: none; stroke-dasharray: none; stroke-dashoffset: 0; }
   }
 
   /* Oculta la barra de scroll horizontal (ej. tab bars con overflow-x-auto) */

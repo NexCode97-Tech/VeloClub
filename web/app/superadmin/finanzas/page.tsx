@@ -2,9 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useAuth } from '@clerk/nextjs';
-import { Plus, Trash2, Zap } from 'lucide-react';
+import { Building2, Clock, CreditCard, DollarSign, Plus, TrendingUp, Trash2, Zap } from 'lucide-react';
 import { apiFetch } from '@/lib/api-client';
-import { AccionesCabecera } from '@/components/superadmin/acciones-cabecera';
 import { Desplegable } from '@/components/ui/desplegable';
 import { DatePicker } from '@/components/ui/date-picker';
 import { HojaInferior } from '@/components/ui/hoja-inferior';
@@ -34,7 +33,7 @@ const CATEGORIAS = [
 /** El color de cada categoría, en el orden fijo de arriba. Nunca se ciclan. */
 const COLOR_CATEGORIA: Record<string, string> = {
   INFRAESTRUCTURA: '#7C3AED',
-  COMISIONES:      '#C2410C',
+  COMISIONES:      '#DC2626',
   PUBLICIDAD:      '#0369A1',
   HERRAMIENTAS:    '#0E7C57',
   OTROS:           '#A33A4E',
@@ -189,17 +188,6 @@ export default function FinanzasSuperadmin() {
 
   return (
     <div style={{ background: '#F7F7FB', minHeight: '100%' }}>
-      <AccionesCabecera>
-        {/* Siempre dice lo mismo. Un boton que cambia a «Cancelar» obliga a
-            leerlo antes de tocarlo; el modal ya tiene su propio cancelar. */}
-        <button type="button" onClick={() => { setErrorModal(null); setAbierto(true); }}
-          className="inline-flex items-center gap-1.5 text-white text-[12px] font-semibold px-3 py-2 rounded-xl shrink-0"
-          style={{ background: '#7C3AED' }}>
-          <Plus className="w-3.5 h-3.5" />
-          Registrar gasto
-        </button>
-      </AccionesCabecera>
-
       <div className="px-4 pt-4 pb-24 flex flex-col gap-3 max-w-5xl mx-auto">
 
         {error && (
@@ -209,11 +197,11 @@ export default function FinanzasSuperadmin() {
           </p>
         )}
 
-        {/* Un solo control para el periodo. Antes convivía con tres botones de
-            preajuste, y dos filtros peleando por lo mismo obligan a mirar los
-            dos para saber qué se está viendo. El selector ya hace todo: un mes,
-            o el rango entre dos. */}
-        <div className="flex items-center justify-end">
+        {/* Los dos únicos controles de la pantalla, juntos. El periodo hace
+            todo por sí solo —un mes, o el rango entre dos—, así que no hay un
+            segundo filtro con el que pelear; y el botón vive acá y no en la
+            cabecera, para que la acción quede al lado de lo que filtra. */}
+        <div className="flex items-center justify-end gap-2">
           <MonthPicker
             value={mesElegido}
             currentMonth={new Date().toISOString().slice(0, 7)}
@@ -222,6 +210,14 @@ export default function FinanzasSuperadmin() {
             modo="meses"
             alignRight
           />
+          {/* Siempre dice lo mismo. Un botón que cambia a «Cancelar» obliga a
+              leerlo antes de tocarlo; el modal ya tiene su propio cancelar. */}
+          <button type="button" onClick={() => { setErrorModal(null); setAbierto(true); }}
+            className="inline-flex items-center gap-1.5 text-white text-[12.5px] font-semibold px-3.5 h-9 rounded-xl shrink-0 whitespace-nowrap"
+            style={{ background: '#7C3AED' }}>
+            <Plus className="w-3.5 h-3.5 shrink-0" />
+            Registrar gasto
+          </button>
         </div>
 
         {cargando ? (
@@ -273,12 +269,54 @@ export default function FinanzasSuperadmin() {
                 filtro, porque son preguntas sobre el negocio entero. */}
             <Tarjeta>
               <h2 className="text-[15px] font-semibold text-foreground m-0">El pulso del negocio</h2>
-              <div className="grid gap-x-5 gap-y-3 mt-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-6">
-                <Dato n={datos.pulso.clubesNuevosPorMes.toLocaleString('es-CO')} q="Clubes nuevos por mes" />
-                <Dato n={pesos(datos.mensual.monto)} q="Ingreso recurrente" />
-                <Dato n={`${datos.pulso.clubesQuePagan} de ${datos.pulso.clubesTotal}`} q="Clubes que pagan" />
-                <Dato n={String(datos.pulso.enPrueba)} q="En periodo de prueba" />
+              <p className="text-[11.5px] text-muted-foreground m-0 mb-3">Del registro al primer pago</p>
+
+              {/* El embudo. Seis números planos escondían lo único que de
+                  verdad cuenta: de los clubes que se registraron, cuántos
+                  llegaron a pagar. Cada etapa lleva su cifra y su porcentaje
+                  escritos, así que el color nunca es el único indicio. */}
+              <div className="grid gap-2.5 grid-cols-1 sm:grid-cols-3">
+                <Etapa
+                  icono={<Building2 className="w-3.5 h-3.5 shrink-0" />}
+                  titulo="Se registraron"
+                  n={datos.pulso.clubesTotal}
+                  pct={100}
+                  color="#7C3AED"
+                  tenue
+                  glosa="Clubes creados desde el primer día"
+                />
+                <Etapa
+                  icono={<Clock className="w-3.5 h-3.5 shrink-0" />}
+                  titulo="Están probando"
+                  n={datos.pulso.enPrueba}
+                  pct={porcentaje(datos.pulso.enPrueba, datos.pulso.clubesTotal)}
+                  color="#B45309"
+                  glosa="Todavía dentro del periodo gratis"
+                  demora={80}
+                />
+                <Etapa
+                  icono={<CreditCard className="w-3.5 h-3.5 shrink-0" />}
+                  titulo="Ya pagan"
+                  n={datos.pulso.clubesQuePagan}
+                  pct={porcentaje(datos.pulso.clubesQuePagan, datos.pulso.clubesTotal)}
+                  color="#7C3AED"
+                  glosa="Con al menos un pago acreditado"
+                  destacado
+                  demora={160}
+                />
+              </div>
+
+              <div className="h-px bg-border my-4" />
+
+              {/* Una sola malla y no dos bloques sueltos: así las cuatro cifras
+                  caen en la misma línea base y se comparan de un barrido. */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-y-2.5">
+                <TituloGrupo icono={<DollarSign className="w-3.5 h-3.5 shrink-0" />}>Lo que deja</TituloGrupo>
+                <TituloGrupo icono={<TrendingUp className="w-3.5 h-3.5 shrink-0" />} segundo>Cómo crece</TituloGrupo>
+
+                <Dato n={pesos(datos.mensual.monto)} u="al mes" q="Ingreso recurrente" primero />
                 <Dato n={pesos(datos.pulso.promedioPorClub)} q="Promedio por club" />
+                <Dato n={datos.pulso.clubesNuevosPorMes.toLocaleString('es-CO')} u="al mes" q="Clubes nuevos" abreGrupo />
                 <Dato n={datos.pulso.deportistas.toLocaleString('es-CO')} q="Deportistas" />
               </div>
             </Tarjeta>
@@ -453,11 +491,13 @@ function Cifra({ rotulo, valor, nota, color, pastilla }: {
       <b className="text-[24px] font-bold tracking-tight tabular-nums leading-tight mt-0.5" style={{ color }}>
         {valor}
       </b>
+      {/* Verde vivo, pero el vivo va en el fondo: puesto en el texto da 3,04
+          de contraste y en una pastilla de 11px no se lee. */}
       {pastilla && (
         <span className="text-[11px] font-bold rounded-full px-2 py-0.5 mt-1 self-start"
           style={pastilla.bien
-            ? { background: 'rgba(14,124,87,0.1)', color: ENTRA }
-            : { background: 'rgba(194,65,12,0.1)', color: SALE }}>
+            ? { background: '#EAFBF0', color: '#15803D' }
+            : { background: 'rgba(220,38,38,0.1)', color: SALE }}>
           {pastilla.texto}
         </span>
       )}
@@ -466,12 +506,95 @@ function Cifra({ rotulo, valor, nota, color, pastilla }: {
   );
 }
 
-/** Un número del pulso: la cifra grande y qué mide, debajo. */
-function Dato({ n, q }: { n: string; q: string }) {
+/** Cuánto de `total` es `parte`, redondeado. Sin total no hay porcentaje. */
+function porcentaje(parte: number, total: number): number {
+  return total > 0 ? Math.round((parte / total) * 100) : 0;
+}
+
+/**
+ * Una etapa del embudo.
+ *
+ * El riel es la proporción y la cifra es el dato: van juntos a propósito, para
+ * que quien no distinga los colores igual lea la etapa completa.
+ */
+function Etapa({ icono, titulo, n, pct, color, glosa, tenue, destacado, demora = 0 }: {
+  icono: React.ReactNode;
+  titulo: string;
+  n: number;
+  pct: number;
+  color: string;
+  glosa: string;
+  /** La primera etapa es el total: su riel va apagado, no compite. */
+  tenue?: boolean;
+  /** La última lleva el porcentaje en pastilla: es la pregunta del bloque. */
+  destacado?: boolean;
+  demora?: number;
+}) {
   return (
-    <span className="flex flex-col">
-      <b className="text-[17px] font-bold tracking-tight tabular-nums leading-tight">{n}</b>
-      <span className="text-[11.5px] text-muted-foreground">{q}</span>
+    <div className="rounded-xl border border-border p-3 flex flex-col gap-2 transition-colors hover:border-primary/30 hover:bg-primary/[0.03]">
+      <span className="flex items-center gap-1.5 text-[11.5px] font-medium text-muted-foreground">
+        {icono}{titulo}
+      </span>
+      <span className="flex items-baseline gap-2">
+        <b className="text-[25px] font-bold tracking-tighter tabular-nums leading-none">{n}</b>
+        {destacado ? (
+          <span className="text-[11.5px] font-semibold tabular-nums rounded-full px-2 py-0.5"
+            style={{ background: '#EAFBF0', color: '#15803D' }}>
+            {pct}%
+          </span>
+        ) : (
+          <span className="text-[11.5px] font-semibold tabular-nums"
+            style={{ color: tenue ? '#8E87A8' : color }}>
+            {pct}%
+          </span>
+        )}
+      </span>
+      <span className="h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(26,16,40,0.05)' }}>
+        <i className="vc-franja block h-full rounded-full"
+          style={{ width: `${pct}%`, background: color, opacity: tenue ? 0.35 : 1, animationDelay: `${demora}ms` }} />
+      </span>
+      <span className="text-[11px] text-muted-foreground leading-snug">{glosa}</span>
+    </div>
+  );
+}
+
+/** El rótulo de un grupo de cifras. Abarca sus dos columnas. */
+function TituloGrupo({ icono, children, segundo }: {
+  icono: React.ReactNode;
+  children: React.ReactNode;
+  segundo?: boolean;
+}) {
+  return (
+    <span className={`col-span-2 flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground ${
+      segundo ? 'mt-3 md:mt-0 md:pl-3.5' : ''
+    }`}>
+      {icono}{children}
+    </span>
+  );
+}
+
+/**
+ * Un número del pulso: la cifra grande, su unidad y qué mide.
+ *
+ * La unidad no es decoración: «4,8» solo no significa nada, «4,8 al mes» sí.
+ */
+function Dato({ n, q, u, primero, abreGrupo }: {
+  n: string;
+  q: string;
+  u?: string;
+  /** Sin línea ni sangría a la izquierda: es el borde de la tarjeta. */
+  primero?: boolean;
+  /** Abre el segundo grupo, así que su línea va más marcada. */
+  abreGrupo?: boolean;
+}) {
+  return (
+    <span className={`flex flex-col gap-0.5 min-w-0 ${primero ? '' : 'pl-3.5 border-l'} ${
+      abreGrupo ? 'max-md:pl-0 max-md:border-l-0 md:border-primary/20' : 'max-md:odd:pl-0 max-md:odd:border-l-0 border-border'
+    }`}>
+      <b className="text-[19px] font-bold tracking-tight tabular-nums leading-tight">
+        {n}{u && <span className="text-[12px] font-medium text-muted-foreground ml-1 tracking-normal">{u}</span>}
+      </b>
+      <span className="text-[11.5px] text-muted-foreground leading-snug">{q}</span>
     </span>
   );
 }

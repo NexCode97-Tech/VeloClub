@@ -160,6 +160,12 @@ export default function FinanzasSuperadmin() {
   );
   const saldo = periodo.entra - periodo.sale;
 
+  /** Cuántos meses distintos abarca lo que se está viendo. Nunca cero. */
+  const mesesDelPeriodo = useMemo(() => {
+    const meses = new Set((datos?.meses ?? []).map(m => m.mes.slice(0, 7)));
+    return Math.max(1, meses.size);
+  }, [datos]);
+
   const gastosDelPeriodo = useMemo(() => {
     // Los tramos vienen por mes o por día según el rango, así que se recortan a
     // `aaaa-mm` para comparar. Sin esto, al ver un mes en días la clave era
@@ -248,11 +254,11 @@ export default function FinanzasSuperadmin() {
                 titular es responder «cuánto» de un vistazo, y dibujarle una
                 gráfica a un solo dato le quita velocidad sin agregar nada. */}
             <div className="grid gap-2 grid-cols-2 lg:grid-cols-4">
-              <Cifra rotulo="Ingresos" valor={pesos(periodo.entra)} color={ENTRA}
+              <Cifra rotulo="Ingresos" valor={pesos(periodo.entra)} color={ENTRA} sinPunto
                 nota={datos.granularidad === 'dia'
                   ? `${datos.pulso.clubesQuePagan} clubes, 1 mes`
                   : `${datos.pulso.clubesQuePagan} clubes, ${datos.meses.length} meses`} />
-              <Cifra rotulo="Gastos" valor={pesos(periodo.sale)} color={SALE}
+              <Cifra rotulo="Gastos" valor={pesos(periodo.sale)} color={SALE} sinPunto
                 nota={`${gastosDelPeriodo} ${gastosDelPeriodo === 1 ? 'gasto registrado' : 'gastos registrados'}`} />
               <Cifra rotulo="Saldo del periodo"
                 valor={`${saldo < 0 ? '-' : ''}${pesos(Math.abs(saldo))}`}
@@ -260,9 +266,11 @@ export default function FinanzasSuperadmin() {
                   ? { texto: `${Math.round((saldo / periodo.entra) * 100)}% de margen`, bien: saldo >= 0 }
                   : undefined}
                 nota={periodo.entra > 0 ? undefined : 'sin ingresos en el periodo'} />
-              <Cifra rotulo="Total acumulado"
-                valor={`${datos.pulso.totalAcumulado < 0 ? '-' : ''}${pesos(Math.abs(datos.pulso.totalAcumulado))}`}
-                nota="toda la historia, sin importar el filtro" />
+              {/* Los meses del periodo, no los tramos: al ver un mes en días
+                  los tramos son 31 y el promedio mensual sería el de un día. */}
+              <Cifra rotulo="Promedio mensual"
+                valor={pesos(periodo.entra / mesesDelPeriodo)}
+                nota={mesesDelPeriodo === 1 ? 'de ingresos en el mes' : `de ingresos, en ${mesesDelPeriodo} meses`} />
             </div>
 
             <Tarjeta>
@@ -492,17 +500,19 @@ function Tarjeta({ children, sinAire }: { children: React.ReactNode; sinAire?: b
  * `uppercase` en ningún rótulo, y era justo lo que hacía ver estas tarjetas
  * como una plantilla ajena.
  */
-function Cifra({ rotulo, valor, nota, color, pastilla }: {
+function Cifra({ rotulo, valor, nota, color, pastilla, sinPunto }: {
   rotulo: string;
   valor: string;
   nota?: string;
   color?: string;
   pastilla?: { texto: string; bien: boolean };
+  /** El punto sobra cuando la cifra ya va en el color de su serie. */
+  sinPunto?: boolean;
 }) {
   return (
     <div className="bg-white rounded-2xl border border-border p-3.5 flex flex-col">
       <span className="text-[12px] font-medium text-muted-foreground flex items-center gap-1.5">
-        {color && <span className="w-2 h-2 rounded-sm shrink-0" style={{ background: color }} />}
+        {color && !sinPunto && <span className="w-2 h-2 rounded-sm shrink-0" style={{ background: color }} />}
         {rotulo}
       </span>
       <b className="text-[24px] font-bold tracking-tight tabular-nums leading-tight mt-0.5" style={{ color }}>

@@ -260,6 +260,43 @@ export async function clubesQuePagan(): Promise<ClubQuePaga[]> {
   return filas.map(f => ({ ...f, total: Number(f.total) }));
 }
 
+/** Cuántos meses cubre cada plan. */
+const MESES_DEL_PLAN = { MENSUAL: 1, TRIMESTRAL: 3, ANUAL: 12 } as const;
+
+/**
+ * Cuánto aporta al mes un club, por lo que pagó la última vez. Cero si su
+ * período ya se venció.
+ *
+ * Se suman los pagos **del mismo día**, no solo el último. Un club puede cerrar
+ * su período con dos movimientos —el cobro con tarjeta y el saldo por Bre-B— y
+ * quedarse con el último dejaría el ciclo contado por 27.000 en vez de por
+ * 180.000.
+ */
+export function aporteMensual(
+  pagos: { monto: number; createdAt: Date }[],
+  tipoPlan: string,
+  ahora: Date = new Date(),
+): number {
+  const meses = MESES_DEL_PLAN[tipoPlan as keyof typeof MESES_DEL_PLAN] ?? 1;
+
+  // El más reciente primero, sin depender de cómo vengan ordenados.
+  const ordenados = [...pagos].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  const ultimo = ordenados[0];
+  if (!ultimo) return 0;
+
+  // Un club que dejó de pagar hace medio año no es ingreso recurrente por más
+  // que siga en la lista.
+  const diasDesde = Math.floor((ahora.getTime() - ultimo.createdAt.getTime()) / 86_400_000);
+  if (diasDesde >= meses * 30) return 0;
+
+  const mismoDia = ultimo.createdAt.toISOString().slice(0, 10);
+  const delCiclo = ordenados
+    .filter(p => p.createdAt.toISOString().slice(0, 10) === mismoDia)
+    .reduce((t, p) => t + p.monto, 0);
+
+  return delCiclo / meses;
+}
+
 /**
  * El ingreso mensual, normalizado.
  *
@@ -268,8 +305,14 @@ export async function clubesQuePagan(): Promise<ClubQuePaga[]> {
  * eso sí se puede sumar: es lo que factura VeloClub en un mes cualquiera con
  * los clubes que hoy están al día.
  *
- * Solo cuentan los clubes activos que ya pagaron alguna vez: uno en periodo de
- * prueba todavía no es ingreso.
+ * Se calcula con **lo que cada club pagó de verdad**, no con `planMonto`. Ese
+ * campo guarda cosas distintas según quién lo escribió: en los clubes que se
+ * registran solos es la tarifa de un mes, y en los que alguien configuró desde
+ * el panel es el total del período. Dividirlo por los meses del plan, que es lo
+ * que se hacía, contaba 20.000 mensuales donde eran 60.000.
+ *
+ * Solo cuentan los clubes activos con un período todavía corriendo: uno en
+ * prueba no es ingreso, y uno que dejó de pagar hace medio año tampoco.
  */
 export async function ingresoMensual(): Promise<{ monto: number; clubes: number }> {
   const suscripciones = await prisma.clubSuscripcion.findMany({
@@ -277,16 +320,23 @@ export async function ingresoMensual(): Promise<{ monto: number; clubes: number 
       club: { active: true },
       pagos: { some: { estado: 'PAID' } },
     },
-    select: { tipoPlan: true, planMonto: true },
+    select: {
+      tipoPlan: true,
+      pagos: { where: { estado: 'PAID' }, select: { monto: true, createdAt: true }, orderBy: { createdAt: 'desc' } },
+    },
   });
 
-  const alMes = { MENSUAL: 1, TRIMESTRAL: 3, ANUAL: 12 } as const;
-  const monto = suscripciones.reduce((suma, s) => {
-    const meses = alMes[s.tipoPlan as keyof typeof alMes] ?? 1;
-    return suma + (s.planMonto ?? 0) / meses;
-  }, 0);
+  let monto = 0;
+  let vigentes = 0;
 
-  return { monto: Math.round(monto), clubes: suscripciones.length };
+  for (const s of suscripciones) {
+    const aporte = aporteMensual(s.pagos, s.tipoPlan);
+    if (aporte === 0) continue;
+    monto += aporte;
+    vigentes++;
+  }
+
+  return { monto: Math.round(monto), clubes: vigentes };
 }
 
 export interface PulsoDelNegocio {

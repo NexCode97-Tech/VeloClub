@@ -932,3 +932,72 @@ comprobar que dos pestañas se sincronizan solas.
 - Corregido error de sintaxis en perfil/page.tsx que rompía el build
 
 **Pendiente:** Plan 3 (Asistencia) · trial 15 días (plan) · lightbox tab Fotos en Mi Perfil
+
+## Sesión 2026-08-25 — Finanzas del negocio
+
+Se construyó el módulo de Finanzas del superadmin y, de paso, se descubrió que
+las cifras del negocio venían mintiendo por tres motivos distintos.
+
+### El módulo
+- **La gráfica pasó de barras a línea** (`dac84c2`). Con un mes en días, treinta
+  y una barras eran una empalizada. La curva es **monótona con el límite de
+  Fritsch y Carlson**: un spline corriente se pasaba de largo y la línea de
+  gastos llegaba a bajar de cero en meses sin un solo gasto — medido, 5,54px
+  (`8d6a5df`).
+- **El grano lo decide el rango**: un mes solo se dibuja día a día, de dos meses
+  en adelante manda el mes. Al agrupar, el día se corta en hora de Colombia y no
+  en UTC (`d1d7877`).
+- **Un solo control de periodo.** Se fueron los botones Mes / 6 meses / Año; el
+  selector de Analíticas aprendió un modo de meses y el año se oprime para verlo
+  entero. Abre en el año en curso, y el botón dice «2026» a secas (`78eb970`).
+- **El pulso es un embudo** de tres etapas con porcentaje —registrados,
+  probando, pagando—, con los colores que el superadmin ya usaba en su inicio
+  (`dac84c2`, `2f3665c`).
+- **La comisión de Mercado Pago se anota sola**: un barrido cada 20 minutos le
+  pregunta a la pasarela por los pagos acreditados y registra lo que se quedó,
+  con `origen` único para no duplicar. No se engancha en las rutas de cobro
+  porque al aprobarse el pago `fee_details` todavía viene vacío (`18ac6e6`).
+- **Se registran ingresos, no solo gastos** (`73fe33f`). Viven en su propia
+  tabla y no en `SuscripcionPago`: ese modelo manda la vigencia de un club y
+  meterle movimientos que no son cobros correría vencimientos que nadie pidió
+  mover.
+
+### Lo que estaba mal en los números
+- **El ingreso recurrente marcaba $208.333 y son $373.333** (`0bf200d`). Salía
+  de `planMonto` dividido por los meses del plan, y ese campo guarda la tarifa
+  de un mes en unos clubes y el total del período en otros. Ahora se calcula con
+  el último ciclo pagado, sumando los pagos del mismo día y descartando a quien
+  se venció.
+- **Faltaban $90.000 sin registrar.** Los cuatro clubes de la campaña pagaron su
+  trimestre a $180.000 partido: una parte por la plataforma y el saldo por
+  Bre-B, que nunca entró al sistema. Quedaron anotados con la fecha real en que
+  entró la plata, así que los $27.000 de Correcaminos cuentan en julio.
+- **La tarjeta decía «0 gastos registrados»** con la cifra de gastos al lado: al
+  ver un mes en días los tramos son `2026-08-14` y se comparaban contra
+  `2026-08` (`8d6a5df`).
+
+### El precio de campaña, y por qué se revirtió
+Se implementó el trimestre a $180.000 planos durante la campaña (`484bc2f`,
+`a5889f0`, `8480605`) y se revirtió completo (`54abc63`, `1a2fc3c`, `8b034e2`).
+
+El motivo: la tarifa por tramos y un precio plano no conviven. Para un club de
+hasta 40 deportistas, el trimestral de campaña ($180.000) salía **más caro que
+pagar tres meses sueltos** ($150.000), y la pantalla los muestra uno al lado del
+otro. De los doce clubes que salen de prueba, ocho son de tramo bajo o medio.
+
+La decisión fue dejar el cobro como estaba y anotar el saldo a mano, que es para
+lo que el módulo aprendió a registrar ingresos.
+
+### Otros
+- **El calendario del navegador no queda en ninguna pantalla** (`621b8b0`).
+  Quedaban cinco `type="date"`: fundación del club, vencimiento del cupón, cierre
+  del enlace de inscripción y las dos fechas de nacimiento. El `DatePicker` del
+  proyecto aprendió `abrirEn="years"`, `compacto`, `error` y `falta`.
+- Los logos de los clubes en la landing, sin anillo ni disco gris (`fa5879c`).
+
+### Pendientes
+- Los tres espacios de publicidad de la landing siguen en `url: '#'`.
+- Cinco lockfiles en el repo (`package-lock.json` en raíz, `api/` y `web/`;
+  `pnpm-lock.yaml` en raíz y `web/`).
+- Nadie ha probado todavía registrar un ingreso desde el modal.
+- Confirmar tarifas reales de Wompi y Bold con un asesor.

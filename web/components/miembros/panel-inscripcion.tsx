@@ -6,6 +6,7 @@ import { useAuth } from '@clerk/nextjs';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Check, Copy, Link2, RefreshCw, X } from 'lucide-react';
 import { apiFetch } from '@/lib/api-client';
+import { DatePicker } from '@/components/ui/date-picker';
 
 /**
  * El enlace de inscripción del club.
@@ -39,12 +40,6 @@ function diasHasta(iso: string): number {
   const hoy = new Date();
   const cero = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
   return Math.round((new Date(a, m - 1, d).getTime() - cero.getTime()) / 86_400_000);
-}
-
-/** Hoy en aaaa-mm-dd local, para que el selector no ofrezca ayer. */
-function hoyISO(): string {
-  const h = new Date();
-  return `${h.getFullYear()}-${String(h.getMonth() + 1).padStart(2, '0')}-${String(h.getDate()).padStart(2, '0')}`;
 }
 
 export function PanelInscripcion({ abierto, onCerrar }: { abierto: boolean; onCerrar: () => void }) {
@@ -271,14 +266,13 @@ export function PanelInscripcion({ abierto, onCerrar }: { abierto: boolean; onCe
                           Cerrar automáticamente <span className="font-normal opacity-70">· opcional</span>
                         </label>
                         <div className="flex items-center gap-2">
-                          <input
-                            type="date"
-                            min={hoyISO()}
+                          <DatePicker
                             value={estado.vence ?? ''}
-                            onChange={e => cambiar({ vence: e.target.value || null })}
-                            disabled={guardando}
-                            style={{ appearance: 'none', WebkitAppearance: 'none' }}
-                            className="flex-1 min-w-0 px-3 py-2 rounded-lg border border-border bg-background text-[13px] outline-none focus:border-primary disabled:opacity-50"
+                            minDate={new Date()}
+                            compacto
+                            placeholder="Sin fecha"
+                            className={`flex-1 min-w-0 ${guardando ? 'opacity-50 pointer-events-none' : ''}`}
+                            onChange={v => cambiar({ vence: v || null })}
                           />
                           {estado.vence && (
                             <button onClick={() => cambiar({ vence: null })} disabled={guardando}

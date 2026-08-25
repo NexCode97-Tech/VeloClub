@@ -14,6 +14,7 @@ import SuscripcionCard from '@/components/ajustes/suscripcion-card';
 import HorarioClases from '@/components/ajustes/horario-clases';
 import { DIAS_SEMANA } from '@/lib/dias';
 import { PhoneInput } from '@/components/ui/phone-input';
+import { DatePicker } from '@/components/ui/date-picker';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -579,18 +580,17 @@ function AjustesPageContent() {
         </div>
         <div className="space-y-1.5">
           <Label className="text-[12px]">Fecha de fundación</Label>
-          <Input
-            type="date"
-            // En escritorio la tarjeta pasa de 900px y el campo se estiraba
-            // entera: el icono del calendario terminaba en la otra punta,
-            // lejisimos de la fecha. Una fecha no necesita mas de este ancho.
-            // El desbordamiento en movil no se arregla aca sino en globals.css:
-            // iOS ignora el ancho de los campos de fecha.
+          {/* En escritorio la tarjeta pasa de 900px y el campo se estiraba
+              entera: una fecha no necesita mas de este ancho. Abre en anios
+              porque ningun club se fundo este mes. */}
+          <DatePicker
             className="w-full sm:max-w-[280px]"
             value={foundedAt}
-            max={new Date().toISOString().slice(0, 10)}
-            min="1800-01-01"
-            onChange={e => { setFoundedAt(e.target.value); setSaved(false); }}
+            maxDate={new Date()}
+            minDate={new Date(1800, 0, 1)}
+            abrirEn="years"
+            placeholder="Elegir fecha"
+            onChange={v => { setFoundedAt(v); setSaved(false); }}
           />
           <p className="text-[10px] text-muted-foreground">
             {foundedAt

@@ -38,6 +38,21 @@ interface DatePickerProps {
   className?: string;
   minDate?: Date;
   maxDate?: Date;
+  /**
+   * Con qué vista abre. `years` es para las fechas de nacimiento: nadie nació
+   * este mes, y llegar a 1994 mes por mes desde hoy son trescientos clics.
+   * Solo aplica mientras el campo esté vacío; con fecha puesta abre en su día.
+   */
+  abrirEn?: 'days' | 'years';
+  /** Alto de campo de formulario denso, para las filas donde no cabe el de 48px. */
+  compacto?: boolean;
+  /** Pinta el borde de error, como el resto de los campos del proyecto. */
+  error?: boolean;
+  /**
+   * El ámbar de «esto lo trajimos vacío y falta llenarlo», el mismo que usa
+   * `entrada()` en los formularios de miembros e inscripción.
+   */
+  falta?: boolean;
 }
 
 type View = 'days' | 'months' | 'years';
@@ -49,6 +64,10 @@ export function DatePicker({
   className = '',
   minDate,
   maxDate,
+  abrirEn = 'days',
+  compacto = false,
+  error = false,
+  falta = false,
 }: DatePickerProps) {
   const parsed   = value ? new Date(value + 'T00:00:00') : null;
   const [open, setOpen]         = useState(false);
@@ -107,7 +126,9 @@ export function DatePicker({
         : { position: 'fixed', top:    rect.bottom + 6,          left, width }
       );
     }
-    setView('days');
+    // Con fecha puesta siempre abre en su dia; `abrirEn` es para el campo
+    // vacio, donde arrancar en el mes actual no ayuda a nadie.
+    setView(!value && abrirEn === 'years' ? 'years' : 'days');
     setOpen(o => !o);
   }
 
@@ -151,11 +172,17 @@ export function DatePicker({
         ref={triggerRef}
         type="button"
         onClick={handleOpen}
-        className="w-full flex items-center gap-2 h-12 px-3 rounded-xl border border-input hover:border-ring transition-colors text-left group"
-        style={{ background: '#fff' }}
+        className={`w-full flex items-center gap-2 px-3 rounded-xl border transition-colors text-left group ${
+          compacto ? 'h-[38px]' : 'h-12'
+        } ${error
+          ? 'border-[#EF476F]'
+          : falta
+            ? 'border-[#D9A227]'
+            : 'border-input hover:border-ring'}`}
+        style={{ background: falta && !error ? '#FDF7E8' : '#fff' }}
       >
         <CalendarDays className="w-4 h-4 shrink-0 text-muted-foreground" />
-        <span className={`flex-1 text-sm ${parsed ? 'text-foreground' : 'text-muted-foreground'}`}>
+        <span className={`flex-1 ${compacto ? 'text-[13px]' : 'text-sm'} ${parsed ? 'text-foreground' : 'text-muted-foreground'}`}>
           {label}
         </span>
         {parsed && (

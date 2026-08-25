@@ -272,12 +272,7 @@ export default function FinanzasSuperadmin() {
             {/* El pulso: lo que no cuentan las cifras de arriba. No depende del
                 filtro, porque son preguntas sobre el negocio entero. */}
             <Tarjeta>
-              <div className="flex items-baseline gap-2 flex-wrap">
-                <h2 className="text-[15px] font-semibold text-foreground m-0">El pulso del negocio</h2>
-                <span className="text-[11.5px] text-muted-foreground ml-auto">
-                  Lo que no cuentan las cifras de arriba
-                </span>
-              </div>
+              <h2 className="text-[15px] font-semibold text-foreground m-0">El pulso del negocio</h2>
               <div className="grid gap-x-5 gap-y-3 mt-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-6">
                 <Dato n={datos.pulso.clubesNuevosPorMes.toLocaleString('es-CO')} q="Clubes nuevos por mes" />
                 <Dato n={pesos(datos.mensual.monto)} q="Ingreso recurrente" />

@@ -6,6 +6,7 @@ import { apiFetch } from '@/lib/api-client';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AccionesCabecera } from '@/components/superadmin/acciones-cabecera';
 import { Plus, Trash2, Ticket, X } from 'lucide-react';
+import { DatePicker } from '@/components/ui/date-picker';
 
 const EASE = [0.23, 1, 0.32, 1] as [number, number, number, number];
 const ACCENT = '#7C3AED';
@@ -169,8 +170,9 @@ export default function CuponesPage() {
                   </div>
                   <div>
                     <label className="text-[11px] font-semibold" style={{ color: '#8E87A8' }}>Expira (opcional)</label>
-                    <input style={inp} type="date" value={form.expiraEn}
-                      onChange={e => setForm(f => ({ ...f, expiraEn: e.target.value }))} />
+                    <DatePicker value={form.expiraEn} compacto minDate={new Date()}
+                      placeholder="Sin fecha"
+                      onChange={v => setForm(f => ({ ...f, expiraEn: v }))} />
                   </div>
                   <div>
                     <label className="text-[11px] font-semibold" style={{ color: '#8E87A8' }}>Límite total de usos (opcional)</label>

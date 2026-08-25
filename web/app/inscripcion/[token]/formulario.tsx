@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { Check, ChevronLeft, Info, Lock, User } from 'lucide-react';
 import { Campo, Ayuda, Desplegable, entrada } from '@/components/miembros/campos';
 import { PhoneInput } from '@/components/ui/phone-input';
+import { DatePicker } from '@/components/ui/date-picker';
 import {
   DOC_TIPOS_CON_NOTA, PARENTESCOS, CATEGORIAS, NIVELES, GENEROS, RH_TIPOS,
   edadDe, esMenorDeEdad,
@@ -477,9 +478,10 @@ export default function FormularioInscripcion({ token }: { token: string }) {
 
             <Campo etiqueta="Fecha de nacimiento" obligatorio error={errores.birthDate}
               falta={faltaba('birthDate')} listo={traido('birthDate')}>
-              <input type="date" value={d.birthDate} onChange={e => set('birthDate', e.target.value)}
-                style={{ appearance: 'none', WebkitAppearance: 'none' }}
-                className={entrada(!!errores.birthDate, faltaba('birthDate'))} />
+              <DatePicker value={d.birthDate} compacto abrirEn="years"
+                maxDate={new Date()} placeholder="Elegir fecha"
+                error={!!errores.birthDate} falta={faltaba('birthDate')}
+                onChange={v => set('birthDate', v)} />
               {años !== null && años >= 0 && (
                 <Ayuda>{años} {años === 1 ? 'año' : 'años'}{menor ? ' · te pediremos los datos del acudiente' : ''}</Ayuda>
               )}

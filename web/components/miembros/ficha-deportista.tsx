@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight, User } from 'lucide-react';
 import { Adjunto, Ayuda, Campo, Chips, Desplegable, entrada } from '@/components/miembros/campos';
 import { PhoneInput } from '@/components/ui/phone-input';
+import { DatePicker } from '@/components/ui/date-picker';
 import {
   CATEGORIAS, NIVELES, DOC_TIPOS_CON_NOTA, PARENTESCOS, GENEROS, RH_TIPOS,
   type DatosFicha, type ErroresFicha,
@@ -182,12 +183,10 @@ export function FichaDeportista({
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
               <Campo etiqueta="Nacimiento" obligatorio={esNuevo} error={errorDe('birthDate')}>
-                <input type="date" value={datos.birthDate} onChange={e => set('birthDate', e.target.value)}
-                  onBlur={marcar('birthDate')}
-                  // Las fechas en iOS se dimensionan por su contenido e ignoran
-                  // el ancho; sin appearance:none el campo se sale de la columna.
-                  style={{ appearance: 'none', WebkitAppearance: 'none' }}
-                  className={entrada(!!errorDe('birthDate'))} />
+                <DatePicker value={datos.birthDate} compacto abrirEn="years"
+                  maxDate={new Date()} placeholder="Elegir fecha"
+                  error={!!errorDe('birthDate')}
+                  onChange={v => { set('birthDate', v); marcar('birthDate')(); }} />
               </Campo>
               <Campo etiqueta="Documento" obligatorio={esNuevo}>
                 <Desplegable valor={datos.docType} opciones={DOC_TIPOS_CON_NOTA} vacio="Tipo"

@@ -515,6 +515,11 @@ model GastoPlataforma {
   // Quien lo registro, por su clerkId. Sin relacion a User: si esa cuenta
   // desaparece, el gasto tiene que seguir en los libros.
   registradoPor String?
+  // De donde salio solo, cuando no lo escribio nadie. Hoy es `mp:<paymentId>`
+  // para la comision de Mercado Pago. Es unico a proposito: el pago se registra
+  // desde tres lados (respuesta directa, webhook y reconciliacion) y sin esto la
+  // misma comision entraria tres veces.
+  origen      String?        @unique
   createdAt   DateTime       @default(now())
   updatedAt   DateTime       @updatedAt
 

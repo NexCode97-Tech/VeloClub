@@ -1144,10 +1144,20 @@ router.post('/finanzas/gastos', requireAuth, requireSuperadmin, async (req, res)
   res.status(201).json({ gasto });
 });
 
-/** DELETE /superadmin/finanzas/gastos/:id */
+/**
+ * DELETE /superadmin/finanzas/gastos/:id
+ *
+ * Los que tienen `origen` no se borran: los puso el sistema leyendo lo que
+ * cobro la pasarela, asi que borrarlos seria negar una plata que de verdad
+ * salio. Ademas el barrido los volveria a crear en la vuelta siguiente.
+ */
 router.delete('/finanzas/gastos/:id', requireAuth, requireSuperadmin, async (req, res) => {
-  const { count } = await prisma.gastoPlataforma.deleteMany({ where: { id: String(req.params.id) } });
-  if (count === 0) return res.status(404).json({ error: 'Ese gasto ya no existe.' });
+  const { count } = await prisma.gastoPlataforma.deleteMany({
+    where: { id: String(req.params.id), origen: null },
+  });
+  if (count === 0) {
+    return res.status(404).json({ error: 'Ese gasto ya no existe o lo registró el sistema.' });
+  }
   res.json({ ok: true });
 });
 

@@ -2,11 +2,11 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useAuth } from '@clerk/nextjs';
-import { motion } from 'framer-motion';
-import { Plus, Trash2, X } from 'lucide-react';
+import { Plus, Trash2, Zap } from 'lucide-react';
 import { apiFetch } from '@/lib/api-client';
 import { AccionesCabecera } from '@/components/superadmin/acciones-cabecera';
 import { Desplegable } from '@/components/ui/desplegable';
+import { HojaInferior } from '@/components/ui/hoja-inferior';
 import { MonthPicker, type DateRange } from '@/components/ui/month-picker';
 import { GraficaMeses, Ranking, ENTRA, SALE, type MesFinanzas } from '@/components/superadmin/grafica-meses';
 
@@ -56,6 +56,8 @@ interface Gasto {
   monto: number;
   categoria: string;
   descripcion: string;
+  /** Lo anotó el sistema, no una persona. Hoy solo la comisión de la pasarela. */
+  origen?: string | null;
 }
 
 interface Pulso {
@@ -106,6 +108,9 @@ export default function FinanzasSuperadmin() {
   const [abierto, setAbierto] = useState(false);
   const [nuevo, setNuevo] = useState(VACIO);
   const [guardando, setGuardando] = useState(false);
+  // El error del formulario vive aparte del de la pantalla: con el modal abierto,
+  // un aviso arriba de la pagina queda detras del velo y nadie lo lee.
+  const [errorModal, setErrorModal] = useState<string | null>(null);
 
   const cargar = useCallback(async () => {
     try {
@@ -152,11 +157,11 @@ export default function FinanzasSuperadmin() {
   async function guardar() {
     const monto = Number(nuevo.monto.replace(/[^\d]/g, ''));
     if (!monto || nuevo.descripcion.trim().length < 2) {
-      setError('Falta el monto o la descripción del gasto.');
+      setErrorModal('Falta el monto o la descripción del gasto.');
       return;
     }
     setGuardando(true);
-    setError(null);
+    setErrorModal(null);
     try {
       const token = await getToken();
       await apiFetch('/superadmin/finanzas/gastos', {
@@ -167,7 +172,7 @@ export default function FinanzasSuperadmin() {
       setAbierto(false);
       await cargar();
     } catch {
-      setError('No se pudo guardar el gasto. Intenta de nuevo.');
+      setErrorModal('No se pudo guardar el gasto. Intenta de nuevo.');
     } finally {
       setGuardando(false);
     }
@@ -187,11 +192,13 @@ export default function FinanzasSuperadmin() {
   return (
     <div style={{ background: '#F7F7FB', minHeight: '100%' }}>
       <AccionesCabecera>
-        <button type="button" onClick={() => setAbierto(a => !a)}
+        {/* Siempre dice lo mismo. Un boton que cambia a «Cancelar» obliga a
+            leerlo antes de tocarlo; el modal ya tiene su propio cancelar. */}
+        <button type="button" onClick={() => { setErrorModal(null); setAbierto(true); }}
           className="inline-flex items-center gap-1.5 text-white text-[12px] font-semibold px-3 py-2 rounded-xl shrink-0"
-          style={{ background: abierto ? '#8E87A8' : '#7C3AED' }}>
-          {abierto ? <X className="w-3.5 h-3.5" /> : <Plus className="w-3.5 h-3.5" />}
-          {abierto ? 'Cancelar' : 'Registrar gasto'}
+          style={{ background: '#7C3AED' }}>
+          <Plus className="w-3.5 h-3.5" />
+          Registrar gasto
         </button>
       </AccionesCabecera>
 
@@ -312,64 +319,6 @@ export default function FinanzasSuperadmin() {
               </Tarjeta>
             </div>
 
-            {/* El registro manual */}
-            {abierto && (
-              <motion.div
-                initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.2, ease: [0.23, 1, 0.32, 1] }}
-              >
-                <Tarjeta>
-                  <div className="flex items-baseline gap-2 flex-wrap">
-                    <h2 className="text-[15px] font-semibold text-foreground m-0">Registrar un gasto</h2>
-                    <span className="text-[11.5px] text-muted-foreground">
-                      Se suma al mes de la fecha que pongas
-                    </span>
-                  </div>
-
-                  <div className="grid gap-2.5 sm:grid-cols-3 mt-3">
-                    <Campo etiqueta="Fecha">
-                      <input type="date" value={nuevo.fecha} max={hoyISO()}
-                        onChange={e => setNuevo(n => ({ ...n, fecha: e.target.value }))}
-                        style={{ appearance: 'none', WebkitAppearance: 'none' }}
-                        className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[13px] outline-none focus:border-primary" />
-                    </Campo>
-                    <Campo etiqueta="Categoría">
-                      <Desplegable valor={nuevo.categoria} opciones={CATEGORIAS} vacio="Elegir"
-                        titulo="Categoría del gasto"
-                        onElegir={v => setNuevo(n => ({ ...n, categoria: v }))} />
-                    </Campo>
-                    <Campo etiqueta="Monto">
-                      <input inputMode="numeric" value={nuevo.monto} placeholder="$ 92.000"
-                        onChange={e => {
-                          const limpio = e.target.value.replace(/[^\d]/g, '');
-                          setNuevo(n => ({ ...n, monto: limpio ? Number(limpio).toLocaleString('es-CO') : '' }));
-                        }}
-                        className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[13px] tabular-nums outline-none focus:border-primary" />
-                    </Campo>
-                    <div className="sm:col-span-3">
-                      <Campo etiqueta="Descripción">
-                        <input value={nuevo.descripcion}
-                          onChange={e => setNuevo(n => ({ ...n, descripcion: e.target.value }))}
-                          placeholder="Railway, Vercel y Neon de octubre"
-                          className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[13px] outline-none focus:border-primary" />
-                      </Campo>
-                    </div>
-                  </div>
-
-                  <div className="flex justify-end gap-2 mt-1">
-                    <button type="button" onClick={() => setAbierto(false)}
-                      className="text-[12.5px] font-semibold px-3.5 py-2 rounded-xl border border-border text-muted-foreground">
-                      Cancelar
-                    </button>
-                    <button type="button" onClick={guardar} disabled={guardando}
-                      className="text-[12.5px] font-semibold px-4 py-2 rounded-xl text-white bg-primary disabled:opacity-60">
-                      {guardando ? 'Guardando...' : 'Guardar gasto'}
-                    </button>
-                  </div>
-                </Tarjeta>
-              </motion.div>
-            )}
-
             <Tarjeta sinAire>
               <div className="px-4 py-3 border-b border-border">
                 <h2 className="text-[15px] font-semibold text-foreground m-0">Gastos registrados</h2>
@@ -386,7 +335,12 @@ export default function FinanzasSuperadmin() {
                       <span className="text-muted-foreground tabular-nums">
                         {new Date(g.fecha).toLocaleDateString('es-CO', { day: 'numeric', month: 'short' })}
                       </span>
-                      <span className="text-foreground truncate" title={g.descripcion}>{g.descripcion}</span>
+                      <span className="text-foreground truncate flex items-center gap-1.5" title={g.descripcion}>
+                        {/* El rayo dice que lo puso el sistema. No es solo un
+                            adorno: es el motivo por el que no tiene papelera. */}
+                        {g.origen && <Zap className="w-3 h-3 shrink-0" style={{ color: '#7C3AED' }} aria-label="Registrado automáticamente" />}
+                        <span className="truncate">{g.descripcion}</span>
+                      </span>
                       <span>
                         <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap"
                           style={{
@@ -399,10 +353,12 @@ export default function FinanzasSuperadmin() {
                       <span className="text-right font-semibold tabular-nums" style={{ color: SALE }}>
                         {pesos(g.monto)}
                       </span>
-                      <button type="button" onClick={() => borrar(g)} aria-label={`Borrar ${g.descripcion}`}
-                        className="text-muted-foreground hover:text-[#A33A4E] transition-colors">
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
+                      {g.origen ? <span /> : (
+                        <button type="button" onClick={() => borrar(g)} aria-label={`Borrar ${g.descripcion}`}
+                          className="text-muted-foreground hover:text-[#A33A4E] transition-colors">
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -411,6 +367,68 @@ export default function FinanzasSuperadmin() {
           </>
         )}
       </div>
+
+      {/* El registro manual. En modal y no al final de la pagina: ahi quedaba
+          debajo de las graficas y de la tabla, tan lejos que el boton parecia
+          no hacer nada. */}
+      <HojaInferior
+        abierta={abierto}
+        onCerrar={() => setAbierto(false)}
+        titulo="Registrar un gasto"
+        ayuda="Se suma al mes de la fecha que pongas"
+        ancho="md"
+        pie={
+          <div className="flex gap-2">
+            <button type="button" onClick={() => setAbierto(false)}
+              className="flex-1 text-[12.5px] font-semibold px-3.5 py-2.5 rounded-xl border border-border text-muted-foreground">
+              Cancelar
+            </button>
+            <button type="button" onClick={guardar} disabled={guardando}
+              className="flex-[1.4] text-[12.5px] font-semibold px-4 py-2.5 rounded-xl text-white bg-primary disabled:opacity-60">
+              {guardando ? 'Guardando...' : 'Guardar gasto'}
+            </button>
+          </div>
+        }
+      >
+        <div className="grid gap-2.5 grid-cols-2">
+          <Campo etiqueta="Fecha">
+            <input type="date" value={nuevo.fecha} max={hoyISO()}
+              onChange={e => setNuevo(n => ({ ...n, fecha: e.target.value }))}
+              style={{ appearance: 'none', WebkitAppearance: 'none' }}
+              className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[13px] outline-none focus:border-primary" />
+          </Campo>
+          <Campo etiqueta="Monto">
+            <input inputMode="numeric" value={nuevo.monto} placeholder="$ 92.000"
+              onChange={e => {
+                const limpio = e.target.value.replace(/[^\d]/g, '');
+                setNuevo(n => ({ ...n, monto: limpio ? Number(limpio).toLocaleString('es-CO') : '' }));
+              }}
+              className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[13px] tabular-nums font-semibold outline-none focus:border-primary" />
+          </Campo>
+          <div className="col-span-2">
+            <Campo etiqueta="Categoría">
+              <Desplegable valor={nuevo.categoria} opciones={CATEGORIAS} vacio="Elegir"
+                titulo="Categoría del gasto"
+                onElegir={v => setNuevo(n => ({ ...n, categoria: v }))} />
+            </Campo>
+          </div>
+          <div className="col-span-2">
+            <Campo etiqueta="Descripción">
+              <input value={nuevo.descripcion}
+                onChange={e => setNuevo(n => ({ ...n, descripcion: e.target.value }))}
+                placeholder="Railway, Vercel y Neon de agosto"
+                className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[13px] outline-none focus:border-primary" />
+            </Campo>
+          </div>
+        </div>
+
+        {errorModal && (
+          <p className="text-[12px] rounded-xl px-3 py-2 mt-2.5 mb-0"
+            style={{ background: 'rgba(239,71,111,0.1)', color: '#A33A4E' }}>
+            {errorModal}
+          </p>
+        )}
+      </HojaInferior>
     </div>
   );
 }

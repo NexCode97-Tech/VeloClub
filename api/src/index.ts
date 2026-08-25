@@ -33,6 +33,7 @@ import { startWorkers } from './workers';
 import { prisma } from './db/client';
 import { getRedis } from './lib/redis';
 import { sincronizarMontosSuscripciones, recordarVencimientosProximos, desactivarClubesVencidos } from './lib/sync-suscripciones';
+import { conciliarComisiones } from './lib/finanzas-plataforma';
 
 dotenv.config();
 
@@ -198,6 +199,7 @@ const server = app.listen(PORT, () => {
     sincronizarMontosSuscripciones().catch(err => console.error('[sync-suscripciones-monto:boot]', err));
     recordarVencimientosProximos().catch(err => console.error('[recordar-vencimientos:boot]', err));
     desactivarClubesVencidos().catch(err => console.error('[desactivar-vencidos:boot]', err));
+    conciliarComisiones().catch(err => console.error('[conciliar-comisiones:boot]', err));
     setInterval(() => {
       sincronizarMontosSuscripciones().catch(err => console.error('[sync-suscripciones-monto:interval]', err));
       recordarVencimientosProximos().catch(err => console.error('[recordar-vencimientos:interval]', err));
@@ -207,8 +209,14 @@ const server = app.listen(PORT, () => {
 
   // Reconciliación de pagos PSE/Efecty en proceso — red de seguridad por si la
   // notificación de Mercado Pago se demora o falla. Corre cada 20 minutos.
+  //
+  // En la misma vuelta se le pone comisión a los pagos que ya se acreditaron:
+  // Mercado Pago la liquida un rato después de aprobar, así que preguntarla en
+  // caliente daría cero. Es el único gasto de la plataforma que no hay que
+  // escribir a mano.
   setInterval(() => {
     reconciliarPagosPendientes().catch(err => console.error('[reconciliar-pagos:interval]', err));
+    conciliarComisiones().catch(err => console.error('[conciliar-comisiones:interval]', err));
   }, 20 * 60 * 1000);
 });
 

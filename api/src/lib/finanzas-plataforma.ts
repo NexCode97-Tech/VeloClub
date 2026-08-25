@@ -1,4 +1,6 @@
+import * as Sentry from '@sentry/node';
 import { prisma } from '../db/client';
+import type { DetalleComision } from './mercadopago';
 
 /**
  * Las finanzas del negocio, no las de un club.
@@ -88,6 +90,125 @@ export async function mesesDe(desde: Date, hasta: Date): Promise<MesFinanzas[]> 
   }
 
   return [...porMes.values()].sort((a, b) => a.mes.localeCompare(b.mes));
+}
+
+/**
+ * La comisión de Mercado Pago se anota sola.
+ *
+ * Es el único gasto que el sistema sí puede leer: la respuesta del pago trae
+ * `fee_details` con lo que se queda la pasarela, así que no hay por qué
+ * escribirlo a mano ni adivinar el porcentaje. Las facturas de Railway o de
+ * Cloudinary siguen siendo manuales porque no llegan a ningún lado que se pueda
+ * consultar.
+ *
+ * Solo cuenta lo que paga el cobrador (`collector`): si en algún medio la
+ * comisión la asume el club, esa plata nunca salió de acá.
+ *
+ * Se llama desde los tres sitios donde un pago pasa a PAID —la respuesta
+ * directa, el webhook y la reconciliación—, así que tiene que poder correr tres
+ * veces sin duplicar nada: de eso se encarga `origen`, que es único.
+ *
+ * Nunca lanza. Que falle anotar la comisión no puede tumbar el cobro que la
+ * originó, que es lo único que el club está esperando. Devuelve si quedó
+ * anotada.
+ */
+export async function registrarComision(params: {
+  mpPaymentId: string;
+  feeDetails?: DetalleComision[] | null;
+  fecha?: Date | null;
+  club?: string | null;
+}): Promise<boolean> {
+  try {
+    const monto = (params.feeDetails ?? [])
+      .filter(f => f.fee_payer === 'collector')
+      .reduce((suma, f) => suma + Number(f.amount || 0), 0);
+
+    // Un pago sin comisión no es un error: Bre-B no cobra nada, y en pruebas
+    // Mercado Pago a veces devuelve el arreglo vacío. Simplemente no hay gasto.
+    if (monto <= 0) return false;
+
+    await prisma.gastoPlataforma.upsert({
+      where:  { origen: `mp:${params.mpPaymentId}` },
+      update: { monto },
+      create: {
+        origen: `mp:${params.mpPaymentId}`,
+        fecha: params.fecha ?? new Date(),
+        monto,
+        categoria: 'COMISIONES',
+        descripcion: params.club
+          ? `Comisión de Mercado Pago, pago de ${params.club}`
+          : 'Comisión de Mercado Pago',
+      },
+    });
+    return true;
+  } catch (err) {
+    console.error('[registrar-comision]', params.mpPaymentId, err instanceof Error ? err.message : err);
+    Sentry.captureException(err, {
+      tags: { tarea: 'registrar-comision' },
+      extra: { mpPaymentId: params.mpPaymentId },
+    });
+    return false;
+  }
+}
+
+/**
+ * Barrido: le pone comisión a todo pago acreditado que todavía no la tenga.
+ *
+ * Es el único enganche que hace falta, y por eso no se toca ninguna de las
+ * rutas de cobro. Dos razones:
+ *
+ * 1. Al aprobarse el pago, `fee_details` suele venir vacío: Mercado Pago la
+ *    liquida un rato después. Anotarla en caliente daría cero casi siempre.
+ * 2. Un pago llega a PAID desde cuatro sitios distintos. Preguntar después por
+ *    los que faltan cubre los cuatro sin repetir la llamada en cada uno, y de
+ *    paso recupera los pagos viejos, de antes de que esto existiera.
+ *
+ * Corre junto a la reconciliación de pagos pendientes, cada 20 minutos.
+ */
+export async function conciliarComisiones(): Promise<number> {
+  const { obtenerPago } = await import('./mercadopago');
+
+  const [pagos, yaAnotados] = await Promise.all([
+    prisma.suscripcionPago.findMany({
+      where: { estado: 'PAID', mpPaymentId: { not: null } },
+      select: {
+        mpPaymentId: true,
+        createdAt: true,
+        suscripcion: { select: { club: { select: { name: true } } } },
+      },
+      orderBy: { createdAt: 'desc' },
+      // Un tope por corrida: son llamadas a la API de Mercado Pago, una por
+      // pago. Lo que quede afuera entra en la vuelta siguiente.
+      take: 60,
+    }),
+    prisma.gastoPlataforma.findMany({
+      where: { origen: { startsWith: 'mp:' } },
+      select: { origen: true },
+    }),
+  ]);
+
+  const anotados = new Set(yaAnotados.map(g => g.origen));
+  let nuevos = 0;
+
+  for (const pago of pagos) {
+    if (anotados.has(`mp:${pago.mpPaymentId}`)) continue;
+    try {
+      const mp = await obtenerPago(String(pago.mpPaymentId));
+      const anotada = await registrarComision({
+        mpPaymentId: String(pago.mpPaymentId),
+        feeDetails: mp.fee_details,
+        // La comisión pertenece al mes en que se cobró el pago, no al periodo
+        // que ese pago cubre.
+        fecha: mp.date_approved ? new Date(mp.date_approved) : pago.createdAt,
+        club: pago.suscripcion.club?.name ?? null,
+      });
+      if (anotada) nuevos++;
+    } catch (err) {
+      console.error('[conciliar-comisiones]', pago.mpPaymentId, err instanceof Error ? err.message : err);
+    }
+  }
+
+  return nuevos;
 }
 
 /** En qué se fue la plata, dentro del rango. */

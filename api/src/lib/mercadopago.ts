@@ -101,9 +101,20 @@ export async function obtenerPreapproval(preapprovalId: string): Promise<{ id: s
   return mpFetch(`/preapproval/${preapprovalId}`, { method: 'GET' });
 }
 
+// Lo que Mercado Pago se queda de cada pago. Viene desglosado por concepto y
+// dice quien lo paga: `collector` somos nosotros, `payer` es el club. Solo lo
+// que cae del lado del cobrador es gasto nuestro.
+export interface DetalleComision {
+  type: string;
+  amount: number;
+  fee_payer: string;
+}
+
 // ── Consultar un pago (usado tras recibir el webhook) ────────────────────────
 export async function obtenerPago(paymentId: string): Promise<{
   id: number; status: string; transaction_amount: number; external_reference: string | null;
+  fee_details?: DetalleComision[];
+  date_approved?: string | null;
 }> {
   return mpFetch(`/v1/payments/${paymentId}`, { method: 'GET' });
 }
@@ -140,6 +151,8 @@ export interface PagoDirectoResponse {
   transaction_amount: number;
   external_reference: string | null;
   transaction_details?: { external_resource_url?: string };
+  fee_details?: DetalleComision[];
+  date_approved?: string | null;
 }
 
 // POST /v1/payments — pago directo sin redirección (tarjeta, PSE, Efecty).

@@ -5,6 +5,188 @@ Actualizar al final de cada sesión o cuando se complete un bloque de trabajo im
 
 ---
 
+## Sesión 2026-08-22 a 2026-08-25
+
+**Modelo:** Claude Opus 5
+**Estado inicial:** `1adc660`, rama `main`
+**Estado final:** `fa5879c`, todo desplegado
+
+Sesión de superficie: el superadmin y la landing. Y de paso salieron dos cosas
+que llevaban tiempo rotas sin que nadie las viera.
+
+### Superadmin
+
+El ícono de Inicio era la cuadrícula de `LayoutDashboard`. La etiqueta ya decía
+«Inicio» en el sidebar, en la barra de arriba y en la barra inferior del móvil:
+la única pieza que seguía hablando de dashboard era el ícono. Ahora es una casa.
+
+- **Actualizar y notificaciones solo en Inicio.** Son acciones del panel entero,
+  no de la pantalla donde uno esté parado. Consecuencia que hay que tener
+  presente: el globo de no leídas también desaparece del resto de pantallas.
+- **Un solo título por pantalla.** Cupones y Reportes se dibujaban su propio
+  encabezado abajo, así que el nombre salía dos veces. Se resolvió con
+  `AccionesCabecera`, un portal a un hueco que el layout deja al lado del
+  título: la página declara sus botones y salen arriba, sin que el layout tenga
+  que conocer a cada módulo. Sirve para los que vengan.
+
+### Las pruebas del API, en verde
+
+Estaban dos en rojo. Tres causas distintas:
+
+- `contarDeportistasActivos` empezó a filtrar por `inscripcion: APROBADO` cuando
+  se hizo la inscripción por enlace, porque quien espera el visto bueno no se
+  cobra. La prueba seguía esperando la consulta vieja. **Ese fallo lo introduje
+  yo y lo di por preexistente sin comprobarlo bien**: hice `git stash`, que no
+  revierte lo ya commiteado, y saqué la conclusión equivocada.
+- En `payments.test.ts`, el molde del pago no traía `memberId` ni `locationId`,
+  de cuando esos campos no existían. Sin sede, la ruta sale a deducirla y toca
+  una tabla que el archivo no simula: respondía 500 por algo ajeno a la prueba.
+- Marcar un pago avisa al staff, y `notifyClubStaff` no estaba simulado.
+
+**43 de 43.**
+
+### El titular de la landing
+
+Decía «Gestiona tu club. Enfócate en el deporte», que es lo que hace el producto
+y no lo que le pasa a quien lo compra: cualquier competidor podía firmar esa
+frase. Ahora nombra al enemigo:
+
+> **Tu club ya no cabe en un Excel.**
+> Múdalo gratis 2 meses.
+
+Va de corrido y no partido: es una sola idea. «Múdalo» responde la objeción de
+quien lleva años con su archivo, que no arranca de cero. Al terminar la campaña
+se borra la segunda línea y el titular sigue en pie.
+
+Hubo que bajar el cuerpo de 3.25rem a 2.85rem: la columna del texto está topada
+en unos 546px por el `max-w-5xl`, que es lo que deja el mockup al lado, y
+«Excel.» quedaba solo en una segunda línea. `text-balance` remata para que,
+donde igual tenga que partirse, reparta las dos líneas.
+
+La descripción nombra lo que reemplaza en vez de «todo-en-uno», que además de
+traer guiones en un párrafo es la promesa más repetida del software. Los botones
+pasaron a «Crear mi club gratis» y «Hablar por WhatsApp», y el cronómetro dice
+«para que finalice», en el texto visible y en el que oye el lector de pantalla.
+
+### Las fuentes: Open Sans no existía
+
+Había **ocho lugares con `Open Sans` escrito a mano**, casi todos en la landing,
+más un Arial dentro de un SVG. Lo grave no era estético:
+
+**Open Sans no se carga en ninguna parte del proyecto.** No está en el layout ni
+en el CSS. El navegador nunca la encontraba y caía al `sans-serif` del sistema:
+Arial en Windows, Helvetica en Mac. Esas pantallas se veían **distintas en cada
+computador**, y ninguna se veía como la app.
+
+- Todos quitados: heredan **Geist Sans**, la única familia de la plataforma.
+- `--font-heading` ahora apunta a `--font-sans` en vez de repetir la pila:
+  existe para no escribirla en cada regla, no para abrir la puerta a una segunda
+  fuente.
+- **El `CLAUDE.md` decía Space Grotesk y Plus Jakarta Sans**, que no aparecen por
+  ningún lado del código. Corregido, con la razón por la que no se escriben
+  nombres de fuente sueltos.
+
+El superadmin, que se sospechaba en otra fuente, siempre estuvo bien: usa
+`inherit` en todos lados.
+
+### El amanecer de la landing
+
+La página alternaba oscuro y claro cuatro veces, con corte seco en tres. El
+héroe casi negro contra el `#F7F7FB` de Funcionalidades, y la franja de clubes
+apareciendo como un rectángulo negro pegado en la mitad del scroll.
+
+Se hizo en dos tiempos. El primero encadenó un degradado por héroe,
+Funcionalidades y Clubes. Al verlo, quedó claro que **estirarlo no lo mejora**:
+cruzando el pliegue deja de leerse como transición y se lee como si media página
+fuera morada. El segundo lo comprimió:
+
+```
+Héroe            #09090B → #FFFFFF   todo el amanecer cabe en la primera pantalla
+De ahí al pie    #FFFFFF
+```
+
+El fundido va como capa encima del resplandor y las partículas, y por debajo del
+contenido, así que el fondo se aclara sin tocar el texto.
+
+Además, **la página pasó a blanco puro y las tarjetas se invirtieron a
+`#F4F3F8`**: con el fondo en blanco, una tarjeta blanca no se separa. Arrastró
+dos detalles: los círculos de los íconos eran violeta translúcido y se perdían
+en el gris, así que pasaron a blanco sólido; y la pastilla de la sub-pestaña
+activa hizo lo mismo, como un control segmentado.
+
+### Los logos de los clubes
+
+Sobre el fondo blanco aparecía un disco gris alrededor de cada logo, más visible
+al pasar el cursor. Dos causas distintas:
+
+**El resplandor del hover.** Funcionaba cuando la sección era casi negra: el
+logo parecía prenderse. Sobre blanco hace lo contrario, porque el logo es una
+imagen opaca que lo tapa entero y solo deja ver el borde difuminado asomando por
+fuera. En vez de iluminar el logo, le dibujaba el contorno de su propio fondo.
+Se quitó.
+
+**Los fondos disparejos.** Medidos en producción:
+
+| Club | Esquina |
+|---|---|
+| Alianza | `#212121` (fondo oscuro, es su diseño) |
+| SBM, Valle Patín, ICPT | `#FEFEFE` |
+| Salazar Skate | `#F7F7F7` |
+| UCundinamarca | `#FFFFFF` |
+
+Se normalizan con `e_make_transparent:15,b_white/f_jpg`. **Los dos pasos
+juntos**: quitar el blanco a secas agujerea las letras blancas de adentro del
+logo, porque borra todo el blanco y no solo el del borde. Se midió: uno pierde
+**70.521 píxeles interiores**. Repintando en blanco, lo quitado vuelve y solo
+cambia el tono. Comprobado contra los seis: los cinco casi blancos quedan en
+`#FFFFFF` exacto y entre 0.00% y 0.02% del resto cambia, que son bordes
+suavizados. La transformación vive en la url, así que la foto de perfil del club
+queda igual.
+
+### Club THE HOPE, reactivado
+
+Sara Hernández, administradora del club, pagó por Bre-B y subió el comprobante.
+El club estaba `active = false` con `desactivadoPorVencimiento = true`, o sea
+bloqueado por plan vencido.
+
+- Pago `Bre-B · VC-FVX7`, $55.000, con comprobante de 375 KB en Cloudinary.
+- Aprobado desde el panel, no por script: marca `PAID`, corre
+  `activarClubTrasPago` y notifica al club. Verificado después: `active = true`,
+  bloqueo levantado.
+
+### Cómo se trabaja acá
+
+Dos cosas que el usuario dejó dichas y quedan como norma:
+
+- **Nada se ejecuta en local.** «En local nunca se va a ejecutar nada porque es
+  perder el tiempo.» La verificación antes de subir es `tsc`, `eslint` y `npm run
+  build`, que son la misma puerta que usa Vercel; después del push se revisa en
+  producción.
+- **Revisar no es ejecutar.** Cuando pide revisar algo, se investiga y se
+  reporta; no se toca el código hasta que lo apruebe.
+
+### Pendiente
+
+- **El globo de notificaciones fuera de Inicio** en el superadmin. Se preguntó y
+  quedó sin respuesta.
+- Los tres espacios de publicidad siguen en `url: '#'`.
+- **Cinco lockfiles** en el repositorio: `package-lock.json` en la raíz, en
+  `api/` y en `web/`, más `pnpm-lock.yaml` en la raíz y en `web/`. Dos gestores
+  compitiendo por el mismo proyecto.
+- Confirmar tarifas reales de Wompi y Bold con un asesor.
+- El riesgo de recibir el dinero de Bre-B en una cuenta personal.
+
+### Una corrección al registro anterior
+
+La entrada pasada anotó como pendiente que «las sedes no son sedes sino grupos».
+**Eso fue una conclusión mía, no una decisión aprobada.** Salió de ver que varios
+clubes nombran sus sedes *NIVEL I*, *ESCUELA ADULTOS* o *PITUFITOS*. El usuario
+lo corrigió: «las sedes no son grupos, nunca te dije que aprobaba eso, las sedes
+son sedes». Queda sin efecto: `Location` es un lugar y no se va a repensar como
+agrupación. Que un club le ponga a su sede el nombre de un nivel es cosa suya.
+
+---
+
 ## Sesión 2026-08-20 a 2026-08-22
 
 **Modelo:** Claude Opus 5
@@ -138,11 +320,10 @@ propósito: con 73 fichas de documento repetido, crearlas ahora fallaría.
 
 ### Pendiente
 
-- **Las sedes no son sedes.** Los clubes usan `Location` como grupo o nivel:
-  *NIVEL I*, *ESCUELA ADULTOS*, *MAYORES*, *PITUFITOS*, *MARTES JUEVES AM*. Solo
-  4 de 18 clubes tienen una sola. La palabra ya no describe lo que hacen con eso
-  y compite con `category` y con las clases del horario. **Aplazado a futuro** por
-  decisión del usuario.
+- ~~Las sedes no son sedes.~~ **Anotado por error, ver la sesión del 22 al 25
+  de agosto.** Fue una conclusión mía, no una decisión del usuario: él la
+  rechazó. Una sede es un lugar y `Location` no se va a repensar como
+  agrupación.
 - Confirmar tarifas reales de Wompi y Bold con un asesor.
 - El riesgo de recibir el dinero de Bre-B en una cuenta personal.
 - Los tres espacios de publicidad siguen en `url: '#'`.

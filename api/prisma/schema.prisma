@@ -526,6 +526,32 @@ model GastoPlataforma {
   @@index([fecha])
 }
 
+// ─── Ingresos sueltos de la plataforma ───────────────────────────────────────
+//
+// Plata que entro pero no paso por la pasarela, asi que `SuscripcionPago` no la
+// ve: el saldo que un club paga por Bre-B, una consultoria, lo que sea. Se
+// anota a mano desde Finanzas del superadmin, igual que los gastos.
+//
+// Vive aparte de `SuscripcionPago` a proposito. Ese modelo manda la vigencia de
+// un club —cuando vence su plan, si esta al dia— y meterle movimientos que no
+// son cobros de suscripcion terminaria corriendo fechas de vencimiento que
+// nadie pidio mover.
+model IngresoPlataforma {
+  id          String   @id @default(cuid())
+  fecha       DateTime
+  monto       Float
+  concepto    String
+  // Que club lo pago, si aplica. Sin relacion: es para leerlo en la lista, y el
+  // ingreso tiene que sobrevivir a que el club se borre.
+  clubNombre  String?
+  // Quien lo registro, por su clerkId.
+  registradoPor String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([fecha])
+}
+
 enum CategoriaGasto {
   INFRAESTRUCTURA
   COMISIONES

@@ -66,7 +66,7 @@ const MES_DEL_PAGO = 'p."createdAt"';
 export async function mesesDe(desde: Date, hasta: Date, porDia = false): Promise<MesFinanzas[]> {
   const FORMATO = porDia ? 'YYYY-MM-DD' : 'YYYY-MM';
 
-  const [ingresos, gastos] = await Promise.all([
+  const [ingresos, sueltos, gastos] = await Promise.all([
     prisma.$queryRawUnsafe<{ mes: string; total: number; clubes: number }[]>(
       `SELECT to_char(${MES_DEL_PAGO} ${ZONA}, '${FORMATO}') AS mes,
               COALESCE(SUM(p.monto), 0)::float8              AS total,
@@ -74,6 +74,15 @@ export async function mesesDe(desde: Date, hasta: Date, porDia = false): Promise
          FROM "SuscripcionPago" p
          JOIN "ClubSuscripcion" s ON s.id = p."suscripcionId"
         WHERE p.estado = 'PAID' AND ${MES_DEL_PAGO} >= $1 AND ${MES_DEL_PAGO} < $2
+        GROUP BY 1`,
+      desde, hasta,
+    ),
+    // Lo que entró sin pasar por la pasarela y se anotó a mano.
+    prisma.$queryRawUnsafe<{ mes: string; total: number }[]>(
+      `SELECT to_char(i.fecha ${ZONA}, '${FORMATO}') AS mes,
+              COALESCE(SUM(i.monto), 0)::float8      AS total
+         FROM "IngresoPlataforma" i
+        WHERE i.fecha >= $1 AND i.fecha < $2
         GROUP BY 1`,
       desde, hasta,
     ),
@@ -106,6 +115,12 @@ export async function mesesDe(desde: Date, hasta: Date, porDia = false): Promise
   for (const fila of ingresos) {
     const m = porMes.get(fila.mes);
     if (m) { m.entra = Number(fila.total); m.clubes = Number(fila.clubes); }
+  }
+  // Se suman a lo mismo: para la gráfica es plata que entró, venga de donde
+  // venga. El desglose de cuál fue cuál está en la lista de movimientos.
+  for (const fila of sueltos) {
+    const m = porMes.get(fila.mes);
+    if (m) m.entra += Number(fila.total);
   }
   for (const fila of gastos) {
     const m = porMes.get(fila.mes);
@@ -364,9 +379,10 @@ export interface PulsoDelNegocio {
 export async function pulsoDelNegocio(): Promise<PulsoDelNegocio> {
   const ahora = new Date();
 
-  const [recaudado, gastado, clubes, clubesQuePaganN, enPrueba, deportistas, primerClub] =
+  const [recaudado, sueltos, gastado, clubes, clubesQuePaganN, enPrueba, deportistas, primerClub] =
     await Promise.all([
       prisma.suscripcionPago.aggregate({ where: { estado: 'PAID' }, _sum: { monto: true } }),
+      prisma.ingresoPlataforma.aggregate({ _sum: { monto: true } }),
       prisma.gastoPlataforma.aggregate({ _sum: { monto: true } }),
       prisma.club.count(),
       prisma.clubSuscripcion.count({ where: { pagos: { some: { estado: 'PAID' } } } }),
@@ -375,7 +391,7 @@ export async function pulsoDelNegocio(): Promise<PulsoDelNegocio> {
       prisma.club.findFirst({ orderBy: { createdAt: 'asc' }, select: { createdAt: true } }),
     ]);
 
-  const recaudadoSiempre = recaudado._sum.monto ?? 0;
+  const recaudadoSiempre = (recaudado._sum.monto ?? 0) + (sueltos._sum.monto ?? 0);
   const gastadoSiempre = gastado._sum.monto ?? 0;
 
   // Meses transcurridos desde que se registró el primer club, contando el

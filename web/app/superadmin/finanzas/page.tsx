@@ -78,6 +78,23 @@ interface Gasto {
   origen?: string | null;
 }
 
+/**
+ * Plata que entró sin pasar por la pasarela: el saldo que un club paga por
+ * Bre-B, una consultoría, lo que sea. Se anota a mano, igual que un gasto.
+ */
+interface Ingreso {
+  id: string;
+  fecha: string;
+  monto: number;
+  concepto: string;
+  clubNombre?: string | null;
+}
+
+/** Una fila de la lista, venga de donde venga. */
+type Movimiento =
+  | { tipo: 'gasto'; id: string; fecha: string; monto: number; texto: string; categoria: string; origen?: string | null }
+  | { tipo: 'ingreso'; id: string; fecha: string; monto: number; texto: string; club?: string | null };
+
 interface Pulso {
   totalAcumulado: number;
   clubesNuevosPorMes: number;
@@ -110,7 +127,7 @@ function hoyISO(): string {
   return `${h.getFullYear()}-${String(h.getMonth() + 1).padStart(2, '0')}-${String(h.getDate()).padStart(2, '0')}`;
 }
 
-const VACIO = { fecha: hoyISO(), monto: '', categoria: 'INFRAESTRUCTURA', descripcion: '' };
+const VACIO = { fecha: hoyISO(), monto: '', categoria: 'INFRAESTRUCTURA', descripcion: '', club: '' };
 
 export default function FinanzasSuperadmin() {
   const { getToken } = useAuth();
@@ -120,10 +137,14 @@ export default function FinanzasSuperadmin() {
   const [rangoFechas, setRangoFechas] = useState<DateRange | null>(anioEnCurso);
   const [datos, setDatos] = useState<Finanzas | null>(null);
   const [gastos, setGastos] = useState<Gasto[]>([]);
+  const [ingresos, setIngresos] = useState<Ingreso[]>([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const [abierto, setAbierto] = useState(false);
+  // Qué se está anotando. El modal es el mismo: cambia el color, el campo de
+  // categoría por el del club, y a dónde se manda.
+  const [tipo, setTipo] = useState<'gasto' | 'ingreso'>('gasto');
   const [nuevo, setNuevo] = useState(VACIO);
   const [guardando, setGuardando] = useState(false);
   // El error del formulario vive aparte del de la pantalla: con el modal abierto,
@@ -141,12 +162,14 @@ export default function FinanzasSuperadmin() {
         : mesElegido
           ? `desde=${mesElegido}-01&hasta=${mesElegido}-01`
           : `desde=${aISO(rango.start)}&hasta=${aISO(rango.end)}`;
-      const [f, g] = await Promise.all([
+      const [f, g, i] = await Promise.all([
         apiFetch<Finanzas>(`/superadmin/finanzas?${busqueda}`, { token }),
         apiFetch<{ gastos: Gasto[] }>('/superadmin/finanzas/gastos', { token }),
+        apiFetch<{ ingresos: Ingreso[] }>('/superadmin/finanzas/ingresos', { token }),
       ]);
       setDatos(f);
       setGastos(g.gastos);
+      setIngresos(i.ingresos);
       setError(null);
     } catch {
       setError('No se pudieron cargar las finanzas. Intenta de nuevo.');
@@ -175,6 +198,18 @@ export default function FinanzasSuperadmin() {
     return Math.max(1, meses.size);
   }, [datos]);
 
+  /** Gastos e ingresos en una sola lista, del más nuevo al más viejo. */
+  const movimientos = useMemo<Movimiento[]>(() => [
+    ...gastos.map(g => ({
+      tipo: 'gasto' as const, id: g.id, fecha: g.fecha, monto: g.monto,
+      texto: g.descripcion, categoria: g.categoria, origen: g.origen,
+    })),
+    ...ingresos.map(i => ({
+      tipo: 'ingreso' as const, id: i.id, fecha: i.fecha, monto: i.monto,
+      texto: i.concepto, club: i.clubNombre,
+    })),
+  ].sort((a, b) => b.fecha.localeCompare(a.fecha)), [gastos, ingresos]);
+
   const gastosDelPeriodo = useMemo(() => {
     // Los tramos vienen por mes o por día según el rango, así que se recortan a
     // `aaaa-mm` para comparar. Sin esto, al ver un mes en días la clave era
@@ -184,35 +219,48 @@ export default function FinanzasSuperadmin() {
     return gastos.filter(g => dentro.has(g.fecha.slice(0, 7))).length;
   }, [gastos, datos]);
 
+  /** Cuántos ingresos a mano caen en el periodo, para la nota de la tarjeta. */
+  const ingresosAMano = useMemo(() => {
+    const dentro = new Set((datos?.meses ?? []).map(m => m.mes.slice(0, 7)));
+    return ingresos.filter(i => dentro.has(i.fecha.slice(0, 7))).length;
+  }, [ingresos, datos]);
+
   async function guardar() {
     const monto = Number(nuevo.monto.replace(/[^\d]/g, ''));
     if (!monto || nuevo.descripcion.trim().length < 2) {
-      setErrorModal('Falta el monto o la descripción del gasto.');
+      setErrorModal(`Falta el monto o la descripción del ${tipo}.`);
       return;
     }
     setGuardando(true);
     setErrorModal(null);
     try {
       const token = await getToken();
-      await apiFetch('/superadmin/finanzas/gastos', {
+      // Cada uno tiene sus campos: el gasto va a una categoría y el ingreso a un
+      // club. Se arma el cuerpo explícito y no un `...nuevo`, que le mandaría al
+      // servidor los campos del otro.
+      const cuerpo = tipo === 'gasto'
+        ? { fecha: nuevo.fecha, monto, categoria: nuevo.categoria, descripcion: nuevo.descripcion }
+        : { fecha: nuevo.fecha, monto, concepto: nuevo.descripcion, clubNombre: nuevo.club || undefined };
+      await apiFetch(`/superadmin/finanzas/${tipo === 'gasto' ? 'gastos' : 'ingresos'}`, {
         method: 'POST', token,
-        body: JSON.stringify({ ...nuevo, monto }),
+        body: JSON.stringify(cuerpo),
       });
       setNuevo({ ...VACIO, categoria: nuevo.categoria });
       setAbierto(false);
       await cargar();
     } catch {
-      setErrorModal('No se pudo guardar el gasto. Intenta de nuevo.');
+      setErrorModal(`No se pudo guardar el ${tipo}. Intenta de nuevo.`);
     } finally {
       setGuardando(false);
     }
   }
 
-  async function borrar(g: Gasto) {
-    if (!confirm(`¿Borrar el gasto de ${pesos(g.monto)}?\n\n${g.descripcion}`)) return;
+  async function borrar(g: Movimiento) {
+    if (!confirm(`¿Borrar el ${g.tipo} de ${pesos(g.monto)}?\n\n${g.texto}`)) return;
     try {
       const token = await getToken();
-      await apiFetch(`/superadmin/finanzas/gastos/${g.id}`, { method: 'DELETE', token });
+      const ruta = g.tipo === 'gasto' ? 'gastos' : 'ingresos';
+      await apiFetch(`/superadmin/finanzas/${ruta}/${g.id}`, { method: 'DELETE', token });
       await cargar();
     } catch {
       setError('No se pudo borrar. Intenta de nuevo.');
@@ -245,11 +293,12 @@ export default function FinanzasSuperadmin() {
           />
           {/* Siempre dice lo mismo. Un botón que cambia a «Cancelar» obliga a
               leerlo antes de tocarlo; el modal ya tiene su propio cancelar. */}
-          <button type="button" onClick={() => { setErrorModal(null); setAbierto(true); }}
+          <button type="button"
+            onClick={() => { setErrorModal(null); setTipo('gasto'); setAbierto(true); }}
             className="inline-flex items-center gap-1.5 text-white text-[12.5px] font-semibold px-3.5 h-9 rounded-xl shrink-0 whitespace-nowrap"
             style={{ background: '#7C3AED' }}>
             <Plus className="w-3.5 h-3.5 shrink-0" />
-            Registrar gasto
+            Registrar movimiento
           </button>
         </div>
 
@@ -263,10 +312,15 @@ export default function FinanzasSuperadmin() {
                 titular es responder «cuánto» de un vistazo, y dibujarle una
                 gráfica a un solo dato le quita velocidad sin agregar nada. */}
             <div className="grid gap-2 grid-cols-2 lg:grid-cols-4">
+              {/* Si hubo plata anotada a mano se dice, porque explica una
+                  diferencia real: esos pesos no están en ningún cobro de la
+                  pasarela y si no se nombran, la cifra parece descuadrada. */}
               <Cifra rotulo="Ingresos" valor={pesos(periodo.entra)} color={ENTRA} sinPunto
-                nota={datos.granularidad === 'dia'
-                  ? `${datos.pulso.clubesQuePagan} clubes, 1 mes`
-                  : `${datos.pulso.clubesQuePagan} clubes, ${datos.meses.length} meses`} />
+                nota={ingresosAMano > 0
+                  ? `${datos.pulso.clubesQuePagan} clubes · ${ingresosAMano} a mano`
+                  : datos.granularidad === 'dia'
+                    ? `${datos.pulso.clubesQuePagan} clubes, 1 mes`
+                    : `${datos.pulso.clubesQuePagan} clubes, ${datos.meses.length} meses`} />
               <Cifra rotulo="Gastos" valor={pesos(periodo.sale)} color={SALE} sinPunto
                 nota={`${gastosDelPeriodo} ${gastosDelPeriodo === 1 ? 'gasto registrado' : 'gastos registrados'}`} />
               <Cifra rotulo="Saldo del periodo"
@@ -385,40 +439,55 @@ export default function FinanzasSuperadmin() {
 
             <Tarjeta sinAire>
               <div className="px-4 py-3 border-b border-border">
-                <h2 className="text-[15px] font-semibold text-foreground m-0">Gastos registrados</h2>
+                <h2 className="text-[15px] font-semibold text-foreground m-0">Movimientos registrados</h2>
+                <p className="text-[11.5px] text-muted-foreground m-0 mt-0.5">
+                  Lo que se anota a mano. Los cobros de la pasarela entran solos.
+                </p>
               </div>
-              {gastos.length === 0 ? (
+              {movimientos.length === 0 ? (
                 <p className="text-[12.5px] text-muted-foreground m-0 px-4 py-6 text-center">
-                  Todavía no has registrado ningún gasto.
+                  Todavía no has registrado ningún movimiento.
                 </p>
               ) : (
                 <div className="overflow-x-auto">
-                  {gastos.map(g => (
-                    <div key={g.id}
-                      className="grid grid-cols-[4.5rem_minmax(9rem,1fr)_7.5rem_6rem_1.8rem] gap-2 items-center px-4 py-2.5 border-b border-border/50 last:border-b-0 text-[12.5px] min-w-[30rem]">
+                  {movimientos.map(m => (
+                    <div key={`${m.tipo}-${m.id}`}
+                      className="grid grid-cols-[4.5rem_minmax(9rem,1fr)_7.5rem_7rem_1.8rem] gap-2 items-center px-4 py-2.5 border-b border-border/50 last:border-b-0 text-[12.5px] min-w-[31rem]">
                       <span className="text-muted-foreground tabular-nums">
-                        {new Date(g.fecha).toLocaleDateString('es-CO', { day: 'numeric', month: 'short' })}
+                        {new Date(m.fecha).toLocaleDateString('es-CO', { day: 'numeric', month: 'short' })}
                       </span>
-                      <span className="text-foreground truncate flex items-center gap-1.5" title={g.descripcion}>
+                      <span className="text-foreground truncate flex items-center gap-1.5" title={m.texto}>
                         {/* El rayo dice que lo puso el sistema. No es solo un
                             adorno: es el motivo por el que no tiene papelera. */}
-                        {g.origen && <Zap className="w-3 h-3 shrink-0" style={{ color: '#7C3AED' }} aria-label="Registrado automáticamente" />}
-                        <span className="truncate">{g.descripcion}</span>
+                        {m.tipo === 'gasto' && m.origen && (
+                          <Zap className="w-3 h-3 shrink-0" style={{ color: '#7C3AED' }} aria-label="Registrado automáticamente" />
+                        )}
+                        <span className="truncate">{m.texto}</span>
                       </span>
                       <span>
-                        <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap"
-                          style={{
-                            background: `${COLOR_CATEGORIA[g.categoria] ?? '#8E87A8'}1A`,
-                            color: COLOR_CATEGORIA[g.categoria] ?? '#8E87A8',
-                          }}>
-                          {CATEGORIAS.find(c => c.valor === g.categoria)?.texto ?? g.categoria}
-                        </span>
+                        {m.tipo === 'gasto' ? (
+                          <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap"
+                            style={{
+                              background: `${COLOR_CATEGORIA[m.categoria] ?? '#8E87A8'}1A`,
+                              color: COLOR_CATEGORIA[m.categoria] ?? '#8E87A8',
+                            }}>
+                            {CATEGORIAS.find(c => c.valor === m.categoria)?.texto ?? m.categoria}
+                          </span>
+                        ) : (
+                          <span className="text-[11px] text-muted-foreground truncate block" title={m.club ?? ''}>
+                            {m.club || 'Ingreso'}
+                          </span>
+                        )}
                       </span>
-                      <span className="text-right font-semibold tabular-nums" style={{ color: SALE }}>
-                        {pesos(g.monto)}
+                      {/* El signo va escrito, no solo el color: en una lista
+                          mezclada, saber si suma o resta no puede depender de
+                          distinguir dos tonos. */}
+                      <span className="text-right font-semibold tabular-nums"
+                        style={{ color: m.tipo === 'gasto' ? SALE : ENTRA }}>
+                        {m.tipo === 'gasto' ? '−' : '+'}{pesos(m.monto)}
                       </span>
-                      {g.origen ? <span /> : (
-                        <button type="button" onClick={() => borrar(g)} aria-label={`Borrar ${g.descripcion}`}
+                      {m.tipo === 'gasto' && m.origen ? <span /> : (
+                        <button type="button" onClick={() => borrar(m)} aria-label={`Borrar ${m.texto}`}
                           className="text-muted-foreground hover:text-[#A33A4E] transition-colors">
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
@@ -438,7 +507,7 @@ export default function FinanzasSuperadmin() {
       <HojaInferior
         abierta={abierto}
         onCerrar={() => setAbierto(false)}
-        titulo="Registrar un gasto"
+        titulo="Registrar un movimiento"
         ayuda="Se suma al mes de la fecha que pongas"
         ancho="md"
         pie={
@@ -448,12 +517,29 @@ export default function FinanzasSuperadmin() {
               Cancelar
             </button>
             <button type="button" onClick={guardar} disabled={guardando}
-              className="flex-[1.4] text-[12.5px] font-semibold px-4 py-2.5 rounded-xl text-white bg-primary disabled:opacity-60">
-              {guardando ? 'Guardando...' : 'Guardar gasto'}
+              className="flex-[1.4] text-[12.5px] font-semibold px-4 py-2.5 rounded-xl text-white disabled:opacity-60"
+              style={{ background: tipo === 'gasto' ? SALE : ENTRA }}>
+              {guardando ? 'Guardando...' : `Guardar ${tipo}`}
             </button>
           </div>
         }
       >
+        {/* Lo primero es qué se anota: cambia el resto del formulario, así que
+            preguntarlo después obligaría a releer lo ya escrito. */}
+        <div className="flex gap-1 p-[3px] rounded-xl bg-secondary mb-3">
+          {(['gasto', 'ingreso'] as const).map(t => (
+            <button key={t} type="button"
+              onClick={() => { setTipo(t); setErrorModal(null); }}
+              aria-pressed={tipo === t}
+              className="flex-1 text-[12.5px] font-semibold py-2 rounded-lg transition-colors capitalize"
+              style={tipo === t
+                ? { background: '#fff', color: t === 'gasto' ? SALE : ENTRA, boxShadow: '0 1px 3px rgba(26,16,40,0.08)' }
+                : { color: '#8E87A8' }}>
+              {t === 'gasto' ? 'Sale' : 'Entra'}
+            </button>
+          ))}
+        </div>
+
         <div className="grid gap-2.5 grid-cols-2">
           <Campo etiqueta="Fecha">
             {/* El calendario del proyecto, nunca el del navegador: ese se dibuja
@@ -475,17 +561,26 @@ export default function FinanzasSuperadmin() {
               className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[13px] tabular-nums font-semibold outline-none focus:border-primary" />
           </Campo>
           <div className="col-span-2">
-            <Campo etiqueta="Categoría">
-              <Desplegable valor={nuevo.categoria} opciones={CATEGORIAS} vacio="Elegir"
-                titulo="Categoría del gasto"
-                onElegir={v => setNuevo(n => ({ ...n, categoria: v }))} />
-            </Campo>
+            {tipo === 'gasto' ? (
+              <Campo etiqueta="Categoría">
+                <Desplegable valor={nuevo.categoria} opciones={CATEGORIAS} vacio="Elegir"
+                  titulo="Categoría del gasto"
+                  onElegir={v => setNuevo(n => ({ ...n, categoria: v }))} />
+              </Campo>
+            ) : (
+              <Campo etiqueta="De qué club · opcional">
+                <input value={nuevo.club}
+                  onChange={e => setNuevo(n => ({ ...n, club: e.target.value }))}
+                  placeholder="Correcaminos"
+                  className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[13px] outline-none focus:border-primary" />
+              </Campo>
+            )}
           </div>
           <div className="col-span-2">
             <Campo etiqueta="Descripción">
               <input value={nuevo.descripcion}
                 onChange={e => setNuevo(n => ({ ...n, descripcion: e.target.value }))}
-                placeholder="Railway, Vercel y Neon de agosto"
+                placeholder={tipo === 'gasto' ? 'Railway, Vercel y Neon de agosto' : 'Saldo del trimestre por Bre-B'}
                 className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[13px] outline-none focus:border-primary" />
             </Campo>
           </div>

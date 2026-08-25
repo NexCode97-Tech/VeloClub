@@ -1155,6 +1155,60 @@ router.post('/finanzas/gastos', requireAuth, requireSuperadmin, async (req, res)
   res.status(201).json({ gasto });
 });
 
+const ingresoSchema = z.object({
+  fecha:      z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  monto:      z.number().positive().max(1_000_000_000),
+  concepto:   z.string().trim().min(2).max(200),
+  clubNombre: z.string().trim().max(120).optional(),
+});
+
+/**
+ * GET /superadmin/finanzas/ingresos — los ultimos anotados a mano.
+ *
+ * Plata que entro sin pasar por la pasarela: el saldo que un club paga por
+ * Bre-B, una consultoria, lo que sea. No toca la vigencia de ningun club — eso
+ * lo sigue mandando SuscripcionPago.
+ */
+router.get('/finanzas/ingresos', requireAuth, requireSuperadmin, async (req, res) => {
+  const limite = Math.min(Math.max(Number(req.query.limite) || 30, 1), 200);
+  const ingresos = await prisma.ingresoPlataforma.findMany({
+    orderBy: { fecha: 'desc' },
+    take: limite,
+  });
+  res.json({ ingresos });
+});
+
+/** POST /superadmin/finanzas/ingresos */
+router.post('/finanzas/ingresos', requireAuth, requireSuperadmin, async (req, res) => {
+  const parsed = ingresoSchema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: 'Revisa los datos del ingreso.', detalle: parsed.error.issues });
+  const d = parsed.data;
+
+  // Al mediodia UTC: guardado a medianoche, cualquier huso al oeste lo corre al
+  // dia anterior y el ingreso se contaria en el mes que no es.
+  const fecha = new Date(`${d.fecha}T12:00:00Z`);
+  if (Number.isNaN(fecha.getTime())) return res.status(400).json({ error: 'Esa fecha no es válida.' });
+
+  const ingreso = await prisma.ingresoPlataforma.create({
+    data: {
+      fecha,
+      monto: d.monto,
+      concepto: d.concepto,
+      clubNombre: d.clubNombre || null,
+      registradoPor: req.auth?.clerkId ?? null,
+    },
+  });
+
+  res.status(201).json({ ingreso });
+});
+
+/** DELETE /superadmin/finanzas/ingresos/:id */
+router.delete('/finanzas/ingresos/:id', requireAuth, requireSuperadmin, async (req, res) => {
+  const { count } = await prisma.ingresoPlataforma.deleteMany({ where: { id: String(req.params.id) } });
+  if (count === 0) return res.status(404).json({ error: 'Ese ingreso ya no existe.' });
+  res.json({ ok: true });
+});
+
 /**
  * DELETE /superadmin/finanzas/gastos/:id
  *

@@ -45,11 +45,19 @@ const CATEGORIAS = [
 ].map(c => ({ ...c, color: COLOR_CATEGORIA[c.valor] }));
 
 /**
- * Con qué se abre la pantalla, mientras nadie toque el selector: los últimos
- * seis meses sin salirse del año en curso. Un mes solo no deja ver ninguna
- * tendencia, y el año entero arranca con medio gráfico vacío.
+ * Con qué se abre la pantalla: el año en curso, de enero al mes de hoy.
+ *
+ * Antes arrancaba en los últimos seis meses pero el botón decía «Ago 2026», que
+ * es el mes actual: el control afirmaba una cosa y la gráfica mostraba otra. El
+ * año es además el periodo con el que se piensa un negocio.
+ *
+ * No llega a diciembre a propósito: los meses que no han pasado dibujarían
+ * media gráfica en blanco como si no hubiera habido movimiento.
  */
-const RANGO_INICIAL = '6m';
+function anioEnCurso(): DateRange {
+  const h = new Date();
+  return { start: new Date(h.getFullYear(), 0, 1), end: new Date(h.getFullYear(), h.getMonth() + 1, 0) };
+}
 
 interface Gasto {
   id: string;
@@ -99,8 +107,8 @@ export default function FinanzasSuperadmin() {
   const { getToken } = useAuth();
   // El mismo selector de Analíticas, en su modo de meses: un mes, o el rango
   // entre dos. No hay un segundo filtro con el que pelear.
-  const [mesElegido, setMesElegido] = useState<string | null>(null);
-  const [rangoFechas, setRangoFechas] = useState<DateRange | null>(null);
+  const [mesElegido, setMesElegido] = useState<string | null>(() => `${new Date().getFullYear()}-01`);
+  const [rangoFechas, setRangoFechas] = useState<DateRange | null>(anioEnCurso);
   const [datos, setDatos] = useState<Finanzas | null>(null);
   const [gastos, setGastos] = useState<Gasto[]>([]);
   const [cargando, setCargando] = useState(true);
@@ -118,11 +126,12 @@ export default function FinanzasSuperadmin() {
       const token = await getToken();
       // El servidor redondea a meses completos, así que el día que se mande da
       // igual mientras caiga dentro del mes.
+      const rango = rangoFechas ?? anioEnCurso();
       const busqueda = rangoFechas
-        ? `desde=${aISO(rangoFechas.start)}&hasta=${aISO(rangoFechas.end)}`
+        ? `desde=${aISO(rango.start)}&hasta=${aISO(rango.end)}`
         : mesElegido
           ? `desde=${mesElegido}-01&hasta=${mesElegido}-01`
-          : `rango=${RANGO_INICIAL}`;
+          : `desde=${aISO(rango.start)}&hasta=${aISO(rango.end)}`;
       const [f, g] = await Promise.all([
         apiFetch<Finanzas>(`/superadmin/finanzas?${busqueda}`, { token }),
         apiFetch<{ gastos: Gasto[] }>('/superadmin/finanzas/gastos', { token }),

@@ -198,12 +198,27 @@ export function MonthPicker({
   let triggerLabel = monthLabel;
   if (dateRange?.start && dateRange?.end) {
     if (modo === 'meses') {
-      // Un rango de meses se nombra por sus meses, no por los dias en que cae.
-      const s = format(dateRange.start, 'MMM', { locale: es });
-      const e = format(dateRange.end, 'MMM yyyy', { locale: es });
-      triggerLabel = format(dateRange.start, 'yyyy') === format(dateRange.end, 'yyyy')
-        ? `${s} – ${e}`
-        : `${format(dateRange.start, 'MMM yyyy', { locale: es })} – ${e}`;
+      const anioIni = format(dateRange.start, 'yyyy');
+      const mismoAnio = anioIni === format(dateRange.end, 'yyyy');
+      const ahora = new Date();
+      // Un año entero se llama por su año y ya: «Ene – Ago 2026» dice lo mismo
+      // con el triple de tinta, y obliga a leerlo para entender que es «todo
+      // 2026». Cuenta como año entero el que arranca en enero y llega hasta
+      // diciembre, o hasta el mes de hoy si es el año en curso.
+      const desdeEnero = dateRange.start.getMonth() === 0;
+      const hastaElFinal = dateRange.end.getMonth() === 11
+        || (Number(anioIni) === ahora.getFullYear() && dateRange.end.getMonth() === ahora.getMonth());
+
+      if (mismoAnio && desdeEnero && hastaElFinal) {
+        triggerLabel = anioIni;
+      } else {
+        // Un rango de meses se nombra por sus meses, no por los dias en que cae.
+        const s = format(dateRange.start, 'MMM', { locale: es });
+        const e = format(dateRange.end, 'MMM yyyy', { locale: es });
+        triggerLabel = mismoAnio
+          ? `${s} – ${e}`
+          : `${format(dateRange.start, 'MMM yyyy', { locale: es })} – ${e}`;
+      }
     } else {
       const s = format(dateRange.start, 'd MMM', { locale: es });
       const e = format(dateRange.end,   'd MMM', { locale: es });

@@ -22,13 +22,22 @@ import { GraficaMeses, Ranking, ENTRA, SALE, type MesFinanzas } from '@/componen
  * sistema pueda leer.
  */
 
-/** El color de cada categoría, en un orden fijo. Nunca se ciclan. */
+/**
+ * El color de cada categoría, en un orden fijo. Nunca se ciclan.
+ *
+ * «Otros» va en el negro del texto y no en un color propio, que además es lo
+ * que corresponde: es el cajón de lo que no cae en ninguna, no una categoría
+ * con identidad. Un neutro dice eso mismo sin tener que explicarlo.
+ *
+ * Esta tabla es la única fuente: el ranking, la pastilla de la tabla y el punto
+ * del desplegable salen todos de acá, así que un color se cambia una vez.
+ */
 const COLOR_CATEGORIA: Record<string, string> = {
   INFRAESTRUCTURA: '#7C3AED',
   COMISIONES:      '#DC2626',
-  PUBLICIDAD:      '#0369A1',
+  PUBLICIDAD:      '#38BDF8',
   HERRAMIENTAS:    '#0E7C57',
-  OTROS:           '#A33A4E',
+  OTROS:           '#1A1028',
 };
 
 /**

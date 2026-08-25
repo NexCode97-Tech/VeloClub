@@ -152,6 +152,17 @@
     font-family: var(--font-heading);
   }
 
+  /* Las barras de una gráfica crecen desde su línea base al montar. La
+     animación es del dato, no decorado: acompaña la lectura de dónde arranca y
+     hasta dónde llega. Quien pidió menos movimiento las ve ya puestas. */
+  .vc-barra { transform-origin: bottom; transform: scaleY(0); animation: vcCrecer .7s cubic-bezier(.23,1,.32,1) forwards; }
+  .vc-franja { transform-origin: left; transform: scaleX(0); animation: vcEstirar .7s cubic-bezier(.23,1,.32,1) forwards; }
+  @keyframes vcCrecer  { to { transform: scaleY(1); } }
+  @keyframes vcEstirar { to { transform: scaleX(1); } }
+  @media (prefers-reduced-motion: reduce) {
+    .vc-barra, .vc-franja { animation: none; transform: none; }
+  }
+
   /* Oculta la barra de scroll horizontal (ej. tab bars con overflow-x-auto) */
   .no-scrollbar {
     scrollbar-width: none;

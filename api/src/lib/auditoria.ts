@@ -35,7 +35,7 @@ const MODELOS_AUDITADOS = new Set([
   'Post', 'PostComment', 'Reporte',
   'Competition', 'CompetitionEvent', 'EventResult',
   'TrainingSession', 'TrainingResult', 'CalendarEvent',
-  'ClaseHorario', 'Cupon', 'CuponCanje',
+  'ClaseHorario', 'Cupon', 'CuponCanje', 'GastoPlataforma',
 ]);
 
 /**

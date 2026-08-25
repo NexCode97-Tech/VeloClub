@@ -497,6 +497,38 @@ model SuscripcionPago {
   @@index([suscripcionId])
 }
 
+// ─── Gastos de la plataforma ─────────────────────────────────────────────────
+//
+// Lo que cuesta sostener VeloClub: servidores, comisiones de la pasarela,
+// pauta, herramientas. No tiene `clubId` a proposito: son gastos del negocio,
+// no de un club, y meterlos en la misma tabla que el flujo de caja de un club
+// mezclaria dos cajas que nunca se deben sumar.
+//
+// Se registran a mano porque no hay de donde sacarlos solos: las facturas de
+// Railway o de Cloudinary no llegan a ningun sitio que el sistema pueda leer.
+model GastoPlataforma {
+  id          String         @id @default(cuid())
+  fecha       DateTime
+  monto       Float
+  categoria   CategoriaGasto
+  descripcion String
+  // Quien lo registro, por su clerkId. Sin relacion a User: si esa cuenta
+  // desaparece, el gasto tiene que seguir en los libros.
+  registradoPor String?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  @@index([fecha])
+}
+
+enum CategoriaGasto {
+  INFRAESTRUCTURA
+  COMISIONES
+  PUBLICIDAD
+  HERRAMIENTAS
+  OTROS
+}
+
 // ─── Cupones de descuento (checkout de suscripción) ──────────────────────────
 
 model Cupon {

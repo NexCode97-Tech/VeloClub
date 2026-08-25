@@ -5,6 +5,9 @@ import { prisma } from '../db/client';
 import { addToAllowlist, removeFromAllowlist } from '../lib/clerk-allowlist';
 import { invalidarTrustedCache, diasDePrueba } from './clubs';
 import { cacheDel } from '../lib/redis';
+import {
+  mesesDe, gastosPorCategoria, clubesQuePagan, ingresoMensual,
+} from '../lib/finanzas-plataforma';
 import { v2 as cloudinary } from 'cloudinary';
 import { validarSubida } from '../lib/upload-guard';
 import { emitToClub } from '../lib/sse';
@@ -1028,6 +1031,89 @@ router.patch('/reportes/:id', requireAuth, requireSuperadmin, async (req, res) =
     });
   }
 
+  res.json({ ok: true });
+});
+
+// ─── Finanzas de la plataforma ───────────────────────────────────────────────
+//
+// La caja del negocio: lo que entra por las suscripciones de los clubes y lo
+// que sale por sostenerlo. Nada de esto se cruza con el flujo de caja de un
+// club, que es plata de otra persona.
+
+/** El primer dia del mes, N meses atras, en UTC. */
+function mesesAtras(n: number): Date {
+  const hoy = new Date();
+  return new Date(Date.UTC(hoy.getUTCFullYear(), hoy.getUTCMonth() - n + 1, 1));
+}
+
+/**
+ * GET /superadmin/finanzas?meses=6
+ *
+ * Todo ya sumado. Traer los pagos crudos para agregarlos en el navegador
+ * funciona con nueve filas y se cae con mil.
+ */
+router.get('/finanzas', requireAuth, requireSuperadmin, async (req, res) => {
+  const meses = Math.min(Math.max(Number(req.query.meses) || 6, 1), 36);
+  const desde = mesesAtras(meses);
+  // Hasta el primer dia del mes que viene: asi el mes en curso entra completo.
+  const ahora = new Date();
+  const hasta = new Date(Date.UTC(ahora.getUTCFullYear(), ahora.getUTCMonth() + 1, 1));
+
+  const [porMes, categorias, clubes, mensual] = await Promise.all([
+    mesesDe(desde, hasta),
+    gastosPorCategoria(desde, hasta),
+    clubesQuePagan(),
+    ingresoMensual(),
+  ]);
+
+  res.json({ meses: porMes, categorias, clubes, mensual, desde, hasta });
+});
+
+const gastoSchema = z.object({
+  fecha:       z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  monto:       z.number().positive().max(1_000_000_000),
+  categoria:   z.enum(['INFRAESTRUCTURA', 'COMISIONES', 'PUBLICIDAD', 'HERRAMIENTAS', 'OTROS']),
+  descripcion: z.string().trim().min(2).max(200),
+});
+
+/** GET /superadmin/finanzas/gastos — los ultimos registrados. */
+router.get('/finanzas/gastos', requireAuth, requireSuperadmin, async (req, res) => {
+  const limite = Math.min(Math.max(Number(req.query.limite) || 30, 1), 200);
+  const gastos = await prisma.gastoPlataforma.findMany({
+    orderBy: { fecha: 'desc' },
+    take: limite,
+  });
+  res.json({ gastos });
+});
+
+/** POST /superadmin/finanzas/gastos — se registran a mano, no hay de donde sacarlos. */
+router.post('/finanzas/gastos', requireAuth, requireSuperadmin, async (req, res) => {
+  const parsed = gastoSchema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: 'Revisa los datos del gasto.', detalle: parsed.error.issues });
+  const d = parsed.data;
+
+  // Al mediodia UTC: guardado a medianoche, cualquier huso al oeste lo corre al
+  // dia anterior y el gasto se contaria en el mes que no es.
+  const fecha = new Date(`${d.fecha}T12:00:00Z`);
+  if (Number.isNaN(fecha.getTime())) return res.status(400).json({ error: 'Esa fecha no es válida.' });
+
+  const gasto = await prisma.gastoPlataforma.create({
+    data: {
+      fecha,
+      monto: d.monto,
+      categoria: d.categoria,
+      descripcion: d.descripcion,
+      registradoPor: req.auth?.clerkId ?? null,
+    },
+  });
+
+  res.status(201).json({ gasto });
+});
+
+/** DELETE /superadmin/finanzas/gastos/:id */
+router.delete('/finanzas/gastos/:id', requireAuth, requireSuperadmin, async (req, res) => {
+  const { count } = await prisma.gastoPlataforma.deleteMany({ where: { id: String(req.params.id) } });
+  if (count === 0) return res.status(404).json({ error: 'Ese gasto ya no existe.' });
   res.json({ ok: true });
 });
 

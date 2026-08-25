@@ -8,7 +8,7 @@ import { apiFetch } from '@/lib/api-client';
 import LoadingScreen, { LoadingCurtain, CURTAIN_MS, esperarPantallaCarga } from '@/components/ui/loading-screen';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Home, Building2, LogOut, Ticket, Info, CircleDollarSign, ArrowLeft, Flag } from 'lucide-react';
+import { Home, Building2, LogOut, Ticket, Info, CircleDollarSign, ArrowLeft, Flag, Wallet } from 'lucide-react';
 import { IconAjustes } from '@/components/ui/custom-icons';
 import { motion, AnimatePresence } from 'framer-motion';
 import { idClubDeRuta } from './club-context';
@@ -19,6 +19,9 @@ const TABS = [
   { href: '/superadmin',          label: 'Inicio',    exact: true,  Icon: Home             },
   { href: '/superadmin/clubs',    label: 'Clubes',    exact: false, Icon: Building2        },
   { href: '/superadmin/cupones',  label: 'Cupones',   exact: false, Icon: Ticket           },
+  // La caja del negocio: lo que entra por las suscripciones y lo que sale por
+  // sostener la plataforma. No se cruza con las finanzas de ningun club.
+  { href: '/superadmin/finanzas', label: 'Finanzas',  exact: false, Icon: Wallet           },
   // Los Terminos prometen retirar contenido que los incumpla; esta es la cola
   // desde donde se hace. Vive en el superadmin porque el feed publico cruza
   // clubes y ninguno puede mandar sobre lo que publica otro.
@@ -29,6 +32,7 @@ const SCREEN_LABELS: Record<string, string> = {
   '/superadmin':          'Inicio',
   '/superadmin/clubs':    'Clubes',
   '/superadmin/cupones':  'Cupones',
+  '/superadmin/finanzas': 'Finanzas',
   '/superadmin/reportes': 'Reportes',
 };
 

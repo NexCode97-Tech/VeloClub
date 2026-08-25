@@ -136,15 +136,15 @@ router.get('/mi-suscripcion', requireAuth, async (req, res) => {
   const [suscripcion, cantidadDeportistas, club] = await Promise.all([
     leerSuscripcion(clubId),
     contarDeportistasFacturables(clubId),
-    prisma.club.findUnique({ where: { id: clubId }, select: { trialEndsAt: true } }),
+    prisma.club.findUnique({ where: { id: clubId }, select: { trialEndsAt: true, createdAt: true } }),
   ]);
 
   // Un club en prueba todavia no tiene suscripcion, y no hay que crearsela solo
   // por consultar. El precio se calcula igual para poder mostrarselo.
   const tipoPlan = (suscripcion?.tipoPlan ?? 'MENSUAL') as TipoPlan;
   const autoRenew = suscripcion?.autoRenew ?? false;
-  const precioSinAutoRenew = calcularPrecioPlan(cantidadDeportistas, tipoPlan, false);
-  const precioConAutoRenew = calcularPrecioPlan(cantidadDeportistas, tipoPlan, true);
+  const precioSinAutoRenew = calcularPrecioPlan(cantidadDeportistas, tipoPlan, false, club?.createdAt);
+  const precioConAutoRenew = calcularPrecioPlan(cantidadDeportistas, tipoPlan, true, club?.createdAt);
   const precio = autoRenew ? precioConAutoRenew : precioSinAutoRenew;
   const vig = suscripcion ? vigencia(suscripcion.pagos, tipoPlan) : null;
   const enTrial = !!club?.trialEndsAt && club.trialEndsAt > new Date();
@@ -164,11 +164,14 @@ router.get('/planes', requireAuth, async (req, res) => {
   if (!requireAdmin(req, res)) return;
   const clubId = req.user!.clubId ?? '';
 
-  const cantidadDeportistas = await contarDeportistasFacturables(clubId);
+  const [cantidadDeportistas, club] = await Promise.all([
+    contarDeportistasFacturables(clubId),
+    prisma.club.findUnique({ where: { id: clubId }, select: { createdAt: true } }),
+  ]);
   const planes = (['MENSUAL', 'TRIMESTRAL', 'ANUAL'] as TipoPlan[]).map(tipoPlan => ({
     tipoPlan,
-    precio: calcularPrecioPlan(cantidadDeportistas, tipoPlan),
-    precioConAutoRenew: calcularPrecioPlan(cantidadDeportistas, tipoPlan, true),
+    precio: calcularPrecioPlan(cantidadDeportistas, tipoPlan, false, club?.createdAt),
+    precioConAutoRenew: calcularPrecioPlan(cantidadDeportistas, tipoPlan, true, club?.createdAt),
   }));
 
   res.json({ cantidadDeportistas, planes });
@@ -303,7 +306,7 @@ router.post('/pagar', paymentLimiter, requireAuth, async (req, res) => {
 
   const [suscripcion, club] = await Promise.all([
     asegurarSuscripcion(clubId),
-    prisma.club.findUnique({ where: { id: clubId }, select: { name: true, email: true, trialEndsAt: true } }),
+    prisma.club.findUnique({ where: { id: clubId }, select: { name: true, email: true, trialEndsAt: true, createdAt: true } }),
   ]);
   // El tope del ciclo se lee despues de asegurar la suscripcion: en paralelo
   // podria consultarla antes de que exista y quedarse sin tope que aplicar.
@@ -312,7 +315,7 @@ router.post('/pagar', paymentLimiter, requireAuth, async (req, res) => {
   // El 5% de descuento es un incentivo por pagar con tarjeta (el único medio que
   // habilita la renovación automática) — un pago manual por PSE o Efecty no lo
   // recibe, aunque la suscripción ya tenga autoRenew activo de antes.
-  const montoBase = calcularPrecioPlan(cantidadDeportistas, suscripcion.tipoPlan as TipoPlan, metodo === 'CARD');
+  const montoBase = calcularPrecioPlan(cantidadDeportistas, suscripcion.tipoPlan as TipoPlan, metodo === 'CARD', club?.createdAt);
 
   // Cupón de descuento (opcional). SIEMPRE se re-valida en el servidor: nunca se
   // confía en el frontend para el precio. Se aplica sobre el total final.
@@ -516,15 +519,16 @@ router.get('/breb', requireAuth, async (req, res) => {
   const datos = datosBreb();
   if (!datos) return res.json({ disponible: false });
 
-  const [suscripcion, cantidadDeportistas] = await Promise.all([
+  const [suscripcion, cantidadDeportistas, club] = await Promise.all([
     leerSuscripcion(clubId),
     contarDeportistasFacturables(clubId),
+    prisma.club.findUnique({ where: { id: clubId }, select: { createdAt: true } }),
   ]);
   const tipoPlan = (suscripcion?.tipoPlan ?? 'MENSUAL') as TipoPlan;
 
   // El 5% por tarjeta no aplica: es el incentivo del único medio que habilita
   // la renovación automática, y una transferencia no la habilita.
-  const monto = calcularPrecioPlan(cantidadDeportistas, tipoPlan, false);
+  const monto = calcularPrecioPlan(cantidadDeportistas, tipoPlan, false, club?.createdAt);
 
   // Un solo pago en revisión a la vez. Sin esto, un club impaciente sube cinco
   // comprobantes del mismo pago y la bandeja del superadmin queda ilegible.
@@ -567,10 +571,10 @@ router.post('/breb', paymentLimiter, requireAuth, async (req, res) => {
 
   const [suscripcion, club] = await Promise.all([
     asegurarSuscripcion(clubId),
-    prisma.club.findUnique({ where: { id: clubId }, select: { name: true, trialEndsAt: true } }),
+    prisma.club.findUnique({ where: { id: clubId }, select: { name: true, trialEndsAt: true, createdAt: true } }),
   ]);
   const cantidadDeportistas = await contarDeportistasFacturables(clubId);
-  const monto = calcularPrecioPlan(cantidadDeportistas, suscripcion.tipoPlan as TipoPlan, false);
+  const monto = calcularPrecioPlan(cantidadDeportistas, suscripcion.tipoPlan as TipoPlan, false, club?.createdAt);
 
   const yaHayPendiente = await prisma.suscripcionPago.findFirst({
     where: { suscripcionId: suscripcion.id, estado: 'PENDING', mpPaymentId: null },
@@ -640,11 +644,11 @@ router.post('/checkout', paymentLimiter, requireAuth, async (req, res) => {
 
   const [suscripcion, club] = await Promise.all([
     asegurarSuscripcion(clubId),
-    prisma.club.findUnique({ where: { id: clubId }, select: { name: true, email: true } }),
+    prisma.club.findUnique({ where: { id: clubId }, select: { name: true, email: true, createdAt: true } }),
   ]);
   const cantidadDeportistas = await contarDeportistasFacturables(clubId);
 
-  const monto = calcularPrecioPlan(cantidadDeportistas, suscripcion.tipoPlan as TipoPlan, suscripcion.autoRenew);
+  const monto = calcularPrecioPlan(cantidadDeportistas, suscripcion.tipoPlan as TipoPlan, suscripcion.autoRenew, club?.createdAt);
   const payerEmail = resolverPayerEmail(req, club?.email);
 
   try {
@@ -675,7 +679,7 @@ router.post('/subscribe', paymentLimiter, requireAuth, async (req, res) => {
 
   const [suscripcion, club] = await Promise.all([
     asegurarSuscripcion(clubId),
-    prisma.club.findUnique({ where: { id: clubId }, select: { name: true, email: true, trialEndsAt: true } }),
+    prisma.club.findUnique({ where: { id: clubId }, select: { name: true, email: true, trialEndsAt: true, createdAt: true } }),
   ]);
   // El tope del ciclo se lee despues de asegurar la suscripcion: en paralelo
   // podria consultarla antes de que exista y quedarse sin tope que aplicar.
@@ -687,7 +691,7 @@ router.post('/subscribe', paymentLimiter, requireAuth, async (req, res) => {
     return res.status(409).json({ error: 'Ya tienes la renovación automática activa. Desactívala antes de volver a activarla.' });
   }
 
-  const monto = calcularPrecioPlan(cantidadDeportistas, suscripcion.tipoPlan as TipoPlan, true);
+  const monto = calcularPrecioPlan(cantidadDeportistas, suscripcion.tipoPlan as TipoPlan, true, club?.createdAt);
   const payerEmail = resolverPayerEmail(req, club?.email);
   const meses = suscripcion.tipoPlan === 'MENSUAL' ? 1 : suscripcion.tipoPlan === 'TRIMESTRAL' ? 3 : 12;
 

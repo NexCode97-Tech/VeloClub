@@ -14,6 +14,8 @@ import { cacheDel } from './redis';
 export async function sincronizarMontosSuscripciones(): Promise<{ revisadas: number; actualizadas: number; fallidas: string[] }> {
   const suscripciones = await prisma.clubSuscripcion.findMany({
     where: { autoRenew: true, mpPreapprovalId: { not: null } },
+    // La fecha de registro del club decide si le toca el precio de campaña.
+    include: { club: { select: { createdAt: true } } },
   });
 
   let actualizadas = 0;
@@ -22,7 +24,7 @@ export async function sincronizarMontosSuscripciones(): Promise<{ revisadas: num
   for (const s of suscripciones) {
     try {
       const cantidadDeportistas = await contarDeportistasFacturables(s.clubId);
-      const montoActual = calcularPrecioPlan(cantidadDeportistas, s.tipoPlan as TipoPlan, true);
+      const montoActual = calcularPrecioPlan(cantidadDeportistas, s.tipoPlan as TipoPlan, true, s.club?.createdAt);
 
       if (montoActual !== s.ultimoMontoSincronizado) {
         await actualizarMontoPreapproval(s.mpPreapprovalId!, montoActual);

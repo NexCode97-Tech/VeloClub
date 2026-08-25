@@ -171,9 +171,11 @@ export function GraficaMeses({ meses }: { meses: MesFinanzas[] }) {
                 <stop offset="0%" stopColor={se.color} stopOpacity={0.18} />
                 <stop offset="100%" stopColor={se.color} stopOpacity={0} />
               </linearGradient>
-              {/* La cuadrícula que vive dentro del área, del color de su serie */}
-              <pattern id={`cua${i}${id}`} width={9} height={9} patternUnits="userSpaceOnUse">
-                <path d="M9 0H0V9" fill="none" stroke={se.color} strokeWidth={0.7} opacity={0.5} />
+              {/* La cuadrícula que vive dentro del área, del color de su serie.
+                  Cuadro chico y trazo fino: a esta escala se lee como una
+                  textura de papel milimetrado y no como una reja. */}
+              <pattern id={`cua${i}${id}`} width={5} height={5} patternUnits="userSpaceOnUse">
+                <path d="M5 0H0V5" fill="none" stroke={se.color} strokeWidth={0.45} opacity={0.45} />
               </pattern>
               {/* Y se desvanece hacia abajo, para no competir con la línea */}
               <linearGradient id={`fd${i}${id}`} x1={0} y1={0} x2={0} y2={1}>

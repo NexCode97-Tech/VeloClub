@@ -979,15 +979,9 @@ export default function SuscripcionCard() {
           </>
         )}
 
-        {/* Solo si de verdad hay algo que ahorrar. Durante la campaña el
-            trimestre vale lo mismo con renovación automática y sin ella, y
-            prometer un 5% que el cobro no da es la clase de detalle que hace
-            que un club deje de creerle a la pantalla. */}
-        {planes?.some(p => p.precioConAutoRenew < p.precio) && (
-          <p className="text-[11px] text-muted-foreground text-center mt-4">
-            Activa la renovación automática al pagar y suma 5% de descuento adicional
-          </p>
-        )}
+        <p className="text-[11px] text-muted-foreground text-center mt-4">
+          Activa la renovación automática al pagar y suma 5% de descuento adicional
+        </p>
       </div>
     );
   }

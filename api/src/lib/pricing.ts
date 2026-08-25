@@ -18,20 +18,14 @@ const DESCUENTO_POR_PLAN: Record<TipoPlan, number> = { MENSUAL: 0, TRIMESTRAL: 0
 
 // ── La campaña de lanzamiento ───────────────────────────────────────────────
 //
-// El **primer** trimestre vale lo mismo para todos los clubes que se registren
-// mientras dura: 180.000, sin tramos y sin el descuento del plan. Es la
-// promoción que acompaña a los dos meses gratis, y por eso comparte su fecha de
-// corte.
+// El trimestre vale lo mismo para todos los clubes que se registren mientras
+// dura: 180.000, sin tramos y sin el descuento del plan. Es la promoción que
+// acompaña a los dos meses gratis, y por eso comparte su fecha de corte.
 //
 // Manda la fecha en que el club se registró, no la del cobro. Un club que entra
 // el 30 de octubre recibe sus dos meses gratis y paga a fines de diciembre, ya
 // fuera de campaña: si mandara la fecha del cobro, le cobraríamos un precio
 // distinto del que se le ofreció al entrar.
-//
-// Y solo el primero: de la renovación en adelante manda la tarifa normal con
-// sus descuentos. Sin ese límite, un club chico con renovación automática
-// quedaría pagando 180.000 cada trimestre de por vida cuando le corresponden
-// 127.500 — cobrándole de más, solo, y sin que nadie lo mire.
 //
 // Sin esto la plataforma cobraba su tarifa por tramos —entre 127.500 y
 // 162.000— y la diferencia hasta los 180.000 habia que perseguirla por fuera,
@@ -68,20 +62,15 @@ export function calcularPrecioPlan(
   cantidadDeportistas: number,
   tipoPlan: TipoPlan,
   autoRenew = false,
-  club: {
-    /**
-     * Cuándo se registró. Sin esto se asume que es ahora, que es lo correcto
-     * para un club nuevo y lo único que se puede suponer cuando quien llama no
-     * tiene el dato a mano.
-     */
-    creadoEn?: Date | null;
-    /** Si ya pagó alguna vez. El precio de campaña es solo del primer cobro. */
-    yaPago?: boolean;
-  } = {},
+  /**
+   * Cuándo se registró el club. Sin esto se asume que se registra ahora, que es
+   * lo correcto para un club nuevo y lo único que se puede suponer cuando quien
+   * llama no tiene el dato a mano.
+   */
+  clubCreadoEn: Date = new Date(),
 ): number {
-  const creadoEn = club.creadoEn ?? new Date();
   // Plano: ni tramos ni descuentos, tampoco el de renovación automática.
-  if (tipoPlan === 'TRIMESTRAL' && enCampana(creadoEn) && !club.yaPago) return TRIMESTRE_CAMPANA;
+  if (tipoPlan === 'TRIMESTRAL' && enCampana(clubCreadoEn)) return TRIMESTRE_CAMPANA;
 
   const base = tarifaMensualPorDeportistas(cantidadDeportistas) * MESES_POR_PLAN[tipoPlan];
   const descuento = DESCUENTO_POR_PLAN[tipoPlan] + (autoRenew ? DESCUENTO_AUTO_RENOVACION : 0);

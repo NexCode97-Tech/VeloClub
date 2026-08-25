@@ -1092,15 +1092,26 @@ router.get('/finanzas', requireAuth, requireSuperadmin, async (req, res) => {
     }
   }
 
+  // Un mes solo se dibuja dia a dia: una unica barra no dice cuando entro la
+  // plata ni si fue de golpe o repartida. De dos meses en adelante manda el mes.
+  const unSoloMes =
+    desde.getUTCFullYear() === hasta.getUTCFullYear()
+      ? hasta.getUTCMonth() - desde.getUTCMonth() === 1
+      : hasta.getUTCFullYear() - desde.getUTCFullYear() === 1
+        && desde.getUTCMonth() === 11 && hasta.getUTCMonth() === 0;
+
   const [porMes, categorias, clubes, mensual, pulso] = await Promise.all([
-    mesesDe(desde, hasta),
+    mesesDe(desde, hasta, unSoloMes),
     gastosPorCategoria(desde, hasta),
     clubesQuePagan(),
     ingresoMensual(),
     pulsoDelNegocio(),
   ]);
 
-  res.json({ meses: porMes, categorias, clubes, mensual, pulso, rango, desde, hasta });
+  res.json({
+    meses: porMes, categorias, clubes, mensual, pulso, rango, desde, hasta,
+    granularidad: unSoloMes ? 'dia' : 'mes',
+  });
 });
 
 const gastoSchema = z.object({

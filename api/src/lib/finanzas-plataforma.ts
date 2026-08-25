@@ -15,13 +15,22 @@ import type { DetalleComision } from './mercadopago';
  */
 
 export interface MesFinanzas {
-  /** aaaa-mm */
+  /** `aaaa-mm` por mes, o `aaaa-mm-dd` cuando el periodo es un mes solo. */
   mes: string;
   entra: number;
   sale: number;
-  /** Cuántos clubes distintos pagaron ese mes. */
+  /** Cuántos clubes distintos pagaron en ese tramo. */
   clubes: number;
 }
+
+/**
+ * En qué zona se corta el día.
+ *
+ * Los timestamps son UTC, pero el día al que pertenece un pago es el día en
+ * Colombia: uno hecho a las 8 de la noche del 31 cae el 1 en UTC y contarlo en
+ * el mes siguiente sería sencillamente falso.
+ */
+const ZONA = "AT TIME ZONE 'America/Bogota'";
 
 export interface GastoPorCategoria {
   categoria: string;
@@ -46,13 +55,22 @@ export interface ClubQuePaga {
  */
 const MES_DEL_PAGO = 'p."createdAt"';
 
-/** Los meses del rango, con lo que entró y lo que salió en cada uno. */
-export async function mesesDe(desde: Date, hasta: Date): Promise<MesFinanzas[]> {
+/**
+ * Los tramos del rango, con lo que entró y lo que salió en cada uno.
+ *
+ * `porDia` cambia el grano. Un periodo de un mes solo dibujado en una sola
+ * barra no dice nada: no se ve cuándo entró la plata ni si fue de golpe o
+ * repartida. Con más de un mes a la vista pasa lo contrario, y treinta barras
+ * por mes serían ilegibles.
+ */
+export async function mesesDe(desde: Date, hasta: Date, porDia = false): Promise<MesFinanzas[]> {
+  const FORMATO = porDia ? 'YYYY-MM-DD' : 'YYYY-MM';
+
   const [ingresos, gastos] = await Promise.all([
     prisma.$queryRawUnsafe<{ mes: string; total: number; clubes: number }[]>(
-      `SELECT to_char(${MES_DEL_PAGO}, 'YYYY-MM') AS mes,
-              COALESCE(SUM(p.monto), 0)::float8   AS total,
-              COUNT(DISTINCT s."clubId")::int     AS clubes
+      `SELECT to_char(${MES_DEL_PAGO} ${ZONA}, '${FORMATO}') AS mes,
+              COALESCE(SUM(p.monto), 0)::float8              AS total,
+              COUNT(DISTINCT s."clubId")::int                AS clubes
          FROM "SuscripcionPago" p
          JOIN "ClubSuscripcion" s ON s.id = p."suscripcionId"
         WHERE p.estado = 'PAID' AND ${MES_DEL_PAGO} >= $1 AND ${MES_DEL_PAGO} < $2
@@ -60,8 +78,8 @@ export async function mesesDe(desde: Date, hasta: Date): Promise<MesFinanzas[]> 
       desde, hasta,
     ),
     prisma.$queryRawUnsafe<{ mes: string; total: number }[]>(
-      `SELECT to_char(g.fecha, 'YYYY-MM')       AS mes,
-              COALESCE(SUM(g.monto), 0)::float8 AS total
+      `SELECT to_char(g.fecha ${ZONA}, '${FORMATO}') AS mes,
+              COALESCE(SUM(g.monto), 0)::float8      AS total
          FROM "GastoPlataforma" g
         WHERE g.fecha >= $1 AND g.fecha < $2
         GROUP BY 1`,
@@ -70,14 +88,19 @@ export async function mesesDe(desde: Date, hasta: Date): Promise<MesFinanzas[]> 
   ]);
 
   const porMes = new Map<string, MesFinanzas>();
-  // Se siembran todos los meses del rango, incluso los vacíos: un mes sin
-  // movimiento es información, y saltárselo deja la gráfica mintiendo sobre el
-  // paso del tiempo.
-  const cursor = new Date(Date.UTC(desde.getUTCFullYear(), desde.getUTCMonth(), 1));
+  // Se siembran todos los tramos del rango, incluso los vacíos: un mes o un día
+  // sin movimiento es información, y saltárselo deja la gráfica mintiendo sobre
+  // el paso del tiempo.
+  const cursor = porDia
+    ? new Date(Date.UTC(desde.getUTCFullYear(), desde.getUTCMonth(), desde.getUTCDate()))
+    : new Date(Date.UTC(desde.getUTCFullYear(), desde.getUTCMonth(), 1));
   while (cursor < hasta) {
-    const clave = `${cursor.getUTCFullYear()}-${String(cursor.getUTCMonth() + 1).padStart(2, '0')}`;
+    const aa = cursor.getUTCFullYear();
+    const mm = String(cursor.getUTCMonth() + 1).padStart(2, '0');
+    const clave = porDia ? `${aa}-${mm}-${String(cursor.getUTCDate()).padStart(2, '0')}` : `${aa}-${mm}`;
     porMes.set(clave, { mes: clave, entra: 0, sale: 0, clubes: 0 });
-    cursor.setUTCMonth(cursor.getUTCMonth() + 1);
+    if (porDia) cursor.setUTCDate(cursor.getUTCDate() + 1);
+    else cursor.setUTCMonth(cursor.getUTCMonth() + 1);
   }
 
   for (const fila of ingresos) {

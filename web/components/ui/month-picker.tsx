@@ -21,13 +21,28 @@ interface MonthPickerProps {
   dateRange: DateRange | null;
   onChange: (month: string | null, range: DateRange | null) => void;
   alignRight?: boolean;
+  /**
+   * Qué se elige después del mes.
+   *
+   * `dias` (por defecto) abre el calendario del mes para marcar un rango de
+   * días adentro: es lo que necesita Analíticas.
+   *
+   * `meses` se queda en la grilla y deja marcar de un mes a otro. Lo pide una
+   * pantalla cuyo dato mínimo es el mes —Finanzas—, donde elegir días no
+   * cambiaría nada y en cambio un rango de varios meses sí.
+   */
+  modo?: 'dias' | 'meses';
 }
 
 export function MonthPicker({
   value, currentMonth, availableMonths = [], dateRange, onChange, alignRight = false,
+  modo = 'dias',
 }: MonthPickerProps) {
   const [open, setOpen]       = useState(false);
   const [step, setStep]       = useState<'month' | 'days'>('month');
+  // En modo meses: el mes que quedó marcado esperando el segundo clic.
+  const [mesInicio, setMesInicio] = useState<string | null>(null);
+  const [mesEncima, setMesEncima] = useState<string | null>(null);
   const [viewYear, setViewYear] = useState(() => {
     const m = value ?? currentMonth;
     return m ? parseInt(m.split('-')[0]) : new Date().getFullYear();
@@ -42,7 +57,9 @@ export function MonthPicker({
   useEffect(() => {
     function h(e: MouseEvent) {
       if (ref.current && !ref.current.contains(e.target as Node)) {
-        setOpen(false); setStep('month');
+        // Un rango a medias no se queda esperando: al cerrar sin el segundo
+        // clic, lo que aplica es el mes que ya se eligio.
+        setOpen(false); setStep('month'); setMesInicio(null); setMesEncima(null);
       }
     }
     document.addEventListener('mousedown', h);
@@ -67,7 +84,39 @@ export function MonthPicker({
     return availableMonths.length === 0 || monthKey === currentMonth || availableMonths.includes(monthKey);
   }
 
+  /**
+   * Modo meses: el primer clic marca el mes y lo aplica solo; el segundo, en
+   * otro mes, arma el rango entre los dos. Volver a tocar el mismo mes lo
+   * confirma como mes único.
+   *
+   * El rango se emite de primer día a último día, y el servidor de todos modos
+   * lo redondea a meses completos: acá el día es solo la forma de nombrar el
+   * mes.
+   */
+  function elegirMesEnRango(monthKey: string) {
+    if (!mesInicio || mesInicio === monthKey) {
+      if (mesInicio === monthKey) { setMesInicio(null); setOpen(false); return; }
+      setMesInicio(monthKey);
+      setMesEncima(null);
+      onChange(monthKey, null);
+      return;
+    }
+
+    const [a, b] = mesInicio < monthKey ? [mesInicio, monthKey] : [monthKey, mesInicio];
+    const [ay, am] = a.split('-').map(Number);
+    const [by, bm] = b.split('-').map(Number);
+    onChange(a, {
+      start: new Date(ay, am - 1, 1),
+      end:   new Date(by, bm, 0),   // dia 0 del mes siguiente = ultimo del mes
+    });
+    setMesInicio(null);
+    setMesEncima(null);
+    setOpen(false);
+  }
+
   function handleSelectMonth(monthKey: string) {
+    if (modo === 'meses') return elegirMesEnRango(monthKey);
+
     const isCurrentMonth = monthKey === currentMonth;
     onChange(isCurrentMonth ? null : monthKey, null);
     setRangeStart(null); setRangeEnd(null);
@@ -109,14 +158,38 @@ export function MonthPicker({
     return isWithinInterval(day, { start: s, end: en });
   }
 
+  /** ¿Este mes cae dentro del rango que se está armando o del ya elegido? */
+  function mesEnRango(monthKey: string): boolean {
+    if (modo !== 'meses') return false;
+    if (mesInicio) {
+      const otro = mesEncima;
+      if (!otro) return monthKey === mesInicio;
+      const [a, b] = mesInicio < otro ? [mesInicio, otro] : [otro, mesInicio];
+      return monthKey >= a && monthKey <= b;
+    }
+    if (!dateRange) return false;
+    const a = format(dateRange.start, 'yyyy-MM');
+    const b = format(dateRange.end,   'yyyy-MM');
+    return monthKey >= a && monthKey <= b;
+  }
+
   // Label del trigger
   const labelDate = selected ? new Date(selected + '-15') : new Date();
   const monthLabel = format(labelDate, 'MMM yyyy', { locale: es });
   let triggerLabel = monthLabel;
   if (dateRange?.start && dateRange?.end) {
-    const s = format(dateRange.start, 'd MMM', { locale: es });
-    const e = format(dateRange.end,   'd MMM', { locale: es });
-    triggerLabel = `${monthLabel} · ${s}–${e}`;
+    if (modo === 'meses') {
+      // Un rango de meses se nombra por sus meses, no por los dias en que cae.
+      const s = format(dateRange.start, 'MMM', { locale: es });
+      const e = format(dateRange.end, 'MMM yyyy', { locale: es });
+      triggerLabel = format(dateRange.start, 'yyyy') === format(dateRange.end, 'yyyy')
+        ? `${s} – ${e}`
+        : `${format(dateRange.start, 'MMM yyyy', { locale: es })} – ${e}`;
+    } else {
+      const s = format(dateRange.start, 'd MMM', { locale: es });
+      const e = format(dateRange.end,   'd MMM', { locale: es });
+      triggerLabel = `${monthLabel} · ${s}–${e}`;
+    }
   }
 
   return (
@@ -175,18 +248,24 @@ export function MonthPicker({
               <div className="grid grid-cols-4 gap-1.5">
                 {MONTHS.map((name, i) => {
                   const monthKey = `${viewYear}-${String(i + 1).padStart(2, '0')}`;
-                  const isSel    = selected === monthKey;
+                  const enRango  = mesEnRango(monthKey);
+                  const isSel    = modo === 'meses'
+                    ? (mesInicio ? monthKey === mesInicio : !dateRange && selected === monthKey)
+                    : selected === monthKey;
                   const isCur    = monthKey === currentMonth;
                   const avail    = isAvailable(monthKey);
                   return (
                     <button
                       key={monthKey}
                       onClick={() => avail && handleSelectMonth(monthKey)}
+                      onMouseEnter={() => modo === 'meses' && mesInicio && setMesEncima(monthKey)}
                       disabled={!avail}
                       className="h-9 rounded-xl text-[11px] font-semibold transition-all duration-150 cursor-pointer"
                       style={
                         isSel
                           ? { background: '#7C3AED', color: '#fff', boxShadow: '0 2px 8px rgba(124,58,237,0.35)' }
+                          : enRango
+                          ? { background: 'rgba(124,58,237,0.14)', color: '#7C3AED' }
                           : isCur && !isSel
                           ? { background: 'rgba(124,58,237,0.10)', color: '#7C3AED', border: '1px solid rgba(124,58,237,0.30)' }
                           : avail
@@ -200,7 +279,13 @@ export function MonthPicker({
                 })}
               </div>
 
-              {value !== null && (
+              {modo === 'meses' ? (
+                <p className="mt-3 mb-0 text-[11px] text-muted-foreground text-center leading-snug">
+                  {mesInicio
+                    ? 'Elegí el mes final, o tocá el mismo para ver solo ese'
+                    : 'Un mes, o dos para ver el rango entre ellos'}
+                </p>
+              ) : value !== null && (
                 <button
                   onClick={() => { onChange(null, null); setOpen(false); }}
                   className="mt-3 w-full text-[11px] text-muted-foreground hover:text-purple-600 transition-colors py-1 cursor-pointer"

@@ -32,9 +32,18 @@ export interface MesFinanzas {
 
 const NOMBRE_MES = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
 
+/** `2026-08` da «Ago»; `2026-08-14`, el número del día. */
 function etiquetaMes(clave: string): string {
-  const [, m] = clave.split('-');
+  const [, m, d] = clave.split('-');
+  if (d) return String(Number(d));
   return NOMBRE_MES[Number(m) - 1] ?? clave;
+}
+
+/** El nombre largo, para el globo: «14 de agosto» o «Agosto 2026». */
+function tituloDe(clave: string): string {
+  const [a, m, d] = clave.split('-');
+  const mes = NOMBRE_MES[Number(m) - 1] ?? clave;
+  return d ? `${Number(d)} de ${mes.toLowerCase()}` : `${mes} ${a}`;
 }
 
 const pesos = (n: number) => '$' + Math.round(n).toLocaleString('es-CO');
@@ -68,7 +77,11 @@ export function GraficaMeses({ meses }: { meses: MesFinanzas[] }) {
   const y = (v: number) => PAD_S + altoUtil - (v / tope) * altoUtil;
 
   const paso = anchoUtil / meses.length;
-  const anchoBarra = Math.min(26, Math.max(6, (paso - 16) / 2));
+  // Poco mas de un tercio del tramo para cada barra: deja el aire entre dias
+  // vecinos sin volverlas hilos cuando el mes trae treinta y uno.
+  const anchoBarra = Math.min(26, Math.max(3.5, paso * 0.36));
+  // Cada cuántos tramos se escribe la etiqueta del eje. Con doce meses, todos.
+  const saltoEtiquetas = meses.length > 24 ? 5 : meses.length > 14 ? 2 : 1;
   const marcas = [0, 0.25, 0.5, 0.75, 1].map(f => tope * f);
 
   const m = encima !== null ? meses[encima] : null;
@@ -84,8 +97,8 @@ export function GraficaMeses({ meses }: { meses: MesFinanzas[] }) {
       <svg viewBox={`0 0 ${W} ${H}`} className="block w-full overflow-visible"
         role="img" aria-labelledby={id}>
         <title id={id}>
-          Lo que entra y lo que sale por mes, de {etiquetaMes(meses[0].mes)} a{' '}
-          {etiquetaMes(meses[meses.length - 1].mes)}
+          Lo que entra y lo que sale, de {tituloDe(meses[0].mes)} a{' '}
+          {tituloDe(meses[meses.length - 1].mes)}
         </title>
 
         {/* Rejilla recesiva: está para orientar, no para competir con el dato */}
@@ -99,20 +112,6 @@ export function GraficaMeses({ meses }: { meses: MesFinanzas[] }) {
             </text>
           </g>
         ))}
-
-        {/* La raya del promedio. Una barra sola no dice si el mes fue bueno o
-            malo; contra el promedio, sí. Va punteada y en el color de lo que
-            entra, para que se lea como referencia y no como una serie más. */}
-        {promedio > 0 && (
-          <g>
-            <line x1={PAD_I} x2={W - PAD_D} y1={y(promedio)} y2={y(promedio)}
-              stroke={ENTRA} strokeWidth={1.5} strokeDasharray="5 4" opacity={0.55} />
-            <text x={W - PAD_D} y={y(promedio) - 5} textAnchor="end"
-              style={{ fontSize: 9, fill: ENTRA, fontWeight: 600 }}>
-              promedio {corto(promedio)}
-            </text>
-          </g>
-        )}
 
         {meses.map((mes, i) => {
           const centro = PAD_I + paso * i + paso / 2;
@@ -130,17 +129,22 @@ export function GraficaMeses({ meses }: { meses: MesFinanzas[] }) {
                 ) : null,
               )}
 
-              <text x={centro} y={H - 8} textAnchor="middle"
-                style={{ fontSize: 9.5, fill: activo ? '#1A1028' : '#8E87A8', fontWeight: activo ? 600 : 400 }}>
-                {etiquetaMes(mes.mes)}
-              </text>
+              {/* Con un mes en días son treinta y una etiquetas: se pintan
+                  salteadas para que no se toquen, y la del tramo señalado
+                  aparece siempre aunque le tocara estar oculta. */}
+              {(i % saltoEtiquetas === 0 || activo) && (
+                <text x={centro} y={H - 8} textAnchor="middle"
+                  style={{ fontSize: 9.5, fill: activo ? '#1A1028' : '#8E87A8', fontWeight: activo ? 600 : 400 }}>
+                  {etiquetaMes(mes.mes)}
+                </text>
+              )}
 
               {/* La zona de contacto es el mes entero, no la barra: apuntarle a
                   una barra de 26px con el mouse es trabajo de más. */}
               <rect
                 x={PAD_I + paso * i} y={PAD_S} width={paso} height={altoUtil}
                 fill="transparent" tabIndex={0} className="outline-none focus-visible:fill-primary/5"
-                aria-label={`${etiquetaMes(mes.mes)}: entró ${pesos(mes.entra)}, salió ${pesos(mes.sale)}, queda ${pesos(mes.entra - mes.sale)}`}
+                aria-label={`${tituloDe(mes.mes)}: entró ${pesos(mes.entra)}, salió ${pesos(mes.sale)}, queda ${pesos(mes.entra - mes.sale)}`}
                 onMouseMove={e => {
                   const r = caja.current?.getBoundingClientRect();
                   if (r) setX(e.clientX - r.left);
@@ -153,6 +157,29 @@ export function GraficaMeses({ meses }: { meses: MesFinanzas[] }) {
             </g>
           );
         })}
+
+        {/* La raya del promedio. Una barra sola no dice si el mes fue bueno o
+            malo; contra el promedio, sí.
+
+            Va de últimas, encima de las barras: dibujada antes, cualquier mes
+            alto le pasaba por encima y se comía la etiqueta. Y en gris y no en
+            el verde de la serie, por dos motivos: sobre una barra verde el
+            verde desaparece, y esto es una referencia, no una tercera serie.
+            El texto lleva un contorno del color del fondo para que se lea igual
+            cuando le cae encima una barra. */}
+        {promedio > 0 && (
+          <g>
+            <line x1={PAD_I} x2={W - PAD_D} y1={y(promedio)} y2={y(promedio)}
+              stroke="#6B6383" strokeWidth={1.5} strokeDasharray="5 4" opacity={0.8} />
+            <text x={W - PAD_D} y={y(promedio) - 5} textAnchor="end"
+              style={{
+                fontSize: 9.5, fill: '#4A4360', fontWeight: 600,
+                stroke: '#fff', strokeWidth: 3, paintOrder: 'stroke',
+              }}>
+              promedio {corto(promedio)}
+            </text>
+          </g>
+        )}
       </svg>
 
       {m && (
@@ -164,9 +191,7 @@ export function GraficaMeses({ meses }: { meses: MesFinanzas[] }) {
             boxShadow: '0 8px 20px -6px rgba(26,16,40,0.45)',
           }}
         >
-          <p className="font-bold m-0 mb-0.5">
-            {etiquetaMes(m.mes)} {m.mes.slice(0, 4)}
-          </p>
+          <p className="font-bold m-0 mb-0.5">{tituloDe(m.mes)}</p>
           <p className="m-0 flex items-center gap-1.5">
             <span className="w-2 h-2 rounded-sm shrink-0" style={{ background: ENTRA }} />
             Entró <b className="tabular-nums font-semibold">{pesos(m.entra)}</b>

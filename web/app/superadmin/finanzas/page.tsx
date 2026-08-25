@@ -6,6 +6,7 @@ import { Plus, Trash2, Zap } from 'lucide-react';
 import { apiFetch } from '@/lib/api-client';
 import { AccionesCabecera } from '@/components/superadmin/acciones-cabecera';
 import { Desplegable } from '@/components/ui/desplegable';
+import { DatePicker } from '@/components/ui/date-picker';
 import { HojaInferior } from '@/components/ui/hoja-inferior';
 import { MonthPicker, type DateRange } from '@/components/ui/month-picker';
 import { GraficaMeses, Ranking, ENTRA, SALE, type MesFinanzas } from '@/components/superadmin/grafica-meses';
@@ -40,15 +41,11 @@ const COLOR_CATEGORIA: Record<string, string> = {
 };
 
 /**
- * Ninguno se sale del año en curso: al decir «este año» o «los últimos seis
- * meses» nadie se refiere a septiembre del año pasado. Para mirar más atrás
- * está el selector de fechas.
+ * Con qué se abre la pantalla, mientras nadie toque el selector: los últimos
+ * seis meses sin salirse del año en curso. Un mes solo no deja ver ninguna
+ * tendencia, y el año entero arranca con medio gráfico vacío.
  */
-const RANGOS = [
-  { clave: 'mes',  texto: 'Mes' },
-  { clave: '6m',   texto: '6 meses' },
-  { clave: 'anio', texto: 'Año' },
-];
+const RANGO_INICIAL = '6m';
 
 interface Gasto {
   id: string;
@@ -76,6 +73,8 @@ interface Finanzas {
   clubes: { clubId: string; nombre: string; total: number }[];
   mensual: { monto: number; clubes: number };
   pulso: Pulso;
+  /** Si las barras son meses o dias. Lo decide el servidor por el rango. */
+  granularidad: 'dia' | 'mes';
 }
 
 /** Una fecha local a aaaa-mm-dd, sin pasar por UTC. */
@@ -94,10 +93,8 @@ const VACIO = { fecha: hoyISO(), monto: '', categoria: 'INFRAESTRUCTURA', descri
 
 export default function FinanzasSuperadmin() {
   const { getToken } = useAuth();
-  const [rango, setRango] = useState('6m');
-  // El mismo selector de Analíticas: un solo control que da un mes o un rango
-  // de días. Elegir acá apaga los tres botones, y tocar un botón lo limpia:
-  // nunca quedan dos filtros peleando por el mismo periodo.
+  // El mismo selector de Analíticas, en su modo de meses: un mes, o el rango
+  // entre dos. No hay un segundo filtro con el que pelear.
   const [mesElegido, setMesElegido] = useState<string | null>(null);
   const [rangoFechas, setRangoFechas] = useState<DateRange | null>(null);
   const [datos, setDatos] = useState<Finanzas | null>(null);
@@ -115,12 +112,13 @@ export default function FinanzasSuperadmin() {
   const cargar = useCallback(async () => {
     try {
       const token = await getToken();
-      // Un rango a mano manda sobre el botón; si no hay, va el preajuste.
+      // El servidor redondea a meses completos, así que el día que se mande da
+      // igual mientras caiga dentro del mes.
       const busqueda = rangoFechas
         ? `desde=${aISO(rangoFechas.start)}&hasta=${aISO(rangoFechas.end)}`
         : mesElegido
-          ? `desde=${mesElegido}-01&hasta=${mesElegido}-28`
-          : `rango=${rango}`;
+          ? `desde=${mesElegido}-01&hasta=${mesElegido}-01`
+          : `rango=${RANGO_INICIAL}`;
       const [f, g] = await Promise.all([
         apiFetch<Finanzas>(`/superadmin/finanzas?${busqueda}`, { token }),
         apiFetch<{ gastos: Gasto[] }>('/superadmin/finanzas/gastos', { token }),
@@ -133,7 +131,7 @@ export default function FinanzasSuperadmin() {
     } finally {
       setCargando(false);
     }
-  }, [getToken, rango, mesElegido, rangoFechas]);
+  }, [getToken, mesElegido, rangoFechas]);
 
   useEffect(() => { cargar(); }, [cargar]);
 
@@ -211,30 +209,19 @@ export default function FinanzasSuperadmin() {
           </p>
         )}
 
-        {/* El rango vive acá y no en la cabecera: ahí quedaba apretado contra
-            el título y no cabía el selector de fechas. */}
-        <div className="flex items-center gap-2 flex-wrap">
-          <div className="flex items-center gap-1 p-[2px] rounded-[10px] bg-white border border-border">
-            {RANGOS.map(r => (
-              <button key={r.clave} type="button"
-                onClick={() => { setRango(r.clave); setMesElegido(null); setRangoFechas(null); }}
-                className={`text-[12px] font-semibold px-3 py-1.5 rounded-lg transition-colors ${
-                  rango === r.clave && !mesElegido && !rangoFechas
-                    ? 'text-primary bg-primary/10' : 'text-muted-foreground'
-                }`}>
-                {r.texto}
-              </button>
-            ))}
-          </div>
-          <div className="ml-auto">
-            <MonthPicker
-              value={mesElegido}
-              currentMonth={new Date().toISOString().slice(0, 7)}
-              dateRange={rangoFechas}
-              onChange={(mes, r) => { setMesElegido(mes); setRangoFechas(r); }}
-              alignRight
-            />
-          </div>
+        {/* Un solo control para el periodo. Antes convivía con tres botones de
+            preajuste, y dos filtros peleando por lo mismo obligan a mirar los
+            dos para saber qué se está viendo. El selector ya hace todo: un mes,
+            o el rango entre dos. */}
+        <div className="flex items-center justify-end">
+          <MonthPicker
+            value={mesElegido}
+            currentMonth={new Date().toISOString().slice(0, 7)}
+            dateRange={rangoFechas}
+            onChange={(mes, r) => { setMesElegido(mes); setRangoFechas(r); }}
+            modo="meses"
+            alignRight
+          />
         </div>
 
         {cargando ? (
@@ -248,7 +235,9 @@ export default function FinanzasSuperadmin() {
                 gráfica a un solo dato le quita velocidad sin agregar nada. */}
             <div className="grid gap-2 grid-cols-2 lg:grid-cols-4">
               <Cifra rotulo="Ingresos" valor={pesos(periodo.entra)} color={ENTRA}
-                nota={`${datos.pulso.clubesQuePagan} clubes, ${datos.meses.length} ${datos.meses.length === 1 ? 'mes' : 'meses'}`} />
+                nota={datos.granularidad === 'dia'
+                  ? `${datos.pulso.clubesQuePagan} clubes, 1 mes`
+                  : `${datos.pulso.clubesQuePagan} clubes, ${datos.meses.length} meses`} />
               <Cifra rotulo="Gastos" valor={pesos(periodo.sale)} color={SALE}
                 nota={`${gastosDelPeriodo} ${gastosDelPeriodo === 1 ? 'gasto registrado' : 'gastos registrados'}`} />
               <Cifra rotulo="Saldo del periodo"
@@ -264,7 +253,9 @@ export default function FinanzasSuperadmin() {
 
             <Tarjeta>
               <div className="flex items-baseline gap-2 flex-wrap">
-                <h2 className="text-[15px] font-semibold text-foreground m-0">Entra y sale, mes a mes</h2>
+                <h2 className="text-[15px] font-semibold text-foreground m-0">
+                  {datos.granularidad === 'dia' ? 'Entra y sale, día a día' : 'Entra y sale, mes a mes'}
+                </h2>
                 {/* Con dos series la leyenda va siempre: la identidad no puede
                     depender solo del color. */}
                 <span className="ml-auto flex gap-3">
@@ -392,10 +383,13 @@ export default function FinanzasSuperadmin() {
       >
         <div className="grid gap-2.5 grid-cols-2">
           <Campo etiqueta="Fecha">
-            <input type="date" value={nuevo.fecha} max={hoyISO()}
-              onChange={e => setNuevo(n => ({ ...n, fecha: e.target.value }))}
-              style={{ appearance: 'none', WebkitAppearance: 'none' }}
-              className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[13px] outline-none focus:border-primary" />
+            {/* El calendario del proyecto, nunca el del navegador: ese se dibuja
+                distinto en cada sistema y no se parece a nada de la app. */}
+            <DatePicker
+              value={nuevo.fecha}
+              onChange={v => setNuevo(n => ({ ...n, fecha: v || hoyISO() }))}
+              maxDate={new Date()}
+            />
           </Campo>
           <Campo etiqueta="Monto">
             <input inputMode="numeric" value={nuevo.monto} placeholder="$ 92.000"

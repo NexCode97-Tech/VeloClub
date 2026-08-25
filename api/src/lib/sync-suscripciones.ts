@@ -14,8 +14,12 @@ import { cacheDel } from './redis';
 export async function sincronizarMontosSuscripciones(): Promise<{ revisadas: number; actualizadas: number; fallidas: string[] }> {
   const suscripciones = await prisma.clubSuscripcion.findMany({
     where: { autoRenew: true, mpPreapprovalId: { not: null } },
-    // La fecha de registro del club decide si le toca el precio de campaña.
-    include: { club: { select: { createdAt: true } } },
+    // El precio de campaña depende de cuándo se registró el club y de si ya
+    // pagó: cubre solo el primer trimestre.
+    include: {
+      club: { select: { createdAt: true } },
+      pagos: { where: { estado: 'PAID' }, select: { id: true }, take: 1 },
+    },
   });
 
   let actualizadas = 0;
@@ -24,7 +28,11 @@ export async function sincronizarMontosSuscripciones(): Promise<{ revisadas: num
   for (const s of suscripciones) {
     try {
       const cantidadDeportistas = await contarDeportistasFacturables(s.clubId);
-      const montoActual = calcularPrecioPlan(cantidadDeportistas, s.tipoPlan as TipoPlan, true, s.club?.createdAt);
+      // Este es el monto que se le manda a Mercado Pago para el proximo cobro
+      // automatico. Es justo donde un precio de campana congelado se cobraria
+      // solo, trimestre tras trimestre, sin que nadie lo mire.
+      const montoActual = calcularPrecioPlan(cantidadDeportistas, s.tipoPlan as TipoPlan, true,
+        { creadoEn: s.club?.createdAt, yaPago: s.pagos.length > 0 });
 
       if (montoActual !== s.ultimoMontoSincronizado) {
         await actualizarMontoPreapproval(s.mpPreapprovalId!, montoActual);

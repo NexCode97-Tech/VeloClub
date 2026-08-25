@@ -44,6 +44,14 @@ function resolverPayerEmail(req: import('express').Request, clubEmail: string | 
   return req.auth?.email || clubEmail || 'sin-correo@veloclubtech.com';
 }
 
+/**
+ * ¿El club ya pagó alguna vez? Lo necesita el precio: el de campaña cubre solo
+ * el primer trimestre, y de la renovación en adelante manda la tarifa normal.
+ */
+function yaPago(suscripcion?: { pagos?: { estado: string }[] } | null): boolean {
+  return !!suscripcion?.pagos?.some(p => p.estado === 'PAID');
+}
+
 // Si el club paga estando todavía en su período de prueba, el plan pagado no
 // debe empezar a correr ese mismo día (desperdiciaría días gratis) — arranca
 // justo cuando termina la prueba, para que se aprovechen los días gratis
@@ -143,8 +151,9 @@ router.get('/mi-suscripcion', requireAuth, async (req, res) => {
   // por consultar. El precio se calcula igual para poder mostrarselo.
   const tipoPlan = (suscripcion?.tipoPlan ?? 'MENSUAL') as TipoPlan;
   const autoRenew = suscripcion?.autoRenew ?? false;
-  const precioSinAutoRenew = calcularPrecioPlan(cantidadDeportistas, tipoPlan, false, club?.createdAt);
-  const precioConAutoRenew = calcularPrecioPlan(cantidadDeportistas, tipoPlan, true, club?.createdAt);
+  const precioDe = { creadoEn: club?.createdAt, yaPago: yaPago(suscripcion) };
+  const precioSinAutoRenew = calcularPrecioPlan(cantidadDeportistas, tipoPlan, false, precioDe);
+  const precioConAutoRenew = calcularPrecioPlan(cantidadDeportistas, tipoPlan, true, precioDe);
   const precio = autoRenew ? precioConAutoRenew : precioSinAutoRenew;
   const vig = suscripcion ? vigencia(suscripcion.pagos, tipoPlan) : null;
   const enTrial = !!club?.trialEndsAt && club.trialEndsAt > new Date();
@@ -164,14 +173,16 @@ router.get('/planes', requireAuth, async (req, res) => {
   if (!requireAdmin(req, res)) return;
   const clubId = req.user!.clubId ?? '';
 
-  const [cantidadDeportistas, club] = await Promise.all([
+  const [cantidadDeportistas, club, suscripcion] = await Promise.all([
     contarDeportistasFacturables(clubId),
     prisma.club.findUnique({ where: { id: clubId }, select: { createdAt: true } }),
+    leerSuscripcion(clubId),
   ]);
+  const precioDe = { creadoEn: club?.createdAt, yaPago: yaPago(suscripcion) };
   const planes = (['MENSUAL', 'TRIMESTRAL', 'ANUAL'] as TipoPlan[]).map(tipoPlan => ({
     tipoPlan,
-    precio: calcularPrecioPlan(cantidadDeportistas, tipoPlan, false, club?.createdAt),
-    precioConAutoRenew: calcularPrecioPlan(cantidadDeportistas, tipoPlan, true, club?.createdAt),
+    precio: calcularPrecioPlan(cantidadDeportistas, tipoPlan, false, precioDe),
+    precioConAutoRenew: calcularPrecioPlan(cantidadDeportistas, tipoPlan, true, precioDe),
   }));
 
   res.json({ cantidadDeportistas, planes });
@@ -315,7 +326,8 @@ router.post('/pagar', paymentLimiter, requireAuth, async (req, res) => {
   // El 5% de descuento es un incentivo por pagar con tarjeta (el único medio que
   // habilita la renovación automática) — un pago manual por PSE o Efecty no lo
   // recibe, aunque la suscripción ya tenga autoRenew activo de antes.
-  const montoBase = calcularPrecioPlan(cantidadDeportistas, suscripcion.tipoPlan as TipoPlan, metodo === 'CARD', club?.createdAt);
+  const montoBase = calcularPrecioPlan(cantidadDeportistas, suscripcion.tipoPlan as TipoPlan, metodo === 'CARD',
+    { creadoEn: club?.createdAt, yaPago: yaPago(suscripcion) });
 
   // Cupón de descuento (opcional). SIEMPRE se re-valida en el servidor: nunca se
   // confía en el frontend para el precio. Se aplica sobre el total final.
@@ -528,7 +540,8 @@ router.get('/breb', requireAuth, async (req, res) => {
 
   // El 5% por tarjeta no aplica: es el incentivo del único medio que habilita
   // la renovación automática, y una transferencia no la habilita.
-  const monto = calcularPrecioPlan(cantidadDeportistas, tipoPlan, false, club?.createdAt);
+  const monto = calcularPrecioPlan(cantidadDeportistas, tipoPlan, false,
+    { creadoEn: club?.createdAt, yaPago: yaPago(suscripcion) });
 
   // Un solo pago en revisión a la vez. Sin esto, un club impaciente sube cinco
   // comprobantes del mismo pago y la bandeja del superadmin queda ilegible.
@@ -574,7 +587,8 @@ router.post('/breb', paymentLimiter, requireAuth, async (req, res) => {
     prisma.club.findUnique({ where: { id: clubId }, select: { name: true, trialEndsAt: true, createdAt: true } }),
   ]);
   const cantidadDeportistas = await contarDeportistasFacturables(clubId);
-  const monto = calcularPrecioPlan(cantidadDeportistas, suscripcion.tipoPlan as TipoPlan, false, club?.createdAt);
+  const monto = calcularPrecioPlan(cantidadDeportistas, suscripcion.tipoPlan as TipoPlan, false,
+    { creadoEn: club?.createdAt, yaPago: yaPago(suscripcion) });
 
   const yaHayPendiente = await prisma.suscripcionPago.findFirst({
     where: { suscripcionId: suscripcion.id, estado: 'PENDING', mpPaymentId: null },
@@ -648,7 +662,8 @@ router.post('/checkout', paymentLimiter, requireAuth, async (req, res) => {
   ]);
   const cantidadDeportistas = await contarDeportistasFacturables(clubId);
 
-  const monto = calcularPrecioPlan(cantidadDeportistas, suscripcion.tipoPlan as TipoPlan, suscripcion.autoRenew, club?.createdAt);
+  const monto = calcularPrecioPlan(cantidadDeportistas, suscripcion.tipoPlan as TipoPlan, suscripcion.autoRenew,
+    { creadoEn: club?.createdAt, yaPago: yaPago(suscripcion) });
   const payerEmail = resolverPayerEmail(req, club?.email);
 
   try {
@@ -691,7 +706,8 @@ router.post('/subscribe', paymentLimiter, requireAuth, async (req, res) => {
     return res.status(409).json({ error: 'Ya tienes la renovación automática activa. Desactívala antes de volver a activarla.' });
   }
 
-  const monto = calcularPrecioPlan(cantidadDeportistas, suscripcion.tipoPlan as TipoPlan, true, club?.createdAt);
+  const monto = calcularPrecioPlan(cantidadDeportistas, suscripcion.tipoPlan as TipoPlan, true,
+    { creadoEn: club?.createdAt, yaPago: yaPago(suscripcion) });
   const payerEmail = resolverPayerEmail(req, club?.email);
   const meses = suscripcion.tipoPlan === 'MENSUAL' ? 1 : suscripcion.tipoPlan === 'TRIMESTRAL' ? 3 : 12;
 

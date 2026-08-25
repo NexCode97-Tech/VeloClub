@@ -80,16 +80,18 @@ export function MarqueeLogos({ logos, velocidad = 'normal', className, ...props 
             aria-hidden={i >= tira.length / 2}
             className="group relative flex h-16 w-16 shrink-0 items-center justify-center sm:h-20 sm:w-20"
           >
-            <span
-              className="absolute inset-0 rounded-full opacity-0 blur-md transition-opacity duration-500 group-hover:opacity-100"
-              style={{ background: 'radial-gradient(circle, rgba(167,139,250,0.45), transparent 70%)' }}
-            />
+            {/* Sin resplandor detrás. Lo había, y funcionaba cuando esta
+                sección era casi negra: el logo parecía prenderse. Sobre blanco
+                hace lo contrario, porque el logo es una imagen opaca que lo
+                tapa entero y solo deja ver el borde difuminado asomando por
+                fuera: en vez de iluminar el logo, le dibujaba el contorno de su
+                propio fondo. La opacidad sola alcanza. */}
             <Image
               src={logo.logoUrl}
               alt={logo.name}
               width={96}
               height={96}
-              className="relative h-full w-full rounded-full object-contain opacity-80 transition-opacity duration-300 group-hover:opacity-100"
+              className="relative h-full w-full rounded-full object-contain opacity-75 transition-opacity duration-300 group-hover:opacity-100"
             />
           </span>
         ))}

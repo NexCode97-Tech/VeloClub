@@ -10,6 +10,30 @@ interface TrustedClub {
   logoUrl: string;
 }
 
+/**
+ * El logo del club, con su fondo llevado a blanco puro.
+ *
+ * Cada club sube el logo como quiere, y los fondos «blancos» que llegan no lo
+ * son: medidos en producción dan #FEFEFE, #F7F7F7 y solo alguno #FFFFFF. Sobre
+ * esta sección, que ahora es blanca, esa diferencia se ve como un disco gris
+ * alrededor del logo.
+ *
+ * `e_make_transparent` quita el color de fondo y `b_white` lo vuelve a pintar
+ * en blanco puro. Van los dos juntos: quitarlo a secas agujerea las letras
+ * blancas de adentro del logo, porque borra todo el blanco y no solo el del
+ * borde. Uno de los logos perdía 70.000 píxeles interiores así. Repintando, lo
+ * que se quitó vuelve como blanco y lo único que cambia es el tono.
+ *
+ * Un logo con fondo oscuro no se toca: ese fondo es su diseño, no un descuido.
+ *
+ * La transformación vive en la url, así que la foto de perfil del club no se
+ * entera: Cloudinary deja esta versión aparte y la cachea.
+ */
+function sobreBlanco(url: string): string {
+  if (!url.includes('/upload/')) return url;
+  return url.replace('/upload/', '/upload/e_make_transparent:15,b_white/f_jpg/');
+}
+
 export default function LandingTrustedBy() {
   const [clubs, setClubs] = React.useState<TrustedClub[]>([]);
 
@@ -17,7 +41,11 @@ export default function LandingTrustedBy() {
     apiFetch<{ clubs: TrustedClub[] }>('/clubs/trusted')
       // La API ya excluye los que no tienen logo, pero un logoUrl vacío pasaría
       // el filtro y dejaría un hueco en la tira.
-      .then(r => setClubs(r.clubs.filter(c => c.logoUrl && c.logoUrl.trim() !== '')))
+      .then(r => setClubs(
+        r.clubs
+          .filter(c => c.logoUrl && c.logoUrl.trim() !== '')
+          .map(c => ({ ...c, logoUrl: sobreBlanco(c.logoUrl) })),
+      ))
       .catch(() => setClubs([]));
   }, []);
 

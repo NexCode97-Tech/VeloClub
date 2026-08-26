@@ -95,9 +95,16 @@ GET/PATCH  /clubs/:id               # configuración del club
 - `TrainingSession → TrainingResult` (resultados de entrenamientos).
 
 ### Design system
+- **Morado de marca: `#381DA0`.** Es el único oficial y el que va en botones,
+  enlaces, estados activos y el sidebar.
 - Background: `#F7F7FB` | Cards: `#fff` | Border: `rgba(120,80,200,0.10)`
-- Accent ADMIN: `#4361EE` | Accent COACH: `#06D6A0` | Accent STUDENT: `#7C3AED`
+- Accent ADMIN: `#4361EE` | Accent COACH: `#06D6A0` | Accent STUDENT: `#381DA0`
 - Muted: `#8E87A8` | Text: `#1A1028`
+- **Sin degradados de marca dentro de la app.** El morado va plano, incluida la
+  pantalla de carga y la transición entre rutas. Tres excepciones: la landing
+  conserva los suyos, las gráficas conservan el área bajo la línea, y las
+  máscaras de scroll, sombras y halos de ambiente no son marca aunque estén
+  escritos con `gradient`.
 - Fuente: **Geist Sans**, la única de toda la plataforma. Se carga en `app/layout.tsx`
   con `geist/font/sans`, no desde Google Fonts. Títulos y cuerpo son la misma familia:
   lo que los separa es el peso y el `letter-spacing`. **Nunca escribir un nombre de

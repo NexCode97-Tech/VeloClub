@@ -14,15 +14,16 @@ product
 
 ## Brand
 - Name: VeloClub
-- Primary accent: `oklch(45% 0.22 290)` — deep violet-purple (#7C3AED)
+- Primary accent: `oklch(37% 0.19 281)` — deep violet-purple (#381DA0)
 - Secondary: `oklch(72% 0.18 165)` — emerald (#06D6A0)
 - Danger: `oklch(63% 0.22 15)` — coral red (#EF476F)
 - Warning: `oklch(78% 0.18 75)` — amber (#FFB703)
 - Info: `oklch(55% 0.20 255)` — indigo (#4361EE)
 - Background: `oklch(98% 0.005 290)` — off-white tinted purple (#F7F7FB)
 - Surface: white, slightly warm
-- Font heading: Space Grotesk
-- Font body: Plus Jakarta Sans
+- Font: Geist Sans, the only family in the platform. Headings and body share
+  it; weight and letter-spacing are what separate them. Geist Mono for code
+  and aligned figures.
 
 ## Tone
 Professional but energetic. Sports-focused. Clean and fast. Data-forward without being cold.

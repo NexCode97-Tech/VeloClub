@@ -141,7 +141,7 @@ export default function HomePage() {
             <Link
               href="/crear-club"
               className="inline-flex items-center gap-1.5 text-sm font-semibold text-white px-4 py-2 rounded-full transition-all hover:scale-[1.03] active:scale-95"
-              style={{ background: 'linear-gradient(135deg, #381DA0, #9333EA)' }}
+              style={{ background: '#381DA0' }}
             >
               Crear mi club
             </Link>
@@ -152,7 +152,7 @@ export default function HomePage() {
             <Link
               href="/crear-club"
               className="inline-flex items-center text-[13px] font-semibold text-white px-3.5 py-2 rounded-full"
-              style={{ background: 'linear-gradient(135deg, #381DA0, #9333EA)' }}
+              style={{ background: '#381DA0' }}
             >
               Crear mi club
             </Link>
@@ -218,7 +218,7 @@ export default function HomePage() {
             href="/crear-club"
             onClick={() => setMenuOpen(false)}
             className="w-full text-center text-sm font-semibold text-white px-4 py-3 rounded-full"
-            style={{ background: 'linear-gradient(135deg, #381DA0, #9333EA)' }}
+            style={{ background: '#381DA0' }}
           >
             Crear mi club
           </Link>
@@ -278,7 +278,7 @@ export default function HomePage() {
       <section className="px-5 pb-20 max-w-5xl mx-auto">
         <div
           className="rounded-3xl p-8 sm:p-12 text-center text-white relative overflow-hidden"
-          style={{ background: 'linear-gradient(135deg, #381DA0 0%, #9333EA 60%, #A855F7 100%)' }}
+          style={{ background: '#381DA0' }}
         >
           <div className="absolute inset-0 opacity-10"
             style={{ backgroundImage: 'radial-gradient(circle at 80% 20%, #fff 0%, transparent 50%)' }}

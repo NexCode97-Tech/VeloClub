@@ -169,7 +169,7 @@ export default function GlassmorphismHero() {
               <Link
                 href="/crear-club"
                 className="vc-cta inline-flex items-center justify-center gap-2 rounded-full w-full sm:w-auto px-8 py-3 text-sm font-semibold text-white transition-all hover:scale-[1.02] active:scale-[0.98]"
-                style={{ background: 'linear-gradient(135deg, #381DA0, #9333EA)' }}
+                style={{ background: '#381DA0' }}
               >
                 Crear mi club gratis
               </Link>

@@ -1,5 +1,9 @@
 # Plan 1 — Cimientos de VeloClub (con Clerk)
 
+> **Ejecutado.** Abril de 2026. Este documento quedó como estaba ese día y no
+> se actualiza: es el registro de una decisión, no documentación vigente. Para
+> saber cómo está hoy el proyecto, mirá el repo, `CLAUDE.md` y `DESIGN.md`.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Construir la base técnica de VeloClub: un frontend en Next.js (desplegado en Vercel) y un backend en Express (desplegado en Render) conectados a PostgreSQL, con login con Google manejado por Clerk y registro de un club nuevo.

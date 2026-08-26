@@ -1,5 +1,13 @@
 # Social Profiles + Follow System + Club Profile — Implementation Plan
 
+> **Ejecutado.** Junio de 2026. Este documento quedó como estaba ese día y no
+> se actualiza: es el registro de una decisión, no documentación vigente.
+>
+> **No copies código de acá.** Los colores y las fuentes que aparecen abajo ya
+> cambiaron —el morado pasó a `#381DA0` y la única familia es Geist Sans—, y
+> los degradados de marca se quitaron de la app. La verdad vive en el repo,
+> en `CLAUDE.md` y en `DESIGN.md`.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Rediseñar el perfil de usuario con layout estilo Facebook/Instagram, agregar sistema de seguidores, perfil de club con portada e insignia de verificación, galería de fotos en cuadrícula, y badge del club sobre la foto de perfil de cada miembro.

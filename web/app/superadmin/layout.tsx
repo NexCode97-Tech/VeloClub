@@ -168,8 +168,7 @@ const SuperadminSidebar = memo(function SuperadminSidebar({ pathname, noLeidas, 
       {/* Logo — con botones de actualizar y notificaciones (igual que el
           sidebar del admin, que lleva sus acciones en esta fila) */}
       <div className="flex items-center shrink-0" style={{ borderBottom: '1px solid rgba(0,0,0,0.06)', minHeight: 58, padding: '0 14px', gap: 9, justifyContent: collapsed ? 'center' : undefined }}>
-        <Image src="/logo.png" alt="VeloClub" width={28} height={28} className="object-contain shrink-0" style={{ borderRadius: 7 }} />
-        {!collapsed && <span className="text-[15px] font-semibold" style={{ color: '#1A1028' }}>VeloClub</span>}
+        <Image src="/logo-vc.png" alt="VeloClub" width={28} height={28} className="object-contain shrink-0" style={{ borderRadius: 7 }} />
         {/* Igual que en la barra de arriba: estas dos son acciones del panel
             entero, asi que solo salen en Inicio. */}
         {!collapsed && pathname === '/superadmin' && (

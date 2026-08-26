@@ -535,7 +535,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           }}
         >
           <Image
-            src="/logo.png"
+            src="/logo-vc.png"
             alt="VeloClub"
             width={28}
             height={28}

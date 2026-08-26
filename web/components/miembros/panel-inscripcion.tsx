@@ -194,7 +194,7 @@ export function PanelInscripcion({ abierto, onCerrar }: { abierto: boolean; onCe
                       onClick={() => cambiar({ abierta: !estado.abierta })}
                       aria-label="Recibir inscripciones"
                       className="w-11 h-6 rounded-full relative shrink-0 transition-colors disabled:opacity-50"
-                      style={{ background: estado.abierta ? '#7C3AED' : '#D8D3E4' }}
+                      style={{ background: estado.abierta ? '#381DA0' : '#D8D3E4' }}
                     >
                       <span
                         className="absolute top-[3px] w-[18px] h-[18px] rounded-full bg-white transition-all"
@@ -233,7 +233,7 @@ export function PanelInscripcion({ abierto, onCerrar }: { abierto: boolean; onCe
                             <div className="h-full rounded-full transition-all"
                               style={{
                                 width: `${Math.min(100, Math.round((estado.recibidos / estado.esperados) * 100))}%`,
-                                background: 'linear-gradient(90deg,#7C3AED,#4361EE)',
+                                background: '#381DA0',
                               }} />
                           </div>
                         ) : null}

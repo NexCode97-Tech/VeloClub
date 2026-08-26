@@ -55,7 +55,7 @@ export function InicioHeaderMovil({ clubName, clubLogoUrl, userName, userPicture
     <header
       className="md:hidden px-4 pt-3 pb-4 sticky top-0 z-30"
       style={{
-        background: 'linear-gradient(150deg,#7C3AED 0%,#5B4AD8 45%,#4361EE 100%)',
+        background: '#381DA0',
         borderRadius: '0 0 24px 24px',
       }}
     >

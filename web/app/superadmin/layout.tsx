@@ -58,7 +58,7 @@ function TipoIcono({ tipo }: { tipo: string }) {
   const map: Record<string, { icon: React.ReactNode; color: string; bg: string }> = {
     CLUB_CREADO:      {
       icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>,
-      color: '#7C3AED', bg: 'rgba(124,58,237,0.10)',
+      color: '#381DA0', bg: 'rgba(56,29,160,0.10)',
     },
     CLUB_DESACTIVADO: {
       icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="10" y1="15" x2="10" y2="9"/><line x1="14" y1="15" x2="14" y2="9"/></svg>,
@@ -93,7 +93,7 @@ interface Notif {
   createdAt: string;
 }
 
-const ACCENT = '#7C3AED';
+const ACCENT = '#381DA0';
 
 // Sidebar aislado: dueño de su propio estado `collapsed`. Al vivir aquí (y no
 // en el layout raíz), togglear contraer/expandir solo re-renderiza este
@@ -235,7 +235,7 @@ const SuperadminSidebar = memo(function SuperadminSidebar({ pathname, noLeidas, 
               return (
                 <Link key={m.slug || 'info'} href={hrefClub(clubId, m.slug)}
                   className={`flex items-center gap-3 rounded-xl text-sm font-semibold transition-colors ${active ? '' : 'hover:bg-secondary'}`}
-                  style={{ height: 44, padding: collapsed ? 0 : '0 12px', justifyContent: collapsed ? 'center' : undefined, color: active ? ACCENT : '#8E87A8', background: active ? 'rgba(124,58,237,0.10)' : undefined }}
+                  style={{ height: 44, padding: collapsed ? 0 : '0 12px', justifyContent: collapsed ? 'center' : undefined, color: active ? ACCENT : '#8E87A8', background: active ? 'rgba(56,29,160,0.10)' : undefined }}
                   {...tipHandlers(m.label)}
                 >
                   <m.Icon size={18} strokeWidth={active ? 2.5 : 2} className="shrink-0" />
@@ -249,7 +249,7 @@ const SuperadminSidebar = memo(function SuperadminSidebar({ pathname, noLeidas, 
           return (
             <Link key={tab.href} href={tab.href}
               className={`flex items-center gap-3 rounded-xl text-sm font-semibold transition-colors ${active ? '' : 'hover:bg-secondary'}`}
-              style={{ height: 44, padding: collapsed ? 0 : '0 12px', justifyContent: collapsed ? 'center' : undefined, color: active ? ACCENT : '#8E87A8', background: active ? 'rgba(124,58,237,0.10)' : undefined }}
+              style={{ height: 44, padding: collapsed ? 0 : '0 12px', justifyContent: collapsed ? 'center' : undefined, color: active ? ACCENT : '#8E87A8', background: active ? 'rgba(56,29,160,0.10)' : undefined }}
               {...tipHandlers(tab.label)}
             >
               <tab.Icon size={18} strokeWidth={active ? 2.5 : 2} className="shrink-0" />
@@ -269,7 +269,7 @@ const SuperadminSidebar = memo(function SuperadminSidebar({ pathname, noLeidas, 
           return (
             <Link href="/superadmin/configuracion"
               className={`shrink-0 flex items-center justify-center rounded-xl transition-colors ${active ? '' : 'hover:bg-secondary'}`}
-              style={{ width: 40, height: 40, color: active ? ACCENT : '#8E87A8', background: active ? 'rgba(124,58,237,0.10)' : undefined }}
+              style={{ width: 40, height: 40, color: active ? ACCENT : '#8E87A8', background: active ? 'rgba(56,29,160,0.10)' : undefined }}
               {...tipHandlers('Ajustes')}>
               <IconAjustes className="w-[18px] h-[18px]" strokeWidth={active ? 2.5 : 2} />
             </Link>
@@ -280,7 +280,7 @@ const SuperadminSidebar = memo(function SuperadminSidebar({ pathname, noLeidas, 
           // eslint-disable-next-line @next/next/no-img-element
           <img src={avatarSrc} alt="Superadmin" className="shrink-0" style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover', border: '2px solid #fff', boxShadow: '0 2px 8px rgba(0,0,0,0.15)' }} />
         ) : (
-          <div className="shrink-0 flex items-center justify-center" style={{ width: 32, height: 32, borderRadius: '50%', background: 'linear-gradient(135deg, #7C3AED, #EF476F)', color: '#fff', fontSize: 13, fontWeight: 600 }}>S</div>
+          <div className="shrink-0 flex items-center justify-center" style={{ width: 32, height: 32, borderRadius: '50%', background: '#381DA0', color: '#fff', fontSize: 13, fontWeight: 600 }}>S</div>
         )}
         {!collapsed && (
           <>
@@ -535,7 +535,7 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
             <div style={{ padding: '16px 16px 14px', background: '#F7F7FB', borderBottom: '1px solid rgba(120,80,200,0.08)', flexShrink: 0 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 {/* Ícono campana */}
-                <div style={{ width: 36, height: 36, borderRadius: 11, background: 'rgba(124,58,237,0.10)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#7C3AED', flexShrink: 0 }}>
+                <div style={{ width: 36, height: 36, borderRadius: 11, background: 'rgba(56,29,160,0.10)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#381DA0', flexShrink: 0 }}>
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
                     <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
@@ -556,7 +556,7 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
                     onClick={marcarTodas}
                     whileTap={{ scale: 0.95 }}
                     transition={{ duration: 0.12 }}
-                    style={{ padding: '5px 10px', borderRadius: 8, background: 'rgba(124,58,237,0.08)', border: '1px solid rgba(124,58,237,0.18)', color: '#7C3AED', fontSize: 10, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+                    style={{ padding: '5px 10px', borderRadius: 8, background: 'rgba(56,29,160,0.08)', border: '1px solid rgba(56,29,160,0.18)', color: '#381DA0', fontSize: 10, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
                   >
                     Marcar todas
                   </motion.button>
@@ -579,11 +579,11 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
               {notifsLoading ? (
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 120 }}>
                   <div className="w-5 h-5 rounded-full border-2 border-t-transparent animate-spin"
-                    style={{ borderColor: '#7C3AED', borderTopColor: 'transparent' }} />
+                    style={{ borderColor: '#381DA0', borderTopColor: 'transparent' }} />
                 </div>
               ) : notifs.length === 0 ? (
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: 180, gap: 10 }}>
-                  <div style={{ width: 52, height: 52, borderRadius: 16, background: 'rgba(124,58,237,0.07)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(142,135,168,0.40)' }}>
+                  <div style={{ width: 52, height: 52, borderRadius: 16, background: 'rgba(56,29,160,0.07)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(142,135,168,0.40)' }}>
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
                       <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
@@ -605,9 +605,9 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
                       style={{
                         width: '100%', display: 'flex', alignItems: 'flex-start', gap: 10,
                         padding: '12px 12px', borderRadius: 16, textAlign: 'left', cursor: 'pointer',
-                        background: n.leida ? '#fff' : 'rgba(124,58,237,0.05)',
-                        border: n.leida ? '1px solid rgba(120,80,200,0.08)' : '1px solid rgba(124,58,237,0.16)',
-                        boxShadow: n.leida ? 'none' : '0 2px 8px rgba(124,58,237,0.06)',
+                        background: n.leida ? '#fff' : 'rgba(56,29,160,0.05)',
+                        border: n.leida ? '1px solid rgba(120,80,200,0.08)' : '1px solid rgba(56,29,160,0.16)',
+                        boxShadow: n.leida ? 'none' : '0 2px 8px rgba(56,29,160,0.06)',
                         transition: 'background 0.15s',
                       }}
                     >
@@ -618,7 +618,7 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
                             {n.titulo}
                           </p>
                           {!n.leida && (
-                            <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#7C3AED', flexShrink: 0 }} />
+                            <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#381DA0', flexShrink: 0 }} />
                           )}
                         </div>
                         <p style={{ margin: 0, fontSize: 11, color: '#8E87A8', lineHeight: 1.4 }}>{n.cuerpo}</p>
@@ -652,8 +652,8 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
               background: 'rgba(255,255,255,0.82)',
               backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
               borderRadius: 40, padding: '6px 0',
-              border: '1px solid rgba(124,58,237,0.14)',
-              boxShadow: '0 8px 32px rgba(124,58,237,0.13), 0 2px 8px rgba(0,0,0,0.06)',
+              border: '1px solid rgba(56,29,160,0.14)',
+              boxShadow: '0 8px 32px rgba(56,29,160,0.13), 0 2px 8px rgba(0,0,0,0.06)',
             }}
           >
             <Link href="/superadmin/clubs" className="flex-1 flex flex-col items-center relative z-10" style={{ gap: 4, paddingBottom: 2 }}>
@@ -667,10 +667,10 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
               return (
                 <Link key={m.slug || 'info'} href={hrefClub(clubId, m.slug)}
                   className="flex-1 flex flex-col items-center relative z-10" style={{ gap: 4, paddingBottom: 2 }}>
-                  <div className="flex items-center justify-center" style={{ width: 44, height: 44, borderRadius: '50%', background: active ? 'linear-gradient(135deg, #7C3AED 0%, #4361EE 55%, #06D6A0 100%)' : 'transparent', boxShadow: active ? '0 4px 20px rgba(124,58,237,0.40)' : 'none' }}>
+                  <div className="flex items-center justify-center" style={{ width: 44, height: 44, borderRadius: '50%', background: active ? '#381DA0' : 'transparent', boxShadow: active ? '0 4px 20px rgba(56,29,160,0.40)' : 'none' }}>
                     <m.Icon size={24} color={active ? '#fff' : '#8E87A8'} strokeWidth={active ? 2.2 : 1.9} />
                   </div>
-                  <span className="text-[9px] tracking-wide leading-none" style={{ color: active ? '#7C3AED' : '#8E87A8', fontWeight: active ? 700 : 500 }}>{m.label}</span>
+                  <span className="text-[9px] tracking-wide leading-none" style={{ color: active ? '#381DA0' : '#8E87A8', fontWeight: active ? 700 : 500 }}>{m.label}</span>
                 </Link>
               );
             })}
@@ -686,8 +686,8 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
                 WebkitBackdropFilter: 'blur(20px)',
                 borderRadius: 40,
                 padding: '6px 0',
-                border: '1px solid rgba(124,58,237,0.14)',
-                boxShadow: '0 8px 32px rgba(124,58,237,0.13), 0 2px 8px rgba(0,0,0,0.06)',
+                border: '1px solid rgba(56,29,160,0.14)',
+                boxShadow: '0 8px 32px rgba(56,29,160,0.13), 0 2px 8px rgba(0,0,0,0.06)',
               }}
             >
               {/* Círculo deslizante — mismo tamaño que el avatar del UserButton */}
@@ -698,11 +698,11 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
                     width: 44,
                     height: 44,
                     borderRadius: '50%',
-                    background: 'linear-gradient(135deg, #7C3AED 0%, #4361EE 55%, #06D6A0 100%)',
+                    background: '#381DA0',
                     left: `calc((${activeIdx} + 0.5) / ${TABS.length + 1} * 100% - 22px)`,
                     top: 6,
                     transition: 'left 0.35s cubic-bezier(0.34,1.2,0.64,1)',
-                    boxShadow: '0 4px 20px rgba(124,58,237,0.40)',
+                    boxShadow: '0 4px 20px rgba(56,29,160,0.40)',
                   }}
                 />
               )}
@@ -728,7 +728,7 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
                     <span
                       className="text-[9px] tracking-wide leading-none"
                       style={{
-                        color: active ? '#7C3AED' : '#8E87A8',
+                        color: active ? '#381DA0' : '#8E87A8',
                         fontWeight: active ? 700 : 500,
                         transition: 'color 0.2s',
                       }}

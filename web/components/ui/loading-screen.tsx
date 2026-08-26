@@ -47,7 +47,7 @@ const LOGO_W = 130;
 const LOGO_H = 87;
 
 // Degradado de marca, el mismo del onboarding
-const BRAND = 'linear-gradient(135deg, #7C3AED 0%, #4361EE 100%)';
+const BRAND = '#381DA0';
 
 // Estilos compartidos por la pantalla de carga y la cortina de salida, para que
 // el relevo entre una y otra sea visualmente idéntico.

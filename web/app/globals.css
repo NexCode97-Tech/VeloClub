@@ -18,9 +18,9 @@
   --font-heading: var(--font-sans);
 
   /* VeloClub brand tokens */
-  --color-vc-accent: #7C3AED;
+  --color-vc-accent: #381DA0;
   --color-vc-accent-light: #A855F7;
-  --color-vc-accent-bg: rgba(124,58,237,0.10);
+  --color-vc-accent-bg: rgba(56,29,160,0.10);
   --color-vc-green: #06D6A0;
   --color-vc-yellow: #FFB703;
   --color-vc-red: #EF476F;
@@ -64,26 +64,26 @@
 }
 
 :root {
-  /* VeloClub light theme — bg #F7F7FB, accent #7C3AED */
+  /* VeloClub light theme — bg #F7F7FB, accent #381DA0 */
   --background: #F7F7FB;
   --foreground: #1A1028;
   --card: #FFFFFF;
   --card-foreground: #1A1028;
   --popover: #FFFFFF;
   --popover-foreground: #1A1028;
-  --primary: #7C3AED;
+  --primary: #381DA0;
   --primary-foreground: #FFFFFF;
   --secondary: #F0EEF8;
   --secondary-foreground: #1A1028;
   --muted: #F0EEF8;
   --muted-foreground: #8E87A8;
   --accent: #F0EEF8;
-  --accent-foreground: #7C3AED;
+  --accent-foreground: #381DA0;
   --destructive: #EF476F;
   --border: rgba(120,80,200,0.10);
   --input: rgba(120,80,200,0.10);
-  --ring: #7C3AED;
-  --chart-1: #7C3AED;
+  --ring: #381DA0;
+  --chart-1: #381DA0;
   --chart-2: #06D6A0;
   --chart-3: #FFB703;
   --chart-4: #EF476F;
@@ -91,12 +91,12 @@
   --radius: 0.75rem;
   --sidebar: #FFFFFF;
   --sidebar-foreground: #1A1028;
-  --sidebar-primary: #7C3AED;
+  --sidebar-primary: #381DA0;
   --sidebar-primary-foreground: #FFFFFF;
   --sidebar-accent: #F0EEF8;
-  --sidebar-accent-foreground: #7C3AED;
+  --sidebar-accent-foreground: #381DA0;
   --sidebar-border: rgba(120,80,200,0.10);
-  --sidebar-ring: #7C3AED;
+  --sidebar-ring: #381DA0;
 }
 
 .dark {

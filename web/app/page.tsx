@@ -10,8 +10,8 @@ import LandingTrustedBy from '@/components/ui/landing-trusted-by';
 
 // Mismo color/fondo para los 4 (el de "Gestión de miembros"), para que los
 // íconos de "Todo lo que necesitas" queden unificados en vez de multicolor.
-const FEATURE_COLOR = '#7C3AED';
-const FEATURE_BG = 'rgba(124,58,237,0.10)';
+const FEATURE_COLOR = '#381DA0';
+const FEATURE_BG = 'rgba(56,29,160,0.10)';
 const features = [
   {
     key: 'miembros',
@@ -141,7 +141,7 @@ export default function HomePage() {
             <Link
               href="/crear-club"
               className="inline-flex items-center gap-1.5 text-sm font-semibold text-white px-4 py-2 rounded-full transition-all hover:scale-[1.03] active:scale-95"
-              style={{ background: 'linear-gradient(135deg, #7C3AED, #9333EA)' }}
+              style={{ background: 'linear-gradient(135deg, #381DA0, #9333EA)' }}
             >
               Crear mi club
             </Link>
@@ -152,7 +152,7 @@ export default function HomePage() {
             <Link
               href="/crear-club"
               className="inline-flex items-center text-[13px] font-semibold text-white px-3.5 py-2 rounded-full"
-              style={{ background: 'linear-gradient(135deg, #7C3AED, #9333EA)' }}
+              style={{ background: 'linear-gradient(135deg, #381DA0, #9333EA)' }}
             >
               Crear mi club
             </Link>
@@ -183,7 +183,7 @@ export default function HomePage() {
             className="object-contain h-8 w-auto"
           />
           <button
-            className="p-2 rounded-xl text-[#1A1028] hover:bg-[rgba(124,58,237,0.06)] transition-colors"
+            className="p-2 rounded-xl text-[#1A1028] hover:bg-[rgba(56,29,160,0.06)] transition-colors"
             onClick={() => setMenuOpen(false)}
             aria-label="Cerrar menú"
           >
@@ -218,7 +218,7 @@ export default function HomePage() {
             href="/crear-club"
             onClick={() => setMenuOpen(false)}
             className="w-full text-center text-sm font-semibold text-white px-4 py-3 rounded-full"
-            style={{ background: 'linear-gradient(135deg, #7C3AED, #9333EA)' }}
+            style={{ background: 'linear-gradient(135deg, #381DA0, #9333EA)' }}
           >
             Crear mi club
           </Link>
@@ -265,7 +265,7 @@ export default function HomePage() {
                 {/* Blanco solido: el violeta translucido que habia se perdia
                     dentro del gris de la tarjeta. */}
                 <div className="w-7 h-7 rounded-lg bg-white flex items-center justify-center shrink-0 mt-0.5">
-                  <Icon className="w-3.5 h-3.5 text-[#7C3AED]" />
+                  <Icon className="w-3.5 h-3.5 text-[#381DA0]" />
                 </div>
                 <p className="text-sm text-[#4A4060] leading-relaxed">{text}</p>
               </li>
@@ -278,7 +278,7 @@ export default function HomePage() {
       <section className="px-5 pb-20 max-w-5xl mx-auto">
         <div
           className="rounded-3xl p-8 sm:p-12 text-center text-white relative overflow-hidden"
-          style={{ background: 'linear-gradient(135deg, #7C3AED 0%, #9333EA 60%, #A855F7 100%)' }}
+          style={{ background: 'linear-gradient(135deg, #381DA0 0%, #9333EA 60%, #A855F7 100%)' }}
         >
           <div className="absolute inset-0 opacity-10"
             style={{ backgroundImage: 'radial-gradient(circle at 80% 20%, #fff 0%, transparent 50%)' }}
@@ -295,7 +295,7 @@ export default function HomePage() {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 relative">
             <Link
               href="/crear-club"
-              className="inline-flex items-center gap-2 px-7 py-3 bg-white text-[#7C3AED] font-semibold text-sm rounded-xl shadow-lg transition-all hover:-translate-y-0.5 active:scale-95 w-full sm:w-auto justify-center"
+              className="inline-flex items-center gap-2 px-7 py-3 bg-white text-[#381DA0] font-semibold text-sm rounded-xl shadow-lg transition-all hover:-translate-y-0.5 active:scale-95 w-full sm:w-auto justify-center"
             >
               Crear mi club gratis
               <ChevronRight className="w-4 h-4" />
@@ -320,7 +320,7 @@ export default function HomePage() {
             href="https://nexcode97.com"
             target="_blank"
             rel="noopener noreferrer"
-            className="font-semibold text-[#7C3AED] hover:text-[#6D28D9] transition-colors"
+            className="font-semibold text-[#381DA0] hover:text-[#6D28D9] transition-colors"
           >
             NexCode97
           </a>

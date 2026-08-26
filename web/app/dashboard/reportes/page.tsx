@@ -25,7 +25,7 @@ const ACCENT = '#4361EE';
 const GREEN  = '#06D6A0';
 const YELLOW = '#FFB703';
 const RED    = '#EF476F';
-const PURPLE = '#7C3AED';
+const PURPLE = '#381DA0';
 
 interface MonthlyAttendance { month: string; presentes: number }
 interface PaymentDist { name: string; value: number; color: string }

@@ -256,11 +256,11 @@ function StudentRow({
           className="overflow-hidden"
         >
           <div className="px-4 py-3 flex items-end gap-3 flex-wrap"
-            style={{ background: 'rgba(124,58,237,0.04)', borderTop: '1px solid rgba(124,58,237,0.10)' }}>
+            style={{ background: 'rgba(56,29,160,0.04)', borderTop: '1px solid rgba(56,29,160,0.10)' }}>
             <div className="flex-1 min-w-[120px]">
               <label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground block mb-1">Tarifa mensual</label>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[12px] font-semibold" style={{ color: '#7C3AED' }}>$</span>
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[12px] font-semibold" style={{ color: '#381DA0' }}>$</span>
                 <input className="w-full pl-6 pr-3 h-9 rounded-lg border border-border text-[13px] bg-white focus:outline-none focus:ring-2 focus:ring-purple-300"
                   placeholder="0"
                   value={feeInput ? Number(feeInput).toLocaleString('es-CO') : ''}
@@ -275,7 +275,7 @@ function StudentRow({
             </div>
             <button onClick={handleSaveConfig} disabled={configSaving || !feeInput || !dayInput}
               className="h-9 px-4 rounded-lg text-[12px] font-semibold text-white cursor-pointer disabled:opacity-50"
-              style={{ background: 'linear-gradient(135deg,#7C3AED,#4361EE)' }}>
+              style={{ background: '#381DA0' }}>
               {configSaving ? '...' : 'Guardar'}
             </button>
           </div>
@@ -287,13 +287,13 @@ function StudentRow({
   return (
     <motion.div
       variants={reducedMotion ? undefined : rowVariants}
-      whileHover={reducedMotion ? {} : { y: -3, boxShadow: '0 12px 40px rgba(124,58,237,0.14)', transition: { duration: 0.22, ease: EASE_OUT } }}
+      whileHover={reducedMotion ? {} : { y: -3, boxShadow: '0 12px 40px rgba(56,29,160,0.14)', transition: { duration: 0.22, ease: EASE_OUT } }}
       whileTap={reducedMotion ? {} : { scale: 0.97, transition: { duration: 0.1 } }}
       layout
       style={{ borderRadius: 16 }}
     >
       <div className="bg-white rounded-2xl overflow-hidden"
-        style={{ border: '1px solid rgba(120,80,200,0.09)', boxShadow: '0 2px 12px rgba(124,58,237,0.05)' }}>
+        style={{ border: '1px solid rgba(120,80,200,0.09)', boxShadow: '0 2px 12px rgba(56,29,160,0.05)' }}>
 
         {/* Cabecera — al tocarla se abre el historial completo del deportista */}
         <div className="px-4 pt-4 pb-3 flex items-center gap-3 relative"
@@ -318,9 +318,9 @@ function StudentRow({
           <button onClick={openConfig}
             className="absolute top-3 right-3 w-7 h-7 rounded-lg flex items-center justify-center cursor-pointer"
             title="Configurar tarifa"
-            style={{ background: configOpen ? 'rgba(124,58,237,0.12)' : 'rgba(142,135,168,0.08)' }}>
+            style={{ background: configOpen ? 'rgba(56,29,160,0.12)' : 'rgba(142,135,168,0.08)' }}>
             {configOpen
-              ? <ChevronUp className="w-3.5 h-3.5" style={{ color: '#7C3AED' }} />
+              ? <ChevronUp className="w-3.5 h-3.5" style={{ color: '#381DA0' }} />
               : <Settings className="w-3.5 h-3.5" style={{ color: '#8E87A8' }} />
             }
           </button>
@@ -817,7 +817,7 @@ export default function FinanzasPage() {
               <button
                 onClick={() => setHojaSede(true)}
                 className="hidden md:flex items-center justify-between gap-2 h-9 px-3 rounded-xl bg-white text-[13px] font-semibold shrink-0"
-                style={{ border: '1.5px solid #7C3AED', color: '#7C3AED', minWidth: 132 }}
+                style={{ border: '1.5px solid #381DA0', color: '#381DA0', minWidth: 132 }}
               >
                 <span className="truncate">{nombreSede(filterSede)}</span>
                 <ChevronDown className="w-3.5 h-3.5 shrink-0" />
@@ -855,7 +855,7 @@ export default function FinanzasPage() {
                 disabled={generatingMonth}
                 title={generatingMonth ? 'Generando...' : 'Generar cobros'}
                 className="flex items-center justify-center gap-1.5 w-9 md:w-auto px-0 md:px-3 h-9 rounded-xl text-[12px] font-semibold cursor-pointer transition-opacity disabled:opacity-60 shrink-0"
-                style={{ background: 'rgba(124,58,237,0.08)', color: '#7C3AED', border: '1.5px dashed rgba(124,58,237,0.25)' }}
+                style={{ background: 'rgba(56,29,160,0.08)', color: '#381DA0', border: '1.5px dashed rgba(56,29,160,0.25)' }}
               >
                 <Zap className="w-3.5 h-3.5 shrink-0" />
                 <span className="hidden md:inline">{generatingMonth ? 'Generando...' : 'Generar cobros'}</span>
@@ -871,7 +871,7 @@ export default function FinanzasPage() {
             variants={pageCard}
             onClick={() => setHojaSede(true)}
             className="md:hidden flex items-center justify-between gap-2 w-full h-10 px-3 rounded-xl bg-white text-[13px] font-semibold"
-            style={{ border: '1.5px solid #7C3AED', color: '#7C3AED' }}
+            style={{ border: '1.5px solid #381DA0', color: '#381DA0' }}
           >
             <span className="truncate">{nombreSede(filterSede)}</span>
             <ChevronDown className="w-4 h-4 shrink-0" />
@@ -1169,7 +1169,7 @@ export default function FinanzasPage() {
                           {hayVariasSedes && (
                             <span className="text-[9px] px-1.5 py-0.5 rounded-full font-semibold truncate"
                               style={e.location
-                                ? { background: 'rgba(124,58,237,0.10)', color: '#6D28D9' }
+                                ? { background: 'rgba(56,29,160,0.10)', color: '#6D28D9' }
                                 : { background: 'rgba(26,16,40,0.06)', color: '#6B6580' }}>
                               {e.location?.name ?? 'General'}
                             </span>
@@ -1491,8 +1491,8 @@ export default function FinanzasPage() {
             <div className="space-y-4 mt-1">
               {/* Info del pago */}
               <div className="flex items-center gap-3 bg-secondary/50 rounded-xl px-3 py-2.5">
-                <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'rgba(124,58,237,0.10)' }}>
-                  <Receipt className="w-4 h-4" style={{ color: '#7C3AED' }} />
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'rgba(56,29,160,0.10)' }}>
+                  <Receipt className="w-4 h-4" style={{ color: '#381DA0' }} />
                 </div>
                 <div className="min-w-0">
                   <p className="text-[13px] font-semibold text-foreground truncate">{receiptModal.member?.fullName ?? '—'}</p>

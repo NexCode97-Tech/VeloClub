@@ -89,7 +89,7 @@ export function SearchModal({ open, onClose }: { open: boolean; onClose: () => v
       <img src={src} alt={name} className={`w-9 h-9 object-cover shrink-0 ${rounded}`} style={{ border: '1px solid rgba(0,0,0,0.06)' }} />
     ) : (
       <div className={`w-9 h-9 shrink-0 flex items-center justify-center text-[11px] font-semibold text-white ${rounded}`}
-        style={{ background: 'linear-gradient(135deg,#7C3AED,#4361EE)' }}>
+        style={{ background: '#381DA0' }}>
         {icon ?? initials(name)}
       </div>
     )
@@ -117,7 +117,7 @@ export function SearchModal({ open, onClose }: { open: boolean; onClose: () => v
             className="flex-1 outline-none text-[14px] text-foreground bg-transparent"
             style={{ fontSize: 16 }}
           />
-          {loading && <Loader2 className="w-4 h-4 animate-spin shrink-0" style={{ color: '#7C3AED' }} />}
+          {loading && <Loader2 className="w-4 h-4 animate-spin shrink-0" style={{ color: '#381DA0' }} />}
           <button onClick={onClose} className="shrink-0 text-muted-foreground hover:text-foreground">
             <X className="w-4 h-4" />
           </button>

@@ -126,9 +126,9 @@ function SelectItem({
       data-slot="select-item"
       className={cn(
         "relative flex w-full cursor-pointer items-center gap-2 rounded-lg pl-3 pr-8 py-2 text-[13px] font-medium outline-none select-none transition-colors",
-        "text-[#1A1028] hover:bg-[rgba(124,58,237,0.07)] hover:text-[#7C3AED]",
-        "data-highlighted:bg-[rgba(124,58,237,0.07)] data-highlighted:text-[#7C3AED]",
-        "data-selected:font-semibold data-selected:text-[#7C3AED]",
+        "text-[#1A1028] hover:bg-[rgba(56,29,160,0.07)] hover:text-[#381DA0]",
+        "data-highlighted:bg-[rgba(56,29,160,0.07)] data-highlighted:text-[#381DA0]",
+        "data-selected:font-semibold data-selected:text-[#381DA0]",
         "data-disabled:pointer-events-none data-disabled:opacity-40",
         "[&_svg]:pointer-events-none [&_svg]:shrink-0",
         className
@@ -143,7 +143,7 @@ function SelectItem({
           <span className="pointer-events-none absolute right-2.5 flex size-4 items-center justify-center" />
         }
       >
-        <CheckIcon className="pointer-events-none size-3.5" style={{ color: '#7C3AED' }} />
+        <CheckIcon className="pointer-events-none size-3.5" style={{ color: '#381DA0' }} />
       </SelectPrimitive.ItemIndicator>
     </SelectPrimitive.Item>
   )

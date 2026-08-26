@@ -70,19 +70,19 @@ export default function SportSelect({ value, onChange, placeholder = 'Selecciona
     <motion.button
       type="button"
       onClick={onClick}
-      whileHover={{ background: 'rgba(124,58,237,0.05)' }}
+      whileHover={{ background: 'rgba(56,29,160,0.05)' }}
       whileTap={{ scale: 0.98 }}
       transition={{ duration: 0.10 }}
       style={{
         width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         padding: '10px 14px', border: 'none', cursor: 'pointer',
-        background: selected ? 'rgba(124,58,237,0.07)' : 'transparent',
+        background: selected ? 'rgba(56,29,160,0.07)' : 'transparent',
         borderTop: borderTop ? '1px solid rgba(120,80,200,0.06)' : 'none',
         fontFamily: 'inherit',
       }}
     >
-      <span style={{ fontSize: 12, color: selected ? '#7C3AED' : '#1A1028', fontWeight: selected ? 700 : 500 }}>{label}</span>
-      {selected && <Check size={13} strokeWidth={2.5} color="#7C3AED" />}
+      <span style={{ fontSize: 12, color: selected ? '#381DA0' : '#1A1028', fontWeight: selected ? 700 : 500 }}>{label}</span>
+      {selected && <Check size={13} strokeWidth={2.5} color="#381DA0" />}
     </motion.button>
   );
 
@@ -97,14 +97,14 @@ export default function SportSelect({ value, onChange, placeholder = 'Selecciona
         style={{
           width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           padding: '10px 12px', borderRadius: 10, cursor: 'pointer', boxSizing: 'border-box',
-          border: open ? '1.5px solid rgba(124,58,237,0.45)' : '1.5px solid rgba(120,80,200,0.18)',
+          border: open ? '1.5px solid rgba(56,29,160,0.45)' : '1.5px solid rgba(120,80,200,0.18)',
           background: '#fff', fontFamily: 'inherit',
-          boxShadow: open ? '0 0 0 3px rgba(124,58,237,0.08)' : 'none',
+          boxShadow: open ? '0 0 0 3px rgba(56,29,160,0.08)' : 'none',
           transition: 'border-color 0.15s, box-shadow 0.15s',
         }}
       >
         <span style={{ fontSize: 13, color: value ? '#1A1028' : '#8E87A8', fontWeight: value ? 600 : 400 }}>{value || placeholder}</span>
-        <motion.span animate={{ rotate: open ? 180 : 0 }} transition={{ duration: 0.18, ease: EASE }} style={{ display: 'flex', color: '#7C3AED' }}>
+        <motion.span animate={{ rotate: open ? 180 : 0 }} transition={{ duration: 0.18, ease: EASE }} style={{ display: 'flex', color: '#381DA0' }}>
           <ChevronDown size={15} strokeWidth={2.5} />
         </motion.span>
       </motion.button>
@@ -123,7 +123,7 @@ export default function SportSelect({ value, onChange, placeholder = 'Selecciona
                 ...(coords.openUp ? { bottom: coords.bottom } : { top: coords.top }),
                 maxHeight: coords.maxHeight, overflowY: 'auto',
                 background: '#fff', borderRadius: 14, zIndex: 1000,
-                border: '1.5px solid rgba(124,58,237,0.15)',
+                border: '1.5px solid rgba(56,29,160,0.15)',
                 boxShadow: '0 8px 32px rgba(80,40,180,0.13), 0 2px 8px rgba(0,0,0,0.06)',
                 WebkitOverflowScrolling: 'touch',
               }}

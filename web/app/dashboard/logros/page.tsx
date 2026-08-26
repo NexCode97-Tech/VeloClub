@@ -266,7 +266,7 @@ function LogrosPageInner() {
             }}
             className="lg:hidden flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[13px] font-semibold text-white shadow-sm shrink-0 cursor-pointer"
             style={{
-              background: 'linear-gradient(135deg, #7C3AED 0%, #4361EE 100%)',
+              background: '#381DA0',
               opacity: canManage ? 1 : 0,
               pointerEvents: canManage ? 'auto' : 'none',
               transition: 'opacity 0.15s ease',
@@ -310,7 +310,7 @@ function LogrosPageInner() {
             El botón de acción va en esta misma fila, a la derecha. */}
         <div className="hidden lg:flex items-center gap-2 mb-4">
           <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
-            style={{ background: 'linear-gradient(135deg, #7C3AED 0%, #4361EE 100%)' }}>
+            style={{ background: '#381DA0' }}>
             {tab === 'comp'
               ? <Trophy className="w-3.5 h-3.5 text-white" />
               : <ClipboardList className="w-3.5 h-3.5 text-white" />}
@@ -328,7 +328,7 @@ function LogrosPageInner() {
               }}
               className="ml-auto flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[13px] font-semibold text-white shadow-sm shrink-0 cursor-pointer"
               style={{
-                background: 'linear-gradient(135deg, #7C3AED 0%, #4361EE 100%)',
+                background: '#381DA0',
                 opacity: canManage ? 1 : 0,
                 pointerEvents: canManage ? 'auto' : 'none',
                 transition: 'opacity 0.15s ease',
@@ -345,7 +345,7 @@ function LogrosPageInner() {
           {tab === 'comp' ? (
             <>
               <StatPill value={loading ? 0 : visibleComps.length} label="Competencias" color="#4361EE" />
-              <StatPill value={loading ? 0 : visibleComps.reduce((s, c) => s + c.events.length, 0)} label="Pruebas" color="#7C3AED" />
+              <StatPill value={loading ? 0 : visibleComps.reduce((s, c) => s + c.events.length, 0)} label="Pruebas" color="#381DA0" />
               <StatPill value={loading ? 0 : totalCompResults} label="Resultados" color="#06D6A0" />
             </>
           ) : (
@@ -587,14 +587,14 @@ function CompCard({ comp: c, isStudent, myMemberId, canManage, deleting, onDelet
       className="bg-white border border-border overflow-hidden w-full"
     >
       {/* Accent bar */}
-      <div className="h-1.5 w-full" style={{ background: hasGold ? 'linear-gradient(90deg,#F4BF00 0%,#4361EE 60%,#7C3AED 100%)' : 'linear-gradient(90deg,#4361EE,#7C3AED)' }} />
+      <div className="h-1.5 w-full" style={{ background: hasGold ? '#381DA0' : '#381DA0' }} />
 
       {/* Header row: icono + info + delete */}
       <div className="flex items-start gap-3 px-4 pt-4 pb-3">
         {/* Icono */}
         <div
           className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0"
-          style={{ background: 'linear-gradient(135deg,rgba(67,97,238,0.13),rgba(124,58,237,0.13))' }}
+          style={{ background: 'rgba(67,97,238,0.13)' }}
         >
           <Trophy className="w-6 h-6" style={{ color: '#4361EE' }} />
         </div>
@@ -649,12 +649,12 @@ function CompCard({ comp: c, isStudent, myMemberId, canManage, deleting, onDelet
 
       {/* Pódio */}
       {podium.length > 0 && (
-        <div className="mx-4 mb-4 rounded-2xl overflow-hidden" style={{ background: 'rgba(247,245,255,0.8)', border: '1px solid rgba(124,58,237,0.08)' }}>
-          <div className="flex items-center justify-between px-3 py-2 border-b" style={{ borderColor: 'rgba(124,58,237,0.08)' }}>
-            <span className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: '#7C3AED' }}>Pódio</span>
-            <Trophy className="w-3 h-3" style={{ color: '#7C3AED', opacity: 0.5 }} />
+        <div className="mx-4 mb-4 rounded-2xl overflow-hidden" style={{ background: 'rgba(247,245,255,0.8)', border: '1px solid rgba(56,29,160,0.08)' }}>
+          <div className="flex items-center justify-between px-3 py-2 border-b" style={{ borderColor: 'rgba(56,29,160,0.08)' }}>
+            <span className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: '#381DA0' }}>Pódio</span>
+            <Trophy className="w-3 h-3" style={{ color: '#381DA0', opacity: 0.5 }} />
           </div>
-          <div className="flex divide-x" style={{ '--tw-divide-opacity': 1, borderColor: 'rgba(124,58,237,0.06)' } as React.CSSProperties}>
+          <div className="flex divide-x" style={{ '--tw-divide-opacity': 1, borderColor: 'rgba(56,29,160,0.06)' } as React.CSSProperties}>
             {podium.map(r => {
               const pos = r.position ?? 0;
               const m = MEDAL_STYLES[pos];

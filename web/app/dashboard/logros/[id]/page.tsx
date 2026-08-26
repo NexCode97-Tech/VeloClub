@@ -345,7 +345,7 @@ export default function CompetitionDetailPage() {
               <button
                 onClick={openEditCompetition}
                 className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold"
-                style={{ background: 'rgba(124,58,237,0.10)', color: '#7C3AED' }}
+                style={{ background: 'rgba(56,29,160,0.10)', color: '#381DA0' }}
               >
                 <Pencil className="w-4 h-4" />
                 <span className="hidden sm:inline">Editar</span>

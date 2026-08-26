@@ -75,7 +75,7 @@ function todayISO() {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 }
-function avatarBg(role: string) { return ROLE_BG[role] ?? 'linear-gradient(135deg,#7C3AED,#A855F7)'; }
+function avatarBg(role: string) { return ROLE_BG[role] ?? '#381DA0'; }
 
 /** ISO strings para cada día de la semana actual (Dom→Sáb) */
 function getWeekDates(): string[] {
@@ -134,7 +134,7 @@ function WeekStrip({
           checkColor = '#ffffff';
         } else if (isToday) {
           bgColor    = 'transparent';
-          ringColor  = '#7C3AED';
+          ringColor  = '#381DA0';
           checkColor = 'transparent';
         } else if (isFuture) {
           bgColor    = 'transparent';
@@ -167,7 +167,7 @@ function WeekStrip({
               style={{
                 border: `2px solid ${ringColor}`,
                 backgroundColor: bgColor,
-                boxShadow: isSelected ? '0 0 0 3px rgba(124,58,237,0.25)' : 'none',
+                boxShadow: isSelected ? '0 0 0 3px rgba(56,29,160,0.25)' : 'none',
               }}
             >
               <AnimatePresence>
@@ -195,7 +195,7 @@ function WeekStrip({
                   <motion.div
                     key="dot"
                     className="w-2 h-2 rounded-full"
-                    style={{ background: '#7C3AED' }}
+                    style={{ background: '#381DA0' }}
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                     exit={{ scale: 0 }}
@@ -205,7 +205,7 @@ function WeekStrip({
             </motion.div>
             <span
               className="text-[10px] font-semibold"
-              style={{ color: (isToday || isSelected) ? '#7C3AED' : '#8E87A8' }}
+              style={{ color: (isToday || isSelected) ? '#381DA0' : '#8E87A8' }}
             >
               {DAY_LABELS[i]}
             </span>
@@ -583,7 +583,7 @@ export default function AsistenciaPage() {
             whileTap={{ scale: 0.93 }}
             aria-label="Descargar consolidado de asistencia"
             className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold cursor-pointer transition-colors hover:bg-secondary"
-            style={{ background: 'rgba(124,58,237,0.08)', color: '#7C3AED' }}
+            style={{ background: 'rgba(56,29,160,0.08)', color: '#381DA0' }}
           >
             <Download className="w-4 h-4" />
             <span className="hidden sm:inline">Descargar</span>
@@ -595,7 +595,7 @@ export default function AsistenciaPage() {
             disabled={saving}
             whileTap={{ scale: 0.93 }}
             className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold text-white cursor-pointer transition-colors"
-            style={{ background: saved ? '#06D6A0' : 'linear-gradient(135deg, #7C3AED 0%, #4361EE 100%)' }}
+            style={{ background: saved ? '#06D6A0' : '#381DA0' }}
           >
             {!saving && !saved && <CheckCircle2 className="w-4 h-4" />}
             <ContenidoGuardado
@@ -646,12 +646,12 @@ export default function AsistenciaPage() {
                         onClick={() => { setClaseSel(c.id); setHojaClases(false); }}
                         className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-colors"
                         style={activa
-                          ? { background: 'rgba(124,58,237,0.05)', border: '1.5px solid #7C3AED' }
+                          ? { background: 'rgba(56,29,160,0.05)', border: '1.5px solid #381DA0' }
                           : { background: '#fff', border: '1.5px solid rgba(120,80,200,0.14)' }}
                       >
                         <span className="w-4 h-4 rounded-full shrink-0 flex items-center justify-center"
-                          style={{ border: `1.5px solid ${activa ? '#7C3AED' : 'rgba(26,16,40,0.20)'}` }}>
-                          {activa && <span className="w-2 h-2 rounded-full" style={{ background: '#7C3AED' }} />}
+                          style={{ border: `1.5px solid ${activa ? '#381DA0' : 'rgba(26,16,40,0.20)'}` }}>
+                          {activa && <span className="w-2 h-2 rounded-full" style={{ background: '#381DA0' }} />}
                         </span>
                         <span className="flex-1 min-w-0">
                           <span className="block text-[12.5px] font-bold text-foreground leading-tight"
@@ -684,8 +684,8 @@ export default function AsistenciaPage() {
         <DialogContent className="max-w-sm">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <span className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'rgba(124,58,237,0.10)' }}>
-                <Download className="w-4 h-4" style={{ color: '#7C3AED' }} />
+              <span className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'rgba(56,29,160,0.10)' }}>
+                <Download className="w-4 h-4" style={{ color: '#381DA0' }} />
               </span>
               Descargar asistencia
             </DialogTitle>
@@ -925,7 +925,7 @@ export default function AsistenciaPage() {
                       onClick={() => clasesHoy.length > 1 && setHojaClases(true)}
                       disabled={clasesHoy.length <= 1}
                       className="flex items-center gap-2.5 px-3 py-2 bg-white rounded-xl md:w-72 md:shrink-0 text-left disabled:cursor-default"
-                      style={{ border: `1.5px solid ${clasesHoy.length > 1 ? '#7C3AED' : 'rgba(120,80,200,0.14)'}` }}
+                      style={{ border: `1.5px solid ${clasesHoy.length > 1 ? '#381DA0' : 'rgba(120,80,200,0.14)'}` }}
                     >
                       <div className="flex-1 min-w-0">
                         <span className="block text-[12.5px] font-bold text-foreground leading-tight"

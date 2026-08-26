@@ -28,8 +28,11 @@ export default function CrearClubPage() {
   return (
     <div className="min-h-screen bg-[#0D0520] flex flex-col lg:flex-row relative overflow-hidden">
       {/* Fondo decorativo */}
+      {/* Dos halos sobre el fondo oscuro. No es un degradado de marca sino luz
+          de ambiente, así que se queda: volverlo un color plano deja la
+          pantalla apagada. */}
       <div className="pointer-events-none absolute inset-0 opacity-40"
-        style={{ backgroundImage: 'radial-gradient(circle at 20% 20%, rgba(124,58,237,0.35) 0%, transparent 55%), radial-gradient(circle at 80% 80%, rgba(67,97,238,0.30) 0%, transparent 55%)' }}
+        style={{ backgroundImage: 'radial-gradient(circle at 20% 20%, rgba(56,29,160,0.35) 0%, transparent 55%), radial-gradient(circle at 80% 80%, rgba(67,97,238,0.30) 0%, transparent 55%)' }}
       />
 
       <Link
@@ -55,7 +58,7 @@ export default function CrearClubPage() {
             { icon: ShieldCheck, text: '2 meses gratis, sin tarjeta requerida' },
           ].map(({ icon: Icon, text }) => (
             <div key={text} className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'rgba(124,58,237,0.20)' }}>
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'rgba(56,29,160,0.20)' }}>
                 <Icon className="w-4 h-4 text-white" />
               </div>
               <p className="text-white/80 text-[13.5px]">{text}</p>
@@ -81,7 +84,7 @@ export default function CrearClubPage() {
           signInUrl="/sign-in"
           forceRedirectUrl="/dashboard"
           appearance={{
-            variables: { colorPrimary: '#7C3AED' },
+            variables: { colorPrimary: '#381DA0' },
             elements: {
               card: 'shadow-2xl rounded-2xl border border-white/10',
               logoImage: 'cl-logo-custom',

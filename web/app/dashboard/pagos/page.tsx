@@ -364,7 +364,7 @@ export default function PagosPage() {
                                 <span className="text-[11px] font-semibold" style={{ color: '#B8860B' }}>
                                   ⏳ Comprobante en revisión
                                 </span>
-                                <label className="text-[11px] font-semibold cursor-pointer" style={{ color: '#7C3AED' }}>
+                                <label className="text-[11px] font-semibold cursor-pointer" style={{ color: '#381DA0' }}>
                                   {uploadingReceipt === p.id ? 'Subiendo…' : 'Reemplazar'}
                                   <input type="file" accept="image/*,application/pdf" className="hidden"
                                     disabled={!!uploadingReceipt}
@@ -373,7 +373,7 @@ export default function PagosPage() {
                               </div>
                             ) : (
                               <label className="flex items-center justify-center gap-1.5 rounded-lg px-3 py-2.5 text-[12px] font-semibold cursor-pointer transition-colors"
-                                style={{ background: 'rgba(124,58,237,0.08)', color: '#7C3AED', border: '1.5px dashed rgba(124,58,237,0.25)' }}>
+                                style={{ background: 'rgba(56,29,160,0.08)', color: '#381DA0', border: '1.5px dashed rgba(56,29,160,0.25)' }}>
                                 <Upload className="w-3.5 h-3.5" />
                                 {uploadingReceipt === p.id ? 'Subiendo…' : 'Subir comprobante'}
                                 <input type="file" accept="image/*,application/pdf" className="hidden"
@@ -446,7 +446,7 @@ export default function PagosPage() {
           <button
             onClick={openNew}
             className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold text-white"
-            style={{ background: 'linear-gradient(135deg, #7C3AED 0%, #4361EE 100%)' }}
+            style={{ background: '#381DA0' }}
           >
             <Plus className="w-4 h-4" />
             <span className="hidden sm:inline">Registrar</span>

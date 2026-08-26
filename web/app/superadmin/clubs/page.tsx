@@ -66,7 +66,7 @@ function planBadge(club: Club, now: Date) {
   if (club.suscripcion) {
     const planLabel: Record<string, string> = { MENSUAL: 'Mensual', TRIMESTRAL: 'Trimestral', ANUAL: 'Anual' };
     const planColor: Record<string, { color: string; bg: string }> = {
-      MENSUAL:    { color: '#7C3AED', bg: 'rgba(124,58,237,0.12)' },
+      MENSUAL:    { color: '#381DA0', bg: 'rgba(56,29,160,0.12)' },
       TRIMESTRAL: { color: '#4361EE', bg: 'rgba(67,97,238,0.12)'  },
       ANUAL:      { color: '#06D6A0', bg: 'rgba(6,214,160,0.12)'  },
     };
@@ -110,12 +110,12 @@ function FilterSelect({ value, onChange, options, placeholder }: {
           selección aparece como badge morado al lado. */}
       <SelectTrigger
         className="rounded-[10px] bg-white gap-1"
-        style={{ height: 30, minHeight: 30, border: `1px solid ${selected ? 'rgba(124,58,237,0.35)' : 'rgba(120,80,200,0.16)'}`, padding: '0 8px 0 10px', fontSize: 11, fontWeight: 600, boxSizing: 'border-box' }}
+        style={{ height: 30, minHeight: 30, border: `1px solid ${selected ? 'rgba(56,29,160,0.35)' : 'rgba(120,80,200,0.16)'}`, padding: '0 8px 0 10px', fontSize: 11, fontWeight: 600, boxSizing: 'border-box' }}
       >
         <span style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#1A1028' }}>
           {placeholder}
           {selected && (
-            <span style={{ fontSize: 9, fontWeight: 700, color: '#7C3AED', background: 'rgba(124,58,237,0.10)', borderRadius: 99, padding: '1px 6px', whiteSpace: 'nowrap' }}>
+            <span style={{ fontSize: 9, fontWeight: 700, color: '#381DA0', background: 'rgba(56,29,160,0.10)', borderRadius: 99, padding: '1px 6px', whiteSpace: 'nowrap' }}>
               {selected.label}
             </span>
           )}
@@ -179,7 +179,7 @@ function EstadoFilterDropdown({ selected, onChange, counts }: {
       <button ref={btnRef} onClick={toggleOpen}
         style={{
           display: 'flex', alignItems: 'center', gap: 6, height: 30, padding: '0 8px 0 10px', boxSizing: 'border-box',
-          borderRadius: 10, border: `1px solid ${selected.length > 0 ? 'rgba(124,58,237,0.35)' : 'rgba(120,80,200,0.16)'}`,
+          borderRadius: 10, border: `1px solid ${selected.length > 0 ? 'rgba(56,29,160,0.35)' : 'rgba(120,80,200,0.16)'}`,
           background: '#fff', cursor: 'pointer', fontSize: 11, fontWeight: 600, fontFamily: 'inherit',
           color: '#1A1028', whiteSpace: 'nowrap',
         }}>
@@ -194,7 +194,7 @@ function EstadoFilterDropdown({ selected, onChange, counts }: {
         </span>
         Estado
         <span style={{
-          fontSize: 9, fontWeight: 700, color: '#7C3AED', background: 'rgba(124,58,237,0.10)',
+          fontSize: 9, fontWeight: 700, color: '#381DA0', background: 'rgba(56,29,160,0.10)',
           borderRadius: 99, padding: '1px 6px',
         }}>
           {selected.length === 0 ? ESTADO_OPTS.length : selected.length}/{ESTADO_OPTS.length}
@@ -213,7 +213,7 @@ function EstadoFilterDropdown({ selected, onChange, counts }: {
             const checked = selected.includes(o.value);
             return (
               <button key={o.value} onClick={() => toggleValue(o.value)}
-                className="hover:bg-[rgba(124,58,237,0.06)]"
+                className="hover:bg-[rgba(56,29,160,0.06)]"
                 style={{
                   display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '7px 8px',
                   borderRadius: 8, border: 'none', background: 'transparent', cursor: 'pointer',
@@ -221,8 +221,8 @@ function EstadoFilterDropdown({ selected, onChange, counts }: {
                 }}>
                 <span style={{
                   width: 14, height: 14, borderRadius: 5, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  background: checked ? '#7C3AED' : 'transparent',
-                  border: checked ? '1px solid #7C3AED' : '1px solid rgba(120,80,200,0.30)', flexShrink: 0,
+                  background: checked ? '#381DA0' : 'transparent',
+                  border: checked ? '1px solid #381DA0' : '1px solid rgba(120,80,200,0.30)', flexShrink: 0,
                 }}>
                   {checked && <Check size={10} color="#fff" strokeWidth={3} />}
                 </span>
@@ -234,12 +234,12 @@ function EstadoFilterDropdown({ selected, onChange, counts }: {
           })}
           <div style={{ height: 1, background: 'rgba(120,80,200,0.10)', margin: '4px 4px' }} />
           <button onClick={() => { onChange([]); setOpen(false); }}
-            className="hover:bg-[rgba(124,58,237,0.06)]"
+            className="hover:bg-[rgba(56,29,160,0.06)]"
             style={{
               display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '7px 8px',
               borderRadius: 8, border: 'none', background: 'transparent', cursor: 'pointer',
               fontSize: 11, fontWeight: 600, fontFamily: 'inherit',
-              color: selected.length === 0 ? '#7C3AED' : '#8E87A8', textAlign: 'left',
+              color: selected.length === 0 ? '#381DA0' : '#8E87A8', textAlign: 'left',
             }}>
             <span style={{ flex: 1 }}>Mostrar todos</span>
             <span style={{ fontSize: 10, color: '#8E87A8', fontWeight: 500 }}>{counts.ALL ?? 0}</span>
@@ -377,7 +377,7 @@ export default function ClubsPage() {
   );
   const clearButton = filtersActive ? (
     <button onClick={clearFilters}
-      style={{ fontSize: 11, fontWeight: 600, color: '#7C3AED', background: 'none', border: 'none', cursor: 'pointer', padding: '6px 4px', whiteSpace: 'nowrap' }}>
+      style={{ fontSize: 11, fontWeight: 600, color: '#381DA0', background: 'none', border: 'none', cursor: 'pointer', padding: '6px 4px', whiteSpace: 'nowrap' }}>
       Limpiar
     </button>
   ) : null;
@@ -409,11 +409,11 @@ export default function ClubsPage() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <div style={{ display: 'flex', background: '#fff', border: '1px solid rgba(120,80,200,0.14)', borderRadius: 10, padding: 2 }}>
               <button onClick={() => setView('table')} title="Vista de tabla"
-                style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '6px 10px', borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: 11, fontWeight: 600, fontFamily: 'inherit', background: view === 'table' ? 'rgba(124,58,237,0.10)' : 'transparent', color: view === 'table' ? '#7C3AED' : '#8E87A8' }}>
+                style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '6px 10px', borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: 11, fontWeight: 600, fontFamily: 'inherit', background: view === 'table' ? 'rgba(56,29,160,0.10)' : 'transparent', color: view === 'table' ? '#381DA0' : '#8E87A8' }}>
                 <Table2 size={13} /> Tabla
               </button>
               <button onClick={() => setView('cards')} title="Vista de tarjetas"
-                style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '6px 10px', borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: 11, fontWeight: 600, fontFamily: 'inherit', background: view === 'cards' ? 'rgba(124,58,237,0.10)' : 'transparent', color: view === 'cards' ? '#7C3AED' : '#8E87A8' }}>
+                style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '6px 10px', borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: 11, fontWeight: 600, fontFamily: 'inherit', background: view === 'cards' ? 'rgba(56,29,160,0.10)' : 'transparent', color: view === 'cards' ? '#381DA0' : '#8E87A8' }}>
                 <LayoutGrid size={13} /> Tarjetas
               </button>
             </div>
@@ -422,7 +422,7 @@ export default function ClubsPage() {
             whileTap={{ scale: 0.95 }}
             transition={{ duration: 0.12, ease: EASE }}
             style={{
-              background: showNew ? 'rgba(239,71,111,0.10)' : '#7C3AED',
+              background: showNew ? 'rgba(239,71,111,0.10)' : '#381DA0',
               border: showNew ? '1.5px solid rgba(239,71,111,0.25)' : 'none',
               borderRadius: 12, padding: '7px 16px', cursor: 'pointer',
               color: showNew ? '#EF476F' : '#fff',
@@ -441,7 +441,7 @@ export default function ClubsPage() {
         <AnimatePresence>
           {showNew && (
             <motion.div key="new-form" variants={expandY} initial="hidden" animate="show" exit="exit"
-              style={{ background: '#fff', border: '1.5px solid rgba(124,58,237,0.25)', borderRadius: 20, padding: '16px 14px', marginBottom: 12 }}>
+              style={{ background: '#fff', border: '1.5px solid rgba(56,29,160,0.25)', borderRadius: 20, padding: '16px 14px', marginBottom: 12 }}>
               <p style={{ margin: '0 0 14px', fontSize: 13, fontWeight: 600, color: '#1A1028', fontFamily: 'inherit' }}>Nuevo club</p>
               {[
                 { label: 'Nombre del club',  key: 'clubName',   type: 'text',  placeholder: 'Ej: Club Patinaje Norte' },
@@ -472,7 +472,7 @@ export default function ClubsPage() {
                 </motion.button>
                 <motion.button onClick={handleCreate} disabled={saving || !newForm.clubName || !newForm.adminEmail || !newForm.adminName}
                   whileTap={{ scale: 0.97 }} transition={{ duration: 0.12 }}
-                  style={{ flex: 2, padding: '11px 0', borderRadius: 12, border: 'none', background: saving ? '#A855F7' : '#7C3AED', color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 3px 14px rgba(124,58,237,0.28)', opacity: (!newForm.clubName || !newForm.adminEmail || !newForm.adminName) ? 0.6 : 1 }}>
+                  style={{ flex: 2, padding: '11px 0', borderRadius: 12, border: 'none', background: saving ? '#A855F7' : '#381DA0', color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 3px 14px rgba(56,29,160,0.28)', opacity: (!newForm.clubName || !newForm.adminEmail || !newForm.adminName) ? 0.6 : 1 }}>
                   {saving ? 'Creando...' : 'Crear club'}
                 </motion.button>
               </div>
@@ -483,13 +483,13 @@ export default function ClubsPage() {
         {/* Lista */}
         {loading ? (
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 160 }}>
-            <div className="w-6 h-6 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: '#7C3AED', borderTopColor: 'transparent' }} />
+            <div className="w-6 h-6 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: '#381DA0', borderTopColor: 'transparent' }} />
           </div>
         ) : clubs.length === 0 ? (
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.28, ease: EASE }}
             style={{ background: '#fff', border: '1px solid rgba(120,80,200,0.10)', borderRadius: 20, padding: '40px 16px', textAlign: 'center' }}>
-            <div style={{ width: 48, height: 48, borderRadius: 14, background: 'rgba(124,58,237,0.07)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <div style={{ width: 48, height: 48, borderRadius: 14, background: 'rgba(56,29,160,0.07)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#381DA0" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
               </svg>
             </div>
@@ -534,12 +534,12 @@ export default function ClubsPage() {
                     return (
                       <tr key={club.id} onClick={() => router.push(`/superadmin/clubs/${club.id}`)}
                         style={{ borderBottom: '1px solid rgba(120,80,200,0.06)', cursor: 'pointer' }}
-                        onMouseEnter={e => (e.currentTarget.style.background = 'rgba(124,58,237,0.03)')}
+                        onMouseEnter={e => (e.currentTarget.style.background = 'rgba(56,29,160,0.03)')}
                         onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                       >
                         <td style={{ padding: '10px 14px' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                            <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'rgba(124,58,237,0.10)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800, color: '#7C3AED', flexShrink: 0, overflow: 'hidden' }}>
+                            <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'rgba(56,29,160,0.10)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800, color: '#381DA0', flexShrink: 0, overflow: 'hidden' }}>
                               {club.logoUrl
                                 ? <img src={club.logoUrl} alt={club.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                 : club.name.charAt(0).toUpperCase()}
@@ -585,13 +585,13 @@ export default function ClubsPage() {
                   key={club.id}
                   variants={cardVariant}
                   onClick={() => router.push(`/superadmin/clubs/${club.id}`)}
-                  whileHover={{ y: -2, boxShadow: '0 10px 28px rgba(124,58,237,0.10)' }}
+                  whileHover={{ y: -2, boxShadow: '0 10px 28px rgba(56,29,160,0.10)' }}
                   whileTap={{ scale: 0.99 }}
                   transition={{ duration: 0.2, ease: EASE }}
                   style={{ textAlign: 'left', background: '#fff', border: '1px solid rgba(120,80,200,0.10)', borderRadius: 20, padding: '14px', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 12, boxShadow: '0 1px 8px rgba(0,0,0,0.04)' }}
                 >
                   {/* Logo */}
-                  <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'rgba(124,58,237,0.10)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 800, color: '#7C3AED', fontFamily: 'inherit', flexShrink: 0, overflow: 'hidden' }}>
+                  <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'rgba(56,29,160,0.10)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 800, color: '#381DA0', fontFamily: 'inherit', flexShrink: 0, overflow: 'hidden' }}>
                     {club.logoUrl
                       ? <img src={club.logoUrl} alt={club.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                       : club.name.charAt(0).toUpperCase()}

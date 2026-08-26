@@ -58,12 +58,12 @@ const ROLES: Record<string, string> = { ADMIN: 'Admin', COACH: 'Entrenador', STU
 const ROLE_COLORS: Record<string, { text: string; bg: string }> = {
   ADMIN:   { text: '#B45309', bg: 'rgba(245,158,11,0.12)' },
   COACH:   { text: '#047857', bg: 'rgba(6,214,160,0.12)' },
-  STUDENT: { text: '#6D28D9', bg: 'rgba(124,58,237,0.12)' },
+  STUDENT: { text: '#6D28D9', bg: 'rgba(56,29,160,0.12)' },
 };
 const ROLE_GRADIENT: Record<string, string> = {
   ADMIN:   'linear-gradient(135deg,#FFB703,#FB8500)',
   COACH:   'linear-gradient(135deg,#06D6A0,#0CB68D)',
-  STUDENT: 'linear-gradient(135deg,#7C3AED,#A855F7)',
+  STUDENT: '#381DA0',
 };
 
 // ── Empty form ─────────────────────────────────────────────────────────────────
@@ -544,7 +544,7 @@ export default function MiembrosPage() {
 
   // ── Stats desktop (también actúan como filtros) ──────────────────────────────
   const statsDesktop: { label: string; value: number; color: string; bg: string; filter: 'ALL'|'STUDENT'|'COACH'|'ADMIN' }[] = [
-    { label: 'Total',       value: members.length,                                    color: '#7C3AED', bg: 'rgba(124,58,237,0.08)', filter: 'ALL'     },
+    { label: 'Total',       value: members.length,                                    color: '#381DA0', bg: 'rgba(56,29,160,0.08)', filter: 'ALL'     },
     { label: 'Deportistas', value: members.filter(m => m.role === 'STUDENT').length,  color: '#4361EE', bg: 'rgba(67,97,238,0.08)',  filter: 'STUDENT' },
     { label: 'Entrenadores',value: members.filter(m => m.role === 'COACH').length,    color: '#06D6A0', bg: 'rgba(6,214,160,0.10)',  filter: 'COACH'   },
     { label: 'Admins',      value: members.filter(m => m.role === 'ADMIN').length,    color: '#FFB703', bg: 'rgba(255,183,3,0.10)',  filter: 'ADMIN'   },
@@ -604,7 +604,7 @@ export default function MiembrosPage() {
           <motion.button onClick={openNew} whileTap={reducedMotion ? {} : { scale: 0.97 }}
             transition={{ duration: 0.12, ease: EASE_OUT }}
             className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold text-white"
-            style={{ background: 'linear-gradient(135deg, #7C3AED 0%, #4361EE 100%)' }}>
+            style={{ background: '#381DA0' }}>
             <Plus className="w-4 h-4" /><span className="hidden sm:inline">Nuevo</span>
           </motion.button>
           </>)}
@@ -701,7 +701,7 @@ export default function MiembrosPage() {
                 whileTap={reducedMotion ? {} : { scale: 0.97 }}
                 transition={{ duration: 0.14, ease: EASE_OUT }}
                 className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-[13px] font-semibold text-white cursor-pointer"
-                style={{ background: 'linear-gradient(135deg, #7C3AED 0%, #4361EE 100%)', boxShadow: '0 4px 16px rgba(124,58,237,0.30)' }}>
+                style={{ background: '#381DA0', boxShadow: '0 4px 16px rgba(56,29,160,0.30)' }}>
                 <Plus className="w-4 h-4" /> Nuevo miembro
               </motion.button>
               )}
@@ -722,8 +722,8 @@ export default function MiembrosPage() {
               className="flex flex-col items-center justify-center py-32 bg-white rounded-2xl"
               style={{ border: '1px solid rgba(120,80,200,0.08)' }}
             >
-              <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4" style={{ background: 'rgba(124,58,237,0.08)' }}>
-                <Users className="w-8 h-8" style={{ color: '#7C3AED' }} />
+              <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4" style={{ background: 'rgba(56,29,160,0.08)' }}>
+                <Users className="w-8 h-8" style={{ color: '#381DA0' }} />
               </div>
               <p className="text-[17px] font-semibold mb-1.5" style={{ color: '#1A1028', fontFamily: 'inherit' }}>
                 {search ? 'Sin resultados' : 'Sin miembros aún'}
@@ -737,7 +737,7 @@ export default function MiembrosPage() {
                 <motion.button onClick={openNew}
                   whileTap={reducedMotion ? {} : { scale: 0.97 }} transition={{ duration: 0.12 }}
                   className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-[13px] font-semibold text-white cursor-pointer"
-                  style={{ background: 'linear-gradient(135deg,#7C3AED,#4361EE)' }}>
+                  style={{ background: '#381DA0' }}>
                   <Plus className="w-4 h-4" /> Agregar miembro
                 </motion.button>
               )}
@@ -754,11 +754,11 @@ export default function MiembrosPage() {
                   <motion.div
                     key={m.id}
                     variants={{ hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0, transition: { duration: 0.25, ease: EASE_OUT } } }}
-                    whileHover={reducedMotion ? {} : { y: -3, boxShadow: '0 12px 40px rgba(124,58,237,0.14)', transition: { duration: 0.22, ease: EASE_OUT } }}
+                    whileHover={reducedMotion ? {} : { y: -3, boxShadow: '0 12px 40px rgba(56,29,160,0.14)', transition: { duration: 0.22, ease: EASE_OUT } }}
                     className="bg-white rounded-2xl overflow-hidden flex flex-col cursor-default"
                     style={{
                       border: '1px solid rgba(120,80,200,0.09)',
-                      boxShadow: '0 2px 12px rgba(124,58,237,0.05)',
+                      boxShadow: '0 2px 12px rgba(56,29,160,0.05)',
                     }}
                   >
                     {/* ── Cabecera con gradiente ── */}
@@ -817,8 +817,8 @@ export default function MiembrosPage() {
                       {/* 1. Documento */}
                       {(m.docType || m.docNumber) && (
                         <div className="flex items-center gap-2.5">
-                          <div className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'rgba(124,58,237,0.08)' }}>
-                            <CreditCard className="w-3 h-3" style={{ color: '#7C3AED' }} />
+                          <div className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'rgba(56,29,160,0.08)' }}>
+                            <CreditCard className="w-3 h-3" style={{ color: '#381DA0' }} />
                           </div>
                           <p className="text-[12px] font-medium" style={{ color: '#5A5278' }}>
                             {[m.docType, m.docNumber].filter(Boolean).join(' · ')}
@@ -830,8 +830,8 @@ export default function MiembrosPage() {
                         const { iso2, dialCode, number } = parsePhoneDisplay(m.phone);
                         return (
                           <div className="flex items-center gap-2.5">
-                            <div className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'rgba(124,58,237,0.08)' }}>
-                              <Phone className="w-3 h-3" style={{ color: '#7C3AED' }} />
+                            <div className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'rgba(56,29,160,0.08)' }}>
+                              <Phone className="w-3 h-3" style={{ color: '#381DA0' }} />
                             </div>
                             <div className="flex items-center gap-1.5">
                               <span className="flex items-center gap-0.5">
@@ -846,8 +846,8 @@ export default function MiembrosPage() {
                       {/* 3. Correo */}
                       {m.email && (
                         <div className="flex items-center gap-2.5 min-w-0">
-                          <div className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'rgba(124,58,237,0.08)' }}>
-                            <Mail className="w-3 h-3" style={{ color: '#7C3AED' }} />
+                          <div className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'rgba(56,29,160,0.08)' }}>
+                            <Mail className="w-3 h-3" style={{ color: '#381DA0' }} />
                           </div>
                           <p className="text-[12px] font-medium truncate lowercase" style={{ color: '#5A5278' }}>{m.email}</p>
                         </div>
@@ -855,8 +855,8 @@ export default function MiembrosPage() {
                       {/* 4. Nacimiento */}
                       {m.birthDate && (
                         <div className="flex items-center gap-2.5">
-                          <div className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'rgba(124,58,237,0.08)' }}>
-                            <Calendar className="w-3 h-3" style={{ color: '#7C3AED' }} />
+                          <div className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'rgba(56,29,160,0.08)' }}>
+                            <Calendar className="w-3 h-3" style={{ color: '#381DA0' }} />
                           </div>
                           <p className="text-[12px] font-medium" style={{ color: '#5A5278' }}>
                             {parseLocalDate(m.birthDate).toLocaleDateString('es-CO', { day: 'numeric', month: 'short', year: 'numeric' })}
@@ -880,7 +880,7 @@ export default function MiembrosPage() {
                             <span
                               key={l.location.id}
                               className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full"
-                              style={{ background: 'rgba(124,58,237,0.08)', color: '#7C3AED' }}
+                              style={{ background: 'rgba(56,29,160,0.08)', color: '#381DA0' }}
                             >
                               <MapPin className="w-2.5 h-2.5" />
                               {l.location.name}
@@ -909,7 +909,7 @@ export default function MiembrosPage() {
                         whileTap={reducedMotion ? {} : { scale: 0.97 }}
                         transition={{ duration: 0.12, ease: EASE_OUT }}
                         className="flex-1 py-2.5 rounded-xl text-[12px] font-semibold text-white flex items-center justify-center gap-1.5 cursor-pointer"
-                        style={{ background: 'linear-gradient(135deg,#7C3AED,#4361EE)', boxShadow: '0 3px 12px rgba(124,58,237,0.22)' }}
+                        style={{ background: '#381DA0', boxShadow: '0 3px 12px rgba(56,29,160,0.22)' }}
                       >
                         <Pencil className="w-3.5 h-3.5" /> Editar
                       </motion.button>
@@ -924,10 +924,10 @@ export default function MiembrosPage() {
                         className={canManage
                           ? 'w-10 h-10 rounded-xl flex items-center justify-center cursor-pointer shrink-0'
                           : 'flex-1 py-2.5 rounded-xl text-[12px] font-semibold flex items-center justify-center gap-1.5 cursor-pointer'}
-                        style={{ background: 'rgba(124,58,237,0.08)', color: '#7C3AED' }}
+                        style={{ background: 'rgba(56,29,160,0.08)', color: '#381DA0' }}
                         aria-label="Ver deportista"
                       >
-                        <Eye className="w-4 h-4" style={{ color: '#7C3AED' }} />
+                        <Eye className="w-4 h-4" style={{ color: '#381DA0' }} />
                         {!canManage && 'Ver detalle'}
                       </motion.button>
                       {canManage && !esUnoMismo(m) && (
@@ -1058,7 +1058,7 @@ export default function MiembrosPage() {
                     <p className="text-[11px] text-muted-foreground truncate lowercase">{m.email ?? '—'}</p>
                     {m.role === 'STUDENT' && (
                       <div className="flex gap-2 mt-0.5 flex-wrap">
-                        {m.category && <span className="text-[10px] font-semibold" style={{ color: '#7C3AED' }}>{m.category}</span>}
+                        {m.category && <span className="text-[10px] font-semibold" style={{ color: '#381DA0' }}>{m.category}</span>}
                         {m.tipo && <span className="text-[10px] text-muted-foreground">{m.tipo}</span>}
                         {m.paymentDueDay && <span className="text-[10px] text-muted-foreground">Día {m.paymentDueDay}</span>}
                       </div>
@@ -1089,7 +1089,7 @@ export default function MiembrosPage() {
                       whileTap={reducedMotion ? {} : { scale: 0.9 }}
                       transition={{ duration: 0.12, ease: EASE_OUT }}
                       className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
-                      style={{ color: '#7C3AED' }}
+                      style={{ color: '#381DA0' }}
                       aria-label={`Ver a ${m.fullName}`}
                     >
                       <Eye className="w-[17px] h-[17px]" />
@@ -1254,7 +1254,7 @@ export default function MiembrosPage() {
                 maxWidth: 760,
                 borderRadius: 28,
                 maxHeight: '92dvh',
-                boxShadow: '0 24px 64px rgba(124,58,237,0.18), 0 4px 16px rgba(0,0,0,0.08)',
+                boxShadow: '0 24px 64px rgba(56,29,160,0.18), 0 4px 16px rgba(0,0,0,0.08)',
                 pointerEvents: 'auto',
               }}
               initial={reducedMotion ? { opacity: 0 } : { opacity: 0, scale: 0.95, y: -12 }}
@@ -1266,7 +1266,7 @@ export default function MiembrosPage() {
             {/* Header */}
             <div className="px-6 pt-5 pb-3 flex items-start justify-between shrink-0">
               <div>
-                <p className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: '#7C3AED' }}>
+                <p className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: '#381DA0' }}>
                   {editing ? 'Editar miembro' : 'Nuevo miembro'}
                 </p>
                 <h2 className="text-[22px] font-semibold text-foreground leading-tight mt-0.5" style={{ fontFamily: 'inherit' }}>
@@ -1348,7 +1348,7 @@ export default function MiembrosPage() {
                   maxWidth: 440,
                   borderRadius: 28,
                   maxHeight: '88dvh',
-                  boxShadow: '0 24px 64px rgba(124,58,237,0.18), 0 4px 16px rgba(0,0,0,0.08)',
+                  boxShadow: '0 24px 64px rgba(56,29,160,0.18), 0 4px 16px rgba(0,0,0,0.08)',
                   pointerEvents: 'auto',
                 }}
                 initial={reducedMotion ? { opacity: 0 } : { opacity: 0, scale: 0.95, y: -12 }}
@@ -1392,8 +1392,8 @@ export default function MiembrosPage() {
                     <div>
                       <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-3">Documento</p>
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(124,58,237,0.08)' }}>
-                          <CreditCard className="w-3.5 h-3.5" style={{ color: '#7C3AED' }} />
+                        <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(56,29,160,0.08)' }}>
+                          <CreditCard className="w-3.5 h-3.5" style={{ color: '#381DA0' }} />
                         </div>
                         <div>
                           {viewMember.docType && (
@@ -1415,8 +1415,8 @@ export default function MiembrosPage() {
                         const { iso2, dialCode, number } = parsePhoneDisplay(viewMember.phone);
                         return (
                           <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(124,58,237,0.08)' }}>
-                              <Phone className="w-3.5 h-3.5" style={{ color: '#7C3AED' }} />
+                            <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(56,29,160,0.08)' }}>
+                              <Phone className="w-3.5 h-3.5" style={{ color: '#381DA0' }} />
                             </div>
                             <div>
                               <p className="text-[10px] text-muted-foreground">Teléfono</p>
@@ -1433,8 +1433,8 @@ export default function MiembrosPage() {
                       })()}
                       {viewMember.email && (
                         <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(124,58,237,0.08)' }}>
-                            <Mail className="w-3.5 h-3.5" style={{ color: '#7C3AED' }} />
+                          <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(56,29,160,0.08)' }}>
+                            <Mail className="w-3.5 h-3.5" style={{ color: '#381DA0' }} />
                           </div>
                           <div>
                             <p className="text-[10px] text-muted-foreground">Correo</p>
@@ -1444,8 +1444,8 @@ export default function MiembrosPage() {
                       )}
                       {viewMember.birthDate && (
                         <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(124,58,237,0.08)' }}>
-                            <Calendar className="w-3.5 h-3.5" style={{ color: '#7C3AED' }} />
+                          <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(56,29,160,0.08)' }}>
+                            <Calendar className="w-3.5 h-3.5" style={{ color: '#381DA0' }} />
                           </div>
                           <div>
                             <p className="text-[10px] text-muted-foreground">Nacimiento</p>
@@ -1520,9 +1520,9 @@ export default function MiembrosPage() {
                       <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-3">Sedes</p>
                       <div className="flex flex-wrap gap-2">
                         {viewMember.locations.map(l => (
-                          <div key={l.location.id} className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl" style={{ background: 'rgba(124,58,237,0.08)' }}>
-                            <MapPin className="w-3 h-3 shrink-0" style={{ color: '#7C3AED' }} />
-                            <span className="text-[12px] font-semibold" style={{ color: '#7C3AED' }}>{l.location.name}</span>
+                          <div key={l.location.id} className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl" style={{ background: 'rgba(56,29,160,0.08)' }}>
+                            <MapPin className="w-3 h-3 shrink-0" style={{ color: '#381DA0' }} />
+                            <span className="text-[12px] font-semibold" style={{ color: '#381DA0' }}>{l.location.name}</span>
                           </div>
                         ))}
                       </div>
@@ -1537,7 +1537,7 @@ export default function MiembrosPage() {
                     transition={{ duration: 0.12, ease: EASE_OUT }}
                     onClick={() => { setViewMember(null); openEdit(viewMember); }}
                     className="w-full py-3.5 rounded-2xl font-semibold text-[14px] text-white flex items-center justify-center gap-2"
-                    style={{ background: 'linear-gradient(135deg, #7C3AED, #4361EE)' }}
+                    style={{ background: '#381DA0' }}
                   >
                     <Pencil className="w-4 h-4" />
                     Editar información

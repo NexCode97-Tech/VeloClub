@@ -107,7 +107,7 @@ function SectionHeader({ label, icon: Icon }: { label: string; icon: React.Eleme
   return (
     <div className="flex items-center gap-2 mb-3">
       <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
-        style={{ background: 'linear-gradient(135deg, #7C3AED 0%, #4361EE 100%)' }}>
+        style={{ background: '#381DA0' }}>
         <Icon className="w-3.5 h-3.5 text-white" />
       </div>
       <h2 className="text-[15px] font-semibold text-foreground">{label}</h2>
@@ -135,7 +135,7 @@ const PROFILE_ROLE_COLOR: Record<string, string> = {
   SUPERADMIN: '#EF476F',
   ADMIN: '#FFB703',
   COACH: '#06D6A0',
-  STUDENT: '#7C3AED',
+  STUDENT: '#381DA0',
 };
 
 type Tab = 'perfil' | 'club' | 'suscripcion';
@@ -393,7 +393,7 @@ function AjustesPageContent() {
             <p className="text-[16px] font-semibold text-foreground truncate">{displayName}</p>
             <span
               className="inline-flex px-2 py-0.5 rounded-full text-[10px] font-semibold tracking-wide mt-1"
-              style={{ background: `${PROFILE_ROLE_COLOR[role ?? ''] ?? '#7C3AED'}1A`, color: PROFILE_ROLE_COLOR[role ?? ''] ?? '#7C3AED' }}
+              style={{ background: `${PROFILE_ROLE_COLOR[role ?? ''] ?? '#381DA0'}1A`, color: PROFILE_ROLE_COLOR[role ?? ''] ?? '#381DA0' }}
             >
               {ROLE_LABELS[role ?? ''] ?? role}
             </span>
@@ -773,7 +773,7 @@ function AjustesPageContent() {
                     className="relative flex-1 flex items-center justify-center py-2.5 rounded-xl z-10">
                     {active && (
                       <motion.div layoutId="ajustes-tab-pill" className="absolute inset-0 rounded-xl"
-                        style={{ background: 'linear-gradient(135deg, #7C3AED 0%, #4361EE 100%)', boxShadow: '0 4px 20px rgba(124,58,237,0.40)' }}
+                        style={{ background: '#381DA0', boxShadow: '0 4px 20px rgba(56,29,160,0.40)' }}
                         transition={{ type: 'spring', stiffness: 500, damping: 35 }} />
                     )}
                     <Icon className="relative w-4 h-4 z-10" style={{ color: active ? '#fff' : '#8E87A8' }} />

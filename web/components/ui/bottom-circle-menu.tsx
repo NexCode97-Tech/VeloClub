@@ -135,10 +135,10 @@ export function BottomCircleMenu({ items, pathname, isOpen, onToggle, onClose }:
             height: 56,
             background: isOpen
               ? '#EF476F'
-              : 'linear-gradient(135deg, #7C3AED 0%, #4361EE 100%)',
+              : '#381DA0',
             boxShadow: isOpen
               ? '0 6px 24px rgba(239,71,111,0.48), 0 2px 8px rgba(0,0,0,0.10)'
-              : '0 6px 24px rgba(124,58,237,0.48), 0 2px 8px rgba(0,0,0,0.10)',
+              : '0 6px 24px rgba(56,29,160,0.48), 0 2px 8px rgba(0,0,0,0.10)',
             transition: 'background 0.22s cubic-bezier(0.23,1,0.32,1), box-shadow 0.22s cubic-bezier(0.23,1,0.32,1)',
             willChange: 'transform',
             zIndex: 43,

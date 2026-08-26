@@ -2,7 +2,7 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
 // ── Paleta VeloClub ───────────────────────────────────────────────────────────
-const PURPLE  = [124, 58,  237] as [number,number,number]; // #7C3AED
+const PURPLE  = [124, 58,  237] as [number,number,number]; // #381DA0
 const BLUE    = [67,  97,  238] as [number,number,number]; // #4361EE
 const GREEN   = [6,   214, 160] as [number,number,number]; // #06D6A0
 const DARK    = [26,  16,  40]  as [number,number,number]; // #1A1028

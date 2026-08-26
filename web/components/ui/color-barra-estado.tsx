@@ -7,9 +7,9 @@ import { usePathname } from 'next/navigation';
 // ruta; gana la coincidencia más larga, así /dashboard exacto puede ser violeta
 // mientras el resto del panel queda gris claro.
 const COLOR_POR_RUTA: Array<{ ruta: string; color: string; exacta?: boolean }> = [
-  // Inicio: el encabezado arranca en #7C3AED, el mismo tono que el degradado
-  // de arriba, para que la barra y el encabezado se lean como una sola pieza.
-  { ruta: '/dashboard', color: '#7C3AED', exacta: true },
+  // Inicio: el encabezado es #381DA0 sólido, así que la barra lleva el mismo
+  // color y las dos se leen como una sola pieza.
+  { ruta: '/dashboard', color: '#381DA0', exacta: true },
   { ruta: '/dashboard', color: '#F7F7FB' },
   { ruta: '/superadmin', color: '#F7F7FB' },
   { ruta: '/sign-in', color: '#F7F7FB' },

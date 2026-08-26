@@ -18,7 +18,7 @@ function initials(name: string): string {
   return name.split(' ').filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase();
 }
 
-const DEFAULT_GRADIENT = 'linear-gradient(135deg,#7C3AED,#A855F7)';
+const DEFAULT_GRADIENT = '#381DA0';
 
 export function MemberAvatar({
   name,

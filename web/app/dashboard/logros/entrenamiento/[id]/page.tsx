@@ -143,7 +143,7 @@ export default function TrainingDetailPage() {
           <button
             onClick={() => { setForm(emptyForm); setError(null); setOpen(true); }}
             className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold text-white shrink-0"
-            style={{ background: 'linear-gradient(135deg, #7C3AED 0%, #4361EE 100%)' }}
+            style={{ background: '#381DA0' }}
           >
             <Plus className="w-4 h-4" />
             <span className="hidden sm:inline">Resultado</span>
@@ -207,7 +207,7 @@ export default function TrainingDetailPage() {
                     )}
                     {r.sets && (
                       <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
-                        <Layers className="w-3 h-3" style={{ color: '#7C3AED' }} />{r.sets} serie{r.sets !== 1 ? 's' : ''}
+                        <Layers className="w-3 h-3" style={{ color: '#381DA0' }} />{r.sets} serie{r.sets !== 1 ? 's' : ''}
                       </span>
                     )}
                     {r.reps && (

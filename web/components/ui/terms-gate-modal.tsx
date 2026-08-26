@@ -39,8 +39,8 @@ export default function TermsGateModal({ open, onAccept }: { open: boolean; onAc
             transition={{ duration: 0.26, ease: EASE }}
             style={{ width: '100%', maxWidth: 440, background: '#fff', borderRadius: 22, padding: '26px 24px', boxShadow: '0 24px 70px rgba(80,40,180,0.28)' }}
           >
-            <div style={{ width: 48, height: 48, borderRadius: 14, background: 'rgba(124,58,237,0.10)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 14 }}>
-              <ShieldCheck size={22} color="#7C3AED" />
+            <div style={{ width: 48, height: 48, borderRadius: 14, background: 'rgba(56,29,160,0.10)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 14 }}>
+              <ShieldCheck size={22} color="#381DA0" />
             </div>
 
             <h2 style={{ margin: '0 0 6px', fontSize: 18, fontWeight: 800, color: '#1A1028', fontFamily: 'inherit' }}>
@@ -66,9 +66,9 @@ export default function TermsGateModal({ open, onAccept }: { open: boolean; onAc
             <button
               type="button"
               onClick={() => setChecked(v => !v)}
-              style={{ display: 'flex', alignItems: 'flex-start', gap: 10, width: '100%', padding: '12px 13px', borderRadius: 12, border: `1.5px solid ${checked ? 'rgba(124,58,237,0.35)' : 'rgba(120,80,200,0.15)'}`, background: checked ? 'rgba(124,58,237,0.05)' : 'transparent', cursor: 'pointer', textAlign: 'left', marginBottom: 16, transition: 'all 0.15s' }}
+              style={{ display: 'flex', alignItems: 'flex-start', gap: 10, width: '100%', padding: '12px 13px', borderRadius: 12, border: `1.5px solid ${checked ? 'rgba(56,29,160,0.35)' : 'rgba(120,80,200,0.15)'}`, background: checked ? 'rgba(56,29,160,0.05)' : 'transparent', cursor: 'pointer', textAlign: 'left', marginBottom: 16, transition: 'all 0.15s' }}
             >
-              <div style={{ width: 19, height: 19, borderRadius: 6, border: `1.5px solid ${checked ? '#7C3AED' : 'rgba(120,80,200,0.30)'}`, background: checked ? '#7C3AED' : '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1, transition: 'all 0.15s' }}>
+              <div style={{ width: 19, height: 19, borderRadius: 6, border: `1.5px solid ${checked ? '#381DA0' : 'rgba(120,80,200,0.30)'}`, background: checked ? '#381DA0' : '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1, transition: 'all 0.15s' }}>
                 {checked && <Check size={13} color="#fff" strokeWidth={3} />}
               </div>
               <span style={{ fontSize: 12.5, lineHeight: 1.55, color: '#4A4560' }}>
@@ -84,10 +84,10 @@ export default function TermsGateModal({ open, onAccept }: { open: boolean; onAc
               disabled={!checked || saving}
               style={{
                 width: '100%', padding: '13px 0', borderRadius: 14, border: 'none',
-                background: !checked ? 'rgba(120,80,200,0.15)' : saving ? '#A855F7' : '#7C3AED',
+                background: !checked ? 'rgba(120,80,200,0.15)' : saving ? '#A855F7' : '#381DA0',
                 color: !checked ? '#A79ECC' : '#fff', fontSize: 13, fontWeight: 600, fontFamily: 'inherit',
                 cursor: !checked || saving ? 'default' : 'pointer',
-                boxShadow: checked && !saving ? '0 4px 16px rgba(124,58,237,0.30)' : 'none',
+                boxShadow: checked && !saving ? '0 4px 16px rgba(56,29,160,0.30)' : 'none',
                 transition: 'all 0.15s',
               }}
             >

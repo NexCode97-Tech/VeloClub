@@ -104,8 +104,7 @@ export default function ModuleLoader({ minHeight }: { minHeight?: number }) {
         }
         .vcml-band {
           position: absolute; top: 0; bottom: 0; left: -100%; width: 300%;
-          background: linear-gradient(100deg,
-            transparent 42%, #7C3AED 48%, #4361EE 52%, transparent 58%);
+          background: #381DA0;
           animation: vcml-sweep 1.5s cubic-bezier(.4,0,.2,1) infinite;
         }
         @keyframes vcml-sweep {
@@ -115,11 +114,11 @@ export default function ModuleLoader({ minHeight }: { minHeight?: number }) {
 
         .vcml-track {
           width: 96px; height: 2.5px; border-radius: 99px; overflow: hidden;
-          background: rgba(124,58,237,.13); margin-top: 16px;
+          background: rgba(56,29,160,.13); margin-top: 16px;
         }
         .vcml-fill {
           display: block; width: 100%; height: 100%; border-radius: 99px;
-          background: linear-gradient(90deg, #7C3AED, #4361EE);
+          background: #381DA0;
           animation: vcml-bar 1.3s cubic-bezier(.65,0,.35,1) infinite;
         }
         @keyframes vcml-bar {

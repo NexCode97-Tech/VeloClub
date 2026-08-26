@@ -542,7 +542,7 @@ export const HorizonHeroSection: React.FC = () => {
               className="absolute inset-0 opacity-50"
               style={{
                 background:
-                  'radial-gradient(circle at 30% 70%, rgba(168,85,247,0.35) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(124,58,237,0.3) 0%, transparent 50%)',
+                  'radial-gradient(circle at 30% 70%, rgba(168,85,247,0.35) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(56,29,160,0.3) 0%, transparent 50%)',
               }}
             />
           </>
@@ -562,7 +562,7 @@ export const HorizonHeroSection: React.FC = () => {
                   ref={idx === 0 ? heroTitleRef : null}
                   className="text-6xl sm:text-7xl md:text-8xl lg:text-9xl font-semibold tracking-tight leading-none bg-clip-text text-transparent"
                   style={{
-                    backgroundImage: 'linear-gradient(135deg, #F5F3FF 0%, #C4B5FD 45%, #A855F7 75%, #7C3AED 100%)',
+                    backgroundImage: 'linear-gradient(135deg, #F5F3FF 0%, #C4B5FD 45%, #A855F7 75%, #381DA0 100%)',
                   }}
                 >
                   {scene.title}
@@ -589,7 +589,7 @@ export const HorizonHeroSection: React.FC = () => {
                     <Link
                       href="/sign-in"
                       className="inline-flex items-center justify-center gap-2 px-8 py-4 text-white rounded-full font-semibold text-base sm:text-lg transition-all duration-300 hover:scale-105 shadow-lg shadow-violet-500/40 hover:shadow-xl hover:shadow-violet-500/50"
-                      style={{ background: 'linear-gradient(135deg, #7C3AED, #A855F7)' }}
+                      style={{ background: 'linear-gradient(135deg, #381DA0, #A855F7)' }}
                     >
                       Entrar a VeloClub
                       <ChevronRight className="w-5 h-5" />

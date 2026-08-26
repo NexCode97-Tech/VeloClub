@@ -3,8 +3,8 @@
 export default function OfflinePage() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', background: '#F7F7FB', padding: '0 24px', textAlign: 'center' }}>
-      <div style={{ width: 64, height: 64, borderRadius: 20, background: 'rgba(124,58,237,0.10)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 20 }}>
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <div style={{ width: 64, height: 64, borderRadius: 20, background: 'rgba(56,29,160,0.10)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 20 }}>
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#381DA0" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
           <line x1="1" y1="1" x2="23" y2="23"/>
           <path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"/>
           <path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"/>
@@ -22,7 +22,7 @@ export default function OfflinePage() {
       </p>
       <button
         onClick={() => window.location.reload()}
-        style={{ padding: '12px 28px', borderRadius: 14, border: 'none', background: '#7C3AED', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}
+        style={{ padding: '12px 28px', borderRadius: 14, border: 'none', background: '#381DA0', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}
       >
         Reintentar
       </button>

@@ -33,7 +33,7 @@ import { GraficaMeses, Ranking, ENTRA, SALE, type MesFinanzas } from '@/componen
  * del desplegable salen todos de acá, así que un color se cambia una vez.
  */
 const COLOR_CATEGORIA: Record<string, string> = {
-  INFRAESTRUCTURA: '#7C3AED',
+  INFRAESTRUCTURA: '#381DA0',
   COMISIONES:      '#DC2626',
   PUBLICIDAD:      '#38BDF8',
   HERRAMIENTAS:    '#0E7C57',
@@ -296,7 +296,7 @@ export default function FinanzasSuperadmin() {
           <button type="button"
             onClick={() => { setErrorModal(null); setTipo('gasto'); setAbierto(true); }}
             className="inline-flex items-center gap-1.5 text-white text-[12.5px] font-semibold px-3.5 h-9 rounded-xl shrink-0 whitespace-nowrap"
-            style={{ background: '#7C3AED' }}>
+            style={{ background: '#381DA0' }}>
             <Plus className="w-3.5 h-3.5 shrink-0" />
             Registrar
           </button>
@@ -420,7 +420,7 @@ export default function FinanzasSuperadmin() {
                 {/* Una sola serie: sin caja de leyenda, el título la nombra. */}
                 <h2 className="text-[15px] font-semibold text-foreground m-0">Ingresos por club</h2>
                 <p className="text-[11.5px] text-muted-foreground m-0">Total pagado desde el primer día</p>
-                <Ranking colores="#7C3AED"
+                <Ranking colores="#381DA0"
                   filas={datos.clubes.map(c => ({ nombre: c.nombre, valor: c.total }))} />
               </Tarjeta>
 
@@ -460,7 +460,7 @@ export default function FinanzasSuperadmin() {
                         {/* El rayo dice que lo puso el sistema. No es solo un
                             adorno: es el motivo por el que no tiene papelera. */}
                         {m.tipo === 'gasto' && m.origen && (
-                          <Zap className="w-3 h-3 shrink-0" style={{ color: '#7C3AED' }} aria-label="Registrado automáticamente" />
+                          <Zap className="w-3 h-3 shrink-0" style={{ color: '#381DA0' }} aria-label="Registrado automáticamente" />
                         )}
                         <span className="truncate">{m.texto}</span>
                       </span>

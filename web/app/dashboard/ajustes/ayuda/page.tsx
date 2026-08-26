@@ -20,7 +20,7 @@ const HELP_GUIDES = [
     ],
   },
   {
-    id: 'miembros', color: '#7C3AED', title: 'Miembros', roles: ['ADMIN', 'COACH'] as Role[],
+    id: 'miembros', color: '#381DA0', title: 'Miembros', roles: ['ADMIN', 'COACH'] as Role[],
     subtitle: 'Registro y gestión de deportistas y staff.',
     steps: [
       { n: 1, t: 'Crear un miembro', d: 'Toca "+ Nuevo". Completa nombre, correo, teléfono y sede. El correo es el que usará para ingresar.' },
@@ -91,7 +91,7 @@ const HELP_GUIDES = [
     ],
   },
   {
-    id: 'club', color: '#7C3AED', title: 'Club', roles: ['ADMIN', 'COACH', 'STUDENT'] as Role[],
+    id: 'club', color: '#381DA0', title: 'Club', roles: ['ADMIN', 'COACH', 'STUDENT'] as Role[],
     subtitle: 'Perfil público de tu club.',
     steps: [
       { n: 1, t: 'Cambiar de pestaña', d: 'Alterna entre "Publicaciones" y "Contacto" para ver la actividad o los datos del club.' },
@@ -100,7 +100,7 @@ const HELP_GUIDES = [
     ],
   },
   {
-    id: 'mi-perfil', color: '#7C3AED', title: 'Mi perfil', roles: ['ADMIN', 'COACH', 'STUDENT'] as Role[],
+    id: 'mi-perfil', color: '#381DA0', title: 'Mi perfil', roles: ['ADMIN', 'COACH', 'STUDENT'] as Role[],
     subtitle: 'Tu información personal.',
     steps: [
       { n: 1, t: 'Publicar y ver fotos', d: 'Alterna entre "Publicaciones" y "Fotos" para compartir novedades o revisar tu galería.' },

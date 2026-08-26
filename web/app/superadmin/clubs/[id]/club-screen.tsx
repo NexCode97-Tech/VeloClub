@@ -53,7 +53,7 @@ export default function ClubScreen({ id, tab }: { id: string; tab: 'info' | 'fin
       <div style={{ padding: '32px 16px', textAlign: 'center' }}>
         <p style={{ fontSize: 14, fontWeight: 600, color: '#1A1028', margin: 0 }}>{error}</p>
         <button onClick={volver}
-          style={{ marginTop: 14, padding: '9px 16px', borderRadius: 12, border: '1px solid rgba(120,80,200,0.16)', background: '#fff', color: '#7C3AED', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+          style={{ marginTop: 14, padding: '9px 16px', borderRadius: 12, border: '1px solid rgba(120,80,200,0.16)', background: '#fff', color: '#381DA0', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
           Volver a clubes
         </button>
       </div>

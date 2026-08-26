@@ -17,14 +17,14 @@ const ITEMS_BY_ROLE: Record<string, { label: string; icon: React.ElementType; co
     { label: 'Calendario', icon: CalendarDays,      color: '#EF476F', href: '/dashboard/calendario' },
     { label: 'Sedes',      icon: MapPin,            color: '#06D6A0', href: '/dashboard/sedes' },
     { label: 'Analíticas',   icon: BarChart2,         color: '#4361EE', href: '/dashboard/reportes' },
-    { label: 'Club',       icon: Building2,         color: '#7C3AED', href: '/dashboard/club' },
+    { label: 'Club',       icon: Building2,         color: '#381DA0', href: '/dashboard/club' },
     { label: 'Ayuda',      icon: HelpCircle,        color: '#8E87A8', href: '/dashboard/ajustes/ayuda' },
   ],
   COACH: [
     { label: 'Rendimiento', icon: Trophy,        color: '#F59E0B', href: '/dashboard/logros' },
     { label: 'Calendario', icon: CalendarDays,  color: '#EF476F', href: '/dashboard/calendario' },
     { label: 'Sedes',      icon: MapPin,        color: '#06D6A0', href: '/dashboard/sedes' },
-    { label: 'Club',       icon: Building2,     color: '#7C3AED', href: '/dashboard/club' },
+    { label: 'Club',       icon: Building2,     color: '#381DA0', href: '/dashboard/club' },
     { label: 'Ayuda',      icon: HelpCircle,    color: '#8E87A8', href: '/dashboard/ajustes/ayuda' },
   ],
   STUDENT: [],
@@ -112,7 +112,7 @@ export default function MasPage() {
             {/* Avatar con botón de cámara */}
             <div className="relative shrink-0">
               <div className="w-14 h-14 rounded-full bg-violet-100 flex items-center justify-center overflow-hidden"
-                style={{ boxShadow: '0 2px 12px rgba(124,58,237,0.15)' }}>
+                style={{ boxShadow: '0 2px 12px rgba(56,29,160,0.15)' }}>
                 {avatarSrc
                   ? <img src={avatarSrc} alt="avatar" className="w-full h-full object-cover" />
                   : <span className="text-violet-500 font-semibold text-xl">{avatarInitial}</span>
@@ -123,7 +123,7 @@ export default function MasPage() {
                     <motion.div
                       initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                       className="absolute inset-0 flex items-center justify-center rounded-full"
-                      style={{ background: 'rgba(124,58,237,0.65)' }}
+                      style={{ background: 'rgba(56,29,160,0.65)' }}
                     >
                       <Loader2 className="w-5 h-5 text-white animate-spin" />
                     </motion.div>
@@ -136,7 +136,7 @@ export default function MasPage() {
                 onClick={() => !uploading && fileRef.current?.click()}
                 disabled={uploading}
                 className="absolute -bottom-0.5 -right-0.5 w-6 h-6 rounded-full flex items-center justify-center cursor-pointer disabled:opacity-50"
-                style={{ background: uploaded ? '#06D6A0' : '#7C3AED', boxShadow: '0 2px 6px rgba(0,0,0,0.2)' }}
+                style={{ background: uploaded ? '#06D6A0' : '#381DA0', boxShadow: '0 2px 6px rgba(0,0,0,0.2)' }}
                 aria-label="Cambiar foto de perfil"
               >
                 <AnimatePresence mode="wait">

@@ -39,13 +39,13 @@ const SIDEBAR_ROLE_COLOR: Record<string, string> = {
   SUPERADMIN: '#EF476F',
   ADMIN:      '#FFB703',
   COACH:      '#06D6A0',
-  STUDENT:    '#7C3AED',
+  STUDENT:    '#381DA0',
 };
 const SIDEBAR_ROLE_GRADIENT: Record<string, string> = {
   SUPERADMIN: 'linear-gradient(135deg,#EF476F,#C1121F)',
   ADMIN:      'linear-gradient(135deg,#FFB703,#FB8500)',
   COACH:      'linear-gradient(135deg,#06D6A0,#0CB68D)',
-  STUDENT:    'linear-gradient(135deg,#7C3AED,#A855F7)',
+  STUDENT:    '#381DA0',
 };
 import { cn } from '@/lib/utils';
 
@@ -82,13 +82,13 @@ const ROLE_MAS_ITEMS: Record<string, { label: string; icon: React.ElementType; h
     { label: 'Calendario', icon: IconCalendar,     href: '/dashboard/calendario', color: '#EF476F' },
     { label: 'Sedes',      icon: IconUbicacion,    href: '/dashboard/sedes',      color: '#06D6A0' },
     { label: 'Analíticas', icon: IconStatistics,   href: '/dashboard/reportes',   color: '#4361EE' },
-    { label: 'Club',       icon: IconClub,         href: '/dashboard/club',       color: '#7C3AED' },
+    { label: 'Club',       icon: IconClub,         href: '/dashboard/club',       color: '#381DA0' },
   ],
   COACH: [
     { label: 'Rendimiento', icon: IconResultados,   href: '/dashboard/logros',     color: '#F59E0B' },
     { label: 'Calendario', icon: IconCalendar,     href: '/dashboard/calendario', color: '#EF476F' },
     { label: 'Sedes',      icon: IconUbicacion,    href: '/dashboard/sedes',      color: '#06D6A0' },
-    { label: 'Club',       icon: IconClub,         href: '/dashboard/club',       color: '#7C3AED' },
+    { label: 'Club',       icon: IconClub,         href: '/dashboard/club',       color: '#381DA0' },
   ],
   STUDENT: [
     { label: 'Club',  icon: IconClub,      href: '/dashboard/club',  color: '#06D6A0' },
@@ -514,7 +514,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             background: '#fff',
             border: '1px solid rgba(0,0,0,0.10)',
             boxShadow: '0 2px 8px rgba(0,0,0,0.10)',
-            color: '#7C3AED',
+            color: '#381DA0',
             cursor: 'pointer',
           }}
         >
@@ -840,7 +840,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     borderRadius: 40,
                     padding: '6px 0',
                     overflow: 'visible',
-                    boxShadow: '0 -2px 12px rgba(124,58,237,0.08), 0 4px 16px rgba(124,58,237,0.10)',
+                    boxShadow: '0 -2px 12px rgba(56,29,160,0.08), 0 4px 16px rgba(56,29,160,0.10)',
                     transform: 'translateZ(0)', /* forzar capa GPU */
                   }}
                 >
@@ -870,11 +870,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                         width: 44,
                         height: 44,
                         borderRadius: '50%',
-                        background: 'linear-gradient(135deg, #7C3AED 0%, #4361EE 55%, #06D6A0 100%)',
+                        background: '#381DA0',
                         left: `calc((${activeTabIndex} + 0.5) / ${totalSlots} * 100% - 22px)`,
                         top: 6,
                         transition: 'left 0.35s cubic-bezier(0.34,1.2,0.64,1)',
-                        boxShadow: '0 4px 20px rgba(124,58,237,0.40)',
+                        boxShadow: '0 4px 20px rgba(56,29,160,0.40)',
                         zIndex: 1,
                         willChange: 'left',
                         transform: 'translateZ(0)',

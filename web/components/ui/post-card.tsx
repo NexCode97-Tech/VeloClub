@@ -40,7 +40,7 @@ const ROLE_GRADIENT: Record<string, string> = {
   SUPERADMIN: 'linear-gradient(135deg,#EF476F,#C1121F)',
   ADMIN:      'linear-gradient(135deg,#FFB703,#FB8500)',
   COACH:      'linear-gradient(135deg,#06D6A0,#0CB68D)',
-  STUDENT:    'linear-gradient(135deg,#7C3AED,#A855F7)',
+  STUDENT:    '#381DA0',
 };
 
 // Etiqueta del autor con el color de su rol, el mismo que usa el sidebar.
@@ -48,7 +48,7 @@ const roleBadge: Record<string, { texto: string; fondo: string }> = {
   SUPERADMIN: { texto: '#B02A47', fondo: 'rgba(239,71,111,0.12)' },
   ADMIN:      { texto: '#854F0B', fondo: 'rgba(255,183,3,0.16)'  },
   COACH:      { texto: '#057A5C', fondo: 'rgba(6,214,160,0.14)'  },
-  STUDENT:    { texto: '#6D28D9', fondo: 'rgba(124,58,237,0.10)' },
+  STUDENT:    { texto: '#6D28D9', fondo: 'rgba(56,29,160,0.10)' },
 };
 
 const roleLabels: Record<string, string> = {
@@ -361,7 +361,7 @@ export function PostCard({
         {editingComment === c.id ? (
           /* ── Modo edición inline ── */
           <div className="rounded-2xl rounded-tl-sm px-3 py-2"
-            style={{ background: '#fff', border: '1px solid rgba(124,58,237,0.18)' }}>
+            style={{ background: '#fff', border: '1px solid rgba(56,29,160,0.18)' }}>
             <p className="text-[11px] font-semibold text-foreground mb-1">{c.authorName}</p>
             <textarea
               value={editText}
@@ -374,7 +374,7 @@ export function PostCard({
             <div className="flex items-center gap-1.5 mt-1.5">
               <button onClick={() => handleSaveEdit(c.id)} disabled={savingEdit || !editText.trim()}
                 className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full text-white disabled:opacity-40"
-                style={{ background: '#7C3AED' }}>
+                style={{ background: '#381DA0' }}>
                 <ContenidoGuardado
                   estado={savingEdit ? 'guardando' : 'idle'}
                   textoIdle="Guardar"
@@ -407,7 +407,7 @@ export function PostCard({
                 type="button"
                 onClick={() => responderA(c)}
                 className="mt-1.5 text-[10.5px] font-bold transition-opacity hover:opacity-70"
-                style={{ color: '#7C3AED' }}
+                style={{ color: '#381DA0' }}
               >
                 Responder
               </button>
@@ -444,7 +444,7 @@ export function PostCard({
                     left: commentMenuPos.left,
                     zIndex: 9999,
                     background: '#fff',
-                    border: '1px solid rgba(124,58,237,0.12)',
+                    border: '1px solid rgba(56,29,160,0.12)',
                     borderRadius: 12,
                     boxShadow: '0 8px 24px rgba(0,0,0,0.10)',
                     minWidth: 140,
@@ -458,7 +458,7 @@ export function PostCard({
                       >
                         <Flag className="w-3.5 h-3.5 text-muted-foreground" /> Reportar
                       </button>
-                      <div style={{ height: 1, background: 'rgba(124,58,237,0.07)' }} />
+                      <div style={{ height: 1, background: 'rgba(56,29,160,0.07)' }} />
                     </>
                   )}
                   {puedoTocar(c) && (
@@ -469,14 +469,14 @@ export function PostCard({
                   >
                     <Pencil className="w-3.5 h-3.5 text-muted-foreground" /> Editar
                   </button>
-                  <div style={{ height: 1, background: 'rgba(124,58,237,0.07)' }} />
+                  <div style={{ height: 1, background: 'rgba(56,29,160,0.07)' }} />
                   <button
                     onClick={() => { setCommentMenu(null); onDeleteComment(post.id, c.id); }}
                     className="flex items-center gap-2 px-3.5 py-2.5 text-[12px] font-semibold text-red-500 hover:bg-red-50 transition-colors text-left"
                   >
                     <Trash2 className="w-3.5 h-3.5" /> Eliminar
                   </button>
-                  <div style={{ height: 1, background: 'rgba(124,58,237,0.07)' }} />
+                  <div style={{ height: 1, background: 'rgba(56,29,160,0.07)' }} />
                   </>
                   )}
                   <button
@@ -693,7 +693,7 @@ export function PostCard({
               rows={3}
               autoFocus
               className="w-full text-[14px] md:text-[13px] text-foreground leading-relaxed outline-none resize-none rounded-xl px-3 py-2"
-              style={{ background: '#fff', border: '1px solid rgba(124,58,237,0.25)' }}
+              style={{ background: '#fff', border: '1px solid rgba(56,29,160,0.25)' }}
             />
             <div className="flex items-center justify-end gap-2 mt-2">
               <button
@@ -706,7 +706,7 @@ export function PostCard({
                 onClick={handleGuardarEdicion}
                 disabled={guardandoPost || !textoEdicion.trim()}
                 className="px-3 py-1.5 rounded-lg text-[12px] font-semibold text-white disabled:opacity-50 cursor-pointer"
-                style={{ background: 'linear-gradient(135deg,#7C3AED,#4361EE)' }}
+                style={{ background: '#381DA0' }}
               >
                 {guardandoPost ? 'Guardando...' : 'Guardar'}
               </button>
@@ -807,7 +807,7 @@ export function PostCard({
                       left: popoverPos.left,
                       zIndex: 9999,
                       background: '#fff',
-                      border: '1px solid rgba(124,58,237,0.12)',
+                      border: '1px solid rgba(56,29,160,0.12)',
                       borderRadius: 14,
                       boxShadow: '0 8px 28px rgba(0,0,0,0.13)',
                       minWidth: 180,
@@ -820,7 +820,7 @@ export function PostCard({
                     </p>
                     {loadingLikes ? (
                       <div className="flex items-center justify-center py-4">
-                        <div className="w-4 h-4 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: '#7C3AED', borderTopColor: 'transparent' }} />
+                        <div className="w-4 h-4 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: '#381DA0', borderTopColor: 'transparent' }} />
                       </div>
                     ) : likeUsers.length === 0 ? (
                       <p className="text-[12px] text-muted-foreground px-3.5 py-2">Sin datos</p>
@@ -898,7 +898,7 @@ export function PostCard({
                   sin tope, una publicacion con veinte comentarios estiraria la
                   tarjeta y dejaria la imagen flotando con un vacio al lado. */}
               <div className={`px-4 pb-2 border-t border-border/40 pt-3${dosColumnas ? ' md:border-t-0 md:bg-transparent md:flex-1 md:min-h-0 md:overflow-y-auto' : ''}`}
-                style={{ background: 'rgba(124,58,237,0.02)' }}>
+                style={{ background: 'rgba(56,29,160,0.02)' }}>
 
                 {/* Lista de comentarios.
                     En escritorio el scroll lo hace el contenedor de arriba, que
@@ -921,7 +921,7 @@ export function PostCard({
                             /* La guia vertical es lo que deja ver de un vistazo
                                donde empieza y termina cada conversacion. */
                             <div className="mt-2 ml-[34px] md:ml-[30px] pl-3 flex flex-col gap-2.5"
-                              style={{ borderLeft: '2px solid rgba(124,58,237,0.16)' }}>
+                              style={{ borderLeft: '2px solid rgba(56,29,160,0.16)' }}>
                               {visibles.map(r => renderComentario(r, true))}
                             </div>
                           )}
@@ -930,9 +930,9 @@ export function PostCard({
                               type="button"
                               onClick={() => alternarHilo(raiz.id)}
                               className="flex items-center gap-2 mt-2 ml-[34px] md:ml-[30px] text-[10.5px] font-bold transition-opacity hover:opacity-70"
-                              style={{ color: '#7C3AED' }}
+                              style={{ color: '#381DA0' }}
                             >
-                              <span className="block w-[18px] h-[2px] rounded-full" style={{ background: 'rgba(124,58,237,0.28)' }} />
+                              <span className="block w-[18px] h-[2px] rounded-full" style={{ background: 'rgba(56,29,160,0.28)' }} />
                               Ver {ocultas} respuesta{ocultas !== 1 ? 's' : ''}
                             </button>
                           )}
@@ -973,13 +973,13 @@ export function PostCard({
               className={dosColumnas ? 'md:order-4' : ''}
             >
               <div className={`px-4 pb-4 pt-1${dosColumnas ? ' md:pt-2.5 md:pb-2.5 md:border-t md:border-border/60' : ''}`}
-                style={{ background: 'rgba(124,58,237,0.02)' }}>
+                style={{ background: 'rgba(56,29,160,0.02)' }}>
                 {/* Sin esta pastilla, en un hilo largo se pierde de vista a
                     quien le estas contestando. */}
                 {respondiendoA && (
                   <div className="flex items-center gap-2 mb-2 rounded-full pl-3 pr-1 py-1 self-start w-fit"
-                    style={{ background: 'rgba(124,58,237,0.09)' }}>
-                    <span className="text-[10.5px] font-bold" style={{ color: '#7C3AED' }}>
+                    style={{ background: 'rgba(56,29,160,0.09)' }}>
+                    <span className="text-[10.5px] font-bold" style={{ color: '#381DA0' }}>
                       Respondiendo a {respondiendoA.nombre}
                     </span>
                     <button
@@ -987,7 +987,7 @@ export function PostCard({
                       onClick={() => setRespondiendoA(null)}
                       aria-label="Cancelar la respuesta"
                       className="w-4 h-4 rounded-full flex items-center justify-center shrink-0"
-                      style={{ background: 'rgba(124,58,237,0.18)', color: '#7C3AED' }}
+                      style={{ background: 'rgba(56,29,160,0.18)', color: '#381DA0' }}
                     >
                       <X className="w-2.5 h-2.5" />
                     </button>
@@ -995,7 +995,7 @@ export function PostCard({
                 )}
                 <div className="flex items-center gap-2">
                   <div className="flex-1 flex items-center gap-2 rounded-full px-3 py-2"
-                    style={{ background: '#fff', border: '1px solid rgba(124,58,237,0.12)' }}>
+                    style={{ background: '#fff', border: '1px solid rgba(56,29,160,0.12)' }}>
                     <input
                       ref={commentInputRef}
                       value={commentText}
@@ -1015,7 +1015,7 @@ export function PostCard({
                     disabled={!commentText.trim() || sendingComment}
                     whileTap={{ scale: 0.9 }}
                     className="w-8 h-8 rounded-full flex items-center justify-center disabled:opacity-40 transition-opacity"
-                    style={{ background: 'linear-gradient(135deg,#7C3AED,#4361EE)' }}>
+                    style={{ background: '#381DA0' }}>
                     {sendingComment
                       ? <div className="w-3.5 h-3.5 border-2 border-white/50 border-t-white rounded-full animate-spin" />
                       : <SendHorizontal className="w-4 h-4 text-white" />
@@ -1063,7 +1063,7 @@ export function PostCard({
                 {reportado ? (
                   <div className="px-6 py-8 flex flex-col items-center text-center gap-2">
                     <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-1"
-                      style={{ background: 'linear-gradient(135deg,#7C3AED,#4361EE)' }}>
+                      style={{ background: '#381DA0' }}>
                       <Flag className="w-5 h-5 text-white" />
                     </div>
                     <p className="text-[15px] font-semibold text-foreground">Gracias por avisar</p>
@@ -1074,7 +1074,7 @@ export function PostCard({
                     <button
                       onClick={() => setReportando(null)}
                       className="mt-3 px-5 py-2.5 rounded-xl text-[13px] font-semibold text-white"
-                      style={{ background: 'linear-gradient(135deg,#7C3AED,#4361EE)' }}
+                      style={{ background: '#381DA0' }}
                     >
                       Listo
                     </button>
@@ -1103,13 +1103,13 @@ export function PostCard({
                             onClick={() => setMotivo(m.valor)}
                             className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-colors"
                             style={motivo === m.valor
-                              ? { background: 'rgba(124,58,237,0.08)', border: '1.5px solid rgba(124,58,237,0.35)' }
+                              ? { background: 'rgba(56,29,160,0.08)', border: '1.5px solid rgba(56,29,160,0.35)' }
                               : { background: '#fff', border: '1.5px solid rgba(26,16,40,0.08)' }}
                           >
                             <span className="w-4 h-4 rounded-full shrink-0 flex items-center justify-center"
-                              style={{ border: `1.5px solid ${motivo === m.valor ? '#7C3AED' : 'rgba(26,16,40,0.20)'}` }}>
+                              style={{ border: `1.5px solid ${motivo === m.valor ? '#381DA0' : 'rgba(26,16,40,0.20)'}` }}>
                               {motivo === m.valor && (
-                                <span className="w-2 h-2 rounded-full" style={{ background: '#7C3AED' }} />
+                                <span className="w-2 h-2 rounded-full" style={{ background: '#381DA0' }} />
                               )}
                             </span>
                             <span className="text-[13px] font-medium text-foreground">{m.etiqueta}</span>
@@ -1134,7 +1134,7 @@ export function PostCard({
                         onClick={enviarReporte}
                         disabled={!motivo || enviandoRep}
                         className="w-full py-3 rounded-xl text-[13px] font-semibold text-white disabled:opacity-40 transition-opacity"
-                        style={{ background: 'linear-gradient(135deg,#7C3AED,#4361EE)' }}
+                        style={{ background: '#381DA0' }}
                       >
                         {enviandoRep ? 'Enviando…' : 'Enviar reporte'}
                       </button>

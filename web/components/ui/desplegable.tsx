@@ -200,7 +200,7 @@ export function Desplegable({
   const borde = error
     ? '#EF476F'
     : abierto
-      ? '#7C3AED'
+      ? '#381DA0'
       : falta
         ? '#D9A227'
         : 'rgba(120,80,200,0.16)';
@@ -227,8 +227,8 @@ export function Desplegable({
             style={{
               color: puesta ? '#6D28D9' : '#1A1028',
               background: puesta
-                ? 'rgba(124,58,237,0.08)'
-                : resaltada === i ? 'rgba(124,58,237,0.05)' : 'transparent',
+                ? 'rgba(56,29,160,0.08)'
+                : resaltada === i ? 'rgba(56,29,160,0.05)' : 'transparent',
             }}
           >
             {o.color && (
@@ -275,7 +275,7 @@ export function Desplegable({
         style={{
           borderColor: compacto && tono ? `${tono}4D` : borde,
           background: falta && !error ? '#FDF7E8' : compacto ? '#fff' : undefined,
-          boxShadow: abierto ? '0 0 0 3px rgba(124,58,237,0.12)' : undefined,
+          boxShadow: abierto ? '0 0 0 3px rgba(56,29,160,0.12)' : undefined,
           color: compacto ? (tono ?? '#8E87A8') : elegida ? '#1A1028' : '#8E87A8',
         }}
       >
@@ -288,7 +288,7 @@ export function Desplegable({
             <span className="flex-1 truncate">{elegida?.texto ?? vacio}</span>
             <ChevronDown
               className="w-3.5 h-3.5 shrink-0 transition-transform"
-              style={{ color: abierto ? '#7C3AED' : '#8E87A8', transform: abierto ? 'rotate(180deg)' : undefined }}
+              style={{ color: abierto ? '#381DA0' : '#8E87A8', transform: abierto ? 'rotate(180deg)' : undefined }}
             />
           </>
         )}

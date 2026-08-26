@@ -226,7 +226,7 @@ export default function SedesPage() {
           <button
             onClick={openNew}
             className="flex lg:hidden items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold text-white"
-            style={{ background: 'linear-gradient(135deg, #7C3AED 0%, #4361EE 100%)' }}
+            style={{ background: '#381DA0' }}
           >
             <Plus className="w-4 h-4" />
             <span className="hidden sm:inline">Nueva sede</span>
@@ -346,8 +346,8 @@ export default function SedesPage() {
                   className="w-full flex items-center justify-between px-3 py-3 rounded-xl border border-dashed border-border hover:border-primary/40 hover:bg-secondary/40 transition-all group"
                 >
                   <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'rgba(124,58,237,0.10)' }}>
-                      <MapPin className="w-4 h-4" style={{ color: '#7C3AED' }} />
+                    <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'rgba(56,29,160,0.10)' }}>
+                      <MapPin className="w-4 h-4" style={{ color: '#381DA0' }} />
                     </div>
                     <div className="text-left">
                       <p className="text-sm font-medium text-foreground">Seleccionar en el mapa</p>
@@ -389,7 +389,7 @@ export default function SedesPage() {
             <button
               onClick={openNew}
               className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold text-white"
-              style={{ background: 'linear-gradient(135deg, #7C3AED 0%, #4361EE 100%)' }}
+              style={{ background: '#381DA0' }}
             >
               <Plus className="w-4 h-4" />
               <span>Nueva sede</span>

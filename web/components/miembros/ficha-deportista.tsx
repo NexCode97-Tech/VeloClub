@@ -140,7 +140,7 @@ export function FichaDeportista({
       <div className="flex gap-1.5 px-6 pt-4 shrink-0">
         {pasos.map((p, i) => (
           <span key={p} className="h-[3px] flex-1 rounded-full transition-colors"
-            style={{ background: i <= indice ? '#7C3AED' : '#E4E0EC' }} />
+            style={{ background: i <= indice ? '#381DA0' : '#E4E0EC' }} />
         ))}
       </div>
       <div className="px-6 pt-3 pb-1 shrink-0">
@@ -240,7 +240,7 @@ export function FichaDeportista({
               <>
                 {menor && (
                   <p className="flex gap-2 items-start text-[11.5px] rounded-lg px-3 py-2 mb-2.5 mt-1"
-                    style={{ background: 'rgba(124,58,237,0.08)', color: '#5B3AA6' }}>
+                    style={{ background: 'rgba(56,29,160,0.08)', color: '#5B3AA6' }}>
                     <User className="w-3.5 h-3.5 shrink-0 mt-0.5" />
                     <span>
                       {años} años, así que los datos de contacto son de quien responde por él.
@@ -353,7 +353,7 @@ export function FichaDeportista({
 
         <button type="button" onClick={siguiente} disabled={guardando}
           className="flex items-center justify-center gap-1.5 px-5 h-11 rounded-xl text-[13.5px] font-semibold text-white shrink-0 disabled:opacity-50"
-          style={{ background: 'linear-gradient(135deg, #7C3AED, #4361EE)' }}>
+          style={{ background: '#381DA0' }}>
           {esUltimo ? botonGuardar : <>Continuar <ChevronRight className="w-4 h-4" /></>}
         </button>
       </div>

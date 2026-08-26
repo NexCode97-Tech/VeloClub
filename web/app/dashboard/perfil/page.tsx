@@ -70,7 +70,7 @@ const roleColors: Record<string, { text: string; bg: string }> = {
   SUPERADMIN: { text: '#EF476F', bg: 'rgba(239,71,111,0.12)' },
   ADMIN:      { text: '#FFB703', bg: 'rgba(255,183,3,0.12)' },
   COACH:      { text: '#06D6A0', bg: 'rgba(6,214,160,0.12)' },
-  STUDENT:    { text: '#7C3AED', bg: 'rgba(124,58,237,0.10)' },
+  STUDENT:    { text: '#381DA0', bg: 'rgba(56,29,160,0.10)' },
 };
 
 
@@ -89,7 +89,7 @@ const ROLE_GRADIENT: Record<string, string> = {
   SUPERADMIN: 'linear-gradient(135deg,#EF476F,#C1121F)',
   ADMIN:      'linear-gradient(135deg,#FFB703,#FB8500)',
   COACH:      'linear-gradient(135deg,#06D6A0,#0CB68D)',
-  STUDENT:    'linear-gradient(135deg,#7C3AED,#A855F7)',
+  STUDENT:    '#381DA0',
 };
 
 // ── Avatar wrapper ────────────────────────────────────────────────────────────
@@ -365,7 +365,7 @@ export default function PerfilPage() {
       >
         {/* Banner — sin overflow-hidden para que el avatar sobresalga */}
         <div className="relative h-36 sm:h-48"
-          style={{ background: coverUrl ? undefined : 'linear-gradient(135deg, #7C3AED 0%, #4361EE 60%, #06D6A0 100%)' }}>
+          style={{ background: coverUrl ? undefined : '#381DA0' }}>
 
           {/* Imagen de portada */}
           {coverUrl && (
@@ -469,7 +469,7 @@ export default function PerfilPage() {
           <div className="flex items-end justify-between" style={{ marginTop: -75 }}>
             <div className="relative z-10">
               <div className="rounded-full border-4 border-white overflow-hidden"
-                style={{ boxShadow: '0 4px 16px rgba(124,58,237,0.20)', width: 120, height: 120 }}>
+                style={{ boxShadow: '0 4px 16px rgba(56,29,160,0.20)', width: 120, height: 120 }}>
                 <Avatar src={user?.picture} name={user?.name ?? 'Usuario'} size={120} role={role} />
               </div>
               {/* Badge del club — esquina inferior derecha */}
@@ -516,7 +516,7 @@ export default function PerfilPage() {
                   rows={3}
                   placeholder="Cuéntale algo a tu equipo..."
                   className="w-full text-[13px] leading-relaxed rounded-xl px-3 py-2 outline-none resize-none"
-                  style={{ background: 'rgba(124,58,237,0.05)', border: '1.5px solid rgba(124,58,237,0.25)', color: '#1A1028' }}
+                  style={{ background: 'rgba(56,29,160,0.05)', border: '1.5px solid rgba(56,29,160,0.25)', color: '#1A1028' }}
                 />
                 <div className="flex items-center gap-2">
                   <motion.button
@@ -524,7 +524,7 @@ export default function PerfilPage() {
                     onClick={saveBio}
                     disabled={savingBio}
                     className="px-4 py-1.5 rounded-lg text-[12px] font-semibold text-white disabled:opacity-60 cursor-pointer"
-                    style={{ background: 'linear-gradient(135deg,#7C3AED,#4361EE)' }}>
+                    style={{ background: '#381DA0' }}>
                     {savingBio ? 'Guardando…' : 'Guardar'}
                   </motion.button>
                   <button onClick={() => setEditingBio(false)}
@@ -614,13 +614,13 @@ export default function PerfilPage() {
                 onClick={() => setActiveTab(tab)}
                 // "Contacto" solo en móvil — en desktop siempre visible en columna derecha
                 className={`flex-1 py-3.5 relative transition-colors${tab === 'Contacto' ? ' sm:hidden' : ''}`}
-                style={{ fontSize: 12, fontWeight: 600, color: activeTab === tab ? '#7C3AED' : '#8E87A8' }}
+                style={{ fontSize: 12, fontWeight: 600, color: activeTab === tab ? '#381DA0' : '#8E87A8' }}
               >
                 {tab}
                 {activeTab === tab && (
                   <motion.div layoutId="profile-tab-indicator"
                     className="absolute bottom-0 left-4 right-4 h-[2.5px] rounded-full"
-                    style={{ background: '#7C3AED' }} />
+                    style={{ background: '#381DA0' }} />
                 )}
               </button>
             ))}
@@ -647,9 +647,9 @@ export default function PerfilPage() {
 
               {posts.length === 0 ? (
                 <div className="rounded-2xl px-6 py-10 flex flex-col items-center text-center mt-4"
-                  style={{ background: 'linear-gradient(135deg,rgba(124,58,237,0.04),rgba(67,97,238,0.03))', border: '1px solid rgba(124,58,237,0.10)' }}>
+                  style={{ background: 'rgba(56,29,160,0.04)', border: '1px solid rgba(56,29,160,0.10)' }}>
                   <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4"
-                    style={{ background: 'linear-gradient(135deg,#7C3AED,#4361EE)' }}>
+                    style={{ background: '#381DA0' }}>
                     <Globe className="w-6 h-6 text-white" />
                   </div>
                   <p className="text-[14px] font-semibold text-foreground mb-1">Sin publicaciones aún</p>
@@ -659,7 +659,7 @@ export default function PerfilPage() {
                   <Link href="/dashboard">
                     <motion.div whileTap={{ scale: 0.97 }}
                       className="mt-4 px-5 py-2 rounded-full text-[13px] font-semibold text-white cursor-pointer"
-                      style={{ background: '#7C3AED' }}>
+                      style={{ background: '#381DA0' }}>
                       Ir al inicio
                     </motion.div>
                   </Link>
@@ -691,9 +691,9 @@ export default function PerfilPage() {
               exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2 }}>
               {postImages.length === 0 ? (
                 <div className="rounded-2xl px-6 py-10 flex flex-col items-center text-center mt-4"
-                  style={{ background: 'linear-gradient(135deg,rgba(124,58,237,0.04),rgba(67,97,238,0.03))', border: '1px solid rgba(124,58,237,0.10)' }}>
+                  style={{ background: 'rgba(56,29,160,0.04)', border: '1px solid rgba(56,29,160,0.10)' }}>
                   <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4"
-                    style={{ background: 'linear-gradient(135deg,#7C3AED,#4361EE)' }}>
+                    style={{ background: '#381DA0' }}>
                     <ImagePlus className="w-6 h-6 text-white" />
                   </div>
                   <p className="text-[14px] font-semibold text-foreground mb-1">Sin fotos aún</p>
@@ -734,7 +734,7 @@ export default function PerfilPage() {
       {activeTab === 'Contacto' && (
         <div className="sm:hidden px-4 py-4 sm:w-1/2">
           <div className="rounded-2xl overflow-hidden"
-            style={{ background: 'white', border: '1px solid rgba(124,58,237,0.10)', boxShadow: '0 1px 12px rgba(0,0,0,0.06)' }}>
+            style={{ background: 'white', border: '1px solid rgba(56,29,160,0.10)', boxShadow: '0 1px 12px rgba(0,0,0,0.06)' }}>
             <div className="flex items-center justify-between px-5 py-4 border-b border-border/50">
               <p className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: '#8E87A8' }}>Información de contacto</p>
               <button
@@ -746,8 +746,8 @@ export default function PerfilPage() {
             </div>
             <div className="divide-y divide-border/40">
               <div className="flex items-center gap-3 px-5 py-4">
-                <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(124,58,237,0.08)' }}>
-                  <Phone className="w-4 h-4" style={{ color: '#7C3AED' }} />
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(56,29,160,0.08)' }}>
+                  <Phone className="w-4 h-4" style={{ color: '#381DA0' }} />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-[10px] font-semibold uppercase tracking-widest mb-0.5" style={{ color: '#8E87A8' }}>Teléfono</p>
@@ -757,8 +757,8 @@ export default function PerfilPage() {
                 </div>
               </div>
               <div className="flex items-center gap-3 px-5 py-4">
-                <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(124,58,237,0.08)' }}>
-                  <Mail className="w-4 h-4" style={{ color: '#7C3AED' }} />
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(56,29,160,0.08)' }}>
+                  <Mail className="w-4 h-4" style={{ color: '#381DA0' }} />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-[10px] font-semibold uppercase tracking-widest mb-0.5" style={{ color: '#8E87A8' }}>Correo electrónico</p>
@@ -769,11 +769,11 @@ export default function PerfilPage() {
               </div>
               {user?.club && (
                 <div className="flex items-center gap-3 px-5 py-4">
-                  <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 overflow-hidden" style={{ background: user.club.logoUrl ? undefined : 'rgba(124,58,237,0.08)' }}>
+                  <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 overflow-hidden" style={{ background: user.club.logoUrl ? undefined : 'rgba(56,29,160,0.08)' }}>
                     {user.club.logoUrl
                       // eslint-disable-next-line @next/next/no-img-element
                       ? <img src={user.club.logoUrl} alt={user.club.name} className="w-full h-full object-cover" />
-                      : <Building2 className="w-4 h-4" style={{ color: '#7C3AED' }} />}
+                      : <Building2 className="w-4 h-4" style={{ color: '#381DA0' }} />}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-[10px] font-semibold uppercase tracking-widest mb-0.5" style={{ color: '#8E87A8' }}>Club</p>
@@ -783,8 +783,8 @@ export default function PerfilPage() {
               )}
               {(memberMe?.category || memberMe?.tipo) && (
                 <div className="flex items-center gap-3 px-5 py-4">
-                  <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(124,58,237,0.08)' }}>
-                    <Users className="w-4 h-4" style={{ color: '#7C3AED' }} />
+                  <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(56,29,160,0.08)' }}>
+                    <Users className="w-4 h-4" style={{ color: '#381DA0' }} />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-[10px] font-semibold uppercase tracking-widest mb-0.5" style={{ color: '#8E87A8' }}>Categoría</p>
@@ -794,8 +794,8 @@ export default function PerfilPage() {
               )}
               {(user?.club?.city || user?.club?.department) && (
                 <div className="flex items-center gap-3 px-5 py-4">
-                  <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(124,58,237,0.08)' }}>
-                    <MapPin className="w-4 h-4" style={{ color: '#7C3AED' }} />
+                  <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(56,29,160,0.08)' }}>
+                    <MapPin className="w-4 h-4" style={{ color: '#381DA0' }} />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-[10px] font-semibold uppercase tracking-widest mb-0.5" style={{ color: '#8E87A8' }}>Ubicación</p>
@@ -811,7 +811,7 @@ export default function PerfilPage() {
       {/* Columna derecha — tarjeta de contacto, solo desktop, sticky */}
       <div className="hidden sm:block sm:px-0 sm:pr-6 pb-6 sm:w-1/2 sm:py-4 sm:sticky sm:top-4 sm:self-start">
         <div className="rounded-2xl overflow-hidden"
-          style={{ background: 'white', border: '1px solid rgba(124,58,237,0.10)', boxShadow: '0 1px 12px rgba(0,0,0,0.06)' }}>
+          style={{ background: 'white', border: '1px solid rgba(56,29,160,0.10)', boxShadow: '0 1px 12px rgba(0,0,0,0.06)' }}>
 
           {/* Header */}
           <div className="flex items-center justify-between px-5 py-4 border-b border-border/50">
@@ -832,8 +832,8 @@ export default function PerfilPage() {
             {/* Teléfono */}
             <div className="flex items-center gap-3 px-5 py-4">
               <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
-                style={{ background: 'rgba(124,58,237,0.08)' }}>
-                <Phone className="w-4 h-4" style={{ color: '#7C3AED' }} />
+                style={{ background: 'rgba(56,29,160,0.08)' }}>
+                <Phone className="w-4 h-4" style={{ color: '#381DA0' }} />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-[10px] font-semibold uppercase tracking-widest mb-0.5" style={{ color: '#8E87A8' }}>Teléfono</p>
@@ -846,8 +846,8 @@ export default function PerfilPage() {
             {/* Correo */}
             <div className="flex items-center gap-3 px-5 py-4">
               <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
-                style={{ background: 'rgba(124,58,237,0.08)' }}>
-                <Mail className="w-4 h-4" style={{ color: '#7C3AED' }} />
+                style={{ background: 'rgba(56,29,160,0.08)' }}>
+                <Mail className="w-4 h-4" style={{ color: '#381DA0' }} />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-[10px] font-semibold uppercase tracking-widest mb-0.5" style={{ color: '#8E87A8' }}>Correo electrónico</p>
@@ -861,11 +861,11 @@ export default function PerfilPage() {
             {user?.club && (
               <div className="flex items-center gap-3 px-5 py-4">
                 <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 overflow-hidden"
-                  style={{ background: user.club.logoUrl ? undefined : 'rgba(124,58,237,0.08)' }}>
+                  style={{ background: user.club.logoUrl ? undefined : 'rgba(56,29,160,0.08)' }}>
                   {user.club.logoUrl
                     // eslint-disable-next-line @next/next/no-img-element
                     ? <img src={user.club.logoUrl} alt={user.club.name} className="w-full h-full object-cover" />
-                    : <Building2 className="w-4 h-4" style={{ color: '#7C3AED' }} />
+                    : <Building2 className="w-4 h-4" style={{ color: '#381DA0' }} />
                   }
                 </div>
                 <div className="flex-1 min-w-0">
@@ -888,8 +888,8 @@ export default function PerfilPage() {
             {(memberMe?.category || memberMe?.tipo) && (
               <div className="flex items-center gap-3 px-5 py-4">
                 <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
-                  style={{ background: 'rgba(124,58,237,0.08)' }}>
-                  <Users className="w-4 h-4" style={{ color: '#7C3AED' }} />
+                  style={{ background: 'rgba(56,29,160,0.08)' }}>
+                  <Users className="w-4 h-4" style={{ color: '#381DA0' }} />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-[10px] font-semibold uppercase tracking-widest mb-0.5" style={{ color: '#8E87A8' }}>Categoría</p>
@@ -904,8 +904,8 @@ export default function PerfilPage() {
             {(user?.club?.city || user?.club?.department) && (
               <div className="flex items-center gap-3 px-5 py-4">
                 <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
-                  style={{ background: 'rgba(124,58,237,0.08)' }}>
-                  <MapPin className="w-4 h-4" style={{ color: '#7C3AED' }} />
+                  style={{ background: 'rgba(56,29,160,0.08)' }}>
+                  <MapPin className="w-4 h-4" style={{ color: '#381DA0' }} />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-[10px] font-semibold uppercase tracking-widest mb-0.5" style={{ color: '#8E87A8' }}>Ubicación</p>
@@ -973,7 +973,7 @@ export default function PerfilPage() {
                 onClick={saveContact}
                 disabled={savingContact}
                 className="flex-1 h-11 rounded-xl text-[13px] font-semibold text-white flex items-center justify-center gap-2 disabled:opacity-60 cursor-pointer"
-                style={{ background: 'linear-gradient(135deg,#7C3AED,#4361EE)' }}
+                style={{ background: '#381DA0' }}
               >
                 {savingContact ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Guardar'}
               </button>

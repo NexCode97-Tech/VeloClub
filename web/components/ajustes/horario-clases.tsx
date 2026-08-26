@@ -126,7 +126,7 @@ export default function HorarioClases() {
 
       {sedes.length === 0 && !cargando ? (
         <div className="rounded-xl px-4 py-5 text-center"
-          style={{ background: 'rgba(124,58,237,0.03)', border: '1px solid rgba(124,58,237,0.10)' }}>
+          style={{ background: 'rgba(56,29,160,0.03)', border: '1px solid rgba(56,29,160,0.10)' }}>
           <p className="text-[12.5px] font-semibold text-foreground mb-1">Primero registra una sede</p>
           <p className="text-[11px] text-muted-foreground">
             Cada clase se dicta en una sede. Agrégalas desde el módulo Sedes.
@@ -136,7 +136,7 @@ export default function HorarioClases() {
         <>
           {porDia.length === 0 && !cargando && (
             <div className="rounded-xl px-4 py-5 text-center"
-              style={{ background: 'rgba(124,58,237,0.03)', border: '1px solid rgba(124,58,237,0.10)' }}>
+              style={{ background: 'rgba(56,29,160,0.03)', border: '1px solid rgba(56,29,160,0.10)' }}>
               <p className="text-[12.5px] font-semibold text-foreground mb-1">Sin horario todavía</p>
               <p className="text-[11px] text-muted-foreground">
                 Mientras no agregues clases, la asistencia se sigue tomando una vez por día, como hasta ahora.
@@ -155,7 +155,7 @@ export default function HorarioClases() {
                   className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-white"
                   style={{ border: '1px solid rgba(120,80,200,0.14)' }}>
                   <span className="text-[12px] font-bold shrink-0 w-[68px]"
-                    style={{ color: '#7C3AED', fontVariantNumeric: 'tabular-nums' }}>
+                    style={{ color: '#381DA0', fontVariantNumeric: 'tabular-nums' }}>
                     {horaLegible(c.hora)}
                   </span>
                   <div className="flex-1 min-w-0">
@@ -167,7 +167,7 @@ export default function HorarioClases() {
                       </span>
                       {c.categoria && (
                         <span className="text-[9px] font-bold px-2 py-0.5 rounded-full"
-                          style={{ background: 'rgba(124,58,237,0.10)', color: '#6D28D9' }}>
+                          style={{ background: 'rgba(56,29,160,0.10)', color: '#6D28D9' }}>
                           {c.categoria}
                         </span>
                       )}
@@ -192,9 +192,9 @@ export default function HorarioClases() {
             onClick={abrirNueva}
             className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-[11.5px] font-bold transition-colors"
             style={{
-              color: '#7C3AED',
-              background: 'rgba(124,58,237,0.06)',
-              border: '1.5px dashed rgba(124,58,237,0.30)',
+              color: '#381DA0',
+              background: 'rgba(56,29,160,0.06)',
+              border: '1.5px dashed rgba(56,29,160,0.30)',
             }}
           >
             <Plus className="w-3.5 h-3.5" /> Agregar clase
@@ -258,7 +258,7 @@ export default function HorarioClases() {
                         onClick={() => setEditando({ ...editando, diaSemana: d.valor })}
                         className="w-10 h-10 rounded-full text-[12px] font-semibold border-2 transition-all flex items-center justify-center"
                         style={editando.diaSemana === d.valor
-                          ? { background: 'rgba(124,58,237,0.08)', borderColor: '#7C3AED', color: '#7C3AED' }
+                          ? { background: 'rgba(56,29,160,0.08)', borderColor: '#381DA0', color: '#381DA0' }
                           : { background: '#fff', borderColor: 'rgba(120,80,200,0.15)', color: '#8E87A8' }}
                       >
                         {d.corto}
@@ -287,13 +287,13 @@ export default function HorarioClases() {
                         onClick={() => setEditando({ ...editando, locationId: s.id })}
                         className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-left transition-colors"
                         style={editando.locationId === s.id
-                          ? { background: 'rgba(124,58,237,0.06)', border: '1.5px solid rgba(124,58,237,0.35)' }
+                          ? { background: 'rgba(56,29,160,0.06)', border: '1.5px solid rgba(56,29,160,0.35)' }
                           : { background: '#fff', border: '1.5px solid rgba(26,16,40,0.08)' }}
                       >
                         <span className="w-4 h-4 rounded-full shrink-0 flex items-center justify-center"
-                          style={{ border: `1.5px solid ${editando.locationId === s.id ? '#7C3AED' : 'rgba(26,16,40,0.20)'}` }}>
+                          style={{ border: `1.5px solid ${editando.locationId === s.id ? '#381DA0' : 'rgba(26,16,40,0.20)'}` }}>
                           {editando.locationId === s.id && (
-                            <span className="w-2 h-2 rounded-full" style={{ background: '#7C3AED' }} />
+                            <span className="w-2 h-2 rounded-full" style={{ background: '#381DA0' }} />
                           )}
                         </span>
                         <span className="text-[12.5px] font-medium text-foreground">{s.name}</span>
@@ -314,13 +314,13 @@ export default function HorarioClases() {
                       onClick={() => setEditando({ ...editando, categoria: '' })}
                       className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-left transition-colors"
                       style={!editando.categoria
-                        ? { background: 'rgba(124,58,237,0.06)', border: '1.5px solid rgba(124,58,237,0.35)' }
+                        ? { background: 'rgba(56,29,160,0.06)', border: '1.5px solid rgba(56,29,160,0.35)' }
                         : { background: '#fff', border: '1.5px solid rgba(26,16,40,0.08)' }}
                     >
                       <span className="w-4 h-4 rounded-full shrink-0 flex items-center justify-center"
-                        style={{ border: `1.5px solid ${!editando.categoria ? '#7C3AED' : 'rgba(26,16,40,0.20)'}` }}>
+                        style={{ border: `1.5px solid ${!editando.categoria ? '#381DA0' : 'rgba(26,16,40,0.20)'}` }}>
                         {!editando.categoria && (
-                          <span className="w-2 h-2 rounded-full" style={{ background: '#7C3AED' }} />
+                          <span className="w-2 h-2 rounded-full" style={{ background: '#381DA0' }} />
                         )}
                       </span>
                       <span className="text-[12.5px] font-medium text-foreground">Todas las categorías</span>
@@ -334,12 +334,12 @@ export default function HorarioClases() {
                           onClick={() => setEditando({ ...editando, categoria: c })}
                           className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-left transition-colors"
                           style={puesta
-                            ? { background: 'rgba(124,58,237,0.06)', border: '1.5px solid rgba(124,58,237,0.35)' }
+                            ? { background: 'rgba(56,29,160,0.06)', border: '1.5px solid rgba(56,29,160,0.35)' }
                             : { background: '#fff', border: '1.5px solid rgba(26,16,40,0.08)' }}
                         >
                           <span className="w-4 h-4 rounded-full shrink-0 flex items-center justify-center"
-                            style={{ border: `1.5px solid ${puesta ? '#7C3AED' : 'rgba(26,16,40,0.20)'}` }}>
-                            {puesta && <span className="w-2 h-2 rounded-full" style={{ background: '#7C3AED' }} />}
+                            style={{ border: `1.5px solid ${puesta ? '#381DA0' : 'rgba(26,16,40,0.20)'}` }}>
+                            {puesta && <span className="w-2 h-2 rounded-full" style={{ background: '#381DA0' }} />}
                           </span>
                           <span className="text-[12.5px] font-medium text-foreground">{c}</span>
                         </button>

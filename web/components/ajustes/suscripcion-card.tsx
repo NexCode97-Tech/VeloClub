@@ -775,7 +775,7 @@ export default function SuscripcionCard() {
             escritorio se entiende por el contexto de las tres columnas */}
         <div className="flex items-center gap-3 rounded-2xl p-3 mb-4 md:hidden" style={{ background: 'rgba(120,80,200,0.06)' }}>
           <div className="w-9 h-9 rounded-full shrink-0 grid place-items-center bg-white border border-border">
-            <Users className="w-[18px] h-[18px]" style={{ color: '#7C3AED' }} />
+            <Users className="w-[18px] h-[18px]" style={{ color: '#381DA0' }} />
           </div>
           <div>
             <p className="text-[13px] font-semibold text-foreground leading-tight">
@@ -816,7 +816,7 @@ export default function SuscripcionCard() {
                   className="relative w-full text-left rounded-2xl overflow-hidden transition-colors"
                   style={{
                     background: '#fff',
-                    border: activo ? '2px solid #7C3AED' : '1px solid rgba(26,16,40,0.10)',
+                    border: activo ? '2px solid #381DA0' : '1px solid rgba(26,16,40,0.10)',
                     // Un solo atajo, sin paddingTop aparte. Antes iban los dos, y
                     // en las tarjetas sin etiqueta el segundo valia undefined: al
                     // montar, React lo aplica igual y borra el relleno superior
@@ -828,13 +828,13 @@ export default function SuscripcionCard() {
                     // La franja de arriba es para la etiqueta "Mas popular", que va
                     // anclada a esa esquina, justo donde cae el precio.
                     padding: `${destacado ? (activo ? 33 : 34) : (activo ? 13 : 14)}px ${activo ? 13 : 14}px ${activo ? 13 : 14}px`,
-                    boxShadow: activo ? '0 6px 22px -12px rgba(124,58,237,0.5)' : undefined,
+                    boxShadow: activo ? '0 6px 22px -12px rgba(56,29,160,0.5)' : undefined,
                   }}
                 >
                   {destacado && (
                     <span
                       className="absolute top-0 right-0 inline-flex items-center gap-1 text-[10px] font-semibold px-2.5 py-1"
-                      style={{ background: '#7C3AED', color: '#fff', borderBottomLeftRadius: 12 }}
+                      style={{ background: '#381DA0', color: '#fff', borderBottomLeftRadius: 12 }}
                     >
                       <Star className="w-2.5 h-2.5" style={{ color: '#FFD60A' }} fill="#FFD60A" />
                       Más popular
@@ -849,12 +849,12 @@ export default function SuscripcionCard() {
                   <div className="flex items-center gap-3" style={{ minHeight: 52 }}>
                     <span
                       className="w-[22px] h-[22px] rounded-full shrink-0 grid place-items-center transition-colors"
-                      style={{ border: `2px solid ${activo ? '#7C3AED' : 'rgba(26,16,40,0.16)'}` }}
+                      style={{ border: `2px solid ${activo ? '#381DA0' : 'rgba(26,16,40,0.16)'}` }}
                     >
                       <motion.span
                         animate={{ scale: activo ? 1 : 0 }}
                         transition={reduce ? { duration: 0 } : { type: 'spring', stiffness: 420, damping: 22 }}
-                        style={{ width: 12, height: 12, borderRadius: '50%', background: '#7C3AED', display: 'block' }}
+                        style={{ width: 12, height: 12, borderRadius: '50%', background: '#381DA0', display: 'block' }}
                       />
                     </span>
                     <div>
@@ -898,7 +898,7 @@ export default function SuscripcionCard() {
               whileTap={reduce ? {} : { scale: 0.985 }}
               transition={{ duration: 0.12, ease: EASE }}
               className="w-full py-3.5 rounded-2xl text-white text-[14px] font-semibold disabled:opacity-60"
-              style={{ background: '#7C3AED', marginTop: 14 }}
+              style={{ background: '#381DA0', marginTop: 14 }}
             >
               {settingPlan
                 ? 'Guardando...'
@@ -920,12 +920,12 @@ export default function SuscripcionCard() {
                   whileTap={reduce ? {} : { scale: 0.98 }}
                   transition={{ duration: 0.12, ease: EASE }}
                   className="w-full text-left rounded-xl p-4 transition-colors disabled:opacity-60 md:relative md:flex md:flex-col md:text-center md:p-5"
-                  style={{ border: destacado ? '2px solid #7C3AED' : '1px solid var(--border, rgba(0,0,0,0.10))', background: '#fff' }}
+                  style={{ border: destacado ? '2px solid #381DA0' : '1px solid var(--border, rgba(0,0,0,0.10))', background: '#fff' }}
                 >
                   {destacado && (
                     <span
                       className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-0.5 rounded-md mb-2 md:absolute md:-top-3 md:left-1/2 md:-translate-x-1/2 md:mb-0"
-                      style={{ background: '#7C3AED', color: '#fff' }}
+                      style={{ background: '#381DA0', color: '#fff' }}
                     >
                       <Star className="w-3 h-3" style={{ color: '#FFD60A' }} fill="#FFD60A" />
                       Más popular
@@ -967,7 +967,7 @@ export default function SuscripcionCard() {
                   <div className="hidden md:flex md:items-end md:pt-4 md:mt-4" style={{ borderTop: '1px solid rgba(0,0,0,0.06)' }}>
                     <span
                       className="text-[13px] font-semibold px-4 py-2 rounded-lg w-full text-center"
-                      style={{ background: destacado ? '#7C3AED' : 'rgba(67,97,238,0.08)', color: destacado ? '#fff' : '#4361EE' }}
+                      style={{ background: destacado ? '#381DA0' : 'rgba(67,97,238,0.08)', color: destacado ? '#fff' : '#4361EE' }}
                     >
                       {settingPlan === p.tipoPlan ? 'Guardando...' : 'Elegir este plan'}
                     </span>
@@ -1328,12 +1328,12 @@ export default function SuscripcionCard() {
                         <button key={key} onClick={() => { setMetodo(key); setError(null); }}
                           className="relative flex flex-col items-center gap-1 py-2.5 rounded-xl text-[12px] font-semibold transition-colors cursor-pointer"
                           style={active
-                            ? { color: '#7C3AED', background: 'rgba(124,58,237,0.05)' }
+                            ? { color: '#381DA0', background: 'rgba(56,29,160,0.05)' }
                             : { border: '1px solid rgba(0,0,0,0.10)', color: '#8E87A8', background: '#fff' }}
                         >
                           {active && (
                             <motion.span layoutId="metodo-activo" className="absolute inset-0 rounded-xl pointer-events-none"
-                              style={{ border: '2px solid #7C3AED' }}
+                              style={{ border: '2px solid #381DA0' }}
                               transition={reduce ? { duration: 0 } : { type: 'spring', stiffness: 500, damping: 34 }} />
                           )}
                           <Icon className="w-4 h-4 relative z-10" />
@@ -1517,7 +1517,7 @@ export default function SuscripcionCard() {
                         </div>
 
                         <label className="block rounded-xl p-4 text-center cursor-pointer"
-                          style={{ border: '1.5px dashed rgba(120,80,200,0.30)', background: 'rgba(124,58,237,0.03)' }}>
+                          style={{ border: '1.5px dashed rgba(120,80,200,0.30)', background: 'rgba(56,29,160,0.03)' }}>
                           <input type="file" accept="image/*,application/pdf" className="hidden"
                             onChange={e => tomarComprobante(e.target.files?.[0] ?? null)} />
                           <Upload className="w-4 h-4 mx-auto mb-1 text-primary" />

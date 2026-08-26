@@ -173,10 +173,10 @@ export function SearchableSelect({
                   key={o.value}
                   type="button"
                   onClick={() => { onChange(o.value); setOpen(false); setSearch(''); }}
-                  className={`w-full flex items-center gap-2 rounded-lg pl-3 pr-2 py-2 text-left text-[13px] font-medium transition-colors hover:bg-[rgba(124,58,237,0.07)] hover:text-[#7C3AED] ${activa ? 'font-semibold text-[#7C3AED] bg-[rgba(124,58,237,0.07)]' : 'text-[#1A1028]'}`}
+                  className={`w-full flex items-center gap-2 rounded-lg pl-3 pr-2 py-2 text-left text-[13px] font-medium transition-colors hover:bg-[rgba(56,29,160,0.07)] hover:text-[#381DA0] ${activa ? 'font-semibold text-[#381DA0] bg-[rgba(56,29,160,0.07)]' : 'text-[#1A1028]'}`}
                 >
                   <span className="flex-1 truncate">{o.label}</span>
-                  {activa && <Check className="w-3.5 h-3.5 shrink-0" style={{ color: '#7C3AED' }} />}
+                  {activa && <Check className="w-3.5 h-3.5 shrink-0" style={{ color: '#381DA0' }} />}
                 </button>
               );
             })}

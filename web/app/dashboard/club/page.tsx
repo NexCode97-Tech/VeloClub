@@ -68,7 +68,7 @@ function ContactCard({ isAdmin, phone, email, phoneDraft, emailDraft, editingCon
           <div className="flex items-center gap-1.5">
             <motion.button whileTap={{ scale: 0.96 }} onClick={onSave} disabled={savingContact}
               className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-[11px] font-semibold text-white cursor-pointer disabled:opacity-60"
-              style={{ background: 'linear-gradient(135deg,#4361EE,#7C3AED)' }}>
+              style={{ background: '#381DA0' }}>
               <Check className="w-3 h-3" /> {savingContact ? 'Guardando…' : 'Guardar'}
             </motion.button>
             <button onClick={onCancel}
@@ -387,7 +387,7 @@ export default function ClubProfilePage() {
       >
         {/* Banner portada — sin overflow-hidden para que el logo sobresalga */}
         <div className="relative h-36 sm:h-48"
-          style={{ background: coverUrl ? undefined : 'linear-gradient(135deg, #4361EE 0%, #7C3AED 60%, #06D6A0 100%)' }}>
+          style={{ background: coverUrl ? undefined : '#381DA0' }}>
           {coverUrl && (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={coverUrl} alt="Portada" className="absolute inset-0 w-full h-full object-cover" />
@@ -470,7 +470,7 @@ export default function ClubProfilePage() {
                 style={{
                   width: 120, height: 120,
                   boxShadow: '0 4px 16px rgba(67,97,238,0.22)',
-                  background: club.logoUrl ? undefined : 'linear-gradient(135deg,#4361EE,#7C3AED)',
+                  background: club.logoUrl ? undefined : '#381DA0',
                 }}>
                 {club.logoUrl
                   // eslint-disable-next-line @next/next/no-img-element
@@ -500,7 +500,7 @@ export default function ClubProfilePage() {
               className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-[13px] font-semibold transition-all cursor-pointer disabled:opacity-60"
               style={following
                 ? { background: 'rgba(67,97,238,0.10)', color: '#4361EE', border: '1.5px solid rgba(67,97,238,0.25)' }
-                : { background: 'linear-gradient(135deg,#4361EE,#7C3AED)', color: '#fff', border: 'none' }
+                : { background: '#381DA0', color: '#fff', border: 'none' }
               }
             >
               {following
@@ -544,7 +544,7 @@ export default function ClubProfilePage() {
                     onClick={saveDescription}
                     disabled={savingDesc}
                     className="px-4 py-1.5 rounded-lg text-[12px] font-semibold text-white disabled:opacity-60 cursor-pointer"
-                    style={{ background: 'linear-gradient(135deg,#4361EE,#7C3AED)' }}>
+                    style={{ background: '#381DA0' }}>
                     {savingDesc ? 'Guardando…' : 'Guardar'}
                   </motion.button>
                   <button onClick={() => setEditingDesc(false)}
@@ -659,9 +659,9 @@ export default function ClubProfilePage() {
                 </div>
                 {posts.length === 0 ? (
                   <div className="rounded-2xl px-6 py-10 flex flex-col items-center text-center"
-                    style={{ background: 'linear-gradient(135deg,rgba(67,97,238,0.04),rgba(124,58,237,0.03))', border: '1px solid rgba(67,97,238,0.10)' }}>
+                    style={{ background: 'rgba(67,97,238,0.04)', border: '1px solid rgba(67,97,238,0.10)' }}>
                     <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4"
-                      style={{ background: 'linear-gradient(135deg,#4361EE,#7C3AED)' }}>
+                      style={{ background: '#381DA0' }}>
                       <Lock className="w-6 h-6 text-white" />
                     </div>
                     <p className="text-[14px] font-semibold text-foreground mb-1">Sin publicaciones del club aún</p>

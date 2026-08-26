@@ -55,13 +55,13 @@ export default function GlassmorphismHero() {
         /* El halo del boton respira. Va en box-shadow y no en transform para no
            mover el boton mientras alguien intenta tocarlo. */
         @keyframes vcGlow {
-          0%, 100% { box-shadow: 0 6px 24px rgba(124,58,237,.32) }
+          0%, 100% { box-shadow: 0 6px 24px rgba(56,29,160,.32) }
           50%      { box-shadow: 0 8px 34px rgba(147,51,234,.55) }
         }
         .vc-cta { animation: vcGlow 3.2s ease-in-out 1.6s infinite }
 
         @media (prefers-reduced-motion: reduce) {
-          .vc-cta { animation: none; box-shadow: 0 6px 24px rgba(124,58,237,.32) }
+          .vc-cta { animation: none; box-shadow: 0 6px 24px rgba(56,29,160,.32) }
           .vc-line { animation: fadeSlideIn .5s ease-out both }
           .vc-promo-text { animation: none; color: #E9D5FF; background: none; -webkit-text-fill-color: currentColor }
           .vc-marquee { animation: none }
@@ -72,13 +72,13 @@ export default function GlassmorphismHero() {
       <div
         className="absolute inset-0 z-[2] pointer-events-none"
         style={{
-          background: 'radial-gradient(ellipse 280px 420px at 50% 55%, rgba(124,58,237,0.7) 0%, rgba(109,28,209,0.4) 35%, rgba(168,85,247,0.12) 60%, transparent 80%)',
+          background: 'radial-gradient(ellipse 280px 420px at 50% 55%, rgba(56,29,160,0.7) 0%, rgba(109,28,209,0.4) 35%, rgba(168,85,247,0.12) 60%, transparent 80%)',
         }}
       />
       <div
         className="absolute inset-0 z-[2] pointer-events-none hidden lg:block"
         style={{
-          background: 'radial-gradient(ellipse 360px 560px at 38% 60%, rgba(124,58,237,0.75) 0%, rgba(109,28,209,0.45) 35%, rgba(168,85,247,0.15) 60%, transparent 80%)',
+          background: 'radial-gradient(ellipse 360px 560px at 38% 60%, rgba(56,29,160,0.75) 0%, rgba(109,28,209,0.45) 35%, rgba(168,85,247,0.15) 60%, transparent 80%)',
         }}
       />
 
@@ -169,7 +169,7 @@ export default function GlassmorphismHero() {
               <Link
                 href="/crear-club"
                 className="vc-cta inline-flex items-center justify-center gap-2 rounded-full w-full sm:w-auto px-8 py-3 text-sm font-semibold text-white transition-all hover:scale-[1.02] active:scale-[0.98]"
-                style={{ background: 'linear-gradient(135deg, #7C3AED, #9333EA)' }}
+                style={{ background: 'linear-gradient(135deg, #381DA0, #9333EA)' }}
               >
                 Crear mi club gratis
               </Link>

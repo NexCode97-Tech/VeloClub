@@ -116,7 +116,7 @@ export default function ReportesPage() {
               onClick={() => setEstado(p.valor)}
               className="px-3.5 py-2 rounded-xl text-[12px] font-semibold transition-colors"
               style={estado === p.valor
-                ? { background: 'rgba(124,58,237,0.10)', color: '#7C3AED', border: '1.5px solid rgba(124,58,237,0.28)' }
+                ? { background: 'rgba(56,29,160,0.10)', color: '#381DA0', border: '1.5px solid rgba(56,29,160,0.28)' }
                 : { background: '#fff', color: '#8E87A8', border: '1.5px solid rgba(26,16,40,0.08)' }}
             >
               {p.etiqueta}
@@ -136,9 +136,9 @@ export default function ReportesPage() {
           <ModuleLoader />
         ) : reportes.length === 0 ? (
           <div className="rounded-2xl px-6 py-12 flex flex-col items-center text-center"
-            style={{ background: 'rgba(124,58,237,0.03)', border: '1px solid rgba(124,58,237,0.08)' }}>
+            style={{ background: 'rgba(56,29,160,0.03)', border: '1px solid rgba(56,29,160,0.08)' }}>
             <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-3"
-              style={{ background: 'linear-gradient(135deg,#7C3AED,#4361EE)' }}>
+              style={{ background: '#381DA0' }}>
               <ShieldCheck className="w-5 h-5 text-white" />
             </div>
             <p className="text-[14px] font-semibold text-foreground mb-1">

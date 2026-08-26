@@ -60,7 +60,7 @@ export function LocationPicker({ value, hasCoords, onSelect, onClear, initialLat
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-base">
-              <MapPin className="w-4 h-4" style={{ color: '#7C3AED' }} />
+              <MapPin className="w-4 h-4" style={{ color: '#381DA0' }} />
               Seleccionar ubicación
             </DialogTitle>
           </DialogHeader>

@@ -334,7 +334,7 @@ export default function FormularioInscripcion({ token }: { token: string }) {
           <div className="flex gap-1.5 mb-3.5">
             {PASOS.map((_, i) => (
               <span key={i} className="h-[3px] flex-1 rounded-full"
-                style={{ background: i === 0 ? '#7C3AED' : '#E4E0EC' }} />
+                style={{ background: i === 0 ? '#381DA0' : '#E4E0EC' }} />
             ))}
           </div>
           <h2 className="text-[17px] font-semibold text-foreground m-0 mb-0.5 tracking-tight">
@@ -386,7 +386,7 @@ export default function FormularioInscripcion({ token }: { token: string }) {
       <Marco club={config.club}>
         <div className="bg-white rounded-2xl border border-border p-4 sm:p-5">
           <div className="rounded-xl p-4"
-            style={{ background: 'linear-gradient(135deg, rgba(124,58,237,0.09), rgba(67,97,238,0.07))', border: '1px solid rgba(124,58,237,0.22)' }}>
+            style={{ background: 'rgba(56,29,160,0.09)', border: '1px solid rgba(56,29,160,0.22)' }}>
             <h2 className="text-[17px] font-semibold text-foreground m-0 mb-1 tracking-tight">
               {nombre ? `Hola, ${nombre}` : 'Ya estás en el club'}
             </h2>
@@ -403,8 +403,8 @@ export default function FormularioInscripcion({ token }: { token: string }) {
                     {avance.llenos} de {avance.total}
                   </b>
                 </div>
-                <div className="h-[5px] rounded-full mt-1 overflow-hidden" style={{ background: 'rgba(124,58,237,0.14)' }}>
-                  <div className="h-full rounded-full" style={{ width: `${Math.round((avance.llenos / avance.total) * 100)}%`, background: '#7C3AED' }} />
+                <div className="h-[5px] rounded-full mt-1 overflow-hidden" style={{ background: 'rgba(56,29,160,0.14)' }}>
+                  <div className="h-full rounded-full" style={{ width: `${Math.round((avance.llenos / avance.total) * 100)}%`, background: '#381DA0' }} />
                 </div>
                 <p className="text-[11.5px] text-muted-foreground m-0 mt-1">
                   {faltan === 0
@@ -439,7 +439,7 @@ export default function FormularioInscripcion({ token }: { token: string }) {
             <span
               key={i}
               className="h-[3px] flex-1 rounded-full transition-colors"
-              style={{ background: i <= paso ? '#7C3AED' : '#E4E0EC' }}
+              style={{ background: i <= paso ? '#381DA0' : '#E4E0EC' }}
             />
           ))}
         </div>
@@ -569,7 +569,7 @@ export default function FormularioInscripcion({ token }: { token: string }) {
             {menor && (
               <>
                 <p className="flex gap-2 items-start text-[11.5px] rounded-lg px-3 py-2 mb-2.5 mt-3.5"
-                  style={{ background: 'rgba(124,58,237,0.08)', color: '#5B3AA6' }}>
+                  style={{ background: 'rgba(56,29,160,0.08)', color: '#5B3AA6' }}>
                   <User className="w-3.5 h-3.5 shrink-0 mt-0.5" />
                   <span>
                     {d.fullName.split(' ')[0] || 'El deportista'} tiene {años} años, así que
@@ -651,7 +651,7 @@ export default function FormularioInscripcion({ token }: { token: string }) {
             <label className="flex gap-2.5 items-start cursor-pointer mt-4">
               <input type="checkbox" checked={d.aceptaTerminos}
                 onChange={e => set('aceptaTerminos', e.target.checked)}
-                className="mt-0.5 shrink-0 w-4 h-4 accent-[#7C3AED]" />
+                className="mt-0.5 shrink-0 w-4 h-4 accent-[#381DA0]" />
               <span className="text-[11.5px] text-muted-foreground leading-relaxed">
                 Autorizo a VeloClub el tratamiento de estos datos según la{' '}
                 <a href="/legal/politica-datos" target="_blank" className="text-primary underline">política de datos</a>
@@ -710,7 +710,7 @@ function Marco({ club, children }: {
                     className="w-full h-full object-cover" unoptimized />
                 </div>
               )
-              : <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#7C3AED] to-[#4361EE] shrink-0" />}
+              : <div className="w-11 h-11 rounded-xl bg-[#381DA0] shrink-0" />}
             <div className="min-w-0">
               <h1 className="text-[16px] font-semibold text-foreground m-0 leading-tight truncate tracking-tight">{club.nombre}</h1>
               <p className="text-[12px] text-muted-foreground m-0">Inscripción de deportistas</p>

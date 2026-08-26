@@ -233,9 +233,9 @@ export function MonthPicker({
         onClick={() => setOpen(p => !p)}
         className="flex items-center gap-1.5 h-9 px-3 rounded-xl text-[12px] font-semibold transition-all cursor-pointer"
         style={{
-          background: open ? 'rgba(124,58,237,0.12)' : '#fff',
-          border: `1.5px solid ${open ? '#7C3AED' : 'rgba(124,58,237,0.18)'}`,
-          color: '#7C3AED',
+          background: open ? 'rgba(56,29,160,0.12)' : '#fff',
+          border: `1.5px solid ${open ? '#381DA0' : 'rgba(56,29,160,0.18)'}`,
+          color: '#381DA0',
         }}
       >
         <CalendarDays className="w-3.5 h-3.5 shrink-0" />
@@ -252,7 +252,7 @@ export function MonthPicker({
           className={`absolute top-11 z-50 rounded-2xl p-4 w-72 ${alignRight ? 'right-0' : 'left-0'}`}
           style={{
             background: '#fff',
-            border: '1px solid rgba(124,58,237,0.14)',
+            border: '1px solid rgba(56,29,160,0.14)',
             boxShadow: '0 12px 40px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)',
           }}
         >
@@ -307,11 +307,11 @@ export function MonthPicker({
                       className="h-9 rounded-xl text-[11px] font-semibold transition-all duration-150 cursor-pointer"
                       style={
                         isSel
-                          ? { background: '#7C3AED', color: '#fff', boxShadow: '0 2px 8px rgba(124,58,237,0.35)' }
+                          ? { background: '#381DA0', color: '#fff', boxShadow: '0 2px 8px rgba(56,29,160,0.35)' }
                           : enRango
-                          ? { background: 'rgba(124,58,237,0.14)', color: '#7C3AED' }
+                          ? { background: 'rgba(56,29,160,0.14)', color: '#381DA0' }
                           : isCur && !isSel
-                          ? { background: 'rgba(124,58,237,0.10)', color: '#7C3AED', border: '1px solid rgba(124,58,237,0.30)' }
+                          ? { background: 'rgba(56,29,160,0.10)', color: '#381DA0', border: '1px solid rgba(56,29,160,0.30)' }
                           : avail
                           ? { background: '#F7F7FB', color: '#1A1028' }
                           : { background: 'transparent', color: '#C4C2CF', cursor: 'not-allowed' }
@@ -390,11 +390,11 @@ export function MonthPicker({
                         pointerEvents: !inMonth ? 'none' : 'auto',
                         cursor: inMonth ? 'pointer' : 'default',
                         background: isStart || isEnd
-                          ? '#7C3AED'
+                          ? '#381DA0'
                           : inRange
-                          ? 'rgba(124,58,237,0.12)'
+                          ? 'rgba(56,29,160,0.12)'
                           : 'transparent',
-                        color: isStart || isEnd ? '#fff' : inRange ? '#7C3AED' : '#1A1028',
+                        color: isStart || isEnd ? '#fff' : inRange ? '#381DA0' : '#1A1028',
                         fontWeight: isStart || isEnd ? 700 : 400,
                         borderRadius: isStart ? '8px 0 0 8px' : isEnd ? '0 8px 8px 0' : inRange ? 0 : 8,
                       }}
@@ -427,7 +427,7 @@ export function MonthPicker({
                     <button
                       onClick={() => setOpen(false)}
                       className="text-[11px] font-semibold px-2.5 py-1 rounded-lg text-white cursor-pointer"
-                      style={{ background: '#7C3AED' }}
+                      style={{ background: '#381DA0' }}
                     >
                       Aplicar
                     </button>

@@ -49,11 +49,11 @@ export function LocationMapPicker({ initialLat, initialLng, onConfirm }: Props) 
     const el = document.createElement('div');
     el.style.cssText = `
       width: 32px; height: 32px;
-      background: #7C3AED;
+      background: #381DA0;
       border: 3px solid white;
       border-radius: 50% 50% 50% 0;
       transform: rotate(-45deg);
-      box-shadow: 0 2px 8px rgba(124,58,237,0.5);
+      box-shadow: 0 2px 8px rgba(56,29,160,0.5);
       cursor: grab;
     `;
     return el;
@@ -274,7 +274,7 @@ export function LocationMapPicker({ initialLat, initialLng, onConfirm }: Props) 
           <button
             onClick={handleConfirm}
             className="px-4 py-2 rounded-xl text-sm font-semibold text-white transition-opacity hover:opacity-90 shrink-0"
-            style={{ background: 'linear-gradient(135deg, #7C3AED 0%, #4361EE 100%)' }}
+            style={{ background: '#381DA0' }}
           >
             Confirmar
           </button>

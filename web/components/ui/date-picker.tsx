@@ -210,7 +210,7 @@ export function DatePicker({
           style={{
             ...dropStyle,
             background: '#fff',
-            border:     '1px solid rgba(124,58,237,0.14)',
+            border:     '1px solid rgba(56,29,160,0.14)',
             boxShadow:  '0 12px 32px rgba(0,0,0,0.12), 0 2px 6px rgba(0,0,0,0.06)',
           }}
         >
@@ -271,11 +271,11 @@ export function DatePicker({
                       className="h-7 w-full flex items-center justify-center rounded-md text-[11px] font-medium transition-all"
                       style={
                         isSel
-                          ? { background: '#7C3AED', color: '#fff', fontWeight: 600,
-                              boxShadow: '0 1px 4px rgba(124,58,237,0.35)' }
+                          ? { background: '#381DA0', color: '#fff', fontWeight: 600,
+                              boxShadow: '0 1px 4px rgba(56,29,160,0.35)' }
                           : isToday && !isSel
-                          ? { background: 'rgba(124,58,237,0.10)', color: '#7C3AED',
-                              fontWeight: 600, border: '1px solid rgba(124,58,237,0.30)' }
+                          ? { background: 'rgba(56,29,160,0.10)', color: '#381DA0',
+                              fontWeight: 600, border: '1px solid rgba(56,29,160,0.30)' }
                           : disabled
                           ? { color: '#D1D0D8', cursor: 'default' }
                           : { color: '#1A1028' }
@@ -326,10 +326,10 @@ export function DatePicker({
                       onClick={() => selectMonth(idx)}
                       className="py-2 rounded-lg text-[11px] font-semibold transition-all"
                       style={isCurrent
-                        ? { background: '#7C3AED', color: '#fff' }
+                        ? { background: '#381DA0', color: '#fff' }
                         : { color: '#1A1028' }
                       }
-                      onMouseEnter={e => { if (!isCurrent) (e.currentTarget as HTMLElement).style.background = 'rgba(124,58,237,0.08)'; }}
+                      onMouseEnter={e => { if (!isCurrent) (e.currentTarget as HTMLElement).style.background = 'rgba(56,29,160,0.08)'; }}
                       onMouseLeave={e => { if (!isCurrent) (e.currentTarget as HTMLElement).style.background = ''; }}
                     >
                       {name}
@@ -372,10 +372,10 @@ export function DatePicker({
                       onClick={() => selectYear(yr)}
                       className="py-2 rounded-lg text-[11px] font-semibold transition-all"
                       style={isCurrent
-                        ? { background: '#7C3AED', color: '#fff' }
+                        ? { background: '#381DA0', color: '#fff' }
                         : { color: '#1A1028' }
                       }
-                      onMouseEnter={e => { if (!isCurrent) (e.currentTarget as HTMLElement).style.background = 'rgba(124,58,237,0.08)'; }}
+                      onMouseEnter={e => { if (!isCurrent) (e.currentTarget as HTMLElement).style.background = 'rgba(56,29,160,0.08)'; }}
                       onMouseLeave={e => { if (!isCurrent) (e.currentTarget as HTMLElement).style.background = ''; }}
                     >
                       {yr}

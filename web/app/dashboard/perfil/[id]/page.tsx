@@ -23,13 +23,13 @@ const roleColors: Record<string, { text: string; bg: string }> = {
   SUPERADMIN: { text: '#EF476F', bg: 'rgba(239,71,111,0.12)' },
   ADMIN:      { text: '#FFB703', bg: 'rgba(255,183,3,0.12)' },
   COACH:      { text: '#06D6A0', bg: 'rgba(6,214,160,0.12)' },
-  STUDENT:    { text: '#7C3AED', bg: 'rgba(124,58,237,0.10)' },
+  STUDENT:    { text: '#381DA0', bg: 'rgba(56,29,160,0.10)' },
 };
 const ROLE_GRADIENT: Record<string, string> = {
   SUPERADMIN: 'linear-gradient(135deg,#EF476F,#C1121F)',
   ADMIN:      'linear-gradient(135deg,#FFB703,#FB8500)',
   COACH:      'linear-gradient(135deg,#06D6A0,#0CB68D)',
-  STUDENT:    'linear-gradient(135deg,#7C3AED,#A855F7)',
+  STUDENT:    '#381DA0',
 };
 
 const TABS = ['Publicaciones', 'Fotos', 'Información'] as const;
@@ -257,11 +257,11 @@ export default function PublicProfilePage() {
   const vacio = (icono: React.ReactNode, titulo: string, detalle: string) => (
     <div className="rounded-2xl px-6 py-10 flex flex-col items-center text-center"
       style={{
-        background: 'linear-gradient(135deg,rgba(124,58,237,0.04),rgba(67,97,238,0.03))',
-        border: '1px solid rgba(124,58,237,0.10)',
+        background: 'rgba(56,29,160,0.04)',
+        border: '1px solid rgba(56,29,160,0.10)',
       }}>
       <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4"
-        style={{ background: 'linear-gradient(135deg,#7C3AED,#4361EE)' }}>
+        style={{ background: '#381DA0' }}>
         {icono}
       </div>
       <p className="text-[14px] font-semibold text-foreground mb-1">{titulo}</p>
@@ -302,7 +302,7 @@ export default function PublicProfilePage() {
               onClick={() => alAbrir(foto.id)}
               aria-label="Abrir la publicación de esta foto"
               className="relative aspect-square rounded-lg overflow-hidden cursor-pointer group focus-visible:outline-2 focus-visible:outline-offset-2"
-              style={{ background: '#f0f0f0', outlineColor: '#7C3AED' }}>
+              style={{ background: '#f0f0f0', outlineColor: '#381DA0' }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={foto.imageUrl!} alt="Foto"
                 className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
@@ -385,7 +385,7 @@ export default function PublicProfilePage() {
       >
         {/* Banner */}
         <div className="relative h-36 sm:h-48"
-          style={{ background: profile.coverUrl ? undefined : 'linear-gradient(135deg, #7C3AED 0%, #4361EE 60%, #06D6A0 100%)' }}>
+          style={{ background: profile.coverUrl ? undefined : '#381DA0' }}>
           {profile.coverUrl && (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={profile.coverUrl} alt="Portada" className="absolute inset-0 w-full h-full object-cover" />
@@ -401,7 +401,7 @@ export default function PublicProfilePage() {
             {/* Foto con badge del club */}
             <div className="relative z-10">
               <div className="rounded-full border-4 border-white overflow-hidden sm:w-[140px] sm:h-[140px]"
-                style={{ boxShadow: '0 4px 16px rgba(124,58,237,0.20)', width: 120, height: 120 }}>
+                style={{ boxShadow: '0 4px 16px rgba(56,29,160,0.20)', width: 120, height: 120 }}>
                 <MemberAvatar
                   name={profile.name}
                   photoUrl={profile.picture}
@@ -426,8 +426,8 @@ export default function PublicProfilePage() {
                 disabled={toggling}
                 className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-[13px] font-semibold transition-all cursor-pointer disabled:opacity-60"
                 style={following
-                  ? { background: 'rgba(124,58,237,0.10)', color: '#7C3AED', border: '1.5px solid rgba(124,58,237,0.25)' }
-                  : { background: 'linear-gradient(135deg,#7C3AED,#4361EE)', color: '#fff', border: 'none' }
+                  ? { background: 'rgba(56,29,160,0.10)', color: '#381DA0', border: '1.5px solid rgba(56,29,160,0.25)' }
+                  : { background: '#381DA0', color: '#fff', border: 'none' }
                 }
               >
                 {following
@@ -517,13 +517,13 @@ export default function PublicProfilePage() {
                   key={tab}
                   onClick={() => setActiveTab(tab)}
                   className="flex-1 py-3.5 relative transition-colors"
-                  style={{ fontSize: 12, fontWeight: 600, color: activeTab === tab ? '#7C3AED' : '#8E87A8' }}
+                  style={{ fontSize: 12, fontWeight: 600, color: activeTab === tab ? '#381DA0' : '#8E87A8' }}
                 >
                   {tab}
                   {activeTab === tab && (
                     <motion.div layoutId="public-profile-tab-indicator"
                       className="absolute bottom-0 left-4 right-4 h-[2.5px] rounded-full"
-                      style={{ background: '#7C3AED' }} />
+                      style={{ background: '#381DA0' }} />
                   )}
                 </button>
               ))}

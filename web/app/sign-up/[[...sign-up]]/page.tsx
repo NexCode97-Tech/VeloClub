@@ -29,7 +29,7 @@ export default function SignUpPage() {
         signInUrl="/sign-in"
         forceRedirectUrl="/dashboard"
         appearance={{
-          variables: { colorPrimary: '#7C3AED' },
+          variables: { colorPrimary: '#381DA0' },
           elements: {
             card: 'shadow-md rounded-2xl border border-slate-200',
             logoImage: 'cl-logo-custom',

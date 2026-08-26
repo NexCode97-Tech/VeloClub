@@ -22,7 +22,7 @@ import { useId, useRef, useState } from 'react';
  * etiqueta en el lector de pantalla.
  */
 
-export const ENTRA = '#7C3AED';
+export const ENTRA = '#381DA0';
 export const SALE = '#DC2626';
 
 export interface MesFinanzas {

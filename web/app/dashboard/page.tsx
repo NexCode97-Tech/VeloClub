@@ -89,7 +89,7 @@ const roleColors: Record<string, { text: string; bg: string }> = {
   SUPERADMIN: { text: '#EF476F', bg: 'rgba(239,71,111,0.12)' },
   ADMIN:      { text: '#FFB703', bg: 'rgba(255,183,3,0.12)' },
   COACH:      { text: '#06D6A0', bg: 'rgba(6,214,160,0.12)' },
-  STUDENT:    { text: '#7C3AED', bg: 'rgba(124,58,237,0.10)' },
+  STUDENT:    { text: '#381DA0', bg: 'rgba(56,29,160,0.10)' },
 };
 
 function todayLabel() {
@@ -142,7 +142,7 @@ const ADS = [
     title: 'NexCode97, desarrollo de software a la medida',
     description: 'Plataformas web y aplicaciones hechas a la medida de tu negocio. Quienes construyen VeloClub.',
     url: 'https://wa.me/573006359008',
-    color: '#7C3AED',
+    color: '#381DA0',
   },
   // Los cupos libres cierran el carrusel. Van tres a proposito: mostrar varios
   // seguidos comunica que el espacio esta abierto, que es justo lo que se
@@ -158,7 +158,7 @@ const ADS = [
     // url el boton no se muestra, que es mejor que mandar al numero de otro.
     url: '#',
     cta: 'Reservar espacio',
-    bg: 'linear-gradient(135deg,#7C3AED 0%,#5B4BE8 55%,#4361EE 100%)',
+    bg: '#381DA0',
   },
   {
     image: '/publicidad-disponible.svg',
@@ -196,7 +196,7 @@ const ROLE_GRADIENT: Record<string, string> = {
   SUPERADMIN: 'linear-gradient(135deg,#EF476F,#C1121F)',
   ADMIN:      'linear-gradient(135deg,#FFB703,#FB8500)',
   COACH:      'linear-gradient(135deg,#06D6A0,#0CB68D)',
-  STUDENT:    'linear-gradient(135deg,#7C3AED,#A855F7)',
+  STUDENT:    '#381DA0',
 };
 
 // ── Avatar wrapper que usa MemberAvatar con gradiente por rol ─────────────────
@@ -317,7 +317,7 @@ function PostComposer({
             onClick={() => { if (fileRef.current) { fileRef.current.accept = 'image/*'; fileRef.current.click(); } }}
             className="sm:hidden shrink-0 mt-1.5"
           >
-            <ImageIcon className="w-[18px] h-[18px]" style={{ color: '#7C3AED' }} />
+            <ImageIcon className="w-[18px] h-[18px]" style={{ color: '#381DA0' }} />
           </button>
         )}
       </div>
@@ -405,7 +405,7 @@ function PostComposer({
           whileTap={{ scale: 0.95 }}
           transition={{ type: 'spring' as const, stiffness: 500, damping: 15 }}
           className="shrink-0 px-5 py-2 rounded-full text-[13px] font-semibold text-white disabled:opacity-50 transition-opacity"
-          style={{ background: 'linear-gradient(135deg, #7C3AED 0%, #4361EE 100%)' }}>
+          style={{ background: '#381DA0' }}>
           <ContenidoGuardado
             estado={estadoPublicado}
             textoIdle="Publicar"
@@ -723,7 +723,7 @@ export default function DashboardPage() {
             <Link
               href="/dashboard/ajustes?tab=suscripcion"
               className="shrink-0 px-3 py-2 rounded-lg text-[11px] font-semibold text-white"
-              style={{ background: trial.daysLeft <= 3 ? '#EF476F' : 'linear-gradient(135deg,#7C3AED,#4361EE)' }}
+              style={{ background: trial.daysLeft <= 3 ? '#EF476F' : '#381DA0' }}
             >
               Activar
             </Link>
@@ -771,7 +771,7 @@ export default function DashboardPage() {
           style={{ boxShadow: '0 1px 8px rgba(0,0,0,0.06)' }}>
           <div className="flex items-center gap-2 px-3 pt-3 pb-2">
             <div className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0"
-              style={{ background: 'linear-gradient(135deg,#4361EE,#7C3AED)' }}>
+              style={{ background: '#381DA0' }}>
               <CalendarDays className="w-3 h-3 text-white" />
             </div>
             <p className="text-[11px] font-semibold text-foreground truncate">Próximos eventos</p>
@@ -836,8 +836,8 @@ export default function DashboardPage() {
               {birthdays.slice(0, 3).map(b => {
                 const isToday    = b.daysUntil === 0;
                 const isTomorrow = b.daysUntil === 1;
-                const daysBg    = isToday ? 'rgba(239,71,111,0.12)' : 'rgba(124,58,237,0.10)';
-                const daysColor = isToday ? '#EF476F' : '#7C3AED';
+                const daysBg    = isToday ? 'rgba(239,71,111,0.12)' : 'rgba(56,29,160,0.10)';
+                const daysColor = isToday ? '#EF476F' : '#381DA0';
                 return (
                   <div key={b.id} className="flex items-center gap-2 py-1.5 rounded-lg">
                     <div className="w-8 h-8 rounded-lg flex flex-col items-center justify-center shrink-0"
@@ -881,7 +881,7 @@ export default function DashboardPage() {
           <div className="flex items-center justify-between px-4 pt-4 pb-3">
             <div className="flex items-center gap-2">
               <div className="w-7 h-7 rounded-lg flex items-center justify-center"
-                style={{ background: 'linear-gradient(135deg,#4361EE,#7C3AED)' }}>
+                style={{ background: '#381DA0' }}>
                 <CalendarDays className="w-3.5 h-3.5 text-white" />
               </div>
               <p className="text-[13px] font-semibold text-foreground">Próximos eventos</p>
@@ -978,8 +978,8 @@ export default function DashboardPage() {
               {birthdays.map(b => {
                 const isToday    = b.daysUntil === 0;
                 const isTomorrow = b.daysUntil === 1;
-                const daysBg  = isToday ? 'rgba(239,71,111,0.12)' : 'rgba(124,58,237,0.10)';
-                const daysColor = isToday ? '#EF476F' : '#7C3AED';
+                const daysBg  = isToday ? 'rgba(239,71,111,0.12)' : 'rgba(56,29,160,0.10)';
+                const daysColor = isToday ? '#EF476F' : '#381DA0';
                 return (
                   <div key={b.id}
                     className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-secondary/60 transition-colors cursor-default">
@@ -1054,7 +1054,7 @@ export default function DashboardPage() {
                     <motion.div
                       layoutId="feed-tab-pill"
                       className="absolute inset-0 rounded-xl"
-                      style={{ background: 'linear-gradient(135deg, #7C3AED 0%, #4361EE 100%)', boxShadow: '0 4px 20px rgba(124,58,237,0.40)' }}
+                      style={{ background: '#381DA0', boxShadow: '0 4px 20px rgba(56,29,160,0.40)' }}
                       transition={{ type: 'spring', stiffness: 500, damping: 35 }}
                     />
                   )}
@@ -1085,18 +1085,18 @@ export default function DashboardPage() {
         {postsLoading && posts.length === 0 ? (
           <motion.div variants={cardVariant} className="flex flex-col items-center py-10 gap-3">
             <div className="w-6 h-6 rounded-full border-2 border-t-transparent animate-spin"
-              style={{ borderColor: '#7C3AED', borderTopColor: 'transparent' }} />
+              style={{ borderColor: '#381DA0', borderTopColor: 'transparent' }} />
             <p className="text-[12px] text-muted-foreground">Cargando publicaciones...</p>
           </motion.div>
         ) : posts.length === 0 ? (
           <motion.div variants={cardVariant}>
             <div
               className="rounded-2xl px-6 py-10 flex flex-col items-center text-center"
-              style={{ background: 'linear-gradient(135deg,rgba(124,58,237,0.04) 0%,rgba(67,97,238,0.03) 100%)', border: '1px solid rgba(124,58,237,0.10)' }}
+              style={{ background: 'rgba(56,29,160,0.04)', border: '1px solid rgba(56,29,160,0.10)' }}
             >
               <div
                 className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4"
-                style={{ background: 'linear-gradient(135deg,#7C3AED,#4361EE)' }}
+                style={{ background: '#381DA0' }}
               >
                 {feedScope === 'public' ? <Globe className="w-6 h-6 text-white" /> : <Lock className="w-6 h-6 text-white" />}
               </div>

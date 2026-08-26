@@ -47,8 +47,8 @@ export default function CuentaPausadaPage() {
     <div className="min-h-screen flex items-center justify-center bg-slate-50">
       <div className="text-center max-w-md px-6">
         <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
-          style={{ background: 'rgba(124,58,237,0.10)' }}>
-          <PauseCircle className="w-8 h-8" style={{ color: '#7C3AED' }} />
+          style={{ background: 'rgba(56,29,160,0.10)' }}>
+          <PauseCircle className="w-8 h-8" style={{ color: '#381DA0' }} />
         </div>
         <h1 className="text-2xl font-semibold text-slate-900 mb-2">Tu cuenta está en pausa</h1>
         <p className="text-slate-500 mb-4">

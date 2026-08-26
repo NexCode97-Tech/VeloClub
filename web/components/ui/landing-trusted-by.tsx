@@ -60,7 +60,7 @@ export default function LandingTrustedBy() {
       <div className="mx-auto w-full max-w-2xl px-5">
         <p className="text-center text-2xl sm:text-3xl font-semibold text-[#1A1028] tracking-tight">
           Clubes que ya confían en{' '}
-          <span className="text-[#7C3AED]">VeloClub</span>
+          <span className="text-[#381DA0]">VeloClub</span>
         </p>
       </div>
 

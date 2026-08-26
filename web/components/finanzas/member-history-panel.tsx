@@ -16,7 +16,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 
 const EASE_OUT: [number, number, number, number] = [0.23, 1, 0.32, 1];
 const IOS: [number, number, number, number] = [0.32, 0.72, 0, 1];
-const BRAND = 'linear-gradient(135deg, #7C3AED 0%, #4361EE 100%)';
+const BRAND = '#381DA0';
 
 const fmt = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 });
 const MONTHS_FULL = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
@@ -260,7 +260,7 @@ export default function MemberHistoryPanel({
             {[
               { l: 'Total pagado', v: fmt.format(stats.totalPagado), c: '#06D6A0', b: true },
               { l: 'Pendiente',    v: fmt.format(stats.totalPendiente), c: '#EF476F', b: true },
-              { l: 'Puntualidad',  v: stats.puntualidad !== null ? `${stats.puntualidad}%` : '—', c: '#7C3AED', b: false },
+              { l: 'Puntualidad',  v: stats.puntualidad !== null ? `${stats.puntualidad}%` : '—', c: '#381DA0', b: false },
             ].map(s => (
               <div key={s.l} className="text-center px-1"
                 style={{ borderRight: s.b ? '1px solid rgba(120,80,200,0.10)' : undefined }}>
@@ -275,7 +275,7 @@ export default function MemberHistoryPanel({
         <div className="flex-1 overflow-y-auto" style={{ WebkitOverflowScrolling: 'touch' }}>
           {isLoading ? (
             <div className="flex items-center justify-center py-16">
-              <div className="w-6 h-6 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: '#7C3AED', borderTopColor: 'transparent' }} />
+              <div className="w-6 h-6 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: '#381DA0', borderTopColor: 'transparent' }} />
             </div>
           ) : (
             <>
@@ -286,9 +286,9 @@ export default function MemberHistoryPanel({
                     <button key={y} onClick={() => setYear(y)}
                       className="px-3 py-1 rounded-lg text-[11.5px] font-semibold transition-colors"
                       style={{
-                        background: y === year ? 'rgba(124,58,237,0.10)' : 'transparent',
-                        color: y === year ? '#7C3AED' : '#8E87A8',
-                        border: `1px solid ${y === year ? 'rgba(124,58,237,0.28)' : 'rgba(120,80,200,0.14)'}`,
+                        background: y === year ? 'rgba(56,29,160,0.10)' : 'transparent',
+                        color: y === year ? '#381DA0' : '#8E87A8',
+                        border: `1px solid ${y === year ? 'rgba(56,29,160,0.28)' : 'rgba(120,80,200,0.14)'}`,
                       }}>
                       {y}
                     </button>
@@ -329,8 +329,8 @@ export default function MemberHistoryPanel({
                 {delAño.length === 0 ? (
                   <div className="flex flex-col items-center justify-center text-center" style={{ padding: '26px 12px' }}>
                     <div className="flex items-center justify-center mb-3"
-                      style={{ width: 46, height: 46, borderRadius: 14, background: 'rgba(124,58,237,0.07)' }}>
-                      <CalendarX className="w-5 h-5" style={{ color: '#7C3AED', opacity: 0.55 }} />
+                      style={{ width: 46, height: 46, borderRadius: 14, background: 'rgba(56,29,160,0.07)' }}>
+                      <CalendarX className="w-5 h-5" style={{ color: '#381DA0', opacity: 0.55 }} />
                     </div>
                     <p className="m-0 text-[12.5px] font-semibold" style={{ color: '#8E87A8' }}>Sin cobros en {year}</p>
                     <p className="m-0 mt-1 text-[11px] max-w-[240px]" style={{ color: '#C4BFD8' }}>
@@ -394,7 +394,7 @@ export default function MemberHistoryPanel({
                             onClick={() => { setReceipt(p); setReceiptFile(null); setError(null); }}
                             title={p.receiptUrl ? 'Ver comprobante' : 'Subir comprobante'}
                             className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-transform active:scale-95"
-                            style={{ border: '1px solid rgba(120,80,200,0.16)', color: p.receiptUrl ? '#7C3AED' : '#B8B2CC' }}>
+                            style={{ border: '1px solid rgba(120,80,200,0.16)', color: p.receiptUrl ? '#381DA0' : '#B8B2CC' }}>
                             {p.receiptUrl ? <Receipt className="w-3.5 h-3.5" /> : <FileX className="w-3.5 h-3.5" />}
                           </button>
                           {pagado && (
@@ -405,7 +405,7 @@ export default function MemberHistoryPanel({
                               )}
                               title="Descargar recibo"
                               className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-transform active:scale-95"
-                              style={{ border: '1px solid rgba(120,80,200,0.16)', color: '#7C3AED' }}>
+                              style={{ border: '1px solid rgba(120,80,200,0.16)', color: '#381DA0' }}>
                               <Download className="w-3.5 h-3.5" />
                             </button>
                           )}
@@ -462,7 +462,7 @@ export default function MemberHistoryPanel({
               <div className="flex gap-2">
                 <label
                   className="flex-1 flex items-center justify-center gap-2 rounded-xl text-[12px] font-semibold cursor-pointer transition-colors"
-                  style={{ padding: '10px 0', border: '1px solid rgba(120,80,200,0.18)', color: '#7C3AED' }}>
+                  style={{ padding: '10px 0', border: '1px solid rgba(120,80,200,0.18)', color: '#381DA0' }}>
                   {receipt.receiptUrl ? <RotateCcw className="w-3.5 h-3.5" /> : <Upload className="w-3.5 h-3.5" />}
                   {receipt.receiptUrl ? 'Reemplazar' : 'Subir'}
                   <input type="file" accept="image/*" onChange={onFile} className="hidden" />

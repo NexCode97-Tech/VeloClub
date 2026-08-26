@@ -127,12 +127,12 @@ export function OpcionHoja({ activa, onClick, children, extra }: {
       onClick={onClick}
       className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-left transition-colors"
       style={activa
-        ? { background: 'rgba(124,58,237,0.06)', border: '1.5px solid rgba(124,58,237,0.35)' }
+        ? { background: 'rgba(56,29,160,0.06)', border: '1.5px solid rgba(56,29,160,0.35)' }
         : { background: '#fff', border: '1.5px solid rgba(26,16,40,0.08)' }}
     >
       <span className="w-4 h-4 rounded-full shrink-0 flex items-center justify-center"
-        style={{ border: `1.5px solid ${activa ? '#7C3AED' : 'rgba(26,16,40,0.20)'}` }}>
-        {activa && <span className="w-2 h-2 rounded-full" style={{ background: '#7C3AED' }} />}
+        style={{ border: `1.5px solid ${activa ? '#381DA0' : 'rgba(26,16,40,0.20)'}` }}>
+        {activa && <span className="w-2 h-2 rounded-full" style={{ background: '#381DA0' }} />}
       </span>
       <span className="flex-1 min-w-0 text-[12.5px] font-medium text-foreground truncate">{children}</span>
       {extra && <span className="text-[9.5px] shrink-0" style={{ color: '#8E87A8', fontVariantNumeric: 'tabular-nums' }}>{extra}</span>}

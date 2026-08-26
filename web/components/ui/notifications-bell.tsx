@@ -31,12 +31,12 @@ const COLOR_BY_TYPE: Record<string, string> = {
   PAYMENT_RECEIVED: '#06D6A0',
   PAYMENT_DUE:      '#EF476F',
   NEW_MEMBER:       '#4361EE',
-  NEW_FOLLOWER:     '#7C3AED',
+  NEW_FOLLOWER:     '#381DA0',
   NEW_COMPETITION:  '#F59E0B',
   NEW_EVENT:        '#4361EE',
   RECEIPT_UPLOADED: '#FFB703',
   POST_COMMENT:     '#4361EE',
-  COMMENT_REPLY:    '#7C3AED',
+  COMMENT_REPLY:    '#381DA0',
 };
 
 function timeAgo(iso: string): string {
@@ -172,7 +172,7 @@ export function NotificationsBell({ sobreOscuro = false }: { sobreOscuro?: boole
                     key={n.id}
                     onClick={() => openItem(n)}
                     className="w-full flex items-start gap-3 px-4 py-3 text-left transition-colors hover:bg-secondary/50 border-b border-border/60"
-                    style={{ background: n.leida ? undefined : 'rgba(124,58,237,0.04)' }}
+                    style={{ background: n.leida ? undefined : 'rgba(56,29,160,0.04)' }}
                   >
                     <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 mt-0.5" style={{ background: `${color}1A` }}>
                       <Icon className="w-4 h-4" style={{ color }} />
@@ -182,7 +182,7 @@ export function NotificationsBell({ sobreOscuro = false }: { sobreOscuro?: boole
                       <p className="text-[11.5px] text-muted-foreground leading-snug">{n.cuerpo}</p>
                       <p className="text-[10px] text-muted-foreground/70 mt-0.5">{timeAgo(n.createdAt)}</p>
                     </div>
-                    {!n.leida && <span className="w-2 h-2 rounded-full shrink-0 mt-1.5" style={{ background: '#7C3AED' }} />}
+                    {!n.leida && <span className="w-2 h-2 rounded-full shrink-0 mt-1.5" style={{ background: '#381DA0' }} />}
                   </button>
                 );
               })}

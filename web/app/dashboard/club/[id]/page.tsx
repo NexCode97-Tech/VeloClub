@@ -108,7 +108,7 @@ export default function PublicClubPage() {
       <div className="bg-white border-b border-border" style={{ boxShadow: '0 1px 12px rgba(0,0,0,0.06)' }}>
         {/* Banner portada */}
         <div className="relative h-36 sm:h-48"
-          style={{ background: club.coverUrl ? undefined : 'linear-gradient(135deg, #4361EE 0%, #7C3AED 60%, #06D6A0 100%)' }}>
+          style={{ background: club.coverUrl ? undefined : '#381DA0' }}>
           {club.coverUrl && (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={club.coverUrl} alt="Portada" className="absolute inset-0 w-full h-full object-cover" />
@@ -136,7 +136,7 @@ export default function PublicClubPage() {
                 style={{
                   width: 150, height: 150,
                   boxShadow: '0 4px 16px rgba(67,97,238,0.22)',
-                  background: club.logoUrl ? undefined : 'linear-gradient(135deg,#4361EE,#7C3AED)',
+                  background: club.logoUrl ? undefined : '#381DA0',
                 }}>
                 {club.logoUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
@@ -162,7 +162,7 @@ export default function PublicClubPage() {
               className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-[13px] font-semibold transition-all cursor-pointer disabled:opacity-60"
               style={following
                 ? { background: 'rgba(67,97,238,0.10)', color: '#4361EE', border: '1.5px solid rgba(67,97,238,0.25)' }
-                : { background: 'linear-gradient(135deg,#4361EE,#7C3AED)', color: '#fff', border: 'none' }
+                : { background: '#381DA0', color: '#fff', border: 'none' }
               }
             >
               {following
@@ -257,9 +257,9 @@ export default function PublicClubPage() {
                 exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2 }}
                 className="px-4 sm:px-6 py-4">
                 <div className="rounded-2xl px-6 py-12 text-center"
-                  style={{ background: 'linear-gradient(135deg,rgba(67,97,238,0.04),rgba(124,58,237,0.03))', border: '1px solid rgba(67,97,238,0.10)' }}>
+                  style={{ background: 'rgba(67,97,238,0.04)', border: '1px solid rgba(67,97,238,0.10)' }}>
                   <div className="w-14 h-14 rounded-2xl mx-auto mb-4 flex items-center justify-center"
-                    style={{ background: 'linear-gradient(135deg,#4361EE,#7C3AED)' }}>
+                    style={{ background: '#381DA0' }}>
                     <Lock className="w-6 h-6 text-white" />
                   </div>
                   <p className="text-[14px] font-semibold text-foreground mb-1">Publicaciones privadas</p>

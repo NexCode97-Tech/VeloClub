@@ -95,10 +95,10 @@ function MiniBarChart({ data }: { data: number[] }) {
                 height: h,
                 borderRadius: 4,
                 background: isCurrent
-                  ? (hovered ? '#6D28D9' : '#7C3AED')
+                  ? (hovered ? '#6D28D9' : '#381DA0')
                   : hovered
-                    ? 'rgba(124,58,237,0.55)'
-                    : `rgba(124,58,237,${0.15 + (i / data.length) * 0.25})`,
+                    ? 'rgba(56,29,160,0.55)'
+                    : `rgba(56,29,160,${0.15 + (i / data.length) * 0.25})`,
                 transformOrigin: 'bottom',
                 transition: 'background 0.15s',
               }}
@@ -235,7 +235,7 @@ export default function InicioSuperadmin() {
       <motion.div
         animate={{ rotate: 360 }}
         transition={{ duration: 0.8, repeat: Infinity, ease: 'linear' }}
-        style={{ width: 24, height: 24, borderRadius: '50%', border: '2.5px solid #7C3AED', borderTopColor: 'transparent' }}
+        style={{ width: 24, height: 24, borderRadius: '50%', border: '2.5px solid #381DA0', borderTopColor: 'transparent' }}
       />
     </div>
   );
@@ -306,14 +306,14 @@ export default function InicioSuperadmin() {
         {/* Hero card — RECAUDADO ESTE MES (columna izquierda en escritorio) */}
         <motion.div
           variants={cardVariant}
-          style={{ background: '#fff', borderRadius: 24, padding: '20px 20px 18px', border: '1px solid rgba(120,80,200,0.10)', boxShadow: '0 2px 20px rgba(124,58,237,0.06)', position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
+          style={{ background: '#fff', borderRadius: 24, padding: '20px 20px 18px', border: '1px solid rgba(120,80,200,0.10)', boxShadow: '0 2px 20px rgba(56,29,160,0.06)', position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
         >
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 10 }}>
             <p style={{ margin: 0, fontSize: 10, fontWeight: 600, color: '#8E87A8', letterSpacing: '0.02em' }}>
               Recaudado · este mes
             </p>
             <motion.div whileTap={{ scale: shouldReduceMotion ? 1 : 0.88 }} transition={{ duration: 0.12, ease: EASE }}>
-              <Link href="/superadmin/finanzas" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', width: 34, height: 34, borderRadius: '50%', background: '#7C3AED', boxShadow: '0 4px 14px rgba(124,58,237,0.38)' }}>
+              <Link href="/superadmin/finanzas" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', width: 34, height: 34, borderRadius: '50%', background: '#381DA0', boxShadow: '0 4px 14px rgba(56,29,160,0.38)' }}>
                 <ArrowUpRight size={16} color="#fff" strokeWidth={2.5} />
               </Link>
             </motion.div>
@@ -347,14 +347,14 @@ export default function InicioSuperadmin() {
           variants={cardVariant}
           style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, flex: 1 }}
         >
-          <div style={{ background: '#fff', borderRadius: 20, padding: '16px 14px', border: '1px solid rgba(120,80,200,0.10)', boxShadow: '0 2px 12px rgba(124,58,237,0.05)' }}>
+          <div style={{ background: '#fff', borderRadius: 20, padding: '16px 14px', border: '1px solid rgba(120,80,200,0.10)', boxShadow: '0 2px 12px rgba(56,29,160,0.05)' }}>
             <p style={{ margin: '0 0 10px', fontSize: 9, fontWeight: 600, color: '#8E87A8', letterSpacing: '0.02em' }}>Clubes activos</p>
             <p style={{ margin: '0 0 4px', fontSize: 44, fontWeight: 800, color: '#1A1028', fontFamily: 'inherit', lineHeight: 1 }}>
               {String(activos).padStart(2, '0')}
             </p>
             <p style={{ margin: 0, fontSize: 11, color: '#8E87A8' }}>De {total} totales</p>
           </div>
-          <div style={{ background: '#fff', borderRadius: 20, padding: '16px 14px', border: '1px solid rgba(120,80,200,0.10)', boxShadow: '0 2px 12px rgba(124,58,237,0.05)' }}>
+          <div style={{ background: '#fff', borderRadius: 20, padding: '16px 14px', border: '1px solid rgba(120,80,200,0.10)', boxShadow: '0 2px 12px rgba(56,29,160,0.05)' }}>
             <p style={{ margin: '0 0 10px', fontSize: 9, fontWeight: 600, color: '#8E87A8', letterSpacing: '0.02em' }}>En prueba</p>
             <p style={{ margin: '0 0 4px', fontSize: 44, fontWeight: 800, color: '#1A1028', fontFamily: 'inherit', lineHeight: 1 }}>
               {String(enPrueba).padStart(2, '0')}
@@ -374,11 +374,11 @@ export default function InicioSuperadmin() {
         >
           {[
             { label: 'Total recaudado', value: totalRecaudado > 0 ? fmtHero(totalRecaudado).main + fmtHero(totalRecaudado).suffix : '$0', color: '#06D6A0', sub: 'Histórico' },
-            { label: 'Total miembros',  value: String(totalMiembros), color: '#7C3AED', sub: 'En todos los clubs' },
+            { label: 'Total miembros',  value: String(totalMiembros), color: '#381DA0', sub: 'En todos los clubs' },
             { label: 'Total clubes',    value: String(total),         color: '#FFB703', sub: `${activos} activos` },
           ].map(s => (
             <motion.div key={s.label} variants={cardVariant}
-              style={{ background: '#fff', borderRadius: 18, border: '1px solid rgba(120,80,200,0.10)', boxShadow: '0 2px 12px rgba(124,58,237,0.05)', padding: '16px' }}>
+              style={{ background: '#fff', borderRadius: 18, border: '1px solid rgba(120,80,200,0.10)', boxShadow: '0 2px 12px rgba(56,29,160,0.05)', padding: '16px' }}>
               <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: '#1A1028' }}>{s.label}</p>
               <p style={{ margin: '1px 0 10px', fontSize: 10, color: '#8E87A8' }}>{s.sub}</p>
               <p style={{ margin: 0, fontSize: 26, fontWeight: 800, color: s.color, fontFamily: 'inherit', lineHeight: 1 }}>{s.value}</p>
@@ -403,8 +403,8 @@ export default function InicioSuperadmin() {
               <AreaChart data={monthlyIncome} margin={{ top: 4, right: 16, left: -10, bottom: 0 }}>
                 <defs>
                   <linearGradient id="incomeGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%"  stopColor="#7C3AED" stopOpacity={0.18} />
-                    <stop offset="95%" stopColor="#7C3AED" stopOpacity={0} />
+                    <stop offset="5%"  stopColor="#381DA0" stopOpacity={0.18} />
+                    <stop offset="95%" stopColor="#381DA0" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="4 4" stroke="rgba(0,0,0,0.04)" vertical={false} />
@@ -416,9 +416,9 @@ export default function InicioSuperadmin() {
                   formatter={(v) => [fmt.format(Number(v ?? 0)), 'Recaudado']}
                   labelStyle={{ fontWeight: 600, color: '#1A1028' }}
                 />
-                <Area type="monotone" dataKey="total" stroke="#7C3AED" strokeWidth={2.4}
+                <Area type="monotone" dataKey="total" stroke="#381DA0" strokeWidth={2.4}
                   fill="url(#incomeGrad)" dot={false}
-                  activeDot={{ r: 5, fill: '#7C3AED', stroke: '#fff', strokeWidth: 2 }} />
+                  activeDot={{ r: 5, fill: '#381DA0', stroke: '#fff', strokeWidth: 2 }} />
               </AreaChart>
             </ResponsiveContainer>
           </motion.div>
@@ -430,7 +430,7 @@ export default function InicioSuperadmin() {
             <p style={{ margin: 0, fontSize: 10, fontWeight: 600, color: '#8E87A8', letterSpacing: '0.02em' }}>
               Clubes registrados
             </p>
-            <Link href="/superadmin/clubs" style={{ fontSize: 11, fontWeight: 600, color: '#7C3AED', textDecoration: 'none' }}>
+            <Link href="/superadmin/clubs" style={{ fontSize: 11, fontWeight: 600, color: '#381DA0', textDecoration: 'none' }}>
               Gestionar →
             </Link>
           </div>
@@ -446,7 +446,7 @@ export default function InicioSuperadmin() {
                 return (
                   <Link key={club.id} href="/superadmin/clubs" style={{ textDecoration: 'none' }}>
                     <div style={{ background: '#fff', border: '1px solid rgba(120,80,200,0.10)', borderRadius: 16, display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', cursor: 'pointer' }}>
-                      <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'rgba(124,58,237,0.10)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 800, color: '#7C3AED', fontFamily: 'inherit', flexShrink: 0, overflow: 'hidden' }}>
+                      <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'rgba(56,29,160,0.10)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 800, color: '#381DA0', fontFamily: 'inherit', flexShrink: 0, overflow: 'hidden' }}>
                         {club.logoUrl
                           ? <img src={club.logoUrl} alt={club.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                           : club.name.charAt(0).toUpperCase()

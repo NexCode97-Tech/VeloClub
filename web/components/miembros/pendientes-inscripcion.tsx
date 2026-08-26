@@ -487,7 +487,7 @@ function FilaBandeja({ fila, marcada, puedeAprobar, ocupada, onMarcar, onAbrir }
 function Pastilla({ tono, children }: { tono: 'azul' | 'violeta' | 'duda'; children: React.ReactNode }) {
   const estilo = {
     azul:    { background: 'rgba(67,97,238,0.11)', color: '#2A52BE' },
-    violeta: { background: 'rgba(124,58,237,0.11)', color: '#6D28D9' },
+    violeta: { background: 'rgba(56,29,160,0.11)', color: '#6D28D9' },
     duda:    { background: '#F7E9C4', color: '#8A6216' },
   }[tono];
   return (

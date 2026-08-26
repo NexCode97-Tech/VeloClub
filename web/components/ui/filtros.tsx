@@ -47,7 +47,7 @@ export interface GrupoFiltro {
 }
 
 const TONOS = {
-  violeta: { fondo: 'rgba(124,58,237,0.09)', borde: 'rgba(124,58,237,0.24)', texto: '#6D28D9' },
+  violeta: { fondo: 'rgba(56,29,160,0.09)', borde: 'rgba(56,29,160,0.24)', texto: '#6D28D9' },
   azul:    { fondo: 'rgba(67,97,238,0.09)',  borde: 'rgba(67,97,238,0.24)',  texto: '#2A52BE' },
   gris:    { fondo: 'rgba(142,135,168,0.12)', borde: 'rgba(142,135,168,0.28)', texto: '#5B5470' },
 } as const;
@@ -57,7 +57,7 @@ function Globo({ n }: { n: number }) {
   return (
     <span
       className="absolute -top-1.5 -right-1.5 text-[10px] font-bold text-white rounded-full px-1 min-w-[16px] h-[16px] flex items-center justify-center"
-      style={{ background: '#7C3AED', border: '2px solid #fff' }}
+      style={{ background: '#381DA0', border: '2px solid #fff' }}
     >
       {n}
     </span>
@@ -201,12 +201,12 @@ export function BotonFiltros({ grupos, resultados, alto = 42, soloIcono }: {
                       enHoja ? 'py-2.5 text-[13px]' : 'py-1.5 text-[12.5px]'
                     } ${on ? 'font-bold' : ''}`}
                     style={{
-                      background: on ? 'rgba(124,58,237,0.07)' : 'transparent',
+                      background: on ? 'rgba(56,29,160,0.07)' : 'transparent',
                       color: on ? '#6D28D9' : '#1A1028',
                     }}>
                     <span className="w-[14px] h-[14px] rounded-full shrink-0 grid place-items-center border-[1.5px]"
-                      style={{ borderColor: on ? '#7C3AED' : 'rgba(120,80,200,0.3)' }}>
-                      {on && <span className="w-[7px] h-[7px] rounded-full" style={{ background: '#7C3AED' }} />}
+                      style={{ borderColor: on ? '#381DA0' : 'rgba(120,80,200,0.3)' }}>
+                      {on && <span className="w-[7px] h-[7px] rounded-full" style={{ background: '#381DA0' }} />}
                     </span>
                     <span className="truncate">{o.texto}</span>
                     {o.n !== undefined && (
@@ -242,8 +242,8 @@ export function BotonFiltros({ grupos, resultados, alto = 42, soloIcono }: {
         }`}
         style={{
           height: alto,
-          background: puestos > 0 ? 'rgba(124,58,237,0.08)' : '#fff',
-          border: `1px solid ${puestos > 0 ? 'rgba(124,58,237,0.32)' : 'rgba(120,80,200,0.12)'}`,
+          background: puestos > 0 ? 'rgba(56,29,160,0.08)' : '#fff',
+          border: `1px solid ${puestos > 0 ? 'rgba(56,29,160,0.32)' : 'rgba(120,80,200,0.12)'}`,
           color: puestos > 0 ? '#6D28D9' : '#1A1028',
         }}
       >
@@ -261,13 +261,13 @@ export function BotonFiltros({ grupos, resultados, alto = 42, soloIcono }: {
             <>
               <span className="md:hidden"><Globo n={puestos} /></span>
               <span className="hidden md:flex text-[10.5px] font-bold text-white rounded-full px-1.5 min-w-[17px] h-[17px] items-center justify-center"
-                style={{ background: '#7C3AED' }}>
+                style={{ background: '#381DA0' }}>
                 {puestos}
               </span>
             </>
           ) : (
             <span className="text-[10.5px] font-bold text-white rounded-full px-1.5 min-w-[17px] h-[17px] flex items-center justify-center"
-              style={{ background: '#7C3AED' }}>
+              style={{ background: '#381DA0' }}>
               {puestos}
             </span>
           )

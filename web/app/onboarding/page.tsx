@@ -27,7 +27,7 @@ const WHATSAPP = '573006359008';
 type NameStatus = 'idle' | 'checking' | 'ok' | 'similar' | 'taken';
 type Mode = 'choice' | 'create' | 'contact' | 'contact_done';
 
-const GRAD = 'linear-gradient(135deg, #7C3AED 0%, #4361EE 100%)';
+const GRAD = '#381DA0';
 
 export default function OnboardingPage() {
   const { getToken, isLoaded, isSignedIn } = useAuth();

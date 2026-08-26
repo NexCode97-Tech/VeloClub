@@ -9,7 +9,7 @@ import { Plus, Trash2, Ticket, X } from 'lucide-react';
 import { DatePicker } from '@/components/ui/date-picker';
 
 const EASE = [0.23, 1, 0.32, 1] as [number, number, number, number];
-const ACCENT = '#7C3AED';
+const ACCENT = '#381DA0';
 
 interface Cupon {
   id: string;
@@ -195,7 +195,7 @@ export default function CuponesPage() {
           </div>
         ) : cupones.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 gap-3 text-center">
-            <div style={{ width: 52, height: 52, borderRadius: 16, background: 'rgba(124,58,237,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(124,58,237,0.5)' }}>
+            <div style={{ width: 52, height: 52, borderRadius: 16, background: 'rgba(56,29,160,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(56,29,160,0.5)' }}>
               <Ticket size={24} />
             </div>
             <p className="text-[13px] font-semibold m-0" style={{ color: '#8E87A8' }}>Aún no hay cupones</p>
@@ -207,7 +207,7 @@ export default function CuponesPage() {
               const est = estadoCupon(c);
               return (
                 <div key={c.id} className="rounded-2xl bg-white border p-3.5 flex items-center gap-3" style={{ borderColor: 'rgba(120,80,200,0.10)' }}>
-                  <div style={{ width: 40, height: 40, borderRadius: 12, background: 'rgba(124,58,237,0.10)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: ACCENT, flexShrink: 0 }}>
+                  <div style={{ width: 40, height: 40, borderRadius: 12, background: 'rgba(56,29,160,0.10)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: ACCENT, flexShrink: 0 }}>
                     <Ticket size={18} />
                   </div>
                   <div className="flex-1 min-w-0">

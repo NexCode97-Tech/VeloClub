@@ -160,7 +160,14 @@ if (superadminEmails.includes(email.toLowerCase())) {
       // La foto es la misma que ya tenemos — verificar si posts/comments están desactualizados
     }
     if (picture) {
-      const linkedMember = await prisma.member.findFirst({ where: { clerkId } });
+      // Se busca por clerkId O por email, igual que el nombre unas líneas más
+      // arriba. Antes solo miraba clerkId, y un miembro creado por el club no
+      // lo tiene: la foto nueva se veía en el sidebar, que la lee de Clerk, y
+      // en Miembros seguía la vieja porque el registro nunca se enteraba.
+      const linkedMember = await prisma.member.findFirst({
+        where: { OR: [{ clerkId }, { email: { equals: email, mode: 'insensitive' } }] },
+        select: { id: true, pictureUrl: true },
+      });
       const pictureChanged = linkedMember ? linkedMember.pictureUrl !== picture : false;
 
       // Actualizar Member

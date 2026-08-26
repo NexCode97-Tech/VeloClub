@@ -771,10 +771,15 @@ export default function MiembrosPage() {
                       }} />
                       <div className="relative flex items-center gap-3">
                         {/* Avatar */}
+                        {/* Sobre la cabecera de color el círculo va blanco y
+                            las iniciales del color del rol. Iba del mismo color
+                            que la cabecera, así que no se veía: quedaban dos
+                            letras blancas flotando sin disco. */}
                         <MemberAvatar
                           name={m.fullName}
                           photoUrl={m.pictureUrl}
-                          gradient={ROLE_GRADIENT[m.role] ?? ROLE_GRADIENT.STUDENT}
+                          gradient="#fff"
+                          color={m.active === false ? '#5B5470' : (ROLE_COLORS[m.role] ?? ROLE_COLORS.STUDENT).text}
                         />
                         <div className="min-w-0 flex-1">
                           <h3

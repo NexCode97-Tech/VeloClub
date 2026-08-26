@@ -9,6 +9,8 @@ interface MemberAvatarProps {
   name: string;
   photoUrl?: string | null;
   gradient?: string;
+  /** Color de las iniciales. Blanco salvo que el círculo sea claro. */
+  color?: string;
   size?: number;
   className?: string;
   fallbackLabel?: string;
@@ -24,6 +26,7 @@ export function MemberAvatar({
   name,
   photoUrl,
   gradient = DEFAULT_GRADIENT,
+  color = '#fff',
   size = 48,
   className = '',
   fallbackLabel,
@@ -53,7 +56,7 @@ export function MemberAvatar({
         justifyContent: 'center',
         fontSize,
         fontWeight: 600,
-        color: '#fff',
+        color,
         letterSpacing: '0.02em',
         userSelect: 'none',
       }}

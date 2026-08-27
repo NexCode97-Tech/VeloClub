@@ -7,11 +7,57 @@ Tinted neutrals dominate. Violet accent (#381DA0) used purposefully on interacti
 headers, the loading screen, the route transition, active states. A gradient from
 violet to blue used to be the house style; it is not any more.
 
-Three exceptions, and they are the only ones:
+Four exceptions, and they are the only ones:
 - **The landing page** keeps its hero, its fade to white and the glassmorphism.
 - **Charts** keep the gradient under the line: that is the area fill, not brand.
 - **Scroll masks, shadows and ambient halos** are written with `gradient` in CSS
   but do not paint the brand. Flattening one of those turns the screen off.
+- **The sport emblem** in the sidebar selector. See below — it is the only place
+  inside the app where a gradient is painted on purpose, and it was a decision,
+  not an oversight. Do not flatten it.
+
+## The sport selector
+It sits above the navigation, separated by a rule. It is not another section:
+it is the context everything else is read in. Switching sport does not open
+another screen, it changes what every screen shows.
+
+Every sport carries **one colour**, and the emblem is that colour with the
+sport's icon on top. The colour does the work of the label: with two or three
+sports you know where you are standing without reading.
+
+| Sport | Colour |
+|---|---|
+| Patinaje | `#381DA0` |
+| Natación | `#06D6A0` |
+| Atletismo | `#EF8EE7` |
+| Ciclismo | `#FFD100` |
+| Fútbol | `#E11D48` |
+
+**The emblem is the one gradient inside the app.** The hue turns 44° between the
+two corners — `linear-gradient(135deg, warm, cold)` — which is what gives it the
+slight relief. The two ends are not picked by eye: they come from rotating the
+base colour's hue in OKLab (±22°) with the lightness left almost still (±0.05),
+so every sport gets exactly the same treatment. Patinaje, for instance, resolves
+to `#0042B3 → #490080`.
+
+**The icon is not always white.** On mint and yellow, white sits below 2:1 and
+disappears; there the icon is `#1A1028`. Pick whichever of the two contrasts
+more against the emblem's own background — it is a calculation, not a taste
+call, and at 26px it shows.
+
+**Two things this costs, written down so nobody rediscovers them:**
+- The gradient opens each colour into a range, and the ranges of neighbouring
+  sports come close. Measured against simulated colour blindness, natación and
+  atletismo land at ΔE 1,9 at their nearest ends — effectively the same colour
+  for the ~8% of men with deuteranopia. It holds because the emblem always has
+  the sport's name beside it, so colour is never the only signal.
+- **Except in the collapsed sidebar**, where the panel shrinks to 68px and the
+  labels go. If that state ships, the emblem needs the sport's first letters
+  under it, or it should not collapse.
+
+**A sport without an icon falls back to its initial** on the same emblem. A
+platform that claims to serve any sport cannot depend on someone drawing a glyph
+before it can accept a new one.
 
 ## Elevation
 - Level 0: `#F7F7FB` — page background

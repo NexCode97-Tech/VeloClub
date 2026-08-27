@@ -771,15 +771,17 @@ export default function MiembrosPage() {
                       }} />
                       <div className="relative flex items-center gap-3">
                         {/* Avatar */}
-                        {/* Sobre la cabecera de color el círculo va blanco y
-                            las iniciales del color del rol. Iba del mismo color
-                            que la cabecera, así que no se veía: quedaban dos
-                            letras blancas flotando sin disco. */}
+                        {/* Blanco al 22% sobre la cabecera, que es el mismo
+                            material de las pastillas de rol de al lado: la
+                            cabecera se lee como una pieza sola en vez de tres
+                            materiales distintos. Iba del mismo color que la
+                            cabecera y no se veía —quedaban dos letras blancas
+                            flotando sin disco— y en blanco sólido pesaba más
+                            que el nombre. */}
                         <MemberAvatar
                           name={m.fullName}
                           photoUrl={m.pictureUrl}
-                          gradient="#fff"
-                          color={m.active === false ? '#5B5470' : (ROLE_COLORS[m.role] ?? ROLE_COLORS.STUDENT).text}
+                          gradient="rgba(255,255,255,0.22)"
                         />
                         <div className="min-w-0 flex-1">
                           <h3

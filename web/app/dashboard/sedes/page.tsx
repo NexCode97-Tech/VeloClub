@@ -215,8 +215,11 @@ export default function SedesPage() {
 
   return (
     <div className="min-h-full bg-background">
-      {/* Header — borde inferior alineado con la fila del logo en el sidebar */}
-      <div className="px-5 py-3 bg-background flex items-center justify-between lg:border-b" style={{ minHeight: 58, borderColor: 'rgba(0,0,0,0.07)' }}>
+      {/* Header — borde inferior alineado con la fila del logo en el sidebar.
+          Altura fija, no minima: con minHeight cualquier hijo que pase de 34px
+          estira la fila y la linea divisoria baja respecto a la del sidebar.
+          58 = 34 del boton + los 24 que pone py-3. */}
+      <div className="px-5 h-[58px] bg-background flex items-center justify-between lg:border-b" style={{ borderColor: 'rgba(0,0,0,0.07)' }}>
         <div>
           <h1 className="text-[22px] font-semibold text-foreground" style={{ fontFamily: 'inherit', lineHeight: 1.1 }}>
             Sedes

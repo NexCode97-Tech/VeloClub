@@ -582,7 +582,7 @@ export default function AsistenciaPage() {
             onClick={abrirDescarga}
             whileTap={{ scale: 0.93 }}
             aria-label="Descargar consolidado de asistencia"
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold cursor-pointer transition-colors hover:bg-secondary"
+            className="flex items-center gap-1.5 h-[34px] px-3 rounded-xl text-sm font-semibold cursor-pointer transition-colors hover:bg-secondary"
             style={{ background: 'rgba(56,29,160,0.08)', color: '#381DA0' }}
           >
             <Download className="w-4 h-4" />
@@ -594,7 +594,7 @@ export default function AsistenciaPage() {
             onClick={handleSave}
             disabled={saving}
             whileTap={{ scale: 0.93 }}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold text-white cursor-pointer transition-colors"
+            className="flex items-center gap-1.5 h-[34px] px-3 rounded-xl text-sm font-semibold text-white cursor-pointer transition-colors"
             style={{ background: saved ? '#06D6A0' : '#381DA0' }}
           >
             {!saving && !saved && <CheckCircle2 className="w-4 h-4" />}

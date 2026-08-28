@@ -2,7 +2,8 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { ChevronDown, Search } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
+import { IconBuscar } from '@/components/ui/custom-icons';
 
 /* ─────────────────────────────────────────────────────────────
    Bandera SVG desde CDN pública (mismo enfoque que APP NTRL)
@@ -379,7 +380,7 @@ export function PhoneInput({ value, onChange, placeholder = 'Número de teléfon
             >
               <div className="p-2 border-b border-border">
                 <div className="relative">
-                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                  <IconBuscar className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
                   <input
                     ref={searchRef}
                     type="text"

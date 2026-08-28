@@ -5,8 +5,8 @@ import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@clerk/nextjs';
 import { apiFetch } from '@/lib/api-client';
-import { X, Loader2, BadgeCheck, Search } from 'lucide-react';
-import { IconClub } from '@/components/ui/custom-icons';
+import { X, Loader2, BadgeCheck } from 'lucide-react';
+import { IconClub, IconBuscar } from '@/components/ui/custom-icons';
 
 interface ClubHit {
   id: string; name: string; city?: string | null; department?: string | null;
@@ -108,7 +108,7 @@ export function SearchModal({ open, onClose }: { open: boolean; onClose: () => v
       >
         {/* Input */}
         <div className="flex items-center gap-2.5 px-4 py-3 border-b border-border shrink-0">
-          <Search className="w-4 h-4 shrink-0" style={{ color: '#8E87A8' }} />
+          <IconBuscar className="w-4 h-4 shrink-0" style={{ color: '#8E87A8' }} />
           <input
             ref={inputRef}
             value={q}

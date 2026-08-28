@@ -8,10 +8,11 @@ import { apiFetch } from '@/lib/api-client';
 import { useNow } from '@/lib/use-now';
 import { PhoneInput } from '@/components/ui/phone-input';
 import { motion, AnimatePresence, type Variants } from 'framer-motion';
-import { ChevronRight, ChevronDown, Check, LayoutGrid, Table2, Search } from 'lucide-react';
+import { ChevronRight, ChevronDown, Check, LayoutGrid, Table2 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select';
 import { type Club } from './club-detail';
 import SportSelect from './sport-select';
+import { IconBuscar } from '@/components/ui/custom-icons';
 
 // ── Easing ────────────────────────────────────────────────────────────────────
 const EASE    = [0.23, 1, 0.32, 1]  as [number,number,number,number];
@@ -362,7 +363,7 @@ export default function ClubsPage() {
   // tarjetas va en la barra superior junto a los dropdowns.
   const searchInput = (
     <div style={{ position: 'relative', flex: '1 1 160px', minWidth: 140, maxWidth: 220 }}>
-      <Search size={13} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: '#8E87A8', pointerEvents: 'none' }} />
+      <IconBuscar width={13} height={13} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: '#8E87A8', pointerEvents: 'none' }} />
       <input
         value={search}
         onChange={e => setSearch(e.target.value)}

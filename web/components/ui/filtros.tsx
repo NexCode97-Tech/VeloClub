@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { AnimatePresence, motion } from 'framer-motion';
-import { SlidersHorizontal, X } from 'lucide-react';
+import { X } from 'lucide-react';
+import { IconFiltros } from '@/components/ui/custom-icons';
 
 /**
  * Los filtros de una pantalla, en un solo control.
@@ -247,7 +248,7 @@ export function BotonFiltros({ grupos, resultados, alto = 42, soloIcono }: {
           color: puestos > 0 ? '#6D28D9' : '#1A1028',
         }}
       >
-        <SlidersHorizontal className="w-4 h-4 shrink-0" style={{ color: puestos > 0 ? '#6D28D9' : '#8E87A8' }} />
+        <IconFiltros className="w-4 h-4 shrink-0" style={{ color: puestos > 0 ? '#6D28D9' : '#8E87A8' }} />
         {soloIcono !== true && (
           <span className={soloIcono === 'movil' ? 'hidden md:inline' : undefined}>Filtros</span>
         )}

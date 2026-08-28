@@ -9,7 +9,7 @@ import { parseLocalDate } from '@/lib/utils';
 import { QK } from '@/hooks/useVeloQuery';
 import { HojaInferior, OpcionHoja } from '@/components/ui/hoja-inferior';
 import {
-  CreditCard, Plus, CheckCircle2, AlertCircle, TrendingUp, TrendingDown, Wallet, Check, PhoneOff, Zap, ChevronUp, Pencil, ExternalLink, Eye, EyeOff, ChevronDown, Search,
+  CreditCard, Plus, CheckCircle2, AlertCircle, TrendingUp, TrendingDown, Wallet, Check, PhoneOff, Zap, ChevronUp, Pencil, ExternalLink, Eye, EyeOff, ChevronDown,
 } from 'lucide-react';
 import { downloadInvoicePDF } from '@/lib/pdf';
 import MemberHistoryPanel from '@/components/finanzas/member-history-panel';
@@ -26,7 +26,7 @@ import { motion, AnimatePresence, useReducedMotion, type Variants } from 'framer
 import { stagger as pageStagger, cardVariant as pageCard } from '@/lib/page-animations';
 import ModuleLoader, { useCargaMinima } from '@/components/ui/module-loader';
 import ModuleReveal from '@/components/ui/module-reveal';
-import { IconAjustes, IconChat, IconDescargar, IconEliminar, IconPendiente, IconRecibo } from '@/components/ui/custom-icons';
+import { IconAjustes, IconChat, IconDescargar, IconEliminar, IconPendiente, IconRecibo, IconBuscar } from '@/components/ui/custom-icons';
 
 const fmt = new Intl.NumberFormat('es-CO', {
   style: 'currency', currency: 'COP', maximumFractionDigits: 0,
@@ -1043,7 +1043,7 @@ export default function FinanzasPage() {
 
           {/* Búsqueda de deportistas */}
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <IconBuscar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <input
               className="w-full pl-9 pr-3 h-10 rounded-xl border border-border bg-white text-[13px] focus:outline-none focus:ring-2 focus:ring-purple-200"
               placeholder="Buscar deportista..."

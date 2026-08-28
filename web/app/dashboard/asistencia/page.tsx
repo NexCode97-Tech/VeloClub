@@ -8,7 +8,7 @@ import { apiFetch } from '@/lib/api-client';
 import { QK } from '@/hooks/useVeloQuery';
 import { horaLegible } from '@/components/ajustes/horario-clases';
 import { DIA_CORTO_3 } from '@/lib/dias';
-import { Users, CheckCircle2, FileSpreadsheet, FileText, ChevronDown, Search } from 'lucide-react';
+import { Users, CheckCircle2, FileSpreadsheet, FileText, ChevronDown } from 'lucide-react';
 const EASE_OUT: [number,number,number,number] = [0.23, 1, 0.32, 1];
 import { MemberAvatar } from '@/components/ui/member-avatar';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
@@ -25,7 +25,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Label } from '@/components/ui/label';
 import { DatePicker } from '@/components/ui/date-picker';
 import { useClubSettings } from '@/hooks/useVeloQuery';
-import { IconDescargar, IconUbicacion } from '@/components/ui/custom-icons';
+import { IconDescargar, IconUbicacion, IconBuscar } from '@/components/ui/custom-icons';
 import {
   descargarAsistenciaPDF, descargarAsistenciaExcel,
   type ReporteAsistencia,
@@ -882,7 +882,7 @@ export default function AsistenciaPage() {
                       para que la búsqueda siga estirándose. */}
                   <div className="flex items-center gap-2 md:contents">
                     <div className="relative flex-1 min-w-0 md:flex-1">
-                      <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: '#8E87A8' }} />
+                      <IconBuscar className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: '#8E87A8' }} />
                       <input
                         className="w-full pl-10 pr-4 py-2.5 rounded-xl text-[13px] outline-none transition-all"
                         style={{ background: '#fff', border: '1px solid rgba(120,80,200,0.12)', color: '#1A1028' }}

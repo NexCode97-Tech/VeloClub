@@ -16,7 +16,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog';
 import {
-  Plus, Pencil, Users, FileSpreadsheet, Upload, X, Eye, Phone, Mail, Calendar, Shield, Heart, CreditCard, PauseCircle, PlayCircle, MoreVertical, Search,
+  Plus, Pencil, Users, FileSpreadsheet, Upload, X, Eye, Phone, Mail, Calendar, Shield, Heart, CreditCard, PauseCircle, PlayCircle, MoreVertical,
 } from 'lucide-react';
 import { MemberAvatar } from '@/components/ui/member-avatar';
 import { PhoneInput, parsePhoneDisplay, FlagImg } from '@/components/ui/phone-input';
@@ -31,7 +31,7 @@ import { downloadMembersTemplate, parseMembersExcel } from '@/lib/excel';
 import ModuleLoader, { useCargaMinima } from '@/components/ui/module-loader';
 import ModuleReveal from '@/components/ui/module-reveal';
 import { ContenidoGuardado, MS_GUARDADO, type EstadoGuardado } from '@/components/ui/save-button-state';
-import { IconDescargar, IconEliminar, IconUbicacion } from '@/components/ui/custom-icons';
+import { IconDescargar, IconEliminar, IconUbicacion, IconBuscar } from '@/components/ui/custom-icons';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface Location { id: string; name: string }
@@ -661,7 +661,7 @@ export default function MiembrosPage() {
             {/* Barra de búsqueda. Sin tope de ancho: se estira hasta topar con
                 los botones, para que no quede un hueco en la mitad de la fila. */}
             <div className="relative flex-1 min-w-[180px]">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: '#8E87A8' }} />
+              <IconBuscar className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: '#8E87A8' }} />
               <input
                 className="w-full pl-10 pr-4 py-2.5 rounded-xl text-[13px] outline-none transition-all"
                 style={{ background: '#fff', border: '1px solid rgba(120,80,200,0.12)', color: '#1A1028' }}
@@ -1014,7 +1014,7 @@ export default function MiembrosPage() {
         <motion.div variants={pageCard}>
           <div className="flex items-center gap-2">
             <div className="relative flex-1 min-w-0">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <IconBuscar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input className="pl-9 bg-white border-border rounded-xl" placeholder="Buscar miembro..." value={search} onChange={e => setSearch(e.target.value)} />
             </div>
             <BotonFiltros

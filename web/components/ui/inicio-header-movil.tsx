@@ -3,11 +3,11 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { BadgeCheck, Search } from 'lucide-react';
+import { BadgeCheck } from 'lucide-react';
 import { NotificationsBell } from '@/components/ui/notifications-bell';
 import { SearchModal } from '@/components/ui/search-modal';
 import { useMembers } from '@/hooks/useVeloQuery';
-import { IconAjustes } from '@/components/ui/custom-icons';
+import { IconAjustes, IconBuscar } from '@/components/ui/custom-icons';
 
 /**
  * Encabezado de Inicio en móvil.
@@ -67,7 +67,7 @@ export function InicioHeaderMovil({ clubName, clubLogoUrl, userName, userPicture
           className="flex-1 min-w-0 flex items-center gap-2 h-9 px-3 rounded-full text-left transition-colors"
           style={{ background: 'rgba(255,255,255,0.18)' }}
         >
-          <Search size={15} strokeWidth={2} className="shrink-0" style={{ color: 'rgba(255,255,255,0.9)' }} />
+          <IconBuscar width={15} height={15} className="shrink-0" style={{ color: 'rgba(255,255,255,0.9)' }} />
           <span className="text-[13px] truncate" style={{ color: 'rgba(255,255,255,0.9)' }}>
             Buscar clubes, deportistas
           </span>

@@ -13,7 +13,7 @@ import { Label } from '@/components/ui/label';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog';
-import { Plus, Pencil, Trash2, MapPin, LocateFixed, X, ChevronRight, ChevronDown, AlertCircle, AlertTriangle } from 'lucide-react';
+import { Plus, Pencil, Trash2, MapPin, LocateFixed, X, ChevronRight, ChevronDown, AlertCircle, AlertTriangle, Search } from 'lucide-react';
 import ModuleLoader, { useCargaMinima } from '@/components/ui/module-loader';
 import ModuleReveal from '@/components/ui/module-reveal';
 
@@ -71,6 +71,7 @@ function MapButtons({ lat, lng }: { lat: number; lng: number }) {
 export default function SedesPage() {
   const { getToken } = useAuth();
   const [locations, setLocations] = useState<Location[]>([]);
+  const [busqueda, setBusqueda] = useState('');
   const [loading, setLoading] = useState(true);
   // Sostiene el indicador un minimo de tiempo para que no parpadee
   const mostrarCarga = useCargaMinima(loading);
@@ -213,28 +214,29 @@ export default function SedesPage() {
     }
   }
 
+  // La busqueda ignora tildes: los municipios se escriben con y sin ellas
+  // indistintamente, y comparando el texto crudo «Bucaramanga» encontraba
+  // pero «Chinacota» no encontraba «Chinácota».
+  const sinTilde = (t: string) =>
+    t.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+  const termino = sinTilde(busqueda.trim());
+  const visibles = termino
+    ? locations.filter(l =>
+        sinTilde(l.name).includes(termino) ||
+        sinTilde(l.address ?? '').includes(termino))
+    : locations;
+
   return (
     <div className="min-h-full bg-background">
       {/* Header — borde inferior alineado con la fila del logo en el sidebar.
-          Altura fija, no minima: con minHeight cualquier hijo que pase de 34px
-          estira la fila y la linea divisoria baja respecto a la del sidebar.
-          58 = 34 del boton + los 24 que pone py-3. */}
-      <div className="px-5 h-[58px] bg-background flex items-center justify-between lg:border-b" style={{ borderColor: 'rgba(0,0,0,0.07)' }}>
+          Altura fija, no minima: cualquier hijo que pase de 34px estiraria la
+          fila y bajaria la linea divisoria respecto a la del sidebar. */}
+      <div className="px-5 h-[58px] bg-background flex items-center lg:border-b" style={{ borderColor: 'rgba(0,0,0,0.07)' }}>
         <div>
           <h1 className="text-[22px] font-semibold text-foreground" style={{ fontFamily: 'inherit', lineHeight: 1.1 }}>
             Sedes
           </h1>
         </div>
-        {canManage && (
-          <button
-            onClick={openNew}
-            className="flex items-center gap-1.5 h-[34px] px-3 rounded-xl text-sm font-semibold text-white"
-            style={{ background: '#381DA0' }}
-          >
-            <Plus className="w-4 h-4" />
-            <span className="hidden sm:inline">Nueva sede</span>
-          </button>
-        )}
       </div>
 
       {errorSede && (
@@ -385,8 +387,38 @@ export default function SedesPage() {
         </DialogContent>
       </Dialog>
 
+      {/* Buscador y accion, en la misma fila. El boton vivia en la cabecera;
+          alli quedaba lejos de la lista y dejaba la fila del titulo desbalanceada
+          contra el resto de modulos, que tampoco llevan acciones arriba. Las
+          medidas son las de Miembros para que las dos pantallas se lean igual. */}
+      {!mostrarCarga && locations.length > 0 && (
+        <div className="px-4 pt-4 lg:pt-6">
+          <div className="flex items-center gap-2 flex-wrap">
+            <div className="relative flex-1 min-w-[180px]">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: '#8E87A8' }} />
+              <input
+                className="w-full pl-10 pr-4 py-2.5 rounded-xl text-[13px] outline-none transition-all"
+                style={{ background: '#fff', border: '1px solid rgba(120,80,200,0.12)', color: '#1A1028' }}
+                placeholder="Buscar por nombre o municipio..."
+                value={busqueda}
+                onChange={e => setBusqueda(e.target.value)}
+              />
+            </div>
+            {canManage && (
+              <button
+                onClick={openNew}
+                className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-[13px] font-semibold text-white shrink-0 cursor-pointer"
+                style={{ background: '#381DA0', boxShadow: '0 4px 16px rgba(56,29,160,0.30)' }}
+              >
+                <Plus className="w-4 h-4" /> Nueva sede
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Lista de sedes */}
-      <motion.div variants={stagger} initial="hidden" animate="show" className="px-4 pt-4 lg:pt-6 pb-4">
+      <motion.div variants={stagger} initial="hidden" animate="show" className="px-4 pt-4 pb-4">
         {mostrarCarga ? (
           <ModuleLoader />
         ) : locations.length === 0 ? (
@@ -401,10 +433,17 @@ export default function SedesPage() {
             )}
           </div>
           </ModuleReveal>
+        ) : visibles.length === 0 ? (
+          <div className="bg-card border border-border rounded-xl p-10 text-center">
+            <Search className="w-10 h-10 text-muted-foreground/30 mx-auto mb-3" />
+            <p className="text-sm text-muted-foreground">
+              Ninguna sede coincide con «{busqueda.trim()}».
+            </p>
+          </div>
         ) : (
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
             <ModuleReveal>
-            {locations.map(loc => (
+            {visibles.map(loc => (
               <div key={loc.id} className="bg-card border border-border rounded-xl overflow-hidden flex flex-col">
                 <div className="flex items-start justify-between px-4 py-4">
                   <div className="flex items-start gap-3 flex-1 min-w-0">

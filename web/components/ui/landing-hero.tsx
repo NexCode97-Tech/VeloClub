@@ -17,8 +17,8 @@ import { CronometroPromo } from '@/components/ui/cronometro-promo';
  */
 export default function LandingHero() {
   return (
-    <header className="px-5 pt-32 pb-10 sm:pt-36 sm:pb-14">
-      <div className="max-w-5xl mx-auto">
+    <header className="px-[22px] pt-[120px] pb-10 sm:pt-[136px] sm:pb-14">
+      <div className="max-w-[1200px] mx-auto">
 
         {/* La cuenta regresiva de la campaña. Se apaga sola al pasar la fecha
             de corte, y el titular sigue en pie sin ella. */}
@@ -26,9 +26,9 @@ export default function LandingHero() {
           <CronometroPromo claro />
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-[1.05fr_0.95fr] gap-5 lg:gap-14 items-start lg:items-end">
+        <div className="grid grid-cols-1 min-[860px]:grid-cols-[1.05fr_0.95fr] gap-5 min-[860px]:gap-14 items-start min-[860px]:items-end">
           <h1
-            className="text-[2.05rem] sm:text-[2.6rem] lg:text-[3.25rem] font-semibold leading-[1.06] text-[#1A1028] max-w-[17ch] text-balance"
+            className="text-[2.05rem] sm:text-[2.6rem] min-[860px]:text-[3.25rem] font-semibold leading-[1.06] text-[#1A1028] max-w-[17ch] text-balance"
             style={{ letterSpacing: '-0.032em' }}
           >
             <span className="text-[#381DA0]">Tecnología</span> que mueve al club.
@@ -37,7 +37,7 @@ export default function LandingHero() {
           {/* El `pb` compensa la línea base: sin él, alinear por el borde de las
               cajas deja el párrafo un pelo más abajo que el titular, que lleva
               el interlineado comprimido. */}
-          <p className="text-base text-[#8E87A8] leading-[1.65] max-w-[46ch] lg:pb-[0.35em]">
+          <p className="text-base text-[#8E87A8] leading-[1.65] max-w-[46ch] min-[860px]:pb-[0.35em]">
             Al servicio de los clubes deportivos de Colombia. Desde las
             inscripciones y el control de asistencia, hasta las mensualidades,
             las sedes y los resultados de cada deportista.

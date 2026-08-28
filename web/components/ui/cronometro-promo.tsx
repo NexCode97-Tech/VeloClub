@@ -63,22 +63,15 @@ export function CronometroPromo({ claro = false }: { claro?: boolean }) {
         Quedan {dias} días para que finalice la promoción de dos meses gratis.
       </span>
 
-      {/* Sobre claro no existe un amarillo que contraste: son claros por
-          definicion. El de la marca da 1,75 y el minimo para una cifra de este
-          tamaño es 3. La cifra va en el amarillo de verdad y lo que la hace
-          legible es un contorno fino, pintado por debajo del relleno con
-          paint-order para que no se coma el trazo. */}
+      {/* En tinta y no en el amarillo de marca. Sobre claro ese amarillo da
+          1,75 de contraste, y aunque un contorno fino lo hacia legible, la
+          cifra quedaba gritando mas que el titular que va debajo. */}
       <span
         aria-hidden="true"
         suppressHydrationWarning
         className={`font-bold text-[1.6rem] sm:text-[1.75rem] tracking-tight tabular-nums ${
-          claro ? 'text-[#FFB703]' : 'font-semibold text-white'
+          claro ? 'text-[#1A1028]' : 'font-semibold text-white'
         }`}
-        style={claro ? {
-          paintOrder: 'stroke fill',
-          WebkitTextStrokeWidth: '0.7px',
-          WebkitTextStrokeColor: 'rgba(120,80,0,0.45)',
-        } : undefined}
       >
         {dias}<Unidad claro={claro}>d</Unidad>
         {dosDigitos(horas)}<Unidad claro={claro}>h</Unidad>

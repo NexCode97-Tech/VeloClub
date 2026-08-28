@@ -135,9 +135,21 @@ export default function HomePage() {
         className="fixed top-0 left-0 right-0 z-50 bg-[#FDFCFC] border-b transition-colors duration-200"
         style={{ borderBottomColor: scrolled ? 'rgba(26,16,40,0.08)' : 'transparent' }}
       >
-        <div className="max-w-5xl mx-auto flex items-center justify-between px-5 py-3 sm:py-0 sm:h-20">
-          {/* Desktop links — izquierda */}
-          <div className="hidden sm:flex items-center gap-6">
+        <div className="relative max-w-[1200px] mx-auto flex items-center justify-between gap-[18px] px-[22px] py-3 sm:py-0 sm:h-[72px]">
+          <Link href="/" aria-label="VeloClub" className="flex items-center shrink-0">
+            <Image
+              src="/logo-vc.png"
+              alt="VeloClub"
+              width={40}
+              height={40}
+              priority
+              className="object-contain h-9 w-9 sm:h-[38px] sm:w-[38px]"
+              style={{ borderRadius: '50%' }}
+            />
+          </Link>
+
+          {/* Enlaces — centrados en la barra */}
+          <div className="hidden sm:flex items-center gap-7 absolute left-1/2 -translate-x-1/2">
             <a href="#funcionalidades" className="text-sm font-medium text-[#8E87A8] hover:text-[#1A1028] transition-colors">
               Funcionalidades
             </a>
@@ -146,18 +158,8 @@ export default function HomePage() {
             </a>
           </div>
 
-          <Image
-            src="/logo-vc.png"
-            alt="VeloClub"
-            width={40}
-            height={40}
-            priority
-            className="object-contain h-9 w-9 sm:h-10 sm:w-10 sm:absolute sm:left-1/2 sm:-translate-x-1/2"
-            style={{ borderRadius: '50%' }}
-          />
-
           {/* Desktop — derecha */}
-          <div className="hidden sm:flex items-center gap-4">
+          <div className="hidden sm:flex items-center gap-3">
             <Link
               href="/sign-in"
               className="inline-flex items-center rounded-full px-4 py-2 text-sm font-semibold text-[#1A1028] border transition-colors hover:bg-[#F7F7FB]"
@@ -201,7 +203,7 @@ export default function HomePage() {
           menuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
         }`}
       >
-        <div className="flex items-center justify-between px-5 py-4 border-b border-[rgba(120,80,200,0.08)]">
+        <div className="flex items-center justify-between px-[22px] py-4 border-b border-[rgba(120,80,200,0.08)]">
           <Image
             src="/logo-vc.png"
             alt="VeloClub"
@@ -223,7 +225,7 @@ export default function HomePage() {
           <a
             href="#funcionalidades"
             onClick={() => setMenuOpen(false)}
-            className="flex items-center justify-between px-5 py-4 border-b border-[rgba(120,80,200,0.06)] text-[15px] font-medium text-[#1A1028]"
+            className="flex items-center justify-between px-[22px] py-4 border-b border-[rgba(120,80,200,0.06)] text-[15px] font-medium text-[#1A1028]"
           >
             Funcionalidades
             <ChevronRight className="w-4 h-4 text-[#9B95AC]" />
@@ -231,7 +233,7 @@ export default function HomePage() {
           <a
             href="#por-que"
             onClick={() => setMenuOpen(false)}
-            className="flex items-center justify-between px-5 py-4 border-b border-[rgba(120,80,200,0.06)] text-[15px] font-medium text-[#1A1028]"
+            className="flex items-center justify-between px-[22px] py-4 border-b border-[rgba(120,80,200,0.06)] text-[15px] font-medium text-[#1A1028]"
           >
             ¿Por qué VeloClub?
             <ChevronRight className="w-4 h-4 text-[#9B95AC]" />
@@ -239,7 +241,7 @@ export default function HomePage() {
         </div>
 
         <div
-          className="px-5 pt-3 border-t border-[rgba(120,80,200,0.08)] flex flex-col gap-2.5"
+          className="px-[22px] pt-3 border-t border-[rgba(120,80,200,0.08)] flex flex-col gap-2.5"
           style={{ paddingBottom: 'max(2rem, env(safe-area-inset-bottom))' }}
         >
           <Link
@@ -265,7 +267,7 @@ export default function HomePage() {
 
       {/* Features — ya en blanco. El amanecer entero pasa dentro del héroe, así
           que de acá para abajo no queda rastro del degradado. */}
-      <section id="funcionalidades" className="px-5 py-16 max-w-5xl mx-auto">
+      <section id="funcionalidades" className="px-[22px] py-16 max-w-[1200px] mx-auto">
         <LandingFeaturesTabs features={features} />
       </section>
 
@@ -273,7 +275,7 @@ export default function HomePage() {
       <LandingTrustedBy />
 
       {/* Benefits */}
-      <section id="por-que" className="px-5 py-16 max-w-5xl mx-auto">
+      <section id="por-que" className="px-[22px] py-16 max-w-[1200px] mx-auto">
         {/* Gris sobre blanco, al reves que antes: con la pagina en blanco puro
             una tarjeta blanca no se separaria del fondo. */}
         <div className="bg-[#F4F3F8] rounded-3xl border border-[rgba(26,16,40,0.05)] p-7 sm:p-10">
@@ -299,7 +301,7 @@ export default function HomePage() {
       </section>
 
       {/* CTA final */}
-      <section className="px-5 pb-20 max-w-5xl mx-auto">
+      <section className="px-[22px] pb-20 max-w-[1200px] mx-auto">
         <div
           className="rounded-3xl p-8 sm:p-12 text-center text-white relative overflow-hidden"
           style={{ background: '#381DA0' }}
@@ -336,7 +338,7 @@ export default function HomePage() {
 
       {/* Footer */}
       <footer className="border-t border-[rgba(120,80,200,0.08)] py-6 text-center text-xs text-[#8E87A8] space-y-1">
-        <div className="max-w-5xl mx-auto px-5">
+        <div className="max-w-[1200px] mx-auto px-[22px]">
         <p>© {ANIO} VeloClub · Todos los derechos reservados</p>
         <p>
           Desarrollado por{' '}

@@ -7,7 +7,7 @@ import LandingNav from '@/components/ui/landing-nav';
 import LandingFeaturesTabs from '@/components/ui/landing-features-tabs';
 import LandingTrustedBy from '@/components/ui/landing-trusted-by';
 import {
-  IconUsers, IconUbicacion, IconAsistencias, IconFinanzas, IconResultados,
+  IconUsers, IconUbicacion, IconAsistencias, IconStatistics, IconFinanzas, IconResultados,
   IconMensualidades, IconFlujoCaja, IconCompetencias, IconEntrenamientos,
 } from '@/components/ui/custom-icons';
 
@@ -41,6 +41,8 @@ const features = [
     sub: [
       { key: 'registro', label: 'Registro', icon: IconAsistencias,
         desc: 'Deja la planilla de papel donde está. El entrenador abre el día, marca presente, ausente, tarde o excusa médica, y el historial de cada deportista queda armado por sede y por fecha.' },
+      { key: 'reportes', label: 'Reportes', icon: IconStatistics,
+        desc: 'Armar el soporte de asistencia deja de ser un trabajo de una tarde. Se elige el rango de fechas, la sede y la clase, y el reporte sale en Excel o en PDF listo para entregar.' },
     ],
   },
   {
@@ -53,7 +55,7 @@ const features = [
       { key: 'mensualidades', label: 'Mensualidades', icon: IconMensualidades,
         desc: 'Cobrar deja de depender de que alguien se acuerde. Se define la cuota y el día de cada deportista, el recordatorio sale solo por WhatsApp y cada pago genera su recibo y queda guardado con su comprobante.' },
       { key: 'flujo', label: 'Flujo de caja', icon: IconFlujoCaja,
-        desc: 'Ingresos y egresos del club, actualizados en tiempo real.' },
+        desc: 'La plata del club deja de vivir en la cabeza de una sola persona. Se registran ingresos, egresos y devoluciones, cada mensualidad cobrada entra sola, y el balance queda a la vista por sede y por fecha.' },
     ],
   },
   {
@@ -64,9 +66,9 @@ const features = [
     bg: FEATURE_BG,
     sub: [
       { key: 'competencias', label: 'Competencias', icon: IconCompetencias,
-        desc: 'Historial de competencias y resultados por deportista y prueba.' },
+        desc: 'Los resultados dejan de perderse en el grupo de WhatsApp. Cada competencia queda con su fecha, su lugar y sus pruebas, y cada deportista con la posición y la categoría en que corrió.' },
       { key: 'entrenamientos', label: 'Entrenamientos', icon: IconEntrenamientos,
-        desc: 'Registra sesiones de entrenamiento y el avance de cada atleta.' },
+        desc: 'Medir el avance deja de depender de la memoria. Cada sesión guarda lo suyo, tiempos y vueltas en pista, series y peso en gimnasio, y cada deportista acumula su propio historial de marcas.' },
     ],
   },
 ];

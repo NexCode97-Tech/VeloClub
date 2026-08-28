@@ -19,6 +19,3 @@ Lo que ya está acordado aquí y todavía **no** está en `web/app/page.tsx`:
 - Funcionalidades sin sub-pestañas, con las entradas de cada módulo en una
   rejilla de dos columnas.
 - Íconos propios del proyecto, los mismos de `components/ui/custom-icons.tsx`.
-
-Pendiente de decidir: las descripciones de Flujo de caja, Competencias y
-Entrenamientos siguen siendo las cortas de la primera versión.

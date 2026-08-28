@@ -33,3 +33,7 @@ api/prisma/dev.db
 
 .vercel
 .env*
+
+# Capturas de pantalla sin anonimizar: llevan nombres de menores, cedulas y
+# enlaces de invitacion vivos. Se suben solo cuando esten limpias.
+web/public/capturas/

@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { Prisma } from '@prisma/client';
 import { v2 as cloudinary } from 'cloudinary';
 import { requireAuth } from '../auth/middleware';
+import { carpetaDe } from '../lib/deportes';
 import { prisma } from '../db/client';
 import { emitToClub } from '../lib/sse';
 import { addToAllowlist, removeFromAllowlist, revokeClerkAccess, revokeClerkSessions } from '../lib/clerk-allowlist';
@@ -83,7 +84,9 @@ router.get('/', requireAuth, async (req, res) => {
   // cuota). La llave de caché incluye el alcance para no servirle a un ADMIN la
   // versión reducida ni a un DEPORTISTA la completa.
   const isStudent = req.user.role === 'DEPORTISTA';
-  const cacheKey = `members:${clubId}:${isStudent ? 'student' : 'staff'}`;
+  // El deporte va en la clave por la misma razon que en sedes: una lista
+  // cacheada por club se la serviria entera a la carpeta de al lado.
+  const cacheKey = `members:${clubId}:${req.deporteId ?? ''}:${isStudent ? 'student' : 'staff'}`;
 
   const cached = await cacheGet<{ members: unknown[] }>(cacheKey);
   if (cached) return res.json(cached);
@@ -240,6 +243,7 @@ router.post('/', requireAuth, async (req, res) => {
         email: rest.email || undefined,
         birthDate: birthDate ? new Date(birthDate) : undefined,
         clubId: req.user.clubId ?? '',
+        deporteId: carpetaDe(req),
         locations: locationIds?.length
           ? { create: locationIds.map((locId) => ({ locationId: locId })) }
           : undefined,
@@ -259,7 +263,7 @@ router.post('/', requireAuth, async (req, res) => {
     try { await addToAllowlist(member.email); } catch { /* ya existe o error de Clerk */ }
   }
 
-  await invalidateMembersCache(req.user.clubId ?? '');
+  await invalidateMembersCache(req.user.clubId ?? '', req.deporteId ?? '');
   emitToClub(req.user.clubId ?? '', 'members');
   await notifyClubStaff(req.user.clubId ?? '', {
     tipo: 'NEW_MEMBER',
@@ -305,7 +309,7 @@ router.patch('/bulk-fee', createLimiter, requireAuth, async (req, res) => {
     data: { amount: monthlyFee },
   });
 
-  await invalidateMembersCache(clubId);
+  await invalidateMembersCache(clubId, req.deporteId ?? '');
   emitToClub(clubId, 'members');
   emitToClub(clubId, 'payments');
   res.json({ updated: ids.length });
@@ -389,7 +393,7 @@ router.put('/:id', requireAuth, async (req, res) => {
     if (roleCambio) await revokeClerkSessions(member.clerkId);
   }
 
-  await invalidateMembersCache(req.user.clubId ?? '');
+  await invalidateMembersCache(req.user.clubId ?? '', req.deporteId ?? '');
   emitToClub(req.user.clubId ?? '', 'members');
   res.json({ member });
 });
@@ -494,7 +498,7 @@ router.patch('/:id/estado', requireAuth, async (req, res) => {
     try { await revokeClerkSessions(existing.clerkId); } catch { /* el gate de /me igual bloquea */ }
   }
 
-  await invalidateMembersCache(req.user.clubId ?? '');
+  await invalidateMembersCache(req.user.clubId ?? '', req.deporteId ?? '');
   emitToClub(req.user.clubId ?? '', 'members');
   res.json({ member });
 });
@@ -572,7 +576,7 @@ router.delete('/:id', requireAuth, async (req, res) => {
     }
   }
 
-  await invalidateMembersCache(req.user.clubId ?? '');
+  await invalidateMembersCache(req.user.clubId ?? '', req.deporteId ?? '');
   emitToClub(req.user.clubId ?? '', 'members');
   res.json({ ok: true });
 });
@@ -694,7 +698,7 @@ router.post('/:id/archivo', uploadLimiter, requireAuth, async (req, res) => {
       : { insuranceFileUrl: subido.secure_url, insurancePublicId: subido.public_id };
 
     const actualizado = await prisma.member.update({ where: { id }, data: datos });
-    await invalidateMembersCache(req.user.clubId ?? '');
+    await invalidateMembersCache(req.user.clubId ?? '', req.deporteId ?? '');
 
     res.json({
       url: campo === 'doc' ? actualizado.docFileUrl : actualizado.insuranceFileUrl,

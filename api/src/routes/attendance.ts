@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { requireAuth } from '../auth/middleware';
+import { carpetaDe } from '../lib/deportes';
 import { prisma } from '../db/client';
 import { emitToClub } from '../lib/sse';
 import { sedeEsDelClub } from '../lib/sedes';
@@ -352,6 +353,7 @@ router.post('/bulk', requireAuth, async (req, res) => {
       ? [prisma.attendance.createMany({
           data: toCreate.map(r => ({
             clubId,
+            deporteId:  carpetaDe(req),
             memberId:   r.memberId,
             locationId: locationId ?? null,
             claseId:    claseId ?? null,

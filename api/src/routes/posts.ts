@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import { z } from 'zod';
 import { v2 as cloudinary } from 'cloudinary';
 import { requireAuth } from '../auth/middleware';
+import { carpetaDe } from '../lib/deportes';
 import { prisma } from '../db/client';
 import { emitToClub } from '../lib/sse';
 import { validarSubida, TipoSubida } from '../lib/upload-guard';
@@ -94,10 +95,14 @@ router.get('/', requireAuth, async (req, res) => {
   const scope  = req.query.scope === 'public' ? 'PUBLIC' : 'PRIVATE';
   const clubId = req.user.clubId ?? '';
 
+  // Esta ruta esta declarada de club entero, porque el muro publico cruza
+  // clubes y porque los likes y comentarios se hacen sobre publicaciones
+  // ajenas. Por eso el muro privado lleva el deporte escrito a mano: es el
+  // unico de los dos que si es de la carpeta.
   const posts = await prisma.post.findMany({
     where: scope === 'PUBLIC'
       ? { scope: 'PUBLIC' }
-      : { scope: 'PRIVATE', clubId },
+      : { scope: 'PRIVATE', clubId, deporteId: req.deporteId ?? '' },
     include: POST_INCLUDE,
     orderBy: { createdAt: 'desc' },
     take: 50,
@@ -124,6 +129,7 @@ router.post('/', comunidadLimiter, requireAuth, async (req, res) => {
   const post = await prisma.post.create({
     data: {
       clubId:        req.user.clubId ?? '',
+      deporteId:     carpetaDe(req),
       clubName:      club?.name ?? '',
       authorClerkId: req.auth?.clerkId ?? null,
       authorName:    await resolverNombreAutor(req.auth?.clerkId, req.auth?.name),

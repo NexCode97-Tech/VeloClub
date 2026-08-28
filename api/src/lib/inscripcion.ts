@@ -7,6 +7,11 @@ import { prisma } from '../db/client';
  * Cada club comparte una url publica y las familias llenan sus propios datos,
  * en vez de que alguien del club arme un Excel con la informacion de cuarenta
  * personas. Lo que entra por ahi queda esperando el visto bueno del club.
+ *
+ * El enlace es POR DEPORTE, no por club. Un club con patinaje y natacion
+ * reparte dos enlaces distintos, y cada uno mete a la gente en su carpeta. Con
+ * un solo enlace para todo el club, alguien tendria que mover a mano cada
+ * inscrito al deporte que le toca, que es justo el momento en que se mezclan.
  */
 
 /** Alfabeto sin caracteres que se confunden al dictar un enlace por telefono. */
@@ -26,23 +31,23 @@ export function nuevoToken(): string {
   return Array.from(bytes, b => ALFABETO[b % ALFABETO.length]).join('');
 }
 
-/** Crea el token del club si todavia no tiene. Devuelve el vigente. */
-export async function asegurarToken(clubId: string): Promise<string> {
-  const club = await prisma.club.findUnique({
-    where: { id: clubId },
+/** Crea el token del deporte si todavia no tiene. Devuelve el vigente. */
+export async function asegurarToken(deporteId: string): Promise<string> {
+  const deporte = await prisma.deporte.findUnique({
+    where: { id: deporteId },
     select: { inscripcionToken: true },
   });
-  if (club?.inscripcionToken) return club.inscripcionToken;
+  if (deporte?.inscripcionToken) return deporte.inscripcionToken;
 
   const token = nuevoToken();
-  await prisma.club.update({ where: { id: clubId }, data: { inscripcionToken: token } });
+  await prisma.deporte.update({ where: { id: deporteId }, data: { inscripcionToken: token } });
   return token;
 }
 
 /** Rota el token. El enlace anterior deja de servir en el acto. */
-export async function rotarToken(clubId: string): Promise<string> {
+export async function rotarToken(deporteId: string): Promise<string> {
   const token = nuevoToken();
-  await prisma.club.update({ where: { id: clubId }, data: { inscripcionToken: token } });
+  await prisma.deporte.update({ where: { id: deporteId }, data: { inscripcionToken: token } });
   return token;
 }
 
@@ -243,12 +248,16 @@ export async function buscarPorDocumento(params: {
  * el club puede correr la fecha y el enlace vuelve a servir, con el mismo token
  * que ya repartio.
  */
-export function inscripcionVigente(club: {
-  active: boolean;
+export function inscripcionVigente(carpeta: {
+  clubActivo: boolean;
+  activo: boolean;
   inscripcionAbierta: boolean;
   inscripcionVenceAt: Date | null;
 }): boolean {
-  if (!club.active || !club.inscripcionAbierta) return false;
-  if (club.inscripcionVenceAt && club.inscripcionVenceAt < new Date()) return false;
+  // Tres interruptores y los tres tienen que estar en si: el club al dia, la
+  // carpeta activa y el enlace abierto. Un club vencido no recibe gente aunque
+  // se haya olvidado de cerrar el formulario.
+  if (!carpeta.clubActivo || !carpeta.activo || !carpeta.inscripcionAbierta) return false;
+  if (carpeta.inscripcionVenceAt && carpeta.inscripcionVenceAt < new Date()) return false;
   return true;
 }

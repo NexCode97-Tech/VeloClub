@@ -1,6 +1,7 @@
 import { Router, Request } from 'express';
 import { z } from 'zod';
 import { requireAuth } from '../auth/middleware';
+import { carpetaDe } from '../lib/deportes';
 import { prisma } from '../db/client';
 import { Prisma } from '@prisma/client';
 import { cacheGet, cacheSet, cacheDel } from '../lib/redis';
@@ -22,7 +23,10 @@ function getId(req: Request): string {
 router.get('/', requireAuth, async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'No autenticado' });
   const clubId = req.user.clubId ?? '';
-  const cacheKey = `locations:${clubId}`;
+  // La clave lleva el deporte. Sin el, las sedes de patinaje quedarian servidas
+  // desde cache a quien esta parado en natacion, y la base ni se enteraria
+  // porque la consulta no llega a hacerse.
+  const cacheKey = `locations:${clubId}:${req.deporteId ?? ''}`;
 
   const cached = await cacheGet<{ locations: unknown[] }>(cacheKey);
   if (cached) return res.json(cached);
@@ -43,9 +47,9 @@ router.post('/', requireAuth, async (req, res) => {
   const parsed = locationSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.issues });
   const location = await prisma.location.create({
-    data: { ...parsed.data, clubId: req.user.clubId ?? '' },
+    data: { ...parsed.data, clubId: req.user.clubId ?? '', deporteId: carpetaDe(req) },
   });
-  await cacheDel(`locations:${req.user.clubId ?? ''}`);
+  await cacheDel(`locations:${req.user.clubId ?? ''}:${req.deporteId ?? ''}`);
   res.status(201).json({ location });
 });
 
@@ -65,7 +69,7 @@ router.put('/:id', requireAuth, async (req, res) => {
     where: { id },
     data: parsed.data,
   });
-  await cacheDel(`locations:${req.user.clubId ?? ''}`);
+  await cacheDel(`locations:${req.user.clubId ?? ''}:${req.deporteId ?? ''}`);
   res.json({ location: updated });
 });
 
@@ -97,7 +101,7 @@ router.delete('/:id', requireAuth, async (req, res) => {
     throw e;
   }
 
-  await cacheDel(`locations:${req.user.clubId ?? ''}`);
+  await cacheDel(`locations:${req.user.clubId ?? ''}:${req.deporteId ?? ''}`);
   res.json({ ok: true });
 });
 

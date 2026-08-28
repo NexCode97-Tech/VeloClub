@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { requireAuth } from '../auth/middleware';
+import { carpetaDe } from '../lib/deportes';
 import { prisma } from '../db/client';
 import { emitToClub } from '../lib/sse';
 import { sedeEsDelClub } from '../lib/sedes';
@@ -126,6 +127,7 @@ router.post('/', requireAuth, async (req, res) => {
   const session = await prisma.trainingSession.create({
     data: {
       clubId:     req.user.clubId ?? '',
+      deporteId:  carpetaDe(req),
       title:      parsed.data.title,
       date:       new Date(parsed.data.date),
       escenario:  parsed.data.escenario ?? 'PISTA',

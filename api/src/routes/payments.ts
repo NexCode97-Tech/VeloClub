@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { requireAuth } from '../auth/middleware';
+import { carpetaDe } from '../lib/deportes';
 import { prisma } from '../db/client';
 import { emitToClub } from '../lib/sse';
 import { notifyClubStaff } from '../lib/notify';
@@ -63,7 +64,7 @@ async function sedeDelMiembro(memberId: string): Promise<string | null> {
   return sedes.length === 1 ? sedes[0].locationId : null;
 }
 
-async function createCashEntry(clubId: string, paymentId: string, amount: number, memberName: string, month: number, year: number, paidAt?: Date | null, locationId?: string | null) {
+async function createCashEntry(clubId: string, deporteId: string, paymentId: string, amount: number, memberName: string, month: number, year: number, paidAt?: Date | null, locationId?: string | null) {
   const existing = await prisma.cashEntry.findUnique({ where: { paymentId } });
   if (existing) {
     // Ya existe el ingreso: mantener el monto sincronizado si cambió la tarifa del pago.
@@ -80,6 +81,8 @@ async function createCashEntry(clubId: string, paymentId: string, amount: number
   await prisma.cashEntry.create({
     data: {
       clubId,
+      // El ingreso nace en la misma carpeta que la mensualidad que lo origina.
+      deporteId,
       type:        'INCOME',
       amount,
       description: `Mensualidad ${memberName} — ${MONTH_NAMES[month - 1]} ${year}`,
@@ -107,7 +110,7 @@ router.post('/generate-month', createLimiter, requireAuth, async (req, res) => {
   const clubId = req.user.clubId ?? '';
 
   const queue = createQueue('bulk-payments');
-  await queue.add('generate-month', { clubId, month, year });
+  await queue.add('generate-month', { clubId, deporteId: carpetaDe(req), month, year });
   res.json({ ok: true, queued: true });
 });
 
@@ -226,6 +229,7 @@ router.post('/', requireAuth, async (req, res) => {
     data: {
       ...rest,
       clubId,
+      deporteId: carpetaDe(req),
       locationId: rest.locationId ?? await sedeDelMiembro(rest.memberId),
       dueDate: dueDate ? new Date(dueDate) : null,
       paidAt:  paidAt  ? new Date(paidAt)  : rest.status === 'PAID' ? new Date() : null,
@@ -234,7 +238,7 @@ router.post('/', requireAuth, async (req, res) => {
   });
 
   if (payment.status === 'PAID') {
-    await createCashEntry(clubId, payment.id, payment.amount, payment.member.fullName, payment.month, payment.year, payment.paidAt, payment.locationId);
+    await createCashEntry(clubId, carpetaDe(req), payment.id, payment.amount, payment.member.fullName, payment.month, payment.year, payment.paidAt, payment.locationId);
     await notifyClubStaff(clubId, {
       tipo: 'PAYMENT_RECEIVED',
       titulo: 'Pago recibido',
@@ -288,7 +292,7 @@ router.patch('/:id', requireAuth, async (req, res) => {
 
   if (payment.status === 'PAID') {
     await createCashEntry(
-      clubId, payment.id,
+      clubId, carpetaDe(req), payment.id,
       payment.amount,
       existing.member.fullName,
       payment.month, payment.year,

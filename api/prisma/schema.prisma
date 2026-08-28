@@ -43,17 +43,10 @@ model Club {
   phone                     String?
   email                     String?
   noAttendanceDays          Int[]
-  // Inscripcion por enlace. El token es aleatorio y no derivado del nombre: con
-  // una url adivinable, cualquiera encontraria el formulario de cualquier club
-  // probando nombres. Si se filtra, se regenera y el enlace viejo muere.
-  inscripcionToken          String?           @unique
-  inscripcionAbierta        Boolean           @default(false)
-  // Cuantos deportistas espera el club, para poder decirle cuantos faltan.
-  inscripcionEsperados      Int?
-  // Cierre automatico. Opcional: si esta puesta, pasada esa fecha el enlace deja
-  // de recibir. El token NO cambia, asi que al reabrir sirve el mismo enlace y
-  // no toca repartirlo otra vez.
-  inscripcionVenceAt        DateTime?
+  // Quien es el dueno. Se declara y no se deduce de la fecha del admin mas
+  // antiguo: es el unico que cruza todos los deportes del club, y una
+  // deduccion equivocada le abre o le cierra carpetas a la persona incorrecta.
+  ownerUserId               String?           @unique
   createdAt                 DateTime          @default(now())
   updatedAt                 DateTime          @updatedAt
   users                     User[]
@@ -69,6 +62,52 @@ model Club {
   posts                     Post[]
   cuponCanjes               CuponCanje[]
   clases                    ClaseHorario[]
+  deportes                  Deporte[]
+}
+
+// ─── Deporte ─────────────────────────────────────────────────────────────────
+//
+// La carpeta. Un club puede ofrecer patinaje y natacion, y cada una es una
+// operacion aparte: sus deportistas, sus sedes, su asistencia, su caja, sus
+// resultados. Nada se comparte entre carpetas — el unico que las cruza es el
+// dueno del club.
+//
+// No es el cliente ni la unidad de cobro: el club sigue siendo quien paga, y
+// paga una sola suscripcion por la suma de deportistas de todas sus carpetas.
+
+model Deporte {
+  id                   String    @id @default(cuid())
+  clubId               String
+  club                 Club      @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  nombre               String
+  // Desactivar no borra: la carpeta deja de aparecer y de recibir gente, pero
+  // conserva su historia. Borrar solo se permite si esta vacia.
+  activo               Boolean   @default(true)
+  // Inscripcion por enlace, ahora por carpeta. Vivia en Club, pero un formulario
+  // que no sabe a que deporte entra la persona obliga a moverla despues a mano,
+  // que es justo el momento en que se mezclan las carpetas.
+  inscripcionToken     String?   @unique
+  inscripcionAbierta   Boolean   @default(false)
+  inscripcionEsperados Int?
+  inscripcionVenceAt   DateTime?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  users            User[]
+  locations        Location[]
+  members          Member[]
+  attendances      Attendance[]
+  clases           ClaseHorario[]
+  payments         Payment[]
+  cashEntries      CashEntry[]
+  competitions     Competition[]
+  trainingSessions TrainingSession[]
+  calendarEvents   CalendarEvent[]
+  posts            Post[]
+
+  // Dos carpetas con el mismo nombre en un club no se distinguen en el selector.
+  @@unique([clubId, nombre])
+  @@index([clubId])
 }
 
 // ─── User (staff: ADMIN, ENTRENADOR, SUPERADMIN) ──────────────────────────────────
@@ -87,10 +126,17 @@ model User {
   termsAcceptedAt DateTime?
   clubId          String?
   club            Club?     @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  // La carpeta a la que esta amarrado. En null cruza todas, que es el caso del
+  // dueno del club. Restrict y no SetNull a proposito: si borrar un deporte
+  // dejara este campo en null, el admin de esa carpeta quedaria convertido en
+  // dueno de todo el club sin que nadie lo decidiera.
+  deporteId       String?
+  deporte         Deporte?  @relation(fields: [deporteId], references: [id], onDelete: Restrict)
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
   @@index([clubId])
+  @@index([deporteId])
 }
 
 // ─── Location (sedes) ────────────────────────────────────────────────────────
@@ -103,6 +149,8 @@ model Location {
   longitude        Float?
   clubId           String
   club             Club              @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  deporteId        String
+  deporte          Deporte           @relation(fields: [deporteId], references: [id], onDelete: Cascade)
   members          MemberLocation[]
   attendances      Attendance[]
   trainingSessions TrainingSession[]
@@ -114,6 +162,7 @@ model Location {
   updatedAt        DateTime          @updatedAt
 
   @@index([clubId])
+  @@index([deporteId])
 }
 
 // ─── Member (deportistas) ────────────────────────────────────────────────────
@@ -122,6 +171,8 @@ model Member {
   id                String            @id @default(cuid())
   clubId            String
   club              Club              @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  deporteId         String
+  deporte           Deporte           @relation(fields: [deporteId], references: [id], onDelete: Cascade)
   fullName          String
   email             String?
   phone             String?
@@ -195,6 +246,7 @@ model Member {
   // cada rato y siempre acotados al club.
   @@index([clubId, inscripcion])
   @@index([clubId, docNumber])
+  @@index([deporteId])
 }
 
 model MemberLocation {
@@ -212,6 +264,8 @@ model Attendance {
   id         String           @id @default(cuid())
   clubId     String
   club       Club             @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  deporteId  String
+  deporte    Deporte          @relation(fields: [deporteId], references: [id], onDelete: Cascade)
   memberId   String
   member     Member           @relation(fields: [memberId], references: [id], onDelete: Cascade)
   locationId String?
@@ -240,6 +294,7 @@ model Attendance {
   @@index([clubId, date])
   @@index([memberId])
   @@index([claseId, date])
+  @@index([deporteId])
 }
 
 // ─── Horario de clases ────────────────────────────────────────────────────────
@@ -255,6 +310,8 @@ model ClaseHorario {
   id          String       @id @default(cuid())
   clubId      String
   club        Club         @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  deporteId   String
+  deporte     Deporte      @relation(fields: [deporteId], references: [id], onDelete: Cascade)
   locationId  String
   location    Location     @relation(fields: [locationId], references: [id], onDelete: Cascade)
   nombre      String
@@ -273,6 +330,7 @@ model ClaseHorario {
   updatedAt   DateTime     @updatedAt
 
   @@index([clubId, diaSemana, activa])
+  @@index([deporteId])
 }
 
 // ─── Payment (pagos de mensualidad) ──────────────────────────────────────────
@@ -281,6 +339,8 @@ model Payment {
   id              String        @id @default(cuid())
   clubId          String
   club            Club          @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  deporteId       String
+  deporte         Deporte       @relation(fields: [deporteId], references: [id], onDelete: Cascade)
   memberId        String
   member          Member        @relation(fields: [memberId], references: [id], onDelete: Cascade)
   amount          Float
@@ -307,6 +367,7 @@ model Payment {
   @@index([clubId, year, month])
   @@index([clubId, status])
   @@index([clubId, locationId])
+  @@index([deporteId])
 }
 
 // ─── CashEntry (flujo de caja) ───────────────────────────────────────────────
@@ -315,6 +376,8 @@ model CashEntry {
   id          String        @id @default(cuid())
   clubId      String
   club        Club          @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  deporteId   String
+  deporte     Deporte       @relation(fields: [deporteId], references: [id], onDelete: Cascade)
   type        CashEntryType
   amount      Float
   description String
@@ -331,6 +394,7 @@ model CashEntry {
   @@index([clubId])
   @@index([clubId, date])
   @@index([clubId, locationId])
+  @@index([deporteId])
 }
 
 // ─── Competition + Events + Results (logros) ─────────────────────────────────
@@ -339,6 +403,8 @@ model Competition {
   id        String             @id @default(cuid())
   clubId    String
   club      Club               @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  deporteId String
+  deporte   Deporte            @relation(fields: [deporteId], references: [id], onDelete: Cascade)
   name      String
   place     String?
   latitude  Float?
@@ -349,6 +415,7 @@ model Competition {
   updatedAt DateTime           @updatedAt
 
   @@index([clubId])
+  @@index([deporteId])
 }
 
 model CompetitionEvent {
@@ -381,6 +448,8 @@ model TrainingSession {
   id         String           @id @default(cuid())
   clubId     String
   club       Club             @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  deporteId  String
+  deporte    Deporte          @relation(fields: [deporteId], references: [id], onDelete: Cascade)
   title      String
   date       DateTime
   // Donde se entrena decide que se mide: en pista se cronometra, en gimnasio se
@@ -396,6 +465,7 @@ model TrainingSession {
 
   @@index([clubId])
   @@index([clubId, date])
+  @@index([deporteId])
 }
 
 model TrainingResult {
@@ -428,6 +498,8 @@ model CalendarEvent {
   id          String            @id @default(cuid())
   clubId      String
   club        Club              @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  deporteId   String
+  deporte     Deporte           @relation(fields: [deporteId], references: [id], onDelete: Cascade)
   title       String
   type        CalendarEventType
   description String?
@@ -443,6 +515,7 @@ model CalendarEvent {
 
   @@index([clubId])
   @@index([clubId, startDate])
+  @@index([deporteId])
 }
 
 // ─── ClubSuscripcion (cobros de plataforma por club) ─────────────────────────
@@ -507,11 +580,11 @@ model SuscripcionPago {
 // Se registran a mano porque no hay de donde sacarlos solos: las facturas de
 // Railway o de Cloudinary no llegan a ningun sitio que el sistema pueda leer.
 model GastoPlataforma {
-  id          String         @id @default(cuid())
-  fecha       DateTime
-  monto       Float
-  categoria   CategoriaGasto
-  descripcion String
+  id            String         @id @default(cuid())
+  fecha         DateTime
+  monto         Float
+  categoria     CategoriaGasto
+  descripcion   String
   // Quien lo registro, por su clerkId. Sin relacion a User: si esa cuenta
   // desaparece, el gasto tiene que seguir en los libros.
   registradoPor String?
@@ -519,9 +592,9 @@ model GastoPlataforma {
   // para la comision de Mercado Pago. Es unico a proposito: el pago se registra
   // desde tres lados (respuesta directa, webhook y reconciliacion) y sin esto la
   // misma comision entraria tres veces.
-  origen      String?        @unique
-  createdAt   DateTime       @default(now())
-  updatedAt   DateTime       @updatedAt
+  origen        String?        @unique
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
 
   @@index([fecha])
 }
@@ -537,17 +610,17 @@ model GastoPlataforma {
 // son cobros de suscripcion terminaria corriendo fechas de vencimiento que
 // nadie pidio mover.
 model IngresoPlataforma {
-  id          String   @id @default(cuid())
-  fecha       DateTime
-  monto       Float
-  concepto    String
+  id            String   @id @default(cuid())
+  fecha         DateTime
+  monto         Float
+  concepto      String
   // Que club lo pago, si aplica. Sin relacion: es para leerlo en la lista, y el
   // ingreso tiene que sobrevivir a que el club se borre.
-  clubNombre  String?
+  clubNombre    String?
   // Quien lo registro, por su clerkId.
   registradoPor String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   @@index([fecha])
 }
@@ -594,6 +667,8 @@ model Post {
   id            String        @id @default(cuid())
   clubId        String
   club          Club          @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  deporteId     String
+  deporte       Deporte       @relation(fields: [deporteId], references: [id], onDelete: Cascade)
   clubName      String        @default("")
   authorClerkId String?
   authorName    String
@@ -613,6 +688,7 @@ model Post {
 
   @@index([clubId])
   @@index([scope, createdAt])
+  @@index([deporteId])
 }
 
 model PostLike {
@@ -685,6 +761,9 @@ model Reporte {
   reporterName    String
   // Club del contenido reportado, para dar contexto al superadmin
   clubId          String?
+  // Carpeta del contenido. Opcional como clubId: la cola de moderacion es del
+  // superadmin y no se filtra por deporte, esto solo da contexto.
+  deporteId       String?
   motivo          MotivoReporte
   detalle         String?
   estado          EstadoReporte @default(PENDIENTE)
@@ -719,27 +798,31 @@ model Reporte {
 //    alterar no sirve como registro.
 
 model Auditoria {
-  id           String   @id @default(cuid())
+  id            String   @id @default(cuid())
   // Que paso, en texto estable: CLUB_ELIMINADO, MIEMBRO_ELIMINADO, ROL_CAMBIADO…
-  accion       String
+  accion        String
   // Sobre que: 'Club', 'Member', 'Payment', 'CashEntry', 'Post'…
-  entidad      String
-  entidadId    String?
+  entidad       String
+  entidadId     String?
   // Frase legible, para leer la bitacora sin interpretar ids
-  resumen      String
+  resumen       String
   // Quien lo hizo. Se copian nombre y correo del momento: si esa cuenta se
   // borra despues, el registro tiene que seguir diciendo quien fue.
-  actorClerkId String?
-  actorEmail   String?
-  actorNombre  String?
-  actorRol     String?
+  actorClerkId  String?
+  actorEmail    String?
+  actorNombre   String?
+  actorRol      String?
   // Club afectado, para poder filtrar por club
-  clubId       String?
-  clubNombre   String?
+  clubId        String?
+  clubNombre    String?
+  // En que carpeta paso. Es registro, no filtro: sin relacion, igual que clubId,
+  // porque la bitacora tiene que sobrevivir a que borren el deporte.
+  deporteId     String?
+  deporteNombre String?
   // Copia de lo borrado o del antes/despues de un cambio
-  datos        Json?
-  ip           String?
-  createdAt    DateTime @default(now())
+  datos         Json?
+  ip            String?
+  createdAt     DateTime @default(now())
 
   @@index([createdAt])
   @@index([accion, createdAt])

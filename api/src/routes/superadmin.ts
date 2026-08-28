@@ -4,7 +4,8 @@ import { requireAuth } from '../auth/middleware';
 import { prisma } from '../db/client';
 import { addToAllowlist, removeFromAllowlist } from '../lib/clerk-allowlist';
 import { invalidarTrustedCache, diasDePrueba } from './clubs';
-import { cacheDel } from '../lib/redis';
+import { cacheDel, cacheDelPattern } from '../lib/redis';
+import { carpetaPorDefecto, primerDeporte } from '../lib/deportes';
 import {
   mesesDe, gastosPorCategoria, clubesQuePagan, ingresoMensual, pulsoDelNegocio,
 } from '../lib/finanzas-plataforma';
@@ -82,22 +83,31 @@ router.post('/clubs', requireAuth, requireSuperadmin, async (req, res) => {
       name: clubName,
       trialEndsAt,
       deporte: deporte || undefined,
-      members: {
-        create: {
-          fullName: adminName, email: adminEmail, phone: adminPhone || undefined, role: 'ADMIN',
-          ...(existingUser
-            ? { clerkId: existingUser.clerkId, inviteStatus: 'ACCEPTED' }
-            : { inviteStatus: 'PENDING' }),
-        },
-      },
+      // Igual que el auto-registro: el club nace con su primera carpeta.
+      deportes: { create: { nombre: primerDeporte(deporte) } },
     },
-    include: { _count: { select: { members: true } } },
+    include: { _count: { select: { members: true } }, deportes: true },
+  });
+
+  const primeraCarpeta = club.deportes[0].id;
+
+  await prisma.member.create({
+    data: {
+      clubId: club.id,
+      deporteId: primeraCarpeta,
+      fullName: adminName, email: adminEmail, phone: adminPhone || undefined, role: 'ADMIN',
+      ...(existingUser
+        ? { clerkId: existingUser.clerkId, inviteStatus: 'ACCEPTED' as const }
+        : { inviteStatus: 'PENDING' as const }),
+    },
   });
 
   if (existingUser) {
+    await prisma.club.update({ where: { id: club.id }, data: { ownerUserId: existingUser.id } });
     await prisma.user.update({
       where: { id: existingUser.id },
-      data: { clubId: club.id, role: 'ADMIN' },
+      // Dueno del club: en null cruza todas sus carpetas.
+      data: { clubId: club.id, role: 'ADMIN', deporteId: null },
     });
   }
 
@@ -142,7 +152,9 @@ router.patch('/clubs/:id/toggle', requireAuth, requireSuperadmin, async (req, re
 // cambio se refleje en todas partes sin recargar (landing, ajustes, perfil).
 async function invalidarCachesClub(clubId: string): Promise<void> {
   await cacheDel(`club:settings:${clubId}`);
-  await cacheDel(`club:profile:${clubId}`);
+  // Por patron: el perfil se cachea por club y deporte, y desde el panel de
+  // superadmin no se sabe cuantas carpetas tiene el club.
+  await cacheDelPattern(`club:profile:${clubId}:*`);
   await invalidarTrustedCache();
 }
 
@@ -360,8 +372,12 @@ router.post('/clubs/:id/miembros', requireAuth, requireSuperadmin, async (req, r
   const existing = await prisma.member.findFirst({ where: { email } });
   if (existing) return res.status(400).json({ error: 'Este email ya está registrado' });
 
+  // Entra a la carpeta por defecto del club. Desde el panel no se elige deporte
+  // porque el caso real es dar de alta al administrador de un club que apenas
+  // arranca, y ahi solo hay una; si el club ya tiene varias, el propio dueno lo
+  // mueve desde su panel.
   const member = await prisma.member.create({
-    data: { clubId, fullName, email, role, inviteStatus: 'PENDING' },
+    data: { clubId, deporteId: await carpetaPorDefecto(clubId), fullName, email, role, inviteStatus: 'PENDING' },
   });
 
   await addToAllowlist(email);

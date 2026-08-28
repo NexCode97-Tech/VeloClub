@@ -29,6 +29,8 @@ import profilesRouter from './routes/profiles';
 import searchRouter from './routes/search';
 import notificationsRouter from './routes/notifications';
 import mercadopagoRouter, { reconciliarPagosPendientes } from './routes/mercadopago';
+import { clubEntero } from './auth/middleware';
+import { SinCarpeta } from './lib/deportes';
 import { startWorkers } from './workers';
 import { prisma } from './db/client';
 import { getRedis } from './lib/redis';
@@ -154,6 +156,17 @@ const superadminLimiter = rateLimit({
 });
 
 // ── Rutas ─────────────────────────────────────────────────────────────────────
+// Las rutas que cruzan clubes a proposito se declaran antes de montarse: el
+// buscador de la comunidad, el muro publico, los perfiles ajenos, el panel de
+// superadmin y el arranque de sesion. Todo lo demas queda acotado a la carpeta
+// de deporte de quien pregunta, sin que cada ruta tenga que acordarse.
+//
+// El sentido de la falla es a proposito: olvidar una declaracion aca hace que
+// esa pantalla se vea vacia y alguien lo reporte el mismo dia. Al reves —
+// tener que acordarse de filtrar en cada consulta — el olvido muestra datos de
+// otro deporte y no lo nota nadie.
+app.use(['/me', '/superadmin', '/posts', '/profiles', '/search', '/follows'], clubEntero);
+
 app.use('/me', meLimiter, meRouter);
 app.use('/clubs', clubsRouter);
 app.use('/locations', locationsRouter);
@@ -183,6 +196,11 @@ Sentry.setupExpressErrorHandler(app);
 
 // ── Manejador global de errores ───────────────────────────────────────────────
 app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
+  // Una cuenta sin deporte asignado no es un fallo del servidor: es algo que su
+  // propio administrador puede arreglar, y el mensaje se lo dice.
+  if (err instanceof SinCarpeta) {
+    return res.status(409).json({ error: err.message });
+  }
   console.error(JSON.stringify({ level: 'ERROR', msg: err.message }));
   res.status(500).json({ error: 'Error interno del servidor' });
 });

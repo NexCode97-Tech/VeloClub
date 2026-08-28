@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { requireAuth } from '../auth/middleware';
+import { carpetaDe } from '../lib/deportes';
 import { prisma } from '../db/client';
 import { emitToClub } from '../lib/sse';
 
@@ -62,6 +63,7 @@ router.post('/', requireAuth, async (req, res) => {
   const entry = await prisma.cashEntry.create({
     data: {
       clubId:      req.user.clubId ?? '',
+      deporteId:   carpetaDe(req),
       type:        parsed.data.type,
       amount:      parsed.data.amount,
       description: parsed.data.description,

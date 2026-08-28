@@ -76,7 +76,7 @@ if (superadminEmails.includes(email.toLowerCase())) {
             ...(email ? [{ email: { equals: email, mode: 'insensitive' as const } }] : []),
           ],
         },
-        select: { clubId: true, role: true, club: { select: { active: true } } },
+        select: { clubId: true, deporteId: true, role: true, club: { select: { active: true } } },
         orderBy: { createdAt: 'desc' },
       });
       // Un club desactivado no se revincula: ahi el bloqueo es intencional
@@ -86,7 +86,11 @@ if (superadminEmails.includes(email.toLowerCase())) {
           // El rol manda desde el registro de miembro, que es donde el club lo
           // administra: al desvincularse, una cuenta podia quedar con un rol
           // viejo y menos permisos de los que le corresponden.
-          data: { clubId: miembroDelUsuario.clubId, role: miembroDelUsuario.role },
+          data: {
+            clubId: miembroDelUsuario.clubId,
+            role: miembroDelUsuario.role,
+            deporteId: miembroDelUsuario.deporteId,
+          },
           include: { club: true },
         });
         console.log(`[me] cuenta revinculada al club ${miembroDelUsuario.clubId}: ${email}`);
@@ -289,6 +293,9 @@ if (superadminEmails.includes(email.toLowerCase())) {
       picture: picture ?? null,
       role: member.role,
       clubId: member.clubId,
+      // Hereda la carpeta de su ficha: entra al deporte en el que el club lo
+      // tiene, no al primero que haya.
+      deporteId: member.deporteId,
       profileComplete: true,
     },
     include: { club: true },

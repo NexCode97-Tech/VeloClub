@@ -1,4 +1,4 @@
-import { prisma } from '../db/client';
+import { prisma, prismaClubEntero } from '../db/client';
 import { cacheDel } from './redis';
 
 /**
@@ -10,6 +10,12 @@ import { cacheDel } from './redis';
  *
  * Antes este conteo estaba repetido en nueve lugares con el mismo `where`, y
  * cualquiera que se olvidara de filtrar cobraba de mas.
+ *
+ * Cuenta el CLUB ENTERO, sumando todos sus deportes. El club es el cliente y
+ * paga una sola suscripcion por toda la gente que tenga, reparta como reparta a
+ * esa gente entre patinaje, natacion o lo que agregue despues. Por eso estos
+ * conteos usan el cliente sin acotar: si se filtraran por la carpeta desde la
+ * que se pregunta, un club con dos deportes pagaria el tramo de uno solo.
  */
 
 /**
@@ -20,7 +26,7 @@ import { cacheDel } from './redis';
  * seria cobrarle por trabajo que no ha hecho.
  */
 export async function contarDeportistasActivos(clubId: string): Promise<number> {
-  return prisma.member.count({
+  return prismaClubEntero.member.count({
     where: { clubId, role: 'DEPORTISTA', active: true, inscripcion: 'APROBADO' },
   });
 }
@@ -29,11 +35,15 @@ export async function contarDeportistasActivos(clubId: string): Promise<number> 
  * El listado se cachea en dos versiones segun el alcance de datos que ve el
  * rol, asi que cualquier cambio debe invalidar ambas. Vive aca y no en la ruta
  * de miembros porque la inscripcion por enlace tambien crea deportistas.
+ *
+ * La clave lleva el deporte ademas del club. Sin el, el listado de patinaje
+ * quedaria servido desde cache a quien esta parado en natacion: un escape que
+ * la base nunca veria, porque no llega a consultarse.
  */
-export async function invalidateMembersCache(clubId: string): Promise<void> {
+export async function invalidateMembersCache(clubId: string, deporteId: string): Promise<void> {
   await Promise.all([
-    cacheDel(`members:${clubId}:staff`),
-    cacheDel(`members:${clubId}:student`),
+    cacheDel(`members:${clubId}:${deporteId}:staff`),
+    cacheDel(`members:${clubId}:${deporteId}:student`),
   ]);
 }
 

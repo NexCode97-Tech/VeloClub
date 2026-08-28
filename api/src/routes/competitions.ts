@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { requireAuth } from '../auth/middleware';
+import { carpetaDe } from '../lib/deportes';
 import { prisma } from '../db/client';
 import { emitToClub } from '../lib/sse';
 import { notifyClubStaff, notifyClubStudents } from '../lib/notify';
@@ -64,6 +65,7 @@ router.post('/', requireAuth, async (req, res) => {
   const competition = await prisma.competition.create({
     data: {
       clubId:    req.user.clubId ?? '',
+      deporteId: carpetaDe(req),
       name:      parsed.data.name,
       place:     parsed.data.place     ?? null,
       latitude:  parsed.data.latitude  ?? null,

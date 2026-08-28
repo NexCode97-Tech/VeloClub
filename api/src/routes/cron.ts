@@ -67,7 +67,7 @@ router.post('/generate-payments', requireCronSecret, async (_req, res) => {
       paymentDueDay: { not: null },
     },
     select: {
-      id: true, fullName: true, clubId: true,
+      id: true, fullName: true, clubId: true, deporteId: true,
       monthlyFee: true, paymentDueDay: true,
       // Para atribuirle la cuota a su sede. Solo sirve si tiene una: con
       // varias no hay forma de saber a que disciplina corresponde.
@@ -91,6 +91,10 @@ router.post('/generate-payments', requireCronSecret, async (_req, res) => {
     await prisma.payment.create({
       data: {
         clubId:   m.clubId,
+        // La cuota nace en la carpeta del deportista, no en la del que la
+        // genera: este cron corre sin nadie de por medio y recorre todos los
+        // clubes y todos sus deportes.
+        deporteId: m.deporteId,
         memberId: m.id,
         amount:   m.monthlyFee!,
         month,

@@ -2,7 +2,9 @@ import { Router } from 'express';
 import { z } from 'zod';
 import * as Sentry from '@sentry/node';
 import { Prisma } from '@prisma/client';
-import { prisma } from '../db/client';
+import { prisma, prismaClubEntero } from '../db/client';
+import { fijarAlcance } from '../lib/contexto-peticion';
+import { carpetaDe } from '../lib/deportes';
 import { requireAuth } from '../auth/middleware';
 import {
   asegurarToken, rotarToken, urlDeInscripcion, esMenor, yaExiste,
@@ -36,24 +38,54 @@ function tituloDe(texto: string): string {
     .join(' ');
 }
 
-/** Lo que hay que saber del club para decidir si el enlace responde. */
-const CLUB_DEL_ENLACE = {
-  id: true, name: true, active: true,
+/**
+ * Lo que hay que saber de la carpeta para decidir si el enlace responde.
+ *
+ * El enlace cuelga del deporte y no del club: un club con patinaje y natacion
+ * reparte dos, y cada uno mete a la gente en su carpeta sin que despues haya
+ * que moverla a mano.
+ */
+const CARPETA_DEL_ENLACE = {
+  id: true, nombre: true, activo: true,
   inscripcionAbierta: true, inscripcionVenceAt: true,
+  club: { select: { id: true, name: true, active: true, logoUrl: true } },
 } as const;
 
-/**
- * El club de ese token, si esta recibiendo inscripciones.
- *
- * Un club que no existe, uno cerrado y uno vencido responden exactamente lo
- * mismo: asi un enlace viejo no sirve para confirmar que el club existe.
- */
-async function clubDelEnlace(token: string) {
-  const club = await prisma.club.findUnique({
-    where: { inscripcionToken: token },
-    select: CLUB_DEL_ENLACE,
+type CarpetaDelEnlace = {
+  id: string; activo: boolean;
+  inscripcionAbierta: boolean; inscripcionVenceAt: Date | null;
+  club: { active: boolean };
+};
+
+/** Traduce la carpeta a los tres interruptores que decide `inscripcionVigente`. */
+function estaAbierta(c: CarpetaDelEnlace): boolean {
+  return inscripcionVigente({
+    clubActivo:         c.club.active,
+    activo:             c.activo,
+    inscripcionAbierta: c.inscripcionAbierta,
+    inscripcionVenceAt: c.inscripcionVenceAt,
   });
-  return club && inscripcionVigente(club) ? club : null;
+}
+
+/**
+ * La carpeta de ese token, si esta recibiendo inscripciones.
+ *
+ * Una que no existe, una cerrada y una vencida responden exactamente lo mismo:
+ * asi un enlace viejo no sirve para confirmar que el club existe.
+ *
+ * Ademas fija el alcance de la peticion: de aca en adelante, todo lo que esta
+ * ruta consulte o cree queda dentro de esa carpeta. Es el unico lugar donde la
+ * carpeta no sale de quien inicio sesion, porque aca no hay sesion: sale del
+ * enlace.
+ */
+async function carpetaDelEnlace(token: string) {
+  const carpeta = await prismaClubEntero.deporte.findUnique({
+    where: { inscripcionToken: token },
+    select: CARPETA_DEL_ENLACE,
+  });
+  if (!carpeta || !estaAbierta(carpeta)) return null;
+  fijarAlcance({ deporteId: carpeta.id });
+  return carpeta;
 }
 
 /**
@@ -91,21 +123,24 @@ async function borrarCuenta(clerkId: string): Promise<void> {
 router.get('/:token', guessLimiter, async (req, res) => {
   const token = String(req.params.token);
 
-  const club = await prisma.club.findUnique({
-    where: { inscripcionToken: token },
-    select: {
-      ...CLUB_DEL_ENLACE, logoUrl: true,
-      locations: { select: { id: true, name: true }, orderBy: { name: 'asc' } },
-    },
-  });
-
-  if (!club || !inscripcionVigente(club)) {
+  const carpeta = await carpetaDelEnlace(token);
+  if (!carpeta) {
     return res.status(404).json({ error: 'Esta inscripción no está disponible.' });
   }
 
+  // Las sedes salen ya acotadas a la carpeta: `carpetaDelEnlace` fijo el
+  // alcance de la peticion, asi que el formulario de natacion nunca ofrece una
+  // sede de patinaje.
+  const sedes = await prisma.location.findMany({
+    where: { clubId: carpeta.club.id },
+    select: { id: true, name: true },
+    orderBy: { name: 'asc' },
+  });
+
   res.json({
-    club: { nombre: club.name, logoUrl: club.logoUrl },
-    sedes: club.locations,
+    club: { nombre: carpeta.club.name, logoUrl: carpeta.club.logoUrl },
+    deporte: carpeta.nombre,
+    sedes,
     categorias: CATEGORIAS,
     niveles: NIVELES,
   });
@@ -119,8 +154,9 @@ router.get('/:token', guessLimiter, async (req, res) => {
  * complete, en vez de hacerle escribir de nuevo lo que el club ya tiene.
  */
 router.post('/:token/reconocer', guessLimiter, async (req, res) => {
-  const club = await clubDelEnlace(String(req.params.token));
-  if (!club) return res.status(404).json({ error: 'Esta inscripción no está disponible.' });
+  const carpeta = await carpetaDelEnlace(String(req.params.token));
+  if (!carpeta) return res.status(404).json({ error: 'Esta inscripción no está disponible.' });
+  const club = carpeta.club;
 
   const parsed = z.object({ docNumber: z.string().min(3).max(30) }).safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: 'Datos incompletos.' });
@@ -169,8 +205,9 @@ const inscripcionSchema = z.object({
  * el club apruebe: quien manda es el estado del miembro, no la cuenta.
  */
 router.post('/:token', inscripcionLimiter, inscripcionPorEnlaceLimiter, async (req, res) => {
-  const club = await clubDelEnlace(String(req.params.token));
-  if (!club) return res.status(404).json({ error: 'Esta inscripción no está disponible.' });
+  const carpeta = await carpetaDelEnlace(String(req.params.token));
+  if (!carpeta) return res.status(404).json({ error: 'Esta inscripción no está disponible.' });
+  const club = carpeta.club;
 
   const parsed = inscripcionSchema.safeParse(req.body);
   if (!parsed.success) {
@@ -383,6 +420,10 @@ router.post('/:token', inscripcionLimiter, inscripcionPorEnlaceLimiter, async (r
     const miembro = await prisma.member.create({
       data: {
         clubId: club.id,
+        // La carpeta sale del enlace por el que entro, no de un menu: es lo que
+        // hace que un club con dos deportes no tenga que repartir despues a
+        // mano a los que se inscribieron.
+        deporteId: carpeta.id,
         fullName: tituloDe(d.fullName),
         email: d.email!.trim().toLowerCase(),
         phone: d.phone,
@@ -426,7 +467,7 @@ router.post('/:token', inscripcionLimiter, inscripcionPorEnlaceLimiter, async (r
       link: '/dashboard/miembros',
     }).catch(() => { /* el aviso no puede tumbar la inscripcion */ });
 
-    await invalidateMembersCache(club.id);
+    await invalidateMembersCache(club.id, carpeta.id);
     emitToClub(club.id, 'members');
 
     res.status(201).json({ ok: true, nombre: miembro.fullName });
@@ -456,9 +497,13 @@ router.get('/club/estado', requireAuth, async (req, res) => {
   const clubId = req.user.clubId ?? '';
   if (!clubId) return res.status(400).json({ error: 'Tu cuenta no está vinculada a un club' });
 
-  const [club, pendientes, aprobados] = await Promise.all([
-    prisma.club.findUnique({
-      where: { id: clubId },
+  // El enlace es de la carpeta en la que esta parado quien pregunta. Un club
+  // con patinaje y natacion ve dos enlaces distintos, uno en cada deporte.
+  const deporteId = carpetaDe(req);
+
+  const [carpeta, pendientes, aprobados] = await Promise.all([
+    prisma.deporte.findUnique({
+      where: { id: deporteId },
       select: {
         inscripcionToken: true, inscripcionAbierta: true,
         inscripcionEsperados: true, inscripcionVenceAt: true,
@@ -476,13 +521,13 @@ router.get('/club/estado', requireAuth, async (req, res) => {
   // El enlace solo se muestra al administrador, que es quien lo reparte. El
   // entrenador ve el conteo pero no la url.
   const esAdmin = req.user.role === 'ADMIN';
-  const token = esAdmin ? await asegurarToken(clubId) : null;
+  const token = esAdmin ? await asegurarToken(deporteId) : null;
 
-  const vence = club?.inscripcionVenceAt ?? null;
+  const vence = carpeta?.inscripcionVenceAt ?? null;
 
   res.json({
-    abierta: club?.inscripcionAbierta ?? false,
-    esperados: club?.inscripcionEsperados ?? null,
+    abierta: carpeta?.inscripcionAbierta ?? false,
+    esperados: carpeta?.inscripcionEsperados ?? null,
     // La fecha se manda como aaaa-mm-dd, que es lo que lee un input date. Se
     // corta en hora de Colombia y no en UTC: guardada al filo de la noche, en
     // UTC ya es el día siguiente y el club vería una fecha corrida.
@@ -504,13 +549,13 @@ const configSchema = z.object({
 /** PATCH /inscripcion/club/estado — abrir, cerrar, o decir cuantos se esperan. */
 router.patch('/club/estado', requireAuth, async (req, res) => {
   if (!soloAdmin(req, res)) return;
-  const clubId = req.user!.clubId ?? '';
+  const deporteId = carpetaDe(req);
 
   const parsed = configSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.issues });
 
   // Abrir por primera vez tiene que dejar un enlace listo para copiar.
-  if (parsed.data.abierta) await asegurarToken(clubId);
+  if (parsed.data.abierta) await asegurarToken(deporteId);
 
   // El dia elegido cuenta completo: vence al final de ese dia en Colombia, no
   // al empezarlo. Quien lo llene esa misma tarde alcanza.
@@ -524,8 +569,8 @@ router.patch('/club/estado', requireAuth, async (req, res) => {
     return res.status(400).json({ error: 'Esa fecha no es válida.' });
   }
 
-  const club = await prisma.club.update({
-    where: { id: clubId },
+  const carpeta = await prisma.deporte.update({
+    where: { id: deporteId },
     data: {
       ...(parsed.data.abierta !== undefined ? { inscripcionAbierta: parsed.data.abierta } : {}),
       ...(parsed.data.esperados !== undefined ? { inscripcionEsperados: parsed.data.esperados } : {}),
@@ -538,18 +583,17 @@ router.patch('/club/estado', requireAuth, async (req, res) => {
   });
 
   res.json({
-    abierta: club.inscripcionAbierta,
-    esperados: club.inscripcionEsperados,
-    vence: club.inscripcionVenceAt ? enBogota(club.inscripcionVenceAt) : null,
-    url: club.inscripcionToken ? urlDeInscripcion(club.inscripcionToken) : null,
+    abierta: carpeta.inscripcionAbierta,
+    esperados: carpeta.inscripcionEsperados,
+    vence: carpeta.inscripcionVenceAt ? enBogota(carpeta.inscripcionVenceAt) : null,
+    url: carpeta.inscripcionToken ? urlDeInscripcion(carpeta.inscripcionToken) : null,
   });
 });
 
 /** POST /inscripcion/club/rotar — el enlace anterior deja de servir. */
 router.post('/club/rotar', requireAuth, strictLimiter, async (req, res) => {
   if (!soloAdmin(req, res)) return;
-  const clubId = req.user!.clubId ?? '';
-  const token = await rotarToken(clubId);
+  const token = await rotarToken(carpetaDe(req));
   res.json({ url: urlDeInscripcion(token) });
 });
 
@@ -708,7 +752,7 @@ router.post('/club/:id/aplicar', requireAuth, async (req, res) => {
     data: { ...datos, cambiosPendientes: Prisma.DbNull },
   });
 
-  await invalidateMembersCache(clubId);
+  await invalidateMembersCache(clubId, carpetaDe(req));
   emitToClub(clubId, 'members');
   res.json({ ok: true, aplicados: Object.keys(cambios).length });
 });
@@ -753,7 +797,7 @@ router.post('/club/:id/aprobar', requireAuth, async (req, res) => {
     data: { inscripcion: 'APROBADO', aprobadoAt: new Date() },
   });
 
-  await invalidateMembersCache(clubId);
+  await invalidateMembersCache(clubId, carpetaDe(req));
   emitToClub(clubId, 'members');
   res.json({ ok: true });
 });
@@ -768,7 +812,7 @@ router.post('/club/aprobar-todos', requireAuth, async (req, res) => {
     data: { inscripcion: 'APROBADO', aprobadoAt: new Date() },
   });
 
-  await invalidateMembersCache(clubId);
+  await invalidateMembersCache(clubId, carpetaDe(req));
   emitToClub(clubId, 'members');
   res.json({ ok: true, aprobados: count });
 });
@@ -794,7 +838,7 @@ router.delete('/club/:id', requireAuth, async (req, res) => {
   if (miembro.clerkId) await borrarCuenta(miembro.clerkId);
 
   await prisma.member.delete({ where: { id } });
-  await invalidateMembersCache(clubId);
+  await invalidateMembersCache(clubId, carpetaDe(req));
   emitToClub(clubId, 'members');
   res.json({ ok: true });
 });

@@ -4,12 +4,13 @@ import { emitToClub } from '../lib/sse';
 
 interface BulkPaymentsJob {
   clubId: string;
+  deporteId: string;
   month: number;
   year: number;
 }
 
 export async function processBulkPayments(job: Job<BulkPaymentsJob>): Promise<void> {
-  const { clubId, month, year } = job.data;
+  const { clubId, deporteId, month, year } = job.data;
 
   console.log(JSON.stringify({
     level: 'INFO',
@@ -20,9 +21,14 @@ export async function processBulkPayments(job: Job<BulkPaymentsJob>): Promise<vo
     jobId: job.id,
   }));
 
+  // El trabajo se acota al deporte desde el que se pidio. El worker corre fuera
+  // de la peticion, asi que el filtro automatico no aplica aca: sin este
+  // `deporteId`, el administrador de patinaje que genera el mes se lo generaria
+  // tambien a los de natacion.
   const members = await prisma.member.findMany({
     where: {
       clubId,
+      deporteId,
       monthlyFee:    { not: null },
       paymentDueDay: { not: null },
     },
@@ -42,7 +48,7 @@ export async function processBulkPayments(job: Job<BulkPaymentsJob>): Promise<vo
     if (m.payments.length > 0) { skipped++; continue; }
     const dueDate = new Date(year, month - 1, m.paymentDueDay!);
     await prisma.payment.create({
-      data: { clubId, memberId: m.id, amount: m.monthlyFee!, month, year, status: 'PENDING', dueDate },
+      data: { clubId, deporteId, memberId: m.id, amount: m.monthlyFee!, month, year, status: 'PENDING', dueDate },
     });
     created++;
   }

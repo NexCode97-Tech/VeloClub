@@ -1,5 +1,6 @@
 import { Router } from 'express';
-import { requireAuth } from '../auth/middleware';
+import { requireAuth, clubEntero } from '../auth/middleware';
+import { primerDeporte } from '../lib/deportes';
 import { prisma } from '../db/client';
 import { z } from 'zod';
 import { v2 as cloudinary } from 'cloudinary';
@@ -235,7 +236,7 @@ router.patch('/settings', requireAuth, async (req, res) => {
     },
   });
   await cacheDel(`club:settings:${clubId}`);
-  await cacheDel(`club:profile:${clubId}`);
+  await cacheDel(`club:profile:${clubId}:${req.deporteId ?? ''}`);
   await invalidarTrustedCache(); // el nombre pudo cambiar
   res.json({ club });
 });
@@ -272,7 +273,7 @@ router.post('/logo', uploadLimiter, requireAuth, async (req, res) => {
     });
 
     await cacheDel(`club:settings:${clubId}`);
-    await cacheDel(`club:profile:${clubId}`);
+    await cacheDel(`club:profile:${clubId}:${req.deporteId ?? ''}`);
     await invalidarTrustedCache(); // nuevo logo → puede aparecer en el landing
     res.json({ club });
   } catch (err) {
@@ -297,7 +298,7 @@ router.delete('/logo', requireAuth, async (req, res) => {
     data:  { logoUrl: null, logoPublicId: null },
   });
   await cacheDel(`club:settings:${clubId}`);
-  await cacheDel(`club:profile:${clubId}`);
+  await cacheDel(`club:profile:${clubId}:${req.deporteId ?? ''}`);
   await invalidarTrustedCache(); // se quitó el logo → deja de aparecer
   res.json({ ok: true });
 });
@@ -307,7 +308,9 @@ router.get('/profile', requireAuth, async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'No autenticado' });
 
   const clubId = req.user.clubId ?? '';
-  const cacheKey = `club:profile:${clubId}`;
+  // Perfil por club Y por deporte: la lista de miembros y la sede principal que
+  // van adentro son de la carpeta, no del club entero.
+  const cacheKey = `club:profile:${clubId}:${req.deporteId ?? ''}`;
   const cached = await cacheGet<unknown>(cacheKey);
   if (cached) return res.json(cached);
 
@@ -317,7 +320,6 @@ router.get('/profile', requireAuth, async (req, res) => {
       id: true, name: true, city: true, department: true, deporte: true,
       logoUrl: true, coverUrl: true, verified: true, createdAt: true, foundedAt: true,
       description: true, phone: true, email: true,
-      _count: { select: { members: true } },
     },
   });
   if (!club) return res.status(404).json({ error: 'Club no encontrado' });
@@ -341,14 +343,26 @@ router.get('/profile', requireAuth, async (req, res) => {
     orderBy: { createdAt: 'asc' },
   });
 
-  const payload = { club, members, followersCount, mainLocation: mainLocation ?? null };
+  // El conteo sale de la lista de arriba y no de un `_count` sobre el club: el
+  // `_count` de una relacion no pasa por el filtro de deporte, asi que decia
+  // «84 miembros» encima de una lista de 30 en cuanto el club tuviera dos
+  // carpetas.
+  const payload = {
+    club: { ...club, _count: { members: members.length } },
+    members,
+    followersCount,
+    mainLocation: mainLocation ?? null,
+  };
   await cacheSet(cacheKey, payload, 300); // 5 min
   res.json(payload);
 });
 
 // GET /clubs/:id/public — perfil público de cualquier club (buscador de comunidad).
 // Solo datos públicos; no expone datos sensibles de miembros.
-router.get('/:id/public', requireAuth, async (req, res) => {
+//
+// Va marcada de club entero: mira el perfil de OTRO club, y filtrarlo por la
+// carpeta de deporte de quien mira no devolveria nada.
+router.get('/:id/public', requireAuth, clubEntero, async (req, res) => {
   if (!req.auth) return res.status(401).json({ error: 'No autenticado' });
   const id = String(req.params.id);
 
@@ -395,7 +409,7 @@ router.patch('/contact', requireAuth, async (req, res) => {
     },
     select: { phone: true, email: true },
   });
-  await cacheDel(`club:profile:${clubId}`);
+  await cacheDel(`club:profile:${clubId}:${req.deporteId ?? ''}`);
   res.json(updated);
 });
 
@@ -411,7 +425,7 @@ router.patch('/description', requireAuth, async (req, res) => {
     data: { description: description?.trim() || null },
     select: { description: true },
   });
-  await cacheDel(`club:profile:${clubId}`);
+  await cacheDel(`club:profile:${clubId}:${req.deporteId ?? ''}`);
   res.json({ description: updated.description });
 });
 
@@ -443,7 +457,7 @@ router.post('/cover', uploadLimiter, requireAuth, async (req, res) => {
     });
 
     await cacheDel(`club:settings:${clubId}`);
-    await cacheDel(`club:profile:${clubId}`);
+    await cacheDel(`club:profile:${clubId}:${req.deporteId ?? ''}`);
     res.json({ coverUrl: club.coverUrl });
   } catch (err) {
     const msg = err instanceof Error ? err.message : JSON.stringify(err);
@@ -585,19 +599,44 @@ router.post('/', createLimiter, requireAuth, async (req, res) => {
           profileComplete: true,
         },
       },
-      members: {
-        create: {
-          fullName:     ownerName.trim(),
-          email:        req.auth.email,
-          phone:        phone || undefined,
-          role:         'ADMIN',
-          clerkId:      req.auth.clerkId,
-          inviteStatus: 'ACCEPTED',
-        },
+      // El club nace con su primera carpeta de deporte. El nombre sale de lo
+      // que declaro en el formulario; si no declaro nada, Patinaje, que es de
+      // donde viene la plataforma.
+      deportes: {
+        create: { nombre: primerDeporte(deporte) },
       },
     },
-    include: { users: true },
+    include: { users: true, deportes: true },
   });
+
+  const primeraCarpeta = club.deportes[0].id;
+
+  // El titular queda declarado como dueno: es el unico que va a poder cruzar
+  // entre deportes cuando el club abra el segundo. Y su ficha de miembro nace
+  // dentro de la primera carpeta, como la de cualquier otro.
+  await prisma.$transaction([
+    prisma.club.update({
+      where: { id: club.id },
+      data:  { ownerUserId: club.users[0].id },
+    }),
+    prisma.member.create({
+      data: {
+        clubId:       club.id,
+        deporteId:    primeraCarpeta,
+        fullName:     ownerName.trim(),
+        email:        req.auth.email,
+        phone:        phone || undefined,
+        role:         'ADMIN',
+        clerkId:      req.auth.clerkId,
+        inviteStatus: 'ACCEPTED',
+      },
+    }),
+    prisma.user.update({
+      where: { id: club.users[0].id },
+      // El dueno no se amarra a una carpeta: en null las cruza todas.
+      data:  { deporteId: null },
+    }),
+  ]);
 
   // Mantener el correo en el allowlist (consistencia con clubes creados por superadmin)
   try { await addToAllowlist(req.auth.email); } catch { /* ignorar */ }

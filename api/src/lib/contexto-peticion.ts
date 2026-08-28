@@ -22,6 +22,22 @@ export interface ActorPeticion {
   ruta?: string | null;
 }
 
+/**
+ * En que carpeta de deporte esta parada la peticion.
+ *
+ * Vive en el mismo AsyncLocalStorage que el actor y por la misma razon: para
+ * que el filtro por deporte lo aplique el cliente de Prisma solo, sin que cada
+ * consulta tenga que acordarse de recibirlo.
+ *
+ * Tres estados, y los tres son explicitos:
+ *   - `{ deporteId }`  la peticion vive dentro de una carpeta y todo se filtra
+ *   - `'club-entero'`  a proposito sin filtrar (superadmin, muro publico, cron)
+ *   - sin fijar        no hay peticion de por medio (arranque, colas, scripts)
+ */
+export type Alcance = { deporteId: string } | 'club-entero';
+
+const almacenAlcance = new AsyncLocalStorage<{ valor: Alcance | null }>();
+
 const almacen = new AsyncLocalStorage<ActorPeticion>();
 
 export function actorActual(): ActorPeticion | undefined {
@@ -34,7 +50,7 @@ export function actorActual(): ActorPeticion | undefined {
  * corre mas adelante: aca solo se reserva el espacio.
  */
 export function contextoPeticion(req: Request, _res: Response, next: NextFunction) {
-  almacen.run(
+  almacenAlcance.run({ valor: null }, () => almacen.run(
     {
       // Detras de un proxy la IP real viene en la cabecera; sin ella se
       // registraria siempre la del balanceador, que no dice nada.
@@ -42,7 +58,22 @@ export function contextoPeticion(req: Request, _res: Response, next: NextFunctio
       ruta: `${req.method} ${req.path}`,
     },
     () => next()
-  );
+  ));
+}
+
+/** El alcance de la peticion actual, o null si no se fijo ninguno. */
+export function alcanceActual(): Alcance | null {
+  return almacenAlcance.getStore()?.valor ?? null;
+}
+
+/**
+ * Fija la carpeta en la que vive el resto de la peticion. Lo llama
+ * `requireAuth` con la carpeta que le corresponde a la persona, y el formulario
+ * publico de inscripcion con la que sale del token del enlace.
+ */
+export function fijarAlcance(alcance: Alcance): void {
+  const caja = almacenAlcance.getStore();
+  if (caja) caja.valor = alcance;
 }
 
 /** Completa el actor una vez que la autenticacion resolvio quien es. */

@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { requireAuth } from '../auth/middleware';
+import { carpetaDe } from '../lib/deportes';
 import { prisma } from '../db/client';
 import { emitToClub } from '../lib/sse';
 import { sedeEsDelClub } from '../lib/sedes';
@@ -115,6 +116,7 @@ router.post('/', requireAuth, async (req, res) => {
   const clase = await prisma.claseHorario.create({
     data: {
       clubId,
+      deporteId:  carpetaDe(req),
       nombre:     parsed.data.nombre.trim(),
       locationId: parsed.data.locationId,
       diaSemana:  parsed.data.diaSemana,

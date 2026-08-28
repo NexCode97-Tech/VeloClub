@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { requireAuth } from '../auth/middleware';
+import { carpetaDe } from '../lib/deportes';
 import { prisma } from '../db/client';
 import { emitToClub } from '../lib/sse';
 import { notifyClubStudents } from '../lib/notify';
@@ -108,6 +109,7 @@ router.post('/', requireAuth, async (req, res) => {
     data: {
       ...rest,
       clubId: req.user.clubId ?? '',
+      deporteId: carpetaDe(req),
       startDate: new Date(startDate),
       endDate: endDate ? new Date(endDate) : null,
       weekDays: [],

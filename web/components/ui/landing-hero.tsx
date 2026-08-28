@@ -17,8 +17,8 @@ import { CronometroPromo } from '@/components/ui/cronometro-promo';
  */
 export default function LandingHero() {
   return (
-    <header className="px-[22px] pt-[120px] pb-10 sm:pt-[136px] sm:pb-14">
-      <div className="max-w-[1200px] mx-auto">
+    <header className="pt-[120px] pb-10 sm:pt-[136px] sm:pb-14">
+      <div className="max-w-[1200px] mx-auto px-[22px]">
 
         {/* La cuenta regresiva de la campaña. Se apaga sola al pasar la fecha
             de corte, y el titular sigue en pie sin ella. */}

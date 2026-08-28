@@ -6,9 +6,9 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@clerk/nextjs';
 import { apiFetch } from '@/lib/api-client';
 import { useClubStream } from '@/hooks/useClubStream';
+import { IconNotificaciones } from '@/components/ui/custom-icons';
 import {
-  Bell, CheckCheck, DollarSign, UserPlus, Users, Trophy, CalendarDays, Receipt, Bell as BellIcon,
-  MessageCircle, CornerDownRight,
+  CheckCheck, DollarSign, UserPlus, Users, Trophy, CalendarDays, Receipt, MessageCircle, CornerDownRight,
 } from 'lucide-react';
 
 interface Notif {
@@ -131,7 +131,7 @@ export function NotificationsBell({ sobreOscuro = false }: { sobreOscuro?: boole
         title="Notificaciones"
         aria-label="Notificaciones"
       >
-        <Bell className={sobreOscuro ? 'w-[17px] h-[17px]' : 'w-[14px] h-[14px]'} />
+        <IconNotificaciones className={sobreOscuro ? 'w-[17px] h-[17px]' : 'w-[14px] h-[14px]'} />
         {unread > 0 && (
           <span
             className="absolute -top-1 -right-1 min-w-[16px] h-[16px] px-1 rounded-full flex items-center justify-center text-white"
@@ -161,11 +161,11 @@ export function NotificationsBell({ sobreOscuro = false }: { sobreOscuro?: boole
             <div className="overflow-y-auto">
               {items.length === 0 ? (
                 <div className="px-4 py-10 text-center">
-                  <BellIcon className="w-8 h-8 mx-auto mb-2 text-muted-foreground/30" />
+                  <IconNotificaciones className="w-8 h-8 mx-auto mb-2 text-muted-foreground/30" />
                   <p className="text-[12px] text-muted-foreground">No tienes notificaciones</p>
                 </div>
               ) : items.map(n => {
-                const Icon = ICON_BY_TYPE[n.tipo] ?? BellIcon;
+                const Icon = ICON_BY_TYPE[n.tipo] ?? IconNotificaciones;
                 const color = COLOR_BY_TYPE[n.tipo] ?? '#8E87A8';
                 return (
                   <button

@@ -13,16 +13,8 @@ import { BottomCircleMenu } from '@/components/ui/bottom-circle-menu';
 import { SearchModal } from '@/components/ui/search-modal';
 import { NotificationsBell } from '@/components/ui/notifications-bell';
 import TermsGateModal from '@/components/ui/terms-gate-modal';
-import {
-  Settings,
-  ChevronLeft,
-  ChevronRight,
-  Search,
-  ArrowLeft,
-  Trophy,
-  ClipboardList,
-} from 'lucide-react';
-import { IconHome, IconUsers, IconCalendar, IconStatistics, IconClub, IconFinanzas, IconUbicacion, IconAsistencias, IconResultados, IconAjustes, IconMisPagos, IconPerfil, IconSuscripcion } from '@/components/ui/custom-icons';
+import { Settings, ChevronLeft, ChevronRight, ArrowLeft, Trophy, ClipboardList } from 'lucide-react';
+import { IconHome, IconUsers, IconCalendar, IconStatistics, IconClub, IconFinanzas, IconUbicacion, IconAsistencias, IconResultados, IconAjustes, IconMisPagos, IconPerfil, IconSuscripcion, IconBuscar } from '@/components/ui/custom-icons';
 
 // Modal de aceptación de Términos y Política de Datos — desactivado hasta
 // completar razón social/NIT en docs/legal. Cambiar a true para publicar.
@@ -567,7 +559,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 style={{ width: 28, height: 28, color: '#8E87A8' }}
                 title="Buscar (Ctrl+K)"
               >
-                <Search className="w-[14px] h-[14px]" />
+                <IconBuscar className="w-[14px] h-[14px]" />
               </button>
               <NotificationsBell />
             </div>

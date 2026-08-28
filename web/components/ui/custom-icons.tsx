@@ -198,3 +198,23 @@ export function IconEntrenamientos({ className, style, ...props }: IconProps) {
     </svg>
   );
 }
+
+// La lupa de las barras de busqueda.
+export function IconBuscar({ className, style, ...props }: IconProps) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 511.786 511.786" fill="currentColor"
+      className={className} style={style} {...props}>
+      <path d="M213.382,426.694c49.214,0.064,96.923-16.963,134.976-48.171l127.275,127.253c8.475,8.185,21.98,7.95,30.165-0.525   c7.984-8.267,7.984-21.373,0-29.641L378.545,348.337c74.545-91.24,61.011-225.636-30.229-300.181S122.68-12.855,48.135,78.385   S-12.876,304.02,78.364,378.566C116.472,409.701,164.172,426.704,213.382,426.694z"/>
+    </svg>
+  );
+}
+
+// La campana, con el punto de aviso ya dentro del dibujo.
+export function IconNotificaciones({ className, style, ...props }: IconProps) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"
+      className={className} style={style} {...props}>
+      <path d="m16.899,20c-.465,2.279-2.485,4-4.899,4s-4.435-1.721-4.899-4h9.799Zm3.601-13c1.93,0,3.5-1.57,3.5-3.5s-1.57-3.5-3.5-3.5-3.5,1.57-3.5,3.5,1.57,3.5,3.5,3.5Zm.423,1.988c-.083.003-.164.012-.248.012-3.133,0-5.681-2.467-5.681-5.5,0-.904.231-1.756.632-2.509-1.221-.635-2.609-.991-4.066-.991C7.531,0,4.043,2.709,3.169,6.516l-1.978,6.191c-.84,2.628,1.19,5.293,4.032,5.293h13.053c2.926,0,4.964-2.812,3.968-5.475l-1.322-3.537Z"/>
+    </svg>
+  );
+}

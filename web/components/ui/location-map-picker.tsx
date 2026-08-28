@@ -1,8 +1,9 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { Search, Loader2, X, LocateFixed } from 'lucide-react';
+import { Loader2, X, LocateFixed } from 'lucide-react';
 import { setOptions, importLibrary } from '@googlemaps/js-api-loader';
+import { IconBuscar } from '@/components/ui/custom-icons';
 
 interface Props {
   initialLat?: number | null;
@@ -213,7 +214,7 @@ export function LocationMapPicker({ initialLat, initialLng, onConfirm }: Props) 
     <div className="flex flex-col gap-3">
       {/* Buscador con Autocomplete de Google */}
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none z-10" />
+        <IconBuscar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none z-10" />
         <input
           ref={inputRef}
           type="text"

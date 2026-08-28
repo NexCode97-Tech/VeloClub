@@ -242,14 +242,18 @@ router.post('/:id/like', requireAuth, async (req, res) => {
   if (!post) return res.status(404).json({ error: 'Publicación no encontrada' });
   if (post.scope === 'PRIVATE' && post.clubId !== req.user.clubId) return res.status(403).json({ error: 'Sin permisos' });
 
-  const existing = await prisma.postLike.findUnique({ where: { postId_userId: { postId, userId } } });
-  if (existing) {
-    await prisma.postLike.delete({ where: { postId_userId: { postId, userId } } });
-    res.json({ liked: false });
-  } else {
-    await prisma.postLike.create({ data: { postId, userId } });
-    res.json({ liked: true });
-  }
+  // Consultar y despues escribir deja una rendija entre las dos consultas: con
+  // dos toques seguidos, las dos peticiones ven que no hay «me gusta» y las dos
+  // intentan crearlo, asi que la segunda choca contra la clave unica y salia un
+  // 500 (VELOCLUB-API-7). Se resuelve dejando que la base decida: se intenta
+  // borrar y, si no habia nada que borrar, se crea.
+  const borrados = await prisma.postLike.deleteMany({ where: { postId, userId } });
+  if (borrados.count > 0) return res.json({ liked: false });
+
+  // createMany con skipDuplicates no falla si otra peticion se adelanto: el
+  // resultado que le importa a quien toca es que quedo marcado.
+  await prisma.postLike.createMany({ data: [{ postId, userId }], skipDuplicates: true });
+  res.json({ liked: true });
 });
 
 // GET /posts/:id/comments

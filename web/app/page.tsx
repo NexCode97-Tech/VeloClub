@@ -76,6 +76,16 @@ const NAV_LINKS = [
   { href: '/sign-in', label: 'Iniciar sesión' },
 ];
 
+// El año del pie se fija en la zona de Colombia y no en la del reloj de quien
+// renderiza. Con new Date().getFullYear() a secas, el servidor va en UTC y el
+// navegador en UTC-5, así que durante las cinco horas siguientes a la medianoche
+// del 31 de diciembre cada uno escribe un año distinto y React tira un error de
+// hidratación. Es el único dato de esta página que dependía del reloj.
+const ANIO = new Intl.DateTimeFormat('es-CO', {
+  timeZone: 'America/Bogota',
+  year: 'numeric',
+}).format(new Date());
+
 export default function HomePage() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -313,7 +323,7 @@ export default function HomePage() {
       {/* Footer */}
       <footer className="border-t border-[rgba(120,80,200,0.08)] py-6 text-center text-xs text-[#8E87A8] space-y-1">
         <div className="max-w-5xl mx-auto px-5">
-        <p>© {new Date().getFullYear()} VeloClub · Todos los derechos reservados</p>
+        <p>© {ANIO} VeloClub · Todos los derechos reservados</p>
         <p>
           Desarrollado por{' '}
           <a

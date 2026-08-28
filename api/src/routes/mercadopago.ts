@@ -84,8 +84,13 @@ export async function reconciliarPagosPendientes(clubId?: string): Promise<numbe
         await activarClubTrasPago(pago.suscripcion.clubId);
         acreditados++;
       } else if (mp.status === 'rejected' || mp.status === 'cancelled') {
-        // El pago no prosperó — limpiar el pendiente para no dejarlo colgado
-        await prisma.suscripcionPago.delete({ where: { id: pago.id } });
+        // El pago no prosperó — limpiar el pendiente para no dejarlo colgado.
+        // Va con deleteMany y no con delete: la sincronizacion la puede disparar
+        // el usuario y tambien el webhook, y si las dos coinciden la segunda
+        // encontraba la fila ya borrada y reventaba (VELOCLUB-API-6). deleteMany
+        // no se queja cuando no hay nada que borrar, que es justo el resultado
+        // que se buscaba.
+        await prisma.suscripcionPago.deleteMany({ where: { id: pago.id } });
       }
     } catch (err) {
       console.error('[reconciliar-pagos] pago', pago.id, err instanceof Error ? err.message : err);

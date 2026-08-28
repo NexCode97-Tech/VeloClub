@@ -212,6 +212,16 @@ router.post('/', requireAuth, async (req, res) => {
   const { dueDate, paidAt, ...rest } = parsed.data;
   const clubId = req.user.clubId ?? '';
 
+  // El miembro tiene que existir y ser de este club. Sin esta comprobacion
+  // pasaban dos cosas: con un id inexistente reventaba la llave foranea y salia
+  // un 500 sin explicacion (VELOCLUB-API-4), y con el id de un miembro de otro
+  // club el pago se creaba igual, cruzando datos entre clubes.
+  const miembro = await prisma.member.findFirst({
+    where: { id: rest.memberId, clubId },
+    select: { id: true },
+  });
+  if (!miembro) return res.status(400).json({ error: 'Ese miembro no existe en el club.' });
+
   const payment = await prisma.payment.create({
     data: {
       ...rest,

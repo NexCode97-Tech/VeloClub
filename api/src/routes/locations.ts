@@ -2,6 +2,7 @@ import { Router, Request } from 'express';
 import { z } from 'zod';
 import { requireAuth } from '../auth/middleware';
 import { prisma } from '../db/client';
+import { Prisma } from '@prisma/client';
 import { cacheGet, cacheSet, cacheDel } from '../lib/redis';
 
 const router = Router();
@@ -78,7 +79,24 @@ router.delete('/:id', requireAuth, async (req, res) => {
     where: { id, clubId: req.user.clubId ?? '' },
   });
   if (!existing) return res.status(404).json({ error: 'Sede no encontrada' });
-  await prisma.location.delete({ where: { id } });
+
+  // Borrar una sede dispara una cadena: se van sus clases del horario en
+  // cascada, y las asistencias que apuntaban a esas clases quedan con claseId
+  // en null. Ahi pasan a caer bajo el indice unico (memberId, date) de las
+  // filas sin clase, y si alguien tenia asistencia ese mismo dia en dos clases
+  // de esa sede, las dos colisionan. Antes eso salia como un 500 sin
+  // explicacion (VELOCLUB-API-5); ahora se cuenta lo que pasa.
+  try {
+    await prisma.location.delete({ where: { id } });
+  } catch (e) {
+    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {
+      return res.status(409).json({
+        error: 'Esta sede tiene asistencias registradas en varias clases del mismo dia y no se puede borrar sin perderlas. Escribenos y las movemos.',
+      });
+    }
+    throw e;
+  }
+
   await cacheDel(`locations:${req.user.clubId ?? ''}`);
   res.json({ ok: true });
 });

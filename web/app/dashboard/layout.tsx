@@ -48,6 +48,7 @@ const SIDEBAR_ROLE_GRADIENT: Record<string, string> = {
   DEPORTISTA:    '#381DA0',
 };
 import { cn } from '@/lib/utils';
+import * as Sentry from '@sentry/nextjs';
 
 // "Más" va en el índice 2 (centro del bottom bar) para ADMIN y ENTRENADOR
 // El href '/dashboard/mas' es el centinela — no navega, activa el CircleMenu
@@ -351,6 +352,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         if (res.status === 'complete_profile') { router.replace('/completar-perfil'); return; }
         const userRole = res.user?.role ?? null;
         setRole(userRole);
+
+        // Sin esto todos los errores de Sentry salian con cero usuarios
+        // afectados y no habia forma de saber si algo le pasaba a una persona o
+        // a un club entero. Va solo el id de Clerk, el rol y el club: ni nombre,
+        // ni correo, ni nada que identifique a un deportista, que en su mayoria
+        // son menores de edad. El rol permite ver de un vistazo si algo le pasa
+        // a los entrenadores y no a los admin, que es la pregunta que mas se
+        // repite al mirar un error.
+        Sentry.setUser(userId ? { id: userId } : null);
+        Sentry.setTag('rol', userRole ?? 'desconocido');
         setClubName(res.user?.club?.name ?? null);
         setUserName(res.user?.name ?? null);
         setUserPicture(res.user?.picture ?? null);

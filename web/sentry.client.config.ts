@@ -24,4 +24,19 @@ Sentry.init({
     'ClerkJS: Network error',
     'AbortError',
   ],
+  // Una respuesta 401 o 404 de la API no es un fallo de software: es la
+  // respuesta correcta a una sesion que vencio o a un registro que ya no esta,
+  // que es lo que pasa cuando alguien deja una pestaña abierta o borra algo en
+  // otro dispositivo. Llegaban aca por el manejador global de promesas y eran
+  // los issues mas numerosos del proyecto, con cero usuarios afectados; tapaban
+  // los errores de verdad.
+  //
+  // Los 400 y 403 si se dejan pasar a proposito: significan que la interfaz
+  // mando algo que la API rechazo, y eso si es un bug nuestro. Los 5xx tambien,
+  // por razones obvias.
+  beforeSend(evento, pista) {
+    const err = pista?.originalException as { name?: string; status?: number } | undefined;
+    if (err?.name === 'ApiError' && (err.status === 401 || err.status === 404)) return null;
+    return evento;
+  },
 });

@@ -68,9 +68,9 @@ const ROLE_TABS: Record<string, { href: string; label: string; icon: React.Eleme
   ],
   STUDENT: [
     { href: '/dashboard',             label: 'Inicio',      icon: IconHome},
-    { href: '/dashboard/logros',      label: 'Rendimiento',  icon: IconResultados },
-    { href: '/dashboard/mas',         label: 'Más',         icon: IconHome}, // reemplazado por CircleMenu
     { href: '/dashboard/calendario',  label: 'Calendario',  icon: IconCalendar },
+    { href: '/dashboard/mas',         label: 'Más',         icon: IconHome}, // reemplazado por CircleMenu
+    { href: '/dashboard/logros',      label: 'Rendimiento',  icon: IconResultados },
     { href: '/dashboard/pagos',       label: 'Mis pagos',   icon: IconMisPagos},
   ],
 };
@@ -91,8 +91,8 @@ const ROLE_MAS_ITEMS: Record<string, { label: string; icon: React.ElementType; h
     { label: 'Club',       icon: IconClub,         href: '/dashboard/club',       color: '#381DA0' },
   ],
   STUDENT: [
-    { label: 'Club',  icon: IconClub,      href: '/dashboard/club',  color: '#06D6A0' },
     { label: 'Sedes', icon: IconUbicacion, href: '/dashboard/sedes', color: '#4361EE' },
+    { label: 'Club',  icon: IconClub,      href: '/dashboard/club',  color: '#06D6A0' },
   ],
 };
 
@@ -130,8 +130,8 @@ const COACH_NAV = [
 
 const STUDENT_NAV = [
   { href: '/dashboard',            label: 'Inicio',        icon: IconHome},
-  { href: '/dashboard/logros',     label: 'Rendimiento',    icon: IconResultados },
   { href: '/dashboard/calendario', label: 'Calendario',    icon: IconCalendar },
+  { href: '/dashboard/logros',     label: 'Rendimiento',    icon: IconResultados },
   { href: '/dashboard/pagos',      label: 'Mis pagos',     icon: IconMisPagos},
   { href: '/dashboard/sedes',      label: 'Sedes',         icon: IconUbicacion },
   { href: '/dashboard/club',       label: 'Club',          icon: IconClub },

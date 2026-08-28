@@ -93,3 +93,40 @@ export const reporteLimiter = rateLimit({
   legacyHeaders: false,
   message: mensaje,
 });
+
+/**
+ * Formulario publico de inscripcion. Es el unico punto de la plataforma donde
+ * alguien sin cuenta puede crear registros, asi que lleva dos topes en vez de
+ * uno.
+ *
+ * Por IP van 40 cada 15 minutos, y no menos: en una jornada de inscripcion los
+ * papas llenan el formulario ahi mismo, todos por el wifi del coliseo, y para
+ * el servidor son la misma IP. Un tope de 20 los habria frenado a mitad de
+ * jornada.
+ */
+export const inscripcionLimiter = rateLimit({
+  windowMs: VENTANA,
+  max: 40,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: mensaje,
+});
+
+/**
+ * El segundo tope va por enlace y no por IP, que es lo que de verdad protege al
+ * club: quien quiera llenarlo de fichas basura solo necesita cambiar de red
+ * —datos moviles, un proxy— y el limite por IP deja de servir. El enlace, en
+ * cambio, es siempre el mismo.
+ *
+ * 150 por hora deja pasar cualquier inscripcion real, incluida una jornada
+ * entera de un club grande, y corta la automatizacion. Si a un club le sobra
+ * ese margen, tiene el boton de generar un enlace nuevo, que invalida el viejo.
+ */
+export const inscripcionPorEnlaceLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 150,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: mensaje,
+  keyGenerator: (req) => `enlace:${req.params.token ?? 'sin-token'}`,
+});

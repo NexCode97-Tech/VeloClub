@@ -9,7 +9,8 @@ import {
   buscarPorDocumento, soloLoQueCambia, inscripcionVigente, NOMBRE_CAMPO,
 } from '../lib/inscripcion';
 import { CATEGORIAS, NIVELES } from '../lib/catalogos';
-import { strictLimiter, guessLimiter } from '../lib/rate-limit';
+import { strictLimiter, guessLimiter, inscripcionLimiter,
+         inscripcionPorEnlaceLimiter } from '../lib/rate-limit';
 import { registrarEvento } from '../lib/auditoria';
 import { notifyClubStaff } from '../lib/notify';
 import { invalidateMembersCache } from '../lib/deportistas';
@@ -167,7 +168,7 @@ const inscripcionSchema = z.object({
  * contrasena que eligieron. La cuenta existe desde ya, pero no sirve hasta que
  * el club apruebe: quien manda es el estado del miembro, no la cuenta.
  */
-router.post('/:token', strictLimiter, async (req, res) => {
+router.post('/:token', inscripcionLimiter, inscripcionPorEnlaceLimiter, async (req, res) => {
   const club = await clubDelEnlace(String(req.params.token));
   if (!club) return res.status(404).json({ error: 'Esta inscripción no está disponible.' });
 

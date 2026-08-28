@@ -50,10 +50,9 @@ Estos MCPs estaban activos en las sesiones de VeloClub:
 - **Para qué:** Deploys, env vars, logs del frontend en Vercel
 - **Se instala automáticamente** con el plugin de Vercel
 
-### 3.3 Neon (base de datos)
-- **Fuente:** Marketplace de Claude Code
-- **Para qué:** Gestionar base de datos PostgreSQL directamente desde Claude
-- **Cómo instalar:** Claude Code → Settings → MCPs → buscar "Neon"
+### 3.3 Base de datos
+La base es un servicio de Postgres dentro del proyecto de Railway, así que se
+maneja con el MCP y el CLI de Railway. No hay proveedor aparte ni MCP propio.
 
 ### 3.4 Claude.ai integrations (conectados vía claude.ai)
 Estos se reconectan iniciando sesión en claude.ai:
@@ -85,15 +84,15 @@ Claude reconstruirá automáticamente el contexto del proyecto.
 Después de instalar, verificar que funciona:
 1. Abrir Claude Code en `VeloClub/`
 2. Decir: `"¿Qué plugins y MCPs tienes activos?"`
-3. Confirmar que aparecen Vercel, Railway, Neon y los skills
+3. Confirmar que aparecen Vercel, Railway y los skills
 
 ---
 
 ## 6. Lo que NO necesitas reinstalar
 
 - ✅ Código del proyecto → está en GitHub
-- ✅ Variables de entorno → están en Vercel y Render (no en tu PC)
-- ✅ Base de datos → está en Render/Neon (no en tu PC)
+- ✅ Variables de entorno → están en Vercel y Railway (no en tu PC)
+- ✅ Base de datos → está en Railway (no en tu PC)
 - ✅ Claves de Clerk → están en Vercel Marketplace
 - ✅ `.claude/settings.local.json` → está en el repo de GitHub
 

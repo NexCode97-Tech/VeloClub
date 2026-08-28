@@ -581,7 +581,7 @@ export default function FinanzasSuperadmin() {
             <Campo etiqueta="Descripción">
               <input value={nuevo.descripcion}
                 onChange={e => setNuevo(n => ({ ...n, descripcion: e.target.value }))}
-                placeholder={tipo === 'gasto' ? 'Railway, Vercel y Neon de agosto' : 'Saldo del trimestre por Bre-B'}
+                placeholder={tipo === 'gasto' ? 'Railway, Vercel y Cloudinary de agosto' : 'Saldo del trimestre por Bre-B'}
                 className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[13px] outline-none focus:border-primary" />
             </Campo>
           </div>

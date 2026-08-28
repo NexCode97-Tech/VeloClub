@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { apiFetch } from '@/lib/api-client';
 import { parseLocalDate, toSentenceCase } from '@/lib/utils';
-import { ArrowLeft, Plus, Trash2, Dumbbell, Clock, Ruler, Hash, Weight, Repeat, Layers, Award } from 'lucide-react';
+import { ArrowLeft, Plus, Clock, Ruler, Hash, Weight, Repeat, Layers, Award } from 'lucide-react';
 import Link from 'next/link';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -16,6 +16,7 @@ import { MemberAvatar } from '@/components/ui/member-avatar';
 import ModuleLoader, { useCargaMinima } from '@/components/ui/module-loader';
 import ModuleReveal from '@/components/ui/module-reveal';
 import { infoEscenario, type Escenario } from '@/lib/training-escenarios';
+import { IconEliminar, IconEntrenamientos } from '@/components/ui/custom-icons';
 
 interface Member { id: string; fullName: string; active?: boolean }
 interface TrainingResult {
@@ -197,7 +198,7 @@ export default function TrainingDetailPage() {
                   <div className="flex flex-wrap gap-3 mt-0.5">
                     {r.exercise && (
                       <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
-                        <Dumbbell className="w-3 h-3" style={{ color: '#06D6A0' }} />{r.exercise}
+                        <IconEntrenamientos className="w-3 h-3" style={{ color: '#06D6A0' }} />{r.exercise}
                       </span>
                     )}
                     {r.weight && (
@@ -243,7 +244,7 @@ export default function TrainingDetailPage() {
                 {canManage && (
                   <button onClick={() => handleDelete(r.id)} disabled={deleting === r.id}
                     className="w-7 h-7 rounded-lg bg-red-50 flex items-center justify-center text-red-400 hover:text-red-600 shrink-0">
-                    <Trash2 className="w-3.5 h-3.5" />
+                    <IconEliminar className="w-3.5 h-3.5" />
                   </button>
                 )}
               </div>

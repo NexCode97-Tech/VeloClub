@@ -6,10 +6,8 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@clerk/nextjs';
 import { apiFetch } from '@/lib/api-client';
 import { useClubStream } from '@/hooks/useClubStream';
-import { IconNotificaciones } from '@/components/ui/custom-icons';
-import {
-  CheckCheck, DollarSign, UserPlus, Users, Trophy, CalendarDays, Receipt, MessageCircle, CornerDownRight,
-} from 'lucide-react';
+import { IconNotificaciones, IconChat, IconRecibo, IconCompetencias } from '@/components/ui/custom-icons';
+import { CheckCheck, DollarSign, UserPlus, Users, CalendarDays, CornerDownRight } from 'lucide-react';
 
 interface Notif {
   id: string; tipo: string; titulo: string; cuerpo: string;
@@ -21,10 +19,10 @@ const ICON_BY_TYPE: Record<string, React.ElementType> = {
   PAYMENT_DUE:      DollarSign,
   NEW_MEMBER:       Users,
   NEW_FOLLOWER:     UserPlus,
-  NEW_COMPETITION:  Trophy,
+  NEW_COMPETITION:  IconCompetencias,
   NEW_EVENT:        CalendarDays,
-  RECEIPT_UPLOADED: Receipt,
-  POST_COMMENT:     MessageCircle,
+  RECEIPT_UPLOADED: IconRecibo,
+  POST_COMMENT:     IconChat,
   COMMENT_REPLY:    CornerDownRight,
 };
 const COLOR_BY_TYPE: Record<string, string> = {

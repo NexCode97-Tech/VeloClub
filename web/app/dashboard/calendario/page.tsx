@@ -7,9 +7,10 @@ import { useClubStream } from '@/hooks/useClubStream';
 import { useEffect, useState } from 'react';
 import { apiFetch } from '@/lib/api-client';
 import { parseLocalDate } from '@/lib/utils';
-import { ChevronLeft, ChevronRight, CalendarDays, Trophy, Dumbbell, MapPin } from 'lucide-react';
+import { ChevronLeft, ChevronRight, CalendarDays } from 'lucide-react';
 import ModuleLoader, { useCargaMinima } from '@/components/ui/module-loader';
 import ModuleReveal from '@/components/ui/module-reveal';
+import { IconUbicacion, IconCompetencias, IconEntrenamientos } from '@/components/ui/custom-icons';
 
 const MONTH_NAMES = [
   'Enero','Febrero','Marzo','Abril','Mayo','Junio',
@@ -273,7 +274,7 @@ function toSentenceCase(str: string): string {
 
 function EventCard({ event }: { event: CalEvent }) {
   const color = TYPE_COLOR[event.type];
-  const Icon  = event.type === 'COMPETITION' ? Trophy : Dumbbell;
+  const Icon  = event.type === 'COMPETITION' ? IconCompetencias : IconEntrenamientos;
   const dateStr = event.date.toLocaleDateString('es-CO', { day: 'numeric', month: 'short' });
   const sub = event.place ?? event.location;
 
@@ -303,7 +304,7 @@ function EventCard({ event }: { event: CalEvent }) {
             : null;
           return (
             <div className="flex items-center gap-1 mt-0.5">
-              <MapPin className="w-3 h-3 shrink-0 text-muted-foreground" />
+              <IconUbicacion className="w-3 h-3 shrink-0 text-muted-foreground" />
               {mapsUrl ? (
                 <a
                   href={mapsUrl}

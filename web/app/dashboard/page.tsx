@@ -8,12 +8,7 @@ import { apiFetch } from '@/lib/api-client';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Bell, BellOff,
-  Image as ImageIcon, X,
-  Globe, Lock,
-  Paperclip, Video, FileText,
-  CalendarDays, Trophy, Users, Gift,
-  Clock, CheckSquare, Wallet, MapPin,
+  Bell, BellOff, Image as ImageIcon, X, Globe, Lock, Paperclip, Video, FileText, CalendarDays, Trophy, Users, Gift, CheckSquare, Wallet,
 } from 'lucide-react';
 import { Slideshow } from '@/components/ui/slideshow';
 // La tarjeta de publicacion es la misma en Inicio, Club y Mi perfil.
@@ -42,6 +37,7 @@ import { MemberAvatar } from '@/components/ui/member-avatar';
 import ModuleLoader, { useCargaMinima } from '@/components/ui/module-loader';
 import ModuleReveal from '@/components/ui/module-reveal';
 import { ContenidoGuardado, MS_GUARDADO, type EstadoGuardado } from '@/components/ui/save-button-state';
+import { IconPendiente, IconUbicacion } from '@/components/ui/custom-icons';
 
 // ── Interfaces ────────────────────────────────────────────────────────────────
 
@@ -367,7 +363,7 @@ function PostComposer({
       {/* Ubicacion — texto libre, aparece con el compositor desplegado */}
       {(open || content || media) && (
         <div className="flex items-center gap-2 px-4 pb-2">
-          <MapPin className="w-4 h-4 shrink-0" style={{ color: '#8E87A8' }} />
+          <IconUbicacion className="w-4 h-4 shrink-0" style={{ color: '#8E87A8' }} />
           <input
             value={ubicacion}
             onChange={e => setUbicacion(e.target.value)}
@@ -708,7 +704,7 @@ export default function DashboardPage() {
               className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
               style={{ background: trial.daysLeft <= 3 ? 'rgba(239,71,111,0.10)' : 'rgba(255,183,3,0.14)' }}
             >
-              <Clock className="w-[18px] h-[18px]" style={{ color: trial.daysLeft <= 3 ? '#EF476F' : '#854F0B' }} />
+              <IconPendiente className="w-[18px] h-[18px]" style={{ color: trial.daysLeft <= 3 ? '#EF476F' : '#854F0B' }} />
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-[13px] font-semibold text-foreground">

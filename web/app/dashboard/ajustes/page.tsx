@@ -6,10 +6,9 @@ import { createPortal } from 'react-dom';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { apiFetch } from '@/lib/api-client';
 import {
-  CheckCircle2, Camera, Building2, ChevronDown, X, Crop,
-  ChevronRight, HelpCircle, User, LogOut, Lock, UserCog, Trash2, AlertTriangle,
+  CheckCircle2, Camera, Building2, ChevronDown, X, Crop, ChevronRight, HelpCircle, User, LogOut, Lock, UserCog, AlertTriangle,
 } from 'lucide-react';
-import { IconClub, IconPerfil, IconSuscripcion } from '@/components/ui/custom-icons';
+import { IconClub, IconPerfil, IconSuscripcion, IconEliminar } from '@/components/ui/custom-icons';
 import SuscripcionCard from '@/components/ajustes/suscripcion-card';
 import HorarioClases from '@/components/ajustes/horario-clases';
 import { DIAS_SEMANA } from '@/lib/dias';
@@ -519,7 +518,7 @@ function AjustesPageContent() {
         className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-[13px] font-semibold transition-colors"
         style={{ background: 'rgba(239,71,111,0.10)', color: '#EF476F', border: '1px solid rgba(239,71,111,0.25)' }}
       >
-        <Trash2 className="w-4 h-4" />
+        <IconEliminar className="w-4 h-4" />
         Eliminar mi cuenta
       </button>
     </div>

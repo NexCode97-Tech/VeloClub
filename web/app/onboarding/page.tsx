@@ -5,16 +5,14 @@ import { useAuth, useClerk } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-  Building2, Headset, ArrowLeft, Check, AlertTriangle, Loader2,
-  Trophy, MessageCircle,
-} from 'lucide-react';
+import { Building2, Headset, ArrowLeft, Check, AlertTriangle, Loader2 } from 'lucide-react';
 import { COLOMBIA } from '@/lib/colombia';
 import { apiFetch } from '@/lib/api-client';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { PhoneInput } from '@/components/ui/phone-input';
 import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select';
+import { IconChat, IconCompetencias } from '@/components/ui/custom-icons';
 
 const DEPORTES = [
   'Fútbol', 'Microfútbol', 'Natación', 'Atletismo', 'Ciclismo', 'Ciclomontañismo',
@@ -265,7 +263,7 @@ function CreateClubForm({ getToken, onBack, onDone }: {
         <button type="submit" disabled={!canSubmit}
           className="w-full py-3 rounded-xl text-white text-sm font-semibold flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer transition-opacity"
           style={{ background: GRAD }}>
-          {loading ? <><Loader2 className="w-4 h-4 animate-spin" /> Creando...</> : <><Trophy className="w-4 h-4" /> Crear club y empezar gratis</>}
+          {loading ? <><Loader2 className="w-4 h-4 animate-spin" /> Creando...</> : <><IconCompetencias className="w-4 h-4" /> Crear club y empezar gratis</>}
         </button>
         <p className="text-[11.5px] text-slate-400 text-center">2 meses gratis. Tu club queda por verificar hasta que lo revisemos o realices el primer pago.</p>
       </form>
@@ -379,7 +377,7 @@ function ContactDone() {
       <a href={`https://wa.me/${WHATSAPP}`} target="_blank" rel="noopener noreferrer"
         className="w-full py-3 rounded-xl text-white text-sm font-semibold flex items-center justify-center gap-2 cursor-pointer"
         style={{ background: '#25D366' }}>
-        <MessageCircle className="w-4 h-4" /> Escríbenos por WhatsApp
+        <IconChat className="w-4 h-4" /> Escríbenos por WhatsApp
       </a>
     </div>
   );

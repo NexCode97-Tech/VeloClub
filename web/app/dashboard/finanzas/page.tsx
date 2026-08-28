@@ -9,7 +9,7 @@ import { parseLocalDate } from '@/lib/utils';
 import { QK } from '@/hooks/useVeloQuery';
 import { HojaInferior, OpcionHoja } from '@/components/ui/hoja-inferior';
 import {
-  CreditCard, Plus, Trash2, CheckCircle2, Clock, AlertCircle, TrendingUp, TrendingDown, Wallet, Download, MessageCircle, Check, PhoneOff, Settings, Zap, ChevronUp, Pencil, Receipt, ExternalLink, Eye, EyeOff, ChevronDown,
+  CreditCard, Plus, CheckCircle2, AlertCircle, TrendingUp, TrendingDown, Wallet, Check, PhoneOff, Zap, ChevronUp, Pencil, ExternalLink, Eye, EyeOff, ChevronDown, Search,
 } from 'lucide-react';
 import { downloadInvoicePDF } from '@/lib/pdf';
 import MemberHistoryPanel from '@/components/finanzas/member-history-panel';
@@ -26,7 +26,7 @@ import { motion, AnimatePresence, useReducedMotion, type Variants } from 'framer
 import { stagger as pageStagger, cardVariant as pageCard } from '@/lib/page-animations';
 import ModuleLoader, { useCargaMinima } from '@/components/ui/module-loader';
 import ModuleReveal from '@/components/ui/module-reveal';
-import { IconBuscar } from '@/components/ui/custom-icons';
+import { IconAjustes, IconChat, IconDescargar, IconEliminar, IconPendiente, IconRecibo } from '@/components/ui/custom-icons';
 
 const fmt = new Intl.NumberFormat('es-CO', {
   style: 'currency', currency: 'COP', maximumFractionDigits: 0,
@@ -42,7 +42,7 @@ const STATUS_LABELS: Record<string, string> = {
 };
 const STATUS_COLORS: Record<string, { text: string; bg: string; icon: React.ElementType }> = {
   PAID:     { text: '#06D6A0', bg: 'rgba(6,214,160,0.12)',   icon: CheckCircle2 },
-  PENDING:  { text: '#FFB703', bg: 'rgba(255,183,3,0.12)',   icon: Clock },
+  PENDING:  { text: '#FFB703', bg: 'rgba(255,183,3,0.12)',   icon: IconPendiente },
   OVERDUE:  { text: '#EF476F', bg: 'rgba(239,71,111,0.12)',  icon: AlertCircle },
   REFUNDED: { text: '#8E87A8', bg: 'rgba(142,135,168,0.12)', icon: CreditCard },
 };
@@ -206,7 +206,7 @@ function StudentRow({
             {wasSent
               ? <motion.span key="ok" initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }} transition={{ duration: 0.15 }}><Check className="w-3.5 h-3.5" style={{ color: '#06D6A0' }} /></motion.span>
               : contactPhone
-              ? <motion.span key="wa" initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }} transition={{ duration: 0.15 }}><MessageCircle className="w-3.5 h-3.5" style={{ color: '#25D366' }} /></motion.span>
+              ? <motion.span key="wa" initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }} transition={{ duration: 0.15 }}><IconChat className="w-3.5 h-3.5" style={{ color: '#25D366' }} /></motion.span>
               : <motion.span key="no"><PhoneOff className="w-3.5 h-3.5" style={{ color: '#8E87A8' }} /></motion.span>
             }
           </AnimatePresence>
@@ -215,7 +215,7 @@ function StudentRow({
       {payment && (
         <button onClick={() => downloadInvoicePDF({ ...payment, memberName: m.fullName, docType: m.docType, docNumber: m.docNumber }, clubName, clubLogoUrl)}
           className="w-7 h-7 rounded-lg bg-secondary flex items-center justify-center text-muted-foreground cursor-pointer" title="Descargar recibo">
-          <Download className="w-3.5 h-3.5" />
+          <IconDescargar className="w-3.5 h-3.5" />
         </button>
       )}
       {payment && (() => {
@@ -228,7 +228,7 @@ function StudentRow({
             title={toVerify ? 'Comprobante por verificar' : payment.receiptUrl ? 'Ver comprobante' : 'Subir comprobante'}
             className="relative w-7 h-7 rounded-lg flex items-center justify-center cursor-pointer transition-colors"
             style={{ background: iconBg }}>
-            <Receipt className="w-3.5 h-3.5" style={{ color: iconColor }} />
+            <IconRecibo className="w-3.5 h-3.5" style={{ color: iconColor }} />
             {toVerify && <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full border border-white" style={{ background: '#FFB703' }} />}
           </button>
         );
@@ -236,7 +236,7 @@ function StudentRow({
       {payment && (
         <button onClick={() => onDeletePay(payment.id)} disabled={deleting}
           className="w-7 h-7 rounded-lg bg-red-50 flex items-center justify-center text-red-400 cursor-pointer disabled:opacity-50">
-          <Trash2 className="w-3.5 h-3.5" />
+          <IconEliminar className="w-3.5 h-3.5" />
         </button>
       )}
     </div>
@@ -319,7 +319,7 @@ function StudentRow({
             style={{ background: configOpen ? 'rgba(56,29,160,0.12)' : 'rgba(142,135,168,0.08)' }}>
             {configOpen
               ? <ChevronUp className="w-3.5 h-3.5" style={{ color: '#381DA0' }} />
-              : <Settings className="w-3.5 h-3.5" style={{ color: '#8E87A8' }} />
+              : <IconAjustes className="w-3.5 h-3.5" style={{ color: '#8E87A8' }} />
             }
           </button>
         </div>
@@ -1043,7 +1043,7 @@ export default function FinanzasPage() {
 
           {/* Búsqueda de deportistas */}
           <div className="relative">
-            <IconBuscar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <input
               className="w-full pl-9 pr-3 h-10 rounded-xl border border-border bg-white text-[13px] focus:outline-none focus:ring-2 focus:ring-purple-200"
               placeholder="Buscar deportista..."
@@ -1191,7 +1191,7 @@ export default function FinanzasPage() {
                           >
                             {deletingFlow === e.id
                               ? <div className="w-3.5 h-3.5 rounded-full border-2 border-red-400 border-t-transparent animate-spin" />
-                              : <Trash2 className="w-3.5 h-3.5 text-red-400" />
+                              : <IconEliminar className="w-3.5 h-3.5 text-red-400" />
                             }
                           </button>
                         </div>
@@ -1490,7 +1490,7 @@ export default function FinanzasPage() {
               {/* Info del pago */}
               <div className="flex items-center gap-3 bg-secondary/50 rounded-xl px-3 py-2.5">
                 <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'rgba(56,29,160,0.10)' }}>
-                  <Receipt className="w-4 h-4" style={{ color: '#381DA0' }} />
+                  <IconRecibo className="w-4 h-4" style={{ color: '#381DA0' }} />
                 </div>
                 <div className="min-w-0">
                   <p className="text-[13px] font-semibold text-foreground truncate">{receiptModal.member?.fullName ?? '—'}</p>
@@ -1534,7 +1534,7 @@ export default function FinanzasPage() {
               {/* Seleccionar archivo */}
               <div>
                 <label className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-dashed border-border cursor-pointer hover:bg-secondary/50 transition-colors">
-                  <Receipt className="w-4 h-4 text-muted-foreground" />
+                  <IconRecibo className="w-4 h-4 text-muted-foreground" />
                   <span className="text-[12px] font-semibold text-muted-foreground">
                     {receiptFile ? 'Cambiar imagen' : receiptModal.receiptUrl ? 'Reemplazar comprobante' : 'Seleccionar imagen'}
                   </span>

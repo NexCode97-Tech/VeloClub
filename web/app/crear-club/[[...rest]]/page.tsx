@@ -5,8 +5,9 @@ import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowLeft, Trophy, Zap, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, Zap, ShieldCheck } from 'lucide-react';
 import LoadingScreen from '@/components/ui/loading-screen';
+import { IconCompetencias } from '@/components/ui/custom-icons';
 
 // Flujo dedicado y con marca propia para el registro self-serve ("Crear mi
 // club"), separado de /sign-up (genérico) y /sign-in (usuarios existentes).
@@ -54,7 +55,7 @@ export default function CrearClubPage() {
         <div className="space-y-3.5">
           {[
             { icon: Zap, text: 'Listo para usar en minutos, sin instalaciones' },
-            { icon: Trophy, text: 'Miembros, asistencia, pagos y competencias' },
+            { icon: IconCompetencias, text: 'Miembros, asistencia, pagos y competencias' },
             { icon: ShieldCheck, text: '2 meses gratis, sin tarjeta requerida' },
           ].map(({ icon: Icon, text }) => (
             <div key={text} className="flex items-center gap-3">

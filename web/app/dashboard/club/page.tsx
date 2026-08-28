@@ -5,12 +5,15 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { apiFetch } from '@/lib/api-client';
-import { MapPin, Camera, Pencil, Trash2, ImagePlus, BadgeCheck, Lock, CalendarDays, Phone, Mail, Building2, Check, X, UserPlus, UserCheck } from 'lucide-react';
+import {
+  Camera, Pencil, ImagePlus, BadgeCheck, Lock, CalendarDays, Phone, Mail, Building2, Check, X, UserPlus, UserCheck,
+} from 'lucide-react';
 import { PostCard, Post, PostComment, LikeUser } from '@/components/ui/post-card';
 import { PhoneInput } from '@/components/ui/phone-input';
 import ModuleLoader, { useCargaMinima } from '@/components/ui/module-loader';
 import ModuleReveal from '@/components/ui/module-reveal';
 import { textoFundacion } from '@/lib/fundacion';
+import { IconEliminar, IconUbicacion } from '@/components/ui/custom-icons';
 
 interface ClubMember {
   id: string; fullName: string; pictureUrl?: string | null;
@@ -135,7 +138,7 @@ function ContactCard({ isAdmin, phone, email, phoneDraft, emailDraft, editingCon
         {(clubCity || clubDept) && (
           <div className="flex items-center gap-3 px-5 py-4">
             <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(67,97,238,0.08)' }}>
-              <MapPin className="w-4 h-4" style={{ color: '#4361EE' }} />
+              <IconUbicacion className="w-4 h-4" style={{ color: '#4361EE' }} />
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-[10px] font-semibold uppercase tracking-widest mb-0.5" style={{ color: '#8E87A8' }}>Ubicación</p>
@@ -448,7 +451,7 @@ export default function ClubProfilePage() {
                             } finally { setDeletingCover(false); }
                           }}
                           className="flex items-center gap-2.5 w-full px-4 py-2.5 text-[13px] font-medium text-red-500 hover:bg-red-50 transition-colors cursor-pointer border-t border-border">
-                          <Trash2 className="w-4 h-4" /> Eliminar
+                          <IconEliminar className="w-4 h-4" /> Eliminar
                         </button>
                       </motion.div>
                     </>
@@ -578,7 +581,7 @@ export default function ClubProfilePage() {
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-3">
             {(club.city || club.department) && (
               <div className="flex items-center gap-1.5">
-                <MapPin className="w-3.5 h-3.5 shrink-0" style={{ color: '#8E87A8' }} />
+                <IconUbicacion className="w-3.5 h-3.5 shrink-0" style={{ color: '#8E87A8' }} />
                 <span className="text-[12px] text-muted-foreground">
                   {[club.city, club.department].filter(Boolean).join(', ')}
                 </span>

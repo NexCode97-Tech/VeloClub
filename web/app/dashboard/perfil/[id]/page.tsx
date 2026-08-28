@@ -8,12 +8,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { apiFetch } from '@/lib/api-client';
 import { MemberAvatar } from '@/components/ui/member-avatar';
 import { PostCard, Post, PostComment, LikeUser } from '@/components/ui/post-card';
-import {
-  MapPin, CalendarDays, Users, ImagePlus, UserPlus, UserCheck,
-  MessageSquareOff, X,
-} from 'lucide-react';
+import { CalendarDays, Users, ImagePlus, UserPlus, UserCheck, MessageSquareOff, X } from 'lucide-react';
 import ModuleLoader, { useCargaMinima } from '@/components/ui/module-loader';
 import ModuleReveal from '@/components/ui/module-reveal';
+import { IconUbicacion } from '@/components/ui/custom-icons';
 
 const roleLabels: Record<string, string> = {
   SUPERADMIN: 'Super admin', ADMIN: 'Administrador',
@@ -473,7 +471,7 @@ export default function PublicProfilePage() {
             )}
             {(profile.club?.city || profile.club?.department) && (
               <div className="flex items-center gap-1.5">
-                <MapPin className="w-3.5 h-3.5 shrink-0" style={{ color: '#8E87A8' }} />
+                <IconUbicacion className="w-3.5 h-3.5 shrink-0" style={{ color: '#8E87A8' }} />
                 <span className="text-[12px] text-muted-foreground">
                   {[profile.club?.city, profile.club?.department].filter(Boolean).join(', ')}
                 </span>

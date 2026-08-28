@@ -6,7 +6,7 @@ import { useAuth, useSession } from '@clerk/nextjs';
 import { useClubStream } from '@/hooks/useClubStream';
 import { useEffect, useState, useCallback } from 'react';
 import { apiFetch } from '@/lib/api-client';
-import { Users, CalendarCheck, CreditCard, Trophy, TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { Users, CalendarCheck, CreditCard, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell,
   PieChart, Pie, Legend,
@@ -17,6 +17,7 @@ import { es } from 'date-fns/locale';
 import { MonthPicker, DateRange } from '@/components/ui/month-picker';
 import ModuleLoader, { useCargaMinima } from '@/components/ui/module-loader';
 import ModuleReveal from '@/components/ui/module-reveal';
+import { IconCompetencias } from '@/components/ui/custom-icons';
 
 const MONTH_NAMES      = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
 const MONTH_NAMES_FULL = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
@@ -225,7 +226,7 @@ export default function ReportesPage() {
       value: totalLogros !== null ? String(totalLogros) : '—',
       sub: 'En competencias',
       color: PURPLE,
-      icon: Trophy,
+      icon: IconCompetencias,
     },
     {
       label: 'Asistencia mes',

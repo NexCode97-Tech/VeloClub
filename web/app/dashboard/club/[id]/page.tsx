@@ -5,11 +5,8 @@ import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@clerk/nextjs';
 import { motion, AnimatePresence } from 'framer-motion';
 import { apiFetch } from '@/lib/api-client';
-import { IconClub } from '@/components/ui/custom-icons';
-import {
-  ArrowLeft, BadgeCheck, MapPin, CalendarDays, UserPlus, UserCheck,
-  Phone, Mail, Building2, Lock,
-} from 'lucide-react';
+import { IconClub, IconUbicacion } from '@/components/ui/custom-icons';
+import { ArrowLeft, BadgeCheck, CalendarDays, UserPlus, UserCheck, Phone, Mail, Building2, Lock } from 'lucide-react';
 import ModuleLoader, { useCargaMinima } from '@/components/ui/module-loader';
 import ModuleReveal from '@/components/ui/module-reveal';
 import { textoFundacion } from '@/lib/fundacion';
@@ -189,7 +186,7 @@ export default function PublicClubPage() {
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-3">
             {(club.city || club.department) && (
               <div className="flex items-center gap-1.5">
-                <MapPin className="w-3.5 h-3.5 shrink-0" style={{ color: '#8E87A8' }} />
+                <IconUbicacion className="w-3.5 h-3.5 shrink-0" style={{ color: '#8E87A8' }} />
                 <span className="text-[12px] text-muted-foreground">
                   {[club.city, club.department].filter(Boolean).join(', ')}
                 </span>
@@ -313,7 +310,7 @@ function ContactCard({ club, mainLocation }: { club: PublicClub; mainLocation: M
           />
           {(club.city || club.department) && (
             <ContactRow
-              icon={<MapPin className="w-4 h-4" style={{ color: '#4361EE' }} />}
+              icon={<IconUbicacion className="w-4 h-4" style={{ color: '#4361EE' }} />}
               label="Ubicación"
               value={[club.city, club.department].filter(Boolean).join(', ')}
             />

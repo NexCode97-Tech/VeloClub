@@ -8,16 +8,13 @@ import { apiFetch } from '@/lib/api-client';
 import { useClubStream } from '@/hooks/useClubStream';
 import Link from 'next/link';
 import { MemberAvatar } from '@/components/ui/member-avatar';
-import {
-  Pencil, MapPin, CalendarDays, Globe,
-  Camera, Users, Trash2, ImagePlus,
-  Phone, Mail, Building2, X, Loader2,
-} from 'lucide-react';
+import { Pencil, CalendarDays, Globe, Camera, Users, ImagePlus, Phone, Mail, Building2, X, Loader2 } from 'lucide-react';
 import { PhoneInput } from '@/components/ui/phone-input';
 
 import { PostCard, Post, PostComment, LikeUser } from '@/components/ui/post-card';
 import ModuleLoader, { useCargaMinima } from '@/components/ui/module-loader';
 import ModuleReveal from '@/components/ui/module-reveal';
+import { IconEliminar, IconUbicacion } from '@/components/ui/custom-icons';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -451,7 +448,7 @@ export default function PerfilPage() {
                           }}
                           className="flex items-center gap-2.5 w-full px-4 py-2.5 text-[13px] font-medium text-red-500 hover:bg-red-50 transition-colors cursor-pointer border-t border-border"
                         >
-                          <Trash2 className="w-4 h-4" />
+                          <IconEliminar className="w-4 h-4" />
                           Eliminar
                         </button>
                       </motion.div>
@@ -569,7 +566,7 @@ export default function PerfilPage() {
             )}
             {(user?.club?.city || user?.club?.department) && (
               <div className="flex items-center gap-1.5">
-                <MapPin className="w-3.5 h-3.5 shrink-0" style={{ color: '#8E87A8' }} />
+                <IconUbicacion className="w-3.5 h-3.5 shrink-0" style={{ color: '#8E87A8' }} />
                 <span className="text-[12px] text-muted-foreground">
                   {[user?.club?.city, user?.club?.department].filter(Boolean).join(', ')}
                 </span>
@@ -795,7 +792,7 @@ export default function PerfilPage() {
               {(user?.club?.city || user?.club?.department) && (
                 <div className="flex items-center gap-3 px-5 py-4">
                   <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(56,29,160,0.08)' }}>
-                    <MapPin className="w-4 h-4" style={{ color: '#381DA0' }} />
+                    <IconUbicacion className="w-4 h-4" style={{ color: '#381DA0' }} />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-[10px] font-semibold uppercase tracking-widest mb-0.5" style={{ color: '#8E87A8' }}>Ubicación</p>
@@ -905,7 +902,7 @@ export default function PerfilPage() {
               <div className="flex items-center gap-3 px-5 py-4">
                 <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
                   style={{ background: 'rgba(56,29,160,0.08)' }}>
-                  <MapPin className="w-4 h-4" style={{ color: '#381DA0' }} />
+                  <IconUbicacion className="w-4 h-4" style={{ color: '#381DA0' }} />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-[10px] font-semibold uppercase tracking-widest mb-0.5" style={{ color: '#8E87A8' }}>Ubicación</p>

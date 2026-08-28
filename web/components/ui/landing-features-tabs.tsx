@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
-import type { LucideIcon } from 'lucide-react';
 
 // Easing/timing por la skill emilkowal-animations: ease-out fuerte para UI,
 // duraciones cortas (<300ms). El contenido usa fade+slide corto al cambiar
@@ -19,7 +18,7 @@ export interface FeatureSub {
 
 export interface FeatureTab {
   key: string;
-  icon: LucideIcon;
+  icon: React.ElementType;
   label: string;
   color: string;
   bg: string;

@@ -3,11 +3,11 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Settings, BadgeCheck } from 'lucide-react';
+import { BadgeCheck, Search } from 'lucide-react';
 import { NotificationsBell } from '@/components/ui/notifications-bell';
 import { SearchModal } from '@/components/ui/search-modal';
 import { useMembers } from '@/hooks/useVeloQuery';
-import { IconBuscar } from '@/components/ui/custom-icons';
+import { IconAjustes } from '@/components/ui/custom-icons';
 
 /**
  * Encabezado de Inicio en móvil.
@@ -67,7 +67,7 @@ export function InicioHeaderMovil({ clubName, clubLogoUrl, userName, userPicture
           className="flex-1 min-w-0 flex items-center gap-2 h-9 px-3 rounded-full text-left transition-colors"
           style={{ background: 'rgba(255,255,255,0.18)' }}
         >
-          <IconBuscar width={15} height={15} className="shrink-0" style={{ color: 'rgba(255,255,255,0.9)' }} />
+          <Search size={15} strokeWidth={2} className="shrink-0" style={{ color: 'rgba(255,255,255,0.9)' }} />
           <span className="text-[13px] truncate" style={{ color: 'rgba(255,255,255,0.9)' }}>
             Buscar clubes, deportistas
           </span>
@@ -84,7 +84,7 @@ export function InicioHeaderMovil({ clubName, clubLogoUrl, userName, userPicture
           className="w-9 h-9 rounded-full flex items-center justify-center shrink-0"
           style={{ background: 'rgba(255,255,255,0.18)' }}
         >
-          <Settings size={17} strokeWidth={1.8} style={{ color: '#fff' }} />
+          <IconAjustes width={17} height={17} style={{ color: '#fff' }} />
         </Link>
       </div>
 

@@ -6,7 +6,10 @@ import Script from 'next/script';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { apiFetch } from '@/lib/api-client';
 import { Desplegable } from '@/components/ui/desplegable';
-import { CreditCard, ArrowLeft, Landmark, Banknote, Clock, RefreshCw, XCircle, Check, Star, Users, Zap, Copy, Upload } from 'lucide-react';
+import { IconPendiente } from '@/components/ui/custom-icons';
+import {
+  CreditCard, ArrowLeft, Landmark, Banknote, RefreshCw, XCircle, Check, Star, Users, Zap, Copy, Upload,
+} from 'lucide-react';
 
 const fmt = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 });
 const cop = fmt.format.bind(fmt);
@@ -1219,7 +1222,7 @@ export default function SuscripcionCard() {
             {payPending ? (
               <div className="p-4 rounded-xl space-y-2" style={{ background: 'rgba(255,183,3,0.08)', border: '1px solid rgba(255,183,3,0.30)' }}>
                 <p className="text-[13px] font-semibold flex items-center gap-1.5" style={{ color: '#B26A00' }}>
-                  <Clock className="w-3.5 h-3.5" /> Pago pendiente de confirmación
+                  <IconPendiente className="w-3.5 h-3.5" /> Pago pendiente de confirmación
                 </p>
                 <p className="text-[12px] text-muted-foreground">
                   {voucherUrl
@@ -1508,7 +1511,7 @@ export default function SuscripcionCard() {
                             demora cuando ya pagó, escribe preocupado. */}
                         <div className="rounded-xl p-3 flex gap-2"
                           style={{ background: 'rgba(240,180,41,0.10)', border: '1px solid rgba(240,180,41,0.30)' }}>
-                          <Clock className="w-4 h-4 shrink-0 mt-0.5" style={{ color: '#8A6216' }} />
+                          <IconPendiente className="w-4 h-4 shrink-0 mt-0.5" style={{ color: '#8A6216' }} />
                           <p className="text-[11.5px] m-0 leading-relaxed" style={{ color: '#8A6216' }}>
                             <b>La verificación puede tomar unas horas.</b> Tu transferencia llega en
                             segundos, pero confirmamos manualmente que entró antes de activar el plan.

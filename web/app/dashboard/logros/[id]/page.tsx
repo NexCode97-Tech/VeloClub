@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { apiFetch } from '@/lib/api-client';
 import { parseLocalDate } from '@/lib/utils';
-import { ChevronLeft, Plus, Trash2, Trophy, Users, MapPin, CalendarDays, Pencil, Navigation } from 'lucide-react';
+import { ChevronLeft, Plus, Users, CalendarDays, Pencil, Navigation } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -17,6 +17,7 @@ import { DatePicker } from '@/components/ui/date-picker';
 import { LocationPicker } from '@/components/ui/location-picker';
 import ModuleLoader, { useCargaMinima } from '@/components/ui/module-loader';
 import ModuleReveal from '@/components/ui/module-reveal';
+import { IconEliminar, IconUbicacion, IconCompetencias } from '@/components/ui/custom-icons';
 
 interface Member { id: string; fullName: string; active?: boolean }
 interface EventResult {
@@ -332,7 +333,7 @@ export default function CompetitionDetailPage() {
             <div className="flex flex-wrap gap-3 mt-1">
               {competition.place && (
                 <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
-                  <MapPin className="w-3 h-3" />{toPlace(competition.place)}
+                  <IconUbicacion className="w-3 h-3" />{toPlace(competition.place)}
                 </span>
               )}
               <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
@@ -415,7 +416,7 @@ export default function CompetitionDetailPage() {
       <div className="px-4 pt-4 flex flex-col gap-4 pb-6">
         {competition.events.length === 0 ? (
           <div className="bg-white border border-border rounded-xl px-4 py-12 text-center">
-            <Trophy className="w-10 h-10 mx-auto mb-3 text-muted-foreground/30" />
+            <IconCompetencias className="w-10 h-10 mx-auto mb-3 text-muted-foreground/30" />
             <p className="text-[13px] font-semibold text-muted-foreground">Sin pruebas registradas</p>
             {canManage && (
               <button
@@ -452,7 +453,7 @@ export default function CompetitionDetailPage() {
                       disabled={deleting === ev.id}
                       className="w-7 h-7 rounded-lg bg-red-50 flex items-center justify-center text-red-400 hover:text-red-600"
                     >
-                      <Trash2 className="w-3.5 h-3.5" />
+                      <IconEliminar className="w-3.5 h-3.5" />
                     </button>
                   </div>
                 )}
@@ -496,7 +497,7 @@ export default function CompetitionDetailPage() {
                           disabled={deleting === r.id}
                           className="w-6 h-6 rounded-lg bg-red-50 flex items-center justify-center text-red-400 hover:text-red-600 shrink-0"
                         >
-                          <Trash2 className="w-3 h-3" />
+                          <IconEliminar className="w-3 h-3" />
                         </button>
                       )}
                     </div>
@@ -515,7 +516,7 @@ export default function CompetitionDetailPage() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <span className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'rgba(67,97,238,0.10)' }}>
-                <Trophy className="w-4 h-4" style={{ color: '#4361EE' }} />
+                <IconCompetencias className="w-4 h-4" style={{ color: '#4361EE' }} />
               </span>
               Editar competencia
             </DialogTitle>

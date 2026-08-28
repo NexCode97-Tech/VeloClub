@@ -16,7 +16,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog';
 import {
-  Plus, Pencil, Trash2, Users, Download, FileSpreadsheet, Upload, X, Eye, Phone, Mail, Calendar, MapPin, Shield, Heart, CreditCard, PauseCircle, PlayCircle, MoreVertical,
+  Plus, Pencil, Users, FileSpreadsheet, Upload, X, Eye, Phone, Mail, Calendar, Shield, Heart, CreditCard, PauseCircle, PlayCircle, MoreVertical, Search,
 } from 'lucide-react';
 import { MemberAvatar } from '@/components/ui/member-avatar';
 import { PhoneInput, parsePhoneDisplay, FlagImg } from '@/components/ui/phone-input';
@@ -31,7 +31,7 @@ import { downloadMembersTemplate, parseMembersExcel } from '@/lib/excel';
 import ModuleLoader, { useCargaMinima } from '@/components/ui/module-loader';
 import ModuleReveal from '@/components/ui/module-reveal';
 import { ContenidoGuardado, MS_GUARDADO, type EstadoGuardado } from '@/components/ui/save-button-state';
-import { IconBuscar } from '@/components/ui/custom-icons';
+import { IconDescargar, IconEliminar, IconUbicacion } from '@/components/ui/custom-icons';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface Location { id: string; name: string }
@@ -585,7 +585,7 @@ export default function MiembrosPage() {
         <div className="flex items-center gap-2">
           <button onClick={() => downloadMembersPDF(members, clubName)} disabled={members.length === 0}
             className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold border border-border text-muted-foreground hover:bg-secondary active:scale-95 transition-all disabled:opacity-40">
-            <Download className="w-4 h-4" /><span className="hidden sm:inline">PDF</span>
+            <IconDescargar className="w-4 h-4" /><span className="hidden sm:inline">PDF</span>
           </button>
           {canManage && (<>
           <button onClick={e => {
@@ -661,7 +661,7 @@ export default function MiembrosPage() {
             {/* Barra de búsqueda. Sin tope de ancho: se estira hasta topar con
                 los botones, para que no quede un hueco en la mitad de la fila. */}
             <div className="relative flex-1 min-w-[180px]">
-              <IconBuscar className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: '#8E87A8' }} />
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: '#8E87A8' }} />
               <input
                 className="w-full pl-10 pr-4 py-2.5 rounded-xl text-[13px] outline-none transition-all"
                 style={{ background: '#fff', border: '1px solid rgba(120,80,200,0.12)', color: '#1A1028' }}
@@ -691,7 +691,7 @@ export default function MiembrosPage() {
               <button onClick={() => downloadMembersPDF(members, clubName)} disabled={members.length === 0}
                 className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-[13px] font-semibold transition-all hover:bg-white cursor-pointer disabled:opacity-40"
                 style={{ color: '#8E87A8', border: '1px solid rgba(120,80,200,0.12)' }}>
-                <Download className="w-4 h-4" /> PDF
+                <IconDescargar className="w-4 h-4" /> PDF
               </button>
               {canManage && (
               <motion.button onClick={openNew}
@@ -887,7 +887,7 @@ export default function MiembrosPage() {
                               className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full"
                               style={{ background: 'rgba(56,29,160,0.08)', color: '#381DA0' }}
                             >
-                              <MapPin className="w-2.5 h-2.5" />
+                              <IconUbicacion className="w-2.5 h-2.5" />
                               {l.location.name}
                             </span>
                           ))}
@@ -963,7 +963,7 @@ export default function MiembrosPage() {
                         style={{ background: 'rgba(239,71,111,0.08)' }}
                         aria-label="Eliminar miembro"
                       >
-                        <Trash2 className="w-4 h-4" style={{ color: '#EF476F' }} />
+                        <IconEliminar className="w-4 h-4" style={{ color: '#EF476F' }} />
                       </motion.button>
                       )}
                     </div>
@@ -1014,7 +1014,7 @@ export default function MiembrosPage() {
         <motion.div variants={pageCard}>
           <div className="flex items-center gap-2">
             <div className="relative flex-1 min-w-0">
-              <IconBuscar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input className="pl-9 bg-white border-border rounded-xl" placeholder="Buscar miembro..." value={search} onChange={e => setSearch(e.target.value)} />
             </div>
             <BotonFiltros
@@ -1207,7 +1207,7 @@ export default function MiembrosPage() {
                       className="w-full flex items-center gap-3 px-2 py-3 rounded-xl text-left transition-colors"
                       style={{ color: '#EF476F' }}
                     >
-                      <Trash2 className="w-[18px] h-[18px] shrink-0" />
+                      <IconEliminar className="w-[18px] h-[18px] shrink-0" />
                       <span className="min-w-0">
                         <span className="block text-[13.5px] font-semibold">Eliminar</span>
                         <span className="block text-[11px]" style={{ color: 'rgba(239,71,111,0.75)' }}>No se puede deshacer</span>
@@ -1526,7 +1526,7 @@ export default function MiembrosPage() {
                       <div className="flex flex-wrap gap-2">
                         {viewMember.locations.map(l => (
                           <div key={l.location.id} className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl" style={{ background: 'rgba(56,29,160,0.08)' }}>
-                            <MapPin className="w-3 h-3 shrink-0" style={{ color: '#381DA0' }} />
+                            <IconUbicacion className="w-3 h-3 shrink-0" style={{ color: '#381DA0' }} />
                             <span className="text-[12px] font-semibold" style={{ color: '#381DA0' }}>{l.location.name}</span>
                           </div>
                         ))}

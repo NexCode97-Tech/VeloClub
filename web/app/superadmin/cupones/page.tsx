@@ -5,8 +5,9 @@ import { useEffect, useState } from 'react';
 import { apiFetch } from '@/lib/api-client';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AccionesCabecera } from '@/components/superadmin/acciones-cabecera';
-import { Plus, Trash2, Ticket, X } from 'lucide-react';
+import { Plus, Ticket, X } from 'lucide-react';
 import { DatePicker } from '@/components/ui/date-picker';
+import { IconEliminar } from '@/components/ui/custom-icons';
 
 const EASE = [0.23, 1, 0.32, 1] as [number, number, number, number];
 const ACCENT = '#381DA0';
@@ -226,7 +227,7 @@ export default function CuponesPage() {
                     {c.activo ? 'Desactivar' : 'Activar'}
                   </button>
                   <button onClick={() => eliminar(c)} className="shrink-0 flex items-center justify-center rounded-lg" style={{ width: 30, height: 30, color: '#EF476F' }} title="Eliminar">
-                    <Trash2 size={15} />
+                    <IconEliminar width={15} height={15} />
                   </button>
                 </div>
               );

@@ -9,10 +9,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { MemberAvatar } from '@/components/ui/member-avatar';
 import { ContenidoGuardado } from '@/components/ui/save-button-state';
 import { VisorImagen } from '@/components/ui/visor-imagen';
-import {
-  Globe, Lock, Heart, MessageCircle, ChevronRight, MapPin, FileText,
-  SendHorizontal, X, Trash2, Pencil, MoreHorizontal, Flag,
-} from 'lucide-react';
+import { IconChat, IconEliminar, IconUbicacion } from '@/components/ui/custom-icons';
+import { Globe, Lock, Heart, ChevronRight, FileText, SendHorizontal, X, Pencil, MoreHorizontal, Flag } from 'lucide-react';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -474,7 +472,7 @@ export function PostCard({
                     onClick={() => { setCommentMenu(null); onDeleteComment(post.id, c.id); }}
                     className="flex items-center gap-2 px-3.5 py-2.5 text-[12px] font-semibold text-red-500 hover:bg-red-50 transition-colors text-left"
                   >
-                    <Trash2 className="w-3.5 h-3.5" /> Eliminar
+                    <IconEliminar className="w-3.5 h-3.5" /> Eliminar
                   </button>
                   <div style={{ height: 1, background: 'rgba(56,29,160,0.07)' }} />
                   </>
@@ -569,7 +567,7 @@ export function PostCard({
                 {post.ubicacion && (
                   <>
                     {' · '}
-                    <MapPin className="inline w-3 h-3 -mt-0.5" style={{ color: '#8E87A8' }} />
+                    <IconUbicacion className="inline w-3 h-3 -mt-0.5" style={{ color: '#8E87A8' }} />
                     {' '}{post.ubicacion}
                   </>
                 )}
@@ -638,7 +636,7 @@ export function PostCard({
                       onClick={() => { setPostMenuOpen(false); setConfirmDel(true); }}
                       className="w-full flex items-center gap-2.5 px-4 py-2.5 text-[13px] font-semibold text-red-500 hover:bg-red-50 transition-colors cursor-pointer border-t border-border/50"
                     >
-                      <Trash2 className="w-3.5 h-3.5" /> Eliminar
+                      <IconEliminar className="w-3.5 h-3.5" /> Eliminar
                     </button>
                     )}
                   </motion.div>
@@ -862,7 +860,7 @@ export function PostCard({
             onClick={() => { setShowComments(v => !v); setTimeout(() => commentInputRef.current?.focus(), 150); }}
             whileTap={{ scale: 0.95 }}
             className={`flex-1 flex items-center justify-center gap-2 py-2.5 transition-colors hover:bg-secondary/60${dosColumnas ? ' md:flex-none md:justify-start md:hover:bg-transparent' : ''}`}>
-            <MessageCircle className="w-[17px] h-[17px] md:w-4 md:h-4" style={{ color: showComments ? '#4361EE' : '#8E87A8' }} />
+            <IconChat className="w-[17px] h-[17px] md:w-4 md:h-4" style={{ color: showComments ? '#4361EE' : '#8E87A8' }} />
             <span className="text-[13px] md:text-[12px] font-semibold" style={{ color: showComments ? '#4361EE' : '#8E87A8' }}>Comentar</span>
           </motion.button>
 

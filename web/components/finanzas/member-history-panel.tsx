@@ -5,14 +5,12 @@ import { createPortal } from 'react-dom';
 import { useAuth } from '@clerk/nextjs';
 import { useQuery } from '@tanstack/react-query';
 import { motion, useReducedMotion } from 'framer-motion';
-import {
-  X, Check, Clock, AlertCircle, Receipt, Download, MessageCircle,
-  FileDown, Upload, Trash2, FileX, RotateCcw, CalendarX,
-} from 'lucide-react';
+import { X, Check, AlertCircle, FileDown, Upload, FileX, RotateCcw, CalendarX } from 'lucide-react';
 import { apiFetch } from '@/lib/api-client';
 import { buildWhatsAppUrl } from '@/lib/whatsapp';
 import { downloadInvoicePDF, downloadHistoryPDF } from '@/lib/pdf';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { IconChat, IconDescargar, IconEliminar, IconPendiente, IconRecibo } from '@/components/ui/custom-icons';
 
 const EASE_OUT: [number, number, number, number] = [0.23, 1, 0.32, 1];
 const IOS: [number, number, number, number] = [0.32, 0.72, 0, 1];
@@ -347,7 +345,7 @@ export default function MemberHistoryPanel({
                       const pagado  = p.status === 'PAID';
                       const dias    = pagado && p.paidAt && p.dueDate ? diasDeDiferencia(p.paidAt, p.dueDate) : null;
 
-                      const Icon = pagado ? (aTiempo === false ? AlertCircle : Check) : Clock;
+                      const Icon = pagado ? (aTiempo === false ? AlertCircle : Check) : IconPendiente;
                       const tono = pagado
                         ? (aTiempo === false ? { bg: 'rgba(239,71,111,0.12)', fg: '#A32D2D' } : { bg: 'rgba(6,214,160,0.13)', fg: '#0B7A5D' })
                         : { bg: 'rgba(255,183,3,0.14)', fg: '#8A6200' };
@@ -377,7 +375,7 @@ export default function MemberHistoryPanel({
                               title="Recordar por WhatsApp"
                               className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-transform active:scale-95"
                               style={{ background: 'rgba(37,211,102,0.12)', color: '#25D366' }}>
-                              <MessageCircle className="w-3.5 h-3.5" />
+                              <IconChat className="w-3.5 h-3.5" />
                             </button>
                           )}
                           {!pagado && (
@@ -395,7 +393,7 @@ export default function MemberHistoryPanel({
                             title={p.receiptUrl ? 'Ver comprobante' : 'Subir comprobante'}
                             className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-transform active:scale-95"
                             style={{ border: '1px solid rgba(120,80,200,0.16)', color: p.receiptUrl ? '#381DA0' : '#B8B2CC' }}>
-                            {p.receiptUrl ? <Receipt className="w-3.5 h-3.5" /> : <FileX className="w-3.5 h-3.5" />}
+                            {p.receiptUrl ? <IconRecibo className="w-3.5 h-3.5" /> : <FileX className="w-3.5 h-3.5" />}
                           </button>
                           {pagado && (
                             <button
@@ -406,7 +404,7 @@ export default function MemberHistoryPanel({
                               title="Descargar recibo"
                               className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-transform active:scale-95"
                               style={{ border: '1px solid rgba(120,80,200,0.16)', color: '#381DA0' }}>
-                              <Download className="w-3.5 h-3.5" />
+                              <IconDescargar className="w-3.5 h-3.5" />
                             </button>
                           )}
                         </div>
@@ -472,7 +470,7 @@ export default function MemberHistoryPanel({
                   <button onClick={borrarComprobante} disabled={busy === 'receipt'}
                     className="flex items-center justify-center gap-2 rounded-xl text-[12px] font-semibold disabled:opacity-50"
                     style={{ padding: '10px 16px', border: '1px solid rgba(239,71,111,0.25)', background: 'rgba(239,71,111,0.06)', color: '#EF476F' }}>
-                    <Trash2 className="w-3.5 h-3.5" /> Eliminar
+                    <IconEliminar className="w-3.5 h-3.5" /> Eliminar
                   </button>
                 )}
 

@@ -7,10 +7,7 @@ import { apiFetch } from '@/lib/api-client';
 import { parseLocalDate, toSentenceCase } from '@/lib/utils';
 import { useCompetitions, useTraining, useLocations } from '@/hooks/useVeloQuery';
 import Link from 'next/link';
-import {
-  Trophy, Plus, Trash2, MapPin, CalendarDays, ChevronRight,
-  ClipboardList, Users, Target, Medal, ArrowLeft,
-} from 'lucide-react';
+import { Plus, CalendarDays, ChevronRight, Users, Target, Medal, ArrowLeft } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -21,6 +18,7 @@ import { LocationPicker } from '@/components/ui/location-picker';
 import ModuleLoader, { useCargaMinima } from '@/components/ui/module-loader';
 import ModuleReveal from '@/components/ui/module-reveal';
 import { ESCENARIOS, infoEscenario, type Escenario } from '@/lib/training-escenarios';
+import { IconEliminar, IconUbicacion, IconCompetencias, IconEntrenamientos } from '@/components/ui/custom-icons';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 interface EventResult  { id: string; position?: number; member: { id: string; fullName: string; pictureUrl?: string | null } }
@@ -298,8 +296,8 @@ function LogrosPageInner() {
               style={{ color: tab === t ? '#1A1028' : '#8E87A8' }}
             >
               {t === 'comp'
-                ? <><Trophy className="w-3.5 h-3.5" />Competencias</>
-                : <><ClipboardList className="w-3.5 h-3.5" />Entrenamientos</>
+                ? <><IconCompetencias className="w-3.5 h-3.5" />Competencias</>
+                : <><IconEntrenamientos className="w-3.5 h-3.5" />Entrenamientos</>
               }
             </button>
           ))}
@@ -312,8 +310,8 @@ function LogrosPageInner() {
           <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
             style={{ background: '#381DA0' }}>
             {tab === 'comp'
-              ? <Trophy className="w-3.5 h-3.5 text-white" />
-              : <ClipboardList className="w-3.5 h-3.5 text-white" />}
+              ? <IconCompetencias className="w-3.5 h-3.5 text-white" />
+              : <IconEntrenamientos className="w-3.5 h-3.5 text-white" />}
           </div>
           <h2 className="text-[15px] font-semibold text-foreground">
             {tab === 'comp' ? 'Competencias' : 'Entrenamientos'}
@@ -365,7 +363,7 @@ function LogrosPageInner() {
             <motion.div key="comp" initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 12 }} transition={{ duration: 0.2 }}>
               {visibleComps.length === 0 ? (
                 <EmptyState
-                  icon={<Trophy className="w-10 h-10" style={{ color: '#4361EE' }} />}
+                  icon={<IconCompetencias className="w-10 h-10" style={{ color: '#4361EE' }} />}
                   color="#4361EE"
                   title="Sin competencias"
                   desc="Registra la primera competencia del club para llevar un historial de resultados."
@@ -382,7 +380,7 @@ function LogrosPageInner() {
             <motion.div key="train" initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -12 }} transition={{ duration: 0.2 }}>
               {visibleSessions.length === 0 ? (
                 <EmptyState
-                  icon={<ClipboardList className="w-10 h-10" style={{ color: '#06D6A0' }} />}
+                  icon={<IconEntrenamientos className="w-10 h-10" style={{ color: '#06D6A0' }} />}
                   color="#06D6A0"
                   title="Sin entrenamientos"
                   desc="Registra sesiones de entrenamiento para hacer seguimiento del rendimiento."
@@ -407,7 +405,7 @@ function LogrosPageInner() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <span className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'rgba(67,97,238,0.10)' }}>
-                <Trophy className="w-4 h-4" style={{ color: '#4361EE' }} />
+                <IconCompetencias className="w-4 h-4" style={{ color: '#4361EE' }} />
               </span>
               Nueva competencia
             </DialogTitle>
@@ -485,7 +483,7 @@ function LogrosPageInner() {
                 </button>
               ) : (
                 <span className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'rgba(6,214,160,0.10)' }}>
-                  <ClipboardList className="w-4 h-4" style={{ color: '#06D6A0' }} />
+                  <IconEntrenamientos className="w-4 h-4" style={{ color: '#06D6A0' }} />
                 </span>
               )}
               {sessionForm.escenario
@@ -596,7 +594,7 @@ function CompCard({ comp: c, isStudent, myMemberId, canManage, deleting, onDelet
           className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0"
           style={{ background: 'rgba(67,97,238,0.13)' }}
         >
-          <Trophy className="w-6 h-6" style={{ color: '#4361EE' }} />
+          <IconCompetencias className="w-6 h-6" style={{ color: '#4361EE' }} />
         </div>
 
         {/* Info central */}
@@ -607,7 +605,7 @@ function CompCard({ comp: c, isStudent, myMemberId, canManage, deleting, onDelet
           <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1">
             {c.place && (
               <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
-                <MapPin className="w-3 h-3 shrink-0" />{toPlace(c.place)}
+                <IconUbicacion className="w-3 h-3 shrink-0" />{toPlace(c.place)}
               </span>
             )}
             <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
@@ -640,7 +638,7 @@ function CompCard({ comp: c, isStudent, myMemberId, canManage, deleting, onDelet
             >
               {deleting
                 ? <div className="w-3.5 h-3.5 rounded-full border border-red-400 border-t-transparent animate-spin" />
-                : <Trash2 className="w-3.5 h-3.5" />
+                : <IconEliminar className="w-3.5 h-3.5" />
               }
             </motion.button>
           )}
@@ -652,7 +650,7 @@ function CompCard({ comp: c, isStudent, myMemberId, canManage, deleting, onDelet
         <div className="mx-4 mb-4 rounded-2xl overflow-hidden" style={{ background: 'rgba(247,245,255,0.8)', border: '1px solid rgba(56,29,160,0.08)' }}>
           <div className="flex items-center justify-between px-3 py-2 border-b" style={{ borderColor: 'rgba(56,29,160,0.08)' }}>
             <span className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: '#381DA0' }}>Pódio</span>
-            <Trophy className="w-3 h-3" style={{ color: '#381DA0', opacity: 0.5 }} />
+            <IconCompetencias className="w-3 h-3" style={{ color: '#381DA0', opacity: 0.5 }} />
           </div>
           <div className="flex divide-x" style={{ '--tw-divide-opacity': 1, borderColor: 'rgba(56,29,160,0.06)' } as React.CSSProperties}>
             {podium.map(r => {
@@ -719,7 +717,7 @@ function TrainCard({ session: s, isStudent, myMemberId, canManage, deleting, onD
           <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1">
             {s.location && (
               <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
-                <MapPin className="w-3 h-3 shrink-0" />{toPlace(s.location.name)}
+                <IconUbicacion className="w-3 h-3 shrink-0" />{toPlace(s.location.name)}
               </span>
             )}
             <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
@@ -754,7 +752,7 @@ function TrainCard({ session: s, isStudent, myMemberId, canManage, deleting, onD
             >
               {deleting
                 ? <div className="w-3.5 h-3.5 rounded-full border border-red-400 border-t-transparent animate-spin" />
-                : <Trash2 className="w-3.5 h-3.5" />
+                : <IconEliminar className="w-3.5 h-3.5" />
               }
             </motion.button>
           )}

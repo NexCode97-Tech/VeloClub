@@ -1,8 +1,9 @@
 'use client';
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { MapPin, X } from 'lucide-react';
+import { X } from 'lucide-react';
 import { LocationMapPicker } from './location-map-picker';
+import { IconUbicacion } from '@/components/ui/custom-icons';
 
 interface Props {
   value: string;
@@ -35,7 +36,7 @@ export function LocationPicker({ value, hasCoords, onSelect, onClear, initialLat
         className="w-full flex items-center gap-2 h-12 px-3 rounded-xl border border-input hover:border-ring transition-colors text-left"
         style={{ background: '#fff' }}
       >
-        <MapPin className={`w-4 h-4 shrink-0 ${hasCoords ? 'text-emerald-500' : 'text-muted-foreground'}`} />
+        <IconUbicacion className={`w-4 h-4 shrink-0 ${hasCoords ? 'text-emerald-500' : 'text-muted-foreground'}`} />
         <span className={`flex-1 text-sm truncate ${value ? 'text-foreground' : 'text-muted-foreground'}`}>
           {value || 'Seleccionar en el mapa…'}
         </span>
@@ -50,7 +51,7 @@ export function LocationPicker({ value, hasCoords, onSelect, onClear, initialLat
       </button>
       {hasCoords && (
         <p className="text-[11px] text-emerald-600 flex items-center gap-1 mt-1">
-          <MapPin className="w-3 h-3" />
+          <IconUbicacion className="w-3 h-3" />
           Enlace Google Maps disponible para los deportistas
         </p>
       )}
@@ -60,7 +61,7 @@ export function LocationPicker({ value, hasCoords, onSelect, onClear, initialLat
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-base">
-              <MapPin className="w-4 h-4" style={{ color: '#381DA0' }} />
+              <IconUbicacion className="w-4 h-4" style={{ color: '#381DA0' }} />
               Seleccionar ubicación
             </DialogTitle>
           </DialogHeader>

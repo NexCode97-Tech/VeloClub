@@ -3,8 +3,8 @@
 import { useAuth } from '@clerk/nextjs';
 import { useEffect, useState } from 'react';
 import { apiFetch } from '@/lib/api-client';
-import { Plus, Trash2, CheckCircle2, Clock, AlertCircle, CalendarDays, TrendingUp, Upload } from 'lucide-react';
-import { IconMisPagos } from '@/components/ui/custom-icons';
+import { Plus, CheckCircle2, AlertCircle, CalendarDays, TrendingUp, Upload } from 'lucide-react';
+import { IconMisPagos, IconEliminar, IconPendiente } from '@/components/ui/custom-icons';
 import { motion } from 'framer-motion';
 import { stagger, cardVariant } from '@/lib/page-animations';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -34,7 +34,7 @@ const STATUS_LABELS: Record<string, string> = {
 };
 const STATUS_COLORS: Record<string, { text: string; bg: string; icon: React.ElementType }> = {
   PAID:     { text: '#06D6A0', bg: 'rgba(6,214,160,0.12)',   icon: CheckCircle2 },
-  PENDING:  { text: '#FFB703', bg: 'rgba(255,183,3,0.12)',   icon: Clock },
+  PENDING:  { text: '#FFB703', bg: 'rgba(255,183,3,0.12)',   icon: IconPendiente },
   OVERDUE:  { text: '#EF476F', bg: 'rgba(239,71,111,0.12)',  icon: AlertCircle },
   REFUNDED: { text: '#8E87A8', bg: 'rgba(142,135,168,0.12)', icon: IconMisPagos },
 };
@@ -259,7 +259,7 @@ export default function PagosPage() {
                   {hasOverdue ? (
                     <AlertCircle className="w-4 h-4" />
                   ) : pending.length > 0 ? (
-                    <Clock className="w-4 h-4" />
+                    <IconPendiente className="w-4 h-4" />
                   ) : (
                     <CheckCircle2 className="w-4 h-4" />
                   )}
@@ -575,7 +575,7 @@ export default function PagosPage() {
                         disabled={deleting === p.id}
                         className="w-7 h-7 rounded-lg bg-red-50 flex items-center justify-center text-red-400 hover:text-red-600 self-end"
                       >
-                        <Trash2 className="w-3.5 h-3.5" />
+                        <IconEliminar className="w-3.5 h-3.5" />
                       </button>
                     </div>
                   )}

@@ -7,10 +7,8 @@ import { DatePicker } from '@/components/ui/date-picker';
 import { PhoneInput } from '@/components/ui/phone-input';
 import SportSelect from './sport-select';
 import { motion, AnimatePresence, type Variants } from 'framer-motion';
-import {
-Pencil, Trash2, X, Check, TrendingUp, CalendarClock,
-  Eye, Upload, RotateCcw, MessageCircle, Power, BadgeCheck, Camera,
-} from 'lucide-react';
+import { Pencil, X, Check, TrendingUp, CalendarClock, Eye, Upload, RotateCcw, Power, BadgeCheck, Camera } from 'lucide-react';
+import { IconChat, IconEliminar } from '@/components/ui/custom-icons';
 
 // ── Formateo ────────────────────────────────────────────────────────────────
 const fmt = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 });
@@ -545,7 +543,7 @@ export default function ClubDetail({ club, suscripcion, tab, onReload, onDeleted
           <motion.a href={getWhatsAppUrl(club)} target="_blank" rel="noopener noreferrer" whileTap={{ scale: 0.96 }}
             title="Enviar recordatorio por WhatsApp"
             style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 11px', borderRadius: 10, background: 'rgba(37,211,102,0.08)', border: '1px solid rgba(37,211,102,0.28)', color: '#1BA147', textDecoration: 'none', fontSize: 11, fontWeight: 600, fontFamily: 'inherit' }}>
-            <MessageCircle size={13} /> Recordatorio
+            <IconChat width={13} height={13} /> Recordatorio
           </motion.a>
           <motion.button onClick={toggleActive} whileTap={{ scale: 0.96 }}
             style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 11px', borderRadius: 10, border: '1px solid rgba(120,80,200,0.14)', background: 'transparent', color: '#6B6580', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
@@ -553,7 +551,7 @@ export default function ClubDetail({ club, suscripcion, tab, onReload, onDeleted
           </motion.button>
           <motion.button onClick={deleteClub} whileTap={{ scale: 0.96 }}
             style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 11px', borderRadius: 10, border: '1px solid rgba(239,71,111,0.20)', background: 'transparent', color: '#EF476F', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
-            <Trash2 size={13} /> Eliminar
+            <IconEliminar width={13} height={13} /> Eliminar
           </motion.button>
         </div>
       </div>
@@ -723,7 +721,7 @@ export default function ClubDetail({ club, suscripcion, tab, onReload, onDeleted
                   <RoleToggle value={m.role} onChange={r => changeRole(m.id, r)} />
                   <motion.button onClick={() => removeMember(m.id)} whileTap={{ scale: 0.88 }}
                     style={{ width: 28, height: 28, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(239,71,111,0.07)', border: '1px solid rgba(239,71,111,0.18)', color: '#EF476F', cursor: 'pointer', flexShrink: 0 }}>
-                    <Trash2 size={12} />
+                    <IconEliminar width={12} height={12} />
                   </motion.button>
                 </div>
               ))
@@ -962,7 +960,7 @@ export default function ClubDetail({ club, suscripcion, tab, onReload, onDeleted
                                 <motion.button onClick={() => startEditPago(p)} whileTap={{ scale: 0.88 }}
                                   style={{ width: 28, height: 28, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(56,29,160,0.08)', border: '1px solid rgba(56,29,160,0.15)', color: '#381DA0', cursor: 'pointer' }}><Pencil size={11} /></motion.button>
                                 <motion.button onClick={() => deletePago(p.id)} whileTap={{ scale: 0.88 }}
-                                  style={{ width: 28, height: 28, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(239,71,111,0.08)', border: '1px solid rgba(239,71,111,0.18)', color: '#EF476F', cursor: 'pointer' }}><Trash2 size={11} /></motion.button>
+                                  style={{ width: 28, height: 28, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(239,71,111,0.08)', border: '1px solid rgba(239,71,111,0.18)', color: '#EF476F', cursor: 'pointer' }}><IconEliminar width={11} height={11} /></motion.button>
                               </div>
                             </div>
                           </motion.div>

@@ -2,8 +2,7 @@
 
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { ChevronDown, Check } from 'lucide-react';
-import { IconBuscar } from '@/components/ui/custom-icons';
+import { ChevronDown, Check, Search } from 'lucide-react';
 
 /* ─────────────────────────────────────────────────────────────
    SearchableSelect — select con buscador integrado
@@ -150,7 +149,7 @@ export function SearchableSelect({
         >
           <div className="p-2 border-b border-border">
             <div className="relative">
-              <IconBuscar className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
               <input
                 ref={searchRef}
                 type="text"

@@ -2,13 +2,14 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useAuth } from '@clerk/nextjs';
-import { Building2, Clock, CreditCard, DollarSign, Plus, TrendingUp, Trash2, Zap } from 'lucide-react';
+import { Building2, CreditCard, DollarSign, Plus, TrendingUp, Zap } from 'lucide-react';
 import { apiFetch } from '@/lib/api-client';
 import { Desplegable } from '@/components/ui/desplegable';
 import { DatePicker } from '@/components/ui/date-picker';
 import { HojaInferior } from '@/components/ui/hoja-inferior';
 import { MonthPicker, type DateRange } from '@/components/ui/month-picker';
 import { GraficaMeses, Ranking, ENTRA, SALE, type MesFinanzas } from '@/components/superadmin/grafica-meses';
+import { IconEliminar, IconPendiente } from '@/components/ui/custom-icons';
 
 /**
  * Las finanzas del negocio.
@@ -380,7 +381,7 @@ export default function FinanzasSuperadmin() {
                   glosa="Clubes creados desde el primer día"
                 />
                 <Etapa
-                  icono={<Clock className="w-3.5 h-3.5 shrink-0" />}
+                  icono={<IconPendiente className="w-3.5 h-3.5 shrink-0" />}
                   titulo="Están probando"
                   n={datos.pulso.enPrueba}
                   pct={porcentaje(datos.pulso.enPrueba, datos.pulso.clubesTotal)}
@@ -489,7 +490,7 @@ export default function FinanzasSuperadmin() {
                       {m.tipo === 'gasto' && m.origen ? <span /> : (
                         <button type="button" onClick={() => borrar(m)} aria-label={`Borrar ${m.texto}`}
                           className="text-muted-foreground hover:text-[#A33A4E] transition-colors">
-                          <Trash2 className="w-3.5 h-3.5" />
+                          <IconEliminar className="w-3.5 h-3.5" />
                         </button>
                       )}
                     </div>

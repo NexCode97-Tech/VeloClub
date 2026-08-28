@@ -5,12 +5,13 @@ import { createPortal } from 'react-dom';
 import { useAuth } from '@clerk/nextjs';
 import { motion, AnimatePresence } from 'framer-motion';
 import { apiFetch } from '@/lib/api-client';
-import { Plus, Pencil, Trash2, X, MapPin, AlertTriangle } from 'lucide-react';
+import { Plus, Pencil, X, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { DIAS_SEMANA } from '@/lib/dias';
 import { CATEGORIAS } from '@/lib/categorias';
+import { IconEliminar, IconUbicacion } from '@/components/ui/custom-icons';
 
 interface Sede { id: string; name: string }
 
@@ -163,7 +164,7 @@ export default function HorarioClases() {
                     <div className="flex items-center gap-1.5 flex-wrap mt-0.5">
                       <span className="inline-flex items-center gap-1 text-[9px] font-bold px-2 py-0.5 rounded-full"
                         style={{ background: 'rgba(67,97,238,0.10)', color: '#2F4BC7' }}>
-                        <MapPin className="w-2.5 h-2.5" /> {c.location.name}
+                        <IconUbicacion className="w-2.5 h-2.5" /> {c.location.name}
                       </span>
                       {c.categoria && (
                         <span className="text-[9px] font-bold px-2 py-0.5 rounded-full"
@@ -181,7 +182,7 @@ export default function HorarioClases() {
                   <button onClick={() => setPorBorrar(c)} aria-label="Quitar clase"
                     className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-colors hover:bg-red-50"
                     style={{ color: '#EF476F' }}>
-                    <Trash2 className="w-3.5 h-3.5" />
+                    <IconEliminar className="w-3.5 h-3.5" />
                   </button>
                 </div>
               ))}

@@ -4,9 +4,10 @@ import { useSession } from '@clerk/nextjs';
 import { useCallback, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { apiFetch } from '@/lib/api-client';
-import { Flag, Trash2, ShieldCheck, Globe, Lock, AlertTriangle } from 'lucide-react';
+import { Flag, ShieldCheck, Globe, Lock, AlertTriangle } from 'lucide-react';
 import { AccionesCabecera } from '@/components/superadmin/acciones-cabecera';
 import ModuleLoader, { useCargaMinima } from '@/components/ui/module-loader';
+import { IconEliminar } from '@/components/ui/custom-icons';
 
 type Estado = 'PENDIENTE' | 'ELIMINADO' | 'DESESTIMADO';
 
@@ -242,7 +243,7 @@ export default function ReportesPage() {
                       className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-[12.5px] font-semibold text-white disabled:opacity-50 transition-opacity"
                       style={{ background: '#EF476F' }}
                     >
-                      <Trash2 className="w-3.5 h-3.5" /> Retirar contenido
+                      <IconEliminar className="w-3.5 h-3.5" /> Retirar contenido
                     </button>
                     <button
                       onClick={() => resolver(r.id, 'DESESTIMAR')}

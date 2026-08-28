@@ -13,8 +13,8 @@ import { BottomCircleMenu } from '@/components/ui/bottom-circle-menu';
 import { SearchModal } from '@/components/ui/search-modal';
 import { NotificationsBell } from '@/components/ui/notifications-bell';
 import TermsGateModal from '@/components/ui/terms-gate-modal';
-import { Settings, ChevronLeft, ChevronRight, ArrowLeft, Trophy, ClipboardList } from 'lucide-react';
-import { IconHome, IconUsers, IconCalendar, IconStatistics, IconClub, IconFinanzas, IconUbicacion, IconAsistencias, IconResultados, IconAjustes, IconMisPagos, IconPerfil, IconSuscripcion, IconBuscar } from '@/components/ui/custom-icons';
+import { Settings, ChevronLeft, ChevronRight, ArrowLeft, Search } from 'lucide-react';
+import { IconHome, IconUsers, IconCalendar, IconStatistics, IconClub, IconFinanzas, IconUbicacion, IconAsistencias, IconResultados, IconAjustes, IconMisPagos, IconPerfil, IconSuscripcion, IconCompetencias, IconEntrenamientos } from '@/components/ui/custom-icons';
 
 // Modal de aceptación de Términos y Política de Datos — desactivado hasta
 // completar razón social/NIT en docs/legal. Cambiar a true para publicar.
@@ -457,10 +457,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   // Dentro de /dashboard/logros muestra Competencias / Entrenamientos (?tab=).
   const onLogros = pathname.startsWith('/dashboard/logros');
   const LOGROS_SUBNAV = [
-    { key: 'comp',  label: 'Competencias',   icon: Trophy },
+    { key: 'comp',  label: 'Competencias',   icon: IconCompetencias },
     // Planilla y no mancuerna: la mancuerna ahora significa gimnasio, y este
     // menú cubre los dos escenarios (pista y gimnasio).
-    { key: 'train', label: 'Entrenamientos', icon: ClipboardList },
+    { key: 'train', label: 'Entrenamientos', icon: IconEntrenamientos },
   ];
 
   // Vista actual del sidebar y dirección del deslizamiento (main → sub-menú
@@ -559,7 +559,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 style={{ width: 28, height: 28, color: '#8E87A8' }}
                 title="Buscar (Ctrl+K)"
               >
-                <IconBuscar className="w-[14px] h-[14px]" />
+                <Search className="w-[14px] h-[14px]" />
               </button>
               <NotificationsBell />
             </div>

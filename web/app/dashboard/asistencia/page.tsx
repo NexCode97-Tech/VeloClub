@@ -8,7 +8,7 @@ import { apiFetch } from '@/lib/api-client';
 import { QK } from '@/hooks/useVeloQuery';
 import { horaLegible } from '@/components/ajustes/horario-clases';
 import { DIA_CORTO_3 } from '@/lib/dias';
-import { Users, MapPin, CheckCircle2, Download, FileSpreadsheet, FileText, ChevronDown } from 'lucide-react';
+import { Users, CheckCircle2, FileSpreadsheet, FileText, ChevronDown, Search } from 'lucide-react';
 const EASE_OUT: [number,number,number,number] = [0.23, 1, 0.32, 1];
 import { MemberAvatar } from '@/components/ui/member-avatar';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
@@ -25,7 +25,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Label } from '@/components/ui/label';
 import { DatePicker } from '@/components/ui/date-picker';
 import { useClubSettings } from '@/hooks/useVeloQuery';
-import { IconBuscar } from '@/components/ui/custom-icons';
+import { IconDescargar, IconUbicacion } from '@/components/ui/custom-icons';
 import {
   descargarAsistenciaPDF, descargarAsistenciaExcel,
   type ReporteAsistencia,
@@ -593,7 +593,7 @@ export default function AsistenciaPage() {
             className="flex items-center gap-1.5 h-[34px] px-3 rounded-xl text-sm font-semibold cursor-pointer transition-colors hover:bg-secondary"
             style={{ background: 'rgba(56,29,160,0.08)', color: '#381DA0' }}
           >
-            <Download className="w-4 h-4" />
+            <IconDescargar className="w-4 h-4" />
             <span className="hidden sm:inline">Descargar</span>
           </motion.button>
         )}
@@ -693,7 +693,7 @@ export default function AsistenciaPage() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <span className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'rgba(56,29,160,0.10)' }}>
-                <Download className="w-4 h-4" style={{ color: '#381DA0' }} />
+                <IconDescargar className="w-4 h-4" style={{ color: '#381DA0' }} />
               </span>
               Descargar asistencia
             </DialogTitle>
@@ -882,7 +882,7 @@ export default function AsistenciaPage() {
                       para que la búsqueda siga estirándose. */}
                   <div className="flex items-center gap-2 md:contents">
                     <div className="relative flex-1 min-w-0 md:flex-1">
-                      <IconBuscar className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: '#8E87A8' }} />
+                      <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: '#8E87A8' }} />
                       <input
                         className="w-full pl-10 pr-4 py-2.5 rounded-xl text-[13px] outline-none transition-all"
                         style={{ background: '#fff', border: '1px solid rgba(120,80,200,0.12)', color: '#1A1028' }}
@@ -901,7 +901,7 @@ export default function AsistenciaPage() {
                         compacto
                         className="md:hidden"
                         tono="#4361EE"
-                        icono={<MapPin className="w-4 h-4" />}
+                        icono={<IconUbicacion className="w-4 h-4" />}
                         valor={selectedLoc}
                         opciones={locations.map(l => ({ valor: l.id, texto: l.name }))}
                         vacio="Sede"
@@ -954,7 +954,7 @@ export default function AsistenciaPage() {
                     </button>
                   ) : locations.length > 1 ? (
                     <div className="hidden md:flex items-center gap-2 md:w-52 md:shrink-0">
-                      <MapPin className="w-4 h-4 text-muted-foreground shrink-0" />
+                      <IconUbicacion className="w-4 h-4 text-muted-foreground shrink-0" />
                       <Select value={selectedLoc} onValueChange={v => setSelectedLoc(v ?? selectedLoc)}>
                         <SelectTrigger className="bg-white flex-1">
                           <span className="text-sm font-semibold">
@@ -970,7 +970,7 @@ export default function AsistenciaPage() {
                     </div>
                   ) : locations.length === 1 ? (
                     <div className="hidden md:flex items-center gap-2 px-3 py-2 bg-white border border-border rounded-xl md:shrink-0">
-                      <MapPin className="w-4 h-4 shrink-0" style={{ color: '#4361EE' }} />
+                      <IconUbicacion className="w-4 h-4 shrink-0" style={{ color: '#4361EE' }} />
                       <span className="text-[13px] font-semibold text-foreground">{locations[0].name}</span>
                     </div>
                   ) : null}
@@ -981,7 +981,7 @@ export default function AsistenciaPage() {
                     esta marcando, que es el error que se paga caro. */}
                 {!claseActiva && locations.length > 0 && (
                   <p className="md:hidden flex items-center gap-1 text-[11px] m-0" style={{ color: '#8E87A8' }}>
-                    <MapPin className="w-3 h-3 shrink-0" />
+                    <IconUbicacion className="w-3 h-3 shrink-0" />
                     <span className="truncate">
                       {locations.find(l => l.id === selectedLoc)?.name ?? locations[0].name}
                     </span>

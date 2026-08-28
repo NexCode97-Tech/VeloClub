@@ -13,12 +13,10 @@ import { Label } from '@/components/ui/label';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog';
-import {
-  Plus, Pencil, Trash2, MapPin, LocateFixed, X, ChevronRight, ChevronDown, AlertCircle, AlertTriangle,
-} from 'lucide-react';
+import { Plus, Pencil, LocateFixed, X, ChevronRight, ChevronDown, AlertCircle, AlertTriangle, Search } from 'lucide-react';
 import ModuleLoader, { useCargaMinima } from '@/components/ui/module-loader';
 import ModuleReveal from '@/components/ui/module-reveal';
-import { IconBuscar } from '@/components/ui/custom-icons';
+import { IconEliminar, IconUbicacion } from '@/components/ui/custom-icons';
 
 // Carga dinámica del mapa (no SSR — Leaflet requiere window)
 const LocationMapPicker = dynamic(
@@ -355,7 +353,7 @@ export default function SedesPage() {
                 >
                   <div className="flex items-center gap-2.5">
                     <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'rgba(56,29,160,0.10)' }}>
-                      <MapPin className="w-4 h-4" style={{ color: '#381DA0' }} />
+                      <IconUbicacion className="w-4 h-4" style={{ color: '#381DA0' }} />
                     </div>
                     <div className="text-left">
                       <p className="text-sm font-medium text-foreground">Seleccionar en el mapa</p>
@@ -398,7 +396,7 @@ export default function SedesPage() {
         <div className="px-4 pt-4 lg:pt-6">
           <div className="flex items-center gap-2 flex-wrap">
             <div className="relative flex-1 min-w-[180px]">
-              <IconBuscar className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: '#8E87A8' }} />
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: '#8E87A8' }} />
               <input
                 className="w-full pl-10 pr-4 py-2.5 rounded-xl text-[13px] outline-none transition-all"
                 style={{ background: '#fff', border: '1px solid rgba(120,80,200,0.12)', color: '#1A1028' }}
@@ -427,7 +425,7 @@ export default function SedesPage() {
         ) : locations.length === 0 ? (
           <ModuleReveal>
           <div className="bg-card border border-border rounded-xl p-10 text-center">
-            <MapPin className="w-10 h-10 text-muted-foreground/30 mx-auto mb-3" />
+            <IconUbicacion className="w-10 h-10 text-muted-foreground/30 mx-auto mb-3" />
             <p className="text-sm text-muted-foreground">No hay sedes registradas aun.</p>
             {canManage && (
             <button onClick={openNew} className="mt-4 px-4 py-2 rounded-xl text-sm font-semibold border border-border text-muted-foreground hover:bg-secondary transition-colors">
@@ -438,7 +436,7 @@ export default function SedesPage() {
           </ModuleReveal>
         ) : visibles.length === 0 ? (
           <div className="bg-card border border-border rounded-xl p-10 text-center">
-            <IconBuscar className="w-10 h-10 text-muted-foreground/30 mx-auto mb-3" />
+            <Search className="w-10 h-10 text-muted-foreground/30 mx-auto mb-3" />
             <p className="text-sm text-muted-foreground">
               Ninguna sede coincide con «{busqueda.trim()}».
             </p>
@@ -451,7 +449,7 @@ export default function SedesPage() {
                 <div className="flex items-start justify-between px-4 py-4">
                   <div className="flex items-start gap-3 flex-1 min-w-0">
                     <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 mt-0.5" style={{ background: 'rgba(6,214,160,0.12)' }}>
-                      <MapPin className="w-5 h-5" style={{ color: '#06D6A0' }} />
+                      <IconUbicacion className="w-5 h-5" style={{ color: '#06D6A0' }} />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="font-semibold text-foreground">{loc.name}</p>
@@ -471,7 +469,7 @@ export default function SedesPage() {
                         <Pencil className="w-4 h-4" />
                       </Button>
                       <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive" onClick={() => handleDelete(loc.id)}>
-                        <Trash2 className="w-4 h-4" />
+                        <IconEliminar className="w-4 h-4" />
                       </Button>
                     </div>
                   )}

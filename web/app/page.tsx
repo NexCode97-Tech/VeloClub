@@ -3,10 +3,11 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Users, CalendarCheck, CreditCard, Trophy, CheckCircle2, ChevronRight, Zap, Shield, Smartphone, Menu, X } from 'lucide-react';
+import { Users, CalendarCheck, CreditCard, CheckCircle2, ChevronRight, Zap, Shield, Smartphone, Menu, X } from 'lucide-react';
 import GlassmorphismHero from '@/components/ui/glassmorphism-trust-hero';
 import LandingFeaturesTabs from '@/components/ui/landing-features-tabs';
 import LandingTrustedBy from '@/components/ui/landing-trusted-by';
+import { IconCompetencias } from '@/components/ui/custom-icons';
 
 // Mismo color/fondo para los 4 (el de "Gestión de miembros"), para que los
 // íconos de "Todo lo que necesitas" queden unificados en vez de multicolor.
@@ -51,7 +52,7 @@ const features = [
   },
   {
     key: 'rendimiento',
-    icon: Trophy,
+    icon: IconCompetencias,
     label: 'Rendimiento',
     color: FEATURE_COLOR,
     bg: FEATURE_BG,

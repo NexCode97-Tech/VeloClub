@@ -549,7 +549,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             width={28}
             height={28}
             className="object-contain shrink-0"
-            style={{ borderRadius: 7 }}
+            style={{ borderRadius: '50%' }}
           />
           {!collapsed && (
             <div className="flex items-center gap-1 ml-auto">

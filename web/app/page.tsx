@@ -7,58 +7,67 @@ import { Users, CalendarCheck, CreditCard, CheckCircle2, ChevronRight, Zap, Shie
 import GlassmorphismHero from '@/components/ui/glassmorphism-trust-hero';
 import LandingFeaturesTabs from '@/components/ui/landing-features-tabs';
 import LandingTrustedBy from '@/components/ui/landing-trusted-by';
-import { IconCompetencias } from '@/components/ui/custom-icons';
+import {
+  IconUsers, IconUbicacion, IconAsistencias, IconFinanzas, IconResultados,
+  IconMensualidades, IconFlujoCaja, IconCompetencias, IconEntrenamientos,
+} from '@/components/ui/custom-icons';
 
-// Mismo color/fondo para los 4 (el de "Gestión de miembros"), para que los
-// íconos de "Todo lo que necesitas" queden unificados en vez de multicolor.
+// Mismo color/fondo para los cuatro, para que los iconos queden unificados en
+// vez de multicolor.
 const FEATURE_COLOR = '#381DA0';
 const FEATURE_BG = 'rgba(56,29,160,0.10)';
+
+// Sin sub-pestañas: las entradas de cada modulo se ven todas a la vez, en dos
+// columnas. Los iconos son los mismos que usa la aplicacion por dentro.
 const features = [
   {
     key: 'miembros',
-    icon: Users,
+    icon: IconUsers,
     label: 'Miembros',
     color: FEATURE_COLOR,
     bg: FEATURE_BG,
     sub: [
-      { key: 'perfiles', label: 'Perfiles', desc: 'Administra deportistas, entrenadores y admins con perfiles completos y fotos.' },
-      { key: 'roles', label: 'Roles', desc: 'Cada rol (admin, entrenador, deportista) tiene su propio nivel de acceso.' },
-      { key: 'sedes', label: 'Sedes', desc: 'Organiza a los miembros según el lugar de entrenamiento al que pertenecen.' },
+      { key: 'perfiles', label: 'Perfiles', icon: IconUsers,
+        desc: 'Deja de tener a tu club repartido entre cuadernos y chats. Compartes un enlace, cada quien registra sus datos y los permisos van por rol, así el entrenador trabaja con su gente y las finanzas quedan en la administración.' },
+      { key: 'sedes', label: 'Sedes', icon: IconUbicacion,
+        desc: 'Ubicar el entrenamiento deja de depender de indicaciones sueltas. Cada sede queda con su punto exacto y su ruta en Google Maps, Waze o Apple Maps, disponible para todo el club desde el primer día.' },
     ],
   },
   {
     key: 'asistencia',
-    icon: CalendarCheck,
+    icon: IconAsistencias,
     label: 'Asistencia',
     color: FEATURE_COLOR,
     bg: FEATURE_BG,
     sub: [
-      { key: 'registro', label: 'Registro', desc: 'Registra presente, ausente, tardanza o excusa médica por sede y fecha.' },
-      { key: 'historial', label: 'Historial', desc: 'Consulta el historial completo de asistencia de cada deportista.' },
-      { key: 'reportes', label: 'Reportes', desc: 'Genera reportes de inasistencias para hacer seguimiento a tiempo.' },
+      { key: 'registro', label: 'Registro', icon: IconAsistencias,
+        desc: 'Deja la planilla de papel donde está. El entrenador abre el día, marca presente, ausente, tarde o excusa médica, y el historial de cada deportista queda armado por sede y por fecha.' },
     ],
   },
   {
-    key: 'pagos',
-    icon: CreditCard,
-    label: 'Pagos y finanzas',
+    key: 'finanzas',
+    icon: IconFinanzas,
+    label: 'Finanzas',
     color: FEATURE_COLOR,
     bg: FEATURE_BG,
     sub: [
-      { key: 'mensualidades', label: 'Mensualidades', desc: 'Controla los pagos de mensualidades de cada deportista al día.' },
-      { key: 'flujo', label: 'Flujo de caja', desc: 'Ingresos y egresos del club, actualizados en tiempo real.' },
-      { key: 'comprobantes', label: 'Comprobantes', desc: 'Cada pago queda con su respectivo comprobante adjunto.' },
+      { key: 'mensualidades', label: 'Mensualidades', icon: IconMensualidades,
+        desc: 'Cobrar deja de depender de que alguien se acuerde. Se define la cuota y el día de cada deportista, el recordatorio sale solo por WhatsApp y cada pago genera su recibo y queda guardado con su comprobante.' },
+      { key: 'flujo', label: 'Flujo de caja', icon: IconFlujoCaja,
+        desc: 'Ingresos y egresos del club, actualizados en tiempo real.' },
     ],
   },
   {
     key: 'rendimiento',
-    icon: IconCompetencias,
+    icon: IconResultados,
     label: 'Rendimiento',
     color: FEATURE_COLOR,
     bg: FEATURE_BG,
     sub: [
-      { key: 'competencias', label: 'Competencias', desc: 'Historial de competencias y resultados por deportista y prueba.' },
-      { key: 'entrenamientos', label: 'Entrenamientos', desc: 'Registra sesiones de entrenamiento y el avance de cada atleta.' },
+      { key: 'competencias', label: 'Competencias', icon: IconCompetencias,
+        desc: 'Historial de competencias y resultados por deportista y prueba.' },
+      { key: 'entrenamientos', label: 'Entrenamientos', icon: IconEntrenamientos,
+        desc: 'Registra sesiones de entrenamiento y el avance de cada atleta.' },
     ],
   },
 ];
@@ -133,12 +142,13 @@ export default function HomePage() {
           </div>
 
           <Image
-            src="/logo.png"
+            src="/logo-vc.png"
             alt="VeloClub"
-            width={80}
-            height={80}
-            className="object-contain h-9 w-auto sm:h-10 sm:absolute sm:left-1/2 sm:-translate-x-1/2"
-            style={{ filter: 'brightness(0) invert(1)' }}
+            width={40}
+            height={40}
+            priority
+            className="object-contain h-9 w-9 sm:h-10 sm:w-10 sm:absolute sm:left-1/2 sm:-translate-x-1/2"
+            style={{ borderRadius: '50%' }}
           />
 
           {/* Desktop — derecha */}
@@ -187,11 +197,12 @@ export default function HomePage() {
       >
         <div className="flex items-center justify-between px-5 py-4 border-b border-[rgba(120,80,200,0.08)]">
           <Image
-            src="/logo.png"
+            src="/logo-vc.png"
             alt="VeloClub"
-            width={80}
-            height={80}
-            className="object-contain h-8 w-auto"
+            width={36}
+            height={36}
+            className="object-contain h-8 w-8"
+            style={{ borderRadius: '50%' }}
           />
           <button
             className="p-2 rounded-xl text-[#1A1028] hover:bg-[rgba(56,29,160,0.06)] transition-colors"
@@ -249,10 +260,6 @@ export default function HomePage() {
       {/* Features — ya en blanco. El amanecer entero pasa dentro del héroe, así
           que de acá para abajo no queda rastro del degradado. */}
       <section id="funcionalidades" className="px-5 py-16 max-w-5xl mx-auto">
-        <p className="text-xs font-semibold uppercase tracking-widest text-[#8E87A8] text-center mb-3">Funcionalidades</p>
-        <h2 className="text-2xl sm:text-3xl font-semibold text-[#1A1028] text-center mb-10 tracking-tight">
-          Todo lo que necesitas
-        </h2>
         <LandingFeaturesTabs features={features} />
       </section>
 

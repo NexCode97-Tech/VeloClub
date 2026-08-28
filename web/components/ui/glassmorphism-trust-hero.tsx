@@ -125,43 +125,35 @@ export default function GlassmorphismHero() {
               <CronometroPromo />
             </div>
 
-            {/* Titular — nombra el enemigo en vez de describir la categoría.
-                «Gestiona tu club» era lo que hace el producto, no lo que le pasa
-                a quien lo compra, y cualquier competidor podía firmar esa frase.
-                Todo club que todavía no compra está usando un Excel, un cuaderno
-                o un grupo de WhatsApp, y al leerlo se reconoce solo.
+            {/* Titular — registro institucional, en tercera persona. La version
+                anterior, «Tu club ya no cabe en un Excel», hablaba de tu a tu y
+                se apoyaba en el dolor; funciona, pero suena a campaña y no a
+                plataforma. Esta declara la categoria, que es lo que hacen las
+                empresas de software con las que el cliente nos compara.
 
-                La frase va de corrido y no partida: es una sola idea, y cortarla
-                obligaba a leerla en dos tiempos. En pantalla angosta baja sola
-                donde le toque.
-
-                La promoción es la segunda línea y remata: «múdalo» responde la
-                objeción de quien lleva años con su archivo, que no arranca de
-                cero. Cuando la campaña termine se borra esa línea y el titular
-                sigue en pie solo. */}
-            {/* El cuerpo baja de 3.25rem a 2.85rem: la columna esta topada en
-                unos 546px por el `max-w-5xl` del contenedor, y a la medida
-                anterior la frase no cabia en un renglon.
-                `text-balance` es la otra mitad del arreglo: donde igual tenga
-                que partirse, reparte las dos lineas en vez de dejar «Excel.»
-                solo abajo. */}
+                La segunda linea sigue siendo la promocion, y cuando termine se
+                borra sin tocar el titular. */}
+            {/* El cuerpo esta en 2.85rem y no mas: la columna queda topada en
+                unos 546px por el `max-w-5xl` del contenedor. `text-balance`
+                reparte las dos lineas donde la frase igual tenga que partirse. */}
             <h1 className="text-[2.05rem] sm:text-[2.5rem] lg:text-[2.85rem] font-semibold tracking-tighter leading-[0.95] text-white">
               <span className="vc-line text-balance" style={{ animationDelay: '.14s' }}>
-                Tu club ya no cabe{' '}
                 <span className="bg-gradient-to-br from-white via-white to-[#A855F7] bg-clip-text text-transparent">
-                  en un Excel.
-                </span>
+                  Tecnología
+                </span>{' '}
+                que mueve al club.
               </span>
               <span className="vc-line" style={{ animationDelay: '.30s' }}>
-                <span className="vc-promo-text">Múdalo gratis 2 meses.</span>
+                <span className="vc-promo-text">Dos meses gratis para empezar.</span>
               </span>
             </h1>
 
             {/* Descripción — nombra lo que reemplaza, en vez de «todo en uno»,
                 que es la promesa más repetida del software y no dice nada. */}
             <p className="vc-fade d4 text-sm text-zinc-400 leading-relaxed mx-auto lg:mx-0 max-w-sm lg:max-w-md">
-              Las listas, las mensualidades, la asistencia y los resultados dejan
-              de vivir en cuadernos y grupos de WhatsApp. Sin costo y sin tarjeta.
+              Al servicio de los clubes deportivos de Colombia. Desde las
+              inscripciones y el control de asistencia, hasta las mensualidades,
+              las sedes y los resultados de cada deportista.
             </p>
 
             {/* CTA */}

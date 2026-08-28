@@ -14,6 +14,7 @@ export interface FeatureSub {
   key: string;
   label: string;
   desc: string;
+  icon: React.ElementType;
 }
 
 export interface FeatureTab {
@@ -27,7 +28,6 @@ export interface FeatureTab {
 
 export default function LandingFeaturesTabs({ features }: { features: FeatureTab[] }) {
   const [mainKey, setMainKey] = useState(features[0].key);
-  const [subKey, setSubKey] = useState(features[0].sub[0].key);
   const reducedMotion = useReducedMotion();
   const [isMobile, setIsMobile] = useState(false);
 
@@ -43,12 +43,6 @@ export default function LandingFeaturesTabs({ features }: { features: FeatureTab
   }, []);
 
   const main = features.find(f => f.key === mainKey) ?? features[0];
-  const sub = main.sub.find(s => s.key === subKey) ?? main.sub[0];
-
-  function selectMain(f: FeatureTab) {
-    setMainKey(f.key);
-    setSubKey(f.sub[0].key);
-  }
 
   const activeIndex = features.findIndex(f => f.key === mainKey);
   const flexOf = (i: number) => (isMobile ? (i === activeIndex ? TAB_ACTIVE_FLEX_MOBILE : 1) : 1);
@@ -82,7 +76,7 @@ export default function LandingFeaturesTabs({ features }: { features: FeatureTab
               role="tab"
               aria-selected={isActive}
               aria-label={f.label}
-              onClick={() => selectMain(f)}
+              onClick={() => setMainKey(f.key)}
               className={`relative z-10 flex items-center justify-center gap-1.5 h-9 rounded-full text-[13px] font-semibold cursor-pointer overflow-hidden min-w-0 transition-[flex,background-color] duration-700 ${
                 isActive ? '' : 'hover:bg-[rgba(26,16,40,0.06)]'
               }`}
@@ -121,67 +115,39 @@ export default function LandingFeaturesTabs({ features }: { features: FeatureTab
         })}
       </div>
 
-      {/* Tarjeta blanca continua: sub-pestañas + panel de contenido, pegada
-          sin espacio a las pestañas principales de arriba. */}
-      <div className="relative overflow-hidden rounded-b-2xl bg-[#F4F3F8] border border-[rgba(26,16,40,0.05)]" style={{ minHeight: 150 }}>
-        <div role="tablist" aria-label={`Aspectos de ${main.label}`} className="flex flex-wrap gap-1 px-6 sm:px-7 pt-4 pb-3 border-b border-[rgba(26,16,40,0.06)]">
-          <AnimatePresence mode="popLayout" initial={false}>
-            {main.sub.map(s => {
-              const isActive = s.key === subKey;
-              return (
-                <motion.button
-                  key={`${main.key}-${s.key}`}
-                  layout
-                  initial={reducedMotion ? { opacity: 0 } : { opacity: 0, y: 4 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.16, ease: EASE_OUT }}
-                  role="tab"
-                  aria-selected={isActive}
-                  onClick={() => setSubKey(s.key)}
-                  className={`relative inline-flex items-center px-2.5 py-1.5 rounded-lg text-[11.5px] font-medium cursor-pointer overflow-hidden transition-colors duration-200 ${
-                    isActive ? '' : 'hover:bg-[rgba(255,255,255,0.6)]'
-                  }`}
-                  style={{ color: isActive ? '#1A1028' : '#9B95AC' }}
-                >
-                  {isActive && (
-                    <motion.div
-                      layoutId="feature-subtab-pill"
-                      className="absolute inset-0 rounded-lg"
-                      style={{ background: '#fff', boxShadow: '0 1px 2px rgba(26,16,40,0.06)', zIndex: 0 }}
-                      transition={reducedMotion ? { duration: 0 } : { type: 'spring', stiffness: 420, damping: 34, mass: 0.9 }}
-                    />
-                  )}
-                  <span className="relative z-10">{s.label}</span>
-                </motion.button>
-              );
-            })}
-          </AnimatePresence>
-        </div>
-
+      {/* El panel del modulo. Todas sus entradas se ven a la vez, en dos
+          columnas. La linea que las separa se dibuja con el selector de hermano
+          adyacente y no con un borde fijo: Asistencia tiene una sola entrada y
+          si no arrastraria una divisoria suelta contra el aire. */}
+      <div className="relative overflow-hidden rounded-b-2xl bg-[#F4F3F8] border border-[rgba(26,16,40,0.05)]">
         <AnimatePresence mode="wait" initial={false}>
           <motion.div
-            key={`${main.key}-${sub.key}`}
+            key={main.key}
             initial={reducedMotion ? { opacity: 0 } : { opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
             exit={reducedMotion ? { opacity: 0 } : { opacity: 0, y: -6 }}
             transition={{ duration: 0.2, ease: EASE_OUT }}
-            className="px-6 sm:px-7 pt-3 pb-6 sm:pb-7 flex items-start gap-4"
+            className="grid grid-cols-1 sm:grid-cols-2"
           >
-            <div
-              className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-              style={{ background: main.bg }}
-            >
-              <main.icon className="w-5 h-5" style={{ color: main.color }} />
-            </div>
-            <div>
-              <p className="font-semibold text-[#1A1028] text-[15.5px] mb-1">
-                {sub.label}
-              </p>
-              <p className="text-[13px] text-[#6B6580] leading-relaxed max-w-md">
-                {sub.desc}
-              </p>
-            </div>
+            {main.sub.map((s, i) => (
+              <article
+                key={s.key}
+                className={`flex items-start gap-4 px-6 py-6 sm:px-7 ${
+                  i === 0 ? '' : 'border-t sm:border-t-0 sm:border-l'
+                } border-[rgba(26,16,40,0.07)]`}
+              >
+                <div
+                  className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                  style={{ background: main.bg }}
+                >
+                  <s.icon className="w-5 h-5" style={{ color: main.color }} />
+                </div>
+                <div>
+                  <p className="font-semibold text-[#1A1028] text-[15.5px] mb-1">{s.label}</p>
+                  <p className="text-[13px] text-[#6B6580] leading-relaxed">{s.desc}</p>
+                </div>
+              </article>
+            ))}
           </motion.div>
         </AnimatePresence>
       </div>

@@ -5,6 +5,106 @@ Actualizar al final de cada sesión o cuando se complete un bloque de trabajo im
 
 ---
 
+## Sesión 2026-08-27
+
+**Modelo:** Claude Opus 5
+**Estado inicial:** `52a22da`, rama `main`
+**Estado final:** `40bbf8c`, todo desplegado
+
+Día de dos mitades. La primera, interfaz y navegación. La segunda, una limpieza
+a fondo de los errores que llevaban semanas acumulándose en Sentry.
+
+### Los roles pasan al español
+`COACH` y `STUDENT` eran lo último del dominio que quedaba en inglés. Se
+renombran a `ENTRENADOR` y `DEPORTISTA` en el esquema y en los 37 archivos de
+`api` y `web` que los usaban, validaciones y plantillas incluidas (`231e772`).
+
+La migración usa `ALTER TYPE ... RENAME VALUE` y no recrea el tipo: renombrar
+conserva el OID, así que las filas y los `@default` siguen apuntando al mismo
+sitio y no hubo que migrar ninguna. Lo que eso no alcanza son las dos columnas
+que guardan el rol como texto suelto, `Post.authorRole` y `PostComment.authorRole`,
+que van con `UPDATE` en la misma migración.
+
+La importación por Excel sigue aceptando los nombres viejos: los clubes que ya
+descargaron la plantilla tienen archivos que dicen `COACH` y habrían dejado de
+poder importar.
+
+### El menú se ordena por frecuencia de uso
+Sedes estaba tercera, encima de Asistencia, y es al revés de como se usa: una
+sede se crea y no se toca en meses, mientras que Asistencia se abre cada día de
+entrenamiento. Sedes baja junto a Club, Asistencia sube al segundo puesto, y una
+línea separa lo que se opera de lo que se configura (`f977573`, `6496415`).
+
+La línea va posicionada en absoluto y no como un elemento más de la lista: el
+resaltado del activo se ubica multiplicando su índice por 48, y cualquier cosa
+que ocupara alto lo habría dejado corrido.
+
+### Sedes estrena buscador
+«Nueva sede» sale de la cabecera y baja a una fila propia junto a un buscador
+que no existía (`7aa8705`). Filtra por nombre y municipio ignorando tildes,
+porque se escriben con y sin ellas y «Chinacota» no encontraba «Chinácota».
+
+### Sentry, de 25 issues a los que de verdad importan
+Lo más valioso no fueron los arreglos sino tres cosas de fondo (`65a8b0b`,
+`40bbf8c`):
+
+- **Los 401 y 404 de la API dejan de contarse como fallos.** No son errores de
+  software sino la respuesta correcta a una sesión vencida o a un registro que
+  ya no está. Eran los dos issues más numerosos del proyecto, con cero usuarios
+  afectados, y tapaban los de verdad. Los 400 y 403 sí siguen pasando.
+- **Ahora se identifica al usuario.** Nunca se llamaba a `setUser`, y por eso
+  los 25 issues decían cero afectados. Va el id de Clerk y el rol, nada que
+  identifique a un deportista.
+- **Faltaba `app/global-error.tsx`.** Sin él, un error dentro del render de
+  React no llegaba a Sentry: el App Router lo atrapaba antes y pintaba una
+  pantalla en blanco. El fallo más visible era el que no veíamos.
+
+Y los bugs con causa real: `POST /payments` no comprobaba el miembro, así que
+con un id de otro club el pago se creaba igual; el borrado de sede reventaba por
+una cadena de cascadas contra el índice único de asistencias; el «me gusta»
+tenía una carrera entre consultar y escribir; la sincronización de suscripciones
+chocaba cuando coincidían el usuario y el webhook; el año del pie de la landing
+se calculaba con el reloj de quien renderiza; y la limpieza de service workers
+desregistraba también el de la PWA recién puesto.
+
+Asistencia pedía la planilla **siete veces** al cargar, casi cuatro segundos en
+un móvil con datos, y seis respuestas se tiraban. Y «Gestionar cuenta» no hacía
+nada mientras el script de Clerk no cargaba, que es lo que Sentry registró como
+rabia.
+
+### El formulario público, con dos topes
+Era el único punto donde alguien sin cuenta crea registros y estaba con el
+límite genérico de 100 cada 15 minutos: 400 fichas basura por hora desde una
+sola IP (`87f7d7b`). Ahora van 40 por IP —no menos, porque en una jornada de
+inscripción los papás llenan el formulario por el mismo wifi— y **150 por hora
+por enlace**, que es lo que de verdad protege al club: cambiar de red evade el
+límite por IP, pero el enlace es siempre el mismo.
+
+### El widget de la landing
+Sigue fuera del repo, en el scratchpad, publicado como artifact. Se le rehizo el
+bloque de capturas: dos ventanas gemelas con barrido, desvanecido al color del
+panel y movimiento de abajo hacia arriba, copiando el comportamiento medido en
+el código de ElevenLabs. Se sumó el par de Sedes, con capturas reales de la
+plataforma y el sidebar montado en HTML en vez de fotografiado.
+
+### Pendientes
+- **El widget vive solo en el scratchpad**, que es temporal. Hay que traerlo al
+  repo o se pierde.
+- `web/public/capturas/` sigue sin versionar y contiene un enlace de inscripción
+  vivo y el nombre de un negocio real. Decidir si se borra.
+- Las otras siete descripciones de módulos del widget arrancan por la
+  funcionalidad y no por el dolor.
+- La landing en producción sigue sin el rediseño, con «Roles» como pestaña
+  aparte y el logo viejo en ocho pantallas. En la traza de un móvil, ese
+  `/logo.png` es el elemento más grande de la pantalla y tarda 5,8 s.
+- «Contáctanos» del widget no lleva a ningún lado.
+- El selector de deporte está diseñado y documentado pero no construido, y sigue
+  sin respuesta si un deportista puede estar en dos deportes a la vez.
+- El lint de `api` tira 51 errores de parseo: ESLint no está leyendo TypeScript.
+  Es anterior a esta sesión.
+
+---
+
 ## Sesión 2026-08-22 a 2026-08-25
 
 **Modelo:** Claude Opus 5

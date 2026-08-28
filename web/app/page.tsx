@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Users, CalendarCheck, CreditCard, CheckCircle2, ChevronRight, Zap, Shield, Smartphone, Menu, X } from 'lucide-react';
-import GlassmorphismHero from '@/components/ui/glassmorphism-trust-hero';
+import LandingHero from '@/components/ui/landing-hero';
 import LandingFeaturesTabs from '@/components/ui/landing-features-tabs';
 import LandingTrustedBy from '@/components/ui/landing-trusted-by';
 import {
@@ -107,7 +107,7 @@ export default function HomePage() {
   // vez de esperar a que arranque el JavaScript.
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 80);
+    const onScroll = () => setScrolled(window.scrollY > 4);
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
@@ -126,17 +126,22 @@ export default function HomePage() {
   }, [menuOpen]);
 
   return (
-    <main className="min-h-dvh bg-white [overflow-x:clip]">
+    <main className="min-h-dvh bg-[#FDFCFC] [overflow-x:clip]">
 
-      {/* Nav — transparente, encima del hero */}
-      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? 'bg-[#0D0520]/95 backdrop-blur-md border-b border-white/5 shadow-lg shadow-black/30' : ''}`}>
+      {/* Nav — opaca desde el primer pixel. El borde inferior existe siempre
+          en transparente y solo se le pinta el color al bajar: si se agregara
+          al aparecer, la barra creceria un pixel y la pagina daria un salto. */}
+      <nav
+        className="fixed top-0 left-0 right-0 z-50 bg-[#FDFCFC] border-b transition-colors duration-200"
+        style={{ borderBottomColor: scrolled ? 'rgba(26,16,40,0.08)' : 'transparent' }}
+      >
         <div className="max-w-5xl mx-auto flex items-center justify-between px-5 py-3 sm:py-0 sm:h-20">
           {/* Desktop links — izquierda */}
           <div className="hidden sm:flex items-center gap-6">
-            <a href="#funcionalidades" className="text-sm font-medium text-white/85 hover:text-white transition-colors">
+            <a href="#funcionalidades" className="text-sm font-medium text-[#8E87A8] hover:text-[#1A1028] transition-colors">
               Funcionalidades
             </a>
-            <a href="#por-que" className="text-sm font-medium text-white/85 hover:text-white transition-colors">
+            <a href="#por-que" className="text-sm font-medium text-[#8E87A8] hover:text-[#1A1028] transition-colors">
               ¿Por qué VeloClub?
             </a>
           </div>
@@ -155,7 +160,8 @@ export default function HomePage() {
           <div className="hidden sm:flex items-center gap-4">
             <Link
               href="/sign-in"
-              className="text-sm font-semibold text-white/90 hover:text-white transition-colors"
+              className="inline-flex items-center rounded-full px-4 py-2 text-sm font-semibold text-[#1A1028] border transition-colors hover:bg-[#F7F7FB]"
+              style={{ background: '#FDFCFC', borderColor: 'rgba(26,16,40,0.08)' }}
             >
               Iniciar sesión
             </Link>
@@ -178,7 +184,7 @@ export default function HomePage() {
               Crear mi club
             </Link>
             <button
-              className="p-2.5 rounded-xl text-white hover:bg-white/10 transition-colors"
+              className="p-2.5 rounded-xl text-[#1A1028] hover:bg-[rgba(26,16,40,0.06)] transition-colors"
               onClick={() => setMenuOpen(v => !v)}
               aria-label={menuOpen ? 'Cerrar menú' : 'Abrir menú'}
             >
@@ -191,7 +197,7 @@ export default function HomePage() {
 
       {/* Menú móvil — overlay a pantalla completa */}
       <div
-        className={`sm:hidden fixed inset-0 z-[60] bg-white flex flex-col transition-opacity duration-300 ${
+        className={`sm:hidden fixed inset-0 z-[60] bg-[#FDFCFC] flex flex-col transition-opacity duration-300 ${
           menuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
         }`}
       >
@@ -255,7 +261,7 @@ export default function HomePage() {
       </div>
 
       {/* Hero glassmorphism */}
-      <GlassmorphismHero />
+      <LandingHero />
 
       {/* Features — ya en blanco. El amanecer entero pasa dentro del héroe, así
           que de acá para abajo no queda rastro del degradado. */}

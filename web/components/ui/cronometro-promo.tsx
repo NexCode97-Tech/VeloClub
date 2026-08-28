@@ -20,10 +20,10 @@ import { restantePromo, desglosarRestante } from '@/lib/promo';
  * separación va en `em` y no en píxeles para que se mantenga proporcional
  * cuando el bloque encoge en móvil.
  */
-function Unidad({ children, ultima }: { children: string; ultima?: boolean }) {
+function Unidad({ children, ultima, claro }: { children: string; ultima?: boolean; claro?: boolean }) {
   return (
     <span
-      className="text-[0.95rem] font-medium text-zinc-500"
+      className={`text-[0.95rem] font-medium ${claro ? 'text-[#8E87A8]' : 'text-zinc-500'}`}
       style={{ marginLeft: '0.14em', marginRight: ultima ? 0 : '0.34em' }}
     >
       {children}
@@ -31,7 +31,7 @@ function Unidad({ children, ultima }: { children: string; ultima?: boolean }) {
   );
 }
 
-export function CronometroPromo() {
+export function CronometroPromo({ claro = false }: { claro?: boolean }) {
   // Se calcula también en el servidor para que el bloque ocupe su lugar desde
   // el primer pintado y el titular no salte al hidratar. Servidor y navegador
   // no comparten reloj, así que los dígitos pueden diferir por un minuto en ese
@@ -63,17 +63,29 @@ export function CronometroPromo() {
         Quedan {dias} días para que finalice la promoción de dos meses gratis.
       </span>
 
+      {/* Sobre claro no existe un amarillo que contraste: son claros por
+          definicion. El de la marca da 1,75 y el minimo para una cifra de este
+          tamaño es 3. La cifra va en el amarillo de verdad y lo que la hace
+          legible es un contorno fino, pintado por debajo del relleno con
+          paint-order para que no se coma el trazo. */}
       <span
         aria-hidden="true"
         suppressHydrationWarning
-        className="font-semibold text-[1.6rem] sm:text-[1.75rem] tracking-tight text-white tabular-nums"
+        className={`font-bold text-[1.6rem] sm:text-[1.75rem] tracking-tight tabular-nums ${
+          claro ? 'text-[#FFB703]' : 'font-semibold text-white'
+        }`}
+        style={claro ? {
+          paintOrder: 'stroke fill',
+          WebkitTextStrokeWidth: '0.7px',
+          WebkitTextStrokeColor: 'rgba(120,80,0,0.45)',
+        } : undefined}
       >
-        {dias}<Unidad>d</Unidad>
-        {dosDigitos(horas)}<Unidad>h</Unidad>
-        {dosDigitos(minutos)}<Unidad ultima>m</Unidad>
+        {dias}<Unidad claro={claro}>d</Unidad>
+        {dosDigitos(horas)}<Unidad claro={claro}>h</Unidad>
+        {dosDigitos(minutos)}<Unidad claro={claro} ultima>m</Unidad>
       </span>
 
-      <span aria-hidden="true" className="text-[12px] text-zinc-400">
+      <span aria-hidden="true" className={`text-[12px] ${claro ? 'text-[#8E87A8]' : 'text-zinc-400'}`}>
         para que finalice
       </span>
     </div>

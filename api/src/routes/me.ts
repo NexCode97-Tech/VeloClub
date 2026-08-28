@@ -518,8 +518,8 @@ router.delete('/', requireAuth, async (req, res) => {
 });
 
 // PATCH /me/accept-terms — el usuario acepta la Política de Tratamiento de Datos
-// y los Términos y Condiciones. Aplica a todos los roles con User (ADMIN, COACH,
-// STUDENT); el superadmin nunca llega aquí porque /me lo redirige antes.
+// y los Términos y Condiciones. Aplica a todos los roles con User (ADMIN, ENTRENADOR,
+// DEPORTISTA); el superadmin nunca llega aquí porque /me lo redirige antes.
 router.patch('/accept-terms', requireAuth, async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'No autenticado' });
   const user = await prisma.user.update({

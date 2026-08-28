@@ -66,7 +66,7 @@ interface MemberRow {
   locations: { location: { name: string } }[];
   role: string;
 }
-const ROLES: Record<string, string> = { ADMIN: 'Admin', COACH: 'Entrenador', STUDENT: 'Deportista' };
+const ROLES: Record<string, string> = { ADMIN: 'Admin', ENTRENADOR: 'Entrenador', DEPORTISTA: 'Deportista' };
 
 export function downloadMembersPDF(members: MemberRow[], clubName: string) {
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });

@@ -32,24 +32,24 @@ const TERMS_GATE_ENABLED = false;
 const SIDEBAR_ROLE_LABEL: Record<string, string> = {
   SUPERADMIN: 'Superadmin',
   ADMIN:      'Admin',
-  COACH:      'Coach',
-  STUDENT:    'Deportista',
+  ENTRENADOR: 'Entrenador',
+  DEPORTISTA: 'Deportista',
 };
 const SIDEBAR_ROLE_COLOR: Record<string, string> = {
   SUPERADMIN: '#EF476F',
   ADMIN:      '#FFB703',
-  COACH:      '#06D6A0',
-  STUDENT:    '#381DA0',
+  ENTRENADOR:      '#06D6A0',
+  DEPORTISTA:    '#381DA0',
 };
 const SIDEBAR_ROLE_GRADIENT: Record<string, string> = {
   SUPERADMIN: 'linear-gradient(135deg,#EF476F,#C1121F)',
   ADMIN:      'linear-gradient(135deg,#FFB703,#FB8500)',
-  COACH:      'linear-gradient(135deg,#06D6A0,#0CB68D)',
-  STUDENT:    '#381DA0',
+  ENTRENADOR:      'linear-gradient(135deg,#06D6A0,#0CB68D)',
+  DEPORTISTA:    '#381DA0',
 };
 import { cn } from '@/lib/utils';
 
-// "Más" va en el índice 2 (centro del bottom bar) para ADMIN y COACH
+// "Más" va en el índice 2 (centro del bottom bar) para ADMIN y ENTRENADOR
 // El href '/dashboard/mas' es el centinela — no navega, activa el CircleMenu
 const ROLE_TABS: Record<string, { href: string; label: string; icon: React.ElementType }[]> = {
   ADMIN: [
@@ -59,14 +59,14 @@ const ROLE_TABS: Record<string, { href: string; label: string; icon: React.Eleme
     { href: '/dashboard/miembros',    label: 'Miembros',    icon: IconUsers },
     { href: '/dashboard/finanzas',    label: 'Finanzas',    icon: IconFinanzas },
   ],
-  COACH: [
+  ENTRENADOR: [
     { href: '/dashboard',             label: 'Inicio',      icon: IconHome},
     { href: '/dashboard/asistencia',  label: 'Asistencia',  icon: IconAsistencias },
     { href: '/dashboard/mas',         label: 'Más',         icon: IconHome}, // reemplazado por CircleMenu
     { href: '/dashboard/miembros',    label: 'Miembros',    icon: IconUsers },
     { href: '/dashboard/logros',      label: 'Rendimiento',  icon: IconResultados },
   ],
-  STUDENT: [
+  DEPORTISTA: [
     { href: '/dashboard',             label: 'Inicio',      icon: IconHome},
     { href: '/dashboard/calendario',  label: 'Calendario',  icon: IconCalendar },
     { href: '/dashboard/mas',         label: 'Más',         icon: IconHome}, // reemplazado por CircleMenu
@@ -84,13 +84,13 @@ const ROLE_MAS_ITEMS: Record<string, { label: string; icon: React.ElementType; h
     { label: 'Sedes',      icon: IconUbicacion,    href: '/dashboard/sedes',      color: '#06D6A0' },
     { label: 'Club',       icon: IconClub,         href: '/dashboard/club',       color: '#381DA0' },
   ],
-  COACH: [
+  ENTRENADOR: [
     { label: 'Calendario', icon: IconCalendar,     href: '/dashboard/calendario', color: '#EF476F' },
     { label: 'Rendimiento', icon: IconResultados,   href: '/dashboard/logros',     color: '#F59E0B' },
     { label: 'Sedes',      icon: IconUbicacion,    href: '/dashboard/sedes',      color: '#06D6A0' },
     { label: 'Club',       icon: IconClub,         href: '/dashboard/club',       color: '#381DA0' },
   ],
-  STUDENT: [
+  DEPORTISTA: [
     { label: 'Sedes', icon: IconUbicacion, href: '/dashboard/sedes', color: '#4361EE' },
     { label: 'Club',  icon: IconClub,      href: '/dashboard/club',  color: '#06D6A0' },
   ],
@@ -116,7 +116,7 @@ const ADMIN_NAV = [
   { href: '/dashboard/ajustes',    label: 'Ajustes',       icon: IconAjustes},
 ];
 
-const COACH_NAV = [
+const ENTRENADOR_NAV = [
   { href: '/dashboard',            label: 'Inicio',        icon: IconHome},
   { href: '/dashboard/asistencia', label: 'Asistencia',    icon: IconAsistencias },
   { href: '/dashboard/miembros',   label: 'Miembros',      icon: IconUsers },
@@ -128,7 +128,7 @@ const COACH_NAV = [
   { href: '/dashboard/ajustes',    label: 'Ajustes',       icon: IconAjustes},
 ];
 
-const STUDENT_NAV = [
+const DEPORTISTA_NAV = [
   { href: '/dashboard',            label: 'Inicio',        icon: IconHome},
   { href: '/dashboard/calendario', label: 'Calendario',    icon: IconCalendar },
   { href: '/dashboard/logros',     label: 'Rendimiento',    icon: IconResultados },
@@ -141,8 +141,8 @@ const STUDENT_NAV = [
 
 const ROLE_NAV: Record<string, typeof ADMIN_NAV> = {
   ADMIN:   ADMIN_NAV,
-  COACH:   COACH_NAV,
-  STUDENT: STUDENT_NAV,
+  ENTRENADOR:   ENTRENADOR_NAV,
+  DEPORTISTA: DEPORTISTA_NAV,
 };
 
 // Deslizamiento del sidebar al entrar/salir de un sub-menú (Ajustes,
@@ -356,14 +356,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         setUserPicture(res.user?.picture ?? null);
         setTermsAccepted(!!res.user?.termsAcceptedAt);
 
-        if (userRole === 'STUDENT') {
-          const STUDENT_ALLOWED = ['/dashboard', '/dashboard/logros', '/dashboard/calendario', '/dashboard/sedes', '/dashboard/club', '/dashboard/pagos', '/dashboard/mas', '/dashboard/perfil', '/dashboard/ajustes'];
-          const allowed = STUDENT_ALLOWED.some(r => pathname === r || pathname.startsWith(r + '/'));
+        if (userRole === 'DEPORTISTA') {
+          const DEPORTISTA_PERMITIDO = ['/dashboard', '/dashboard/logros', '/dashboard/calendario', '/dashboard/sedes', '/dashboard/club', '/dashboard/pagos', '/dashboard/mas', '/dashboard/perfil', '/dashboard/ajustes'];
+          const allowed = DEPORTISTA_PERMITIDO.some(r => pathname === r || pathname.startsWith(r + '/'));
           if (!allowed) { router.replace('/dashboard'); return; }
         }
-        if (userRole === 'COACH') {
-          const COACH_BLOCKED = ['/dashboard/finanzas', '/dashboard/reportes', '/dashboard/pagos'];
-          const blocked = COACH_BLOCKED.some(r => pathname === r || pathname.startsWith(r + '/'));
+        if (userRole === 'ENTRENADOR') {
+          const ENTRENADOR_BLOQUEADO = ['/dashboard/finanzas', '/dashboard/reportes', '/dashboard/pagos'];
+          const blocked = ENTRENADOR_BLOQUEADO.some(r => pathname === r || pathname.startsWith(r + '/'));
           if (blocked) { router.replace('/dashboard'); return; }
         }
 
@@ -421,8 +421,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   // Sin rol confirmado se usa el menú de menor privilegio, no el de ADMIN: así un
   // fallo al resolver el rol nunca deja a la vista los módulos de administración.
-  const tabItems   = role ? (ROLE_TABS[role] ?? ROLE_TABS.STUDENT) : ROLE_TABS.STUDENT;
-  const sideNavItems = role ? (ROLE_NAV[role] ?? ROLE_NAV.STUDENT) : ROLE_NAV.STUDENT;
+  const tabItems   = role ? (ROLE_TABS[role] ?? ROLE_TABS.DEPORTISTA) : ROLE_TABS.DEPORTISTA;
+  const sideNavItems = role ? (ROLE_NAV[role] ?? ROLE_NAV.DEPORTISTA) : ROLE_NAV.DEPORTISTA;
   const tabHrefs   = new Set(tabItems.map((t) => t.href));
   const isOnExtra  = !tabHrefs.has(pathname) && pathname !== '/dashboard' && pathname.startsWith('/dashboard/');
 

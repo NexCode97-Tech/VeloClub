@@ -125,8 +125,8 @@ function formatJoinDate(dateStr?: string) {
 
 const ROLE_LABELS: Record<string, string> = {
   ADMIN: 'Administrador',
-  COACH: 'Entrenador',
-  STUDENT: 'Deportista',
+  ENTRENADOR: 'Entrenador',
+  DEPORTISTA: 'Deportista',
   SUPERADMIN: 'Superadmin',
 };
 
@@ -134,8 +134,8 @@ const ROLE_LABELS: Record<string, string> = {
 const PROFILE_ROLE_COLOR: Record<string, string> = {
   SUPERADMIN: '#EF476F',
   ADMIN: '#FFB703',
-  COACH: '#06D6A0',
-  STUDENT: '#381DA0',
+  ENTRENADOR: '#06D6A0',
+  DEPORTISTA: '#381DA0',
 };
 
 type Tab = 'perfil' | 'club' | 'suscripcion';

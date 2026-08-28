@@ -38,9 +38,9 @@ router.get('/', requireAuth, async (req, res) => {
     }),
   ]);
 
-  // Deportistas = STUDENT · Entrenadores/staff = COACH + ADMIN
-  const athletes = members.filter(m => m.role === 'STUDENT');
-  const coaches  = members.filter(m => m.role === 'COACH' || m.role === 'ADMIN');
+  // Deportistas = DEPORTISTA · Entrenadores/staff = ENTRENADOR + ADMIN
+  const athletes = members.filter(m => m.role === 'DEPORTISTA');
+  const coaches  = members.filter(m => m.role === 'ENTRENADOR' || m.role === 'ADMIN');
 
   res.json({ clubs, athletes, coaches });
 });

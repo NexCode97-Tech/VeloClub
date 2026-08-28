@@ -39,23 +39,23 @@ export interface Post {
 const ROLE_GRADIENT: Record<string, string> = {
   SUPERADMIN: 'linear-gradient(135deg,#EF476F,#C1121F)',
   ADMIN:      'linear-gradient(135deg,#FFB703,#FB8500)',
-  COACH:      'linear-gradient(135deg,#06D6A0,#0CB68D)',
-  STUDENT:    '#381DA0',
+  ENTRENADOR:      'linear-gradient(135deg,#06D6A0,#0CB68D)',
+  DEPORTISTA:    '#381DA0',
 };
 
 // Etiqueta del autor con el color de su rol, el mismo que usa el sidebar.
 const roleBadge: Record<string, { texto: string; fondo: string }> = {
   SUPERADMIN: { texto: '#B02A47', fondo: 'rgba(239,71,111,0.12)' },
   ADMIN:      { texto: '#854F0B', fondo: 'rgba(255,183,3,0.16)'  },
-  COACH:      { texto: '#057A5C', fondo: 'rgba(6,214,160,0.14)'  },
-  STUDENT:    { texto: '#6D28D9', fondo: 'rgba(56,29,160,0.10)' },
+  ENTRENADOR:      { texto: '#057A5C', fondo: 'rgba(6,214,160,0.14)'  },
+  DEPORTISTA:    { texto: '#6D28D9', fondo: 'rgba(56,29,160,0.10)' },
 };
 
 const roleLabels: Record<string, string> = {
   SUPERADMIN: 'Super admin',
   ADMIN:      'Administrador',
-  COACH:      'Entrenador',
-  STUDENT:    'Deportista',
+  ENTRENADOR:      'Entrenador',
+  DEPORTISTA:    'Deportista',
 };
 
 // Motivos de reporte. Salen de la seccion 5 de los Terminos, que es lo que el
@@ -88,7 +88,7 @@ function Avatar({ src, name, size = 36, role }: {
     <MemberAvatar
       name={name}
       photoUrl={src}
-      gradient={ROLE_GRADIENT[role ?? ''] ?? ROLE_GRADIENT.STUDENT}
+      gradient={ROLE_GRADIENT[role ?? ''] ?? ROLE_GRADIENT.DEPORTISTA}
       size={size}
     />
   );
@@ -557,8 +557,8 @@ export function PostCard({
                 >{post.authorName || 'Usuario'}</p>
                 <span className="text-[11px] md:text-[10px] font-semibold px-2.5 md:px-2 py-0.5 rounded-full shrink-0"
                   style={{
-                    background: (roleBadge[post.authorRole] ?? roleBadge.STUDENT).fondo,
-                    color:      (roleBadge[post.authorRole] ?? roleBadge.STUDENT).texto,
+                    background: (roleBadge[post.authorRole] ?? roleBadge.DEPORTISTA).fondo,
+                    color:      (roleBadge[post.authorRole] ?? roleBadge.DEPORTISTA).texto,
                   }}>
                   {roleLabels[post.authorRole] ?? post.authorRole}
                 </span>

@@ -17,19 +17,19 @@ import ModuleReveal from '@/components/ui/module-reveal';
 
 const roleLabels: Record<string, string> = {
   SUPERADMIN: 'Super admin', ADMIN: 'Administrador',
-  COACH: 'Entrenador',      STUDENT: 'Deportista',
+  ENTRENADOR: 'Entrenador',      DEPORTISTA: 'Deportista',
 };
 const roleColors: Record<string, { text: string; bg: string }> = {
   SUPERADMIN: { text: '#EF476F', bg: 'rgba(239,71,111,0.12)' },
   ADMIN:      { text: '#FFB703', bg: 'rgba(255,183,3,0.12)' },
-  COACH:      { text: '#06D6A0', bg: 'rgba(6,214,160,0.12)' },
-  STUDENT:    { text: '#381DA0', bg: 'rgba(56,29,160,0.10)' },
+  ENTRENADOR:      { text: '#06D6A0', bg: 'rgba(6,214,160,0.12)' },
+  DEPORTISTA:    { text: '#381DA0', bg: 'rgba(56,29,160,0.10)' },
 };
 const ROLE_GRADIENT: Record<string, string> = {
   SUPERADMIN: 'linear-gradient(135deg,#EF476F,#C1121F)',
   ADMIN:      'linear-gradient(135deg,#FFB703,#FB8500)',
-  COACH:      'linear-gradient(135deg,#06D6A0,#0CB68D)',
-  STUDENT:    '#381DA0',
+  ENTRENADOR:      'linear-gradient(135deg,#06D6A0,#0CB68D)',
+  DEPORTISTA:    '#381DA0',
 };
 
 const TABS = ['Publicaciones', 'Fotos', 'Información'] as const;
@@ -235,7 +235,7 @@ export default function PublicProfilePage() {
   }
 
   const role = profile.role;
-  const rc   = roleColors[role] ?? roleColors.STUDENT;
+  const rc   = roleColors[role] ?? roleColors.DEPORTISTA;
   // El mosaico sale del mismo listado que el feed para que nunca se contradigan
   const fotos = posts.filter(p => p.imageUrl);
   const postoEnVisor = posts.find(p => p.id === postoAbierto) ?? null;
@@ -405,7 +405,7 @@ export default function PublicProfilePage() {
                 <MemberAvatar
                   name={profile.name}
                   photoUrl={profile.picture}
-                  gradient={ROLE_GRADIENT[role] ?? ROLE_GRADIENT.STUDENT}
+                  gradient={ROLE_GRADIENT[role] ?? ROLE_GRADIENT.DEPORTISTA}
                   size={120}
                 />
               </div>

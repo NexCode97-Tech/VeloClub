@@ -57,7 +57,7 @@ export interface DatosFicha {
   allergies: string;
   category: string;
   tipo: string;
-  role: 'ADMIN' | 'COACH' | 'STUDENT';
+  role: 'ADMIN' | 'ENTRENADOR' | 'DEPORTISTA';
   locationIds: string[];
 }
 
@@ -66,7 +66,7 @@ export const FICHA_VACIA: DatosFicha = {
   docType: '', docNumber: '',
   guardianName: '', guardianRelation: '', guardianDocNumber: '', guardianPhone: '',
   eps: '', gender: '', rh: '', allergies: '', category: '', tipo: '',
-  role: 'STUDENT', locationIds: [],
+  role: 'DEPORTISTA', locationIds: [],
 };
 
 export const MAYORIA_DE_EDAD = 18;
@@ -113,8 +113,8 @@ export const TITULO_SECCION: Record<Seccion, string> = {
  */
 export function seccionesDe(datos: DatosFicha, haySedes: boolean): Seccion[] {
   const s: Seccion[] = ['identidad', 'contacto'];
-  if (datos.role === 'STUDENT') s.push('acudiente', 'deportiva');
-  else if (datos.role === 'COACH') s.push('acudiente');
+  if (datos.role === 'DEPORTISTA') s.push('acudiente', 'deportiva');
+  else if (datos.role === 'ENTRENADOR') s.push('acudiente');
   if (haySedes && datos.role !== 'ADMIN') s.push('sedes');
   s.push('documentos');
   return s;

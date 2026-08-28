@@ -127,7 +127,7 @@ router.get('/resumen-inicio', requireAuth, async (req, res) => {
   if (!clubId) return res.status(400).json({ error: 'Tu cuenta no está vinculada a un club' });
 
   // El resumen del club es del cuerpo tecnico; un deportista ve lo suyo en su panel
-  if (req.user.role !== 'ADMIN' && req.user.role !== 'COACH') {
+  if (req.user.role !== 'ADMIN' && req.user.role !== 'ENTRENADOR') {
     return res.status(403).json({ error: 'Sin permisos' });
   }
 
@@ -143,7 +143,7 @@ router.get('/resumen-inicio', requireAuth, async (req, res) => {
   const anio = ahora.getFullYear();
 
   const [deportistas, asistieronHoy, pagosDelMes, pagosPagados] = await Promise.all([
-    prisma.member.count({ where: { clubId, role: 'STUDENT', active: true } }),
+    prisma.member.count({ where: { clubId, role: 'DEPORTISTA', active: true } }),
     // Llegar tarde cuenta como asistir, igual que en el reporte descargable
     prisma.attendance.count({ where: { clubId, date: hoy, status: { in: ['PRESENT', 'LATE'] } } }),
     prisma.payment.count({ where: { clubId, month: mes, year: anio } }),

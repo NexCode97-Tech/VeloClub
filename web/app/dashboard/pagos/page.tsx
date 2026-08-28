@@ -79,7 +79,7 @@ export default function PagosPage() {
   const [deleting, setDeleting]   = useState<string | null>(null);
   const [uploadingReceipt, setUploadingReceipt] = useState<string | null>(null);
 
-  const canManage = role === 'ADMIN' || role === 'COACH';
+  const canManage = role === 'ADMIN' || role === 'ENTRENADOR';
 
   async function handleUploadReceipt(paymentId: string, file: File) {
     if (uploadingReceipt) return;
@@ -110,7 +110,7 @@ export default function PagosPage() {
       `/payments?month=${filterMonth}&year=${filterYear}`, { token }
     );
     const all = res.payments;
-    // STUDENT: filtrar solo sus propios pagos
+    // DEPORTISTA: filtrar solo sus propios pagos
     setPayments(memberId !== undefined
       ? (memberId ? all.filter(p => p.memberId === memberId) : all)
       : all
@@ -125,7 +125,7 @@ export default function PagosPage() {
       setRole(userRole);
 
       let memberId: string | null = null;
-      if (userRole === 'STUDENT') {
+      if (userRole === 'DEPORTISTA') {
         const memberRes = await apiFetch<{ member: { id: string } }>('/members/me', { token }).catch(() => null);
         memberId = memberRes?.member.id ?? null;
         setMyMemberId(memberId);
@@ -133,11 +133,11 @@ export default function PagosPage() {
 
       const [paymentsRes, membersRes] = await Promise.all([
         apiFetch<{ payments: Payment[] }>(`/payments?month=${filterMonth}&year=${filterYear}`, { token }),
-        userRole !== 'STUDENT' ? apiFetch<{ members: Member[] }>('/members', { token }) : Promise.resolve({ members: [] }),
+        userRole !== 'DEPORTISTA' ? apiFetch<{ members: Member[] }>('/members', { token }) : Promise.resolve({ members: [] }),
       ]);
 
       const all = paymentsRes.payments;
-      setPayments(userRole === 'STUDENT' && memberId ? all.filter(p => p.memberId === memberId) : all);
+      setPayments(userRole === 'DEPORTISTA' && memberId ? all.filter(p => p.memberId === memberId) : all);
       setMembers(membersRes.members);
       setLoading(false);
     })();
@@ -217,8 +217,8 @@ export default function PagosPage() {
     );
   }
 
-  // ── Vista STUDENT ────────────────────────────────────────────────────────
-  if (role === 'STUDENT') {
+  // ── Vista DEPORTISTA ────────────────────────────────────────────────────────
+  if (role === 'DEPORTISTA') {
     const pending = payments.filter(p => p.status === 'PENDING' || p.status === 'OVERDUE');
     const paid    = payments.filter(p => p.status === 'PAID');
     const totalOwed = pending.reduce((s, p) => s + p.amount, 0);
@@ -434,7 +434,7 @@ export default function PagosPage() {
     );
   }
 
-  // ── Vista ADMIN / COACH ───────────────────────────────────────────────────
+  // ── Vista ADMIN / ENTRENADOR ───────────────────────────────────────────────────
   return (
     <div className="min-h-full bg-background">
       {/* Encabezado */}
@@ -587,7 +587,7 @@ export default function PagosPage() {
         )}
       </motion.div>
 
-      {/* Modal registrar pago — solo ADMIN/COACH */}
+      {/* Modal registrar pago — solo ADMIN/ENTRENADOR */}
       {canManage && <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-sm">
           <DialogHeader>

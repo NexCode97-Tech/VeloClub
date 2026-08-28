@@ -12,7 +12,7 @@ const router = Router();
 // que respondian a cualquiera con sesion activa del club aunque la interfaz le
 // escondiera los botones.
 function puedeGestionar(req: import('express').Request): boolean {
-  return req.user?.role === 'ADMIN' || req.user?.role === 'COACH';
+  return req.user?.role === 'ADMIN' || req.user?.role === 'ENTRENADOR';
 }
 
 

@@ -8,11 +8,11 @@ import { apiFetch } from '@/lib/api-client';
 import ModuleLoader, { useCargaMinima } from '@/components/ui/module-loader';
 import ModuleReveal from '@/components/ui/module-reveal';
 
-type Role = 'ADMIN' | 'COACH' | 'STUDENT';
+type Role = 'ADMIN' | 'ENTRENADOR' | 'DEPORTISTA';
 
 const HELP_GUIDES = [
   {
-    id: 'inicio', color: '#4361EE', title: 'Inicio', roles: ['ADMIN', 'COACH', 'STUDENT'] as Role[],
+    id: 'inicio', color: '#4361EE', title: 'Inicio', roles: ['ADMIN', 'ENTRENADOR', 'DEPORTISTA'] as Role[],
     subtitle: 'Resumen general del club.',
     steps: [
       { n: 1, t: 'Ver el resumen', d: 'Revisa indicadores rápidos, próximos eventos y cumpleaños del mes en un solo vistazo.' },
@@ -20,7 +20,7 @@ const HELP_GUIDES = [
     ],
   },
   {
-    id: 'miembros', color: '#381DA0', title: 'Miembros', roles: ['ADMIN', 'COACH'] as Role[],
+    id: 'miembros', color: '#381DA0', title: 'Miembros', roles: ['ADMIN', 'ENTRENADOR'] as Role[],
     subtitle: 'Registro y gestión de deportistas y staff.',
     steps: [
       { n: 1, t: 'Crear un miembro', d: 'Toca "+ Nuevo". Completa nombre, correo, teléfono y sede. El correo es el que usará para ingresar.' },
@@ -29,7 +29,7 @@ const HELP_GUIDES = [
     ],
   },
   {
-    id: 'sedes', color: '#06D6A0', title: 'Sedes', roles: ['ADMIN', 'COACH', 'STUDENT'] as Role[],
+    id: 'sedes', color: '#06D6A0', title: 'Sedes', roles: ['ADMIN', 'ENTRENADOR', 'DEPORTISTA'] as Role[],
     subtitle: 'Lugares de entrenamiento del club.',
     steps: [
       { n: 1, t: 'Crear una sede', d: 'Toca "Nueva sede". Completa el nombre (ej. "Sede Norte") y busca el municipio.' },
@@ -38,7 +38,7 @@ const HELP_GUIDES = [
     ],
   },
   {
-    id: 'asistencia', color: '#06D6A0', title: 'Asistencia', roles: ['ADMIN', 'COACH'] as Role[],
+    id: 'asistencia', color: '#06D6A0', title: 'Asistencia', roles: ['ADMIN', 'ENTRENADOR'] as Role[],
     subtitle: 'Registro diario por fecha y sede.',
     steps: [
       { n: 1, t: 'Seleccionar fecha y sede', d: 'Elige el día y la sede. La lista de deportistas se filtra automáticamente.' },
@@ -57,7 +57,7 @@ const HELP_GUIDES = [
     ],
   },
   {
-    id: 'pagos', color: '#FFB703', title: 'Mis pagos', roles: ['STUDENT'] as Role[],
+    id: 'pagos', color: '#FFB703', title: 'Mis pagos', roles: ['DEPORTISTA'] as Role[],
     subtitle: 'Historial de tus mensualidades.',
     steps: [
       { n: 1, t: 'Revisar tu estado', d: 'Consulta "Por pagar" y "Total pagado" en la parte superior de la pantalla.' },
@@ -65,7 +65,7 @@ const HELP_GUIDES = [
     ],
   },
   {
-    id: 'rendimiento', color: '#F59E0B', title: 'Rendimiento', roles: ['ADMIN', 'COACH', 'STUDENT'] as Role[],
+    id: 'rendimiento', color: '#F59E0B', title: 'Rendimiento', roles: ['ADMIN', 'ENTRENADOR', 'DEPORTISTA'] as Role[],
     subtitle: 'Competencias y entrenamientos.',
     steps: [
       { n: 1, t: 'Cambiar de pestaña', d: 'Alterna entre "Competencias" y "Entrenamientos" en la parte superior.' },
@@ -74,7 +74,7 @@ const HELP_GUIDES = [
     ],
   },
   {
-    id: 'calendario', color: '#EF476F', title: 'Calendario', roles: ['ADMIN', 'COACH', 'STUDENT'] as Role[],
+    id: 'calendario', color: '#EF476F', title: 'Calendario', roles: ['ADMIN', 'ENTRENADOR', 'DEPORTISTA'] as Role[],
     subtitle: 'Próximos entrenamientos y competencias.',
     steps: [
       { n: 1, t: 'Navegar por mes', d: 'Usa las flechas junto al nombre del mes para moverte entre meses.' },
@@ -91,7 +91,7 @@ const HELP_GUIDES = [
     ],
   },
   {
-    id: 'club', color: '#381DA0', title: 'Club', roles: ['ADMIN', 'COACH', 'STUDENT'] as Role[],
+    id: 'club', color: '#381DA0', title: 'Club', roles: ['ADMIN', 'ENTRENADOR', 'DEPORTISTA'] as Role[],
     subtitle: 'Perfil público de tu club.',
     steps: [
       { n: 1, t: 'Cambiar de pestaña', d: 'Alterna entre "Publicaciones" y "Contacto" para ver la actividad o los datos del club.' },
@@ -100,7 +100,7 @@ const HELP_GUIDES = [
     ],
   },
   {
-    id: 'mi-perfil', color: '#381DA0', title: 'Mi perfil', roles: ['ADMIN', 'COACH', 'STUDENT'] as Role[],
+    id: 'mi-perfil', color: '#381DA0', title: 'Mi perfil', roles: ['ADMIN', 'ENTRENADOR', 'DEPORTISTA'] as Role[],
     subtitle: 'Tu información personal.',
     steps: [
       { n: 1, t: 'Publicar y ver fotos', d: 'Alterna entre "Publicaciones" y "Fotos" para compartir novedades o revisar tu galería.' },

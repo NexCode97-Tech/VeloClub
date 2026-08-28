@@ -21,7 +21,7 @@ import { cacheDel } from './redis';
  */
 export async function contarDeportistasActivos(clubId: string): Promise<number> {
   return prisma.member.count({
-    where: { clubId, role: 'STUDENT', active: true, inscripcion: 'APROBADO' },
+    where: { clubId, role: 'DEPORTISTA', active: true, inscripcion: 'APROBADO' },
   });
 }
 

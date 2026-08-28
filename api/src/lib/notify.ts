@@ -21,12 +21,12 @@ export async function notify(recipientClerkId: string, clubId: string | null, pa
   }
 }
 
-/** Notifica a todo el staff (ADMIN + COACH) de un club, excepto opcionalmente a un clerkId. */
+/** Notifica a todo el staff (ADMIN + ENTRENADOR) de un club, excepto opcionalmente a un clerkId. */
 export async function notifyClubStaff(clubId: string, payload: NotifPayload, exceptClerkId?: string) {
   if (!clubId) return;
   try {
     const staff = await prisma.member.findMany({
-      where: { clubId, role: { in: ['ADMIN', 'COACH'] }, clerkId: { not: null } },
+      where: { clubId, role: { in: ['ADMIN', 'ENTRENADOR'] }, clerkId: { not: null } },
       select: { clerkId: true },
     });
     const recipients = staff
@@ -42,13 +42,13 @@ export async function notifyClubStaff(clubId: string, payload: NotifPayload, exc
   }
 }
 
-/** Notifica a todos los deportistas (STUDENT) de un club. */
+/** Notifica a todos los deportistas (DEPORTISTA) de un club. */
 export async function notifyClubStudents(clubId: string, payload: NotifPayload) {
   if (!clubId) return;
   try {
     const students = await prisma.member.findMany({
       // Un deportista desactivado no recibe avisos del club mientras esté en pausa
-      where: { clubId, role: 'STUDENT', active: true, clerkId: { not: null } },
+      where: { clubId, role: 'DEPORTISTA', active: true, clerkId: { not: null } },
       select: { clerkId: true },
     });
     const recipients = students.map(s => s.clerkId!).filter(Boolean);

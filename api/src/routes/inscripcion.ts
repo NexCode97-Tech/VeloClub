@@ -398,7 +398,7 @@ router.post('/:token', strictLimiter, async (req, res) => {
         allergies: d.allergies?.trim() || null,
         category: d.category || null,
         tipo: d.tipo || null,
-        role: 'STUDENT',
+        role: 'DEPORTISTA',
         clerkId,
         inviteStatus: 'ACCEPTED',
         origen: 'FORMULARIO',

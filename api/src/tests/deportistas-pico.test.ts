@@ -35,7 +35,7 @@ describe('contarDeportistasActivos', () => {
     // `inscripcion: APROBADO` importa para la factura: quien se inscribio por
     // el enlace y espera el visto bueno del club todavia no se cobra.
     expect(count).toHaveBeenCalledWith({
-      where: { clubId: 'club-1', role: 'STUDENT', active: true, inscripcion: 'APROBADO' },
+      where: { clubId: 'club-1', role: 'DEPORTISTA', active: true, inscripcion: 'APROBADO' },
     });
   });
 });

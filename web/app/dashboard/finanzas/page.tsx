@@ -482,7 +482,7 @@ export default function FinanzasPage() {
 
   // ── Vista unificada de deportistas ───────────────────────────────────────────
   const studentRows = useMemo(() => {
-    const students = allMembers.filter(m => m.role === 'STUDENT');
+    const students = allMembers.filter(m => m.role === 'DEPORTISTA');
     return students.map(m => {
       // Busca el pago más relevante del mes (OVERDUE > PENDING > PAID > primero)
       const monthPayments = payments.filter(p => p.memberId === m.id);
@@ -528,7 +528,7 @@ export default function FinanzasPage() {
   const countPending = studentRows.filter(r => r.payment && r.payment.status !== 'PAID').length;
   const countNone    = studentRows.filter(r => !r.payment && r.configured).length;
   // Deportistas sin tarifa configurada (destino de "Tarifa general")
-  const bulkTargetCount = allMembers.filter(m => m.role === 'STUDENT' && !m.monthlyFee).length;
+  const bulkTargetCount = allMembers.filter(m => m.role === 'DEPORTISTA' && !m.monthlyFee).length;
 
   // ── Acciones de mensualidades ────────────────────────────────────────────────
   async function handleGenerateMonth() {
@@ -1260,7 +1260,7 @@ export default function FinanzasPage() {
                   <span className="text-sm">{payForm.memberId ? allMembers.find(m => m.id === payForm.memberId)?.fullName ?? 'Seleccionar deportista' : 'Seleccionar deportista'}</span>
                 </SelectTrigger>
                 <SelectContent>
-                  {allMembers.filter(m => m.role === 'STUDENT').map(m => (
+                  {allMembers.filter(m => m.role === 'DEPORTISTA').map(m => (
                     <SelectItem key={m.id} value={m.id}>{m.fullName}</SelectItem>
                   ))}
                 </SelectContent>

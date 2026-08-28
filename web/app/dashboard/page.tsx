@@ -88,8 +88,8 @@ type FeedScope = 'public' | 'private';
 const roleColors: Record<string, { text: string; bg: string }> = {
   SUPERADMIN: { text: '#EF476F', bg: 'rgba(239,71,111,0.12)' },
   ADMIN:      { text: '#FFB703', bg: 'rgba(255,183,3,0.12)' },
-  COACH:      { text: '#06D6A0', bg: 'rgba(6,214,160,0.12)' },
-  STUDENT:    { text: '#381DA0', bg: 'rgba(56,29,160,0.10)' },
+  ENTRENADOR:      { text: '#06D6A0', bg: 'rgba(6,214,160,0.12)' },
+  DEPORTISTA:    { text: '#381DA0', bg: 'rgba(56,29,160,0.10)' },
 };
 
 function todayLabel() {
@@ -195,8 +195,8 @@ const cardVariant = {
 const ROLE_GRADIENT: Record<string, string> = {
   SUPERADMIN: 'linear-gradient(135deg,#EF476F,#C1121F)',
   ADMIN:      'linear-gradient(135deg,#FFB703,#FB8500)',
-  COACH:      'linear-gradient(135deg,#06D6A0,#0CB68D)',
-  STUDENT:    '#381DA0',
+  ENTRENADOR:      'linear-gradient(135deg,#06D6A0,#0CB68D)',
+  DEPORTISTA:    '#381DA0',
 };
 
 // ── Avatar wrapper que usa MemberAvatar con gradiente por rol ─────────────────
@@ -205,7 +205,7 @@ function Avatar({ src, name, size = 36, role }: { src?: string | null; name: str
     <MemberAvatar
       name={name}
       photoUrl={src}
-      gradient={ROLE_GRADIENT[role ?? ''] ?? ROLE_GRADIENT.STUDENT}
+      gradient={ROLE_GRADIENT[role ?? ''] ?? ROLE_GRADIENT.DEPORTISTA}
       size={size}
     />
   );

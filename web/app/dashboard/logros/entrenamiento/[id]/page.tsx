@@ -70,7 +70,7 @@ export default function TrainingDetailPage() {
 
   useEffect(() => { load(); }, []);
 
-  const canManage   = role === 'ADMIN' || role === 'COACH';
+  const canManage   = role === 'ADMIN' || role === 'ENTRENADOR';
   const escenario   = infoEscenario(session?.escenario);
   const esGimnasio  = escenario.valor === 'GIMNASIO';
   const IconoEscenario = escenario.icono;

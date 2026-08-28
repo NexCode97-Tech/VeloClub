@@ -294,7 +294,7 @@ export default function CompetitionDetailPage() {
     }
   }
 
-  const canManage = role === 'ADMIN' || role === 'COACH';
+  const canManage = role === 'ADMIN' || role === 'ENTRENADOR';
 
   if (mostrarCarga) {
     return (

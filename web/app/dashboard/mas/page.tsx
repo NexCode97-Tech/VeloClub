@@ -20,14 +20,14 @@ const ITEMS_BY_ROLE: Record<string, { label: string; icon: React.ElementType; co
     { label: 'Club',       icon: Building2,         color: '#381DA0', href: '/dashboard/club' },
     { label: 'Ayuda',      icon: HelpCircle,        color: '#8E87A8', href: '/dashboard/ajustes/ayuda' },
   ],
-  COACH: [
+  ENTRENADOR: [
     { label: 'Rendimiento', icon: Trophy,        color: '#F59E0B', href: '/dashboard/logros' },
     { label: 'Calendario', icon: CalendarDays,  color: '#EF476F', href: '/dashboard/calendario' },
     { label: 'Sedes',      icon: MapPin,        color: '#06D6A0', href: '/dashboard/sedes' },
     { label: 'Club',       icon: Building2,     color: '#381DA0', href: '/dashboard/club' },
     { label: 'Ayuda',      icon: HelpCircle,    color: '#8E87A8', href: '/dashboard/ajustes/ayuda' },
   ],
-  STUDENT: [],
+  DEPORTISTA: [],
 };
 
 export default function MasPage() {
@@ -48,7 +48,7 @@ export default function MasPage() {
         setRole(res.user?.role ?? 'ADMIN');
 
         // Si es deportista, cargar su foto de perfil actual
-        if (res.user?.role === 'STUDENT') {
+        if (res.user?.role === 'DEPORTISTA') {
           const me = await apiFetch<{ member?: { pictureUrl?: string | null } }>('/members/me', { token });
           setMemberPic(me.member?.pictureUrl ?? null);
         }
@@ -90,8 +90,8 @@ export default function MasPage() {
 
   const roleLabel: Record<string, string> = {
     ADMIN: 'Administrador',
-    COACH: 'Entrenador',
-    STUDENT: 'Deportista',
+    ENTRENADOR: 'Entrenador',
+    DEPORTISTA: 'Deportista',
   };
 
   // Foto a mostrar: primero la subida manualmente, luego la de Clerk
@@ -104,8 +104,8 @@ export default function MasPage() {
         Más opciones
       </h1>
 
-      {/* ── Tarjeta Mi cuenta (STUDENT) ─────────────────────────────────────── */}
-      {items !== null && role === 'STUDENT' && (
+      {/* ── Tarjeta Mi cuenta (DEPORTISTA) ─────────────────────────────────────── */}
+      {items !== null && role === 'DEPORTISTA' && (
         <motion.div variants={cardVariant} className="bg-white border border-border rounded-2xl px-4 py-4 mb-4">
           <div className="flex items-center gap-3">
 
@@ -195,8 +195,8 @@ export default function MasPage() {
         </motion.div>
       )}
 
-      {/* Tarjeta Mi cuenta — ADMIN / COACH */}
-      {items !== null && role !== 'STUDENT' && (
+      {/* Tarjeta Mi cuenta — ADMIN / ENTRENADOR */}
+      {items !== null && role !== 'DEPORTISTA' && (
         <motion.div
           variants={cardVariant}
           onClick={() => clerk.openUserProfile()}

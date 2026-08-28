@@ -71,7 +71,7 @@ model Club {
   clases                    ClaseHorario[]
 }
 
-// ─── User (staff: ADMIN, COACH, SUPERADMIN) ──────────────────────────────────
+// ─── User (staff: ADMIN, ENTRENADOR, SUPERADMIN) ──────────────────────────────────
 
 model User {
   id              String    @id @default(cuid())
@@ -177,7 +177,7 @@ model Member {
   // reescribir la ficha de otro.
   cambiosPendientes Json?
   clerkId           String?           @unique
-  role              Role              @default(STUDENT)
+  role              Role              @default(DEPORTISTA)
   // Pausa temporal, no borrado. Los deportistas se van de vacaciones en
   // noviembre y vuelven en febrero: mientras esten inactivos no se les genera
   // cuota, no cuentan para el precio del plan del club y no entran a la app,
@@ -794,8 +794,8 @@ model Follow {
 enum Role {
   SUPERADMIN
   ADMIN
-  COACH
-  STUDENT
+  ENTRENADOR
+  DEPORTISTA
 }
 
 enum OrigenMiembro {

@@ -56,8 +56,8 @@ interface Props {
 }
 
 const ROLES = [
-  { valor: 'STUDENT' as const, texto: 'Deportista' },
-  { valor: 'COACH'   as const, texto: 'Entrenador' },
+  { valor: 'DEPORTISTA' as const, texto: 'Deportista' },
+  { valor: 'ENTRENADOR'   as const, texto: 'Entrenador' },
   { valor: 'ADMIN'   as const, texto: 'Administrador' },
 ];
 
@@ -276,7 +276,7 @@ export function FichaDeportista({
         {/* ── 3 · Qué hace en el club ────────────────────────────────────── */}
         {paso === 'entrenamiento' && (
           <>
-            {datos.role === 'STUDENT' && (
+            {datos.role === 'DEPORTISTA' && (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 <Campo etiqueta="Categoría">
                   <Desplegable valor={datos.category} opciones={[...CATEGORIAS]} vacio="Elegir categoría"

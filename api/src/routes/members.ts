@@ -42,7 +42,7 @@ const memberSchema = z.object({
   paymentDueDay: z.number().min(1).max(31).nullable().optional(),
   monthlyFee: z.number().positive().nullable().optional(),
   locationIds: z.array(z.string()).optional(),
-  role: z.enum(['ADMIN', 'COACH', 'STUDENT']).optional(),
+  role: z.enum(['ADMIN', 'ENTRENADOR', 'DEPORTISTA']).optional(),
 });
 
 // La url debe ser del propio Cloudinary: es lo único que el frontend renderiza y
@@ -78,11 +78,11 @@ router.get('/', requireAuth, async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'No autenticado' });
   const clubId = req.user.clubId ?? '';
 
-  // Un STUDENT necesita el listado para mostrar nombres en resultados, pero no
+  // Un DEPORTISTA necesita el listado para mostrar nombres en resultados, pero no
   // los datos personales (documento, EPS, contacto de emergencia, archivos ni
   // cuota). La llave de caché incluye el alcance para no servirle a un ADMIN la
-  // versión reducida ni a un STUDENT la completa.
-  const isStudent = req.user.role === 'STUDENT';
+  // versión reducida ni a un DEPORTISTA la completa.
+  const isStudent = req.user.role === 'DEPORTISTA';
   const cacheKey = `members:${clubId}:${isStudent ? 'student' : 'staff'}`;
 
   const cached = await cacheGet<{ members: unknown[] }>(cacheKey);
@@ -271,7 +271,7 @@ router.post('/', requireAuth, async (req, res) => {
 });
 
 // PATCH /members/bulk-fee — configura tarifa + día de cobro de forma masiva.
-// Solo aplica a los deportistas (STUDENT) que aún NO tienen tarifa (no pisa
+// Solo aplica a los deportistas (DEPORTISTA) que aún NO tienen tarifa (no pisa
 // tarifas individuales). Actualiza también los cobros pendientes de esos miembros.
 router.patch('/bulk-fee', createLimiter, requireAuth, async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'No autenticado' });
@@ -288,7 +288,7 @@ router.patch('/bulk-fee', createLimiter, requireAuth, async (req, res) => {
 
   // Solo los deportistas sin tarifa configurada
   const targets = await prisma.member.findMany({
-    where: { clubId, role: 'STUDENT', monthlyFee: null },
+    where: { clubId, role: 'DEPORTISTA', monthlyFee: null },
     select: { id: true },
   });
   const ids = targets.map(t => t.id);

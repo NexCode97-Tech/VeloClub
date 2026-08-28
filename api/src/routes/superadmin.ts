@@ -332,22 +332,22 @@ router.delete('/clubs/:id', requireAuth, requireSuperadmin, async (req, res) => 
   res.json({ ok: true });
 });
 
-// GET /superadmin/clubs/:id/miembros — miembros no-STUDENT de un club
+// GET /superadmin/clubs/:id/miembros — miembros no-DEPORTISTA de un club
 router.get('/clubs/:id/miembros', requireAuth, requireSuperadmin, async (req, res) => {
   const id = String(req.params.id);
   const members = await prisma.member.findMany({
-    where: { clubId: id, role: { in: ['ADMIN', 'COACH'] } },
+    where: { clubId: id, role: { in: ['ADMIN', 'ENTRENADOR'] } },
     select: { id: true, fullName: true, email: true, phone: true, role: true, inviteStatus: true },
     orderBy: { createdAt: 'asc' },
   });
   res.json({ members });
 });
 
-// POST /superadmin/clubs/:id/miembros — agregar ADMIN o COACH a un club
+// POST /superadmin/clubs/:id/miembros — agregar ADMIN o ENTRENADOR a un club
 const addMemberSchema = z.object({
   fullName: z.string().min(2).max(100),
   email:    z.string().email(),
-  role:     z.enum(['ADMIN', 'COACH']),
+  role:     z.enum(['ADMIN', 'ENTRENADOR']),
 });
 
 router.post('/clubs/:id/miembros', requireAuth, requireSuperadmin, async (req, res) => {
@@ -377,7 +377,7 @@ router.post('/clubs/:id/miembros', requireAuth, requireSuperadmin, async (req, r
 router.patch('/clubs/:clubId/miembros/:memberId', requireAuth, requireSuperadmin, async (req, res) => {
   const memberId = String(req.params.memberId);
   const { role } = req.body;
-  if (!['ADMIN', 'COACH'].includes(role)) return res.status(400).json({ error: 'Rol inválido' });
+  if (!['ADMIN', 'ENTRENADOR'].includes(role)) return res.status(400).json({ error: 'Rol inválido' });
 
   const antes = await prisma.member.findUnique({
     where: { id: memberId },

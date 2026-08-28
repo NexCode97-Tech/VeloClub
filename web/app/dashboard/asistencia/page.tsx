@@ -64,7 +64,7 @@ const STATUS_LABEL: Record<Status, string> = { PRESENT: 'P', LATE: 'T', ABSENT: 
 const STATUS_COLOR: Record<Status, string> = { PRESENT: '#06D6A0', LATE: '#FFB703', ABSENT: '#EF476F', MEDICAL_EXCUSE: '#8B8FA8' };
 const STATUS_NAME: Record<Status, string>  = { PRESENT: 'Presente', LATE: 'Tarde', ABSENT: 'Ausente', MEDICAL_EXCUSE: 'Excusa médica' };
 const ROLE_BG: Record<string, string> = {
-  COACH: 'linear-gradient(135deg,#06D6A0,#0CB68D)',
+  ENTRENADOR: 'linear-gradient(135deg,#06D6A0,#0CB68D)',
   ADMIN: 'linear-gradient(135deg,#FFB703,#FB8500)',
 };
 
@@ -430,7 +430,7 @@ export default function AsistenciaPage() {
   }
 
   const counts = CYCLE.map(s => ({ s, n: Object.values(att).filter(v => v === s).length }));
-  const canManage = role === 'ADMIN' || role === 'COACH';
+  const canManage = role === 'ADMIN' || role === 'ENTRENADOR';
 
   // ── Descarga del consolidado ───────────────────────────────────────────────
   const { data: clubSettings } = useClubSettings();

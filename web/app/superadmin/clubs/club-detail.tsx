@@ -39,7 +39,7 @@ export interface Suscripcion { id: string; planMonto: number; tipoPlan: TipoPlan
 
 export interface Member {
   id: string; fullName: string; email: string; phone?: string | null;
-  role: 'ADMIN' | 'COACH'; inviteStatus: string;
+  role: 'ADMIN' | 'ENTRENADOR'; inviteStatus: string;
 }
 export interface Club {
   id: string; name: string; active: boolean; createdAt: string;
@@ -120,8 +120,8 @@ const PLAN_BADGE: Record<TipoPlan, { label: string; color: string; bg: string }>
   TRIMESTRAL: { label: 'Trimestral', color: '#4361EE', bg: 'rgba(67,97,238,0.12)'  },
   ANUAL:      { label: 'Anual',      color: '#06D6A0', bg: 'rgba(6,214,160,0.12)'  },
 };
-const ROLE_COLOR = { ADMIN: '#FFB703', COACH: '#06D6A0' } as const;
-const ROLE_LABEL = { ADMIN: 'Admin', COACH: 'Entrenador' } as const;
+const ROLE_COLOR = { ADMIN: '#FFB703', ENTRENADOR: '#06D6A0' } as const;
+const ROLE_LABEL = { ADMIN: 'Admin', ENTRENADOR: 'Entrenador' } as const;
 
 const inp: React.CSSProperties = {
   width: '100%', padding: '10px 12px', borderRadius: 10,
@@ -184,10 +184,10 @@ function PlanSelector({ value, onChange }: { value: TipoPlan; onChange: (v: Tipo
 }
 
 // ── RoleToggle ────────────────────────────────────────────────────────────────
-function RoleToggle({ value, onChange }: { value: 'ADMIN' | 'COACH'; onChange: (v: 'ADMIN' | 'COACH') => void }) {
+function RoleToggle({ value, onChange }: { value: 'ADMIN' | 'ENTRENADOR'; onChange: (v: 'ADMIN' | 'ENTRENADOR') => void }) {
   return (
     <div style={{ display: 'flex', background: 'rgba(120,80,200,0.07)', borderRadius: 10, padding: 2, gap: 2 }}>
-      {(['ADMIN', 'COACH'] as const).map(r => {
+      {(['ADMIN', 'ENTRENADOR'] as const).map(r => {
         const active = value === r;
         return (
           <motion.button key={r} onClick={() => onChange(r)} whileTap={{ scale: 0.96 }} transition={{ duration: 0.12, ease: EASE }}
@@ -249,7 +249,7 @@ export default function ClubDetail({ club, suscripcion, tab, onReload, onDeleted
   const [members, setMembers] = useState<Member[]>([]);
   const [membersLoading, setMembersLoading] = useState(true);
   const [showAddMember, setShowAddMember] = useState(false);
-  const [memberForm, setMemberForm] = useState({ fullName: '', email: '', role: 'COACH' as 'ADMIN' | 'COACH' });
+  const [memberForm, setMemberForm] = useState({ fullName: '', email: '', role: 'ENTRENADOR' as 'ADMIN' | 'ENTRENADOR' });
   const [memberSaving, setMemberSaving] = useState(false);
   const [memberError, setMemberError] = useState<string | null>(null);
 
@@ -366,13 +366,13 @@ export default function ClubDetail({ club, suscripcion, tab, onReload, onDeleted
       const token = await getToken();
       await apiFetch(`/superadmin/clubs/${club.id}/miembros`, { method: 'POST', token, body: JSON.stringify(memberForm) });
       setShowAddMember(false);
-      setMemberForm({ fullName: '', email: '', role: 'COACH' });
+      setMemberForm({ fullName: '', email: '', role: 'ENTRENADOR' });
       await loadMembers();
       await onReload();
     } catch (e) { setMemberError(e instanceof Error ? e.message : 'Error'); }
     finally { setMemberSaving(false); }
   }
-  async function changeRole(memberId: string, role: 'ADMIN' | 'COACH') {
+  async function changeRole(memberId: string, role: 'ADMIN' | 'ENTRENADOR') {
     const token = await getToken();
     await apiFetch(`/superadmin/clubs/${club.id}/miembros/${memberId}`, { method: 'PATCH', token, body: JSON.stringify({ role }) });
     await loadMembers();

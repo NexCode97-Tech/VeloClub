@@ -45,7 +45,7 @@ router.get('/:clerkId', requireAuth, async (req, res) => {
   const clerkId = String(req.params.clerkId);
   const clubIdDelVisitante = req.user?.clubId ?? null;
 
-  // Buscar como User (ADMIN, COACH)
+  // Buscar como User (ADMIN, ENTRENADOR)
   const user = await prisma.user.findUnique({
     where: { clerkId },
     select: {
@@ -96,7 +96,7 @@ router.get('/:clerkId', requireAuth, async (req, res) => {
     });
   }
 
-  // Buscar como Member (STUDENT)
+  // Buscar como Member (DEPORTISTA)
   const member = await prisma.member.findFirst({
     where: { clerkId },
     select: {

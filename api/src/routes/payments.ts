@@ -171,10 +171,10 @@ router.get('/', requireAuth, async (req, res) => {
   if (memberId)        where.memberId = memberId;
   if (sede)            where.locationId = sede === 'GENERAL' ? null : sede;
 
-  // Un STUDENT solo puede ver su propio historial. Antes se devolvían todos los
+  // Un DEPORTISTA solo puede ver su propio historial. Antes se devolvían todos los
   // pagos del club (con email y teléfono de cada miembro) y el filtrado ocurría
   // en el cliente, así que los datos igual viajaban al navegador.
-  if (req.user.role === 'STUDENT') {
+  if (req.user.role === 'DEPORTISTA') {
     const self = await prisma.member.findFirst({
       where: {
         clubId,
@@ -368,7 +368,7 @@ router.post('/:id/my-receipt', requireAuth, async (req, res) => {
   const vMiRecibo = validarSubida(base64, 'doc');
   if (!vMiRecibo.ok) return res.status(400).json({ error: vMiRecibo.error });
 
-  // Resolver el miembro del deportista (los STUDENT no tienen req.user)
+  // Resolver el miembro del deportista (los DEPORTISTA no tienen req.user)
   const member = await prisma.member.findFirst({
     where: {
       OR: [

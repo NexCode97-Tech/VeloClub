@@ -6,8 +6,16 @@ interface LocationOption {
   name: string;
 }
 
+// Los roles se llamaban COACH y STUDENT. Se conservan como entrada valida para
+// que las plantillas ya descargadas sigan sirviendo; de salida solo se generan
+// los nombres nuevos.
+const ROLES_VIEJOS: Record<string, string> = {
+  COACH: 'ENTRENADOR',
+  STUDENT: 'DEPORTISTA',
+};
+
 export function downloadMembersTemplate(locations: LocationOption[] = []) {
-  const ROLES      = ['ADMIN', 'COACH', 'STUDENT'];
+  const ROLES      = ['ADMIN', 'ENTRENADOR', 'DEPORTISTA'];
 
   const NIVELES    = ['Escuela', 'Novatos', 'Intermedio', 'Avanzados', 'Federados'];
   const SEDES      = locations.map(l => l.name);
@@ -26,7 +34,7 @@ export function downloadMembersTemplate(locations: LocationOption[] = []) {
     'EPS',
     'Categoría',
     'Nivel / Tipo',
-    'Rol (ADMIN / COACH / STUDENT)',
+    'Rol (ADMIN / ENTRENADOR / DEPORTISTA)',
     'Día de corte mensualidad (1-31)',
     'Sede',
   ];
@@ -43,7 +51,7 @@ export function downloadMembersTemplate(locations: LocationOption[] = []) {
     'Sura',
     'Menores 3-10 años',
     'Escuela',
-    'STUDENT',
+    'DEPORTISTA',
     '15',
     SEDES[0] ?? '',
   ];
@@ -52,9 +60,9 @@ export function downloadMembersTemplate(locations: LocationOption[] = []) {
     '* Campos obligatorios',
     '* El correo es opcional, pero sin él no se le puede enviar la invitación a la app',
     '* Si lo pones, debe ser único por deportista',
-    '* Rol: ADMIN = Administrador, COACH = Entrenador, STUDENT = Deportista',
+    '* Rol: ADMIN = Administrador, ENTRENADOR = Entrenador, DEPORTISTA = Deportista',
     '* Tipo de documento: CC, TI, RC (Registro Civil), CE, Pasaporte, NIT u Otro',
-    '* Categoría y Nivel son opcionales (solo aplican a STUDENT)',
+    '* Categoría y Nivel son opcionales (solo aplican a DEPORTISTA)',
     '* Día de corte: número entre 1 y 31',
     '* Sede: selecciona de la lista desplegable (opcional)',
     '',
@@ -101,7 +109,7 @@ export function downloadMembersTemplate(locations: LocationOption[] = []) {
       formula1: `"${ROLES.join(',')}"`,
       showErrorMessage: true,
       errorTitle: 'Rol inválido',
-      error: 'Selecciona ADMIN, COACH o STUDENT de la lista',
+      error: 'Selecciona ADMIN, ENTRENADOR o DEPORTISTA de la lista',
     },
     {
       sqref: 'J2:J1000',
@@ -164,7 +172,7 @@ export interface MemberImportRow {
   eps?: string;
   category?: string;
   tipo?: string;
-  role: 'ADMIN' | 'COACH' | 'STUDENT';
+  role: 'ADMIN' | 'ENTRENADOR' | 'DEPORTISTA';
   paymentDueDay?: number;
   locationName?: string;
 }
@@ -325,7 +333,13 @@ export function parseMembersExcel(
         const rowNum = i + 2;
         const fullName = texto(r, 'Nombre Completo *', 'Nombre Completo', 'Nombre') ?? '';
         const email    = texto(r, 'Correo electrónico *', 'Correo electrónico', 'Correo', 'Email') ?? '';
-        const roleRaw  = (texto(r, 'Rol (ADMIN / COACH / STUDENT)', 'Rol') ?? 'STUDENT').toUpperCase();
+        // Se acepta la cabecera vieja y los nombres viejos de los roles: los
+        // clubes que descargaron la plantilla antes del cambio al español
+        // tienen archivos que dicen COACH y STUDENT, y esos siguen importando.
+        const rolEscrito = (texto(r, 'Rol (ADMIN / ENTRENADOR / DEPORTISTA)',
+                                     'Rol (ADMIN / COACH / STUDENT)',
+                                     'Rol') ?? 'DEPORTISTA').toUpperCase();
+        const roleRaw  = ROLES_VIEJOS[rolEscrito] ?? rolEscrito;
 
         if (!fullName) { errors.push(`Fila ${rowNum}: Nombre completo es obligatorio`); return; }
         // Un correo mal escrito si se rechaza: importarlo dejaria una
@@ -339,8 +353,8 @@ export function parseMembersExcel(
         // caso que mas lo necesita: un club cargando de una vez la lista de
         // ninos de seis anos, de los que nadie tiene correo. Sin correo el
         // deportista queda registrado pero no se le puede enviar la invitacion.
-        if (!['ADMIN', 'COACH', 'STUDENT'].includes(roleRaw)) {
-          errors.push(`Fila ${rowNum}: Rol inválido "${roleRaw}" — usa ADMIN, COACH o STUDENT`); return;
+        if (!['ADMIN', 'ENTRENADOR', 'DEPORTISTA'].includes(roleRaw)) {
+          errors.push(`Fila ${rowNum}: Rol inválido "${roleRaw}" — usa ADMIN, ENTRENADOR o DEPORTISTA`); return;
         }
 
         const dueDayRaw = parseInt(texto(r, 'Día de corte mensualidad (1-31)', 'Día de corte') ?? '');
@@ -369,7 +383,7 @@ export function parseMembersExcel(
           eps:              texto(r, 'EPS'),
           category:         texto(r, 'Categoría'),
           tipo:             texto(r, 'Nivel / Tipo'),
-          role:             roleRaw as 'ADMIN' | 'COACH' | 'STUDENT',
+          role:             roleRaw as 'ADMIN' | 'ENTRENADOR' | 'DEPORTISTA',
           paymentDueDay,
           locationName,
         });

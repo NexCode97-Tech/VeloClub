@@ -165,7 +165,7 @@ function LogrosPageInner() {
       const meRes = await apiFetch<{ status: string; user?: { role: string } }>('/me', { token });
       const userRole = meRes.user?.role ?? '';
       setRole(userRole);
-      if (userRole === 'STUDENT') {
+      if (userRole === 'DEPORTISTA') {
         const memberRes = await apiFetch<{ member: { id: string } }>('/members/me', { token }).catch(() => null);
         setMyMemberId(memberRes?.member.id ?? null);
       }
@@ -174,8 +174,8 @@ function LogrosPageInner() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const canManage = role === 'ADMIN' || role === 'COACH';
-  const isStudent = role === 'STUDENT';
+  const canManage = role === 'ADMIN' || role === 'ENTRENADOR';
+  const isStudent = role === 'DEPORTISTA';
 
   const visibleComps = isStudent && myMemberId
     ? competitions.filter(c => c.events.some(e => e.results.some(r => r.member.id === myMemberId)))
@@ -257,7 +257,7 @@ function LogrosPageInner() {
           Rendimiento
         </h1>
         {/* Botón de acción — solo móvil, a la misma altura del título */}
-        {role !== 'STUDENT' && (
+        {role !== 'DEPORTISTA' && (
           <motion.button
             whileTap={{ scale: 0.93 }}
             onClick={() => {
@@ -319,7 +319,7 @@ function LogrosPageInner() {
             {tab === 'comp' ? 'Competencias' : 'Entrenamientos'}
           </h2>
 
-          {role !== 'STUDENT' && (
+          {role !== 'DEPORTISTA' && (
             <motion.button
               whileTap={{ scale: 0.93 }}
               onClick={() => {

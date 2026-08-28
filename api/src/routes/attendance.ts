@@ -170,7 +170,7 @@ const MAX_DIAS_REPORTE = 366;
 router.get('/report', requireAuth, async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'No autenticado' });
   // El consolidado del club completo es informacion del cuerpo tecnico
-  if (req.user.role !== 'ADMIN' && req.user.role !== 'COACH') {
+  if (req.user.role !== 'ADMIN' && req.user.role !== 'ENTRENADOR') {
     return res.status(403).json({ error: 'Sin permisos' });
   }
   const clubId = req.user.clubId ?? '';
@@ -216,7 +216,7 @@ router.get('/report', requireAuth, async (req, res) => {
   const members = await prisma.member.findMany({
     where: {
       clubId,
-      role: 'STUDENT',
+      role: 'DEPORTISTA',
       active: true,
       ...(sedeFiltro ? { locations: { some: { locationId: sedeFiltro } } } : {}),
       // La planilla de esa clase solo tiene a los de su categoria; el reporte
@@ -281,7 +281,7 @@ router.get('/report', requireAuth, async (req, res) => {
 // POST /attendance/bulk  — upsert all records for a date+location
 router.post('/bulk', requireAuth, async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'No autenticado' });
-  if (!['ADMIN', 'COACH'].includes(req.user.role)) return res.status(403).json({ error: 'Sin permisos' });
+  if (!['ADMIN', 'ENTRENADOR'].includes(req.user.role)) return res.status(403).json({ error: 'Sin permisos' });
   const clubId = req.user.clubId ?? '';
 
   const parsed = bulkSchema.safeParse(req.body);

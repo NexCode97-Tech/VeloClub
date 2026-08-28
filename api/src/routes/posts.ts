@@ -107,7 +107,7 @@ router.get('/', requireAuth, async (req, res) => {
 });
 
 // POST /posts
-// Publica cualquiera, incluidos los deportistas. Antes se exigia ADMIN o COACH
+// Publica cualquiera, incluidos los deportistas. Antes se exigia ADMIN o ENTRENADOR
 // y la comunidad quedaba en manos del cuerpo tecnico; la responsabilidad de lo
 // publicado es de quien lo publica, que es el unico que puede editarlo o
 // borrarlo despues.

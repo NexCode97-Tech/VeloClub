@@ -54,16 +54,16 @@ interface Member {
 }
 
 // ── Design tokens ──────────────────────────────────────────────────────────────
-const ROLES: Record<string, string> = { ADMIN: 'Admin', COACH: 'Entrenador', STUDENT: 'Deportista' };
+const ROLES: Record<string, string> = { ADMIN: 'Admin', ENTRENADOR: 'Entrenador', DEPORTISTA: 'Deportista' };
 const ROLE_COLORS: Record<string, { text: string; bg: string }> = {
   ADMIN:   { text: '#B45309', bg: 'rgba(245,158,11,0.12)' },
-  COACH:   { text: '#047857', bg: 'rgba(6,214,160,0.12)' },
-  STUDENT: { text: '#6D28D9', bg: 'rgba(56,29,160,0.12)' },
+  ENTRENADOR:   { text: '#047857', bg: 'rgba(6,214,160,0.12)' },
+  DEPORTISTA: { text: '#6D28D9', bg: 'rgba(56,29,160,0.12)' },
 };
 const ROLE_GRADIENT: Record<string, string> = {
   ADMIN:   'linear-gradient(135deg,#FFB703,#FB8500)',
-  COACH:   'linear-gradient(135deg,#06D6A0,#0CB68D)',
-  STUDENT: '#381DA0',
+  ENTRENADOR:   'linear-gradient(135deg,#06D6A0,#0CB68D)',
+  DEPORTISTA: '#381DA0',
 };
 
 // ── Empty form ─────────────────────────────────────────────────────────────────
@@ -83,7 +83,7 @@ export default function MiembrosPage() {
   const qc = useQueryClient();
 
   const [search, setSearch]         = useState('');
-  const [roleFilter, setRoleFilter] = useState<'ALL'|'STUDENT'|'COACH'|'ADMIN'>('ALL');
+  const [roleFilter, setRoleFilter] = useState<'ALL'|'DEPORTISTA'|'ENTRENADOR'|'ADMIN'>('ALL');
   const [estadoFilter, setEstadoFilter] = useState<'ACTIVOS'|'PAUSADOS'|'TODOS'>('ACTIVOS');
   const [cambiandoEstado, setCambiandoEstado] = useState<string | null>(null);
   const [sortOrder, setSortOrder]     = useState<'az'|'za'|'recent'|'oldest'>('recent');
@@ -543,10 +543,10 @@ export default function MiembrosPage() {
   // ── Step content renderer ────────────────────────────────────────────────────
 
   // ── Stats desktop (también actúan como filtros) ──────────────────────────────
-  const statsDesktop: { label: string; value: number; color: string; bg: string; filter: 'ALL'|'STUDENT'|'COACH'|'ADMIN' }[] = [
+  const statsDesktop: { label: string; value: number; color: string; bg: string; filter: 'ALL'|'DEPORTISTA'|'ENTRENADOR'|'ADMIN' }[] = [
     { label: 'Total',       value: members.length,                                    color: '#381DA0', bg: 'rgba(56,29,160,0.08)', filter: 'ALL'     },
-    { label: 'Deportistas', value: members.filter(m => m.role === 'STUDENT').length,  color: '#4361EE', bg: 'rgba(67,97,238,0.08)',  filter: 'STUDENT' },
-    { label: 'Entrenadores',value: members.filter(m => m.role === 'COACH').length,    color: '#06D6A0', bg: 'rgba(6,214,160,0.10)',  filter: 'COACH'   },
+    { label: 'Deportistas', value: members.filter(m => m.role === 'DEPORTISTA').length,  color: '#4361EE', bg: 'rgba(67,97,238,0.08)',  filter: 'DEPORTISTA' },
+    { label: 'Entrenadores',value: members.filter(m => m.role === 'ENTRENADOR').length,    color: '#06D6A0', bg: 'rgba(6,214,160,0.10)',  filter: 'ENTRENADOR'   },
     { label: 'Admins',      value: members.filter(m => m.role === 'ADMIN').length,    color: '#FFB703', bg: 'rgba(255,183,3,0.10)',  filter: 'ADMIN'   },
   ];
 
@@ -749,7 +749,7 @@ export default function MiembrosPage() {
               className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
             >
               {filtered.map((m) => {
-                const rc = ROLE_COLORS[m.role] ?? ROLE_COLORS.STUDENT;
+                const rc = ROLE_COLORS[m.role] ?? ROLE_COLORS.DEPORTISTA;
                 return (
                   <motion.div
                     key={m.id}
@@ -764,7 +764,7 @@ export default function MiembrosPage() {
                     {/* ── Cabecera con gradiente ── */}
                     {/* El pausado va en gris: en una cuadrícula de 40 fichas, el
                         color es lo que se nota antes de leer cualquier etiqueta */}
-                    <div className="relative px-5 pt-5 pb-4" style={{ background: m.active === false ? 'linear-gradient(135deg,#A8A2B8,#7C7690)' : (ROLE_GRADIENT[m.role] ?? ROLE_GRADIENT.STUDENT) }}>
+                    <div className="relative px-5 pt-5 pb-4" style={{ background: m.active === false ? 'linear-gradient(135deg,#A8A2B8,#7C7690)' : (ROLE_GRADIENT[m.role] ?? ROLE_GRADIENT.DEPORTISTA) }}>
                       {/* Patrón decorativo sutil */}
                       <div className="absolute inset-0 opacity-10" style={{
                         backgroundImage: 'radial-gradient(circle at 80% 20%, rgba(255,255,255,0.6) 0%, transparent 60%)',
@@ -1042,7 +1042,7 @@ export default function MiembrosPage() {
         ) : (
           <div className="space-y-2 pb-28">
             {filtered.map(m => {
-              const rc = ROLE_COLORS[m.role] ?? ROLE_COLORS.STUDENT;
+              const rc = ROLE_COLORS[m.role] ?? ROLE_COLORS.DEPORTISTA;
               return (
                 <motion.div key={m.id} layout
                   initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
@@ -1052,7 +1052,7 @@ export default function MiembrosPage() {
                   <MemberAvatar
                     name={m.fullName}
                     photoUrl={m.pictureUrl}
-                    gradient={ROLE_GRADIENT[m.role] ?? ROLE_GRADIENT.STUDENT}
+                    gradient={ROLE_GRADIENT[m.role] ?? ROLE_GRADIENT.DEPORTISTA}
                   />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5 mb-0.5">
@@ -1063,7 +1063,7 @@ export default function MiembrosPage() {
                       )}
                     </div>
                     <p className="text-[11px] text-muted-foreground truncate lowercase">{m.email ?? '—'}</p>
-                    {m.role === 'STUDENT' && (
+                    {m.role === 'DEPORTISTA' && (
                       <div className="flex gap-2 mt-0.5 flex-wrap">
                         {m.category && <span className="text-[10px] font-semibold" style={{ color: '#381DA0' }}>{m.category}</span>}
                         {m.tipo && <span className="text-[10px] text-muted-foreground">{m.tipo}</span>}
@@ -1159,7 +1159,7 @@ export default function MiembrosPage() {
                 <MemberAvatar
                   name={accionesMember.fullName}
                   photoUrl={accionesMember.pictureUrl}
-                  gradient={ROLE_GRADIENT[accionesMember.role] ?? ROLE_GRADIENT.STUDENT}
+                  gradient={ROLE_GRADIENT[accionesMember.role] ?? ROLE_GRADIENT.DEPORTISTA}
                 />
                 <div className="min-w-0">
                   <p className="text-[14px] font-semibold text-foreground truncate">{accionesMember.fullName}</p>
@@ -1364,7 +1364,7 @@ export default function MiembrosPage() {
                 transition={{ duration: 0.26, ease: EASE_OUT }}
               >
                 {/* Hero del deportista */}
-                <div className="relative px-6 pt-6 pb-5" style={{ background: ROLE_GRADIENT[viewMember.role] ?? ROLE_GRADIENT.STUDENT }}>
+                <div className="relative px-6 pt-6 pb-5" style={{ background: ROLE_GRADIENT[viewMember.role] ?? ROLE_GRADIENT.DEPORTISTA }}>
                   <button
                     onClick={() => setViewMember(null)}
                     className="absolute top-4 right-4 w-8 h-8 rounded-full flex items-center justify-center"

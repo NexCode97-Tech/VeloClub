@@ -47,7 +47,7 @@ export function InicioHeaderMovil({ clubName, clubLogoUrl, userName, userPicture
   const [buscarAbierto, setBuscarAbierto] = useState(false);
   const { data } = useMembers();
   const miembros = (data?.members ?? []) as MiembroMin[];
-  const deportistas = miembros.filter(m => !m.role || m.role === 'STUDENT');
+  const deportistas = miembros.filter(m => !m.role || m.role === 'DEPORTISTA');
   const visibles = deportistas.slice(0, 3);
   const restantes = deportistas.length - visibles.length;
 

@@ -1,0 +1,1229 @@
+<title>Hero en blanco y los planes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap">
+<style>
+  :root{
+    --tinta:#1A1028; --mudo:#8E87A8; --morado:#381DA0; --borde:rgba(120,80,200,0.10);
+    --fondo:#FDFCFC; --suave:#F7F7FB; --gris:#F4F3F8; --linea:rgba(26,16,40,0.08);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --tinta:#F4F2FA; --mudo:#9A93B5; --morado:#9B7DF0; --borde:rgba(160,130,235,0.16);
+      --fondo:#141020; --suave:#1C1630; --gris:#211A38; --linea:rgba(200,190,240,0.10);
+    }
+  }
+  :root[data-theme="dark"]{
+    --tinta:#F4F2FA; --mudo:#9A93B5; --morado:#9B7DF0; --borde:rgba(160,130,235,0.16);
+    --fondo:#141020; --suave:#1C1630; --gris:#211A38; --linea:rgba(200,190,240,0.10);
+  }
+  /* Sobre fondo oscuro sí entra el amarillo de la marca: ahí contrasta de
+     sobra y es el tono que la gente reconoce. */
+  @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .reloj{color:#FFB703} }
+  :root[data-theme="dark"] .reloj{color:#FFB703}
+  *{box-sizing:border-box}
+  body{background:var(--fondo);color:var(--tinta);font-family:Geist,ui-sans-serif,system-ui,sans-serif;
+    margin:0;-webkit-font-smoothing:antialiased;line-height:1.6}
+  .marco{max-width:1200px;margin:0 auto;padding:0 22px}
+  #tope{position:absolute;top:0;height:1px;width:1px}
+  a{color:inherit;text-decoration:none}
+
+  /* ── Barra ─────────────────────────────────────────────── */
+  /* Opaca. El vidrio dejaba leer el contenido que pasaba por debajo y el
+     titulo se veia atravesado por la barra. */
+  nav{position:sticky;top:0;z-index:20;background:var(--fondo);
+    border-bottom:1px solid transparent;transition:border-color .18s ease}
+  nav.pegada{border-bottom-color:var(--linea)}
+
+  nav .marco{display:flex;align-items:center;gap:18px;height:62px;position:relative}
+  .logo{display:flex;align-items:center;flex:none}
+  .logo img{width:38px;height:38px;border-radius:99px;display:block;object-fit:contain}
+  /* Los enlaces van centrados en la barra, no pegados al logo. Se posicionan
+     contra el nav y no dentro del flujo: asi quedan en la mitad exacta sin
+     depender de cuanto midan la marca de un lado y las acciones del otro. */
+  .enlaces{display:none;gap:26px;position:absolute;left:50%;transform:translateX(-50%)}
+  @media(min-width:900px){.enlaces{display:flex}}
+  .enlaces a{font-size:13.5px;color:var(--mudo);font-weight:500;transition:color .18s}
+  .enlaces a:hover,.enlaces a[aria-current]{color:var(--tinta)}
+  .acciones{margin-left:auto;display:flex;align-items:center;gap:12px;flex:none}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;white-space:nowrap;
+    background:var(--morado);color:#fff;border:0;border-radius:99px;padding:9px 17px;
+    font:inherit;font-size:13.5px;font-weight:600;cursor:pointer;
+    box-shadow:0 1px 2px rgba(56,29,160,.20), 0 3px 8px -2px rgba(56,29,160,.28);
+    transition:filter .18s, box-shadow .18s, transform .18s}
+  .btn:hover{filter:brightness(1.12);
+    box-shadow:0 1px 2px rgba(56,29,160,.22), 0 6px 14px -3px rgba(56,29,160,.34)}
+  .btn.linea{background:var(--fondo);color:var(--tinta);border:1px solid var(--linea);
+    box-shadow:0 1px 2px rgba(26,16,40,.05), 0 2px 6px -2px rgba(26,16,40,.08)}
+  .btn.linea:hover{background:var(--suave);filter:none;
+    box-shadow:0 1px 2px rgba(26,16,40,.06), 0 4px 10px -3px rgba(26,16,40,.12)}
+  .btn.grande{padding:11px 22px;font-size:14px}
+
+  /* ── Hero ──────────────────────────────────────────────── */
+  header{padding:64px 0 40px}
+  /* El hero va en dos columnas: el titulo manda a la izquierda y el parrafo lo
+     acompaña a la derecha, a la altura de su base. Centrado, el titulo tenia
+     que competir con el parrafo por la misma linea de lectura; asi cada uno
+     tiene la suya y el conjunto arranca por donde se empieza a leer. */
+  .hero-fila{display:grid;grid-template-columns:1.05fr .95fr;gap:56px;
+    align-items:end;text-align:left}
+  .hero-fila .bajada{margin:0;max-width:46ch;padding-bottom:.35em}
+  header{text-align:left}
+  header .promo{margin-bottom:22px}
+  header .cta{justify-content:flex-start}
+  header .letra-chica{text-align:left}
+  @media(max-width:860px){
+    .hero-fila{grid-template-columns:1fr;gap:20px;align-items:start}
+    .hero-fila .bajada{padding-bottom:0}
+  }
+
+
+  /* El contador va suelto sobre el blanco, sin caja.
+
+     Sobre blanco no existe un amarillo que contraste: son claros por
+     definición. El de la marca da 1,75 y el mínimo para una cifra de este
+     tamaño es 3. Así que la cifra va en el amarillo de verdad y lo que la hace
+     legible es un contorno fino, no oscurecer el tono. El contorno se pinta
+     por debajo del relleno con paint-order, para que no se coma el trazo. */
+  .promo{display:inline-flex;align-items:baseline;gap:11px;margin-bottom:26px}
+  .reloj{font-size:1.6rem;font-weight:700;letter-spacing:-.02em;
+    font-variant-numeric:tabular-nums;line-height:1;color:#FFB703}
+  /* La unidad, separada de su cifra. La separación va en `em` y no en píxeles
+     para que se mantenga proporcional cuando el bloque encoge en móvil. */
+  .reloj i{font-style:normal;font-size:.95rem;font-weight:500;color:var(--mudo);
+    margin-left:.14em;margin-right:.34em}
+  .reloj i.ultima{margin-right:0}
+  .leyenda{font-size:12px;color:var(--mudo)}
+  .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;
+    clip:rect(0,0,0,0);white-space:nowrap;border:0}
+  h1{font-size:clamp(2.05rem,4.7vw,3.25rem);font-weight:600;letter-spacing:-.032em;line-height:1.06;
+    margin:0 auto;max-width:17ch;text-wrap:balance}
+  h1 em{font-style:normal;color:var(--morado)}
+  .bajada{font-size:16px;color:var(--mudo);margin:20px auto 0;max-width:56ch;line-height:1.65}
+  .cta{display:flex;gap:11px;justify-content:center;flex-wrap:wrap;margin-top:28px}
+  .letra-chica{font-size:12.5px;color:var(--mudo);margin-top:14px}
+  header .letra-chica{margin-bottom:8px}
+
+  /* ── Bloques del home ──────────────────────────────────── */
+  section.bloque{border-top:0}
+
+  /* Estos bloques son los de la landing, sin tocar. Van con los colores
+     literales de producción y no con los tokens del widget: en la landing la
+     página es clara siempre, así que se les pinta su propio fondo para que se
+     sostengan igual si el sistema está en tema oscuro. */
+  .landing-claro{background:#FDFCFC;color:#1A1028;padding:64px 0}
+  .landing-claro.sin-abajo{padding-bottom:80px}
+  /* Las pestañas quedan pegadas al hero, como continuacion suya y no como un
+     bloque nuevo. Por eso pierden el relleno de arriba. */
+  .landing-claro.sin-arriba{padding-top:0}
+  .marco.angosto{max-width:1200px}
+  .rotulo{font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;
+    color:#8E87A8;text-align:center;margin:0 0 12px}
+  .rotulo.izq{text-align:left}
+  h2.titulo-landing{font-size:clamp(1.5rem,3vw,1.875rem);font-weight:600;letter-spacing:-.025em;
+    color:#1A1028;text-align:center;margin:0 0 40px;max-width:none;line-height:1.2}
+  h2.titulo-landing.izq{text-align:left}
+  h2.titulo-landing.chico{font-size:1.5rem;margin-bottom:32px}
+
+  /* Funcionalidades ── tira gris arriba, panel pegado abajo sin espacio. */
+  .fx-tabs{display:flex;align-items:center;gap:8px;padding:6px;background:#ECEAF3;
+    border-radius:16px 16px 0 0;overflow-x:auto;scrollbar-width:none}
+  .fx-tabs::-webkit-scrollbar{display:none}
+  .fx-tabs button{display:flex;align-items:center;justify-content:center;gap:6px;height:36px;
+    padding:0 14px;border:0;border-radius:99px;background:transparent;color:#6B6580;
+    font:600 13px Geist,ui-sans-serif,system-ui,sans-serif;cursor:pointer;min-width:0;flex:1 1 0%;
+    transition:background-color .7s cubic-bezier(.23,1,.32,1),color .7s cubic-bezier(.23,1,.32,1),
+      flex .7s cubic-bezier(.23,1,.32,1)}
+  .fx-tabs button span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .fx-tabs button:hover{background:rgba(26,16,40,.06)}
+  .fx-tabs button[aria-selected="true"]{background:#1A1028;color:#fff}
+  .fx-panel{background:#F4F3F8;border:1px solid rgba(26,16,40,.05);border-radius:0 0 16px 16px;
+    min-height:150px;overflow:hidden}
+  /* Las entradas del modulo ya no se turnan en sub-pestañas: van las dos a la
+     vez, en dos columnas. La linea que las separa se dibuja con el selector de
+     hermano adyacente y no con un borde fijo, para que Asistencia, que hoy
+     tiene una sola entrada, no arrastre una divisoria suelta al aire. */
+  .fx-rejilla{display:grid;grid-template-columns:1fr 1fr}
+  .fx-item{display:flex;align-items:flex-start;gap:16px;padding:26px}
+  .fx-item + .fx-item{border-left:1px solid rgba(26,16,40,.07)}
+  @media(max-width:719px){
+    .fx-rejilla{grid-template-columns:1fr}
+    .fx-item + .fx-item{border-left:0;border-top:1px solid rgba(26,16,40,.07)}
+  }
+  .fx-icono{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;
+    justify-content:center;flex:none;background:rgba(56,29,160,.10);color:#381DA0}
+  .fx-titulo{font-size:15.5px;font-weight:600;color:#1A1028;margin:0 0 4px}
+  .fx-desc{font-size:13px;color:#6B6580;line-height:1.6;margin:0}
+  @media(max-width:639px){
+    .fx-tabs button{padding:0 8px}
+    .fx-tabs button span{display:none}
+    .fx-tabs button[aria-selected="true"]{flex:2.4 1 0%}
+    .fx-tabs button[aria-selected="true"] span{display:block}
+    .fx-item{padding-left:22px;padding-right:22px}
+  }
+
+  /* Clubes ── tira en movimiento continuo que se detiene al pasar el cursor. */
+  .confian{font-size:clamp(1.5rem,3vw,1.875rem);font-weight:600;letter-spacing:-.025em;
+    color:#1A1028;text-align:center;margin:0 auto;max-width:42rem;padding:0 20px;line-height:1.25}
+  .confian em{font-style:normal;color:#381DA0}
+  .tira{width:100%;overflow:hidden;margin-top:48px;
+    -webkit-mask-image:linear-gradient(to right,transparent,#000 12%,#000 88%,transparent);
+    mask-image:linear-gradient(to right,transparent,#000 12%,#000 88%,transparent)}
+  .pista{display:flex;width:max-content;align-items:center;gap:48px;padding:8px 0;
+    animation:desfile 40s linear infinite}
+  .pista:hover{animation-play-state:paused}
+  @keyframes desfile{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+  @media(prefers-reduced-motion:reduce){.pista{animation:none}}
+  .logo-club{width:80px;height:80px;border-radius:99px;flex:none;display:flex;
+    align-items:center;justify-content:center;background:#F4F3F8;color:#8E87A8;
+    font-size:19px;font-weight:700;letter-spacing:-.02em;opacity:.75;transition:opacity .3s}
+  .logo-club:hover{opacity:1}
+  @media(max-width:639px){.pista{gap:32px}.logo-club{width:64px;height:64px;font-size:16px}}
+
+  /* Por qué ── gris sobre blanco: una tarjeta blanca no se separaría del fondo. */
+  .tarjeta-razones{background:#F4F3F8;border:1px solid rgba(26,16,40,.05);border-radius:24px;
+    padding:40px}
+  @media(max-width:639px){.tarjeta-razones{padding:28px}}
+  .razones{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:16px}
+  .razones li{display:flex;gap:12px;align-items:flex-start}
+  .razones .marca{width:28px;height:28px;border-radius:8px;background:#fff;display:flex;
+    align-items:center;justify-content:center;flex:none;color:#381DA0;margin-top:2px}
+  .razones p{margin:0;font-size:14px;color:#4A4060;line-height:1.65}
+
+  /* Cierre ── el morado va plano. El halo es luz de ambiente, no marca. */
+  .cierre{background:#381DA0;border-radius:24px;padding:48px 32px;text-align:center;color:#fff;
+    position:relative;overflow:hidden}
+  .cierre .halo{position:absolute;inset:0;opacity:.10;
+    background-image:radial-gradient(circle at 80% 20%, #fff 0%, transparent 50%)}
+  .cierre h2{position:relative;font-size:clamp(1.5rem,3vw,1.875rem);font-weight:600;
+    letter-spacing:-.025em;margin:0 0 12px;color:#fff;line-height:1.2}
+  .cierre p{position:relative;color:#DDD6FE;font-size:14px;margin:0 auto 28px;max-width:46ch;
+    line-height:1.65}
+  .cierre .cta{position:relative;margin-top:0}
+  .cierre .btn{background:#fff;color:#381DA0;gap:8px}
+  .cierre .btn:hover{filter:none;background:rgba(255,255,255,.9)}
+  .cierre .btn.linea{background:transparent;color:#fff;border:1px solid rgba(255,255,255,.4);
+    box-shadow:none}
+  .cierre .btn.linea:hover{background:rgba(255,255,255,.1)}
+
+  footer{background:#fff;border-top:1px solid rgba(120,80,200,.08);padding:24px 0;
+    text-align:center;font-size:12px;color:#8E87A8;line-height:1.9}
+  footer p{margin:0}
+  footer a{color:#381DA0;font-weight:600}
+
+
+  /* ── El bloque de capturas ─────────────────────────────── */
+  /* Todo va encerrado en #dentro y con ese prefijo en cada selector. Los dos
+     archivos nacieron por separado y comparten nombres —.marco, .acciones,
+     .halo, .tira, .pista, .bajada, .marca y h2 existen en los dos y significan
+     cosas distintas—, así que sin el prefijo esto rompía la landing. */
+  /* Vive dentro del panel gris de Funcionalidades, con el mismo margen que el
+     texto de la pestaña: las ventanas flotan adentro en vez de ir pegadas al
+     borde. El único lado que sangra es el derecho, y lo recorta esta caja. */
+  #dentro{margin:18px 26px -26px 0;overflow:hidden;border-radius:14px 14px 0 0}
+  
+  /* ── El bloque, como iría en el home ───────────────────── */
+
+  
+  /* El escenario: dos capturas completas de la plataforma, del mismo tamaño,
+     apoyadas una sobre la otra. Ninguna está recortada: la de la derecha se ve
+     parcial solo porque la otra la tapa, y al pasarle el cursor sube al frente
+     y se ve entera. Por eso las dos caben dentro del bloque en vez de salirse
+     por el filo: una captura que se sale ya no se puede mostrar completa. */
+  #dentro .escena{position:relative;margin:0}
+
+  /* El tamaño lo calcula el guion contra el ancho real del bloque: ancho de
+     ventana, alto, posición de la derecha y la escala del lienzo salen de ahí.
+     Aquí solo van las cosas que no dependen de esa medida. */
+  #dentro .ventana{position:absolute;cursor:pointer;
+    /* Redondeada solo arriba y con borde solo arriba y a los lados: va pegada
+       al filo de abajo, así que ahí no hay ni esquina que redondear ni canto
+       que dibujar. El tono es el mismo de la tarjeta que las contiene.
+
+       El borde hace un segundo trabajo: cuando la de atrás se hunde, lo que
+       asoma por arriba deja de ser la primera hilera de su contenido —que en
+       la de inscripción es el velo oscuro del modal y se leía como un trazo
+       negro— y pasa a ser un contorno claro de tarjeta. */
+    border-radius:14px 14px 0 0;overflow:hidden;background:#fff;
+    border:1px solid rgba(26,16,40,.11);border-bottom:0;
+    box-shadow:0 10px 30px -18px rgba(26,16,40,.14);
+    transition:box-shadow .5s cubic-bezier(.4,0,.2,1),
+               transform .5s cubic-bezier(.4,0,.2,1),
+               z-index 0s}
+
+  /* La que manda no crece: se levanta. La que no manda se hunde un 2% y se
+     va contra el filo de abajo, así que el movimiento se lee de abajo hacia
+     arriba y el ancho no se toca. Es lo que hace la referencia, que mueve la
+     ventana entera con un translateY de 12px y deja la activa en cero. */
+  #dentro .ventana{transform:translateY(2%)}
+  #dentro .escena:not(.der-al-frente) .izq,
+  #dentro .escena.der-al-frente .der{transform:translateY(0)}
+  /* Lo que separa a las dos es una franja del color del panel metida entre
+     ellas: la de atrás no se recorta ni se transparenta, se la va tapando el
+     gris del fondo y parece disolverse en la sección.
+
+     Tiene que ser una capa propia y no una máscara. Una máscara deja ver lo
+     que hay debajo, que es la otra captura, y ahí salía blanco cuando abajo
+     estaba la de Miembros y oscuro cuando estaba el velo del modal. Tampoco
+     puede ir dentro de una ventana, porque tendría que estar encima de una y
+     debajo de la otra a la vez. Va suelta en la escena, en la capa del medio.
+
+     Son cuatro: dos que marcan la unión en reposo y dos que tapan el filo
+     mientras el barrido corre. */
+  #dentro .izq,#dentro .der{z-index:1}
+  #dentro .escena:not(.der-al-frente) .izq,
+  #dentro .escena.der-al-frente .der{z-index:3}
+
+  /* El barrido: la que sube al frente entra destapándose desde el borde de
+     contacto hacia afuera, y avanza cubriendo a la otra. La de atrás se queda
+     quieta y entera.
+
+     Va como animación de entrada y no como transición entre dos estados. Con
+     transiciones las dos se movían a la vez —una se destapaba mientras la
+     otra se recortaba—, y en la franja donde la de adelante todavía no había
+     llegado quedaba un hueco de panel vacío avanzando. Eso se leía siempre
+     como «la derecha va y vuelve», nunca como «la izquierda avanza».
+
+     El corte es duro, pero nunca se ve: cae siempre debajo de la franja gris,
+     en la parte donde el gris es opaco. */
+  #dentro .ventana{clip-path:inset(0 round 14px 14px 0 0)}
+  @keyframes destapa-izq{
+    from{clip-path:inset(0 var(--corte) 0 0 round 14px 14px 0 0)}
+    to{clip-path:inset(0 round 14px 14px 0 0)}}
+  @keyframes destapa-der{
+    from{clip-path:inset(0 0 0 var(--corte) round 14px 14px 0 0)}
+    to{clip-path:inset(0 round 14px 14px 0 0)}}
+  /* El «vivo» lo pone el guion al primer gesto: sin él, la de la izquierda se
+     destaparía sola al cargar la página, sin que nadie la haya tocado. */
+  #dentro .escena.vivo:not(.der-al-frente) .izq{
+    animation:destapa-izq .5s cubic-bezier(.4,0,.2,1)}
+  #dentro .escena.vivo.der-al-frente .der{
+    animation:destapa-der .5s cubic-bezier(.4,0,.2,1)}
+
+  /* Cada captura tiene dos desvanecidos, con trabajos distintos. En total
+     cuatro: dos que marcan dónde están las cosas y dos que tapan mientras las
+     cosas se mueven.
+
+     Los de reposo marcan la unión cuando nada pasa. Nunca viajan: se reubican
+     de un borde al otro sin transición, a los 500 ms, cuando el barrido ya
+     terminó y la captura que avanzó los dejó cubiertos. Por eso el salto no
+     se ve: para entonces están debajo.
+
+     Los de barrido existen solo mientras corre la animación. Van montados en
+     el filo que avanza, tapándolo todo el trayecto, y al terminar desaparecen
+     en vez de quedarse anclados. El relevo tampoco se nota: llegan justo donde
+     el de reposo acaba de ubicarse, así que uno se va y el otro ya está ahí,
+     en la misma posición y con el mismo aspecto.
+
+     En los dos casos, el de la izquierda abre hacia la izquierda y el de la
+     derecha hacia la derecha, apoyados los dos sobre el filo. */
+  #dentro .velo,#dentro .barre{position:absolute;top:0;bottom:0;z-index:2;
+    pointer-events:none;width:var(--fundido)}
+  #dentro .velo.a,#dentro .barre.a{
+    background:linear-gradient(to left,#F4F3F8 0,#F4F3F8 18%,
+      rgba(244,243,248,0) 100%)}
+  #dentro .velo.b,#dentro .barre.b{
+    background:linear-gradient(to right,#F4F3F8 0,#F4F3F8 18%,
+      rgba(244,243,248,0) 100%)}
+
+  /* Los de reposo: quietos, y el cambio de sitio a los 500 ms, ya cubiertos. */
+  #dentro .velo{transition:left 0s .5s}
+  #dentro .velo.a{left:calc(var(--filo-reposo) - var(--fundido))}
+  #dentro .velo.b{left:var(--filo-reposo)}
+  #dentro .escena.der-al-frente .velo.a{
+    left:calc(var(--filo-activo) - var(--fundido))}
+  #dentro .escena.der-al-frente .velo.b{left:var(--filo-activo)}
+
+  /* Los de barrido: sin fill-mode a propósito. Al acabar la animación vuelven
+     solos a su estado base, que es invisible, y ese es justo el momento en que
+     el de reposo ya ocupó su lugar. */
+  #dentro .barre{opacity:0}
+  @keyframes barre-a-activo{
+    from{left:calc(var(--filo-reposo) - var(--fundido));opacity:1}
+    to{left:calc(var(--filo-activo) - var(--fundido));opacity:1}}
+  @keyframes barre-b-activo{
+    from{left:var(--filo-reposo);opacity:1}
+    to{left:var(--filo-activo);opacity:1}}
+  @keyframes barre-a-reposo{
+    from{left:calc(var(--filo-activo) - var(--fundido));opacity:1}
+    to{left:calc(var(--filo-reposo) - var(--fundido));opacity:1}}
+  @keyframes barre-b-reposo{
+    from{left:var(--filo-activo);opacity:1}
+    to{left:var(--filo-reposo);opacity:1}}
+  #dentro .escena.vivo.der-al-frente .barre.a{
+    animation:barre-a-activo .5s cubic-bezier(.4,0,.2,1)}
+  #dentro .escena.vivo.der-al-frente .barre.b{
+    animation:barre-b-activo .5s cubic-bezier(.4,0,.2,1)}
+  #dentro .escena.vivo:not(.der-al-frente) .barre.a{
+    animation:barre-a-reposo .5s cubic-bezier(.4,0,.2,1)}
+  #dentro .escena.vivo:not(.der-al-frente) .barre.b{
+    animation:barre-b-reposo .5s cubic-bezier(.4,0,.2,1)}
+  #dentro .velo.a{left:calc(var(--filo-reposo) - var(--fundido));
+    background:linear-gradient(to left,#F4F3F8 0,#F4F3F8 18%,
+      rgba(244,243,248,0) 100%)}
+  #dentro .velo.b{left:var(--filo-reposo);
+    background:linear-gradient(to right,#F4F3F8 0,#F4F3F8 18%,
+      rgba(244,243,248,0) 100%)}
+  #dentro .escena.der-al-frente .velo.a{
+    left:calc(var(--filo-activo) - var(--fundido))}
+  #dentro .escena.der-al-frente .velo.b{left:var(--filo-activo)}
+
+  /* La que manda se despega un poco más del fondo. */
+  #dentro .escena:not(.der-al-frente) .izq,
+  #dentro .escena.der-al-frente .der{
+    box-shadow:0 22px 54px -26px rgba(26,16,40,.22)}
+
+  @media(prefers-reduced-motion:reduce){
+    #dentro .ventana{transition:none;animation:none}
+    #dentro .velo{transition:none}
+    #dentro .barre{animation:none}
+  }
+
+  /* La app de mentira va dibujada a tamaño real y se reduce con scale, para que
+     los tamaños de letra queden como en una captura de verdad. */
+  /* Las capturas de Sedes son fotos de la plataforma, no una app dibujada:
+     llenan su ventana desde la esquina de arriba a la izquierda y lo que sobra
+     se corta abajo, igual que el lienzo de las otras dos. */
+  /* La captura del contenido llena el ancho que le deja el menu y conserva su
+     alto; lo que sobra abajo es el mismo fondo de la aplicacion, asi que la
+     union no se nota. */
+  #dentro .cuerpo-foto{flex:1;min-height:0}
+  #dentro .foto-centro{width:100%;height:auto;display:block}
+  #dentro .foto{width:100%;height:100%;display:block;object-fit:fill}
+
+  #dentro .lienzo{width:1440px;transform-origin:0 0;position:absolute;inset:0}
+  #dentro .ventana .lienzo,
+  #dentro .ventana .telon{transform:scale(var(--s,.47))}
+
+  
+  /* ── La app ────────────────────────────────────────────── */
+  #dentro .app{display:flex;height:826px;background:#F7F7FB;font-size:14px}
+  #dentro .lado{width:240px;flex:none;background:#fff;border-right:1px solid rgba(0,0,0,.07);
+    padding:0 12px;display:flex;flex-direction:column}
+  #dentro .lado .cabeza{display:flex;align-items:center;gap:10px;height:58px;flex:none;
+    border-bottom:1px solid rgba(0,0,0,.06);margin:0 -12px 10px;padding:0 14px}
+  #dentro .vc{width:30px;height:30px;border-radius:8px;flex:none;display:block;object-fit:contain}
+  #dentro .yo-av{width:32px;height:32px;border-radius:99px;flex:none;display:flex;
+    align-items:center;justify-content:center;background:rgba(56,29,160,.10);
+    color:var(--morado);font-size:12px;font-weight:600}
+  /* Separa lo que se opera de lo que se configura, igual que en la app. */
+  #dentro .lado a:nth-last-of-type(2){border-top:1px solid rgba(0,0,0,.06);
+    margin-top:8px;padding-top:8px;height:52px}
+  #dentro .lado a{display:flex;align-items:center;gap:12px;height:44px;padding:0 12px;
+    border-radius:12px;color:#5B5470;font-size:14px;font-weight:500}
+  #dentro .lado a.on{background:rgba(56,29,160,.07);color:var(--morado);font-weight:600}
+  #dentro .lado .yo{margin-top:auto;display:flex;align-items:center;gap:10px;height:64px;
+    border-top:1px solid rgba(0,0,0,.06);margin-left:-12px;margin-right:-12px;padding:0 14px}
+  #dentro .lado .yo .quien{font-size:13px;font-weight:600;line-height:1.2}
+  #dentro .lado .yo .quien span{display:block;font-size:11px;color:var(--ambar);font-weight:600}
+
+  
+  /* El selector de deporte. Va arriba de todo y separado de la navegación por
+     una línea, porque no es una sección más: es el contexto en el que se ve
+     todo lo demás. Cambiar de deporte no lleva a otra pantalla, cambia lo que
+     muestran todas.
+
+     El emblema es la inicial sobre un color y no un dibujo del deporte: no
+     existe un ícono decente para cada disciplina, y una plataforma que dice
+     servir para cualquier deporte no puede depender de tener el dibujo listo
+     antes de aceptar uno nuevo. */
+  #dentro .deporte{display:flex;align-items:center;gap:10px;height:44px;padding:0 10px;
+    margin:2px 0 10px;border-radius:12px;border:1px solid var(--linea);
+    background:#fff;font-size:14px;font-weight:600;letter-spacing:-.01em}
+  #dentro .deporte .emblema{width:26px;height:26px;border-radius:8px;
+    background:linear-gradient(135deg,#0042B3,#490080);
+    color:#fff;display:flex;align-items:center;justify-content:center;
+    font-size:12.5px;font-weight:700;flex:none}
+  #dentro .deporte .emblema svg{width:17px;height:17px}
+  #dentro .deporte .flechas{margin-left:auto;width:15px;height:15px;color:#8E87A8}
+  #dentro .lado .navega{border-top:1px solid rgba(0,0,0,.06);margin:0 -12px;padding:10px 12px 0}
+
+  #dentro .centro{flex:1;min-width:0;display:flex;flex-direction:column}
+  /* La cabecera del módulo mide lo mismo que la fila del logo en el sidebar,
+     58, y lleva el mismo borde abajo: en la plataforma las dos líneas son una
+     sola línea que cruza la pantalla. El título va en 22, como en la app.
+
+     El flex:none no es decorativo: la app mide 826 de alto fijo y su contenido
+     pasa de eso, así que sin él la fila se encogía y la línea subía respecto a
+     la del sidebar. Lo mismo para la fila del logo. */
+  #dentro .barra{height:58px;flex:none;display:flex;align-items:center;padding:0 20px;
+    border-bottom:1px solid rgba(0,0,0,.07);
+    font-size:22px;font-weight:600;letter-spacing:-.03em}
+  #dentro .cuerpo{padding:16px 20px 0;display:flex;flex-direction:column;gap:18px}
+
+  #dentro .cifras{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+  #dentro .cifra{background:#fff;border:1px solid var(--linea);border-radius:16px;
+    padding:18px;text-align:center}
+  #dentro .cifra.viva{background:rgba(56,29,160,.06);border-color:rgba(56,29,160,.18)}
+  #dentro .cifra b{display:block;font-size:30px;font-weight:700;letter-spacing:-.03em;
+    font-variant-numeric:tabular-nums;line-height:1.1}
+  #dentro .cifra.viva b{color:var(--morado)}
+  #dentro .cifra span{font-size:13px;color:var(--mudo)}
+  #dentro .cifra.viva span{color:var(--morado);font-weight:600}
+
+  #dentro .herramientas{display:flex;gap:12px;align-items:center}
+  #dentro .buscador{flex:1;height:48px;background:#fff;border:1px solid var(--linea);
+    border-radius:99px;display:flex;align-items:center;gap:10px;padding:0 18px;
+    color:var(--mudo);font-size:14px}
+  #dentro .chip{height:48px;padding:0 18px;border-radius:99px;background:#fff;
+    border:1px solid var(--linea);display:flex;align-items:center;
+    font-size:14px;font-weight:500;color:#5B5470}
+  #dentro .chip.morado{background:var(--morado);color:#fff;border:0;font-weight:600}
+
+  #dentro .fichas{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+  #dentro .ficha{background:#fff;border:1px solid var(--linea);border-radius:16px;overflow:hidden}
+  #dentro .cab{padding:20px;position:relative;overflow:hidden}
+  #dentro .cab .halo{position:absolute;inset:0;opacity:.10;
+    background-image:radial-gradient(circle at 80% 20%,rgba(255,255,255,.6) 0%,transparent 60%)}
+  #dentro .cab.est{background:#381DA0}
+  #dentro .cab.adm{background:linear-gradient(135deg,#FFB703,#FB8500)}
+  #dentro .cab.ent{background:linear-gradient(135deg,#06D6A0,#0CB68D)}
+  #dentro .cab .fila{position:relative;display:flex;align-items:center;gap:12px}
+  #dentro .av{width:48px;height:48px;border-radius:99px;flex:none;display:flex;
+    align-items:center;justify-content:center;font-size:16px;font-weight:600;
+    background:rgba(255,255,255,.22);color:#fff}
+  #dentro .cab .nombre{color:#fff;font-weight:600;font-size:15px;line-height:1.3}
+  #dentro .pastillas{display:flex;gap:6px;margin-top:5px}
+  #dentro .pastillas span{font-size:10px;font-weight:600;padding:2px 8px;border-radius:99px;
+    background:rgba(255,255,255,.22);color:#fff}
+  #dentro .datos{padding:16px 20px;display:flex;flex-direction:column;gap:12px}
+  #dentro .dato{display:flex;align-items:center;gap:12px;font-size:13.5px;color:#4A4060}
+  #dentro .dato i{width:26px;height:26px;border-radius:8px;background:rgba(56,29,160,.07);flex:none}
+  #dentro .dato i.verde{background:rgba(6,214,160,.12)}
+  #dentro .sede{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:600;
+    color:var(--morado);background:rgba(56,29,160,.07);border-radius:99px;
+    padding:5px 10px;align-self:flex-start}
+  #dentro .acciones{display:flex;gap:8px;padding:0 20px 20px}
+  #dentro .acciones .editar{flex:1;height:44px;border-radius:99px;background:var(--morado);
+    color:#fff;font-size:14px;font-weight:600;display:flex;align-items:center;
+    justify-content:center}
+  #dentro .acciones .redondo{width:44px;height:44px;border-radius:99px;
+    background:rgba(56,29,160,.07);flex:none}
+  #dentro .acciones .redondo.rojo{background:rgba(239,71,111,.10)}
+
+
+  
+  /* ── El par de capturas de cada pestaña ───────────────────── */
+  /* Los dos pares viven en la misma escena y se turnan. El que no toca sale del
+     flujo con display:none y no solo con opacity, para que no se lleve el
+     puntero ni deje sus imagenes cargadas encima de las otras. */
+  #dentro .escena .v-sedes{display:none}
+  #dentro .escena.vista-sedes .v-perfiles{display:none}
+  #dentro .escena.vista-sedes .v-sedes{display:block}
+
+  /* ── El par de Asistencia ─────────────────────────────────── */
+  /* Son la misma pantalla en dos momentos: sin marcar y ya marcada. Por eso las
+     dos llevan el mismo menu y la misma cabecera, y lo unico que cambia es el
+     contenido y el boton de guardar. */
+  #dentro .escena .v-asistencia,
+  #dentro .escena .v-mensualidades{display:none}
+  #dentro .escena.vista-asistencia .v-perfiles,
+  #dentro .escena.vista-asistencia .v-sedes,
+  #dentro .escena.vista-asistencia .v-mensualidades{display:none}
+  #dentro .escena.vista-asistencia .v-asistencia{display:block}
+
+  #dentro .escena.vista-mensualidades .v-perfiles,
+  #dentro .escena.vista-mensualidades .v-sedes,
+  #dentro .escena.vista-mensualidades .v-asistencia{display:none}
+  #dentro .escena.vista-mensualidades .v-mensualidades{display:block}
+
+  #dentro .acciones-barra{margin-left:auto;display:flex;gap:8px}
+  #dentro .acciones-barra .chip{height:34px;padding:0 12px;font-size:13px}
+  #dentro .chip.guardado{background:var(--menta);color:#fff}
+  #dentro .chip.guardado svg{color:#fff}
+
+  /* ── Sedes, el modulo ─────────────────────────────────────── */
+  /* Las medidas salen de app/dashboard/sedes/page.tsx, no de la captura: la
+     rejilla es de dos columnas, la cabecera lleva 16 de relleno y el mapa 200
+     de alto con borde arriba. */
+  #dentro .rejilla-sedes{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  #dentro .sede{background:#fff;border:1px solid var(--linea);border-radius:12px;
+    overflow:hidden;display:flex;flex-direction:column}
+  #dentro .sede-cab{display:flex;align-items:flex-start;gap:12px;padding:16px}
+  #dentro .sede-pin{width:40px;height:40px;border-radius:12px;flex:none;
+    margin-top:2px;background:rgba(6,214,160,.12);color:var(--menta);
+    display:flex;align-items:center;justify-content:center}
+  #dentro .sede-pin svg{width:20px;height:20px}
+  #dentro .sede-txt{flex:1;min-width:0}
+  #dentro .sede-nom{font-size:15px;font-weight:600;color:var(--tinta);margin:0}
+  #dentro .sede-mun{font-size:12px;color:var(--mudo);margin:2px 0 0}
+
+  /* Los tres proveedores van dentro del bloque de texto y no en una fila
+     aparte, con el mismo fondo morado al 8% que llevan en la aplicacion. Los
+     logos son los archivos que ella misma sirve, incrustados. */
+  #dentro .abrir{display:flex;align-items:center;gap:6px;margin-top:10px}
+  #dentro .abrir-rot{font-size:10px;color:var(--mudo);margin-right:2px}
+  #dentro .prov{display:inline-flex;align-items:center;gap:4px;
+    padding:4px 8px;border-radius:8px;background:rgba(120,80,200,.08);
+    font-size:11px;font-weight:500;color:var(--tinta)}
+  #dentro .prov img{width:14px;height:14px;object-fit:contain;flex:none;display:block}
+
+  /* Editar y borrar son botones fantasma, sin fondo, como en la aplicacion. */
+  #dentro .sede-acc{display:flex;gap:4px;flex:none;margin-left:8px}
+  #dentro .ghost{width:32px;height:32px;border-radius:8px;color:var(--tinta);
+    display:flex;align-items:center;justify-content:center;opacity:.75}
+  #dentro .ghost.rojo{color:#EF476F}
+  #dentro .ghost svg{width:16px;height:16px}
+
+  #dentro .sede-mapa{position:relative;height:200px;border-top:1px solid var(--linea)}
+  #dentro .sede-mapa .mapa{width:100%;height:100%;display:block}
+  #dentro .chincheta{position:absolute;left:47%;top:52%;width:24px;height:24px;
+    transform:translate(-50%,-100%)}
+  #dentro .chincheta svg{width:24px;height:24px;display:block;
+    filter:drop-shadow(0 2px 3px rgba(0,0,0,.28))}
+
+  /* ── La ruta abierta ──────────────────────────────────────── */
+  /* Es otra aplicacion, no la nuestra: por eso esta pantalla no lleva el
+     sidebar de VeloClub ni su cabecera. */
+  #dentro .guia{display:flex;height:826px;background:#EAF1E6}
+  #dentro .guia-panel{width:430px;flex:none;background:#fff;padding:22px 24px;
+    display:flex;flex-direction:column;gap:18px;
+    box-shadow:2px 0 18px rgba(26,16,40,.08);z-index:2}
+  #dentro .modos{display:flex;gap:10px}
+  #dentro .modo{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;
+    padding:10px 0;border-radius:12px;color:#5B5470;font-size:13px}
+  #dentro .modo b{font-size:13px;font-weight:600}
+  #dentro .modo svg{width:22px;height:22px}
+  #dentro .modo.on{background:rgba(56,29,160,.08);color:var(--morado)}
+
+  #dentro .puntos{border:1px solid var(--linea);border-radius:14px;padding:14px 16px}
+  #dentro .punto{display:flex;align-items:center;gap:12px}
+  #dentro .bolita{width:11px;height:11px;border-radius:99px;flex:none;
+    border:2px solid #8E87A8}
+  #dentro .destino{width:13px;height:13px;border-radius:99px;flex:none;
+    background:#E4453A}
+  #dentro .dir{font-size:14px;color:var(--tinta)}
+  #dentro .hilo{width:2px;height:20px;margin:4px 0 4px 5px;background:var(--linea)}
+
+  #dentro .opcion{border-top:1px solid var(--linea);padding-top:16px}
+  #dentro .opcion.tenue{opacity:.55}
+  #dentro .opcion-cab{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+  #dentro .opcion-cab b{font-size:16px;font-weight:600;letter-spacing:-.01em}
+  #dentro .tiempo{font-size:16px;font-weight:700;color:var(--morado)}
+  #dentro .opcion-pie{display:flex;align-items:baseline;justify-content:space-between;
+    gap:12px;margin-top:5px;font-size:13px;color:var(--mudo)}
+  #dentro .km{flex:none}
+  #dentro .empezar{margin-top:14px;padding:11px 0;border-radius:12px;
+    background:var(--morado);color:#fff;font-size:14px;font-weight:600;
+    text-align:center}
+
+  #dentro .guia-mapa{position:relative;flex:1;min-width:0}
+  #dentro .guia-mapa svg{width:100%;height:100%;display:block}
+  #dentro .guia-mapa .chincheta{left:38%;top:85%;width:34px;height:34px}
+  #dentro .guia-mapa .chincheta svg{width:34px;height:34px}
+  #dentro .burbuja{position:absolute;left:56%;top:47%;transform:translate(-50%,-50%);
+    background:#fff;border-radius:10px;padding:8px 12px;
+    box-shadow:0 4px 14px rgba(26,16,40,.18);text-align:center}
+  #dentro .burbuja b{display:block;font-size:15px;font-weight:700}
+  #dentro .burbuja span{font-size:12px;color:var(--mudo)}
+  #dentro .rotulo-origen{position:absolute;left:76%;top:17%;
+    transform:translate(-100%,-50%);background:#fff;border-radius:8px;
+    padding:5px 10px;font-size:13px;font-weight:600;
+    box-shadow:0 3px 10px rgba(26,16,40,.16)}
+
+  /* ── El modal de inscripción por enlace ────────────────── */
+  /* El velo es el de la plataforma, copiado del panel de inscripción: fondo
+     rgba(15,10,30,.5) y blur de 3. Es oscuro, no blanco. El blur viaja dentro
+     del scale del lienzo, así que se ve proporcionalmente igual que en la app
+     en vez de quedar exagerado. */
+  #dentro .telon{position:absolute;top:0;left:0;width:1440px;height:826px;
+    transform-origin:0 0;background:rgba(15,10,30,.5);
+    -webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);
+    display:flex;align-items:center;justify-content:center}
+
+  /* Las medidas salen de components/miembros/panel-inscripcion.tsx, no de ojo.
+     El modal mide 440 de ancho —max-w-[440px]—, no 660, y de ahí para abajo
+     cada tamaño de letra y cada relleno es el del componente. Dibujado más
+     grande llenaba la pantalla de alto a alto y se leía como un montaje. */
+  #dentro .modal{width:440px;background:#fff;border-radius:16px;padding:20px;
+    border:1px solid var(--linea);position:relative;
+    box-shadow:0 24px 60px -20px rgba(15,10,30,.35);
+    /* Los 440 son los del componente, y el 1,15 es puro widget: dentro de una
+       captura tan reducida el modal se leía chico. Va como scale y no tocando
+       las medidas para que las proporciones de adentro sigan siendo las de la
+       plataforma. Si se cambia, hay que recalcular el divisor del solape. */
+    transform:scale(1.15)}
+  #dentro .modal .cerrar{position:absolute;top:20px;right:20px;width:28px;height:28px;
+    border-radius:99px;background:var(--suave)}
+  #dentro .modal h3{font-size:17px;font-weight:600;letter-spacing:-.025em;
+    margin:0;padding-right:36px}
+  #dentro .modal .bajo{font-size:12px;color:var(--mudo);margin:2px 0 12px}
+
+  #dentro .interruptor{display:flex;align-items:center;gap:12px;background:var(--suave);
+    border-radius:12px;padding:12px}
+  #dentro .interruptor .txt{flex:1;min-width:0}
+  #dentro .interruptor .txt b{display:block;font-size:13px;font-weight:600}
+  #dentro .interruptor .txt span{font-size:11px;color:var(--mudo)}
+  #dentro .palanca{width:44px;height:24px;border-radius:99px;background:var(--morado);
+    flex:none;display:flex;align-items:center;justify-content:flex-end;padding:0 3px}
+  #dentro .palanca::after{content:'';width:18px;height:18px;border-radius:99px;background:#fff}
+
+  #dentro .enlace{display:flex;align-items:center;gap:8px;border:1px solid var(--linea);
+    border-radius:12px;padding:10px;margin-top:12px;background:var(--suave);
+    font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;
+    color:var(--tinta)}
+  #dentro .botones{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+  #dentro .botones .copiar,
+  #dentro .botones .wa{display:flex;align-items:center;justify-content:center;gap:6px;
+    padding:10px 0;border-radius:12px;font-size:12.5px;font-weight:600}
+  #dentro .botones .copiar{background:var(--morado);color:#fff}
+  #dentro .botones .wa{border:1px solid var(--linea);color:var(--tinta)}
+
+  #dentro .cuenta{display:flex;align-items:baseline;gap:8px;margin:16px 0 0;
+    font-size:12px;color:var(--mudo)}
+  #dentro .cuenta b{font-size:22px;font-weight:700;letter-spacing:-.025em;
+    color:var(--tinta);line-height:1}
+
+  #dentro .campo{margin-top:12px}
+  #dentro .campo .rot{font-size:11px;font-weight:600;color:var(--mudo);margin-bottom:4px}
+  #dentro .campo .rot span{font-weight:400;opacity:.7}
+  #dentro .campo .caja{display:flex;align-items:center;gap:8px;border:1px solid var(--linea);
+    border-radius:8px;padding:8px 12px;font-size:13px;color:var(--mudo)}
+  #dentro .campo .pista{font-size:10.5px;color:var(--mudo);margin:4px 0 0}
+
+  /* El cierre automático no va detrás de un separador suelto: en el componente
+     es el propio bloque el que lleva el borde arriba. */
+  #dentro .separa{border-top:1px solid var(--linea);margin:16px 0 14px}
+  #dentro .regenerar{text-align:center;margin-top:16px}
+  #dentro .regenerar b{display:flex;align-items:center;justify-content:center;gap:6px;
+    padding:8px 0;font-size:12px;font-weight:600;color:var(--mudo)}
+  #dentro .regenerar span{display:block;font-size:10.5px;color:var(--mudo)}
+
+
+  /* Los íconos son los de Lucide, los mismos de la app. El tamaño lo pone cada
+     contexto; el color lo heredan de su texto con currentColor, así no hay que
+     repetirlo en ninguna parte. */
+  #dentro svg{display:block;flex:none}
+  #dentro .lado a svg{width:18px;height:18px;color:#8E87A8}
+  #dentro .lado a.on svg{color:var(--morado)}
+  #dentro .lado .cabeza .acc{width:20px;height:20px;color:#8E87A8;margin-left:auto}
+  #dentro .lado .cabeza .acc + .acc{margin-left:6px}
+  #dentro .lado .cabeza .acc svg{width:20px;height:20px}
+  #dentro .buscador svg{width:18px;height:18px;color:#8E87A8}
+  #dentro .chip{gap:8px}
+  #dentro .chip svg{width:17px;height:17px;color:#8E87A8}
+  #dentro .chip.morado svg{color:#fff}
+  #dentro .dato i{display:flex;align-items:center;justify-content:center;color:var(--morado)}
+  #dentro .dato i.verde{color:var(--menta)}
+  #dentro .dato i svg{width:14px;height:14px}
+  /* En el teléfono la bandera del país ocupa el lugar del ícono: la pastilla
+     se queda, para que la columna de íconos siga alineada, y adentro va la
+     bandera en vez del auricular. */
+  #dentro .dato i.pais{background:none}
+  #dentro .dato .bandera{width:18px;height:13.5px;border-radius:2px;
+    display:block;flex:none}
+  #dentro .sede svg{width:12px;height:12px}
+  #dentro .acciones .editar svg{width:16px;height:16px}
+  #dentro .acciones .editar{gap:8px}
+  #dentro .acciones .redondo{display:flex;align-items:center;justify-content:center;color:var(--morado)}
+  #dentro .acciones .redondo svg{width:17px;height:17px}
+  #dentro .acciones .redondo.rojo{color:#EF476F}
+  #dentro .modal .cerrar{display:flex;align-items:center;justify-content:center;color:#5B5470}
+  #dentro .modal .cerrar svg{width:14px;height:14px}
+  #dentro .enlace svg{width:14px;height:14px;color:#8E87A8}
+  #dentro .botones .copiar svg{width:14px;height:14px}
+  #dentro .campo .caja svg{width:14px;height:14px;color:var(--mudo)}
+  #dentro .regenerar b svg{width:14px;height:14px}
+
+
+  /* ── Precios ───────────────────────────────────────────── */
+  section{padding:70px 0;border-top:1px solid var(--linea)}
+  section.primera{border-top:0;padding-top:58px}
+  h1.titulo-pagina{font-size:clamp(1.9rem,4.2vw,2.7rem);font-weight:600;letter-spacing:-.032em;
+    text-align:center;margin:0 auto;line-height:1.1;text-wrap:balance;max-width:22ch}
+  /* Solo se ve una pagina a la vez, para poder juzgar el alto real de cada
+     una. El nav navega de verdad. */
+  [hidden]{display:none !important}
+  .rotulo{font-size:12.5px;font-weight:600;color:var(--morado);text-align:center;margin:0 0 10px}
+  h2{font-size:clamp(1.7rem,3.6vw,2.35rem);font-weight:600;letter-spacing:-.03em;text-align:center;
+    margin:0;line-height:1.15;text-wrap:balance}
+  .sub{font-size:15px;color:var(--mudo);text-align:center;margin:12px auto 0;max-width:52ch}
+
+  .tramos{display:flex;justify-content:center;margin:30px 0 34px}
+  .tramos .caja{display:flex;gap:3px;background:var(--suave);border:1px solid var(--linea);
+    border-radius:99px;padding:4px}
+  .tramos button{font:inherit;font-size:13px;font-weight:600;padding:8px 16px;border-radius:99px;
+    border:0;background:transparent;color:var(--mudo);cursor:pointer;transition:all .18s;white-space:nowrap}
+  .tramos button[aria-pressed="true"]{background:var(--fondo);color:var(--tinta);
+    box-shadow:0 1px 4px rgba(26,16,40,.10)}
+
+  .planes{display:grid;gap:16px;grid-template-columns:1fr}
+  @media(min-width:800px){.planes{grid-template-columns:repeat(3,1fr);align-items:start}}
+  .plan{border:1px solid var(--linea);border-radius:18px;padding:24px;background:var(--gris);
+    display:flex;flex-direction:column;gap:3px;position:relative;transition:border-color .18s}
+  .plan:hover{border-color:color-mix(in srgb, var(--morado) 30%, transparent)}
+  .plan.destacado{border:1.5px solid var(--morado);padding-top:30px}
+  .insignia{position:absolute;top:-11px;left:50%;transform:translateX(-50%);
+    background:var(--morado);color:#fff;font-size:11px;font-weight:700;
+    border-radius:99px;padding:4px 12px;white-space:nowrap;
+    display:inline-flex;align-items:center;gap:5px}
+  /* La estrella va rellena y no de contorno: a 11px un trazo se empasta. */
+  .insignia svg{width:11px;height:11px;flex:none;fill:#FFB703}
+  .plan .nombre{font-size:14.5px;font-weight:600}
+  .plan .ciclo{font-size:12.5px;color:var(--mudo);margin-bottom:14px}
+  .plan .precio{display:flex;align-items:baseline;gap:5px}
+  .plan .precio b{font-size:34px;font-weight:700;letter-spacing:-.035em;font-variant-numeric:tabular-nums;line-height:1}
+  .plan .precio span{font-size:13.5px;color:var(--mudo)}
+  .plan .equivale{font-size:12.5px;color:var(--mudo);margin-top:7px;min-height:19px}
+  .plan .ahorro{display:inline-block;font-size:11.5px;font-weight:700;border-radius:99px;
+    padding:2px 9px;margin-top:9px;background:#EAFBF0;color:#15803D;align-self:flex-start}
+  .plan .btn{margin-top:19px;width:100%}
+  .plan ul{list-style:none;margin:19px 0 0;padding:17px 0 0;border-top:1px solid var(--linea);
+    display:flex;flex-direction:column;gap:9px}
+  .plan li{font-size:13px;color:var(--mudo);display:flex;align-items:flex-start;gap:8px;line-height:1.5}
+  .plan li svg{width:14px;height:14px;flex:none;margin-top:3px;stroke:var(--morado);
+    stroke-width:2.6;fill:none;stroke-linecap:round;stroke-linejoin:round}
+  .plan li b{color:var(--tinta);font-weight:600}
+
+  .nota-pie{font-size:12.5px;color:var(--mudo);text-align:center;margin:28px auto 0;max-width:62ch;line-height:1.6}
+
+  ul.notas{max-width:1120px;margin:0 auto;padding:0 22px 70px;list-style:none}
+  ul.notas li{font-size:13px;color:var(--mudo);line-height:1.8;padding-left:17px;position:relative}
+  ul.notas li::before{content:'';position:absolute;left:0;top:12px;width:5px;height:5px;
+    border-radius:99px;background:var(--morado)}
+  ul.notas b{color:var(--tinta);font-weight:600}
+</style>
+
+<div id="tope" aria-hidden="true"></div>
+<nav>
+  <div class="marco">
+    <a class="logo" href="/" data-ir="home" aria-label="VeloClub"><img src="data:image/png;base64,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" alt=""></a>
+    <div class="enlaces">
+      <a href="#funcionalidades">Funcionalidades</a>
+      <a href="/precios" data-ir="precios">Precios</a>
+      <a href="#">Contáctanos</a>
+    </div>
+    <div class="acciones">
+      <a class="btn linea" href="#">Iniciar sesión</a>
+      <a class="btn" href="#">Crear mi club</a>
+    </div>
+  </div>
+  <!-- la banda va fuera del marco, para ocupar todo el ancho -->
+</nav>
+
+<header data-vista="home">
+  <div class="marco">
+    <div class="promo">
+      <span class="sr-only">Quedan 66 días para que finalice la promoción de dos meses gratis.</span>
+      <span class="reloj" aria-hidden="true">
+        66<i>d</i>13<i>h</i>44<i class="ultima">m</i>
+      </span>
+      <span class="leyenda" aria-hidden="true">para que finalice</span>
+    </div>
+
+    <div class="hero-fila">
+      <h1><em>Tecnología</em> que mueve al club.</h1>
+      <p class="bajada">
+        Al servicio de los clubes deportivos de Colombia. Desde las inscripciones y el
+        control de asistencia, hasta las mensualidades, las sedes y los resultados de
+        cada deportista.
+      </p>
+    </div>
+
+    <div class="cta">
+      <a class="btn grande" href="#">Crear mi club gratis</a>
+      <a class="btn linea grande" href="#">Hablar por WhatsApp</a>
+    </div>
+    <p class="letra-chica">Dos meses sin costo. Sin tarjeta y sin compromiso.</p>
+
+  </div>
+</header>
+
+<!-- ── Funcionalidades ─────────────────────────────────── -->
+<section class="bloque landing-claro sin-arriba" id="funcionalidades" data-vista="home">
+  <div class="marco angosto">
+    <div class="fx">
+      <div class="fx-tabs" role="tablist" aria-label="Funcionalidades de VeloClub">
+        <button role="tab" data-tab="miembros" aria-selected="true"><svg viewBox="0 0 24 24" fill="currentColor" style="width:16px;height:16px;display:block;flex:none"><path d="m7.5 13a4.5 4.5 0 1 1 4.5-4.5 4.505 4.505 0 0 1 -4.5 4.5zm7.5 7a5.006 5.006 0 0 0 -5-5h-5a5.006 5.006 0 0 0 -5 5v4h15zm2.5-11a4.5 4.5 0 1 1 4.5-4.5 4.505 4.505 0 0 1 -4.5 4.5zm1.5 2h-5a4.793 4.793 0 0 0 -.524.053 6.514 6.514 0 0 1 -1.576 2.216 7.008 7.008 0 0 1 5.1 6.731h7v-4a5.006 5.006 0 0 0 -5-5z"/></svg><span>Miembros</span></button>
+        <button role="tab" data-tab="asistencia" aria-selected="false"><svg viewBox="0 0 24 24" fill="currentColor" style="width:16px;height:16px;display:block;flex:none"><path d="m18 12c-3.314 0-6 2.686-6 6s2.686 6 6 6 6-2.686 6-6-2.686-6-6-6zm3.683 5.712-2.703 2.614c-.452.446-1.052.671-1.653.671s-1.203-.225-1.663-.674l-1.354-1.332c-.395-.387-.4-1.02-.014-1.414.386-.395 1.019-.401 1.414-.014l1.354 1.331c.144.142.38.139.522-.002l2.713-2.624c.397-.381 1.031-.37 1.414.029.382.398.369 1.031-.029 1.414zm-12.683-9.712c-.828 0-1.5-.672-1.5-1.5s.672-1.5 1.5-1.5 1.5.672 1.5 1.5-.672 1.5-1.5 1.5zm1.5 1c.433 0 .82.186 1.094.479-.518.903-1.48 1.521-2.594 1.521s-2.076-.617-2.594-1.52c.274-.293.661-.48 1.094-.48zm2.5-9h-8c-2.757 0-5 2.243-5 5v14c0 2.757 2.243 5 5 5h7.721c-1.665-1.466-2.721-3.607-2.721-6h-5c-.552 0-1-.447-1-1s.448-1 1-1h5.262c.889-3.449 4.011-6 7.738-6v-5c0-2.757-2.243-5-5-5zm-4 13c-2.761 0-5-2.239-5-5s2.239-5 5-5 5 2.239 5 5-2.239 5-5 5z"/></svg><span>Asistencia</span></button>
+        <button role="tab" data-tab="pagos" aria-selected="false"><svg viewBox="0 0 24 24" fill="currentColor" style="width:16px;height:16px;display:block;flex:none"><path d="M13.053,5.079c.971-.909,2.344-2.36,2.894-3.744,.255-.641-.257-1.335-.947-1.335h-6c-.69,0-1.202,.693-.947,1.335,.55,1.384,1.923,2.835,2.894,3.744C5.569,5.878,1,12.618,1,18c0,3.309,2.691,6,6,6h10c3.309,0,6-2.691,6-6,0-5.382-4.569-12.122-9.947-12.921Zm-2.409,8.682l3.042,.507c1.341,.223,2.315,1.373,2.315,2.733,0,1.654-1.346,3-3,3v1c0,.552-.448,1-1,1s-1-.448-1-1v-1h-.268c-1.068,0-2.063-.574-2.598-1.499-.276-.478-.113-1.089,.365-1.366,.476-.277,1.089-.114,1.366,.365,.178,.308,.511,.5,.867,.5h2.268c.551,0,1-.449,1-1,0-.378-.271-.698-.644-.76l-3.042-.507c-1.341-.223-2.315-1.373-2.315-2.733,0-1.654,1.346-3,3-3v-1c0-.552,.448-1,1-1s1,.448,1,1v1h.268c1.067,0,2.063,.575,2.598,1.5,.276,.478,.113,1.089-.365,1.366-.477,.277-1.089,.114-1.366-.365-.179-.309-.511-.5-.867-.5h-2.268c-.551,0-1,.449-1,1,0,.378,.271,.698,.644,.76Z"/></svg><span>Finanzas</span></button>
+        <button role="tab" data-tab="rendimiento" aria-selected="false"><svg viewBox="0 0 24 24" fill="currentColor" style="width:16px;height:16px;display:block;flex:none"><path d="M15.091,15.997c6.571-.033,8.909-3.513,8.909-6.497,0-1.677-1.188-3.08-2.765-3.419,.136-.386,.254-.741,.333-1.01,.353-1.193,.125-2.453-.626-3.458-.766-1.024-1.937-1.612-3.214-1.612H6.271c-1.277,0-2.449,.588-3.215,1.612-.751,1.005-.979,2.266-.626,3.458,.08,.269,.197,.624,.334,1.011-1.577,.339-2.764,1.742-2.764,3.419,0,2.984,2.339,6.464,8.909,6.497,.056,.302,.091,.61,.091,.924v3.079c0,1.826-1.536,1.992-2,2h-1c-.553,0-1,.447-1,1s.447,1,1,1h12c.553,0,1-.447,1-1s-.447-1-1-1h-.992c-.472-.008-2.008-.174-2.008-2v-3.08c0-.313,.035-.621,.091-.923Zm5.361-8.007c.017,0,.031,.01,.048,.01,.827,0,1.5,.673,1.5,1.5,0,2.034-1.609,4.197-6.036,4.47,.221-.299,.474-.576,.762-.821,1.739-1.478,2.933-3.453,3.726-5.159ZM2,9.5c0-.827,.673-1.5,1.5-1.5,.017,0,.031-.009,.047-.01,.794,1.706,1.988,3.681,3.727,5.159,.288,.245,.541,.521,.762,.821-4.427-.273-6.036-2.436-6.036-4.47Zm7.792,.263c-.264-.182-.375-.518-.27-.822l.519-1.606-1.366-1c-.327-.24-.398-.699-.158-1.026,.138-.188,.358-.3,.591-.3h1.681l.511-1.593c.129-.387,.547-.595,.934-.466,.22,.073,.393,.246,.466,.466l.51,1.593h1.681c.405,0,.734,.328,.734,.734,0,.235-.112,.455-.301,.593l-1.366,1,.519,1.606c.124,.386-.088,.8-.475,.925-.224,.072-.469,.032-.659-.107l-1.343-.988-1.344,.987c-.256,.191-.606,.192-.864,.004Z"/></svg><span>Rendimiento</span></button>
+      </div>
+      <div class="fx-panel" role="tabpanel">
+        <div class="fx-rejilla"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Clubes que ya confían ───────────────────────────── -->
+<section class="bloque landing-claro clubes" data-vista="home">
+  <p class="confian">Clubes que ya confían en <em>VeloClub</em></p>
+  <div class="tira">
+    <div class="pista">
+      <span class="logo-club">WT</span>
+      <span class="logo-club">SS</span>
+      <span class="logo-club">SC</span>
+      <span class="logo-club">TD</span>
+      <span class="logo-club">GP</span>
+      <span class="logo-club">UC</span>
+      <span class="logo-club">WT</span>
+      <span class="logo-club">SS</span>
+      <span class="logo-club">SC</span>
+      <span class="logo-club">TD</span>
+      <span class="logo-club">GP</span>
+      <span class="logo-club">UC</span>
+      <span class="logo-club" aria-hidden="true">WT</span>
+      <span class="logo-club" aria-hidden="true">SS</span>
+      <span class="logo-club" aria-hidden="true">SC</span>
+      <span class="logo-club" aria-hidden="true">TD</span>
+      <span class="logo-club" aria-hidden="true">GP</span>
+      <span class="logo-club" aria-hidden="true">UC</span>
+      <span class="logo-club" aria-hidden="true">WT</span>
+      <span class="logo-club" aria-hidden="true">SS</span>
+      <span class="logo-club" aria-hidden="true">SC</span>
+      <span class="logo-club" aria-hidden="true">TD</span>
+      <span class="logo-club" aria-hidden="true">GP</span>
+      <span class="logo-club" aria-hidden="true">UC</span>
+    </div>
+  </div>
+</section>
+
+<!-- ── Por qué VeloClub ────────────────────────────────── -->
+<section class="bloque landing-claro" id="por-que" data-vista="home">
+  <div class="marco angosto">
+    <div class="tarjeta-razones">
+      <p class="rotulo izq">¿Por qué VeloClub?</p>
+      <h2 class="titulo-landing izq chico">Diseñado para clubes reales</h2>
+      <ul class="razones">
+        <li><span class="marca" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;display:block;flex:none"><path d="M4 14h7l-2 7 11-11h-7l2-7z"/></svg></span><p>Multi-sede: gestiona varios lugares de entrenamiento desde una cuenta.</p></li>
+        <li><span class="marca" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;display:block;flex:none"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/></svg></span><p>Acceso controlado: tú decides quién entra a tu club.</p></li>
+        <li><span class="marca" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;display:block;flex:none"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span><p>Roles diferenciados: admin, entrenador y deportista con acceso personalizado.</p></li>
+        <li><span class="marca" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;display:block;flex:none"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></svg></span><p>Instálala como app en tu celular, sin pasar por tiendas.</p></li>
+        <li><span class="marca" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;display:block;flex:none"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg></span><p>Historial completo: asistencia, pagos y resultados de cada deportista.</p></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ── Cierre ──────────────────────────────────────────── -->
+<section class="bloque landing-claro sin-abajo" data-vista="home">
+  <div class="marco angosto">
+    <div class="cierre">
+      <div class="halo" aria-hidden="true"></div>
+      <h2>¿Listo para empezar?</h2>
+      <p>Crea tu club y gestiona todo desde hoy. 2 meses gratis registrándote antes
+        del 31 de octubre, sin tarjeta y sin compromiso.</p>
+      <div class="cta">
+        <a class="btn" href="#">Crear mi club gratis<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;display:block;flex:none"><path d="m9 18 6-6-6-6"/></svg></a>
+        <a class="btn linea" href="#">Ya tengo cuenta</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer data-vista="home">
+  <div class="marco">
+    <p>© 2026 VeloClub · Todos los derechos reservados</p>
+    <p>Desarrollado por <a href="https://nexcode97.com" target="_blank" rel="noopener noreferrer">NexCode97</a></p>
+  </div>
+</footer>
+
+<section data-vista="precios" class="primera" hidden>
+  <div class="marco">
+    <h1 class="titulo-pagina">Todo incluido, desde $50.000 al mes</h1>
+    <p class="sub">
+      Sin módulos aparte ni funciones bloqueadas. Lo único que mueve el precio
+      es cuántos deportistas tenga tu club.
+    </p>
+
+    <div class="tramos">
+      <div class="caja" role="group" aria-label="Cuántos deportistas">
+        <button data-tramo="0" aria-pressed="true">Hasta 40</button>
+        <button data-tramo="1" aria-pressed="false">41 a 80</button>
+        <button data-tramo="2" aria-pressed="false">81 o más</button>
+      </div>
+    </div>
+
+    <div class="planes">
+      <div class="plan">
+        <span class="nombre">Mensual</span>
+        <span class="ciclo">Se cobra cada mes</span>
+        <span class="precio"><b data-precio="0">$50.000</b><span>/mes</span></span>
+        <span class="equivale"></span>
+        <a class="btn linea" href="#">Empezar gratis</a>
+        <ul>
+          <li><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>Sin permanencia</li>
+          <li><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>Se cancela cuando quieras</li>
+          <li><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>Gestión de miembros y asistencia digital</li>
+          <li><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>Pagos y finanzas del club</li>
+          <li><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>Resultados y competencias</li>
+          <li><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>Analíticas</li>
+          <li><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>Gestión de sedes</li>
+        </ul>
+      </div>
+
+      <div class="plan destacado">
+        <span class="insignia"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.6l2.6 5.9 6.4.6-4.8 4.3 1.4 6.3L12 16.4 6.4 19.7l1.4-6.3L3 9.1l6.4-.6z"/></svg>El que más eligen</span>
+        <span class="nombre">Trimestral</span>
+        <span class="ciclo">Se cobra cada 3 meses</span>
+        <span class="precio"><b data-precio="1">$135.000</b><span>/trimestre</span></span>
+        <span class="equivale" data-equivale="1">equivale a $45.000 al mes</span>
+        <span class="ahorro">10% menos</span>
+        <a class="btn" href="#">Empezar gratis</a>
+        <ul>
+          <li><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg><span><b>10% de descuento</b> sobre el mensual</span></li>
+          <li><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>Un solo cobro cada trimestre</li>
+          <li><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>Gestión de miembros y asistencia digital</li>
+          <li><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>Pagos y finanzas del club</li>
+          <li><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>Resultados y competencias</li>
+          <li><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>Analíticas</li>
+          <li><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>Gestión de sedes</li>
+        </ul>
+      </div>
+
+      <div class="plan">
+        <span class="nombre">Anual</span>
+        <span class="ciclo">Se cobra una vez al año</span>
+        <span class="precio"><b data-precio="2">$480.000</b><span>/año</span></span>
+        <span class="equivale" data-equivale="2">equivale a $40.000 al mes</span>
+        <span class="ahorro">20% menos</span>
+        <a class="btn linea" href="#">Empezar gratis</a>
+        <ul>
+          <li><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg><span><b>20% de descuento</b>, el mayor</span></li>
+          <li><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>Te olvidas del cobro por un año</li>
+          <li><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>Gestión de miembros y asistencia digital</li>
+          <li><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>Pagos y finanzas del club</li>
+          <li><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>Resultados y competencias</li>
+          <li><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>Analíticas</li>
+          <li><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>Gestión de sedes</li>
+        </ul>
+      </div>
+    </div>
+
+    <p class="nota-pie">
+      Activa la renovación automática y se descuenta un 5% más en cada cobro.
+      Los dos meses gratis van antes de todo esto: el primer cobro llega cuando
+      se acaban, y puedes irte antes sin pagar nada.
+    </p>
+  </div>
+</section>
+
+<section id="notas" style="border:0;padding-top:0">
+  <p class="rotulo" style="text-align:left;max-width:1120px;margin:0 auto 12px;padding:0 22px">Qué cambia</p>
+  <ul class="notas">
+    <li><b>Fondo blanco y logo a la izquierda.</b> El nav queda con la forma que la gente ya conoce: marca a la izquierda, secciones al centro, la acción a la derecha. Los enlaces se centran contra la barra y no dentro del flujo, así quedan en la mitad exacta sin depender de cuánto midan la marca de un lado y los botones del otro.</li>
+    <li><b>Entra «Precios» al menú y sale «¿Por qué VeloClub?».</b> Con dos secciones el menú se lee de un vistazo; con tres había que elegir.</li>
+    <li><b>Debajo del hero va la landing tal cual está hoy.</b> Funcionalidades con sus pestañas, la tira de clubes en movimiento, «Diseñado para clubes reales» y el cierre morado: mismos textos, mismos tamaños, mismos colores. Lo único que cambia arriba es el hero y el nav. Los teléfonos salieron.</li>
+    <li><b>Esos bloques van con los colores literales de producción</b> y no con los tokens del widget. En la landing la página es clara siempre, así que cada bloque pinta su propio fondo blanco: si el sistema está en tema oscuro, la parte copiada se sigue viendo como se ve en veloclubtech.com.</li>
+    <li><b>En la tira de clubes van las iniciales, no los logos.</b> Los logos reales los trae la API; los círculos tienen el tamaño y la separación de producción para poder juzgar el peso de la franja.</li>
+    <li><b>Los precios viven en <code>/precios</code>, no en el home.</b> El home queda con una sola cosa que hacer —crear el club— y la página de precios se puede mandar sola por WhatsApp a quien pregunta cuánto vale, sin obligarlo a bajar por toda la portada.</li>
+    <li><b>El contador es el que ya existe</b>, con su misma forma —cifra grande, unidad chica al lado, la frase al final— y las cifras en el amarillo de la marca. Va suelto sobre el blanco, sin caja. El amarillo no es el <code>#FFB703</code> de la marca: sobre blanco da <b>1,75</b> de contraste y el mínimo para una cifra de este tamaño es 3, así que no se vería. Va en el <code>#FFB703</code> de la marca, que sobre blanco queda en <b>1,75</b> de contraste: por debajo del mínimo de 3. Se compensa con más peso en la cifra, que es lo único que ayuda sin tocar el tono.</li>
+    <li><b>El precio depende del tamaño del club, y eso se muestra en vez de esconderse.</b> El selector cambia los tres planes a la vez, así nadie llega al registro y se encuentra con otro número.</li>
+    <li><b>Arranca en el tramo básico</b>, el de hasta 40 deportistas, que es el que corresponde al «desde $50.000» del título. Empezaba en el del medio y la página decía un precio arriba y mostraba otro abajo.</li>
+    <li><b>Los tres precios son los que cobra el sistema hoy</b>, sacados de <code>pricing.ts</code>: 10% menos el trimestral, 20% menos el anual, y el 5% extra de la renovación automática dicho al pie.</li>
+    <li><b>El «desde» del título es $50.000, que es el cobro mensual más bajo que existe.</b> El anual dividido en doce da $40.000, pero nadie paga eso al mes: paga $480.000 de una vez. Anunciar como mensual algo que no se cobra mensual es la clase de letra chica que después genera reclamos, así que las divisiones van dentro de la tarjeta y dicen «equivale a».</li>
+    <li><b>El trimestral va destacado</b> porque es el del medio y el que más se toma. La insignia y el borde son lo único que lo separa; el precio se lee igual en los tres.</li>
+    <li><b>Un solo botón manda.</b> El morado sólido es la acción; las otras van en línea. Sin degradados, como quedó el resto de la app.</li>
+    <li><b>«Iniciar sesión» también es un botón</b>, en su variante de línea. Un enlace suelto al lado de un botón se lee como texto de relleno, y entrar a la cuenta no es relleno: es lo que hace todos los días quien ya es cliente.</li>
+        <li><b>La sombra va en dos capas cortas</b>, una de contacto y una de apoyo, y crece un poco al pasar el cursor. La del morado es de su propio color: una sombra gris debajo de un botón de color se ve sucia.</li>
+    <li><b>El titular declara, no interpela.</b> Pasó de «Tu club ya no cabe en un Excel» a una frase de misión en tercera persona. La segunda persona y el guiño al dolor son de otro registro; el que se buscaba aquí es el institucional, con la bajada haciendo dos movimientos, a quién sirve y un barrido que nombra los módulos. «Tecnología» va en morado, sin el degradado que tenía: sobre blanco el morado ya destaca solo.</li>
+  </ul>
+</section>
+
+<script>
+  // El widget navega como el sitio: una pagina a la vez, con su alto real.
+  function ir(donde) {
+    document.querySelectorAll('[data-vista]').forEach(el => {
+      el.hidden = el.dataset.vista !== donde;
+    });
+    document.querySelectorAll('[data-ir]').forEach(a => {
+      if (a.dataset.ir === 'precios') a.toggleAttribute('aria-current', donde === 'precios');
+    });
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }
+  document.querySelectorAll('[data-ir]').forEach(a => {
+    a.addEventListener('click', e => { e.preventDefault(); ir(a.dataset.ir); });
+  });
+
+  // La barra marca su borde inferior en cuanto la pagina deja de estar arriba.
+  const tope = document.getElementById('tope');
+  const barra = document.querySelector('nav');
+  new IntersectionObserver(([e]) => {
+    barra.classList.toggle('pegada', !e.isIntersecting);
+  }).observe(tope);
+
+  // Las pestañas de funcionalidades, con el mismo contenido de la landing.
+  // Cada entrada lleva su nombre, su descripcion y el trazo de su icono. El
+  // icono es propio y ya no se clona del de la pestaña: con las dos entradas a
+  // la vista, ambas saldrian con el mismo dibujo.
+  const MODULOS = {
+    miembros: [
+      ['Perfiles',
+       'Deja de tener a tu club repartido entre cuadernos y chats. Compartes un enlace, cada quien registra sus datos y los permisos van por rol, así el entrenador trabaja con su gente y las finanzas quedan en la administración.',
+       '<path d="m7.5 13a4.5 4.5 0 1 1 4.5-4.5 4.505 4.505 0 0 1 -4.5 4.5zm7.5 7a5.006 5.006 0 0 0 -5-5h-5a5.006 5.006 0 0 0 -5 5v4h15zm2.5-11a4.5 4.5 0 1 1 4.5-4.5 4.505 4.505 0 0 1 -4.5 4.5zm1.5 2h-5a4.793 4.793 0 0 0 -.524.053 6.514 6.514 0 0 1 -1.576 2.216 7.008 7.008 0 0 1 5.1 6.731h7v-4a5.006 5.006 0 0 0 -5-5z"/>'],
+      ['Sedes',
+       'Ubicar el entrenamiento deja de depender de indicaciones sueltas. Cada sede queda con su punto exacto y su ruta en Google Maps, Waze o Apple Maps, disponible para todo el club desde el primer día.',
+       '<path d="M12,.042a9.992,9.992,0,0,0-9.981,9.98c0,2.57,1.99,6.592,5.915,11.954a5.034,5.034,0,0,0,8.132,0c3.925-5.362,5.915-9.384,5.915-11.954A9.992,9.992,0,0,0,12,.042ZM12,14a4,4,0,1,1,4-4A4,4,0,0,1,12,14Z"/>'],
+    ],
+    asistencia: [
+      ['Registro',
+       'Deja la planilla de papel donde está. El entrenador abre el día, marca presente, ausente, tarde o excusa médica, y el historial de cada deportista queda armado por sede y por fecha.',
+       '<path d="m18 12c-3.314 0-6 2.686-6 6s2.686 6 6 6 6-2.686 6-6-2.686-6-6-6zm3.683 5.712-2.703 2.614c-.452.446-1.052.671-1.653.671s-1.203-.225-1.663-.674l-1.354-1.332c-.395-.387-.4-1.02-.014-1.414.386-.395 1.019-.401 1.414-.014l1.354 1.331c.144.142.38.139.522-.002l2.713-2.624c.397-.381 1.031-.37 1.414.029.382.398.369 1.031-.029 1.414zm-12.683-9.712c-.828 0-1.5-.672-1.5-1.5s.672-1.5 1.5-1.5 1.5.672 1.5 1.5-.672 1.5-1.5 1.5zm1.5 1c.433 0 .82.186 1.094.479-.518.903-1.48 1.521-2.594 1.521s-2.076-.617-2.594-1.52c.274-.293.661-.48 1.094-.48zm2.5-9h-8c-2.757 0-5 2.243-5 5v14c0 2.757 2.243 5 5 5h7.721c-1.665-1.466-2.721-3.607-2.721-6h-5c-.552 0-1-.447-1-1s.448-1 1-1h5.262c.889-3.449 4.011-6 7.738-6v-5c0-2.757-2.243-5-5-5zm-4 13c-2.761 0-5-2.239-5-5s2.239-5 5-5 5 2.239 5 5-2.239 5-5 5z"/>'],
+    ],
+    pagos: [
+      ['Mensualidades',
+       'Cobrar deja de depender de que alguien se acuerde. Se define la cuota y el día de cada deportista, el recordatorio sale solo por WhatsApp y cada pago genera su recibo y queda guardado con su comprobante.',
+       '<path d="m17 0c-3.866 0-7 3.134-7 7s3.134 7 7 7 7-3.134 7-7-3.134-7-7-7zm-1.479 5.74 3.286.548c1.271.211 2.193 1.3 2.193 2.588 0 1.447-1.177 2.624-2.624 2.624h-.376v1h-2v-1c-1.654 0-3-1.346-3-3h2c0 .551.449 1 1 1h2.376c.344 0 .624-.28.624-.624 0-.307-.22-.565-.521-.616l-3.286-.548c-1.27-.211-2.192-1.3-2.192-2.588 0-1.447 1.177-2.624 2.624-2.624h.376v-1h2v1c1.654 0 3 1.346 3 3h-2c0-.551-.448-1-1-1h-2.376c-.344 0-.624.28-.624.624 0 .307.219.565.521.616zm-6.521 6.26c0-.252.03-.496.074-.735 1.15 2.132 3.137 3.739 5.519 4.4-.489.213-1.027.335-1.593.335-2.206 0-4-1.794-4-4zm15 .651v9.349h-2v2h-2v-2h-16v2h-2v-2h-2v-5h3v-2h-3v-6h3v-2h-3v-2c0-1.654 1.346-3 3-3h6.518c-.958 1.43-1.518 3.149-1.518 5 0 .513.053 1.012.135 1.502-.711.986-1.135 2.192-1.135 3.498 0 3.309 2.691 6 6 6 1.783 0 3.382-.786 4.482-2.024 2.632-.14 4.963-1.401 6.518-3.325z"/>'],
+      ['Flujo de caja',
+       'Ingresos y egresos del club, actualizados en tiempo real.',
+       '<path d="m8.433,18.607c.76.762.76,2.023-.013,2.798l-2.199,2.288c-.196.204-.458.307-.721.307-.25,0-.499-.093-.693-.279-.398-.383-.411-1.016-.028-1.414l1.256-1.307h-2.035c-2.206,0-4-1.794-4-4v-2c0-.553.448-1,1-1s1,.447,1,1v2c0,1.103.897,2,2,2h2.029l-1.25-1.307c-.383-.398-.371-1.031.028-1.414.397-.383,1.03-.37,1.414.027l2.212,2.301ZM20,3h-2.035l1.256-1.307c.383-.398.371-1.031-.028-1.414-.397-.382-1.03-.37-1.414.027l-2.199,2.288c-.773.774-.773,2.036-.013,2.798l2.212,2.301c.196.204.458.307.721.307.25,0,.499-.093.693-.279.398-.383.411-1.016.028-1.414l-1.25-1.307h2.029c1.103,0,2,.897,2,2v2c0,.553.448,1,1,1s1-.447,1-1v-2c0-2.206-1.794-4-4-4Zm-8.004,12.715v3.555c0,1.075.58,2.073,1.512,2.604l3,1.715c.156.089.326.142.493.201v-5.508l-4.973-2.797c-.006.078-.031.151-.031.23Zm7.004,2.567v5.505c.164-.058.331-.11.484-.198l3-1.715c.933-.532,1.512-1.53,1.512-2.604v-3.555c0-.077-.024-.15-.03-.226l-4.966,2.793Zm3.484-5.172l-3-1.714c-.919-.525-2.059-.525-2.977,0l-3,1.714c-.254.145-.475.329-.671.535l5.164,2.904,5.158-2.901c-.197-.207-.419-.393-.674-.538Zm-9.484-6.609c0,3.59-2.91,6.5-6.5,6.5S0,10.09,0,6.5,2.91,0,6.5,0s6.5,2.91,6.5,6.5Zm-2.5,1.897c.01-1.297-.916-2.397-2.193-2.61l-3.261-.544c-.289-.048-.523-.281-.544-.574-.026-.365.263-.67.622-.67h2.376c.367,0,.689.199.862.494.182.31.509.506.869.506.763,0,1.253-.825.874-1.487-.518-.903-1.491-1.513-2.605-1.513,0-.552-.448-1-1-1s-1,.448-1,1h-.315c-1.451,0-2.673,1.152-2.685,2.603-.01,1.297.915,2.397,2.192,2.61l3.286.548c.315.052.54.331.52.655-.02.334-.315.585-.649.585h-2.35c-.367,0-.688-.199-.862-.494-.182-.31-.509-.506-.869-.506-.763,0-1.253.825-.874,1.487.518.903,1.491,1.513,2.605,1.513,0,.552.448,1,1,1s1-.448,1-1h.315c1.451,0,2.673-1.152,2.685-2.603Z"/>'],
+    ],
+    rendimiento: [
+      ['Competencias',
+       'Historial de competencias y resultados por deportista y prueba.',
+       '<path d="m5.714 4.772c-.427-.71-.196-1.632.515-2.058.708-.426 1.632-.196 2.058.514.824 1.374 1.613 2.366 2.11 2.938.92-.173 2.287-.173 3.207 0 .497-.571 1.286-1.563 2.11-2.938.427-.71 1.35-.94 2.058-.514.711.426.941 1.348.515 2.058-1.721 2.803-2.989 4.031-3.286 4.229v4.317c-.563-.184-1.009-.221-2.5-.31v-1.509h-1v1.509c-1.493.089-1.934.126-2.5.31v-4.304c-.297-.226-1.561-1.427-3.286-4.242zm.885 12.273c-.357-.026-.734-.045-1.098-.045-1.676 0-3.426.369-3.499.384-.401.085-.71.407-.778.812-.009.054-.223.78-.223 1.804 0 .954.088 1.41.229 1.917.109.395.449.682.857.725.092.01 1.631.169 4.61.272-.099-1.025-.197-2.412-.197-3.914 0-.683.039-1.34.098-1.955zm5.401-12.045c1.429 0 2-.571 2-2s-.571-2-2-2-2 .571-2 2 .571 2 2 2zm10.78 13.916c-.1-.414-.451-.72-.876-.761-.064-.006-1.601-.155-2.904-.155-.484 0-1.028.021-1.525.047.015.312.025.629.025.953 0 1.502-.097 2.889-.196 3.914 2.996-.103 4.554-.264 4.648-.274.374-.04.694-.286.828-.638.184-.478.221-.646.221-1.502 0-1.155-.211-1.546-.22-1.584zm-8.43-3.725c-.046-.008-1.138-.191-2.351-.191s-2.305.184-2.351.191c-.375.064-.682.335-.79.7-.176.434-.401 2.311-.359 3.109 0 1.543.111 2.974.214 3.969.986.019 2.081.031 3.286.031s2.3-.012 3.286-.032c.102-.994.214-2.426.214-3.968.042-.79-.184-2.685-.359-3.109-.108-.364-.415-.636-.79-.7z"/>'],
+      ['Entrenamientos',
+       'Registra sesiones de entrenamiento y el avance de cada atleta.',
+       '<path d="M14,17c0,.351-.097,.695-.278,1h-3.444c-.181-.305-.278-.649-.278-1,0-1.103,.897-2,2-2s2,.897,2,2Zm5.685-4.676c.862,1.411,1.315,3.016,1.315,4.676,.005,1.654-.461,3.256-1.301,4.645-.894,1.478-2.522,2.355-4.249,2.355h-6.899c-1.727,0-3.355-.877-4.249-2.355-.841-1.389-1.306-2.991-1.301-4.645,0-1.66,.453-3.265,1.315-4.676-1.558-3.288-2.315-5.523-2.315-6.824C2,3.446,3.299,0,12,0s10,3.446,10,5.5c0,1.301-.758,3.536-2.315,6.824Zm-3.685,4.676c0-2.206-1.794-4-4-4s-4,1.794-4,4c-.011,.725,.205,1.419,.573,2.035,.359,.602,1.018,.965,1.719,.965h3.417c.701,0,1.36-.363,1.719-.965,.367-.615,.583-1.31,.573-2.035Zm1.394-12.125c-.771-.399-2.333-.875-5.394-.875-3.23,0-4.771,.551-5.402,.879-.471,.216-.644,.593-.507,1.136,.118,.46,.433,1.464,1.246,3.297,1.361-.828,2.954-1.312,4.663-1.312s3.305,.478,4.666,1.305c.812-1.834,1.123-2.838,1.238-3.298,.067-.507-.105-.883-.51-1.132Z"/>'],
+    ],
+  };
+
+  const fxTabs = document.querySelectorAll('.fx-tabs button');
+  const fxRejilla = document.querySelector('.fx-rejilla');
+
+  // Todas las entradas del modulo se pintan a la vez, en dos columnas. Ya no
+  // hay estado interno que recordar: la pestaña de arriba es la unica seleccion.
+  function pintarModulo(modulo) {
+    fxRejilla.replaceChildren(...MODULOS[modulo].map(([etiqueta, texto, trazo, vb]) => {
+      const item = document.createElement('article');
+      item.className = 'fx-item';
+      item.innerHTML =
+        '<div class="fx-icono" aria-hidden="true">' +
+          '<svg viewBox="' + (vb || '0 0 24 24') + '" fill="currentColor" ' +
+          'style="width:19px;height:19px">' +
+          trazo + '</svg>' +
+        '</div><div><p class="fx-titulo"></p><p class="fx-desc"></p></div>';
+      item.querySelector('.fx-titulo').textContent = etiqueta;
+      item.querySelector('.fx-desc').textContent = texto;
+      return item;
+    }));
+  }
+
+  fxTabs.forEach(b => b.addEventListener('click', () => {
+    fxTabs.forEach(o => o.setAttribute('aria-selected', String(o === b)));
+    pintarModulo(b.dataset.tab);
+  }));
+  pintarModulo('miembros');
+
+  // Los precios reales, por tramo de deportistas. Salen de calcularPrecioPlan:
+  // tarifa del tramo x meses del plan, menos 10% el trimestral y 20% el anual.
+  const TRAMOS = [
+    { mensual: 50000, trimestral: 135000, anual: 480000 },
+    { mensual: 55000, trimestral: 148500, anual: 528000 },
+    { mensual: 60000, trimestral: 162000, anual: 576000 },
+  ];
+  const pesos = n => '$' + n.toLocaleString('es-CO');
+
+  function pintar(i) {
+    const t = TRAMOS[i];
+    const cifras = document.querySelectorAll('[data-precio]');
+    cifras[0].textContent = pesos(t.mensual);
+    cifras[1].textContent = pesos(t.trimestral);
+    cifras[2].textContent = pesos(t.anual);
+    // «equivale a» y no «al mes» a secas: es una division para poder comparar
+    // los tres planes, no un cobro que alguien vaya a recibir cada mes.
+    document.querySelector('[data-equivale="1"]').textContent = 'equivale a ' + pesos(Math.round(t.trimestral / 3)) + ' al mes';
+    document.querySelector('[data-equivale="2"]').textContent = 'equivale a ' + pesos(Math.round(t.anual / 12)) + ' al mes';
+  }
+
+  document.querySelectorAll('.tramos button').forEach(b => {
+    b.addEventListener('click', () => {
+      document.querySelectorAll('.tramos button').forEach(o => o.setAttribute('aria-pressed', String(o === b)));
+      pintar(Number(b.dataset.tramo));
+    });
+  });
+  pintar(0);
+
+/* ── Las dos capturas ──────────────────────────────────────────────────────
+   Las medidas se calculan contra el ancho real del bloque, no en px fijos: el
+   panel cambia de ancho con la ventana del navegador y las dos capturas tienen
+   que seguir cabiendo enteras.
+
+   El divisor de abajo sale de una sola condición: el modal está centrado en su
+   pantalla y mide 506 de los 1440 —440 por el 1,15 del widget—, o sea que
+   arranca al 32,4% del ancho. Para que en reposo no quede tapado, lo que la
+   izquierda le monta encima tiene que ser menos que eso; con 15% de holgura da
+   0,2754 del ancho de ventana, y despejando el solape queda 1,7246.
+
+   La que quede al frente la elige el cursor y se queda ahí. Sin mouseleave a
+   propósito: no vuelve sola al estado inicial. El puntero solo llega a la de
+   atrás por la franja que la otra no le tapa, que es justo la que se ve, así
+   que el gesto sale bien sin calcular nada. */
+(function(){
+  var caja = document.getElementById('dentro');
+  var esc  = caja && caja.querySelector('.escena');
+  if (!esc) return;
+  /* Hay un par de ventanas por pestaña y todas comparten geometria, asi que
+     las medidas se aplican a todas por igual: la que no toca esta oculta y no
+     le cuesta nada estar al dia para cuando le llegue el turno. */
+  var izqs = esc.querySelectorAll('.izq');
+  var ders = esc.querySelectorAll('.der');
+  if (!izqs.length || !ders.length) return;
+  function cada(lista, f){ Array.prototype.forEach.call(lista, f); }
+
+  var SANGRIA = 26;   /* la izquierda arranca alineada con el ícono de la pestaña */
+
+  function medir(){
+    var D = caja.clientWidth;
+    if (!D) return;
+    var W = Math.round((D - SANGRIA) / 1.7246);
+    var s = W / 1440;
+    /* Las ventanas ocupan la escena entera y muestran el 92% de su pantalla,
+       no el 100%: cortadas abajo se leen como capturas de algo que sigue, que
+       es lo que las hace parecer una app de verdad y no dos recortes que
+       terminan solos. La que se hunde se sale por abajo y la corta el bloque,
+       que es justo el efecto. */
+    var H = Math.round(826 * s * 0.92);
+    esc.style.height = H + 'px';
+    esc.style.setProperty('--s', s);
+    cada(izqs, function(v){
+      v.style.height = H + 'px'; v.style.top = '0';
+      v.style.width = W + 'px';  v.style.left = SANGRIA + 'px';
+    });
+    cada(ders, function(v){
+      v.style.height = H + 'px'; v.style.top = '0';
+      v.style.width = W + 'px';  v.style.left = (D - W) + 'px';
+    });
+    /* Las dos posiciones del separador, una por cada borde de contacto. La
+       franja mide 2F y lleva el gris en el medio, así que se la centra
+       restando F: el gris queda sentado justo sobre el filo. */
+    var F = Math.round(W * 0.17);
+    esc.style.setProperty('--fundido', F + 'px');
+    /* Dónde se juntan las dos capturas en cada estado. En reposo, en el borde
+       derecho de la de la izquierda; con la derecha al frente, en el borde
+       izquierdo de la derecha. Los dos desvanecidos se apoyan ahí. */
+    esc.style.setProperty('--filo-reposo', (SANGRIA + W) + 'px');
+    esc.style.setProperty('--filo-activo', (D - W) + 'px');
+    esc.style.setProperty('--corte', (SANGRIA + 2 * W - D) + 'px');
+  }
+
+  medir();
+  if (window.ResizeObserver) new ResizeObserver(medir).observe(caja);
+  else window.addEventListener('resize', medir);
+
+  function alFrente(cual){
+    esc.classList.add('vivo');
+    esc.classList.toggle('der-al-frente', cual === 'der');
+  }
+  cada(ders, function(v){
+    v.addEventListener('mouseenter', function(){ alFrente('der'); });
+    /* En pantalla táctil no hay hover: el toque hace lo mismo. */
+    v.addEventListener('click', function(){ alFrente('der'); });
+  });
+  cada(izqs, function(v){
+    v.addEventListener('mouseenter', function(){ alFrente('izq'); });
+    v.addEventListener('click', function(){ alFrente('izq'); });
+  });
+
+  /* La pestaña manda que par se ve. Al cambiar se vuelve al reposo, con la de
+     la izquierda al frente: entrar a una pestaña nueva y encontrarla ya
+     revuelta por el gesto de la anterior no tiene sentido. */
+  window.verCapturas = function(nombre){
+    esc.classList.toggle('vista-sedes', nombre === 'Sedes');
+    esc.classList.toggle('vista-asistencia', nombre === 'Registro');
+    esc.classList.toggle('vista-mensualidades', nombre === 'Mensualidades');
+    esc.classList.remove('der-al-frente', 'vivo');
+  };
+})();
+</script>

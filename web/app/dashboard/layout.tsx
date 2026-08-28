@@ -54,16 +54,16 @@ import { cn } from '@/lib/utils';
 const ROLE_TABS: Record<string, { href: string; label: string; icon: React.ElementType }[]> = {
   ADMIN: [
     { href: '/dashboard',             label: 'Inicio',      icon: IconHome},
-    { href: '/dashboard/miembros',    label: 'Miembros',    icon: IconUsers },
-    { href: '/dashboard/mas',         label: 'Más',         icon: IconHome}, // reemplazado por CircleMenu
     { href: '/dashboard/asistencia',  label: 'Asistencia',  icon: IconAsistencias },
+    { href: '/dashboard/mas',         label: 'Más',         icon: IconHome}, // reemplazado por CircleMenu
+    { href: '/dashboard/miembros',    label: 'Miembros',    icon: IconUsers },
     { href: '/dashboard/finanzas',    label: 'Finanzas',    icon: IconFinanzas },
   ],
   COACH: [
     { href: '/dashboard',             label: 'Inicio',      icon: IconHome},
-    { href: '/dashboard/miembros',    label: 'Miembros',    icon: IconUsers },
-    { href: '/dashboard/mas',         label: 'Más',         icon: IconHome}, // reemplazado por CircleMenu
     { href: '/dashboard/asistencia',  label: 'Asistencia',  icon: IconAsistencias },
+    { href: '/dashboard/mas',         label: 'Más',         icon: IconHome}, // reemplazado por CircleMenu
+    { href: '/dashboard/miembros',    label: 'Miembros',    icon: IconUsers },
     { href: '/dashboard/logros',      label: 'Rendimiento',  icon: IconResultados },
   ],
   STUDENT: [
@@ -78,15 +78,15 @@ const ROLE_TABS: Record<string, { href: string; label: string; icon: React.Eleme
 // Ítems del CircleMenu por rol
 const ROLE_MAS_ITEMS: Record<string, { label: string; icon: React.ElementType; href: string; color: string }[]> = {
   ADMIN: [
-    { label: 'Rendimiento', icon: IconResultados,   href: '/dashboard/logros',     color: '#F59E0B' },
     { label: 'Calendario', icon: IconCalendar,     href: '/dashboard/calendario', color: '#EF476F' },
-    { label: 'Sedes',      icon: IconUbicacion,    href: '/dashboard/sedes',      color: '#06D6A0' },
+    { label: 'Rendimiento', icon: IconResultados,   href: '/dashboard/logros',     color: '#F59E0B' },
     { label: 'Analíticas', icon: IconStatistics,   href: '/dashboard/reportes',   color: '#4361EE' },
+    { label: 'Sedes',      icon: IconUbicacion,    href: '/dashboard/sedes',      color: '#06D6A0' },
     { label: 'Club',       icon: IconClub,         href: '/dashboard/club',       color: '#381DA0' },
   ],
   COACH: [
-    { label: 'Rendimiento', icon: IconResultados,   href: '/dashboard/logros',     color: '#F59E0B' },
     { label: 'Calendario', icon: IconCalendar,     href: '/dashboard/calendario', color: '#EF476F' },
+    { label: 'Rendimiento', icon: IconResultados,   href: '/dashboard/logros',     color: '#F59E0B' },
     { label: 'Sedes',      icon: IconUbicacion,    href: '/dashboard/sedes',      color: '#06D6A0' },
     { label: 'Club',       icon: IconClub,         href: '/dashboard/club',       color: '#381DA0' },
   ],
@@ -96,15 +96,21 @@ const ROLE_MAS_ITEMS: Record<string, { label: string; icon: React.ElementType; h
   ],
 };
 
+// El orden es por frecuencia de uso, no por jerarquia: arriba lo que se abre
+// a diario, abajo lo que se configura una vez. Sedes estaba tercera y es
+// justamente lo contrario —una sede se crea, se corrige alguna vez y no se
+// vuelve a tocar en meses—, asi que le quitaba el mejor puesto de la lista a
+// Asistencia, que el entrenador abre cada dia de entrenamiento. La linea
+// divisoria antes de Sedes separa lo que se opera de lo que se configura.
 const ADMIN_NAV = [
   { href: '/dashboard',            label: 'Inicio',        icon: IconHome},
-  { href: '/dashboard/miembros',   label: 'Miembros',      icon: IconUsers },
-  { href: '/dashboard/sedes',      label: 'Sedes',         icon: IconUbicacion },
   { href: '/dashboard/asistencia', label: 'Asistencia',    icon: IconAsistencias },
+  { href: '/dashboard/miembros',   label: 'Miembros',      icon: IconUsers },
+  { href: '/dashboard/calendario', label: 'Calendario',    icon: IconCalendar },
   { href: '/dashboard/finanzas',   label: 'Finanzas',      icon: IconFinanzas },
   { href: '/dashboard/logros',     label: 'Rendimiento',    icon: IconResultados },
-  { href: '/dashboard/calendario', label: 'Calendario',    icon: IconCalendar },
   { href: '/dashboard/reportes',   label: 'Analíticas',    icon: IconStatistics },
+  { href: '/dashboard/sedes',      label: 'Sedes',         icon: IconUbicacion },
   { href: '/dashboard/club',       label: 'Club',          icon: IconClub },
   { href: '/dashboard/perfil',     label: 'Mi perfil',     icon: IconPerfil },
   { href: '/dashboard/ajustes',    label: 'Ajustes',       icon: IconAjustes},
@@ -112,11 +118,11 @@ const ADMIN_NAV = [
 
 const COACH_NAV = [
   { href: '/dashboard',            label: 'Inicio',        icon: IconHome},
-  { href: '/dashboard/miembros',   label: 'Miembros',      icon: IconUsers },
-  { href: '/dashboard/sedes',      label: 'Sedes',         icon: IconUbicacion },
   { href: '/dashboard/asistencia', label: 'Asistencia',    icon: IconAsistencias },
-  { href: '/dashboard/logros',     label: 'Rendimiento',    icon: IconResultados },
+  { href: '/dashboard/miembros',   label: 'Miembros',      icon: IconUsers },
   { href: '/dashboard/calendario', label: 'Calendario',    icon: IconCalendar },
+  { href: '/dashboard/logros',     label: 'Rendimiento',    icon: IconResultados },
+  { href: '/dashboard/sedes',      label: 'Sedes',         icon: IconUbicacion },
   { href: '/dashboard/club',       label: 'Club',          icon: IconClub },
   { href: '/dashboard/perfil',     label: 'Mi perfil',     icon: IconPerfil },
   { href: '/dashboard/ajustes',    label: 'Ajustes',       icon: IconAjustes},
@@ -126,9 +132,9 @@ const STUDENT_NAV = [
   { href: '/dashboard',            label: 'Inicio',        icon: IconHome},
   { href: '/dashboard/logros',     label: 'Rendimiento',    icon: IconResultados },
   { href: '/dashboard/calendario', label: 'Calendario',    icon: IconCalendar },
+  { href: '/dashboard/pagos',      label: 'Mis pagos',     icon: IconMisPagos},
   { href: '/dashboard/sedes',      label: 'Sedes',         icon: IconUbicacion },
   { href: '/dashboard/club',       label: 'Club',          icon: IconClub },
-  { href: '/dashboard/pagos',      label: 'Mis pagos',     icon: IconMisPagos},
   { href: '/dashboard/perfil',     label: 'Mi perfil',     icon: IconPerfil },
   { href: '/dashboard/ajustes',    label: 'Ajustes',       icon: IconAjustes},
 ];
@@ -657,6 +663,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                         } : undefined}
                         onMouseLeave={collapsed ? () => setNavTip(null) : undefined}
                       >
+                        {/* Separa lo que se opera de lo que se configura. Va
+                            absoluta y no como un elemento de la lista: el
+                            resaltado del activo se posiciona con el indice por
+                            48px, asi que cualquier cosa que ocupe alto en el
+                            flujo lo dejaria corrido de ahi para abajo. */}
+                        {href === '/dashboard/sedes' && (
+                          <span
+                            aria-hidden
+                            className="absolute left-0 right-0"
+                            style={{ top: -2, borderTop: '1px solid rgba(0,0,0,0.06)' }}
+                          />
+                        )}
                         <Icon className="w-[18px] h-[18px] shrink-0" strokeWidth={active ? 2.5 : 2} />
                         {!collapsed && <span>{label}</span>}
                         {!collapsed && href === '/dashboard/logros' && (

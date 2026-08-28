@@ -104,9 +104,10 @@ export default function HomePage() {
       {/* Hero glassmorphism */}
       <LandingHero />
 
-      {/* Features — ya en blanco. El amanecer entero pasa dentro del héroe, así
-          que de acá para abajo no queda rastro del degradado. */}
-      <section id="funcionalidades" className="px-[22px] py-16 max-w-[1200px] mx-auto">
+      {/* Sin aire arriba: el que separa del hero lo pone el propio hero con
+          su `pb`. Con los dos sumando quedaban 120 px, tres veces lo que hay
+          en el prototipo, y todo lo de abajo arrancaba demasiado lejos. */}
+      <section id="funcionalidades" className="px-[22px] pb-16 max-w-[1200px] mx-auto">
         <LandingFeaturesTabs features={features} />
       </section>
 

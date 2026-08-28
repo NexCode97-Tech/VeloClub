@@ -448,18 +448,33 @@ function AjustesPageContent() {
         </Button>
       </div>
 
-      {/* Gestionar cuenta */}
+      {/* Gestionar cuenta.
+
+          El panel lo abre Clerk desde un script aparte. Mientras ese script no
+          termina de cargar —o si no carga, que pasa y esta reportado— pulsar
+          aqui no hacia absolutamente nada: ni abria, ni avisaba, ni se veia
+          distinto. La gente lo tocaba una y otra vez, y eso es lo que Sentry
+          registro como rabia (VELOCLUB-WEB-19). Ahora el boton se apaga hasta
+          que Clerk esta listo y lo dice. */}
       <button
         type="button"
+        disabled={!clerk.loaded}
         onClick={() => clerk.openUserProfile()}
-        className="w-full flex items-center gap-3 px-5 py-3.5 text-left hover:bg-secondary/40 active:bg-secondary/60 transition-colors border-b border-border"
+        className="w-full flex items-center gap-3 px-5 py-3.5 text-left hover:bg-secondary/40 active:bg-secondary/60 transition-colors border-b border-border disabled:opacity-55 disabled:cursor-default"
       >
         <UserCog className="w-4 h-4 text-muted-foreground shrink-0" />
         <div className="flex-1 min-w-0">
           <p className="text-[13px] font-semibold text-foreground">Gestionar cuenta</p>
-          <p className="text-[11px] text-muted-foreground">Nombre, contraseña y datos de acceso</p>
+          <p className="text-[11px] text-muted-foreground">
+            {clerk.loaded ? 'Nombre, contraseña y datos de acceso' : 'Preparando tu cuenta…'}
+          </p>
         </div>
-        <ChevronRight className="w-4 h-4 text-muted-foreground" />
+        {clerk.loaded
+          ? <ChevronRight className="w-4 h-4 text-muted-foreground" />
+          : <span
+              aria-hidden
+              className="w-3.5 h-3.5 rounded-full border-2 border-muted-foreground/40 border-t-transparent animate-spin shrink-0"
+            />}
       </button>
 
       {/* Centro de ayuda */}

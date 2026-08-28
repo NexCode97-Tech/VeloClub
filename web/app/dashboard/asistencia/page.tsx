@@ -275,7 +275,7 @@ export default function AsistenciaPage() {
   });
   // Las clases que toca ese dia. Salen del horario del club: no se le pregunta
   // nada al entrenador, la app ya sabe que hay hoy.
-  const { data: clasesData } = useQuery({
+  const { data: clasesData, isLoading: loadingClases } = useQuery({
     queryKey: ['clasesDia', selectedDate],
     queryFn: async () => {
       const token = await getToken();
@@ -314,6 +314,13 @@ export default function AsistenciaPage() {
       return apiFetch<{ records: AttRecord[] }>(`/attendance?date=${selectedDate}${q}`, { token });
     },
     staleTime: 0,
+    // No se consulta hasta saber que clase toca. claseSel arranca en null, y sin
+    // esta condicion la pantalla pedia la planilla sin clase, despues el efecto
+    // elegia una, cambiaba la clave y volvia a pedir. Encadenado con la sede y
+    // el horario salian siete peticiones de medio segundo cada una en la carga
+    // (VELOCLUB-WEB-R), casi cuatro segundos en un movil con datos, y seis de
+    // esas respuestas se tiraban a la basura.
+    enabled: !loadingClases && (clasesHoy.length === 0 || claseSel !== null),
   });
 
   const locations = useMemo(() => locsData?.locations ?? [], [locsData]);

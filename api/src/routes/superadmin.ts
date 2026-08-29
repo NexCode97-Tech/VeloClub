@@ -347,11 +347,15 @@ router.delete('/clubs/:id', requireAuth, requireSuperadmin, async (req, res) => 
 /**
  * GET /superadmin/clubs/:id/dueno — quien puede serlo y quien lo es.
  *
- * El dueno es el unico que cruza entre los deportes de su club. Se declara y no
- * se deduce: la migracion que estreno los deportes lo dedujo del ADMIN mas
- * antiguo, que es lo mejor que se podia hacer sin preguntar, pero en un club con
- * cuatro administradores la cuenta mas vieja no tiene por que ser la de quien
- * dirige. Hasta ahora no habia forma de corregirlo sin meterle mano a la base.
+ * El dueno es a quien responde el club: el interlocutor declarado, no un nivel
+ * de permisos. Cambiar de deporte y abrir uno nuevo lo puede cualquier
+ * administrador, asi que nombrar dueno no le da a nadie mas de lo que ya tenia.
+ *
+ * Se declara y no se deduce. La migracion que estreno los deportes lo dedujo del
+ * ADMIN mas antiguo, que es lo mejor que se podia hacer sin preguntar, pero en un
+ * club con cuatro administradores la cuenta mas vieja no tiene por que ser la de
+ * quien dirige. Hasta ahora no habia forma de corregirlo sin meterle mano a la
+ * base.
  */
 router.get('/clubs/:id/dueno', requireAuth, requireSuperadmin, async (req, res) => {
   const clubId = String(req.params.id);
@@ -406,7 +410,8 @@ router.patch('/clubs/:id/dueno', requireAuth, requireSuperadmin, async (req, res
       ? [prisma.user.update({ where: { id: anterior.ownerUserId }, data: { deporteId: carpeta } })]
       : []),
     prisma.club.update({ where: { id: clubId }, data: { ownerUserId: nuevo.id } }),
-    // En null cruza todas: es como se representa ser dueno.
+    // Sin carpeta propia: el dueno no vive en un deporte en particular, y sin
+    // eleccion explicita entra por la mas antigua.
     prisma.user.update({ where: { id: nuevo.id }, data: { deporteId: null } }),
   ]);
 

@@ -46,7 +46,7 @@ export interface Member {
 
 /**
  * Quien puede ser dueño del club. Son cuentas de acceso (`User`) y no fichas de
- * miembro: el dueño es quien inicia sesión y cruza entre deportes.
+ * miembro, y solo administradores.
  */
 export interface Candidato {
   id: string; name: string; email: string;
@@ -706,7 +706,7 @@ export default function ClubDetail({ club, suscripcion, tab, onReload, onDeleted
             <div style={{ padding: '12px 14px', borderBottom: '1px solid rgba(120,80,200,0.08)' }}>
               <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: '#381DA0', letterSpacing: '0.02em' }}>Dueño del club</p>
               <p style={{ margin: '4px 0 0', fontSize: 11, color: '#8E87A8', lineHeight: 1.45 }}>
-                El único que ve todos los deportes del club y cambia entre ellos. Los demás quedan en el suyo.
+                A quién responde el club. No le da permisos de más: los deportes los gestiona cualquier administrador.
               </p>
             </div>
 
@@ -718,11 +718,11 @@ export default function ClubDetail({ club, suscripcion, tab, onReload, onDeleted
               </p>
             ) : (
               <>
-                {/* Un club sin dueño no puede abrir un segundo deporte. Se dice
-                    aquí porque desde afuera no hay forma de notarlo. */}
+                {/* No rompe nada, pero deja al club sin un interlocutor
+                    declarado. Se dice aquí porque desde afuera no se nota. */}
                 {!dueno.ownerUserId && (
                   <p style={{ margin: 0, padding: '10px 14px', fontSize: 11, lineHeight: 1.45, background: '#FFF7ED', color: '#9A3412', borderBottom: '1px solid rgba(120,80,200,0.07)' }}>
-                    Sin dueño. El club funciona normal, pero nadie puede agregarle un segundo deporte hasta que se nombre uno.
+                    Sin dueño declarado. El club funciona normal; lo que falta es saber con quién hablar cuando haya que hablar con alguien.
                   </p>
                 )}
                 {dueno.candidatos.map(c => (

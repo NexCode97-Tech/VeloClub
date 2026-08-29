@@ -72,9 +72,17 @@ Dos cosas que la base de datos no atrapa y hay que cuidar a mano:
 - **Los trabajos en cola reciben el `deporteId` en el payload.** Corren fuera de
   la petición, así que no heredan el contexto.
 
-Quién cruza carpetas: **solo el dueño**, declarado en `Club.ownerUserId`. Se
-declara y no se deduce de «tiene la carpeta en null»: una deducción equivocada
-le abre o le cierra carpetas a la persona incorrecta.
+Quién cruza carpetas: **cualquier ADMIN**. Entrenadores y deportistas viven en
+la suya y el selector se les queda como rótulo, no como control. La condición se
+resuelve **solo por el rol** (`resolverCarpeta` en `api/src/lib/deportes.ts`),
+nunca por «es el dueño»: el dueño se declara a mano desde el panel de
+superadmin, y bastaría nombrar ahí a un entrenador para colarle el permiso por
+la puerta de atrás.
+
+`Club.ownerUserId` **no gobierna permisos**. Es el interlocutor declarado del
+club — a quién responde. Se declara y no se deduce; la migración inicial lo
+dedujo del ADMIN más antiguo y se corrige desde Superadmin → Clubes → el club →
+«Dueño del club».
 
 El **enlace de inscripción es por deporte** (`Deporte.inscripcionToken`): quien
 entra por él cae directo en esa carpeta, sin que nadie tenga que repartirlo
@@ -131,7 +139,9 @@ DELETE     /deportes/:id             # solo si está vacía
 ### Modelo de datos clave
 - `Deporte` = la carpeta. Cuelga del club y lleva su propio enlace de inscripción.
 - `User` = staff del club (ADMIN, ENTRENADOR). Tiene `clerkId` único y un
-  `deporteId` opcional: en null cruza todas las carpetas, que es el caso del dueño.
+  `deporteId` opcional: es la carpeta donde trabaja. En null no vive en ninguna
+  en particular y entra por la más antigua. No confundir con permisos: quien
+  cambia de deporte se decide por el rol.
 - `Member` = deportista. Puede o no tener `clerkId` (si fue invitado). Tiene su propio `role = STUDENT`.
 - `Payment` = mensualidad con `month` + `year` + `memberId`. Genera `CashEntry` automáticamente al pagarse.
 - `Attendance` tiene constraint `@@unique([memberId, date])` — un registro por miembro por día.

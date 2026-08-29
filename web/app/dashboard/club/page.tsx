@@ -6,14 +6,16 @@ import { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { apiFetch } from '@/lib/api-client';
 import {
-  Camera, Pencil, ImagePlus, BadgeCheck, Lock, CalendarDays, Building2, Check, X, UserPlus, UserCheck,
+  Camera, ImagePlus, BadgeCheck, Lock, CalendarDays, Building2, Check, X, UserPlus, UserCheck,
 } from 'lucide-react';
 import { PostCard, Post, PostComment, LikeUser } from '@/components/ui/post-card';
 import { PhoneInput } from '@/components/ui/phone-input';
 import ModuleLoader, { useCargaMinima } from '@/components/ui/module-loader';
 import ModuleReveal from '@/components/ui/module-reveal';
 import { textoFundacion } from '@/lib/fundacion';
-import { IconEliminar, IconUbicacion, IconTelefono, IconMail } from '@/components/ui/custom-icons';
+import {
+  IconEditar, IconEliminar, IconMail, IconTelefono, IconUbicacion,
+} from '@/components/ui/custom-icons';
 
 interface ClubMember {
   id: string; fullName: string; pictureUrl?: string | null;
@@ -64,7 +66,7 @@ function ContactCard({ isAdmin, phone, email, phoneDraft, emailDraft, editingCon
           <motion.button whileTap={{ scale: 0.96 }} onClick={onEditStart}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold cursor-pointer transition-colors hover:bg-secondary"
             style={{ color: '#4361EE' }}>
-            <Pencil className="w-3 h-3" /> Editar
+            <IconEditar className="w-3 h-3" /> Editar
           </motion.button>
         )}
         {isAdmin && editingContact && (
@@ -425,7 +427,7 @@ export default function ClubProfilePage() {
                     style={{ background: 'rgba(255,255,255,0.20)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.30)' }}>
                     {(uploadingCover || deletingCover)
                       ? <div className="w-3.5 h-3.5 border-2 border-white/50 border-t-white rounded-full animate-spin" />
-                      : <Pencil className="w-3.5 h-3.5" />}
+                      : <IconEditar className="w-3.5 h-3.5" />}
                   </motion.button>
                   {coverMenuOpen && (
                     <>
@@ -565,7 +567,7 @@ export default function ClubProfilePage() {
                   <p className="text-[13px] text-foreground/75 leading-relaxed">
                     {description}
                     {isAdmin && (
-                      <Pencil className="inline-block ml-1.5 w-3 h-3 opacity-0 group-hover:opacity-40 transition-opacity" />
+                      <IconEditar className="inline-block ml-1.5 w-3 h-3 opacity-0 group-hover:opacity-40 transition-opacity" />
                     )}
                   </p>
                 ) : isAdmin ? (

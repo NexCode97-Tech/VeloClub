@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, Request } from 'express';
 import { z } from 'zod';
 import { requireAuth } from '../auth/middleware';
 import { prismaClubEntero } from '../db/client';
@@ -13,9 +13,9 @@ import { createLimiter } from '../lib/rate-limit';
  * eso usa `prismaClubEntero` y por eso cada consulta lleva el `clubId` escrito
  * a mano — aca no hay filtro automatico que lo ponga.
  *
- * Quien manda es el dueno declarado del club. Un administrador de una sola
- * carpeta puede ver la suya, pero no crear, renombrar ni desactivar ninguna:
- * abrir un deporte cambia lo que el club paga.
+ * Los deportes son cosa de los administradores, todos: ven las carpetas del
+ * club, se paran en la que quieran y pueden abrir una nueva. Entrenadores y
+ * deportistas ven la suya y nada mas.
  */
 
 const router = Router();
@@ -40,18 +40,14 @@ function tituloDe(texto: string): string {
 }
 
 /**
- * Comprueba que quien pide sea el dueno del club.
+ * Quien puede gestionar los deportes del club: cualquier administrador.
  *
- * Se resuelve contra `Club.ownerUserId`, que es un dato declarado, y no contra
- * «tiene la carpeta en null»: si se dedujera del null, borrar un deporte o un
- * dato mal escrito convertiria a cualquiera en dueno sin que nadie lo decidiera.
+ * Se lee de `req` y no se vuelve a consultar, porque `requireAuth` ya lo
+ * resolvio para toda la peticion — es el mismo dato con el que se acoto cada
+ * consulta a la base, asi que no pueden discrepar.
  */
-async function esDueno(clubId: string, userId: string): Promise<boolean> {
-  const club = await prismaClubEntero.club.findUnique({
-    where: { id: clubId },
-    select: { ownerUserId: true },
-  });
-  return !!club?.ownerUserId && club.ownerUserId === userId;
+function puedeGestionar(req: Request): boolean {
+  return !!req.puedeCambiarDeporte;
 }
 
 /**
@@ -85,9 +81,9 @@ router.get('/', requireAuth, async (req, res) => {
   });
   const porCarpeta = new Map(conteos.map(c => [c.deporteId, c._count._all]));
 
-  // El que no es dueno ve solo la suya: mostrarle la lista completa le contaria
-  // que el club tiene otros deportes, que es informacion de la que no participa.
-  const visibles = req.esDuenoDelClub
+  // Los administradores ven todas las carpetas del club. Entrenadores y
+  // deportistas ven la suya y nada mas.
+  const visibles = req.puedeCambiarDeporte
     ? carpetas
     : carpetas.filter(c => c.id === req.deporteId);
 
@@ -100,7 +96,7 @@ router.get('/', requireAuth, async (req, res) => {
       sedes: c._count.locations,
     })),
     activo: req.deporteId ?? null,
-    puedeCambiar: !!req.esDuenoDelClub,
+    puedeCambiar: !!req.puedeCambiarDeporte,
   });
 });
 
@@ -113,8 +109,8 @@ router.get('/', requireAuth, async (req, res) => {
 router.post('/', createLimiter, requireAuth, async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'No autenticado' });
   const clubId = req.user.clubId ?? '';
-  if (!await esDueno(clubId, req.user.id)) {
-    return res.status(403).json({ error: 'Solo el dueño del club puede agregar deportes' });
+  if (!puedeGestionar(req)) {
+    return res.status(403).json({ error: 'Solo los administradores pueden agregar deportes' });
   }
 
   const parsed = nombreSchema.safeParse(req.body);
@@ -141,8 +137,8 @@ router.post('/', createLimiter, requireAuth, async (req, res) => {
 router.patch('/:id', requireAuth, async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'No autenticado' });
   const clubId = req.user.clubId ?? '';
-  if (!await esDueno(clubId, req.user.id)) {
-    return res.status(403).json({ error: 'Solo el dueño del club puede gestionar los deportes' });
+  if (!puedeGestionar(req)) {
+    return res.status(403).json({ error: 'Solo los administradores pueden gestionar los deportes' });
   }
 
   const id = String(req.params.id);
@@ -196,8 +192,8 @@ router.patch('/:id', requireAuth, async (req, res) => {
 router.delete('/:id', requireAuth, async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'No autenticado' });
   const clubId = req.user.clubId ?? '';
-  if (!await esDueno(clubId, req.user.id)) {
-    return res.status(403).json({ error: 'Solo el dueño del club puede eliminar deportes' });
+  if (!puedeGestionar(req)) {
+    return res.status(403).json({ error: 'Solo los administradores pueden eliminar deportes' });
   }
 
   const id = String(req.params.id);

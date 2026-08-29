@@ -7,8 +7,12 @@ import { DatePicker } from '@/components/ui/date-picker';
 import { PhoneInput } from '@/components/ui/phone-input';
 import SportSelect from './sport-select';
 import { motion, AnimatePresence, type Variants } from 'framer-motion';
-import { Pencil, X, Check, TrendingUp, CalendarClock, Eye, Upload, RotateCcw, Power, BadgeCheck, Camera } from 'lucide-react';
-import { IconChat, IconEliminar } from '@/components/ui/custom-icons';
+import {
+  X, Check, TrendingUp, CalendarClock, Eye, Upload, RotateCcw, Power, BadgeCheck, Camera,
+} from 'lucide-react';
+import {
+  IconChat, IconEditar, IconEliminar,
+} from '@/components/ui/custom-icons';
 
 // ── Formateo ────────────────────────────────────────────────────────────────
 const fmt = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 });
@@ -38,6 +42,15 @@ export interface Suscripcion { id: string; planMonto: number; tipoPlan: TipoPlan
 export interface Member {
   id: string; fullName: string; email: string; phone?: string | null;
   role: 'ADMIN' | 'ENTRENADOR'; inviteStatus: string;
+}
+
+/**
+ * Quien puede ser dueño del club. Son cuentas de acceso (`User`) y no fichas de
+ * miembro: el dueño es quien inicia sesión y cruza entre deportes.
+ */
+export interface Candidato {
+  id: string; name: string; email: string;
+  role: 'ADMIN' | 'ENTRENADOR'; esDueno: boolean;
 }
 export interface Club {
   id: string; name: string; active: boolean; createdAt: string;
@@ -251,6 +264,10 @@ export default function ClubDetail({ club, suscripcion, tab, onReload, onDeleted
   const [memberSaving, setMemberSaving] = useState(false);
   const [memberError, setMemberError] = useState<string | null>(null);
 
+  // ── Estado: dueño del club ───────────────────────────────────────────────
+  const [dueno, setDueno] = useState<{ ownerUserId: string | null; candidatos: Candidato[] } | null>(null);
+  const [cambiandoDueno, setCambiandoDueno] = useState<string | null>(null);
+
   // ── Estado: finanzas ─────────────────────────────────────────────────────
   const [abonoOpen, setAbonoOpen] = useState(false);
   const [abonoForm, setAbonoForm] = useState({ concepto: '', monto: '', fecha: '' });
@@ -306,6 +323,25 @@ export default function ClubDetail({ club, suscripcion, tab, onReload, onDeleted
   }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { loadMembers(); }, [club.id]);
+
+  // ── Dueño del club ───────────────────────────────────────────────────────
+  async function loadDueno() {
+    const token = await getToken();
+    setDueno(await apiFetch(`/superadmin/clubs/${club.id}/dueno`, { token }));
+  }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { loadDueno(); }, [club.id]);
+
+  async function hacerDueno(userId: string) {
+    setCambiandoDueno(userId);
+    try {
+      const token = await getToken();
+      await apiFetch(`/superadmin/clubs/${club.id}/dueno`, {
+        method: 'PATCH', token, body: JSON.stringify({ userId }),
+      });
+      await loadDueno();
+    } finally { setCambiandoDueno(null); }
+  }
 
   // ── Info: editar / trial / toggle / delete ───────────────────────────────
   async function startEdit() {
@@ -572,7 +608,7 @@ export default function ClubDetail({ club, suscripcion, tab, onReload, onDeleted
               {!editing && (
                 <motion.button onClick={startEdit} whileTap={{ scale: 0.94 }}
                   style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '5px 12px', borderRadius: 10, background: 'rgba(56,29,160,0.07)', border: '1px solid rgba(56,29,160,0.15)', color: '#381DA0', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
-                  <Pencil size={11} /> Editar
+                  <IconEditar  width={11} height={11} /> Editar
                 </motion.button>
               )}
             </div>
@@ -662,6 +698,52 @@ export default function ClubDetail({ club, suscripcion, tab, onReload, onDeleted
                     : [{ label: 'Revisión', value: 'Sin revisar aún', tenue: true }]),
                 ]} />
               </div>
+            )}
+          </div>
+
+          {/* Dueño del club */}
+          <div style={{ background: '#fff', border: '1px solid rgba(120,80,200,0.10)', borderRadius: 18, overflow: 'hidden' }}>
+            <div style={{ padding: '12px 14px', borderBottom: '1px solid rgba(120,80,200,0.08)' }}>
+              <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: '#381DA0', letterSpacing: '0.02em' }}>Dueño del club</p>
+              <p style={{ margin: '4px 0 0', fontSize: 11, color: '#8E87A8', lineHeight: 1.45 }}>
+                El único que ve todos los deportes del club y cambia entre ellos. Los demás quedan en el suyo.
+              </p>
+            </div>
+
+            {dueno === null ? (
+              <p style={{ margin: 0, padding: '14px', fontSize: 12, color: '#8E87A8' }}>Cargando…</p>
+            ) : dueno.candidatos.length === 0 ? (
+              <p style={{ margin: 0, padding: '14px', fontSize: 12, color: '#8E87A8' }}>
+                Este club todavía no tiene cuentas de acceso creadas.
+              </p>
+            ) : (
+              <>
+                {/* Un club sin dueño no puede abrir un segundo deporte. Se dice
+                    aquí porque desde afuera no hay forma de notarlo. */}
+                {!dueno.ownerUserId && (
+                  <p style={{ margin: 0, padding: '10px 14px', fontSize: 11, lineHeight: 1.45, background: '#FFF7ED', color: '#9A3412', borderBottom: '1px solid rgba(120,80,200,0.07)' }}>
+                    Sin dueño. El club funciona normal, pero nadie puede agregarle un segundo deporte hasta que se nombre uno.
+                  </p>
+                )}
+                {dueno.candidatos.map(c => (
+                  <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderBottom: '1px solid rgba(120,80,200,0.06)' }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{ margin: 0, fontSize: 12.5, fontWeight: 600, color: '#1A1028', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.name}</p>
+                      <p style={{ margin: '2px 0 0', fontSize: 10.5, color: '#8E87A8', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {c.email} · {c.role === 'ADMIN' ? 'Admin' : 'Entrenador'}
+                      </p>
+                    </div>
+                    {c.esDueno ? (
+                      <span style={{ padding: '4px 10px', borderRadius: 999, background: 'rgba(56,29,160,0.08)', color: '#381DA0', fontSize: 10.5, fontWeight: 700, whiteSpace: 'nowrap' }}>Dueño</span>
+                    ) : (
+                      <motion.button onClick={() => hacerDueno(c.id)} disabled={cambiandoDueno !== null} whileTap={{ scale: 0.95 }}
+                        style={{ padding: '5px 11px', borderRadius: 9, border: '1.5px solid rgba(120,80,200,0.18)', background: 'transparent', color: '#5B5470', fontSize: 10.5, fontWeight: 600, cursor: cambiandoDueno ? 'default' : 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap', opacity: cambiandoDueno ? 0.5 : 1 }}>
+                        {cambiandoDueno === c.id ? 'Cambiando…' : 'Hacer dueño'}
+                      </motion.button>
+                    )}
+                  </div>
+                ))}
+              </>
             )}
           </div>
 
@@ -833,7 +915,7 @@ export default function ClubDetail({ club, suscripcion, tab, onReload, onDeleted
                       {tienePagos ? montoPlanTexto : trial ? 'En prueba gratuita' : 'Sin plan'}
                     </span>
                     {tienePagos && <span style={{ fontSize: 12, color: '#8E87A8' }}>{planSuffix(tipo)}</span>}
-                    <Pencil size={11} color="#C4BFD8" />
+                    <IconEditar  width={11} height={11} color="#C4BFD8" />
                   </motion.button>
                 )}
                 {!tienePagos && !editPlan && (
@@ -958,7 +1040,7 @@ export default function ClubDetail({ club, suscripcion, tab, onReload, onDeleted
                                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
                                 </motion.button>
                                 <motion.button onClick={() => startEditPago(p)} whileTap={{ scale: 0.88 }}
-                                  style={{ width: 28, height: 28, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(56,29,160,0.08)', border: '1px solid rgba(56,29,160,0.15)', color: '#381DA0', cursor: 'pointer' }}><Pencil size={11} /></motion.button>
+                                  style={{ width: 28, height: 28, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(56,29,160,0.08)', border: '1px solid rgba(56,29,160,0.15)', color: '#381DA0', cursor: 'pointer' }}><IconEditar  width={11} height={11} /></motion.button>
                                 <motion.button onClick={() => deletePago(p.id)} whileTap={{ scale: 0.88 }}
                                   style={{ width: 28, height: 28, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(239,71,111,0.08)', border: '1px solid rgba(239,71,111,0.18)', color: '#EF476F', cursor: 'pointer' }}><IconEliminar width={11} height={11} /></motion.button>
                               </div>

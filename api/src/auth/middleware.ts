@@ -23,8 +23,11 @@ declare global {
       clubId?: string;
       // La carpeta de deporte en la que esta parada la peticion, ya verificada.
       deporteId?: string;
-      // Solo el dueno del club cruza carpetas; el resto vive en la suya.
+      // Dueno declarado del club. Hoy no gobierna permisos: sirve para saber a
+      // quien responde el club.
       esDuenoDelClub?: boolean;
+      // Quien puede pararse en otra carpeta y gestionarlas: los administradores.
+      puedeCambiarDeporte?: boolean;
       // Por que no se pudo resolver una carpeta, cuando no se pudo. La peticion
       // no se corta: `/me` lo devuelve para poder decirselo a la persona en vez
       // de dejarla frente a pantallas vacias sin explicacion.
@@ -115,13 +118,15 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
       const carpeta = await resolverCarpeta({
         clubId:              user.clubId,
         userId:              user.id,
+        rol:                 user.role,
         deporteIdDelUsuario: user.deporteId,
         ownerUserId:         user.club?.ownerUserId ?? null,
         pedida,
       });
       if (carpeta.ok) {
-        req.deporteId       = carpeta.deporteId;
-        req.esDuenoDelClub  = carpeta.esDueno;
+        req.deporteId           = carpeta.deporteId;
+        req.esDuenoDelClub      = carpeta.esDueno;
+        req.puedeCambiarDeporte = carpeta.puedeCambiar;
         // Si la ruta ya se declaro de club entero, no se le pisa: ahi el cruce
         // es el proposito. `req.deporteId` igual queda puesto, porque esas
         // rutas a veces necesitan saber desde que carpeta se las llamo.

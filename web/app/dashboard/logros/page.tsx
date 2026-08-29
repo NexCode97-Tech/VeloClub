@@ -7,7 +7,9 @@ import { apiFetch } from '@/lib/api-client';
 import { parseLocalDate, toSentenceCase } from '@/lib/utils';
 import { useCompetitions, useTraining, useLocations } from '@/hooks/useVeloQuery';
 import Link from 'next/link';
-import { Plus, CalendarDays, ChevronRight, Users, Target, Medal, ArrowLeft } from 'lucide-react';
+import {
+  CalendarDays, ChevronRight, Users, Target, Medal, ArrowLeft,
+} from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -18,7 +20,9 @@ import { LocationPicker } from '@/components/ui/location-picker';
 import ModuleLoader, { useCargaMinima } from '@/components/ui/module-loader';
 import ModuleReveal from '@/components/ui/module-reveal';
 import { ESCENARIOS, infoEscenario, type Escenario } from '@/lib/training-escenarios';
-import { IconEliminar, IconUbicacion, IconCompetencias, IconEntrenamientos } from '@/components/ui/custom-icons';
+import {
+  IconCompetencias, IconEliminar, IconEntrenamientos, IconMas, IconUbicacion,
+} from '@/components/ui/custom-icons';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 interface EventResult  { id: string; position?: number; member: { id: string; fullName: string; pictureUrl?: string | null } }
@@ -270,7 +274,7 @@ function LogrosPageInner() {
               transition: 'opacity 0.15s ease',
             }}
           >
-            <Plus className="w-4 h-4" />
+            <IconMas className="w-4 h-4" />
             <span className="hidden sm:inline">{tab === 'comp' ? 'Competencia' : 'Entrenamiento'}</span>
           </motion.button>
         )}
@@ -332,7 +336,7 @@ function LogrosPageInner() {
                 transition: 'opacity 0.15s ease',
               }}
             >
-              <Plus className="w-4 h-4" />
+              <IconMas className="w-4 h-4" />
               {tab === 'comp' ? 'Competencia' : 'Entrenamiento'}
             </motion.button>
           )}

@@ -16,7 +16,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog';
 import {
-  Plus, Pencil, Users, FileSpreadsheet, X, PlayCircle, MoreVertical,
+  Users, FileSpreadsheet, X, PlayCircle, MoreVertical,
 } from 'lucide-react';
 import { MemberAvatar } from '@/components/ui/member-avatar';
 import { PhoneInput, parsePhoneDisplay, FlagImg } from '@/components/ui/phone-input';
@@ -32,9 +32,7 @@ import ModuleLoader, { useCargaMinima } from '@/components/ui/module-loader';
 import ModuleReveal from '@/components/ui/module-reveal';
 import { ContenidoGuardado, MS_GUARDADO, type EstadoGuardado } from '@/components/ui/save-button-state';
 import {
-  IconDescargar, IconEliminar, IconUbicacion, IconBuscar, IconVer, IconImportar,
-  IconTelefono, IconMail, IconIdentificacion, IconFechaNacimiento, IconEps,
-  IconAcudiente, IconDesactivar,
+  IconAcudiente, IconBuscar, IconDesactivar, IconDescargar, IconEditar, IconEliminar, IconEps, IconFechaNacimiento, IconIdentificacion, IconImportar, IconMail, IconMas, IconTelefono, IconUbicacion, IconVer,
 } from '@/components/ui/custom-icons';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -607,7 +605,7 @@ export default function MiembrosPage() {
             transition={{ duration: 0.12, ease: EASE_OUT }}
             className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold text-white"
             style={{ background: '#381DA0' }}>
-            <Plus className="w-4 h-4" /><span className="hidden sm:inline">Nuevo</span>
+            <IconMas className="w-4 h-4" /><span className="hidden sm:inline">Nuevo</span>
           </motion.button>
           </>)}
         </div>
@@ -704,7 +702,7 @@ export default function MiembrosPage() {
                 transition={{ duration: 0.14, ease: EASE_OUT }}
                 className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-[13px] font-semibold text-white cursor-pointer"
                 style={{ background: '#381DA0', boxShadow: '0 4px 16px rgba(56,29,160,0.30)' }}>
-                <Plus className="w-4 h-4" /> Nuevo miembro
+                <IconMas className="w-4 h-4" /> Nuevo miembro
               </motion.button>
               )}
             </div>
@@ -740,7 +738,7 @@ export default function MiembrosPage() {
                   whileTap={reducedMotion ? {} : { scale: 0.97 }} transition={{ duration: 0.12 }}
                   className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-[13px] font-semibold text-white cursor-pointer"
                   style={{ background: '#381DA0' }}>
-                  <Plus className="w-4 h-4" /> Agregar miembro
+                  <IconMas className="w-4 h-4" /> Agregar miembro
                 </motion.button>
               )}
             </motion.div>
@@ -920,7 +918,7 @@ export default function MiembrosPage() {
                         className="flex-1 py-2.5 rounded-xl text-[12px] font-semibold text-white flex items-center justify-center gap-1.5 cursor-pointer"
                         style={{ background: '#381DA0', boxShadow: '0 3px 12px rgba(56,29,160,0.22)' }}
                       >
-                        <Pencil className="w-3.5 h-3.5" /> Editar
+                        <IconEditar className="w-3.5 h-3.5" /> Editar
                       </motion.button>
                       )}
                       {/* Sin permisos de gestion, ver el detalle es la unica accion
@@ -1178,7 +1176,7 @@ export default function MiembrosPage() {
                 // error seguro.
                 const propio = esUnoMismo(m);
                 const opciones = [
-                  { icon: Pencil, label: 'Editar', hint: 'Datos, sede y rol', color: '#5B5470', onClick: cerrarY(() => openEdit(m)) },
+                  { icon: IconEditar, label: 'Editar', hint: 'Datos, sede y rol', color: '#5B5470', onClick: cerrarY(() => openEdit(m)) },
                   { icon: IconVer, label: 'Ver detalle', hint: 'Ficha completa', color: '#5B5470', onClick: cerrarY(() => setViewMember(m)) },
                   ...(propio ? [] : [
                     enPausa
@@ -1548,7 +1546,7 @@ export default function MiembrosPage() {
                     className="w-full py-3.5 rounded-2xl font-semibold text-[14px] text-white flex items-center justify-center gap-2"
                     style={{ background: '#381DA0' }}
                   >
-                    <Pencil className="w-4 h-4" />
+                    <IconEditar className="w-4 h-4" />
                     Editar información
                   </motion.button>
                 </div>

@@ -5,7 +5,9 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { apiFetch } from '@/lib/api-client';
 import { parseLocalDate } from '@/lib/utils';
-import { ChevronLeft, Plus, Users, CalendarDays, Pencil, Navigation } from 'lucide-react';
+import {
+  ChevronLeft, Users, CalendarDays, Navigation,
+} from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -17,7 +19,9 @@ import { DatePicker } from '@/components/ui/date-picker';
 import { LocationPicker } from '@/components/ui/location-picker';
 import ModuleLoader, { useCargaMinima } from '@/components/ui/module-loader';
 import ModuleReveal from '@/components/ui/module-reveal';
-import { IconEliminar, IconUbicacion, IconCompetencias } from '@/components/ui/custom-icons';
+import {
+  IconCompetencias, IconEditar, IconEliminar, IconMas, IconUbicacion,
+} from '@/components/ui/custom-icons';
 
 interface Member { id: string; fullName: string; active?: boolean }
 interface EventResult {
@@ -348,7 +352,7 @@ export default function CompetitionDetailPage() {
                 className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold"
                 style={{ background: 'rgba(56,29,160,0.10)', color: '#381DA0' }}
               >
-                <Pencil className="w-4 h-4" />
+                <IconEditar className="w-4 h-4" />
                 <span className="hidden sm:inline">Editar</span>
               </button>
               <button
@@ -356,7 +360,7 @@ export default function CompetitionDetailPage() {
                 className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold text-white"
                 style={{ background: '#4361EE' }}
               >
-                <Plus className="w-4 h-4" />
+                <IconMas className="w-4 h-4" />
                 <span className="hidden sm:inline">Prueba</span>
               </button>
             </div>
@@ -445,7 +449,7 @@ export default function CompetitionDetailPage() {
                       className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold"
                       style={{ background: 'rgba(67,97,238,0.10)', color: '#4361EE' }}
                     >
-                      <Plus className="w-3 h-3" />
+                      <IconMas className="w-3 h-3" />
                       Resultado
                     </button>
                     <button

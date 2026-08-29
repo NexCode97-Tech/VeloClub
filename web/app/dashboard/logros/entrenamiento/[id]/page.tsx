@@ -5,7 +5,9 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { apiFetch } from '@/lib/api-client';
 import { parseLocalDate, toSentenceCase } from '@/lib/utils';
-import { ArrowLeft, Plus, Clock, Ruler, Hash, Weight, Repeat, Layers, Award } from 'lucide-react';
+import {
+  ArrowLeft, Clock, Ruler, Hash, Weight, Repeat, Layers, Award,
+} from 'lucide-react';
 import Link from 'next/link';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -16,7 +18,9 @@ import { MemberAvatar } from '@/components/ui/member-avatar';
 import ModuleLoader, { useCargaMinima } from '@/components/ui/module-loader';
 import ModuleReveal from '@/components/ui/module-reveal';
 import { infoEscenario, type Escenario } from '@/lib/training-escenarios';
-import { IconEliminar, IconEntrenamientos } from '@/components/ui/custom-icons';
+import {
+  IconEliminar, IconEntrenamientos, IconMas,
+} from '@/components/ui/custom-icons';
 
 interface Member { id: string; fullName: string; active?: boolean }
 interface TrainingResult {
@@ -146,7 +150,7 @@ export default function TrainingDetailPage() {
             className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold text-white shrink-0"
             style={{ background: '#381DA0' }}
           >
-            <Plus className="w-4 h-4" />
+            <IconMas className="w-4 h-4" />
             <span className="hidden sm:inline">Resultado</span>
           </button>
         )}

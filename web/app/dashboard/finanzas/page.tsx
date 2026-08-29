@@ -9,7 +9,7 @@ import { parseLocalDate } from '@/lib/utils';
 import { QK } from '@/hooks/useVeloQuery';
 import { HojaInferior, OpcionHoja } from '@/components/ui/hoja-inferior';
 import {
-  CreditCard, Plus, CheckCircle2, AlertCircle, TrendingUp, TrendingDown, Wallet, Check, PhoneOff, ChevronUp, Pencil, ExternalLink, ChevronDown,
+  CreditCard, CheckCircle2, AlertCircle, TrendingUp, TrendingDown, Wallet, Check, PhoneOff, ChevronUp, ExternalLink, ChevronDown,
 } from 'lucide-react';
 import { downloadInvoicePDF } from '@/lib/pdf';
 import MemberHistoryPanel from '@/components/finanzas/member-history-panel';
@@ -27,8 +27,7 @@ import { stagger as pageStagger, cardVariant as pageCard } from '@/lib/page-anim
 import ModuleLoader, { useCargaMinima } from '@/components/ui/module-loader';
 import ModuleReveal from '@/components/ui/module-reveal';
 import {
-  IconAjustes, IconChat, IconDescargar, IconEliminar, IconPendiente, IconRecibo,
-  IconBuscar, IconVer, IconNoMostrar, IconTarifa, IconGenerarCobros,
+  IconAjustes, IconBuscar, IconChat, IconDescargar, IconEditar, IconEliminar, IconGenerarCobros, IconMas, IconNoMostrar, IconPendiente, IconRecibo, IconTarifa, IconVer,
 } from '@/components/ui/custom-icons';
 
 const fmt = new Intl.NumberFormat('es-CO', {
@@ -832,7 +831,7 @@ export default function FinanzasPage() {
                 className="flex items-center justify-center gap-1.5 px-3 h-9 rounded-xl text-[12px] font-semibold cursor-pointer shrink-0"
                 style={{ background: 'rgba(6,214,160,0.08)', color: '#06D6A0', border: '1.5px dashed rgba(6,214,160,0.25)' }}
               >
-                <Plus className="w-3.5 h-3.5" />
+                <IconMas className="w-3.5 h-3.5" />
                 Nuevo
               </motion.button>
             )}
@@ -1184,7 +1183,7 @@ export default function FinanzasPage() {
                             className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors hover:bg-secondary"
                             title="Editar"
                           >
-                            <Pencil className="w-3.5 h-3.5 text-muted-foreground" />
+                            <IconEditar className="w-3.5 h-3.5 text-muted-foreground" />
                           </button>
                           <button
                             onClick={() => handleDeleteFlow(e.id)}

@@ -344,6 +344,77 @@ router.delete('/clubs/:id', requireAuth, requireSuperadmin, async (req, res) => 
   res.json({ ok: true });
 });
 
+/**
+ * GET /superadmin/clubs/:id/dueno — quien puede serlo y quien lo es.
+ *
+ * El dueno es el unico que cruza entre los deportes de su club. Se declara y no
+ * se deduce: la migracion que estreno los deportes lo dedujo del ADMIN mas
+ * antiguo, que es lo mejor que se podia hacer sin preguntar, pero en un club con
+ * cuatro administradores la cuenta mas vieja no tiene por que ser la de quien
+ * dirige. Hasta ahora no habia forma de corregirlo sin meterle mano a la base.
+ */
+router.get('/clubs/:id/dueno', requireAuth, requireSuperadmin, async (req, res) => {
+  const clubId = String(req.params.id);
+  const club = await prisma.club.findUnique({
+    where: { id: clubId },
+    select: { id: true, name: true, ownerUserId: true },
+  });
+  if (!club) return res.status(404).json({ error: 'Club no encontrado' });
+
+  const candidatos = await prisma.user.findMany({
+    where: { clubId, role: { in: ['ADMIN', 'ENTRENADOR'] } },
+    select: { id: true, name: true, email: true, role: true, createdAt: true },
+    orderBy: { createdAt: 'asc' },
+  });
+
+  res.json({
+    ownerUserId: club.ownerUserId,
+    candidatos: candidatos.map(u => ({ ...u, esDueno: u.id === club.ownerUserId })),
+  });
+});
+
+/** PATCH /superadmin/clubs/:id/dueno — nombrar dueno. */
+router.patch('/clubs/:id/dueno', requireAuth, requireSuperadmin, async (req, res) => {
+  const clubId = String(req.params.id);
+  const parsed = z.object({ userId: z.string().min(1) }).safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: parsed.error.issues });
+
+  const nuevo = await prisma.user.findFirst({
+    where: { id: parsed.data.userId, clubId },
+    select: { id: true, name: true },
+  });
+  if (!nuevo) return res.status(400).json({ error: 'Esa persona no pertenece a este club' });
+
+  const anterior = await prisma.club.findUnique({
+    where: { id: clubId },
+    select: { ownerUserId: true },
+  });
+  const carpeta = await carpetaPorDefecto(clubId);
+
+  // `ownerUserId` es unico, asi que primero se suelta el que estaba. Y va todo
+  // en una transaccion porque a mitad de camino el club quedaria sin dueno.
+  await prisma.$transaction([
+    prisma.club.update({ where: { id: clubId }, data: { ownerUserId: null } }),
+    // El anterior deja de cruzar carpetas y queda amarrado a una, como
+    // cualquier otro administrador. Si se le dejara la carpeta en null seguiria
+    // entrando por la primera sin que nadie lo hubiera decidido.
+    ...(anterior?.ownerUserId
+      ? [prisma.user.update({ where: { id: anterior.ownerUserId }, data: { deporteId: carpeta } })]
+      : []),
+    prisma.club.update({ where: { id: clubId }, data: { ownerUserId: nuevo.id } }),
+    // En null cruza todas: es como se representa ser dueno.
+    prisma.user.update({ where: { id: nuevo.id }, data: { deporteId: null } }),
+  ]);
+
+  await crearNotificacion(
+    'CLUB_CREADO',
+    'Dueño de club actualizado',
+    `${nuevo.name} quedó como dueño del club.`,
+  );
+
+  res.json({ ok: true, ownerUserId: nuevo.id });
+});
+
 // GET /superadmin/clubs/:id/miembros — miembros no-DEPORTISTA de un club
 router.get('/clubs/:id/miembros', requireAuth, requireSuperadmin, async (req, res) => {
   const id = String(req.params.id);

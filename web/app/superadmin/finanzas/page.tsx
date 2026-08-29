@@ -2,14 +2,18 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useAuth } from '@clerk/nextjs';
-import { Building2, CreditCard, DollarSign, Plus, TrendingUp, Zap } from 'lucide-react';
+import {
+  Building2, CreditCard, DollarSign, TrendingUp, Zap,
+} from 'lucide-react';
 import { apiFetch } from '@/lib/api-client';
 import { Desplegable } from '@/components/ui/desplegable';
 import { DatePicker } from '@/components/ui/date-picker';
 import { HojaInferior } from '@/components/ui/hoja-inferior';
 import { MonthPicker, type DateRange } from '@/components/ui/month-picker';
 import { GraficaMeses, Ranking, ENTRA, SALE, type MesFinanzas } from '@/components/superadmin/grafica-meses';
-import { IconEliminar, IconPendiente } from '@/components/ui/custom-icons';
+import {
+  IconEliminar, IconMas, IconPendiente,
+} from '@/components/ui/custom-icons';
 
 /**
  * Las finanzas del negocio.
@@ -298,7 +302,7 @@ export default function FinanzasSuperadmin() {
             onClick={() => { setErrorModal(null); setTipo('gasto'); setAbierto(true); }}
             className="inline-flex items-center gap-1.5 text-white text-[12.5px] font-semibold px-3.5 h-9 rounded-xl shrink-0 whitespace-nowrap"
             style={{ background: '#381DA0' }}>
-            <Plus className="w-3.5 h-3.5 shrink-0" />
+            <IconMas className="w-3.5 h-3.5 shrink-0" />
             Registrar
           </button>
         </div>

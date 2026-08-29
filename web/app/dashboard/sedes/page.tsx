@@ -13,10 +13,14 @@ import { Label } from '@/components/ui/label';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog';
-import { Plus, Pencil, LocateFixed, X, ChevronRight, ChevronDown, AlertCircle, AlertTriangle } from 'lucide-react';
+import {
+  LocateFixed, X, ChevronRight, ChevronDown, AlertCircle, AlertTriangle,
+} from 'lucide-react';
 import ModuleLoader, { useCargaMinima } from '@/components/ui/module-loader';
 import ModuleReveal from '@/components/ui/module-reveal';
-import { IconEliminar, IconUbicacion, IconBuscar } from '@/components/ui/custom-icons';
+import {
+  IconBuscar, IconEditar, IconEliminar, IconMas, IconUbicacion,
+} from '@/components/ui/custom-icons';
 
 // Carga dinámica del mapa (no SSR — Leaflet requiere window)
 const LocationMapPicker = dynamic(
@@ -411,7 +415,7 @@ export default function SedesPage() {
                 className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-[13px] font-semibold text-white shrink-0 cursor-pointer"
                 style={{ background: '#381DA0', boxShadow: '0 4px 16px rgba(56,29,160,0.30)' }}
               >
-                <Plus className="w-4 h-4" /> Nueva sede
+                <IconMas className="w-4 h-4" /> Nueva sede
               </button>
             )}
           </div>
@@ -466,7 +470,7 @@ export default function SedesPage() {
                   {canManage && (
                     <div className="flex gap-1 shrink-0 ml-2">
                       <Button size="sm" variant="ghost" onClick={() => openEdit(loc)}>
-                        <Pencil className="w-4 h-4" />
+                        <IconEditar className="w-4 h-4" />
                       </Button>
                       <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive" onClick={() => handleDelete(loc.id)}>
                         <IconEliminar className="w-4 h-4" />

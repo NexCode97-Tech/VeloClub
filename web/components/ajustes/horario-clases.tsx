@@ -5,13 +5,17 @@ import { createPortal } from 'react-dom';
 import { useAuth } from '@clerk/nextjs';
 import { motion, AnimatePresence } from 'framer-motion';
 import { apiFetch } from '@/lib/api-client';
-import { Plus, Pencil, X, AlertTriangle } from 'lucide-react';
+import {
+  X, AlertTriangle,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { DIAS_SEMANA } from '@/lib/dias';
 import { CATEGORIAS } from '@/lib/categorias';
-import { IconEliminar, IconUbicacion } from '@/components/ui/custom-icons';
+import {
+  IconEditar, IconEliminar, IconMas, IconUbicacion,
+} from '@/components/ui/custom-icons';
 
 interface Sede { id: string; name: string }
 
@@ -177,7 +181,7 @@ export default function HorarioClases() {
                   <button onClick={() => { setError(''); setEditando(c); }} aria-label="Editar clase"
                     className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-colors hover:bg-secondary"
                     style={{ color: '#8E87A8' }}>
-                    <Pencil className="w-3.5 h-3.5" />
+                    <IconEditar className="w-3.5 h-3.5" />
                   </button>
                   <button onClick={() => setPorBorrar(c)} aria-label="Quitar clase"
                     className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-colors hover:bg-red-50"
@@ -198,7 +202,7 @@ export default function HorarioClases() {
               border: '1.5px dashed rgba(56,29,160,0.30)',
             }}
           >
-            <Plus className="w-3.5 h-3.5" /> Agregar clase
+            <IconMas className="w-3.5 h-3.5" /> Agregar clase
           </button>
         </>
       )}

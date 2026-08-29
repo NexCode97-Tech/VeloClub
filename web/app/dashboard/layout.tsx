@@ -153,12 +153,11 @@ interface SelectorDeportes {
   lista: { id: string; nombre: string; activo: boolean }[];
   activo: string | null;
   puedeCambiar: boolean;
-  varios: boolean;
   aviso: string | null;
 }
 
 const SIN_DEPORTES: SelectorDeportes = {
-  lista: [], activo: null, puedeCambiar: false, varios: false, aviso: null,
+  lista: [], activo: null, puedeCambiar: false, aviso: null,
 };
 
 interface RespuestaMe {
@@ -643,7 +642,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           deportes={deportes.lista}
           activo={deportes.activo}
           puedeCambiar={deportes.puedeCambiar}
-          varios={deportes.varios}
           colapsado={collapsed}
           onCambiar={cambiarDeporte}
           cargarCifras={cargarCifrasDeportes}
@@ -915,26 +913,20 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </div>
           )}
 
-          {/* En movil el selector solo aparece si el club de verdad tiene mas de
-              un deporte. Aca arriba no hay barra superior a proposito — cada
-              modulo ya trae su fila de titulo — y sumarle una a todos los clubes
-              para mostrarles un unico deporte seria chrome que no informa nada.
-              Crear un deporte se hace desde escritorio: es una decision poco
-              frecuente y que mueve lo que el club paga. */}
-          {deportes.varios && (
-            <div className="md:hidden px-4 pt-4">
-              <SelectorDeporte
-                deportes={deportes.lista}
-                activo={deportes.activo}
-                puedeCambiar={deportes.puedeCambiar}
-                varios={deportes.varios}
-                colapsado={false}
-                onCambiar={cambiarDeporte}
-                cargarCifras={cargarCifrasDeportes}
-                onAgregar={agregarDeporte}
-              />
-            </div>
-          )}
+          {/* En movil no hay sidebar, asi que el selector va aca arriba. Cuesta
+              una fila en cada pantalla, y se paga a proposito: sirve para saber
+              en que deporte estas parado antes de tomar asistencia o cobrar. */}
+          <div className="md:hidden px-4 pt-4">
+            <SelectorDeporte
+              deportes={deportes.lista}
+              activo={deportes.activo}
+              puedeCambiar={deportes.puedeCambiar}
+              colapsado={false}
+              onCambiar={cambiarDeporte}
+              cargarCifras={cargarCifrasDeportes}
+              onAgregar={agregarDeporte}
+            />
+          </div>
 
           {children}
         </main>

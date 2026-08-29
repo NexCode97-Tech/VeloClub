@@ -3,8 +3,12 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Check, ChevronsUpDown, Plus } from 'lucide-react';
-import { iconoDeDeporte, IconUbicacion, IconUsers } from '@/components/ui/custom-icons';
+import {
+  Check, ChevronsUpDown,
+} from 'lucide-react';
+import {
+  IconMas, IconUbicacion, IconUsers, iconoDeDeporte,
+} from '@/components/ui/custom-icons';
 
 export interface Carpeta {
   id: string;
@@ -22,8 +26,6 @@ interface Props {
   activo: string | null;
   /** Solo el dueño del club cruza entre deportes. */
   puedeCambiar: boolean;
-  /** El club ofrece más de uno. Decide si al resto del equipo se le muestra dónde está. */
-  varios: boolean;
   colapsado: boolean;
   onCambiar: (id: string) => void;
   /** Trae los conteos. Se llama al abrir, no en cada carga del panel. */
@@ -72,14 +74,18 @@ function Insignia({ nombre, tam = 26 }: { nombre: string; tam?: number }) {
  * navegación: es lo que decide qué navegación estás mirando. Puesto entre
  * Inicio y Miembros se leería como un módulo más.
  *
- * A quien no puede cambiar no se le esconde: se le deja como rótulo, sin
- * flecha y sin abrir. Un entrenador que no sabe en qué deporte está es un
- * entrenador que marca asistencia en el lugar equivocado. Eso sí, solo aparece
- * si el club tiene más de uno — en un club de un solo deporte sería un letrero
- * que no informa nada.
+ * A quien no puede cambiar no se le esconde: se le deja como rótulo, sin flecha
+ * y sin abrir. Un entrenador que no sabe en qué deporte está es un entrenador
+ * que marca asistencia en el lugar equivocado.
+ *
+ * Se muestra SIEMPRE, también en un club de un solo deporte. Al principio se
+ * escondía ahí, con el argumento de que un letrero que dice lo único que puede
+ * decir no informa nada. El argumento estaba mal: lo que confirma no es cuál de
+ * varios, es que estás parado donde crees. Sin él, el día que el club abra el
+ * segundo deporte nadie va a tener la costumbre de mirar.
  */
 export default function SelectorDeporte({
-  deportes, activo, puedeCambiar, varios, colapsado, onCambiar, cargarCifras, onAgregar,
+  deportes, activo, puedeCambiar, colapsado, onCambiar, cargarCifras, onAgregar,
 }: Props) {
   const [abierto, setAbierto] = useState(false);
   const [cifras, setCifras] = useState<CarpetaConCifras[] | null>(null);
@@ -138,8 +144,8 @@ export default function SelectorDeporte({
     };
   }, [abierto]);
 
+  // Lo único que lo esconde es no tener ninguna carpeta que mostrar.
   if (!actual) return null;
-  if (!puedeCambiar && !varios) return null;
 
   const cifrasDe = (id: string) => cifras?.find(c => c.id === id) ?? null;
 
@@ -313,7 +319,7 @@ export default function SelectorDeporte({
                     onClick={() => setAgregando(true)}
                     className="w-full flex items-center gap-2 px-3 py-2.5 text-[12.5px] font-semibold text-[#381DA0] transition-colors hover:bg-[rgba(56,29,160,0.05)] cursor-pointer"
                   >
-                    <Plus className="w-3.5 h-3.5" strokeWidth={2.4} />
+                    <IconMas className="w-3.5 h-3.5" strokeWidth={2.4} />
                     Agregar deporte
                   </button>
                 )}

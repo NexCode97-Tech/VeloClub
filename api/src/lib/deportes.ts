@@ -43,7 +43,7 @@ export async function invalidarDeportes(clubId: string): Promise<void> {
 }
 
 export type Resolucion =
-  | { ok: true; deporteId: string; esDueno: boolean }
+  | { ok: true; deporteId: string; esDueno: boolean; puedeCambiar: boolean }
   | { ok: false; error: string };
 
 /**
@@ -62,33 +62,43 @@ export type Resolucion =
 export async function resolverCarpeta(opts: {
   clubId: string;
   userId: string;
+  rol: string;
   deporteIdDelUsuario: string | null;
   ownerUserId: string | null;
   pedida?: string;
 }): Promise<Resolucion> {
-  const { clubId, userId, deporteIdDelUsuario, ownerUserId, pedida } = opts;
+  const { clubId, userId, rol, deporteIdDelUsuario, ownerUserId, pedida } = opts;
 
   // El dueno se decide por lo que declara el club, no por tener la carpeta en
   // null. Si se dedujera del null, borrar un deporte o un dato mal escrito
-  // convertiria a cualquiera en dueno sin que nadie lo hubiera decidido.
+  // convertiria a cualquiera en dueno sin que nadie lo hubiera decidido. Hoy no
+  // gobierna permisos: sirve para saber a quien responde el club.
   const esDueno = !!ownerUserId && ownerUserId === userId;
 
-  if (esDueno) {
-    const carpetas = await deportesDelClub(clubId);
-    const activas = carpetas.filter(c => c.activo);
+  // Los deportes son cosa de los administradores, todos. Al principio esto
+  // estaba reservado al dueno; con cuatro administradores en un mismo club, tres
+  // no tenian forma ni de enterarse de que la funcion existia.
+  const puedeCambiar = rol === 'ADMIN' || esDueno;
+
+  if (puedeCambiar) {
+    const activas = (await deportesDelClub(clubId)).filter(c => c.activo);
     if (activas.length === 0) {
       return { ok: false, error: 'El club no tiene ningun deporte activo' };
     }
     if (pedida) {
       const elegida = activas.find(c => c.id === pedida);
-      if (elegida) return { ok: true, deporteId: elegida.id, esDueno: true };
+      if (elegida) return { ok: true, deporteId: elegida.id, esDueno, puedeCambiar };
       console.warn(JSON.stringify({
         level: 'WARN', msg: 'deporte pedido que no es del club', clubId, userId, pedida,
       }));
     }
-    // Sin eleccion explicita se entra por la primera, que es la mas antigua:
-    // en los clubes que ya existian esa es Patinaje, y ahi es donde esta todo.
-    return { ok: true, deporteId: activas[0].id, esDueno: true };
+    // Sin eleccion explicita entra por la suya, que es donde trabaja; si no
+    // tiene ninguna asignada, por la mas antigua. En los clubes que ya existian
+    // esa es Patinaje, y ahi es donde esta todo.
+    const propia = deporteIdDelUsuario
+      ? activas.find(c => c.id === deporteIdDelUsuario)
+      : undefined;
+    return { ok: true, deporteId: (propia ?? activas[0]).id, esDueno, puedeCambiar };
   }
 
   if (deporteIdDelUsuario) {
@@ -97,7 +107,7 @@ export async function resolverCarpeta(opts: {
         level: 'WARN', msg: 'deporte pedido sin ser el propio', clubId, userId, pedida,
       }));
     }
-    return { ok: true, deporteId: deporteIdDelUsuario, esDueno: false };
+    return { ok: true, deporteId: deporteIdDelUsuario, esDueno, puedeCambiar: false };
   }
 
   // Sin carpeta propia y sin ser dueno. Pasa en los clubes que quedaron sin
@@ -106,7 +116,9 @@ export async function resolverCarpeta(opts: {
   // trancado por fuera de su propio club. Con dos o mas, se detiene: adivinar
   // cual le toca es justo lo que este modelo no debe hacer.
   const carpetas = (await deportesDelClub(clubId)).filter(c => c.activo);
-  if (carpetas.length === 1) return { ok: true, deporteId: carpetas[0].id, esDueno: false };
+  if (carpetas.length === 1) {
+    return { ok: true, deporteId: carpetas[0].id, esDueno, puedeCambiar: false };
+  }
   return {
     ok: false,
     error: 'Tu cuenta no esta asignada a ningun deporte. Pidele al administrador del club que te asigne uno.',
@@ -170,24 +182,19 @@ export async function selectorDeDeporte(req: Request): Promise<{
   lista: Carpeta[];
   activo: string | null;
   puedeCambiar: boolean;
-  varios: boolean;
   aviso: string | null;
 }> {
   const clubId = req.user?.clubId ?? '';
   if (!clubId) {
-    return { lista: [], activo: null, puedeCambiar: false, varios: false, aviso: null };
+    return { lista: [], activo: null, puedeCambiar: false, aviso: null };
   }
   const carpetas = (await deportesDelClub(clubId)).filter(c => c.activo);
   return {
-    // Quien no es dueno ve solo la suya: la lista completa le contaria cuales
-    // son los otros deportes del club, que es informacion de la que no participa.
-    lista: req.esDuenoDelClub ? carpetas : carpetas.filter(c => c.id === req.deporteId),
+    // Quien no puede cambiar ve solo la suya: la lista completa le contaria
+    // cuales son los otros deportes del club, de los que no participa.
+    lista: req.puedeCambiarDeporte ? carpetas : carpetas.filter(c => c.id === req.deporteId),
     activo: req.deporteId ?? null,
-    puedeCambiar: !!req.esDuenoDelClub,
-    // Que el club tenga mas de uno si se cuenta, aunque no se diga cuales: es
-    // lo que decide si al entrenador se le muestra en cual esta parado. En un
-    // club de un solo deporte ese rotulo seria un letrero que no informa nada.
-    varios: carpetas.length > 1,
+    puedeCambiar: !!req.puedeCambiarDeporte,
     aviso: req.sinDeporte ?? null,
   };
 }

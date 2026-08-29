@@ -3,8 +3,12 @@
 import { useAuth } from '@clerk/nextjs';
 import { useEffect, useState } from 'react';
 import { apiFetch } from '@/lib/api-client';
-import { Plus, CheckCircle2, AlertCircle, CalendarDays, TrendingUp, Upload } from 'lucide-react';
-import { IconMisPagos, IconEliminar, IconPendiente } from '@/components/ui/custom-icons';
+import {
+  CheckCircle2, AlertCircle, CalendarDays, TrendingUp, Upload,
+} from 'lucide-react';
+import {
+  IconEliminar, IconMas, IconMisPagos, IconPendiente,
+} from '@/components/ui/custom-icons';
 import { motion } from 'framer-motion';
 import { stagger, cardVariant } from '@/lib/page-animations';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -448,7 +452,7 @@ export default function PagosPage() {
             className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold text-white"
             style={{ background: '#381DA0' }}
           >
-            <Plus className="w-4 h-4" />
+            <IconMas className="w-4 h-4" />
             <span className="hidden sm:inline">Registrar</span>
           </button>
         )}

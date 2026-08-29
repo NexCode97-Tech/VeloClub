@@ -5,9 +5,13 @@ import { useEffect, useState } from 'react';
 import { apiFetch } from '@/lib/api-client';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AccionesCabecera } from '@/components/superadmin/acciones-cabecera';
-import { Plus, Ticket, X } from 'lucide-react';
+import {
+  Ticket, X,
+} from 'lucide-react';
 import { DatePicker } from '@/components/ui/date-picker';
-import { IconEliminar } from '@/components/ui/custom-icons';
+import {
+  IconEliminar, IconMas,
+} from '@/components/ui/custom-icons';
 
 const EASE = [0.23, 1, 0.32, 1] as [number, number, number, number];
 const ACCENT = '#381DA0';
@@ -139,7 +143,7 @@ export default function CuponesPage() {
               transition: 'background 0.18s, color 0.18s',
             }}
           >
-            {showForm ? <X size={14} /> : <Plus size={14} />}
+            {showForm ? <X size={14} /> : <IconMas  width={14} height={14} />}
             {showForm ? 'Cancelar' : 'Nuevo cupón'}
           </motion.button>
         </AccionesCabecera>

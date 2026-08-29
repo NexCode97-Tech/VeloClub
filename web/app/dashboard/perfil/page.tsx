@@ -8,13 +8,17 @@ import { apiFetch } from '@/lib/api-client';
 import { useClubStream } from '@/hooks/useClubStream';
 import Link from 'next/link';
 import { MemberAvatar } from '@/components/ui/member-avatar';
-import { Pencil, CalendarDays, Globe, Camera, Users, ImagePlus, Phone, Mail, Building2, X, Loader2 } from 'lucide-react';
+import {
+  CalendarDays, Globe, Camera, Users, ImagePlus, Phone, Mail, Building2, X, Loader2,
+} from 'lucide-react';
 import { PhoneInput } from '@/components/ui/phone-input';
 
 import { PostCard, Post, PostComment, LikeUser } from '@/components/ui/post-card';
 import ModuleLoader, { useCargaMinima } from '@/components/ui/module-loader';
 import ModuleReveal from '@/components/ui/module-reveal';
-import { IconEliminar, IconUbicacion } from '@/components/ui/custom-icons';
+import {
+  IconEditar, IconEliminar, IconUbicacion,
+} from '@/components/ui/custom-icons';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -410,7 +414,7 @@ export default function PerfilPage() {
                 >
                   {(uploadingCover || deletingCover)
                     ? <div className="w-3.5 h-3.5 border-2 border-white/50 border-t-white rounded-full animate-spin" />
-                    : <Pencil className="w-3.5 h-3.5" />
+                    : <IconEditar className="w-3.5 h-3.5" />
                   }
                 </motion.button>
 
@@ -538,7 +542,7 @@ export default function PerfilPage() {
                 {bio ? (
                   <p className="text-[13px] text-foreground/80 leading-relaxed">
                     {bio}
-                    <Pencil className="inline-block ml-1.5 w-3 h-3 opacity-0 group-hover:opacity-40 transition-opacity" />
+                    <IconEditar className="inline-block ml-1.5 w-3 h-3 opacity-0 group-hover:opacity-40 transition-opacity" />
                   </p>
                 ) : (
                   <p className="text-[13px] text-muted-foreground/50 italic hover:text-muted-foreground/70 transition-colors">
@@ -738,7 +742,7 @@ export default function PerfilPage() {
                 onClick={openContactEdit}
                 className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors hover:bg-secondary cursor-pointer"
               >
-                <Pencil className="w-3.5 h-3.5" style={{ color: '#8E87A8' }} />
+                <IconEditar className="w-3.5 h-3.5" style={{ color: '#8E87A8' }} />
               </button>
             </div>
             <div className="divide-y divide-border/40">
@@ -819,7 +823,7 @@ export default function PerfilPage() {
               onClick={openContactEdit}
               className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors hover:bg-secondary cursor-pointer"
             >
-              <Pencil className="w-3.5 h-3.5" style={{ color: '#8E87A8' }} />
+              <IconEditar className="w-3.5 h-3.5" style={{ color: '#8E87A8' }} />
             </button>
           </div>
 

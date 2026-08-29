@@ -2,7 +2,8 @@
 
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { useEffect, useRef } from 'react';
-import { Plus, X } from 'lucide-react';
+import { X } from 'lucide-react';
+import { IconMas } from '@/components/ui/custom-icons';
 import { useRouter } from 'next/navigation';
 
 export interface CircleMenuItem {
@@ -163,7 +164,7 @@ export function BottomCircleMenu({ items, pathname, isOpen, onToggle, onClose }:
                 exit={{ rotate: -90, opacity: 0, scale: 0.7 }}
                 transition={{ duration: 0.16, ease: [0.23, 1, 0.32, 1] as [number, number, number, number] }}
               >
-                <Plus className="w-5 h-5 text-white" strokeWidth={2.5} />
+                <IconMas className="w-5 h-5 text-white" strokeWidth={2.5} />
               </motion.span>
             )}
           </AnimatePresence>

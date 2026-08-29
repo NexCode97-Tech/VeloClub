@@ -9,8 +9,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { MemberAvatar } from '@/components/ui/member-avatar';
 import { ContenidoGuardado } from '@/components/ui/save-button-state';
 import { VisorImagen } from '@/components/ui/visor-imagen';
-import { IconChat, IconEliminar, IconUbicacion } from '@/components/ui/custom-icons';
-import { Globe, Lock, Heart, ChevronRight, FileText, SendHorizontal, X, Pencil, MoreHorizontal, Flag } from 'lucide-react';
+import {
+  IconChat, IconEditar, IconEliminar, IconUbicacion,
+} from '@/components/ui/custom-icons';
+import {
+  Globe, Lock, Heart, ChevronRight, FileText, SendHorizontal, X, MoreHorizontal, Flag,
+} from 'lucide-react';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -465,7 +469,7 @@ export function PostCard({
                     onClick={() => { setCommentMenu(null); setEditingComment(c.id); setEditText(c.content); }}
                     className="flex items-center gap-2 px-3.5 py-2.5 text-[12px] font-semibold text-foreground hover:bg-secondary/60 transition-colors text-left"
                   >
-                    <Pencil className="w-3.5 h-3.5 text-muted-foreground" /> Editar
+                    <IconEditar className="w-3.5 h-3.5 text-muted-foreground" /> Editar
                   </button>
                   <div style={{ height: 1, background: 'rgba(56,29,160,0.07)' }} />
                   <button
@@ -614,7 +618,7 @@ export function PostCard({
                       onClick={() => { setPostMenuOpen(false); setEditandoPost(true); setTextoEdicion(post.content); }}
                       className="w-full flex items-center gap-2.5 px-4 py-2.5 text-[13px] font-semibold text-foreground hover:bg-secondary transition-colors cursor-pointer"
                     >
-                      <Pencil className="w-3.5 h-3.5" /> Editar
+                      <IconEditar className="w-3.5 h-3.5" /> Editar
                     </button>
                     )}
                     {/* Mover cambia la pestaña donde aparece la publicacion:

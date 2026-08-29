@@ -10,6 +10,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Bell, BellOff, X, Paperclip, FileText, Trophy, Users, CheckSquare, Wallet,
 } from 'lucide-react';
+import { CarruselCumpleanos, CarruselEventos } from '@/components/ui/widgets-carrusel';
 import { Slideshow } from '@/components/ui/slideshow';
 // La tarjeta de publicacion es la misma en Inicio, Club y Mi perfil.
 import { PostCard } from '@/components/ui/post-card';
@@ -38,7 +39,7 @@ import ModuleLoader, { useCargaMinima } from '@/components/ui/module-loader';
 import ModuleReveal from '@/components/ui/module-reveal';
 import { ContenidoGuardado, MS_GUARDADO, type EstadoGuardado } from '@/components/ui/save-button-state';
 import {
-  IconCandado, IconCumpleanos, IconEvento, IconFoto, IconPendiente, IconPublico, IconUbicacion, IconVideo,
+  IconCandado, IconEvento, IconFoto, IconPendiente, IconPublico, IconUbicacion, IconVideo,
 } from '@/components/ui/custom-icons';
 
 // ── Interfaces ────────────────────────────────────────────────────────────────
@@ -757,260 +758,25 @@ export default function DashboardPage() {
         )}
       </div>
 
-      {/* ── Eventos y cumpleaños (móvil) ────────────────────────────────────
+      {/* ── Eventos y cumpleaños ───────────────────────────────────────────
           Suben por encima de la publicidad: Inicio abre mejor con informacion
-          del club que con un anuncio. Es `sm:hidden`, asi que escritorio
-          conserva sus widgets en la columna derecha. */}
-      <div className="sm:hidden px-4 pt-4">
-      {/* ── Widgets móvil — grid 2 cols, encima de los tabs ─────────────── */}
-      <motion.div variants={cardVariant} className="sm:hidden grid grid-cols-2 gap-3">
-        {/* Próximos eventos */}
-        <div className="rounded-2xl bg-white border border-border overflow-hidden"
-          style={{ boxShadow: '0 1px 8px rgba(0,0,0,0.06)' }}>
-          <div className="flex items-center gap-2 px-3 pt-3 pb-2">
-            <div className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0"
-              style={{ background: '#381DA0' }}>
-              <IconEvento className="w-3 h-3 text-white" />
-            </div>
-            <p className="text-[11px] font-semibold text-foreground truncate">Próximos eventos</p>
-          </div>
-          {widgetsLoading ? (
-            <div className="px-3 pb-3 flex flex-col gap-1.5">
-              {[1,2].map(i => <div key={i} className="h-8 rounded-lg bg-secondary animate-pulse" />)}
-            </div>
-          ) : upcomingEvents.length === 0 ? (
-            <div className="px-3 pb-4 flex flex-col items-center gap-1 pt-1">
-              <IconEvento className="w-6 h-6" style={{ color: '#C4BFDB' }} />
-              <p className="text-[10px] text-muted-foreground text-center">Sin eventos próximos</p>
-            </div>
-          ) : (
-            <div className="px-3 pb-3 flex flex-col gap-1">
-              {upcomingEvents.slice(0, 3).map(ev => {
-                const d = new Date(ev.startDate);
-                const typeColors: Record<string, { bg: string; text: string }> = {
-                  TRAINING:    { bg: 'rgba(6,214,160,0.10)',  text: '#06D6A0' },
-                  MEETUP:      { bg: 'rgba(67,97,238,0.10)',  text: '#4361EE' },
-                  COMPETITION: { bg: 'rgba(239,71,111,0.10)', text: '#EF476F' },
-                };
-                const tc = typeColors[ev.type] ?? typeColors.MEETUP;
-                return (
-                  <div key={ev.id} className="flex items-center gap-2 py-1.5 rounded-lg">
-                    <div className="flex flex-col items-center justify-center w-8 h-8 rounded-lg shrink-0"
-                      style={{ background: tc.bg }}>
-                      <span className="text-[11px] font-semibold leading-none" style={{ color: tc.text }}>{d.getDate()}</span>
-                      <span className="text-[8px] font-semibold uppercase leading-none" style={{ color: tc.text }}>
-                        {d.toLocaleDateString('es-CO', { month: 'short' })}
-                      </span>
-                    </div>
-                    <p className="text-[11px] font-semibold text-foreground truncate flex-1">{ev.title.charAt(0).toUpperCase() + ev.title.slice(1).toLowerCase()}</p>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
+          del club que con un anuncio.
 
-        {/* Cumpleaños */}
-        <div className="rounded-2xl bg-white border border-border overflow-hidden"
-          style={{ boxShadow: '0 1px 8px rgba(0,0,0,0.06)' }}>
-          <div className="flex items-center gap-2 px-3 pt-3 pb-2">
-            <div className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0"
-              style={{ background: 'linear-gradient(135deg,#EF476F,#FFB703)' }}>
-              <IconCumpleanos className="w-3 h-3 text-white" />
-            </div>
-            <p className="text-[11px] font-semibold text-foreground">Cumpleaños</p>
-          </div>
-          {widgetsLoading ? (
-            <div className="px-3 pb-3 flex flex-col gap-1.5">
-              {[1,2].map(i => <div key={i} className="h-8 rounded-lg bg-secondary animate-pulse" />)}
-            </div>
-          ) : birthdays.length === 0 ? (
-            <div className="px-3 pb-4 flex flex-col items-center gap-1 pt-1">
-              <IconCumpleanos className="w-6 h-6" style={{ color: '#C4BFDB' }} />
-              <p className="text-[10px] text-muted-foreground text-center">Sin cumpleaños en 30 días</p>
-            </div>
-          ) : (
-            <div className="px-3 pb-3 flex flex-col gap-1">
-              {birthdays.slice(0, 3).map(b => {
-                const isToday    = b.daysUntil === 0;
-                const isTomorrow = b.daysUntil === 1;
-                const daysBg    = isToday ? 'rgba(239,71,111,0.12)' : 'rgba(56,29,160,0.10)';
-                const daysColor = isToday ? '#EF476F' : '#381DA0';
-                return (
-                  <div key={b.id} className="flex items-center gap-2 py-1.5 rounded-lg">
-                    <div className="w-8 h-8 rounded-lg flex flex-col items-center justify-center shrink-0"
-                      style={{ background: daysBg }}>
-                      {isToday ? (
-                        <span className="text-[14px] leading-none">🎂</span>
-                      ) : (
-                        <>
-                          <p className="text-[12px] font-semibold leading-none" style={{ color: daysColor }}>
-                            {isTomorrow ? '1' : b.daysUntil}
-                          </p>
-                          <p className="text-[7px] font-semibold uppercase leading-none mt-0.5" style={{ color: daysColor }}>
-                            {isTomorrow ? 'mañ' : 'días'}
-                          </p>
-                        </>
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[11px] font-semibold text-foreground truncate">{b.fullName}</p>
-                      <p className="text-[10px]" style={{ color: isToday ? '#EF476F' : '#8E87A8', fontWeight: 500 }}>
-                        {(() => { const d = new Date(b.birthDate); return d.toLocaleDateString('es-CO', { day: 'numeric', month: 'long' }); })()}
-                      </p>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
+          En carrusel horizontal y no en lista. Con seis cumpleaños la tarjeta
+          medía más de 600 px y arrastraba a la de eventos, que se estiraba
+          vacía para igualarla: media pantalla de Inicio se iba en dos listas
+          que casi nadie recorre entera.
+
+          Es el mismo componente en las tres medidas. Antes había una versión de
+          móvil y otra de escritorio con el mismo contenido escrito dos veces, y
+          cualquier arreglo había que acordarse de hacerlo en las dos. */}
+      <motion.div
+        variants={cardVariant}
+        className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 px-4 sm:px-6 pt-4 sm:pt-3"
+      >
+        <CarruselEventos eventos={upcomingEvents} cargando={widgetsLoading} />
+        <CarruselCumpleanos cumples={birthdays} cargando={widgetsLoading} />
       </motion.div>
-      </div>
-
-      {/* Eventos y cumpleaños (escritorio) — en una fila, sobre el feed.
-          Antes vivian apilados en una columna derecha que se comia la mitad
-          del ancho, dejando las publicaciones en media pantalla. */}
-      <div className="hidden sm:grid sm:grid-cols-2 gap-4 px-6 pt-3">
-
-        {/* Widget — Próximos eventos */}
-        <div className="rounded-2xl bg-white border border-border overflow-hidden"
-          style={{ boxShadow: '0 1px 8px rgba(0,0,0,0.06)' }}>
-          <div className="flex items-center justify-between px-4 pt-4 pb-3">
-            <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg flex items-center justify-center"
-                style={{ background: '#381DA0' }}>
-                <IconEvento className="w-3.5 h-3.5 text-white" />
-              </div>
-              <p className="text-[13px] font-semibold text-foreground">Próximos eventos</p>
-            </div>
-            <Link href="/dashboard/calendario"
-              className="text-[11px] font-semibold text-purple-600 hover:underline cursor-pointer">
-              Ver todos
-            </Link>
-          </div>
-
-          {widgetsLoading ? (
-            <div className="px-4 pb-4 flex flex-col gap-2">
-              {[1,2,3].map(i => (
-                <div key={i} className="h-10 rounded-xl bg-secondary animate-pulse" />
-              ))}
-            </div>
-          ) : upcomingEvents.length === 0 ? (
-            <div className="px-4 pb-5 flex flex-col items-center gap-1.5 pt-2">
-              <IconEvento className="w-7 h-7" style={{ color: '#C4BFDB' }} />
-              <p className="text-[12px] text-muted-foreground text-center">Sin eventos próximos</p>
-            </div>
-          ) : (
-            <div className="px-4 pb-3 flex flex-col gap-1">
-              {upcomingEvents.map(ev => {
-                const d = new Date(ev.startDate);
-                const day   = d.toLocaleDateString('es-CO', { day: 'numeric', month: 'short' });
-                const time  = ev.allDay ? 'Todo el día' : d.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
-                const typeColors: Record<string, { bg: string; text: string }> = {
-                  TRAINING:    { bg: 'rgba(6,214,160,0.10)',   text: '#06D6A0' },
-                  MEETUP:      { bg: 'rgba(67,97,238,0.10)',   text: '#4361EE' },
-                  COMPETITION: { bg: 'rgba(239,71,111,0.10)',  text: '#EF476F' },
-                };
-                const tc = typeColors[ev.type] ?? typeColors.MEETUP;
-                const typeLabel: Record<string, string> = {
-                  TRAINING: 'Entrenamiento', MEETUP: 'Reunión', COMPETITION: 'Competencia',
-                };
-                return (
-                  <div key={ev.id}
-                    className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-secondary/60 transition-colors cursor-default">
-                    {/* Fecha */}
-                    <div className="flex flex-col items-center justify-center w-10 h-10 rounded-xl shrink-0"
-                      style={{ background: tc.bg }}>
-                      <span className="text-[13px] font-semibold leading-none" style={{ color: tc.text }}>
-                        {d.getDate()}
-                      </span>
-                      <span className="text-[9px] font-semibold uppercase leading-none mt-0.5" style={{ color: tc.text }}>
-                        {d.toLocaleDateString('es-CO', { month: 'short' })}
-                      </span>
-                    </div>
-                    {/* Info */}
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[12px] font-semibold text-foreground truncate">{ev.title.charAt(0).toUpperCase() + ev.title.slice(1).toLowerCase()}</p>
-                      <div className="flex items-center gap-2 mt-0.5">
-                        <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full" style={{ background: tc.bg, color: tc.text }}>
-                          {typeLabel[ev.type] ?? ev.type}
-                        </span>
-                        <span className="text-[10px] text-muted-foreground">{time}</span>
-                        {ev.location?.name && (
-                          <span className="text-[10px] text-muted-foreground truncate">· {ev.location.name.charAt(0).toUpperCase() + ev.location.name.slice(1).toLowerCase()}</span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-
-        {/* Widget — Recordatorios de Cumpleaños */}
-        <div className="rounded-2xl bg-white border border-border overflow-hidden"
-          style={{ boxShadow: '0 1px 8px rgba(0,0,0,0.06)' }}>
-          <div className="flex items-center gap-2 px-4 pt-4 pb-2">
-            <div className="w-7 h-7 rounded-lg flex items-center justify-center"
-              style={{ background: 'linear-gradient(135deg,#EF476F,#FFB703)' }}>
-              <IconCumpleanos className="w-3.5 h-3.5 text-white" />
-            </div>
-            <p className="text-[13px] font-semibold text-foreground">Cumpleaños</p>
-          </div>
-
-          {widgetsLoading ? (
-            <div className="px-4 pb-4 flex flex-col gap-2">
-              {[1,2].map(i => (
-                <div key={i} className="h-10 rounded-xl bg-secondary animate-pulse" />
-              ))}
-            </div>
-          ) : birthdays.length === 0 ? (
-            <div className="px-4 pb-5 flex flex-col items-center gap-1.5 pt-2">
-              <IconCumpleanos className="w-7 h-7" style={{ color: '#C4BFDB' }} />
-              <p className="text-[12px] text-muted-foreground text-center">Sin cumpleaños en los próximos 30 días</p>
-            </div>
-          ) : (
-            <div className="px-4 pb-3 flex flex-col gap-1">
-              {birthdays.map(b => {
-                const isToday    = b.daysUntil === 0;
-                const isTomorrow = b.daysUntil === 1;
-                const daysBg  = isToday ? 'rgba(239,71,111,0.12)' : 'rgba(56,29,160,0.10)';
-                const daysColor = isToday ? '#EF476F' : '#381DA0';
-                return (
-                  <div key={b.id}
-                    className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-secondary/60 transition-colors cursor-default">
-                    {/* Días restantes en lugar del avatar */}
-                    <div className="w-10 h-10 rounded-xl flex flex-col items-center justify-center shrink-0"
-                      style={{ background: daysBg }}>
-                      {isToday ? (
-                        <span className="text-[18px] leading-none">🎂</span>
-                      ) : (
-                        <>
-                          <p className="text-[14px] font-semibold leading-none" style={{ color: daysColor }}>
-                            {isTomorrow ? '1' : b.daysUntil}
-                          </p>
-                          <p className="text-[8px] font-semibold uppercase tracking-wide leading-none mt-0.5" style={{ color: daysColor }}>
-                            {isTomorrow ? 'mañana' : 'días'}
-                          </p>
-                        </>
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[12px] font-semibold text-foreground truncate">{b.fullName}</p>
-                      <p className="text-[11px]" style={{ color: isToday ? '#EF476F' : '#8E87A8', fontWeight: 500 }}>
-                        {(() => { const d = new Date(b.birthDate); return d.toLocaleDateString('es-CO', { day: 'numeric', month: 'long' }); })()}
-                      </p>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-
-      </div>
 
       {/* ── Slideshow publicitario — ancho completo ─────────────────────────── */}
       <div className="w-full px-6 pt-4">

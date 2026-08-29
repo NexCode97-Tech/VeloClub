@@ -10,10 +10,10 @@ import { MemberAvatar } from '@/components/ui/member-avatar';
 import { ContenidoGuardado } from '@/components/ui/save-button-state';
 import { VisorImagen } from '@/components/ui/visor-imagen';
 import {
-  IconChat, IconEditar, IconEliminar, IconUbicacion,
+  IconChat, IconEditar, IconEliminar, IconMeGusta, IconMeGustaVacio, IconUbicacion,
 } from '@/components/ui/custom-icons';
 import {
-  Globe, Lock, Heart, ChevronRight, FileText, SendHorizontal, X, MoreHorizontal, Flag,
+  Globe, Lock, ChevronRight, FileText, SendHorizontal, X, MoreHorizontal, Flag,
 } from 'lucide-react';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -851,8 +851,14 @@ export function PostCard({
             transition={{ type: 'spring' as const, stiffness: 500, damping: 15 }}
             className={`flex-1 flex items-center justify-center gap-2 py-2.5 transition-colors hover:bg-secondary/60${dosColumnas ? ' md:flex-none md:justify-start md:gap-1.5 md:hover:bg-transparent' : ''}`}>
             <motion.div animate={likeAnim ? { scale: [1, 1.4, 1] } : { scale: 1 }} transition={{ duration: 0.35, ease: 'easeInOut' }}>
-              <Heart className="w-[17px] h-[17px] md:w-4 md:h-4 transition-colors" fill={liked ? '#EF476F' : 'none'}
-                style={{ color: liked ? '#EF476F' : '#8E87A8' }} />
+              {/* Dos dibujos distintos y no el mismo relleno y sin rellenar: el
+                  de sin marcar es un corazón a medias, que se lee como «falta
+                  algo» aun en gris, y el marcado es el corazón entero en rojo.
+                  El cambio de forma se nota también en la miniatura del móvil,
+                  donde un relleno de 17 px casi no se distingue. */}
+              {liked
+                ? <IconMeGusta className="w-[17px] h-[17px] md:w-4 md:h-4" style={{ color: '#EF476F' }} />
+                : <IconMeGustaVacio className="w-[17px] h-[17px] md:w-4 md:h-4" style={{ color: '#8E87A8' }} />}
             </motion.div>
             <span className="text-[13px] md:text-[12px] font-semibold" style={{ color: liked ? '#EF476F' : '#8E87A8' }}>Me gusta</span>
           </motion.button>

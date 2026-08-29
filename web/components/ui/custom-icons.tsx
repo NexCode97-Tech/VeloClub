@@ -430,6 +430,96 @@ export function IconEditar({ className, style, ...props }: IconProps) {
   );
 }
 
+export function IconDanzas({ className, style, ...props }: IconProps) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"
+      className={className} style={style} {...props}>
+      <path d="m4.5,2.5c0-1.381,1.119-2.5,2.5-2.5s2.5,1.119,2.5,2.5-1.119,2.5-2.5,2.5-2.5-1.119-2.5-2.5Zm19.46,8.703c-.155-.53-.71-.835-1.24-.68l-3.322.747c.089-.159.335-.46.396-.615.35-.894.191-1.574-.003-1.987-.42-.892-1.607-1.898-4.917-1.617-1.104.142-1.942.343-2.666.546.168.517.821,1.307,1.351,1.89.382.42.338,1.072-.101,1.431l-.019.015c-.4.326-.981.293-1.336-.081-.585-.616-1.409-1.622-1.826-2.752,2.14-1.464,3.326-4.663,3.64-6.957.082-.603-.373-1.142-.982-1.142h0c-.501,0-.931.371-.983.87-.145,1.391-.639,3.414-1.853,4.758-.227.251-.565.372-.903.372h-4.286c-.426,0-.832-.212-1.063-.571-1.155-1.795-1.652-3.214-1.797-4.535-.056-.507-.471-.895-.982-.895h0C.47,0-.002.526.078,1.117c.458,3.357,2.773,6.408,2.967,6.695,1.419,2.106,3.2,3.853,4.245,4.796.414.374.376,1.033-.071,1.366-.007.005-.014.01-.021.016-.335.25-.798.231-1.112-.045-.692-.607-1.872-1.664-2.541-2.379-2.113,1.673-2.99,3.37-2.334,4.762.552,1.171,2.005,1.664,3.869,1.664,1.183,0,2.533-.204,3.92-.554v5.561c0,.552.448,1,1,1h0c.552,0,1-.448,1-1v-6.16c.424-.147.847-.301,1.264-.47,1.631-.662,3.087-1.453,4.298-2.288l6.717-1.64c.53-.155.834-.71.68-1.24h0Z"/>
+    </svg>
+  );
+}
+
+export function IconGimnasia({ className, style, ...props }: IconProps) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"
+      className={className} style={style} {...props}>
+      <path d="m14.5 19.5c0 1.381-1.119 2.5-2.5 2.5s-2.5-1.119-2.5-2.5 1.119-2.5 2.5-2.5 2.5 1.119 2.5 2.5zm5.49 4.372c-.473.268-1.089.104-1.361-.381l-4.213-7.49h-4.831l-4.213 7.49c-.271.486-.889.649-1.361.381-.481-.271-.652-.88-.381-1.362l4.371-7.771v-13.739c0-.552.447-1 1-1s1 .448 1 1v5h4v-5c0-.552.447-1 1-1s1 .448 1 1v13.739l4.371 7.771c.271.481.101 1.091-.381 1.362z"/>
+    </svg>
+  );
+}
+
+export function IconMicrofutbol({ className, style, ...props }: IconProps) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"
+      className={className} style={style} {...props}>
+      <path d="m23 14.75-3.341-2.506-3.799-5.97 1.95-1.039c.288-.154.613-.235.94-.235h3.25c.553 0 1-.448 1-1s-.447-1-1-1h-3.25c-.654 0-1.306.163-1.882.47l-5.661 3.018c-.926.493-1.71 1.225-2.268 2.118l-1.347 2.158c-.093.148-.251.236-.425.236h-2.168c-.553 0-1 .448-1 1s.447 1 1 1h2.168c.867 0 1.66-.439 2.121-1.176l1.347-2.158c.006-.01 6.212 9.877 6.212 9.877.1.16.152.343.152.531v2.926c0 .552.447 1 1 1s1-.448 1-1v-2.926c0-.562-.157-1.112-.456-1.59l-1.853-2.965 2.165-1.378 2.943 2.207c.126.095.201.245.201.401v4.25c0 .552.447 1 1 1s1-.448 1-1v-4.25c0-.781-.373-1.529-1-2zm-15.503-12.25c0-1.381 1.119-2.5 2.5-2.5s2.5 1.119 2.5 2.5-1.119 2.5-2.5 2.5-2.5-1.119-2.5-2.5zm-3.497 6.5c0 1.105-.895 2-2 2s-2-.895-2-2 .895-2 2-2 2 .895 2 2z"/>
+    </svg>
+  );
+}
+
+export function IconBaloncesto({ className, style, ...props }: IconProps) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"
+      className={className} style={style} {...props}>
+      <path d="M16.742,12H7.266a3,3,0,0,0-3,3c0,.123.734,6.06.734,6.06V23a1,1,0,0,0,2,0V22H9v1a1,1,0,0,0,2,0V22h2v1a1,1,0,0,0,2,0V22h2v1a1,1,0,0,0,2,0V21.226c.007-.033.742-6.106.742-6.227a3,3,0,0,0-3-3Zm.748,2.337a.984.984,0,0,1,.252.66c0,.041-.115,1-.115,1H15V14h1.742A.987.987,0,0,1,17.49,14.337ZM13,16H11V14h2ZM6.516,14.338A.987.987,0,0,1,7.266,14H9v2H6.383s-.117-.961-.117-1A.981.981,0,0,1,6.516,14.338ZM6.883,20l-.25-2H9v2ZM11,20V18h2v2Zm4-2h2.384l-.244,2H15Zm1-8H8V8A1,1,0,0,1,9,7h6a1,1,0,0,1,1,1Zm8-5v8a5,5,0,0,1-2.5,4.332l.21-1.728A5,5,0,0,0,18,10.162V8a3,3,0,0,0-3-3H9A3,3,0,0,0,6,8v2.163A5,5,0,0,0,2.305,15.62l.214,1.72A5,5,0,0,1,0,13V5A5.006,5.006,0,0,1,5,0H19A5.006,5.006,0,0,1,24,5Z"/>
+    </svg>
+  );
+}
+
+export function IconVoleibol({ className, style, ...props }: IconProps) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"
+      className={className} style={style} {...props}>
+      <path d="m9 2.5c0-1.381 1.119-2.5 2.5-2.5s2.5 1.119 2.5 2.5-1.119 2.5-2.5 2.5-2.5-1.119-2.5-2.5zm13.994 3.39c.061.549-.334 1.043-.883 1.104l-8.11.901v10.865c0 .715-.256 1.409-.722 1.952l-2.519 2.938c-.361.42-.993.467-1.41.108-.419-.359-.468-.991-.108-1.41l2.519-2.938c.155-.181.241-.412.241-.65v-2.76h-1.153c-.032.054-.054.113-.096.16l-2.165 2.464c-.33.375-.75.663-1.218.835l-4.024 1.479c-.505.19-1.094-.07-1.283-.594-.19-.518.075-1.093.594-1.283l4.023-1.479c.156-.058.296-.154.406-.279l1.916-2.181v-7.348l-4.842-2.079c-.734-.365-1.158-1.051-1.158-1.813v-2.882c0-.552.448-1 1-1s1 .448 1 1v2.882l4.937 2.118h3.008l8.945-.994c.546-.068 1.043.333 1.104.883zm-1.994-1.89c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z"/>
+    </svg>
+  );
+}
+
+export function IconTenis({ className, style, ...props }: IconProps) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"
+      className={className} style={style} {...props}>
+      <path d="m13.118.059a11.972 11.972 0 0 1 10.823 10.823 9.536 9.536 0 0 1 -8.141-2.682 9.532 9.532 0 0 1 -2.682-8.141zm9.434 12.941a11.529 11.529 0 0 1 -11.446-12.952 11.941 11.941 0 0 0 -11.059 11.076 11.373 11.373 0 0 1 12.829 12.828 11.938 11.938 0 0 0 11.075-11.046 11.563 11.563 0 0 1 -1.399.094zm-14.313 2.761a9.413 9.413 0 0 0 -8.179-2.625 11.975 11.975 0 0 0 10.8 10.8 9.408 9.408 0 0 0 -2.621-8.175z"/>
+    </svg>
+  );
+}
+
+export function IconCiclismo({ className, style, ...props }: IconProps) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"
+      className={className} style={style} {...props}>
+      <path d="M5,23a5,5,0,1,1,5-5A5.006,5.006,0,0,1,5,23Zm14,0a5,5,0,1,1,5-5A5.006,5.006,0,0,1,19,23Zm-6-5V14a1,1,0,0,0-.348-.758l-2.287-1.965a.986.986,0,0,1-.348-.744.967.967,0,0,1,.273-.708l1.964-1.563a1.008,1.008,0,0,1,1.418.067l2.6,2.4a1,1,0,0,0,.679.266H20a1,1,0,0,0,0-2H17.34L15.063,6.893a2.973,2.973,0,0,0-4.105-.153L8.994,8.3a3,3,0,0,0,.068,4.491L11,14.459V18a1,1,0,0,0,2,0ZM16.5,1A2.5,2.5,0,1,0,19,3.5,2.5,2.5,0,0,0,16.5,1Z"/>
+    </svg>
+  );
+}
+
+export function IconBoxeo({ className, style, ...props }: IconProps) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"
+      className={className} style={style} {...props}>
+      <path d="M1,7.077A7.009,7.009,0,0,1,8,0h5a7.01,7.01,0,0,1,6.713,5.029A4.993,4.993,0,0,0,15,10v4a1,1,0,0,0,1,1h0a1,1,0,0,0,1-1V10.17A3.114,3.114,0,0,1,19.839,7,3,3,0,0,1,23,10v3.075A7.48,7.48,0,0,1,19.752,19H2.827l-.377-.539A7.992,7.992,0,0,1,1,13.869V10.444A3.959,3.959,0,0,0,3,11h9a1,1,0,0,0,1-1h0a1,1,0,0,0-1-1H3A1.983,1.983,0,0,1,1,7.077ZM3,21v1a2,2,0,0,0,2,2H17a2,2,0,0,0,2-2V21Z"/>
+    </svg>
+  );
+}
+
+export function IconMeGustaVacio({ className, style, ...props }: IconProps) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"
+      className={className} style={style} {...props}>
+      <path d="M22.12,3.9c-1.2-1.25-2.81-1.91-4.66-1.9-2.25,.05-4.34,1.29-5.44,3.26,0,.01-.01,.02-.02,.03,0-.01-.02-.02-.02-.03-1.11-1.96-3.19-3.21-5.46-3.26-1.84,0-3.44,.66-4.64,1.91C.61,5.22-.07,7.09,0,9.01c0,4.5,4.66,9.4,8.57,12.72,.99,.84,2.21,1.26,3.43,1.26,1.23,0,2.46-.43,3.46-1.28,3.18-2.71,8.53-7.95,8.53-12.63,.07-1.98-.61-3.87-1.88-5.18Zm-7.95,16.29c-.35,.3-.75,.51-1.17,.64V9c0-1.62,.69-2.63,.69-2.63,.02-.03,.04-.06,.06-.1,.75-1.36,2.19-2.23,3.74-2.27,1.27,0,2.37,.45,3.18,1.29,.89,.93,1.37,2.28,1.32,3.76,0,2.81-2.92,6.98-7.82,11.14Z"/>
+    </svg>
+  );
+}
+
+export function IconMeGusta({ className, style, ...props }: IconProps) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"
+      className={className} style={style} {...props}>
+      <path d="M17.5,1.917a6.4,6.4,0,0,0-5.5,3.3,6.4,6.4,0,0,0-5.5-3.3A6.8,6.8,0,0,0,0,8.967c0,4.547,4.786,9.513,8.8,12.88a4.974,4.974,0,0,0,6.4,0C19.214,18.48,24,13.514,24,8.967A6.8,6.8,0,0,0,17.5,1.917Z"/>
+    </svg>
+  );
+}
+
 /**
  * El ícono de cada deporte.
  *
@@ -440,18 +530,103 @@ export function IconEditar({ className, style, ...props }: IconProps) {
  * Agregar un deporte es agregar una línea aquí, con su ícono arriba.
  */
 const ICONOS_DE_DEPORTE: Record<string, ComponentType<IconProps>> = {
-  patinaje:  IconPatinaje,
-  natacion:  IconNatacion,
-  atletismo: IconAtletismo,
-  futbol:    IconFutbol,
+  patinaje:    IconPatinaje,
+  natacion:    IconNatacion,
+  atletismo:   IconAtletismo,
+  futbol:      IconFutbol,
+  microfutbol: IconMicrofutbol,
+  baloncesto:  IconBaloncesto,
+  voleibol:    IconVoleibol,
+  tenis:       IconTenis,
+  ciclismo:    IconCiclismo,
+  boxeo:       IconBoxeo,
+  danzas:      IconDanzas,
+  gimnasia:    IconGimnasia,
 };
+
+/**
+ * El color de cada deporte, con su tono de sombra.
+ *
+ * Es la paleta de Among Us. No es un guiño: son doce colores que ese juego tuvo
+ * que resolver para exactamente este problema — que doce cosas se distingan de
+ * un vistazo. Repartir doce tonos por la rueda de color no funciona; se probó y
+ * siempre quedaban dos parejas indistinguibles.
+ *
+ * La sombra no es un oscurecido calculado: viene con la paleta, y es la que usa
+ * el relieve en la parte baja de la insignia.
+ */
+const COLORES_DE_DEPORTE: Record<string, { color: string; sombra: string }> = {
+  futbol:      { color: '#C51111', sombra: '#7A0838' },
+  natacion:    { color: '#132ED1', sombra: '#09158E' },
+  danzas:      { color: '#117F2D', sombra: '#0A4D2E' },
+  atletismo:   { color: '#F5F557', sombra: '#C28722' },
+  baloncesto:  { color: '#EF7D0D', sombra: '#B33E15' },
+  gimnasia:    { color: '#ED54BA', sombra: '#AB2BAD' },
+  boxeo:       { color: '#3F474E', sombra: '#1E1F26' },
+  voleibol:    { color: '#D6E0F0', sombra: '#8394BF' },
+  patinaje:    { color: '#6B2FBB', sombra: '#3B177C' },
+  ciclismo:    { color: '#71491E', sombra: '#5E2615' },
+  microfutbol: { color: '#38FEDC', sombra: '#24A8BE' },
+  tenis:       { color: '#50EF39', sombra: '#15A742' },
+};
+
+// Un club puede tener un deporte que no está en el catálogo (se lo agregamos a
+// mano). Ahí cae en el morado de marca, que nunca se ve mal.
+const NEUTRO = { color: '#6B2FBB', sombra: '#3B177C' };
+
+function claveDe(nombre: string): string {
+  return nombre.trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+}
 
 /** Devuelve el ícono del deporte, o null si todavía no tiene uno propio. */
 export function iconoDeDeporte(nombre: string): ComponentType<IconProps> | null {
-  const clave = nombre
-    .trim()
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '');
-  return ICONOS_DE_DEPORTE[clave] ?? null;
+  return ICONOS_DE_DEPORTE[claveDe(nombre)] ?? null;
+}
+
+/**
+ * El color del deporte, su sombra y la tinta con la que se dibuja encima.
+ *
+ * Cuatro de los doce son claros — amarillo, blanco, cian y lima — y sobre ellos
+ * el glifo blanco desaparece. En el juego eso lo resuelve el contorno negro del
+ * personaje; aquí no hay contorno, así que la tinta se decide midiendo la
+ * luminancia y no a ojo.
+ *
+ * Sobre los claros va una versión oscura del MISMO color, no negro: el negro se
+ * lee, pero rompe con los otros once, y el tono propio mantiene las doce
+ * insignias como una familia.
+ */
+export function colorDeDeporte(nombre: string) {
+  const { color, sombra } = COLORES_DE_DEPORTE[claveDe(nombre)] ?? NEUTRO;
+  return {
+    color,
+    sombra,
+    brillo: aclarar(color, 0.26),
+    tinta: esClaro(color) ? mezclar(color, 0.68) : '#fff',
+  };
+}
+
+/** Luminancia relativa (WCAG). Por encima de 0.42 el blanco deja de leerse. */
+function esClaro(hex: string): boolean {
+  const v = canales(hex).map(x => {
+    const c = x / 255;
+    return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+  });
+  return 0.2126 * v[0] + 0.7152 * v[1] + 0.0722 * v[2] > 0.42;
+}
+
+function canales(hex: string): number[] {
+  const n = parseInt(hex.slice(1), 16);
+  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+}
+
+/** Hacia el negro. */
+function mezclar(hex: string, k: number): string {
+  const c = canales(hex).map(v => Math.round(v * (1 - k)));
+  return `rgb(${c[0]},${c[1]},${c[2]})`;
+}
+
+/** Hacia el blanco. Es la parada alta del relieve. */
+function aclarar(hex: string, k: number): string {
+  const c = canales(hex).map(v => Math.round(v + (255 - v) * k));
+  return `rgb(${c[0]},${c[1]},${c[2]})`;
 }

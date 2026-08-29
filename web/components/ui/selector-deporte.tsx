@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Check, ChevronDown } from 'lucide-react';
-import { iconoDeDeporte, IconMas } from '@/components/ui/custom-icons';
+import { colorDeDeporte, iconoDeDeporte, IconMas } from '@/components/ui/custom-icons';
 import { DEPORTES, mismoDeporte } from '@/lib/deportes';
 
 export interface Carpeta {
@@ -45,12 +45,21 @@ const BORDE  = 'rgba(120,80,200,0.10)';
 function Insignia({ nombre, tam = 28 }: { nombre: string; tam?: number }) {
   const Icono = iconoDeDeporte(nombre);
   const glifo = Math.round(tam * 0.57);
+  const { color, sombra, brillo, tinta } = colorDeDeporte(nombre);
   return (
     <span
       className="flex items-center justify-center shrink-0"
       style={{
         width: tam, height: tam, borderRadius: '50%',
-        background: 'rgba(56,29,160,0.10)', color: MORADO,
+        // El relieve son tres capas y cada una hace algo distinto: el degradado
+        // da el volumen, la línea blanca de adentro es el brillo del borde
+        // superior, y la sombra de abajo despega la insignia del fondo. Con una
+        // sola de las tres se ve plana con un degradado encima.
+        background: `linear-gradient(160deg, ${brillo} 0%, ${color} 58%, ${sombra} 100%)`,
+        boxShadow:
+          'inset 0 1px 0 rgba(255,255,255,0.34), inset 0 -1px 0 rgba(0,0,0,0.14), ' +
+          '0 1px 2px rgba(26,16,40,0.22), 0 3px 7px -2px rgba(26,16,40,0.24)',
+        color: tinta,
       }}
     >
       {Icono
@@ -168,8 +177,8 @@ export default function SelectorDeporte({
       {!colapsado && (
         <>
           <span className="flex flex-col flex-1 min-w-0 text-left">
-            <span className="text-[10px] font-semibold" style={{ letterSpacing: '0.06em', color: MUDO }}>
-              DEPORTE
+            <span className="text-[10.5px] font-semibold" style={{ color: MUDO }}>
+              Deporte
             </span>
             <span
               className="text-[13.5px] font-semibold truncate"

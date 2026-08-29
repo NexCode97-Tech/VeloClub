@@ -21,7 +21,7 @@ export const DEPORTES = [
   'Natación',
   'Atletismo',
   'Ciclismo',
-  'Ciclomontañismo',
+  'Danzas',
   'Patinaje',
   'Baloncesto',
   'Voleibol',

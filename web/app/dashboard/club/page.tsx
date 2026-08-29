@@ -6,14 +6,14 @@ import { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { apiFetch } from '@/lib/api-client';
 import {
-  Camera, Pencil, ImagePlus, BadgeCheck, Lock, CalendarDays, Phone, Mail, Building2, Check, X, UserPlus, UserCheck,
+  Camera, Pencil, ImagePlus, BadgeCheck, Lock, CalendarDays, Building2, Check, X, UserPlus, UserCheck,
 } from 'lucide-react';
 import { PostCard, Post, PostComment, LikeUser } from '@/components/ui/post-card';
 import { PhoneInput } from '@/components/ui/phone-input';
 import ModuleLoader, { useCargaMinima } from '@/components/ui/module-loader';
 import ModuleReveal from '@/components/ui/module-reveal';
 import { textoFundacion } from '@/lib/fundacion';
-import { IconEliminar, IconUbicacion } from '@/components/ui/custom-icons';
+import { IconEliminar, IconUbicacion, IconTelefono, IconMail } from '@/components/ui/custom-icons';
 
 interface ClubMember {
   id: string; fullName: string; pictureUrl?: string | null;
@@ -86,7 +86,7 @@ function ContactCard({ isAdmin, phone, email, phoneDraft, emailDraft, editingCon
         {/* Teléfono */}
         <div className="flex items-center gap-3 px-5 py-4">
           <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(67,97,238,0.08)' }}>
-            <Phone className="w-4 h-4" style={{ color: '#4361EE' }} />
+            <IconTelefono className="w-4 h-4" style={{ color: '#4361EE' }} />
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-[10px] font-semibold uppercase tracking-widest mb-0.5" style={{ color: '#8E87A8' }}>Teléfono</p>
@@ -102,7 +102,7 @@ function ContactCard({ isAdmin, phone, email, phoneDraft, emailDraft, editingCon
         {/* Correo */}
         <div className="flex items-center gap-3 px-5 py-4">
           <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(67,97,238,0.08)' }}>
-            <Mail className="w-4 h-4" style={{ color: '#4361EE' }} />
+            <IconMail className="w-4 h-4" style={{ color: '#4361EE' }} />
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-[10px] font-semibold uppercase tracking-widest mb-0.5" style={{ color: '#8E87A8' }}>Correo electrónico</p>

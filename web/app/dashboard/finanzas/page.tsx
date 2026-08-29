@@ -9,7 +9,7 @@ import { parseLocalDate } from '@/lib/utils';
 import { QK } from '@/hooks/useVeloQuery';
 import { HojaInferior, OpcionHoja } from '@/components/ui/hoja-inferior';
 import {
-  CreditCard, Plus, CheckCircle2, AlertCircle, TrendingUp, TrendingDown, Wallet, Check, PhoneOff, Zap, ChevronUp, Pencil, ExternalLink, Eye, EyeOff, ChevronDown,
+  CreditCard, Plus, CheckCircle2, AlertCircle, TrendingUp, TrendingDown, Wallet, Check, PhoneOff, ChevronUp, Pencil, ExternalLink, ChevronDown,
 } from 'lucide-react';
 import { downloadInvoicePDF } from '@/lib/pdf';
 import MemberHistoryPanel from '@/components/finanzas/member-history-panel';
@@ -26,7 +26,10 @@ import { motion, AnimatePresence, useReducedMotion, type Variants } from 'framer
 import { stagger as pageStagger, cardVariant as pageCard } from '@/lib/page-animations';
 import ModuleLoader, { useCargaMinima } from '@/components/ui/module-loader';
 import ModuleReveal from '@/components/ui/module-reveal';
-import { IconAjustes, IconChat, IconDescargar, IconEliminar, IconPendiente, IconRecibo, IconBuscar } from '@/components/ui/custom-icons';
+import {
+  IconAjustes, IconChat, IconDescargar, IconEliminar, IconPendiente, IconRecibo,
+  IconBuscar, IconVer, IconNoMostrar, IconTarifa, IconGenerarCobros,
+} from '@/components/ui/custom-icons';
 
 const fmt = new Intl.NumberFormat('es-CO', {
   style: 'currency', currency: 'COP', maximumFractionDigits: 0,
@@ -843,7 +846,7 @@ export default function FinanzasPage() {
                 className="flex items-center justify-center gap-1.5 w-9 md:w-auto px-0 md:px-3 h-9 rounded-xl text-[12px] font-semibold cursor-pointer transition-opacity shrink-0"
                 style={{ background: 'rgba(6,214,160,0.08)', color: '#06D6A0', border: '1.5px dashed rgba(6,214,160,0.25)' }}
               >
-                <Wallet className="w-3.5 h-3.5 shrink-0" />
+                <IconTarifa className="w-3.5 h-3.5 shrink-0" />
                 <span className="hidden md:inline">Tarifa general</span>
               </motion.button>
               <motion.button
@@ -855,7 +858,7 @@ export default function FinanzasPage() {
                 className="flex items-center justify-center gap-1.5 w-9 md:w-auto px-0 md:px-3 h-9 rounded-xl text-[12px] font-semibold cursor-pointer transition-opacity disabled:opacity-60 shrink-0"
                 style={{ background: 'rgba(56,29,160,0.08)', color: '#381DA0', border: '1.5px dashed rgba(56,29,160,0.25)' }}
               >
-                <Zap className="w-3.5 h-3.5 shrink-0" />
+                <IconGenerarCobros className="w-3.5 h-3.5 shrink-0" />
                 <span className="hidden md:inline">{generatingMonth ? 'Generando...' : 'Generar cobros'}</span>
               </motion.button>
               </>
@@ -934,8 +937,8 @@ export default function FinanzasPage() {
                       className="w-6 h-6 rounded-md flex items-center justify-center transition-opacity opacity-60 hover:opacity-100 cursor-pointer"
                     >
                       {montoOculto
-                        ? <EyeOff className="w-3.5 h-3.5" />
-                        : <Eye className="w-3.5 h-3.5" />}
+                        ? <IconNoMostrar className="w-3.5 h-3.5" />
+                        : <IconVer className="w-3.5 h-3.5" />}
                     </button>
                   </div>
                   <p className="text-[32px] font-semibold leading-none tracking-tight"
@@ -1131,7 +1134,7 @@ export default function FinanzasPage() {
 
             {entries.length === 0 ? (
               <div className="bg-white border border-border rounded-xl px-4 py-10 text-center">
-                <Wallet className="w-10 h-10 mx-auto mb-3 text-muted-foreground/30" />
+                <IconTarifa className="w-10 h-10 mx-auto mb-3 text-muted-foreground/30" />
                 <p className="text-[13px] font-semibold text-muted-foreground">Sin movimientos este mes</p>
                 <p className="text-[11px] text-muted-foreground mt-1">Los cobros marcados como pagados aparecen aquí automáticamente</p>
               </div>

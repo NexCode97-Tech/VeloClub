@@ -16,7 +16,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog';
 import {
-  Plus, Pencil, Users, FileSpreadsheet, Upload, X, Eye, Phone, Mail, Calendar, Shield, Heart, CreditCard, PauseCircle, PlayCircle, MoreVertical,
+  Plus, Pencil, Users, FileSpreadsheet, X, PlayCircle, MoreVertical,
 } from 'lucide-react';
 import { MemberAvatar } from '@/components/ui/member-avatar';
 import { PhoneInput, parsePhoneDisplay, FlagImg } from '@/components/ui/phone-input';
@@ -31,7 +31,11 @@ import { downloadMembersTemplate, parseMembersExcel } from '@/lib/excel';
 import ModuleLoader, { useCargaMinima } from '@/components/ui/module-loader';
 import ModuleReveal from '@/components/ui/module-reveal';
 import { ContenidoGuardado, MS_GUARDADO, type EstadoGuardado } from '@/components/ui/save-button-state';
-import { IconDescargar, IconEliminar, IconUbicacion, IconBuscar } from '@/components/ui/custom-icons';
+import {
+  IconDescargar, IconEliminar, IconUbicacion, IconBuscar, IconVer, IconImportar,
+  IconTelefono, IconMail, IconIdentificacion, IconFechaNacimiento, IconEps,
+  IconAcudiente, IconDesactivar,
+} from '@/components/ui/custom-icons';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface Location { id: string; name: string }
@@ -593,7 +597,7 @@ export default function MiembrosPage() {
               setMenuImportar({ top: r.bottom + 6, right: window.innerWidth - r.right });
             }}
             className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold border border-border text-muted-foreground hover:bg-secondary active:scale-95 transition-all">
-            <Upload className="w-4 h-4" /><span className="hidden sm:inline">Importar</span>
+            <IconImportar className="w-4 h-4" /><span className="hidden sm:inline">Importar</span>
           </button>
           <button onClick={() => downloadMembersTemplate(locations)}
             className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold border border-border text-muted-foreground hover:bg-secondary active:scale-95 transition-all">
@@ -685,7 +689,7 @@ export default function MiembrosPage() {
                 }}
                 className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-[13px] font-semibold transition-all hover:bg-white cursor-pointer"
                 style={{ color: '#8E87A8', border: '1px solid rgba(120,80,200,0.12)' }}>
-                <Upload className="w-4 h-4" /> Importar
+                <IconImportar className="w-4 h-4" /> Importar
               </button>
               )}
               <button onClick={() => downloadMembersPDF(members, clubName)} disabled={members.length === 0}
@@ -800,7 +804,7 @@ export default function MiembrosPage() {
                                 className="text-[10px] font-semibold px-2 py-0.5 rounded-full flex items-center gap-1"
                                 style={{ background: 'rgba(0,0,0,0.28)', color: '#fff' }}
                               >
-                                <PauseCircle className="w-2.5 h-2.5" />
+                                <IconDesactivar className="w-2.5 h-2.5" />
                                 En pausa
                               </span>
                             )}
@@ -823,7 +827,7 @@ export default function MiembrosPage() {
                       {(m.docType || m.docNumber) && (
                         <div className="flex items-center gap-2.5">
                           <div className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'rgba(56,29,160,0.08)' }}>
-                            <CreditCard className="w-3 h-3" style={{ color: '#381DA0' }} />
+                            <IconIdentificacion className="w-3 h-3" style={{ color: '#381DA0' }} />
                           </div>
                           <p className="text-[12px] font-medium" style={{ color: '#5A5278' }}>
                             {[m.docType, m.docNumber].filter(Boolean).join(' · ')}
@@ -836,7 +840,7 @@ export default function MiembrosPage() {
                         return (
                           <div className="flex items-center gap-2.5">
                             <div className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'rgba(56,29,160,0.08)' }}>
-                              <Phone className="w-3 h-3" style={{ color: '#381DA0' }} />
+                              <IconTelefono className="w-3 h-3" style={{ color: '#381DA0' }} />
                             </div>
                             <div className="flex items-center gap-1.5">
                               <span className="flex items-center gap-0.5">
@@ -852,7 +856,7 @@ export default function MiembrosPage() {
                       {m.email && (
                         <div className="flex items-center gap-2.5 min-w-0">
                           <div className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'rgba(56,29,160,0.08)' }}>
-                            <Mail className="w-3 h-3" style={{ color: '#381DA0' }} />
+                            <IconMail className="w-3 h-3" style={{ color: '#381DA0' }} />
                           </div>
                           <p className="text-[12px] font-medium truncate lowercase" style={{ color: '#5A5278' }}>{m.email}</p>
                         </div>
@@ -861,7 +865,7 @@ export default function MiembrosPage() {
                       {m.birthDate && (
                         <div className="flex items-center gap-2.5">
                           <div className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'rgba(56,29,160,0.08)' }}>
-                            <Calendar className="w-3 h-3" style={{ color: '#381DA0' }} />
+                            <IconFechaNacimiento className="w-3 h-3" style={{ color: '#381DA0' }} />
                           </div>
                           <p className="text-[12px] font-medium" style={{ color: '#5A5278' }}>
                             {parseLocalDate(m.birthDate).toLocaleDateString('es-CO', { day: 'numeric', month: 'short', year: 'numeric' })}
@@ -872,7 +876,7 @@ export default function MiembrosPage() {
                       {m.eps && (
                         <div className="flex items-center gap-2.5">
                           <div className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'rgba(6,214,160,0.08)' }}>
-                            <Heart className="w-3 h-3" style={{ color: '#06D6A0' }} />
+                            <IconEps className="w-3 h-3" style={{ color: '#06D6A0' }} />
                           </div>
                           <p className="text-[12px] font-medium" style={{ color: '#5A5278' }}>{m.eps}</p>
                         </div>
@@ -898,7 +902,7 @@ export default function MiembrosPage() {
                       {m.emergencyContact && (
                         <div className="flex items-center gap-2.5">
                           <div className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'rgba(67,97,238,0.08)' }}>
-                            <Shield className="w-3 h-3" style={{ color: '#4361EE' }} />
+                            <IconAcudiente className="w-3 h-3" style={{ color: '#4361EE' }} />
                           </div>
                           <p className="text-[12px] font-medium" style={{ color: '#5A5278' }}>{m.emergencyContact}</p>
                         </div>
@@ -932,7 +936,7 @@ export default function MiembrosPage() {
                         style={{ background: 'rgba(56,29,160,0.08)', color: '#381DA0' }}
                         aria-label="Ver deportista"
                       >
-                        <Eye className="w-4 h-4" style={{ color: '#381DA0' }} />
+                        <IconVer className="w-4 h-4" style={{ color: '#381DA0' }} />
                         {!canManage && 'Ver detalle'}
                       </motion.button>
                       {canManage && !esUnoMismo(m) && (
@@ -948,7 +952,7 @@ export default function MiembrosPage() {
                       >
                         {m.active === false
                           ? <PlayCircle className="w-4 h-4" style={{ color: '#06D6A0' }} />
-                          : <PauseCircle className="w-4 h-4" style={{ color: '#5B5470' }} />}
+                          : <IconDesactivar className="w-4 h-4" style={{ color: '#5B5470' }} />}
                       </motion.button>
                       )}
                       {/* Ni eliminar ni pausar la propia cuenta: las dos dejan a
@@ -1097,7 +1101,7 @@ export default function MiembrosPage() {
                       style={{ color: '#381DA0' }}
                       aria-label={`Ver a ${m.fullName}`}
                     >
-                      <Eye className="w-[17px] h-[17px]" />
+                      <IconVer className="w-[17px] h-[17px]" />
                     </motion.button>
                   )}
                   </div>
@@ -1175,11 +1179,11 @@ export default function MiembrosPage() {
                 const propio = esUnoMismo(m);
                 const opciones = [
                   { icon: Pencil, label: 'Editar', hint: 'Datos, sede y rol', color: '#5B5470', onClick: cerrarY(() => openEdit(m)) },
-                  { icon: Eye, label: 'Ver detalle', hint: 'Ficha completa', color: '#5B5470', onClick: cerrarY(() => setViewMember(m)) },
+                  { icon: IconVer, label: 'Ver detalle', hint: 'Ficha completa', color: '#5B5470', onClick: cerrarY(() => setViewMember(m)) },
                   ...(propio ? [] : [
                     enPausa
                       ? { icon: PlayCircle, label: 'Reactivar', hint: 'Vuelve a la asistencia y a la cuota', color: '#06D6A0', onClick: cerrarY(() => handleToggleEstado(m)) }
-                      : { icon: PauseCircle, label: 'Pausar', hint: 'Deja de generar cuota, conserva su historial', color: '#5B5470', onClick: cerrarY(() => handleToggleEstado(m)) },
+                      : { icon: IconDesactivar, label: 'Pausar', hint: 'Deja de generar cuota, conserva su historial', color: '#5B5470', onClick: cerrarY(() => handleToggleEstado(m)) },
                   ]),
                 ];
                 return (
@@ -1398,7 +1402,7 @@ export default function MiembrosPage() {
                       <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-3">Documento</p>
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(56,29,160,0.08)' }}>
-                          <CreditCard className="w-3.5 h-3.5" style={{ color: '#381DA0' }} />
+                          <IconIdentificacion className="w-3.5 h-3.5" style={{ color: '#381DA0' }} />
                         </div>
                         <div>
                           {viewMember.docType && (
@@ -1421,7 +1425,7 @@ export default function MiembrosPage() {
                         return (
                           <div className="flex items-center gap-3">
                             <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(56,29,160,0.08)' }}>
-                              <Phone className="w-3.5 h-3.5" style={{ color: '#381DA0' }} />
+                              <IconTelefono className="w-3.5 h-3.5" style={{ color: '#381DA0' }} />
                             </div>
                             <div>
                               <p className="text-[10px] text-muted-foreground">Teléfono</p>
@@ -1439,7 +1443,7 @@ export default function MiembrosPage() {
                       {viewMember.email && (
                         <div className="flex items-center gap-3">
                           <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(56,29,160,0.08)' }}>
-                            <Mail className="w-3.5 h-3.5" style={{ color: '#381DA0' }} />
+                            <IconMail className="w-3.5 h-3.5" style={{ color: '#381DA0' }} />
                           </div>
                           <div>
                             <p className="text-[10px] text-muted-foreground">Correo</p>
@@ -1450,7 +1454,7 @@ export default function MiembrosPage() {
                       {viewMember.birthDate && (
                         <div className="flex items-center gap-3">
                           <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(56,29,160,0.08)' }}>
-                            <Calendar className="w-3.5 h-3.5" style={{ color: '#381DA0' }} />
+                            <IconFechaNacimiento className="w-3.5 h-3.5" style={{ color: '#381DA0' }} />
                           </div>
                           <div>
                             <p className="text-[10px] text-muted-foreground">Nacimiento</p>
@@ -1471,7 +1475,7 @@ export default function MiembrosPage() {
                         {viewMember.emergencyContact && (
                           <div className="flex items-center gap-3">
                             <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(67,97,238,0.08)' }}>
-                              <Shield className="w-3.5 h-3.5" style={{ color: '#4361EE' }} />
+                              <IconAcudiente className="w-3.5 h-3.5" style={{ color: '#4361EE' }} />
                             </div>
                             <div>
                               <p className="text-[10px] text-muted-foreground">Nombre</p>
@@ -1484,7 +1488,7 @@ export default function MiembrosPage() {
                           return (
                             <div className="flex items-center gap-3">
                               <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(67,97,238,0.08)' }}>
-                                <Phone className="w-3.5 h-3.5" style={{ color: '#4361EE' }} />
+                                <IconTelefono className="w-3.5 h-3.5" style={{ color: '#4361EE' }} />
                               </div>
                               <div>
                                 <p className="text-[10px] text-muted-foreground">Teléfono</p>
@@ -1509,7 +1513,7 @@ export default function MiembrosPage() {
                       <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-3">Salud</p>
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(6,214,160,0.08)' }}>
-                          <Heart className="w-3.5 h-3.5" style={{ color: '#06D6A0' }} />
+                          <IconEps className="w-3.5 h-3.5" style={{ color: '#06D6A0' }} />
                         </div>
                         <div>
                           <p className="text-[10px] text-muted-foreground">EPS</p>

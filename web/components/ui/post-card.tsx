@@ -10,10 +10,10 @@ import { MemberAvatar } from '@/components/ui/member-avatar';
 import { ContenidoGuardado } from '@/components/ui/save-button-state';
 import { VisorImagen } from '@/components/ui/visor-imagen';
 import {
-  IconChat, IconEditar, IconEliminar, IconMeGusta, IconMeGustaVacio, IconUbicacion,
+  IconCandado, IconChat, IconCompartir, IconEditar, IconEliminar, IconMeGusta, IconMeGustaVacio, IconPublico, IconUbicacion,
 } from '@/components/ui/custom-icons';
 import {
-  Globe, Lock, ChevronRight, FileText, SendHorizontal, X, MoreHorizontal, Flag,
+  ChevronRight, FileText, SendHorizontal, X, MoreHorizontal, Flag,
 } from 'lucide-react';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -631,8 +631,8 @@ export function PostCard({
                       className="w-full flex items-center gap-2.5 px-4 py-2.5 text-[13px] font-semibold text-foreground hover:bg-secondary transition-colors cursor-pointer border-t border-border/50 disabled:opacity-50 whitespace-nowrap"
                     >
                       {post.scope === 'PUBLIC'
-                        ? <><Lock className="w-3.5 h-3.5 shrink-0" /> Mover a Mi club</>
-                        : <><Globe className="w-3.5 h-3.5 shrink-0" /> Mover a Público</>}
+                        ? <><IconCandado className="w-3.5 h-3.5 shrink-0" /> Mover a Mi club</>
+                        : <><IconPublico className="w-3.5 h-3.5 shrink-0" /> Mover a Público</>}
                     </button>
                     )}
                     {esAutor && (
@@ -881,7 +881,7 @@ export function PostCard({
             whileTap={{ scale: 0.95 }}
             className={`flex-1 flex items-center justify-center gap-2 py-2.5 transition-colors hover:bg-secondary/60${dosColumnas ? ' md:flex-none md:justify-start md:hover:bg-transparent' : ''}`}
             onClick={() => { if (navigator.share) navigator.share({ text: post.content }); }}>
-            <ChevronRight className="w-[17px] h-[17px] md:w-4 md:h-4 rotate-[-45deg]" style={{ color: '#8E87A8' }} />
+            <IconCompartir className="w-[15px] h-[15px] md:w-[14px] md:h-[14px]" style={{ color: '#8E87A8' }} />
             <span className="text-[13px] md:text-[12px] font-semibold text-muted-foreground">Compartir</span>
           </motion.button>
         </div>

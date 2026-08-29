@@ -8,7 +8,7 @@ import { apiFetch } from '@/lib/api-client';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Bell, BellOff, Image as ImageIcon, X, Globe, Lock, Paperclip, Video, FileText, CalendarDays, Trophy, Users, Gift, CheckSquare, Wallet,
+  Bell, BellOff, X, Paperclip, FileText, Trophy, Users, CheckSquare, Wallet,
 } from 'lucide-react';
 import { Slideshow } from '@/components/ui/slideshow';
 // La tarjeta de publicacion es la misma en Inicio, Club y Mi perfil.
@@ -37,7 +37,9 @@ import { MemberAvatar } from '@/components/ui/member-avatar';
 import ModuleLoader, { useCargaMinima } from '@/components/ui/module-loader';
 import ModuleReveal from '@/components/ui/module-reveal';
 import { ContenidoGuardado, MS_GUARDADO, type EstadoGuardado } from '@/components/ui/save-button-state';
-import { IconPendiente, IconUbicacion } from '@/components/ui/custom-icons';
+import {
+  IconCandado, IconCumpleanos, IconEvento, IconFoto, IconPendiente, IconPublico, IconUbicacion, IconVideo,
+} from '@/components/ui/custom-icons';
 
 // ── Interfaces ────────────────────────────────────────────────────────────────
 
@@ -313,7 +315,7 @@ function PostComposer({
             onClick={() => { if (fileRef.current) { fileRef.current.accept = 'image/*'; fileRef.current.click(); } }}
             className="sm:hidden shrink-0 mt-1.5"
           >
-            <ImageIcon className="w-[18px] h-[18px]" style={{ color: '#381DA0' }} />
+            <IconFoto className="w-[17px] h-[17px]" style={{ color: '#381DA0' }} />
           </button>
         )}
       </div>
@@ -382,8 +384,8 @@ function PostComposer({
       <div className={`${open || content || media ? 'flex' : 'hidden sm:flex'} items-center justify-between px-4 pb-4 border-t border-border/60 pt-3 gap-3`}>
         <div className="flex items-center gap-1 min-w-0">
           {[
-            { icon: ImageIcon, label: 'Foto',  accept: 'image/*' },
-            { icon: Video,     label: 'Video', accept: 'video/*' },
+            { icon: IconFoto,  label: 'Foto',  accept: 'image/*' },
+            { icon: IconVideo, label: 'Video', accept: 'video/*' },
           ].map(btn => (
             <motion.button key={btn.label} whileTap={{ scale: 0.9 }}
               disabled={uploading}
@@ -747,7 +749,7 @@ export default function DashboardPage() {
             />
             )}
             <FichaInicio
-              icono={<CalendarDays className="w-[13px] h-[13px]" style={{ color: '#D4537E' }} />}
+              icono={<IconEvento className="w-[13px] h-[13px]" style={{ color: '#D4537E' }} />}
               etiqueta="Eventos"
               valor={String(upcomingEvents.length)}
             />
@@ -768,7 +770,7 @@ export default function DashboardPage() {
           <div className="flex items-center gap-2 px-3 pt-3 pb-2">
             <div className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0"
               style={{ background: '#381DA0' }}>
-              <CalendarDays className="w-3 h-3 text-white" />
+              <IconEvento className="w-3 h-3 text-white" />
             </div>
             <p className="text-[11px] font-semibold text-foreground truncate">Próximos eventos</p>
           </div>
@@ -778,7 +780,7 @@ export default function DashboardPage() {
             </div>
           ) : upcomingEvents.length === 0 ? (
             <div className="px-3 pb-4 flex flex-col items-center gap-1 pt-1">
-              <CalendarDays className="w-6 h-6" style={{ color: '#C4BFDB' }} />
+              <IconEvento className="w-6 h-6" style={{ color: '#C4BFDB' }} />
               <p className="text-[10px] text-muted-foreground text-center">Sin eventos próximos</p>
             </div>
           ) : (
@@ -814,7 +816,7 @@ export default function DashboardPage() {
           <div className="flex items-center gap-2 px-3 pt-3 pb-2">
             <div className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0"
               style={{ background: 'linear-gradient(135deg,#EF476F,#FFB703)' }}>
-              <Gift className="w-3 h-3 text-white" />
+              <IconCumpleanos className="w-3 h-3 text-white" />
             </div>
             <p className="text-[11px] font-semibold text-foreground">Cumpleaños</p>
           </div>
@@ -824,7 +826,7 @@ export default function DashboardPage() {
             </div>
           ) : birthdays.length === 0 ? (
             <div className="px-3 pb-4 flex flex-col items-center gap-1 pt-1">
-              <Gift className="w-6 h-6" style={{ color: '#C4BFDB' }} />
+              <IconCumpleanos className="w-6 h-6" style={{ color: '#C4BFDB' }} />
               <p className="text-[10px] text-muted-foreground text-center">Sin cumpleaños en 30 días</p>
             </div>
           ) : (
@@ -878,7 +880,7 @@ export default function DashboardPage() {
             <div className="flex items-center gap-2">
               <div className="w-7 h-7 rounded-lg flex items-center justify-center"
                 style={{ background: '#381DA0' }}>
-                <CalendarDays className="w-3.5 h-3.5 text-white" />
+                <IconEvento className="w-3.5 h-3.5 text-white" />
               </div>
               <p className="text-[13px] font-semibold text-foreground">Próximos eventos</p>
             </div>
@@ -896,7 +898,7 @@ export default function DashboardPage() {
             </div>
           ) : upcomingEvents.length === 0 ? (
             <div className="px-4 pb-5 flex flex-col items-center gap-1.5 pt-2">
-              <CalendarDays className="w-7 h-7" style={{ color: '#C4BFDB' }} />
+              <IconEvento className="w-7 h-7" style={{ color: '#C4BFDB' }} />
               <p className="text-[12px] text-muted-foreground text-center">Sin eventos próximos</p>
             </div>
           ) : (
@@ -953,7 +955,7 @@ export default function DashboardPage() {
           <div className="flex items-center gap-2 px-4 pt-4 pb-2">
             <div className="w-7 h-7 rounded-lg flex items-center justify-center"
               style={{ background: 'linear-gradient(135deg,#EF476F,#FFB703)' }}>
-              <Gift className="w-3.5 h-3.5 text-white" />
+              <IconCumpleanos className="w-3.5 h-3.5 text-white" />
             </div>
             <p className="text-[13px] font-semibold text-foreground">Cumpleaños</p>
           </div>
@@ -966,7 +968,7 @@ export default function DashboardPage() {
             </div>
           ) : birthdays.length === 0 ? (
             <div className="px-4 pb-5 flex flex-col items-center gap-1.5 pt-2">
-              <Gift className="w-7 h-7" style={{ color: '#C4BFDB' }} />
+              <IconCumpleanos className="w-7 h-7" style={{ color: '#C4BFDB' }} />
               <p className="text-[12px] text-muted-foreground text-center">Sin cumpleaños en los próximos 30 días</p>
             </div>
           ) : (
@@ -1034,8 +1036,8 @@ export default function DashboardPage() {
             style={{ background: '#FFFFFF', boxShadow: '0 1px 4px rgba(0,0,0,0.08), inset 0 0 0 1px rgba(0,0,0,0.06)' }}
           >
             {([
-              { key: 'public'  as FeedScope, label: 'Público',  icon: Globe, desc: 'Todos los clubes' },
-              { key: 'private' as FeedScope, label: 'Mi club',   icon: Lock,  desc: 'Solo interno' },
+              { key: 'public'  as FeedScope, label: 'Público',  icon: IconPublico, desc: 'Todos los clubes' },
+              { key: 'private' as FeedScope, label: 'Mi club',   icon: IconCandado, desc: 'Solo interno' },
             ] as const).map(tab => {
               const active = feedScope === tab.key;
               const Icon = tab.icon;
@@ -1094,7 +1096,7 @@ export default function DashboardPage() {
                 className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4"
                 style={{ background: '#381DA0' }}
               >
-                {feedScope === 'public' ? <Globe className="w-6 h-6 text-white" /> : <Lock className="w-6 h-6 text-white" />}
+                {feedScope === 'public' ? <IconPublico className="w-6 h-6 text-white" /> : <IconCandado className="w-6 h-6 text-white" />}
               </div>
               <p className="text-[14px] font-semibold text-foreground mb-1">
                 {feedScope === 'public' ? 'El feed público está vacío' : 'No hay publicaciones internas aún'}

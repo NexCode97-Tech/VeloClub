@@ -7,10 +7,12 @@ import { useClubStream } from '@/hooks/useClubStream';
 import { useEffect, useState } from 'react';
 import { apiFetch } from '@/lib/api-client';
 import { parseLocalDate } from '@/lib/utils';
-import { ChevronLeft, ChevronRight, CalendarDays } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import ModuleLoader, { useCargaMinima } from '@/components/ui/module-loader';
 import ModuleReveal from '@/components/ui/module-reveal';
-import { IconUbicacion, IconCompetencias, IconEntrenamientos } from '@/components/ui/custom-icons';
+import {
+  IconCompetencias, IconEntrenamientos, IconEvento, IconUbicacion,
+} from '@/components/ui/custom-icons';
 
 const MONTH_NAMES = [
   'Enero','Febrero','Marzo','Abril','Mayo','Junio',
@@ -224,7 +226,7 @@ export default function CalendarioPage() {
 
             { selectedEvents.length === 0 ? (
               <div className="flex flex-col items-center py-6 gap-2">
-                <CalendarDays className="w-8 h-8 text-muted-foreground/30" />
+                <IconEvento className="w-8 h-8 text-muted-foreground/30" />
                 <p className="text-[12px] text-muted-foreground">Sin eventos el día {selectedDay}</p>
               </div>
             ) : (
@@ -250,7 +252,7 @@ export default function CalendarioPage() {
 
             {events.length === 0 && !loading ? (
               <div className="flex flex-col items-center py-6 gap-2">
-                <CalendarDays className="w-8 h-8 text-muted-foreground/30" />
+                <IconEvento className="w-8 h-8 text-muted-foreground/30" />
                 <p className="text-[12px] text-muted-foreground">Sin eventos este mes</p>
               </div>
             ) : (

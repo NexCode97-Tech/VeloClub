@@ -1,4 +1,4 @@
-import type { SVGProps } from 'react';
+import type { ComponentType, SVGProps } from 'react';
 
 type IconProps = SVGProps<SVGSVGElement> & { strokeWidth?: number };
 
@@ -279,4 +279,27 @@ export function IconBuscar({ className, style, ...props }: IconProps) {
       <path d="M504.352,459.061l-99.435-99.477c74.402-99.427,54.115-240.344-45.312-314.746S119.261-9.277,44.859,90.15   S-9.256,330.494,90.171,404.896c79.868,59.766,189.565,59.766,269.434,0l99.477,99.477c12.501,12.501,32.769,12.501,45.269,0   c12.501-12.501,12.501-32.769,0-45.269L504.352,459.061z M225.717,385.696c-88.366,0-160-71.634-160-160s71.634-160,160-160   s160,71.634,160,160C385.623,314.022,314.044,385.602,225.717,385.696z"/>
     </svg>
   );
+}
+
+/**
+ * El ícono de cada deporte.
+ *
+ * Un club puede abrir la carpeta que quiera y ponerle el nombre que quiera, así
+ * que esto nunca va a estar completo. La clave se normaliza (sin tildes, en
+ * minúscula) para que «Natación», «natacion» y «NATACIÓN» sean lo mismo.
+ *
+ * Agregar un deporte es agregar una línea aquí, con su ícono arriba.
+ */
+const ICONOS_DE_DEPORTE: Record<string, ComponentType<IconProps>> = {
+  patinaje: IconPatinaje,
+};
+
+/** Devuelve el ícono del deporte, o null si todavía no tiene uno propio. */
+export function iconoDeDeporte(nombre: string): ComponentType<IconProps> | null {
+  const clave = nombre
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+  return ICONOS_DE_DEPORTE[clave] ?? null;
 }

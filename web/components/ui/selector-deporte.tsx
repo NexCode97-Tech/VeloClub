@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Check, ChevronsUpDown, Plus } from 'lucide-react';
-import { IconPatinaje, IconUbicacion, IconUsers } from '@/components/ui/custom-icons';
+import { iconoDeDeporte, IconUbicacion, IconUsers } from '@/components/ui/custom-icons';
 
 export interface Carpeta {
   id: string;
@@ -29,6 +29,40 @@ interface Props {
   /** Trae los conteos. Se llama al abrir, no en cada carga del panel. */
   cargarCifras: () => Promise<CarpetaConCifras[]>;
   onAgregar: (nombre: string) => Promise<void>;
+}
+
+/**
+ * La insignia del deporte.
+ *
+ * Con ícono propio cuando lo hay y, si no, con la inicial del nombre. La
+ * inicial no es un parche: un club abre la carpeta que quiera y le pone el
+ * nombre que quiera, así que un ícono genérico para todos los deportes sin arte
+ * dejaría tres carpetas con el mismo dibujo — que es justo lo contrario de para
+ * lo que está el ícono. La letra al menos distingue, y se ve como lo que es:
+ * un lugar esperando su dibujo.
+ */
+function Insignia({ nombre, tam = 26 }: { nombre: string; tam?: number }) {
+  const Icono = iconoDeDeporte(nombre);
+  const glifo = Math.round(tam * 0.58);
+  return (
+    <span
+      className="flex items-center justify-center shrink-0"
+      style={{
+        width: tam, height: tam, borderRadius: Math.round(tam * 0.31),
+        background: 'rgba(56,29,160,0.08)', color: '#381DA0',
+      }}
+    >
+      {Icono
+        ? <Icono style={{ width: glifo, height: glifo }} />
+        : <span
+            className="font-semibold leading-none"
+            style={{ fontSize: Math.round(tam * 0.46) }}
+          >
+            {nombre.trim().charAt(0).toUpperCase()}
+          </span>
+      }
+    </span>
+  );
 }
 
 /**
@@ -132,12 +166,7 @@ export default function SelectorDeporte({
       className="flex items-center gap-2.5 w-full"
       style={{ minWidth: 0 }}
     >
-      <span
-        className="flex items-center justify-center shrink-0"
-        style={{ width: 26, height: 26, borderRadius: 8, background: 'rgba(56,29,160,0.08)', color: '#381DA0' }}
-      >
-        <IconPatinaje className="w-[15px] h-[15px]" />
-      </span>
+      <Insignia nombre={actual.nombre} />
       {!colapsado && (
         <>
           <span className="flex flex-col min-w-0 text-left">
@@ -217,6 +246,7 @@ export default function SelectorDeporte({
                       onClick={() => { setAbierto(false); if (!esActual) onCambiar(d.id); }}
                       className="w-full flex items-center gap-2.5 px-3 py-2.5 text-left transition-colors hover:bg-[rgba(56,29,160,0.05)] cursor-pointer"
                     >
+                      <Insignia nombre={d.nombre} tam={24} />
                       <span className="flex flex-col min-w-0 flex-1">
                         <span className="text-[13px] font-semibold text-[#1A1028] truncate leading-tight">
                           {d.nombre}

@@ -5,6 +5,91 @@ Actualizar al final de cada sesión o cuando se complete un bloque de trabajo im
 
 ---
 
+## Sesión 2026-08-28
+
+**Modelo:** Claude Opus 5
+**Estado inicial:** `9024461`, rama `main`
+**Estado final:** `787daec`, sin desplegar
+
+Tres bloques: la landing, una copia de seguridad completa, y el cambio grande
+del día — que un club pueda manejar varios deportes.
+
+### La landing, y los íconos del proyecto
+Se rehízo el hero con el registro de ElevenLabs, se quitaron los sub-tabs de
+funcionalidades a favor de una grilla de dos columnas, se estrenó `/precios` y
+la barra pasó a ser una sola, compartida entre el home y precios. Se
+reemplazaron los íconos de Lucide por los propios en toda la plataforma
+(`custom-icons.tsx` pasó de 13 a 27).
+
+Dos veces se coló `web/public/capturas/` en un commit — tiene un enlace de
+invitación vivo, nombres de menores y una cédula. Las dos veces se deshizo antes
+de subir. La corrección de fondo fue agregarla a `.gitignore`.
+
+### Copia de seguridad de toda la plataforma
+Antes de tocar nada: volcado de la base, el repositorio como bundle, los 236
+archivos de Cloudinary, los usuarios de Clerk y las variables de Railway y
+Vercel. Vive fuera del repositorio, cifrada con AES-256, y se comprobó que se
+puede **restaurar**, no solo que existe. Falta sacarla del portátil.
+
+Al escribirla salieron cuatro menciones a Neon en la documentación. La base es
+un servicio de Postgres dentro del propio proyecto de Railway; quedaron
+corregidas.
+
+### Varios deportes por club
+El cambio grande. Un club puede ofrecer patinaje y natación, y cada uno es una
+carpeta con aislamiento total: sus deportistas, sedes, asistencia,
+mensualidades, caja y resultados no se mezclan. El único que las cruza es el
+dueño. La suscripción sigue siendo una sola, por la **suma** de todos los
+deportes (`fae0923`, `787daec`).
+
+Lo decidido antes de escribir código está en
+`docs/superpowers/plans/2026-08-28-deportes-por-club.md`, con las tres cosas que
+en la ejecución salieron distintas del plan.
+
+**El filtro no se escribe en las rutas.** Va montado en el cliente de Prisma
+(`api/src/lib/alcance.ts`), en el mismo sitio donde ya vivía la auditoría y por
+la misma razón: instrumentar cincuenta rutas a mano significa olvidarse de la
+próxima que alguien agregue. Las que cruzan clubes a propósito se declaran en
+`index.ts`, y ese olvido falla del lado seguro — deja una pantalla vacía que
+alguien reporta el mismo día, en vez de mostrar datos de otro deporte sin que lo
+note nadie.
+
+Tres agujeros que la base de datos no habría atrapado, y que no estaban en el
+plan porque el plan miraba el esquema:
+
+- **Las claves de Redis llevaban solo el club.** Cacheada la lista de patinaje,
+  se le servía igual a quien estaba parado en natación, y la consulta ni llegaba
+  a hacerse.
+- **El conteo que define el precio quedaba acotado a una carpeta**, así que un
+  club con dos deportes habría pagado el tramo de uno solo. Ahora usa un cliente
+  aparte, `prismaClubEntero`, separado justo para que `grep` liste en una sola
+  pantalla cada consulta que mira más allá de una carpeta.
+- **El trabajo en cola que genera las cuotas del mes** corre fuera de la
+  petición: el administrador de patinaje se las habría generado también a los de
+  natación.
+
+La migración se probó **contra una copia completa de producción** restaurada
+aparte: 19 carpetas creadas, 1558 deportistas, 10036 asistencias y 1712 pagos
+reubicados, cero filas apuntando a la carpeta de otro club, y el token de
+inscripción idéntico byte a byte — los enlaces que los clubes ya repartieron por
+WhatsApp siguen abriendo. La base de ensayo se borró al terminar.
+
+### Pendientes
+- **Nada de esto está desplegado.** La migración corre sobre datos reales.
+- «Grandes Paisas» quedó sin dueño declarado: 221 deportistas y su único usuario
+  es un ENTRENADOR. Se decidió no promoverlo desde una migración. Sigue
+  funcionando igual, con su única carpeta, pero no puede abrir un segundo
+  deporte hasta que se le nombre dueño.
+- Crear un deporte es una acción de escritorio; en móvil el selector solo
+  aparece si el club ya tiene más de uno.
+- El muro quedó por carpeta. Es lo consistente con «aislamiento total», pero es
+  lo que más vale la pena mirar en uso.
+- Sacar la copia cifrada del portátil.
+- Sigue lo de sesiones anteriores: los tres espacios de publicidad en `url: '#'`
+  y los cinco lockfiles en el repo.
+
+---
+
 ## Sesión 2026-08-27
 
 **Modelo:** Claude Opus 5

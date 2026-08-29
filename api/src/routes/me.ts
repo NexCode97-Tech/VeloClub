@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { requireAuth } from '../auth/middleware';
+import { selectorDeDeporte } from '../lib/deportes';
 import { prisma } from '../db/client';
 import { v2 as cloudinary } from 'cloudinary';
 import { removeFromAllowlist, revokeClerkAccess } from '../lib/clerk-allowlist';
@@ -240,7 +241,12 @@ if (superadminEmails.includes(email.toLowerCase())) {
       return res.json({ status: 'complete_profile', user });
     }
 
-    return res.json({ status: 'ok', user: { ...user, coverUrl: user.coverUrl ?? null }, trial });
+    return res.json({
+      status: 'ok',
+      user: { ...user, coverUrl: user.coverUrl ?? null },
+      trial,
+      deportes: await selectorDeDeporte(req),
+    });
   }
 
   // New user — check if email was pre-registered as a Member (case-insensitive)
@@ -449,7 +455,7 @@ router.patch('/profile', requireAuth, async (req, res) => {
     });
   }
 
-  res.json({ status: 'ok', user });
+  res.json({ status: 'ok', user, deportes: await selectorDeDeporte(req) });
 });
 
 // DELETE /me — el propio usuario elimina su cuenta (Admin, Entrenador o Deportista).

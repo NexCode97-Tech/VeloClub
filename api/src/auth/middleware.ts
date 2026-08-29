@@ -126,15 +126,11 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
         // es el proposito. `req.deporteId` igual queda puesto, porque esas
         // rutas a veces necesitan saber desde que carpeta se las llamo.
         if (alcanceActual() !== 'club-entero') fijarAlcance({ deporteId: carpeta.deporteId });
-      } else if (carpeta.estado === 403) {
-        // Pidio una carpeta que no le corresponde. Eso si se corta: es un id
-        // ajeno viajando en una cabecera, justo el intento que este modelo
-        // tiene que rechazar.
-        return res.status(403).json({ error: carpeta.error });
       } else {
         // No se le pudo asignar ninguna. La peticion sigue, pero acotada a una
         // carpeta que no existe: asi no ve nada en vez de verlo todo. `/me`
-        // devuelve el motivo para poder explicarselo.
+        // devuelve el motivo para poder explicarselo, en vez de dejarla frente
+        // a pantallas vacias sin saber por que.
         req.sinDeporte = carpeta.error;
         if (alcanceActual() !== 'club-entero') fijarAlcance({ deporteId: '__sin_deporte__' });
       }

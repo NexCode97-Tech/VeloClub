@@ -44,15 +44,20 @@ export async function invalidarDeportes(clubId: string): Promise<void> {
 
 export type Resolucion =
   | { ok: true; deporteId: string; esDueno: boolean }
-  | { ok: false; estado: 403 | 409; error: string };
+  | { ok: false; error: string };
 
 /**
  * En que carpeta esta parada esta persona.
  *
- * `pedida` es la que mando el frontend. Al dueno se le concede si es del club y
- * esta activa; a cualquier otro se le exige que coincida con la suya, porque un
- * id de carpeta ajeno en una cabecera es justo el intento que este modelo tiene
- * que rechazar.
+ * `pedida` es la que mando el frontend, y es una PREFERENCIA, no una credencial:
+ * si no le corresponde, se ignora y se cae en la que si — nunca se rechaza la
+ * peticion. La diferencia importa. Devolver 403 ante una carpeta ajena suena
+ * mas estricto, pero el aislamiento no lo da el rechazo sino lo que se resuelve:
+ * pedir la carpeta de otro no la abre en ningun caso. Lo que si haria el 403 es
+ * dejar a alguien trancado por fuera de su propio club por un valor viejo
+ * guardado en el navegador, y sin poder ni cargar `/me` para arreglarlo.
+ *
+ * El intento queda en el log, que es donde sirve.
  */
 export async function resolverCarpeta(opts: {
   clubId: string;
@@ -72,12 +77,14 @@ export async function resolverCarpeta(opts: {
     const carpetas = await deportesDelClub(clubId);
     const activas = carpetas.filter(c => c.activo);
     if (activas.length === 0) {
-      return { ok: false, estado: 409, error: 'El club no tiene ningun deporte activo' };
+      return { ok: false, error: 'El club no tiene ningun deporte activo' };
     }
     if (pedida) {
       const elegida = activas.find(c => c.id === pedida);
-      if (!elegida) return { ok: false, estado: 403, error: 'Ese deporte no es de este club o esta desactivado' };
-      return { ok: true, deporteId: elegida.id, esDueno: true };
+      if (elegida) return { ok: true, deporteId: elegida.id, esDueno: true };
+      console.warn(JSON.stringify({
+        level: 'WARN', msg: 'deporte pedido que no es del club', clubId, userId, pedida,
+      }));
     }
     // Sin eleccion explicita se entra por la primera, que es la mas antigua:
     // en los clubes que ya existian esa es Patinaje, y ahi es donde esta todo.
@@ -86,7 +93,9 @@ export async function resolverCarpeta(opts: {
 
   if (deporteIdDelUsuario) {
     if (pedida && pedida !== deporteIdDelUsuario) {
-      return { ok: false, estado: 403, error: 'No tienes acceso a ese deporte' };
+      console.warn(JSON.stringify({
+        level: 'WARN', msg: 'deporte pedido sin ser el propio', clubId, userId, pedida,
+      }));
     }
     return { ok: true, deporteId: deporteIdDelUsuario, esDueno: false };
   }
@@ -100,7 +109,6 @@ export async function resolverCarpeta(opts: {
   if (carpetas.length === 1) return { ok: true, deporteId: carpetas[0].id, esDueno: false };
   return {
     ok: false,
-    estado: 409,
     error: 'Tu cuenta no esta asignada a ningun deporte. Pidele al administrador del club que te asigne uno.',
   };
 }
@@ -147,4 +155,39 @@ export async function carpetaPorDefecto(clubId: string): Promise<string> {
 export function primerDeporte(declarado?: string | null): string {
   const limpio = (declarado ?? '').trim();
   return limpio || 'Patinaje';
+}
+
+/**
+ * Lo que necesita el selector de deporte para pintarse.
+ *
+ * Va en `/me` y no en una llamada aparte porque el dashboard ya llama a `/me`
+ * en cada carga: pedir las carpetas por separado agregaria una ida y vuelta a
+ * cada entrada para dibujar algo que esta arriba del menu. Los conteos NO van
+ * aca — esos se piden a `/deportes` cuando el selector se abre, que es cuando
+ * se ven.
+ */
+export async function selectorDeDeporte(req: Request): Promise<{
+  lista: Carpeta[];
+  activo: string | null;
+  puedeCambiar: boolean;
+  varios: boolean;
+  aviso: string | null;
+}> {
+  const clubId = req.user?.clubId ?? '';
+  if (!clubId) {
+    return { lista: [], activo: null, puedeCambiar: false, varios: false, aviso: null };
+  }
+  const carpetas = (await deportesDelClub(clubId)).filter(c => c.activo);
+  return {
+    // Quien no es dueno ve solo la suya: la lista completa le contaria cuales
+    // son los otros deportes del club, que es informacion de la que no participa.
+    lista: req.esDuenoDelClub ? carpetas : carpetas.filter(c => c.id === req.deporteId),
+    activo: req.deporteId ?? null,
+    puedeCambiar: !!req.esDuenoDelClub,
+    // Que el club tenga mas de uno si se cuenta, aunque no se diga cuales: es
+    // lo que decide si al entrenador se le muestra en cual esta parado. En un
+    // club de un solo deporte ese rotulo seria un letrero que no informa nada.
+    varios: carpetas.length > 1,
+    aviso: req.sinDeporte ?? null,
+  };
 }

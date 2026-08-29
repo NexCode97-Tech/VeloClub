@@ -1,3 +1,5 @@
+import { deporteActivo } from './deporte-activo';
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
 
 export class ApiError extends Error {
@@ -48,11 +50,17 @@ export async function apiFetch<T>(
   options: RequestInit & { token?: string | null } = {}
 ): Promise<T> {
   const { token, headers, ...rest } = options;
+  // La carpeta de deporte viaja en cada llamada, y se pone aquí y no en cada
+  // módulo: la llamada que se olvidara de mandarla traería los datos del
+  // deporte equivocado, y nadie lo notaría hasta ver un nombre desconocido en
+  // una lista.
+  const deporte = deporteActivo();
   const init: RequestInit = {
     ...rest,
     headers: {
       'Content-Type': 'application/json',
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(deporte ? { 'X-Deporte': deporte } : {}),
       ...headers,
     },
   };

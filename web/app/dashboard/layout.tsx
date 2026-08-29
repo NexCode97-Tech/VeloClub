@@ -8,6 +8,8 @@ import { useEffect, useState, useRef, Suspense } from 'react';
 import { createPortal } from 'react-dom';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { apiFetch } from '@/lib/api-client';
+import { deporteActivo, fijarDeporteActivo } from '@/lib/deporte-activo';
+import SelectorDeporte from '@/components/ui/selector-deporte';
 import LoadingScreen, { LoadingCurtain, CURTAIN_MS, esperarPantallaCarga } from '@/components/ui/loading-screen';
 import { BottomCircleMenu } from '@/components/ui/bottom-circle-menu';
 import { SearchModal } from '@/components/ui/search-modal';
@@ -146,6 +148,31 @@ const NAV_SLIDE = {
   exit:   (d: number) => ({ x: d * -22, opacity: 0 }),
 };
 
+/** El selector de deporte, tal como lo devuelve `/me`. */
+interface SelectorDeportes {
+  lista: { id: string; nombre: string; activo: boolean }[];
+  activo: string | null;
+  puedeCambiar: boolean;
+  varios: boolean;
+  aviso: string | null;
+}
+
+const SIN_DEPORTES: SelectorDeportes = {
+  lista: [], activo: null, puedeCambiar: false, varios: false, aviso: null,
+};
+
+interface RespuestaMe {
+  status: string;
+  user?: {
+    role: string;
+    name?: string;
+    picture?: string | null;
+    club?: { name?: string; logoUrl?: string; verified?: boolean };
+    termsAcceptedAt?: string | null;
+  };
+  deportes?: SelectorDeportes;
+}
+
 
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -174,6 +201,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [navTip, setNavTip] = useState<{ label: string; top: number; left: number } | null>(null);
   const [searchOpen, setSearchOpen] = useState(false);
   const [clubName, setClubName] = useState<string | null>(null);
+  const [deportes, setDeportes] = useState<SelectorDeportes>(SIN_DEPORTES);
   const [userName, setUserName] = useState<string | null>(null);
   const [userPicture, setUserPicture] = useState<string | null>(null);
   const [termsAccepted, setTermsAccepted] = useState(true);
@@ -316,11 +344,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         const token = await session?.getToken({ skipCache: true });
         if (stale) return;
 
-        let res: { status: string; user?: { role: string; name?: string; picture?: string | null; club?: { name?: string; logoUrl?: string; verified?: boolean }; termsAcceptedAt?: string | null } } | null = null;
+        let res: RespuestaMe | null = null;
         let attempts = 0;
         while (attempts < 3) {
           try {
-            res = await apiFetch<{ status: string; user?: { role: string; name?: string; picture?: string | null; club?: { name?: string; logoUrl?: string; verified?: boolean }; termsAcceptedAt?: string | null } }>('/me', { token });
+            res = await apiFetch<RespuestaMe>('/me', { token });
             break;
           } catch (err) {
             const { ApiError } = await import('@/lib/api-client');
@@ -358,6 +386,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         setUserName(res.user?.name ?? null);
         setUserPicture(res.user?.picture ?? null);
         setTermsAccepted(!!res.user?.termsAcceptedAt);
+
+        // La carpeta elegida se guarda en el navegador, y puede haber quedado
+        // apuntando a un deporte que ya no existe o que dejo de ser suyo. El
+        // backend no falla por eso — resuelve la que si le toca — asi que aca
+        // se toma la que el respondio y se corrige lo guardado. Sin esto, la
+        // pantalla diria un deporte y los datos serian de otro.
+        const sel = res.deportes ?? SIN_DEPORTES;
+        setDeportes(sel);
+        if (sel.activo !== deporteActivo()) fijarDeporteActivo(sel.activo);
 
         if (userRole === 'DEPORTISTA') {
           const DEPORTISTA_PERMITIDO = ['/dashboard', '/dashboard/logros', '/dashboard/calendario', '/dashboard/sedes', '/dashboard/club', '/dashboard/pagos', '/dashboard/mas', '/dashboard/perfil', '/dashboard/ajustes'];
@@ -415,6 +452,39 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }, []);
 
   if (checking) return <LoadingScreen retrying={retrying} />;
+
+  /**
+   * Cambiar de deporte recarga el panel entero.
+   *
+   * Es a proposito, y es la parte importante. Cada modulo guarda por su cuenta
+   * lo que ya trajo: miembros, asistencia, finanzas, calendario. Avisarles uno
+   * por uno significaria que el que se olvide de escuchar siga mostrando los
+   * datos del deporte anterior, y eso no se ve como un error — se ve como una
+   * lista con nombres que no van. Recargar no deja nada viejo en pantalla, y
+   * cambiar de deporte no es algo que se haga diez veces al dia.
+   */
+  function cambiarDeporte(id: string) {
+    fijarDeporteActivo(id);
+    window.location.assign('/dashboard');
+  }
+
+  async function cargarCifrasDeportes() {
+    const token = await session?.getToken();
+    const r = await apiFetch<{ deportes: { id: string; nombre: string; activo: boolean; deportistas: number; sedes: number }[] }>(
+      '/deportes', { token },
+    );
+    return r.deportes;
+  }
+
+  async function agregarDeporte(nombre: string) {
+    const token = await session?.getToken();
+    const r = await apiFetch<{ deporte: { id: string } }>('/deportes', {
+      method: 'POST', token, body: JSON.stringify({ nombre }),
+    });
+    // Entrar de una al deporte recien creado: es lo que quiere quien acaba de
+    // crearlo, y ademas confirma que nacio vacio.
+    cambiarDeporte(r.deporte.id);
+  }
 
   async function handleAcceptTerms() {
     const token = await session?.getToken();
@@ -565,6 +635,20 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </div>
           )}
         </div>
+
+        {/* Selector de deporte — arriba del menu y con su propia linea, porque
+            no es una opcion mas de la navegacion: es lo que decide que
+            navegacion estas mirando. */}
+        <SelectorDeporte
+          deportes={deportes.lista}
+          activo={deportes.activo}
+          puedeCambiar={deportes.puedeCambiar}
+          varios={deportes.varios}
+          colapsado={collapsed}
+          onCambiar={cambiarDeporte}
+          cargarCifras={cargarCifrasDeportes}
+          onAgregar={agregarDeporte}
+        />
 
         {/* Nav items */}
         <nav className="flex-1 px-2 py-2 overflow-y-auto overflow-x-hidden relative">
@@ -820,6 +904,38 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             en el sidebar en escritorio). */}
 
         <main ref={mainRef} className="flex-1 overflow-y-auto pb-28 md:pb-0" style={{ WebkitOverflowScrolling: 'touch', overscrollBehaviorY: 'contain' }}>
+          {/* Una cuenta sin deporte asignado veria todas las pantallas vacias y
+              sin explicacion. Esto le dice que pasa y a quien pedirselo. */}
+          {deportes.aviso && (
+            <div
+              className="mx-4 mt-4 rounded-xl px-4 py-3 text-[13px] leading-snug"
+              style={{ background: '#FFF7ED', border: '1px solid #FED7AA', color: '#9A3412' }}
+            >
+              {deportes.aviso}
+            </div>
+          )}
+
+          {/* En movil el selector solo aparece si el club de verdad tiene mas de
+              un deporte. Aca arriba no hay barra superior a proposito — cada
+              modulo ya trae su fila de titulo — y sumarle una a todos los clubes
+              para mostrarles un unico deporte seria chrome que no informa nada.
+              Crear un deporte se hace desde escritorio: es una decision poco
+              frecuente y que mueve lo que el club paga. */}
+          {deportes.varios && (
+            <div className="md:hidden px-4 pt-4">
+              <SelectorDeporte
+                deportes={deportes.lista}
+                activo={deportes.activo}
+                puedeCambiar={deportes.puedeCambiar}
+                varios={deportes.varios}
+                colapsado={false}
+                onCambiar={cambiarDeporte}
+                cargarCifras={cargarCifrasDeportes}
+                onAgregar={agregarDeporte}
+              />
+            </div>
+          )}
+
           {children}
         </main>
 

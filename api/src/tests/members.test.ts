@@ -29,6 +29,8 @@ vi.mock('../auth/middleware', () => ({
   requireAuth: vi.fn((req: express.Request, _res: express.Response, next: express.NextFunction) => {
     req.user = { id: 'user-test-id', clubId: 'club-test-id', role: 'ADMIN' };
     req.auth = { clerkId: 'clerk-test-id', email: 'test@test.com', name: 'Test User' };
+    req.deporteId = 'deporte-test-id';
+    req.esDuenoDelClub = true;
     next();
   }),
   requireRole: vi.fn(() => (_req: express.Request, _res: express.Response, next: express.NextFunction) => next()),
@@ -66,6 +68,22 @@ import { prisma } from '../db/client';
 import { cacheGet } from '../lib/redis';
 import membersRouter from '../routes/members';
 import { requireAuth } from '../auth/middleware';
+
+/**
+ * La sesion que simulan estas pruebas. Un solo sitio: antes cada bloque repetia
+ * el mismo objeto y agregarle un campo — la carpeta de deporte, por ejemplo —
+ * dejaba a los otros bloques con una sesion a medias y fallando por algo que no
+ * era lo que estaban probando.
+ */
+function sesionDePrueba(req: express.Request, next: express.NextFunction) {
+  req.user  = { id: 'user-test-id', clubId: 'club-test-id', role: 'ADMIN' };
+  req.auth  = { clerkId: 'clerk-test-id', email: 'test@test.com', name: 'Test User' };
+  // El requireAuth de verdad resuelve la carpeta antes de seguir, y las rutas
+  // la exigen para crear.
+  req.deporteId      = 'deporte-test-id';
+  req.esDuenoDelClub = true;
+  next();
+}
 
 // ── App de test ───────────────────────────────────────────────────────────────
 const app = express();
@@ -115,13 +133,7 @@ describe('POST /members', () => {
     vi.clearAllMocks();
     (cacheGet as ReturnType<typeof vi.fn>).mockResolvedValue(null);
     // Restaurar requireAuth al comportamiento normal
-    (requireAuth as ReturnType<typeof vi.fn>).mockImplementation(
-      (req: express.Request, _res: express.Response, next: express.NextFunction) => {
-        req.user = { id: 'user-test-id', clubId: 'club-test-id', role: 'ADMIN' };
-        req.auth = { clerkId: 'clerk-test-id', email: 'test@test.com', name: 'Test User' };
-        next();
-      }
-    );
+    (requireAuth as ReturnType<typeof vi.fn>).mockImplementation((req: express.Request, _res: express.Response, next: express.NextFunction) => sesionDePrueba(req, next));
   });
 
   it('crea un miembro y retorna 201 con datos válidos', async () => {
@@ -157,13 +169,7 @@ describe('POST /members', () => {
 describe('DELETE /members/:id', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    (requireAuth as ReturnType<typeof vi.fn>).mockImplementation(
-      (req: express.Request, _res: express.Response, next: express.NextFunction) => {
-        req.user = { id: 'user-test-id', clubId: 'club-test-id', role: 'ADMIN' };
-        req.auth = { clerkId: 'clerk-test-id', email: 'test@test.com', name: 'Test User' };
-        next();
-      }
-    );
+    (requireAuth as ReturnType<typeof vi.fn>).mockImplementation((req: express.Request, _res: express.Response, next: express.NextFunction) => sesionDePrueba(req, next));
   });
 
   it('retorna 404 cuando el miembro no existe', async () => {

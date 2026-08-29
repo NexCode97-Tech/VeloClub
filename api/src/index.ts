@@ -29,6 +29,7 @@ import profilesRouter from './routes/profiles';
 import searchRouter from './routes/search';
 import notificationsRouter from './routes/notifications';
 import mercadopagoRouter, { reconciliarPagosPendientes } from './routes/mercadopago';
+import deportesRouter from './routes/deportes';
 import { clubEntero } from './auth/middleware';
 import { SinCarpeta } from './lib/deportes';
 import { startWorkers } from './workers';
@@ -165,10 +166,11 @@ const superadminLimiter = rateLimit({
 // esa pantalla se vea vacia y alguien lo reporte el mismo dia. Al reves —
 // tener que acordarse de filtrar en cada consulta — el olvido muestra datos de
 // otro deporte y no lo nota nadie.
-app.use(['/me', '/superadmin', '/posts', '/profiles', '/search', '/follows'], clubEntero);
+app.use(['/me', '/superadmin', '/posts', '/profiles', '/search', '/follows', '/deportes'], clubEntero);
 
 app.use('/me', meLimiter, meRouter);
 app.use('/clubs', clubsRouter);
+app.use('/deportes', deportesRouter);
 app.use('/locations', locationsRouter);
 app.use('/members', membersRouter);
 // La inscripcion por enlace tiene rutas publicas: el limitador va adentro, por

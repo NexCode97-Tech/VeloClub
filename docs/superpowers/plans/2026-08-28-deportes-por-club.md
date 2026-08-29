@@ -1,7 +1,8 @@
 # Varios deportes por club — Plan de implementación
 
-> **Sin ejecutar.** Escrito el 28 de agosto de 2026 para revisión. Nada de esto
-> se ha tocado todavía.
+> **Ejecutado el 28 de agosto de 2026.** Lo que sigue es el plan tal como se
+> aprobó. Al final quedan anotadas las tres cosas que en la ejecución salieron
+> distintas de lo escrito, y por qué.
 
 **Qué se busca:** que un club pueda manejar varios deportes dentro de la misma
 cuenta, con aislamiento total entre ellos. Cada deporte es una carpeta con sus
@@ -172,3 +173,79 @@ conserva.
 - La página de precios dice hoy «Lo único que mueve el precio es cuántos
   deportistas tenga tu club». Deja de ser cierta el día que el número de
   carpetas entre al cálculo.
+
+
+---
+
+## Lo que cambió al ejecutarlo
+
+**1. El filtro no se le pasa a las rutas: va montado en el cliente.**
+
+El plan decía «un cliente de Prisma que ya viene con el club y el deporte
+puestos» que las rutas usarían. Al empezar a aplicarlo aparecio que el proyecto
+ya tenía `contexto-peticion.ts`, un AsyncLocalStorage por petición, y que la
+auditoría ya resolvía el mismo problema montándose en el cliente global. Hacer
+lo mismo con el alcance salió mejor por dos razones: no hay que tocar quince
+archivos de rutas, y no queda forma de saltárselo. Lo que sí se paga es que las
+rutas que cruzan clubes a propósito tienen que declararlo — y ese olvido falla
+del lado seguro, dejando una pantalla vacía en vez de mostrando datos ajenos.
+
+**2. La cabecera del deporte es una preferencia, no una credencial.**
+
+El plan decía «rechazar al que pida una carpeta que no le corresponde». Se
+escribió así y se cambió: un 403 en `requireAuth` deja a alguien trancado por
+fuera de su propio club por un valor viejo guardado en el navegador, sin poder
+ni cargar `/me` para arreglarlo. Ahora se ignora la carpeta pedida y se resuelve
+la que sí le toca. El aislamiento no lo da el rechazo sino lo que se resuelve:
+pedir la de otro no la abre en ningún caso. El intento queda en el log.
+
+**3. Tres agujeros que la base de datos no habría atrapado.**
+
+No estaban en el plan porque el plan miraba el esquema:
+
+- Las claves de Redis llevaban solo el club. Cacheada la lista de patinaje, se
+  le servía igual a quien estaba parado en natación, y la consulta ni llegaba a
+  hacerse.
+- El conteo que define el precio quedaba acotado a una carpeta, así que un club
+  con dos deportes habría pagado el tramo de uno solo.
+- El trabajo en cola que genera las cuotas del mes corre fuera de la petición y
+  no heredaba el deporte: el administrador de patinaje se las habría generado
+  también a los de natación.
+
+---
+
+## Cómo se verificó
+
+- **La migración, contra una copia completa de producción** restaurada en una
+  base de ensayo aparte: 19 carpetas creadas, 1558 deportistas, 10036
+  asistencias y 1712 pagos reubicados, **cero filas apuntando a la carpeta de
+  otro club**, y el token de inscripción idéntico byte a byte antes y después.
+  La base de ensayo se borró al terminar.
+- **El aislamiento, con datos inventados** y la prueba que quedó en
+  `api/scripts/prueba-aislamiento.ts`: lecturas, búsqueda por id, filtros con
+  `OR`, creación, `deleteMany`, `updateMany`, el conteo de club entero y el caso
+  sin petición de por medio.
+- `npm test` (60 pruebas), `tsc` en las dos mitades, `next lint` y `next build`.
+
+---
+
+## Lo que quedó pendiente
+
+- **Un club sin dueño declarado.** «Grandes Paisas» tiene 221 deportistas y su
+  único usuario es un ENTRENADOR, así que la migración lo dejó sin
+  `ownerUserId`. Se decidió no promoverlo solo: una migración que le sube los
+  permisos a alguien es peor que un club que por ahora no puede abrir un segundo
+  deporte. Sigue funcionando igual que hoy, con su única carpeta.
+- **Crear un deporte es una acción de escritorio.** En móvil el selector aparece
+  solo si el club ya tiene más de uno. No hay barra superior en móvil a
+  propósito, y sumarle una a todos los clubes para mostrarles un único deporte
+  sería chrome que no informa nada.
+- **Los eventos en vivo siguen siendo por club.** Un movimiento en patinaje hace
+  que la pestaña abierta en natación se refresque de más. No es una fuga: al
+  refrescarse pide sus propios datos. Se deja anotado por si molesta.
+- **El muro (`Post`) quedó por carpeta**, como decía el plan. Es la decisión
+  consistente con «aislamiento total», pero es la que más vale la pena mirar en
+  uso: puede que un club quiera un solo muro para todo.
+- **`Post_clubId_createdAt_idx`** existe en la base y no en el esquema. Es
+  deriva anterior a este cambio (viene de `20260603000005_add_posts`) y se dejó
+  como estaba.

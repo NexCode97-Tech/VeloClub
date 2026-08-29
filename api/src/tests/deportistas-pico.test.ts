@@ -6,10 +6,19 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 // prueba el comportamiento completo: sube al crecer, no baja dentro del ciclo,
 // y se reinicia al pagar.
 
+// El conteo de deportistas usa `prismaClubEntero` a proposito: el club paga por
+// la suma de todos sus deportes, y acotarlo a una carpeta le cobraria de menos.
+// Los dos comparten el mismo doble para que la prueba siga midiendo el criterio
+// de conteo y no por cual de los dos clientes pasa.
+const contarMiembros = vi.fn();
+
 vi.mock('../db/client', () => ({
   prisma: {
-    member: { count: vi.fn() },
+    member: { count: contarMiembros },
     clubSuscripcion: { findUnique: vi.fn(), update: vi.fn(), updateMany: vi.fn() },
+  },
+  prismaClubEntero: {
+    member: { count: contarMiembros },
   },
 }));
 
@@ -17,7 +26,7 @@ const { prisma } = await import('../db/client');
 const { contarDeportistasFacturables, contarDeportistasActivos, reiniciarPicoDeportistas } =
   await import('../lib/deportistas');
 
-const count      = prisma.member.count as unknown as ReturnType<typeof vi.fn>;
+const count      = contarMiembros;
 const findUnique = prisma.clubSuscripcion.findUnique as unknown as ReturnType<typeof vi.fn>;
 const update     = prisma.clubSuscripcion.update as unknown as ReturnType<typeof vi.fn>;
 const updateMany = prisma.clubSuscripcion.updateMany as unknown as ReturnType<typeof vi.fn>;

@@ -38,8 +38,47 @@ npm run lint       # ESLint (sin `any`, sin errores de tipos — Vercel rechaza 
 
 ## Arquitectura
 
-### Multi-tenancy
-Toda entidad del dominio (Member, Payment, Attendance, Location, etc.) tiene `clubId` obligatorio. **Siempre filtrar por `clubId` en queries del backend** — nunca devolver datos cruzados entre clubs.
+### Multi-tenancy y deportes
+Hay **dos fronteras**, no una:
+
+1. **`clubId`** separa clientes. Toda entidad del dominio lo lleva obligatorio.
+2. **`deporteId`** separa deportes *dentro* de un club. Un club puede ofrecer
+   patinaje y natación, y cada uno es una carpeta con sus propios deportistas,
+   sedes, asistencia, mensualidades, caja y resultados. Nada se comparte.
+
+**El filtro por deporte NO se escribe en las rutas.** Va montado en el cliente
+de Prisma (`api/src/lib/alcance.ts`), en el mismo sitio donde vive la auditoría
+y por la misma razón: instrumentar cincuenta rutas a mano significa olvidarse de
+la próxima que alguien agregue. `requireAuth` resuelve la carpeta activa y la
+deja en el contexto de la petición; el cliente la aplica a todo lo que se
+consulte después.
+
+Las rutas que cruzan clubes a propósito se declaran en `api/src/index.ts` con
+`clubEntero`: superadmin, muro público, perfiles, buscador, `/me`, `/deportes`.
+**El sentido de la falla es intencional**: olvidar una declaración deja una
+pantalla vacía que alguien reporta el mismo día; el olvido contrario mostraría
+datos de otro deporte sin que lo notara nadie.
+
+Para una consulta suelta que sí debe ver el club completo existe
+`prismaClubEntero` en `api/src/db/client.ts`. Está separado justo para que se
+note: `grep prismaClubEntero` lista, en una sola pantalla, cada consulta que
+mira más allá de una carpeta. Ahí vive el conteo que define el precio del plan
+— el club paga por la **suma de todos sus deportes**, no por carpeta.
+
+Dos cosas que la base de datos no atrapa y hay que cuidar a mano:
+- **Las claves de Redis llevan el deporte** además del club. Una clave por club
+  le serviría a natación la lista cacheada de patinaje, y la consulta ni
+  llegaría a hacerse.
+- **Los trabajos en cola reciben el `deporteId` en el payload.** Corren fuera de
+  la petición, así que no heredan el contexto.
+
+Quién cruza carpetas: **solo el dueño**, declarado en `Club.ownerUserId`. Se
+declara y no se deduce de «tiene la carpeta en null»: una deducción equivocada
+le abre o le cierra carpetas a la persona incorrecta.
+
+El **enlace de inscripción es por deporte** (`Deporte.inscripcionToken`): quien
+entra por él cae directo en esa carpeta, sin que nadie tenga que repartirlo
+después.
 
 ### Autenticación y roles
 - Clerk gestiona identidades. El backend verifica el JWT con `verifyToken` de `@clerk/backend`.
@@ -79,14 +118,20 @@ GET/POST   /cashflow
 GET/POST   /events                   # CalendarEvent
 GET/POST   /locations
 
-GET        /me                       # bootstrap de sesión
+GET        /me                       # bootstrap de sesión (incluye el selector de deporte)
 GET/PATCH  /clubs/:id               # configuración del club
+
+GET/POST   /deportes                 # las carpetas del club
+PATCH      /deportes/:id             # renombrar, activar, desactivar
+DELETE     /deportes/:id             # solo si está vacía
 
 /superadmin/*                        # solo SUPERADMIN — clubs, suscripciones, notificaciones
 ```
 
 ### Modelo de datos clave
-- `User` = staff del club (ADMIN, COACH). Tiene `clerkId` único.
+- `Deporte` = la carpeta. Cuelga del club y lleva su propio enlace de inscripción.
+- `User` = staff del club (ADMIN, ENTRENADOR). Tiene `clerkId` único y un
+  `deporteId` opcional: en null cruza todas las carpetas, que es el caso del dueño.
 - `Member` = deportista. Puede o no tener `clerkId` (si fue invitado). Tiene su propio `role = STUDENT`.
 - `Payment` = mensualidad con `month` + `year` + `memberId`. Genera `CashEntry` automáticamente al pagarse.
 - `Attendance` tiene constraint `@@unique([memberId, date])` — un registro por miembro por día.

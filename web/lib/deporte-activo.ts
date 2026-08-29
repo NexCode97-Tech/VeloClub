@@ -43,3 +43,23 @@ export function fijarDeporteActivo(id: string | null): void {
     // Igual que arriba: sin almacenamiento la elección dura lo que la pestaña.
   }
 }
+
+/**
+ * El nombre del deporte activo, para poder decirlo en pantalla.
+ *
+ * Lo deja puesto el panel al resolver `/me` y lo leen las pantallas que
+ * necesitan nombrarlo — el modal de nuevo miembro, sobre todo. Va aquí y no en
+ * un contexto para que se pueda leer de una, sin pedirle nada al servidor: el
+ * dato ya vino con el arranque.
+ *
+ * No es una fuente de verdad; el que manda es el id. Esto es solo la etiqueta.
+ */
+let nombre: string | null = null;
+
+export function nombreDeporteActivo(): string | null {
+  return nombre;
+}
+
+export function fijarNombreDeporte(valor: string | null): void {
+  nombre = valor;
+}

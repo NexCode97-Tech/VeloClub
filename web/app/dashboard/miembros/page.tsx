@@ -9,6 +9,7 @@ import { createPortal } from 'react-dom';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { stagger as pageStagger, cardVariant as pageCard } from '@/lib/page-animations';
 import { apiFetch } from '@/lib/api-client';
+import { nombreDeporteActivo } from '@/lib/deporte-activo';
 import { parseLocalDate } from '@/lib/utils';
 import { QK } from '@/hooks/useVeloQuery';
 import { Input } from '@/components/ui/input';
@@ -1279,6 +1280,17 @@ export default function MiembrosPage() {
                 <h2 className="text-[22px] font-semibold text-foreground leading-tight mt-0.5" style={{ fontFamily: 'inherit' }}>
                   {editing ? editing.fullName : 'Datos del deportista'}
                 </h2>
+                {/* En que deporte va a quedar. El dato ya esta arriba en el
+                    selector, pero ahi arriba no es donde se toma la decision:
+                    es aqui, y quien lleve media hora llenando fichas no vuelve
+                    a mirar el menu. Solo al crear — al editar no se mueve de
+                    deporte, asi que decirlo sobraria. */}
+                {!editing && nombreDeporteActivo() && (
+                  <p className="text-[12px] mt-1.5" style={{ color: '#8E87A8' }}>
+                    Entra al deporte{' '}
+                    <b style={{ color: '#381DA0', fontWeight: 600 }}>{nombreDeporteActivo()}</b>
+                  </p>
+                )}
               </div>
               <motion.button
                 whileTap={reducedMotion ? {} : { scale: 0.93 }}

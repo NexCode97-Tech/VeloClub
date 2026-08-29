@@ -78,7 +78,12 @@ export async function resolverCarpeta(opts: {
   // Los deportes son cosa de los administradores, todos. Al principio esto
   // estaba reservado al dueno; con cuatro administradores en un mismo club, tres
   // no tenian forma ni de enterarse de que la funcion existia.
-  const puedeCambiar = rol === 'ADMIN' || esDueno;
+  //
+  // La condicion es SOLO el rol, no «rol o ser dueno». Ser dueno se declara a
+  // mano desde el panel de superadmin, y bastaria nombrar ahi a un entrenador
+  // para colarle el permiso por la puerta de atras. Entrenadores y deportistas
+  // ven su deporte y no lo cambian, pase lo que pase con `ownerUserId`.
+  const puedeCambiar = rol === 'ADMIN';
 
   if (puedeCambiar) {
     const activas = (await deportesDelClub(clubId)).filter(c => c.activo);

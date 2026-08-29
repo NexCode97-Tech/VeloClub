@@ -3,12 +3,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { AnimatePresence, motion } from 'framer-motion';
-import {
-  Check, ChevronsUpDown,
-} from 'lucide-react';
-import {
-  IconMas, IconUbicacion, IconUsers, iconoDeDeporte,
-} from '@/components/ui/custom-icons';
+import { Check, ChevronDown } from 'lucide-react';
+import { iconoDeDeporte, IconMas } from '@/components/ui/custom-icons';
+import { DEPORTES, mismoDeporte } from '@/lib/deportes';
 
 export interface Carpeta {
   id: string;
@@ -24,7 +21,7 @@ interface CarpetaConCifras extends Carpeta {
 interface Props {
   deportes: Carpeta[];
   activo: string | null;
-  /** Solo el dueño del club cruza entre deportes. */
+  /** Cambiar de deporte y abrir uno nuevo: los administradores. */
   puedeCambiar: boolean;
   colapsado: boolean;
   onCambiar: (id: string) => void;
@@ -33,33 +30,32 @@ interface Props {
   onAgregar: (nombre: string) => Promise<void>;
 }
 
+const MORADO = '#381DA0';
+const MUDO   = '#8E87A8';
+const BORDE  = 'rgba(120,80,200,0.10)';
+
 /**
  * La insignia del deporte.
  *
  * Con ícono propio cuando lo hay y, si no, con la inicial del nombre. La
- * inicial no es un parche: un club abre la carpeta que quiera y le pone el
- * nombre que quiera, así que un ícono genérico para todos los deportes sin arte
- * dejaría tres carpetas con el mismo dibujo — que es justo lo contrario de para
- * lo que está el ícono. La letra al menos distingue, y se ve como lo que es:
- * un lugar esperando su dibujo.
+ * inicial no es un parche: un ícono genérico para todos los deportes sin arte
+ * dejaría tres carpetas con el mismo dibujo, que es justo lo contrario de para
+ * lo que está el ícono.
  */
-function Insignia({ nombre, tam = 26 }: { nombre: string; tam?: number }) {
+function Insignia({ nombre, tam = 28 }: { nombre: string; tam?: number }) {
   const Icono = iconoDeDeporte(nombre);
-  const glifo = Math.round(tam * 0.58);
+  const glifo = Math.round(tam * 0.57);
   return (
     <span
       className="flex items-center justify-center shrink-0"
       style={{
-        width: tam, height: tam, borderRadius: Math.round(tam * 0.31),
-        background: 'rgba(56,29,160,0.08)', color: '#381DA0',
+        width: tam, height: tam, borderRadius: '50%',
+        background: 'rgba(56,29,160,0.10)', color: MORADO,
       }}
     >
       {Icono
         ? <Icono style={{ width: glifo, height: glifo }} />
-        : <span
-            className="font-semibold leading-none"
-            style={{ fontSize: Math.round(tam * 0.46) }}
-          >
+        : <span className="font-semibold leading-none" style={{ fontSize: Math.round(tam * 0.44) }}>
             {nombre.trim().charAt(0).toUpperCase()}
           </span>
       }
@@ -78,23 +74,20 @@ function Insignia({ nombre, tam = 26 }: { nombre: string; tam?: number }) {
  * y sin abrir. Un entrenador que no sabe en qué deporte está es un entrenador
  * que marca asistencia en el lugar equivocado.
  *
- * Se muestra SIEMPRE, también en un club de un solo deporte. Al principio se
- * escondía ahí, con el argumento de que un letrero que dice lo único que puede
- * decir no informa nada. El argumento estaba mal: lo que confirma no es cuál de
- * varios, es que estás parado donde crees. Sin él, el día que el club abra el
- * segundo deporte nadie va a tener la costumbre de mirar.
+ * Se muestra siempre, también en un club de un solo deporte: lo que confirma no
+ * es cuál de varios, es que estás parado donde crees.
  */
 export default function SelectorDeporte({
   deportes, activo, puedeCambiar, colapsado, onCambiar, cargarCifras, onAgregar,
 }: Props) {
   const [abierto, setAbierto] = useState(false);
   const [cifras, setCifras] = useState<CarpetaConCifras[] | null>(null);
-  const [agregando, setAgregando] = useState(false);
-  const [nombreNuevo, setNombreNuevo] = useState('');
+  const [eligiendo, setEligiendo] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [guardando, setGuardando] = useState(false);
+  const [creando, setCreando] = useState<string | null>(null);
   const [caja, setCaja] = useState<{ top: number; left: number; width: number } | null>(null);
   const botonRef = useRef<HTMLDivElement>(null);
+  const menuRef  = useRef<HTMLDivElement>(null);
 
   const actual = deportes.find(d => d.id === activo) ?? deportes[0] ?? null;
 
@@ -110,21 +103,30 @@ export default function SelectorDeporte({
     return () => { vivo = false; };
   }, [abierto, cifras, cargarCifras]);
 
+  // Cerrar al tocar fuera. Cuenta como «dentro» tanto el botón como el menú:
+  // el menú vive en un portal y cuelga del body, así que sin comprobarlo
+  // también, tocar cualquier opción se leía como un clic de afuera y cerraba
+  // el menú en el mismo gesto con el que se estaba eligiendo.
   useEffect(() => {
     if (!abierto) return;
-    const cerrar = (e: MouseEvent) => {
-      if (!botonRef.current?.contains(e.target as Node)) setAbierto(false);
+    const fuera = (e: MouseEvent) => {
+      const t = e.target as Node;
+      if (botonRef.current?.contains(t) || menuRef.current?.contains(t)) return;
+      setAbierto(false);
     };
     const conEsc = (e: KeyboardEvent) => { if (e.key === 'Escape') setAbierto(false); };
-    // En captura: el menú vive en un portal, así que un clic dentro de él no
-    // pasa por el botón y cerraría el menú justo al elegir.
+    document.addEventListener('mousedown', fuera);
     document.addEventListener('keydown', conEsc);
-    const t = setTimeout(() => document.addEventListener('mousedown', cerrar), 0);
     return () => {
-      clearTimeout(t);
-      document.removeEventListener('mousedown', cerrar);
+      document.removeEventListener('mousedown', fuera);
       document.removeEventListener('keydown', conEsc);
     };
+  }, [abierto]);
+
+  // Al cerrarlo vuelve a la lista de deportes: reabrirlo y encontrarse a mitad
+  // de «agregar» es desconcertante, porque no es donde se dejó.
+  useEffect(() => {
+    if (!abierto) { setEligiendo(false); setError(null); }
   }, [abierto]);
 
   // El menú se dibuja en un portal para que no lo recorte el sidebar, que tiene
@@ -133,7 +135,7 @@ export default function SelectorDeporte({
     if (!abierto) { setCaja(null); return; }
     const medir = () => {
       const r = botonRef.current?.getBoundingClientRect();
-      if (r) setCaja({ top: r.bottom + 6, left: r.left, width: Math.max(r.width, 244) });
+      if (r) setCaja({ top: r.bottom + 6, left: r.left, width: Math.max(r.width, 248) });
     };
     medir();
     window.addEventListener('resize', medir);
@@ -144,57 +146,53 @@ export default function SelectorDeporte({
     };
   }, [abierto]);
 
-  // Lo único que lo esconde es no tener ninguna carpeta que mostrar.
   if (!actual) return null;
 
   const cifrasDe = (id: string) => cifras?.find(c => c.id === id) ?? null;
+  const disponibles = DEPORTES.filter(d => !deportes.some(x => mismoDeporte(x.nombre, d)));
 
-  async function crear() {
-    const nombre = nombreNuevo.trim();
-    if (nombre.length < 2) { setError('Escribe el nombre del deporte'); return; }
-    setGuardando(true);
+  async function crear(nombre: string) {
+    setCreando(nombre);
     setError(null);
     try {
       await onAgregar(nombre);
-      setNombreNuevo('');
-      setAgregando(false);
-      setAbierto(false);
-      setCifras(null);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'No se pudo agregar');
-    } finally {
-      setGuardando(false);
+      setCreando(null);
     }
   }
 
   const cuerpo = (
-    <div
-      className="flex items-center gap-2.5 w-full"
-      style={{ minWidth: 0 }}
-    >
+    <>
       <Insignia nombre={actual.nombre} />
       {!colapsado && (
         <>
-          <span className="flex flex-col min-w-0 text-left">
-            <span className="text-[9.5px] font-semibold tracking-[0.07em] text-[#8E87A8] leading-none mb-[3px]">
+          <span className="flex flex-col flex-1 min-w-0 text-left">
+            <span className="text-[10px] font-semibold" style={{ letterSpacing: '0.06em', color: MUDO }}>
               DEPORTE
             </span>
-            <span className="text-[13px] font-semibold text-[#1A1028] truncate leading-none">
+            <span
+              className="text-[13.5px] font-semibold truncate"
+              style={{ letterSpacing: '-0.01em', color: '#1A1028' }}
+            >
               {actual.nombre}
             </span>
           </span>
           {puedeCambiar && (
-            <ChevronsUpDown className="w-3.5 h-3.5 shrink-0 ml-auto text-[#8E87A8]" />
+            <ChevronDown
+              className="w-3.5 h-3.5 shrink-0 transition-transform duration-200"
+              style={{ color: MUDO, transform: abierto ? 'rotate(180deg)' : 'none' }}
+            />
           )}
         </>
       )}
-    </div>
+    </>
   );
 
   return (
     <div
       className="shrink-0"
-      style={{ padding: colapsado ? '8px 8px' : '8px 10px', borderBottom: '1px solid rgba(0,0,0,0.06)' }}
+      style={{ padding: 10, borderBottom: '1px solid rgba(0,0,0,0.06)' }}
     >
       <div ref={botonRef}>
         {puedeCambiar ? (
@@ -204,18 +202,18 @@ export default function SelectorDeporte({
             aria-haspopup="listbox"
             aria-expanded={abierto}
             title={colapsado ? actual.nombre : undefined}
-            className="w-full flex items-center rounded-[10px] transition-colors hover:bg-[rgba(56,29,160,0.05)] cursor-pointer"
-            style={{ padding: colapsado ? 4 : '7px 8px', border: '1px solid rgba(120,80,200,0.14)' }}
+            className="w-full flex items-center gap-[9px] rounded-[11px] cursor-pointer transition-colors hover:bg-[#F1EFF9]"
+            style={{ padding: colapsado ? 5 : '9px 10px', background: '#F7F7FB', border: `1px solid ${BORDE}` }}
           >
             {cuerpo}
           </button>
         ) : (
-          // Rótulo, no control: borde punteado para que se lea como «estás
-          // aquí» y no como algo que se puede tocar.
+          // Rótulo, no control: fondo blanco y borde punteado para que se lea
+          // como «estás aquí» y no como algo que se puede tocar.
           <div
             title={colapsado ? actual.nombre : undefined}
-            className="w-full flex items-center rounded-[10px]"
-            style={{ padding: colapsado ? 4 : '7px 8px', border: '1px dashed rgba(120,80,200,0.28)' }}
+            className="w-full flex items-center gap-[9px] rounded-[11px]"
+            style={{ padding: colapsado ? 5 : '9px 10px', background: '#fff', border: `1px dashed ${BORDE}` }}
           >
             {cuerpo}
           </div>
@@ -226,104 +224,114 @@ export default function SelectorDeporte({
         <AnimatePresence>
           {abierto && caja && (
             <motion.div
-              initial={{ opacity: 0, y: -4, scale: 0.98 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -4, scale: 0.98 }}
-              transition={{ duration: 0.14, ease: [0.23, 1, 0.32, 1] }}
+              ref={menuRef}
+              initial={{ opacity: 0, y: -5 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -5 }}
+              transition={{ duration: 0.16, ease: [0.23, 1, 0.32, 1] }}
               role="listbox"
-              className="fixed z-[80] rounded-[14px] overflow-hidden"
+              aria-label="Deportes del club"
+              className="fixed z-[80]"
               style={{
                 top: caja.top, left: caja.left, width: caja.width,
-                background: '#fff',
-                border: '1px solid rgba(120,80,200,0.14)',
-                boxShadow: '0 12px 32px -8px rgba(26,16,40,0.18), 0 2px 6px rgba(26,16,40,0.06)',
+                background: '#fff', border: `1px solid ${BORDE}`, borderRadius: 12, padding: 5,
+                boxShadow: '0 12px 32px -8px rgba(26,16,40,0.22), 0 2px 6px rgba(26,16,40,0.06)',
+                maxHeight: '70dvh', overflowY: 'auto',
               }}
             >
-              <div className="py-1.5">
-                {deportes.map(d => {
-                  const c = cifrasDe(d.id);
-                  const esActual = d.id === actual.id;
-                  return (
-                    <button
-                      key={d.id}
-                      type="button"
-                      role="option"
-                      aria-selected={esActual}
-                      onClick={() => { setAbierto(false); if (!esActual) onCambiar(d.id); }}
-                      className="w-full flex items-center gap-2.5 px-3 py-2.5 text-left transition-colors hover:bg-[rgba(56,29,160,0.05)] cursor-pointer"
-                    >
-                      <Insignia nombre={d.nombre} tam={24} />
-                      <span className="flex flex-col min-w-0 flex-1">
-                        <span className="text-[13px] font-semibold text-[#1A1028] truncate leading-tight">
-                          {d.nombre}
-                        </span>
-                        {c && (
-                          <span className="flex items-center gap-2.5 mt-[3px] text-[11px] text-[#8E87A8] leading-none">
-                            <span className="inline-flex items-center gap-1">
-                              <IconUsers className="w-3 h-3" />
-                              {c.deportistas}
-                            </span>
-                            <span className="inline-flex items-center gap-1">
-                              <IconUbicacion className="w-3 h-3" />
-                              {c.sedes}
-                            </span>
-                          </span>
-                        )}
-                      </span>
-                      {esActual && <Check className="w-3.5 h-3.5 shrink-0 text-[#381DA0]" strokeWidth={2.6} />}
-                    </button>
-                  );
-                })}
-              </div>
-
-              <div style={{ borderTop: '1px solid rgba(0,0,0,0.06)' }}>
-                {agregando ? (
-                  <div className="p-3 flex flex-col gap-2">
-                    <input
-                      autoFocus
-                      value={nombreNuevo}
-                      onChange={e => { setNombreNuevo(e.target.value); setError(null); }}
-                      onKeyDown={e => { if (e.key === 'Enter') crear(); }}
-                      placeholder="Natación, fútbol, atletismo…"
-                      maxLength={40}
-                      className="w-full text-[13px] rounded-[9px] px-2.5 py-2 outline-none focus:border-[#381DA0]"
-                      style={{ border: '1px solid rgba(120,80,200,0.18)', color: '#1A1028' }}
-                    />
-                    <p className="text-[11px] text-[#8E87A8] leading-snug">
-                      Nace vacío. No se copia nada del otro deporte: ni deportistas,
-                      ni sedes, ni horarios.
+              {eligiendo ? (
+                <>
+                  <p className="px-[9px] pt-1.5 pb-2 text-[11px] leading-snug" style={{ color: MUDO }}>
+                    Nace vacío: no se copia nada del otro deporte, ni deportistas,
+                    ni sedes, ni horarios.
+                  </p>
+                  {error && (
+                    <p className="px-[9px] pb-2 text-[11.5px] leading-snug" style={{ color: '#DC2626' }}>{error}</p>
+                  )}
+                  {disponibles.length === 0 ? (
+                    <p className="px-[9px] py-2 text-[12px]" style={{ color: MUDO }}>
+                      Ya tienes todos los deportes de la lista.
                     </p>
-                    {error && <p className="text-[11.5px] text-[#DC2626] leading-snug">{error}</p>}
-                    <div className="flex gap-2">
-                      <button
-                        type="button"
-                        onClick={crear}
-                        disabled={guardando}
-                        className="flex-1 text-[12.5px] font-semibold text-white rounded-full py-2 transition-all disabled:opacity-60 cursor-pointer"
-                        style={{ background: '#381DA0' }}
-                      >
-                        {guardando ? 'Creando…' : 'Crear'}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => { setAgregando(false); setError(null); setNombreNuevo(''); }}
-                        className="text-[12.5px] font-semibold text-[#8E87A8] rounded-full px-3.5 py-2 transition-colors hover:bg-[rgba(26,16,40,0.05)] cursor-pointer"
-                      >
-                        Cancelar
-                      </button>
-                    </div>
-                  </div>
-                ) : (
+                  ) : disponibles.map(nombre => (
+                    <button
+                      key={nombre}
+                      type="button"
+                      disabled={creando !== null}
+                      onClick={() => crear(nombre)}
+                      className="w-full flex items-center gap-[9px] px-[9px] py-2 rounded-[9px] text-left transition-colors hover:bg-[#F7F7FB] cursor-pointer disabled:opacity-50"
+                    >
+                      <Insignia nombre={nombre} tam={24} />
+                      <span className="flex-1 text-[13px] font-semibold" style={{ letterSpacing: '-0.01em', color: '#1A1028' }}>
+                        {nombre}
+                      </span>
+                      {creando === nombre && (
+                        <span className="text-[11px]" style={{ color: MUDO }}>Creando…</span>
+                      )}
+                    </button>
+                  ))}
+                  <div style={{ height: 1, background: 'rgba(0,0,0,0.06)', margin: '5px 3px' }} />
                   <button
                     type="button"
-                    onClick={() => setAgregando(true)}
-                    className="w-full flex items-center gap-2 px-3 py-2.5 text-[12.5px] font-semibold text-[#381DA0] transition-colors hover:bg-[rgba(56,29,160,0.05)] cursor-pointer"
+                    onClick={() => { setEligiendo(false); setError(null); }}
+                    className="w-full text-left px-[9px] py-2 rounded-[9px] text-[12.5px] font-semibold transition-colors hover:bg-[#F7F7FB] cursor-pointer"
+                    style={{ color: MUDO }}
                   >
-                    <IconMas className="w-3.5 h-3.5" strokeWidth={2.4} />
-                    Agregar deporte
+                    Volver
                   </button>
-                )}
-              </div>
+                </>
+              ) : (
+                <>
+                  {deportes.map(d => {
+                    const c = cifrasDe(d.id);
+                    const esActual = d.id === actual.id;
+                    return (
+                      <button
+                        key={d.id}
+                        type="button"
+                        role="option"
+                        aria-selected={esActual}
+                        onClick={() => { setAbierto(false); if (!esActual) onCambiar(d.id); }}
+                        className="w-full flex items-center gap-[9px] px-[9px] py-2 rounded-[9px] text-left transition-colors hover:bg-[#F7F7FB] cursor-pointer"
+                      >
+                        <Insignia nombre={d.nombre} tam={24} />
+                        <span className="flex flex-col flex-1 min-w-0">
+                          <span className="text-[13px] font-semibold truncate" style={{ letterSpacing: '-0.01em', color: '#1A1028' }}>
+                            {d.nombre}
+                          </span>
+                          {c && (
+                            <span className="text-[11px]" style={{ color: MUDO }}>
+                              {c.deportistas} {c.deportistas === 1 ? 'deportista' : 'deportistas'}
+                              {' · '}
+                              {c.sedes} {c.sedes === 1 ? 'sede' : 'sedes'}
+                            </span>
+                          )}
+                        </span>
+                        <Check
+                          className="w-3.5 h-3.5 shrink-0"
+                          strokeWidth={2.6}
+                          style={{ color: MORADO, opacity: esActual ? 1 : 0 }}
+                        />
+                      </button>
+                    );
+                  })}
+
+                  {puedeCambiar && (
+                    <>
+                      <div style={{ height: 1, background: 'rgba(0,0,0,0.06)', margin: '5px 3px' }} />
+                      <button
+                        type="button"
+                        onClick={() => setEligiendo(true)}
+                        className="w-full flex items-center gap-[9px] px-[9px] py-2 rounded-[9px] text-left transition-colors hover:bg-[#F7F7FB] cursor-pointer"
+                      >
+                        <span className="w-6 h-6 shrink-0 flex items-center justify-center" style={{ color: MORADO }}>
+                          <IconMas style={{ width: 13, height: 13 }} />
+                        </span>
+                        <span className="text-[12.5px] font-semibold" style={{ color: MORADO }}>Agregar deporte</span>
+                      </button>
+                    </>
+                  )}
+                </>
+              )}
             </motion.div>
           )}
         </AnimatePresence>,

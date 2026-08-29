@@ -50,7 +50,7 @@ export interface Member {
  */
 export interface Candidato {
   id: string; name: string; email: string;
-  role: 'ADMIN' | 'ENTRENADOR'; esDueno: boolean;
+  role: 'ADMIN'; esDueno: boolean;
 }
 export interface Club {
   id: string; name: string; active: boolean; createdAt: string;

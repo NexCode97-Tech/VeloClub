@@ -8,7 +8,7 @@ import { useEffect, useState, useRef, Suspense } from 'react';
 import { createPortal } from 'react-dom';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { apiFetch } from '@/lib/api-client';
-import { deporteActivo, fijarDeporteActivo } from '@/lib/deporte-activo';
+import { deporteActivo, fijarDeporteActivo, fijarNombreDeporte } from '@/lib/deporte-activo';
 import SelectorDeporte from '@/components/ui/selector-deporte';
 import LoadingScreen, { LoadingCurtain, CURTAIN_MS, esperarPantallaCarga } from '@/components/ui/loading-screen';
 import { BottomCircleMenu } from '@/components/ui/bottom-circle-menu';
@@ -394,6 +394,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         const sel = res.deportes ?? SIN_DEPORTES;
         setDeportes(sel);
         if (sel.activo !== deporteActivo()) fijarDeporteActivo(sel.activo);
+        fijarNombreDeporte(sel.lista.find(d => d.id === sel.activo)?.nombre ?? null);
 
         if (userRole === 'DEPORTISTA') {
           const DEPORTISTA_PERMITIDO = ['/dashboard', '/dashboard/logros', '/dashboard/calendario', '/dashboard/sedes', '/dashboard/club', '/dashboard/pagos', '/dashboard/mas', '/dashboard/perfil', '/dashboard/ajustes'];

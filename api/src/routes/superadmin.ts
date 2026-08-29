@@ -361,8 +361,12 @@ router.get('/clubs/:id/dueno', requireAuth, requireSuperadmin, async (req, res) 
   });
   if (!club) return res.status(404).json({ error: 'Club no encontrado' });
 
+  // Solo administradores. Un entrenador nombrado dueno seria una contradiccion:
+  // el dueno es la cara del club ante nosotros, y quien no administra no puede
+  // serlo. Ademas evita que por aca se le cuele el permiso de cambiar de
+  // deporte a quien no le corresponde.
   const candidatos = await prisma.user.findMany({
-    where: { clubId, role: { in: ['ADMIN', 'ENTRENADOR'] } },
+    where: { clubId, role: 'ADMIN' },
     select: { id: true, name: true, email: true, role: true, createdAt: true },
     orderBy: { createdAt: 'asc' },
   });
@@ -380,10 +384,10 @@ router.patch('/clubs/:id/dueno', requireAuth, requireSuperadmin, async (req, res
   if (!parsed.success) return res.status(400).json({ error: parsed.error.issues });
 
   const nuevo = await prisma.user.findFirst({
-    where: { id: parsed.data.userId, clubId },
+    where: { id: parsed.data.userId, clubId, role: 'ADMIN' },
     select: { id: true, name: true },
   });
-  if (!nuevo) return res.status(400).json({ error: 'Esa persona no pertenece a este club' });
+  if (!nuevo) return res.status(400).json({ error: 'El dueño tiene que ser un administrador de este club' });
 
   const anterior = await prisma.club.findUnique({
     where: { id: clubId },

@@ -11,6 +11,7 @@ import {
   Bell, BellOff, X, Paperclip, FileText, Trophy, Users, CheckSquare, Wallet,
 } from 'lucide-react';
 import { CarruselCumpleanos, CarruselEventos } from '@/components/ui/widgets-carrusel';
+import { SelectorDeporteMovil } from '@/lib/contexto-deporte';
 import { Slideshow } from '@/components/ui/slideshow';
 // La tarjeta de publicacion es la misma en Inicio, Club y Mi perfil.
 import { PostCard } from '@/components/ui/post-card';
@@ -698,6 +699,13 @@ export default function DashboardPage() {
           la misma informacion, con la fecha exacta de fin, sin ocupar una franja
           entera de la pantalla. */}
       <div className="px-4 sm:px-6 pt-3 sm:pt-4 space-y-3">
+        {/* El selector de deporte, en movil. Va aca y no arriba del todo: aca
+            queda debajo del encabezado morado y pegado a las fichas de
+            resumen, que es lo que esta mirando. Encima del encabezado se veia
+            como una pieza suelta que no pertenece a la pantalla.
+            En escritorio no aparece — alli vive en el sidebar. */}
+        <SelectorDeporteMovil />
+
         {trial !== null && role === 'ADMIN' && (
           <div
             className="rounded-2xl px-3.5 py-3 flex items-center gap-3 bg-white"

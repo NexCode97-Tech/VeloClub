@@ -108,9 +108,24 @@ function Carril({ children }: { children: React.ReactNode }) {
   const mover = (signo: 1 | -1) => {
     const el = carril.current;
     if (!el) return;
-    // Un salto de casi una pantalla, con un tope para que en móvil no avance
-    // media ficha por golpe.
-    el.scrollBy({ left: signo * Math.max(el.clientWidth * 0.8, 180), behavior: 'smooth' });
+
+    // El salto va por fichas enteras, no por un porcentaje del ancho: con un
+    // 80 % suelto el carril quedaba a mitad de ficha y al devolverse la
+    // primera se veía cortada. El paso se mide del propio DOM para que siga
+    // sirviendo si algún día la ficha cambia de ancho.
+    const fichas = el.children;
+    const primera = fichas[0] as HTMLElement | undefined;
+    if (!primera) return;
+    const segunda = fichas[1] as HTMLElement | undefined;
+    const paso = segunda ? segunda.offsetLeft - primera.offsetLeft : primera.offsetWidth + 8;
+    if (paso <= 0) return;
+
+    // Cuántas caben a la vista, mínimo una: así el golpe nunca se queda corto
+    // ni se salta fichas sin que se vean.
+    const cuantas = Math.max(1, Math.floor(el.clientWidth / paso));
+    const actual = Math.round(el.scrollLeft / paso);
+    // scrollTo recorta solo lo que se pase de los extremos.
+    el.scrollTo({ left: (actual + signo * cuantas) * paso, behavior: 'smooth' });
   };
 
   return (

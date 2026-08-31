@@ -446,6 +446,16 @@ export function IconGenerarCobros({ className, style, ...props }: IconProps) {
   );
 }
 
+/** Enviar: el avión de papel del campo de comentarios. */
+export function IconEnviar({ className, style, ...props }: IconProps) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="-2 -2 28 28" fill="currentColor"
+      className={className} style={style} {...props}>
+      <path d="m.172,3.708C-.216,2.646.076,1.47.917.713,1.756-.041,2.951-.211,3.965.282l18.09,8.444c.97.454,1.664,1.283,1.945,2.273H4.048L.229,3.835c-.021-.041-.04-.084-.057-.127Zm3.89,9.292L.309,20.175c-.021.04-.039.08-.054.122-.387,1.063-.092,2.237.749,2.993.521.467,1.179.708,1.841.708.409,0,.819-.092,1.201-.279l18.011-8.438c.973-.456,1.666-1.288,1.945-2.28H4.062Z"/>
+    </svg>
+  );
+}
+
 /** El altavoz del cupo de publicidad libre. */
 export function IconVolumen({ className, style, ...props }: IconProps) {
   return (

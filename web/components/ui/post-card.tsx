@@ -10,10 +10,10 @@ import { MemberAvatar } from '@/components/ui/member-avatar';
 import { ContenidoGuardado } from '@/components/ui/save-button-state';
 import { VisorImagen } from '@/components/ui/visor-imagen';
 import {
-  IconCandado, IconChat, IconCompartir, IconEditar, IconEliminar, IconMeGusta, IconMeGustaVacio, IconPublico, IconUbicacion,
+  IconCandado, IconChat, IconCompartir, IconEditar, IconEliminar, IconEnviar, IconMeGusta, IconMeGustaVacio, IconPublico, IconUbicacion,
 } from '@/components/ui/custom-icons';
 import {
-  ChevronRight, FileText, SendHorizontal, X, MoreHorizontal, Flag,
+  ChevronRight, FileText, X, MoreHorizontal, Flag,
 } from 'lucide-react';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -1026,7 +1026,7 @@ export function PostCard({
                     style={{ background: '#381DA0' }}>
                     {sendingComment
                       ? <div className="w-3.5 h-3.5 border-2 border-white/50 border-t-white rounded-full animate-spin" />
-                      : <SendHorizontal className="w-4 h-4 text-white" />
+                      : <IconEnviar className="w-4 h-4 text-white" />
                     }
                   </motion.button>
                 </div>

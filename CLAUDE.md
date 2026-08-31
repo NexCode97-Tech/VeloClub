@@ -166,8 +166,35 @@ DELETE     /deportes/:id             # solo si está vacía
   fuente suelto** en `style` ni en una clase; si no se carga, el navegador cae al sans
   del sistema y la pantalla se ve distinta en cada computador. Para código y cifras
   alineadas, **Geist Mono** vía `font-mono`.
-- Mobile-first PWA con bottom tab bar por rol. Desktop con sidebar fijo de 240px.
-- Íconos: solo Lucide React.
+- Mobile-first PWA con bottom tab bar por rol. Desktop con sidebar de 210px
+  (64 colapsado), visible desde `md`.
+
+### Íconos
+
+Son **propios**, en `web/components/ui/custom-icons.tsx`. Lucide queda solo
+donde todavía no hay equivalente dibujado; al agregar uno propio se reemplaza
+en **todos** sus usos de una vez, no solo en la pantalla que se esté tocando.
+Un mismo concepto con dos dibujos según la pantalla es el error que más veces
+ha aparecido aquí: pasó con el verificado, con el teléfono y con la billetera.
+
+Dos reglas al agregar uno:
+
+- **El lienzo lleva margen si el dibujo llega al borde**: `viewBox="-2 -2 28 28"`
+  en vez de `"0 0 24 24"`, sin tocar el `path`. El tamaño que se escribe
+  (`w-[13px]`) se le da al lienzo, no al dibujo, así que uno que llene el borde
+  se ve un sexto más grande que un Lucide del mismo tamaño, y si tiene un canto
+  recto pegado al límite, esa fila de píxeles se pinta a medias y se lee como
+  recortada. Le pasó al calendario.
+- **El tamaño va por clase, nunca con `size`.** `size` es una prop de Lucide, no
+  un atributo de SVG: en los propios no hace nada y en TypeScript falla si la
+  lista mezcla unos y otros.
+
+Los ~50 íconos viejos no llevan ese margen. **No se normalizan en masa**: sus
+tamaños están calibrados a ojo por toda la plataforma y cambiarlos de golpe
+obliga a revisarla entera a ciegas. Se normalizan por pantalla, cuando se
+trabaje en ella y se pueda mirar el resultado. Mientras convivan las dos
+generaciones, un ícono viejo junto a uno nuevo se compensa en el tamaño de ese
+uso —`w-[11px]` contra `w-[13px]` en las fichas de Inicio— con el porqué al lado.
 
 ### Navegación por rol (móvil / desktop)
 - `ROLE_TABS` en `layout.tsx` define las tabs del bottom bar móvil por rol.

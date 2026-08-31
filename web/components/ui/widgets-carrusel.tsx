@@ -1,6 +1,8 @@
 'use client';
 
+import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { IconCumpleanos, IconEvento } from '@/components/ui/custom-icons';
 
 /**
@@ -17,6 +19,7 @@ import { IconCumpleanos, IconEvento } from '@/components/ui/custom-icons';
  */
 
 const MUDO = '#8E87A8';
+const BORDE = 'rgba(120,80,200,0.10)';
 
 interface Evento {
   id: string; title: string; type: string; startDate: string; allDay: boolean;
@@ -41,23 +44,91 @@ function tituloDe(t: string) {
   return t.charAt(0).toUpperCase() + t.slice(1).toLowerCase();
 }
 
-/** El carril. Se desplaza con el dedo, con la rueda o con las flechas. */
-function Carril({ children }: { children: React.ReactNode }) {
+/** Una flecha, con la máscara que desvanece las fichas por debajo. */
+function Flecha({ lado, onClick }: { lado: 'izq' | 'der'; onClick: () => void }) {
+  const izq = lado === 'izq';
+  const Icono = izq ? ChevronLeft : ChevronRight;
   return (
     <div
-      className="flex gap-2 overflow-x-auto px-3 pb-3 sm:px-4 sm:pb-4"
+      className={`absolute top-0 bottom-3 sm:bottom-4 flex items-center pointer-events-none ${izq ? 'left-0 pl-1.5 sm:pl-2 justify-start' : 'right-0 pr-1.5 sm:pr-2 justify-end'}`}
       style={{
-        // La barra se esconde: en escritorio robaba alto a una tarjeta que
-        // justamente existe para ocupar poco, y el desplazamiento se entiende
-        // igual porque la última ficha queda cortada a la vista.
-        scrollbarWidth: 'none',
-        msOverflowStyle: 'none',
-        scrollSnapType: 'x proximity',
-        WebkitOverflowScrolling: 'touch',
-        overscrollBehaviorX: 'contain',
+        width: 56,
+        // No es un degradado de marca: es la máscara que avisa que el carril
+        // sigue. Sin ella la flecha flota sobre una ficha cortada a la mitad.
+        background: `linear-gradient(to ${izq ? 'right' : 'left'}, #fff 55%, rgba(255,255,255,0))`,
       }}
     >
-      {children}
+      <button
+        type="button"
+        onClick={onClick}
+        aria-label={izq ? 'Ver anteriores' : 'Ver siguientes'}
+        className="pointer-events-auto w-7 h-7 rounded-full bg-white flex items-center justify-center transition-colors hover:bg-secondary active:scale-95"
+        style={{ border: `1px solid ${BORDE}`, boxShadow: '0 2px 8px rgba(0,0,0,0.10)' }}
+      >
+        <Icono className="w-4 h-4" style={{ color: '#381DA0' }} strokeWidth={2.5} />
+      </button>
+    </div>
+  );
+}
+
+/**
+ * El carril. Se desplaza con el dedo, con la rueda o con las flechas.
+ *
+ * Las flechas no son un adorno: la barra de scroll está escondida —en
+ * escritorio le robaba alto a una tarjeta que existe justamente para ocupar
+ * poco— y sin ellas, con mouse, no había forma de llegar a las fichas de la
+ * derecha. Cada una aparece solo cuando queda algo hacia ese lado.
+ */
+function Carril({ children }: { children: React.ReactNode }) {
+  const carril = useRef<HTMLDivElement>(null);
+  const [hayIzq, setHayIzq] = useState(false);
+  const [hayDer, setHayDer] = useState(false);
+
+  const medir = useCallback(() => {
+    const el = carril.current;
+    if (!el) return;
+    // El margen de 1 px absorbe los anchos fraccionarios del zoom del
+    // navegador, que si no dejan la flecha derecha encendida para siempre.
+    setHayIzq(el.scrollLeft > 1);
+    setHayDer(el.scrollWidth - el.clientWidth - el.scrollLeft > 1);
+  }, []);
+
+  // Sin dependencias a propósito: corre en cada render, que es justo cuando
+  // llegan los datos y el carril cambia de ancho. Medir cuesta dos lecturas.
+  useEffect(medir);
+
+  useEffect(() => {
+    const el = carril.current;
+    if (!el || typeof ResizeObserver === 'undefined') return;
+    const observador = new ResizeObserver(medir);
+    observador.observe(el);
+    return () => observador.disconnect();
+  }, [medir]);
+
+  const mover = (signo: 1 | -1) => {
+    const el = carril.current;
+    if (!el) return;
+    // Un salto de casi una pantalla, con un tope para que en móvil no avance
+    // media ficha por golpe.
+    el.scrollBy({ left: signo * Math.max(el.clientWidth * 0.8, 180), behavior: 'smooth' });
+  };
+
+  return (
+    <div className="relative">
+      <div
+        ref={carril}
+        onScroll={medir}
+        className="no-scrollbar flex gap-2 overflow-x-auto px-3 pb-3 sm:px-4 sm:pb-4"
+        style={{
+          scrollSnapType: 'x proximity',
+          WebkitOverflowScrolling: 'touch',
+          overscrollBehaviorX: 'contain',
+        }}
+      >
+        {children}
+      </div>
+      {hayIzq && <Flecha lado="izq" onClick={() => mover(-1)} />}
+      {hayDer && <Flecha lado="der" onClick={() => mover(1)} />}
     </div>
   );
 }
@@ -109,7 +180,7 @@ export function CarruselEventos({ eventos, cargando }: { eventos: Evento[]; carg
       <div className="flex items-center justify-between px-3 pt-3 pb-2 sm:px-4 sm:pt-4">
         <div className="flex items-center gap-2 min-w-0">
           <div
-            className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg flex items-center justify-center shrink-0"
+            className="w-6 h-6 sm:w-7 sm:h-7 rounded-full flex items-center justify-center shrink-0"
             style={{ background: '#381DA0' }}
           >
             <IconEvento className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white" />
@@ -134,7 +205,7 @@ export function CarruselEventos({ eventos, cargando }: { eventos: Evento[]; carg
               return (
                 <Ficha key={ev.id}>
                   <div
-                    className="flex flex-col items-center justify-center w-10 h-10 rounded-xl shrink-0"
+                    className="flex flex-col items-center justify-center w-10 h-10 rounded-full shrink-0"
                     style={{ background: c.bg }}
                   >
                     <span className="text-[13px] font-semibold leading-none" style={{ color: c.text }}>
@@ -170,7 +241,7 @@ export function CarruselCumpleanos({ cumples, cargando }: { cumples: Cumple[]; c
     <Marco>
       <div className="flex items-center gap-2 px-3 pt-3 pb-2 sm:px-4 sm:pt-4">
         <div
-          className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg flex items-center justify-center shrink-0"
+          className="w-6 h-6 sm:w-7 sm:h-7 rounded-full flex items-center justify-center shrink-0"
           style={{ background: 'linear-gradient(135deg,#EF476F,#FFB703)' }}
         >
           <IconCumpleanos className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white" />
@@ -193,7 +264,7 @@ export function CarruselCumpleanos({ cumples, cargando }: { cumples: Cumple[]; c
               return (
                 <Ficha key={b.id}>
                   <div
-                    className="w-10 h-10 rounded-xl flex flex-col items-center justify-center shrink-0"
+                    className="w-10 h-10 rounded-full flex flex-col items-center justify-center shrink-0"
                     style={{ background: fondo }}
                   >
                     {hoy ? (

@@ -313,12 +313,24 @@ export function IconFiltros({ className, style, ...props }: IconProps) {
 }
 
 // La lupa de las barras de busqueda.
-/** Buscar: la lupa. */
+/**
+ * Buscar: la lupa.
+ *
+ * El dibujo viene con el cristal a la derecha y el mango cayendo hacia la
+ * izquierda; se voltea para dejarlo como se espera una lupa y como estaba la
+ * anterior. El espejo va aquí dentro y no en cada uso: siempre mira para el
+ * mismo lado, y son catorce los sitios que tendrían que acordarse.
+ *
+ * `translate(24,0) scale(-1,1)` refleja alrededor del centro del lienzo. El
+ * dibujo sigue ocupando lo mismo, así que el margen del viewBox no cambia.
+ */
 export function IconBuscar({ className, style, ...props }: IconProps) {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="-2 -2 28 28" fill="currentColor"
       className={className} style={style} {...props}>
-      <path d="m23.707 22.293-5.969-5.969c1.412-1.725 2.262-3.927 2.262-6.324 0-5.514-4.486-10-10-10s-10 4.486-10 10 4.486 10 10 10c2.398 0 4.6-.85 6.324-2.262l5.969 5.969c.391.391 1.023.391 1.414 0s.391-1.023 0-1.414zm-15.207-8.793c0 .871-.625 1.5-1.36 1.5-1.294 0-1.447-1.75-1.447-3h2.806s-.01 1.191 0 1.5zm.016-2.5s-3.015.003-3.016 0c0 0-.5-1.618-.5-2.317 0-3 1.5-3.183 2.5-3.183.876 0 1.5 1 1.5 2.5 0 .893-.209 2.17-.484 3zm4.344 4c-.735 0-1.36-.629-1.36-1.5.01-.309 0-1.5 0-1.5h2.806c0 1.25-.152 3-1.447 3zm1.64-4s-3.016 0-3.016 0c-.276-.83-.484-2.107-.484-3 0-1.5.624-2.5 1.5-2.5 1 0 2.5.183 2.5 3.183 0 .699-.5 2.317-.5 2.317z"/>
+      <g transform="translate(24,0) scale(-1,1)">
+        <path d="M14,0C6.665-.189,1.6,8.253,5.139,14.618L.879,18.879a3,3,0,0,0,4.242,4.242l4.261-4.26C15.748,22.4,24.189,17.336,24,10A10.011,10.011,0,0,0,14,0Zm0,17C4.749,16.7,4.751,3.294,14,3a1,1,0,0,1,0,2c-6.607.21-6.607,9.791,0,10a5.006,5.006,0,0,0,5-5,1,1,0,0,1,2,0A7.009,7.009,0,0,1,14,17Z"/>
+      </g>
     </svg>
   );
 }

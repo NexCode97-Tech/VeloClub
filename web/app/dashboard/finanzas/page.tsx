@@ -9,7 +9,7 @@ import { parseLocalDate } from '@/lib/utils';
 import { QK } from '@/hooks/useVeloQuery';
 import { HojaInferior, OpcionHoja } from '@/components/ui/hoja-inferior';
 import {
-  CreditCard, CheckCircle2, AlertCircle, TrendingUp, TrendingDown, Check, PhoneOff, ChevronUp, ExternalLink, ChevronDown,
+  CreditCard, CheckCircle2, AlertCircle, Check, PhoneOff, ChevronUp, ExternalLink, ChevronDown,
 } from 'lucide-react';
 import { downloadInvoicePDF } from '@/lib/pdf';
 import MemberHistoryPanel from '@/components/finanzas/member-history-panel';
@@ -27,7 +27,7 @@ import { stagger as pageStagger, cardVariant as pageCard } from '@/lib/page-anim
 import ModuleLoader, { useCargaMinima } from '@/components/ui/module-loader';
 import ModuleReveal from '@/components/ui/module-reveal';
 import {
-  IconAjustes, IconBuscar, IconChat, IconDescargar, IconEditar, IconEliminar, IconGenerarCobros, IconMas, IconNoMostrar, IconPendiente, IconRecibo, IconTarifa, IconVer,
+  IconAjustes, IconBuscar, IconChat, IconDescargar, IconEditar, IconEgresos, IconEliminar, IconGenerarCobros, IconIngresos, IconMas, IconNoMostrar, IconPendiente, IconRecibo, IconTarifa, IconVer,
 } from '@/components/ui/custom-icons';
 
 const fmt = new Intl.NumberFormat('es-CO', {
@@ -1117,8 +1117,8 @@ export default function FinanzasPage() {
           <>
             <div className="grid grid-cols-3 gap-2">
               {[
-                { label: 'Ingresos', value: totalIncome,  color: '#06D6A0', icon: TrendingUp },
-                { label: 'Egresos',  value: totalExpense, color: '#EF476F', icon: TrendingDown },
+                { label: 'Ingresos', value: totalIncome,  color: '#06D6A0', icon: IconIngresos },
+                { label: 'Egresos',  value: totalExpense, color: '#EF476F', icon: IconEgresos },
                 { label: 'Balance',  value: balance,      color: balance >= 0 ? '#4361EE' : '#EF476F', icon: IconTarifa },
               ].map(({ label, value, color, icon: Icon }) => (
                 <div key={label} className="bg-white border border-border rounded-xl p-3 text-center">
@@ -1148,8 +1148,8 @@ export default function FinanzasPage() {
                       <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
                         style={{ background: isIncome ? 'rgba(6,214,160,0.12)' : 'rgba(239,71,111,0.12)' }}>
                         {isIncome
-                          ? <TrendingUp  className="w-4 h-4" style={{ color: '#06D6A0' }} />
-                          : <TrendingDown className="w-4 h-4" style={{ color: '#EF476F' }} />
+                          ? <IconIngresos className="w-4 h-4" style={{ color: '#06D6A0' }} />
+                          : <IconEgresos  className="w-4 h-4" style={{ color: '#EF476F' }} />
                         }
                       </div>
                       <div className="flex-1 min-w-0">

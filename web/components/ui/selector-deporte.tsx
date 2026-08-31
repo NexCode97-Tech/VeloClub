@@ -211,8 +211,17 @@ export default function SelectorDeporte({
             aria-haspopup="listbox"
             aria-expanded={abierto}
             title={colapsado ? actual.nombre : undefined}
-            className="w-full flex items-center gap-[9px] rounded-[11px] cursor-pointer transition-colors hover:bg-[#F1EFF9]"
-            style={{ padding: colapsado ? 5 : '9px 10px', background: '#F7F7FB', border: `1px solid ${BORDE}` }}
+            // El fondo cambia con la medida porque el selector cambia de sitio:
+            // en escritorio vive en el sidebar, que es blanco, y ahi el gris lo
+            // recorta; en movil vive sobre el fondo de la pagina, que es ese
+            // mismo gris, y se disolvia. Blanco con la sombra de las fichas de
+            // Inicio, para que se lea como una tarjeta mas de esa columna.
+            //
+            // El corte va en `md` porque es el mismo con el que cada copia
+            // aparece y desaparece: el sidebar es `hidden md:flex` y la de
+            // movil, `md:hidden`.
+            className="w-full flex items-center gap-[9px] rounded-[11px] cursor-pointer transition-colors bg-white shadow-[0_1px_6px_rgba(0,0,0,0.05)] md:bg-[#F7F7FB] md:shadow-none hover:bg-[#F1EFF9]"
+            style={{ padding: colapsado ? 5 : '9px 10px', border: `1px solid ${BORDE}` }}
           >
             {cuerpo}
           </button>

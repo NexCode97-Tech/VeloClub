@@ -9,7 +9,7 @@ import { parseLocalDate } from '@/lib/utils';
 import { QK } from '@/hooks/useVeloQuery';
 import { HojaInferior, OpcionHoja } from '@/components/ui/hoja-inferior';
 import {
-  CreditCard, CheckCircle2, AlertCircle, TrendingUp, TrendingDown, Wallet, Check, PhoneOff, ChevronUp, ExternalLink, ChevronDown,
+  CreditCard, CheckCircle2, AlertCircle, TrendingUp, TrendingDown, Check, PhoneOff, ChevronUp, ExternalLink, ChevronDown,
 } from 'lucide-react';
 import { downloadInvoicePDF } from '@/lib/pdf';
 import MemberHistoryPanel from '@/components/finanzas/member-history-panel';
@@ -1119,7 +1119,7 @@ export default function FinanzasPage() {
               {[
                 { label: 'Ingresos', value: totalIncome,  color: '#06D6A0', icon: TrendingUp },
                 { label: 'Egresos',  value: totalExpense, color: '#EF476F', icon: TrendingDown },
-                { label: 'Balance',  value: balance,      color: balance >= 0 ? '#4361EE' : '#EF476F', icon: Wallet },
+                { label: 'Balance',  value: balance,      color: balance >= 0 ? '#4361EE' : '#EF476F', icon: IconTarifa },
               ].map(({ label, value, color, icon: Icon }) => (
                 <div key={label} className="bg-white border border-border rounded-xl p-3 text-center">
                   <Icon className="w-4 h-4 mx-auto mb-1" style={{ color }} />

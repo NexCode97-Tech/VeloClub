@@ -8,7 +8,11 @@ import { apiFetch } from '@/lib/api-client';
 import LoadingScreen, { LoadingCurtain, CURTAIN_MS, esperarPantallaCarga } from '@/components/ui/loading-screen';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Home, Building2, LogOut, Ticket, Info, CircleDollarSign, ArrowLeft, Flag, Wallet } from 'lucide-react';
+import { Home, Building2, LogOut, Ticket, Info, CircleDollarSign, ArrowLeft, Flag } from 'lucide-react';
+// Finanzas lleva el ícono propio del módulo: es el mismo que usa el panel del
+// club en su barra lateral, y sería raro que el mismo módulo se dibuje distinto
+// según desde dónde se mire.
+import { IconFinanzas } from '@/components/ui/custom-icons';
 import { IconAjustes } from '@/components/ui/custom-icons';
 import { motion, AnimatePresence } from 'framer-motion';
 import { idClubDeRuta } from './club-context';
@@ -21,7 +25,7 @@ const TABS = [
   { href: '/superadmin/cupones',  label: 'Cupones',   exact: false, Icon: Ticket           },
   // La caja del negocio: lo que entra por las suscripciones y lo que sale por
   // sostener la plataforma. No se cruza con las finanzas de ningun club.
-  { href: '/superadmin/finanzas', label: 'Finanzas',  exact: false, Icon: Wallet           },
+  { href: '/superadmin/finanzas', label: 'Finanzas',  exact: false, Icon: IconFinanzas     },
   // Los Terminos prometen retirar contenido que los incumpla; esta es la cola
   // desde donde se hace. Vive en el superadmin porque el feed publico cruza
   // clubes y ninguno puede mandar sobre lo que publica otro.
@@ -251,7 +255,9 @@ const SuperadminSidebar = memo(function SuperadminSidebar({ pathname, noLeidas, 
               style={{ height: 44, padding: collapsed ? 0 : '0 12px', justifyContent: collapsed ? 'center' : undefined, color: active ? ACCENT : '#8E87A8', background: active ? 'rgba(56,29,160,0.10)' : undefined }}
               {...tipHandlers(tab.label)}
             >
-              <tab.Icon size={18} strokeWidth={active ? 2.5 : 2} className="shrink-0" />
+              {/* Por clase y no por `size`: la lista mezcla íconos de Lucide
+                  con los propios, y `size` no es un atributo de SVG. */}
+              <tab.Icon className="w-[18px] h-[18px] shrink-0" strokeWidth={active ? 2.5 : 2} />
               {!collapsed && <span>{tab.label}</span>}
             </Link>
           );
@@ -718,10 +724,9 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
                   >
                     <div className="flex items-center justify-center" style={{ width: 44, height: 44 }}>
                       <tab.Icon
-                        size={26}
-                        color={active ? '#fff' : '#8E87A8'}
+                        className="w-[26px] h-[26px]"
                         strokeWidth={active ? 2.2 : 1.7}
-                        style={{ transition: 'color 0.2s' }}
+                        style={{ color: active ? '#fff' : '#8E87A8', transition: 'color 0.2s' }}
                       />
                     </div>
                     <span

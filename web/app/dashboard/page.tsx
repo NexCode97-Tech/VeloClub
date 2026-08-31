@@ -8,7 +8,7 @@ import { apiFetch } from '@/lib/api-client';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Bell, BellOff, X, Paperclip, FileText, Trophy, Users, CheckSquare, Wallet,
+  Bell, BellOff, X, Paperclip, FileText, Trophy, Users, CheckSquare,
 } from 'lucide-react';
 import { CarruselCumpleanos, CarruselEventos } from '@/components/ui/widgets-carrusel';
 import { SelectorDeporteMovil } from '@/lib/contexto-deporte';
@@ -40,7 +40,8 @@ import ModuleLoader, { useCargaMinima } from '@/components/ui/module-loader';
 import ModuleReveal from '@/components/ui/module-reveal';
 import { ContenidoGuardado, MS_GUARDADO, type EstadoGuardado } from '@/components/ui/save-button-state';
 import {
-  IconCandado, IconEvento, IconFoto, IconPendiente, IconPublico, IconUbicacion, IconVideo,
+  IconAlDia, IconCandado, IconEvento, IconFoto, IconPendiente, IconPublico, IconUbicacion,
+  IconVideo,
 } from '@/components/ui/custom-icons';
 
 // ── Interfaces ────────────────────────────────────────────────────────────────
@@ -751,7 +752,7 @@ export default function DashboardPage() {
                 como un error, no como "todavia no hay nada" */}
             {resumen.pagosAlDia !== undefined && (
             <FichaInicio
-              icono={<Wallet className="w-[13px] h-[13px]" style={{ color: '#BA7517' }} />}
+              icono={<IconAlDia className="w-[13px] h-[13px]" style={{ color: '#BA7517' }} />}
               etiqueta="Al día"
               valor={resumen.pagosAlDia === null ? '—' : String(resumen.pagosAlDia)}
               sufijo={resumen.pagosAlDia === null ? undefined : '%'}

@@ -403,6 +403,23 @@ export function IconTarifa({ className, style, ...props }: IconProps) {
   );
 }
 
+/**
+ * Los pagos al día: la tarjeta con el visto.
+ *
+ * El lienzo va con dos unidades de margen por lado, como el del calendario:
+ * el dibujo llega a los cuatro bordes y sin ese aire la base se recorta en
+ * tamaños chicos. Va en la misma fila que el calendario, así que además tiene
+ * que pesar lo mismo que él.
+ */
+export function IconAlDia({ className, style, ...props }: IconProps) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="-2 -2 28 28" fill="currentColor"
+      className={className} style={style} {...props}>
+      <path d="m17.995 12.01c-3.311 0-5.995 2.684-5.995 5.995s2.684 5.995 5.995 5.995 5.995-2.684 5.995-5.995-2.684-5.995-5.995-5.995zm3.525 5.501-2.906 2.906c-.378.378-.879.585-1.413.585h-.002c-.534 0-1.035-.209-1.412-.586l-1.304-1.304c-.39-.39-.39-1.023 0-1.413s1.023-.39 1.413 0l1.305 1.305 2.906-2.906c.39-.39 1.023-.39 1.413 0s.39 1.023 0 1.413zm-1.526-17.511h-15.988c-2.207 0-3.996 1.789-3.996 3.997v.999h23.981v-.999c0-2.207-1.789-3.997-3.997-3.997zm-2.076 10.011c2.391 0 4.607 1.055 6.072 2.719v-5.735h-23.98v6.994c0 2.207 1.789 3.997 3.997 3.997l5.918.019c0-4.415 3.579-7.994 7.994-7.994zm-12.413 3.978c-.828 0-1.499-.671-1.499-1.499s.671-1.499 1.499-1.499 1.499.671 1.499 1.499-.671 1.499-1.499 1.499z"/>
+    </svg>
+  );
+}
+
 export function IconGenerarCobros({ className, style, ...props }: IconProps) {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"

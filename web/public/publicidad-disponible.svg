@@ -1,5 +1,14 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 900" width="1200" height="900" role="img" aria-label="Espacio disponible para publicidad">
-  <!-- Sin fondo propio: el color lo pone la tarjeta que lo contiene, para que
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 900" width="1200" height="900" role="presentation" aria-hidden="true">
+  <!-- Solo el ambiente: el brillo y los aros. El ícono y los textos los pone la
+       tarjeta en HTML, no este archivo.
+
+       El motivo es la tipografía. Un SVG cargado con <img> no hereda las
+       fuentes de la página, así que el texto que viviera aquí nunca se vería
+       en Geist: caía al sans de cada sistema y la pieza cambiaba de un
+       computador a otro. En HTML hereda la del proyecto y de paso el título se
+       lee nítido en cualquier pantalla, sin depender del escalado.
+
+       Sin fondo propio: el color lo pone la tarjeta que lo contiene, para que
        el mismo dibujo sirva en los distintos cupos sin duplicar el archivo. -->
   <defs>
     <radialGradient id="brillo" cx="0.78" cy="0.18" r="0.72">
@@ -15,17 +24,4 @@
     <circle cx="1010" cy="720" r="250"/>
     <circle cx="190" cy="180" r="120"/>
   </g>
-
-  <g transform="translate(600 330)">
-    <rect x="-62" y="-62" width="124" height="124" rx="34" fill="#ffffff" fill-opacity="0.16"/>
-    <g transform="translate(-31.4 -32.8) scale(2.85)" fill="#ffffff">
-      <path d="M20.8,4.293A1,1,0,0,0,19.39,5.707a8.911,8.911,0,0,1,0,12.586A1,1,0,1,0,20.8,19.707,10.911,10.911,0,0,0,20.8,4.293Z"/>
-      <path d="M18.093,7.293a1,1,0,1,0-1.414,1.414,4.664,4.664,0,0,1,0,6.586,1,1,0,1,0,1.414,1.414A6.665,6.665,0,0,0,18.093,7.293Z"/>
-      <path d="M13.819.207A12.055,12.055,0,0,0,6.268,5H5a5.006,5.006,0,0,0-5,5v4a5.006,5.006,0,0,0,5,5H6.269a12.051,12.051,0,0,0,7.55,4.793A1,1,0,0,0,15,22.81V1.19A1,1,0,0,0,13.819.207Z"/>
-    </g>
-  </g>
-
-  <text x="600" y="510" text-anchor="middle" font-family="Inter, Segoe UI, Helvetica, Arial, sans-serif" font-size="86" font-weight="700" fill="#ffffff">Tu Publicidad Aquí</text>
-  <text x="600" y="586" text-anchor="middle" font-family="Inter, Segoe UI, Helvetica, Arial, sans-serif" font-size="42" font-weight="400" fill="#ffffff" fill-opacity="0.86">Promociona tu marca o tu evento</text>
-  <text x="600" y="648" text-anchor="middle" font-family="Inter, Segoe UI, Helvetica, Arial, sans-serif" font-size="42" font-weight="400" fill="#ffffff" fill-opacity="0.86">ante los clubes deportivos</text>
 </svg>

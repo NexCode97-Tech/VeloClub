@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback, type CSSProperties } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { IconTelefono } from '@/components/ui/custom-icons';
+import { IconTelefono, IconVolumen } from '@/components/ui/custom-icons';
 
 export interface SlideshowSlide {
   img: string;
@@ -20,6 +20,12 @@ export interface SlideshowSlide {
    * los clientes la foto tapa toda la caja y este valor no cambia nada.
    */
   bg?: string;
+  /**
+   * Es un cupo libre, no el anuncio de un cliente. Solo en esos la tarjeta
+   * dibuja el título y la descripción encima: la pieza de un anunciante trae
+   * su propio texto dentro de la imagen y superponerle otro la taparía.
+   */
+  cupoLibre?: boolean;
 }
 
 // El tamaño no se recibe por props: el alto es el mismo en móvil, tablet y
@@ -88,6 +94,36 @@ function BotonContacto({ slide }: { slide: SlideshowSlide }) {
   );
 }
 
+/**
+ * El contenido del cupo libre: el altavoz, el título y la invitación.
+ *
+ * Vive aquí y no dentro del SVG porque un SVG cargado con `<img>` no hereda las
+ * fuentes de la página: el texto nunca se veía en Geist, caía al sans de cada
+ * sistema y la pieza cambiaba de un computador a otro. De paso se lee nítido en
+ * cualquier pantalla, sin depender de a qué tamaño se escale el dibujo.
+ */
+function PiezaCupoLibre({ slide }: { slide: SlideshowSlide }) {
+  if (!slide.cupoLibre) return null;
+  return (
+    <div className="absolute inset-0 flex flex-col items-center justify-center px-6 text-center pointer-events-none">
+      <div
+        className="flex items-center justify-center mb-2.5"
+        style={{ width: 42, height: 42, borderRadius: 14, background: 'rgba(255,255,255,0.16)' }}
+      >
+        <IconVolumen className="w-5 h-5 text-white" />
+      </div>
+      <p className="text-[15px] font-semibold text-white leading-tight text-balance">
+        {slide.title}
+      </p>
+      {slide.description && (
+        <p className="text-[11px] leading-snug mt-1 max-w-[30ch]" style={{ color: 'rgba(255,255,255,0.86)' }}>
+          {slide.description}
+        </p>
+      )}
+    </div>
+  );
+}
+
 // Precarga todas las imágenes al montar — evita jank en las transiciones
 function usePreloadImages(slides: SlideshowSlide[]) {
   useEffect(() => {
@@ -109,6 +145,7 @@ function SlideCard({ slide, priority }: { slide: SlideshowSlide; priority?: bool
         loading={priority ? 'eager' : 'lazy'}
         decoding={priority ? 'sync' : 'async'}
       />
+      <PiezaCupoLibre slide={slide} />
       {slide.label && (
         <div
           className="absolute top-3 left-3 flex items-center"
@@ -209,6 +246,7 @@ export function Slideshow({ slides, autoPlayMs = 5000 }: SlideshowProps) {
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={mobileSlide.img} alt={mobileSlide.title} className="w-full h-full object-cover" loading="eager" />
+            <PiezaCupoLibre slide={mobileSlide} />
             {mobileSlide.label && (
               <div
                 className="absolute top-3 left-3 flex items-center"

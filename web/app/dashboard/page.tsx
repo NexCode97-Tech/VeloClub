@@ -159,6 +159,7 @@ const ADS = [
     // url el boton no se muestra, que es mejor que mandar al numero de otro.
     url: '#',
     cta: 'Reservar espacio',
+    cupoLibre: true,
     bg: '#381DA0',
   },
   {
@@ -168,6 +169,7 @@ const ADS = [
     description: 'Promociona tu marca o tu evento ante los clubes deportivos.',
     url: '#',
     cta: 'Reservar espacio',
+    cupoLibre: true,
     bg: 'linear-gradient(135deg,#4361EE 0%,#2D7FF0 55%,#06B6D4 100%)',
   },
   {
@@ -177,6 +179,7 @@ const ADS = [
     description: 'Promociona tu marca o tu evento ante los clubes deportivos.',
     url: '#',
     cta: 'Reservar espacio',
+    cupoLibre: true,
     bg: 'linear-gradient(135deg,#9333EA 0%,#A736D9 55%,#C026D3 100%)',
   },
 ];
@@ -793,7 +796,8 @@ export default function DashboardPage() {
       {/* ── Slideshow publicitario — ancho completo ─────────────────────────── */}
       <div className="w-full px-6 pt-4">
         <Slideshow
-          slides={ADS.map(ad => ({ img: ad.image, label: ad.label, title: ad.title, description: ad.description, url: ad.url, cta: 'cta' in ad ? ad.cta : undefined, bg: 'bg' in ad ? ad.bg : undefined }))}
+          slides={ADS.map(ad => ({ img: ad.image, label: ad.label, title: ad.title, description: ad.description, url: ad.url, cta: 'cta' in ad ? ad.cta : undefined, bg: 'bg' in ad ? ad.bg : undefined,
+            cupoLibre: 'cupoLibre' in ad ? ad.cupoLibre : undefined }))}
         />
       </div>
 

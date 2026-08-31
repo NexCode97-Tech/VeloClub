@@ -5,8 +5,8 @@ import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@clerk/nextjs';
 import { motion, AnimatePresence } from 'framer-motion';
 import { apiFetch } from '@/lib/api-client';
-import { IconClub, IconUbicacion, IconVerificado } from '@/components/ui/custom-icons';
-import { ArrowLeft, CalendarDays, UserPlus, UserCheck, Phone, Mail, Building2, Lock } from 'lucide-react';
+import { IconClub, IconTelefono, IconUbicacion, IconVerificado } from '@/components/ui/custom-icons';
+import { ArrowLeft, CalendarDays, UserPlus, UserCheck, Mail, Building2, Lock } from 'lucide-react';
 import ModuleLoader, { useCargaMinima } from '@/components/ui/module-loader';
 import ModuleReveal from '@/components/ui/module-reveal';
 import { textoFundacion } from '@/lib/fundacion';
@@ -301,7 +301,7 @@ function ContactCard({ club, mainLocation }: { club: PublicClub; mainLocation: M
           <p className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: '#8E87A8' }}>Información de contacto</p>
         </div>
         <div className="divide-y divide-border/40">
-          <ContactRow icon={<Phone className="w-4 h-4" style={{ color: '#4361EE' }} />} label="Teléfono" value={club.phone} />
+          <ContactRow icon={<IconTelefono className="w-4 h-4" style={{ color: '#4361EE' }} />} label="Teléfono" value={club.phone} />
           <ContactRow icon={<Mail className="w-4 h-4" style={{ color: '#4361EE' }} />} label="Correo electrónico" value={club.email} />
           <ContactRow
             icon={<Building2 className="w-4 h-4" style={{ color: '#4361EE' }} />}

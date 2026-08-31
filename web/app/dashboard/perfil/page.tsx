@@ -9,7 +9,7 @@ import { useClubStream } from '@/hooks/useClubStream';
 import Link from 'next/link';
 import { MemberAvatar } from '@/components/ui/member-avatar';
 import {
-  CalendarDays, Globe, Camera, Users, ImagePlus, Phone, Mail, Building2, X, Loader2,
+  CalendarDays, Globe, Camera, Users, ImagePlus, Mail, Building2, X, Loader2,
 } from 'lucide-react';
 import { PhoneInput } from '@/components/ui/phone-input';
 
@@ -17,7 +17,7 @@ import { PostCard, Post, PostComment, LikeUser } from '@/components/ui/post-card
 import ModuleLoader, { useCargaMinima } from '@/components/ui/module-loader';
 import ModuleReveal from '@/components/ui/module-reveal';
 import {
-  IconEditar, IconEliminar, IconUbicacion, IconVerificado,
+  IconEditar, IconEliminar, IconTelefono, IconUbicacion, IconVerificado,
 } from '@/components/ui/custom-icons';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -746,7 +746,7 @@ export default function PerfilPage() {
             <div className="divide-y divide-border/40">
               <div className="flex items-center gap-3 px-5 py-4">
                 <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(56,29,160,0.08)' }}>
-                  <Phone className="w-4 h-4" style={{ color: '#381DA0' }} />
+                  <IconTelefono className="w-4 h-4" style={{ color: '#381DA0' }} />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-[10px] font-semibold uppercase tracking-widest mb-0.5" style={{ color: '#8E87A8' }}>Teléfono</p>
@@ -832,7 +832,7 @@ export default function PerfilPage() {
             <div className="flex items-center gap-3 px-5 py-4">
               <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
                 style={{ background: 'rgba(56,29,160,0.08)' }}>
-                <Phone className="w-4 h-4" style={{ color: '#381DA0' }} />
+                <IconTelefono className="w-4 h-4" style={{ color: '#381DA0' }} />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-[10px] font-semibold uppercase tracking-widest mb-0.5" style={{ color: '#8E87A8' }}>Teléfono</p>

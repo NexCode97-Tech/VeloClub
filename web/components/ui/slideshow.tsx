@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback, type CSSProperties } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Phone } from 'lucide-react';
+import { IconTelefono } from '@/components/ui/custom-icons';
 
 export interface SlideshowSlide {
   img: string;
@@ -82,7 +82,7 @@ function BotonContacto({ slide }: { slide: SlideshowSlide }) {
       className="inline-flex items-center gap-1.5 text-white/90 font-semibold transition-colors"
       style={{ ...PASTILLA, fontSize: 10, lineHeight: 1 }}
     >
-      <Phone className="w-3 h-3" aria-hidden />
+      <IconTelefono className="w-3 h-3" aria-hidden />
       {slide.cta ?? 'Contactar'}
     </a>
   );

@@ -8,7 +8,7 @@ import { apiFetch } from '@/lib/api-client';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Bell, BellOff, X, Paperclip, FileText, Trophy, Users, CheckSquare,
+  Bell, BellOff, X, Paperclip, FileText, Trophy, Users,
 } from 'lucide-react';
 import { CarruselCumpleanos, CarruselEventos } from '@/components/ui/widgets-carrusel';
 import { SelectorDeporteMovil } from '@/lib/contexto-deporte';
@@ -40,8 +40,8 @@ import ModuleLoader, { useCargaMinima } from '@/components/ui/module-loader';
 import ModuleReveal from '@/components/ui/module-reveal';
 import { ContenidoGuardado, MS_GUARDADO, type EstadoGuardado } from '@/components/ui/save-button-state';
 import {
-  IconAlDia, IconCandado, IconEvento, IconFoto, IconPendiente, IconPublico, IconUbicacion,
-  IconVideo,
+  IconAlDia, IconCandado, IconEvento, IconFoto, IconHoy, IconPendiente, IconPublico,
+  IconUbicacion, IconVideo,
 } from '@/components/ui/custom-icons';
 
 // ── Interfaces ────────────────────────────────────────────────────────────────
@@ -742,7 +742,7 @@ export default function DashboardPage() {
         {resumen && (
           <div className="flex gap-2">
             <FichaInicio
-              icono={<CheckSquare className="w-[13px] h-[13px]" style={{ color: '#1D9E75' }} />}
+              icono={<IconHoy className="w-[13px] h-[13px]" style={{ color: '#1D9E75' }} />}
               etiqueta="Hoy"
               valor={String(resumen.asistenciaHoy)}
               sufijo={`/${resumen.deportistas}`}

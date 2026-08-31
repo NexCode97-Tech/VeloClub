@@ -565,9 +565,16 @@ export function IconCandado({ className, style, ...props }: IconProps) {
   );
 }
 
+/**
+ * El calendario. El dibujo llega justo a los cuatro bordes del lienzo, sin el
+ * margen que traen los de Lucide, así que a 13 px la base caía en la última
+ * fila de píxeles y se veía cortada; al lado de un ícono de Lucide del mismo
+ * tamaño también se veía más grande. El lienzo se agranda dos unidades por
+ * lado —el dibujo no se toca— y queda con el mismo aire que los demás.
+ */
 export function IconEvento({ className, style, ...props }: IconProps) {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="-2 -2 28 28" fill="currentColor"
       className={className} style={style} {...props}>
       <path d="m0,19c0,2.757,2.243,5,5,5h14c2.757,0,5-2.243,5-5v-9H0v9Zm8.397-3.323h2.247l.596-2.283c.094-.362.419-.614.792-.621.373.007.698.259.792.621l.596,2.283h2.247c.452,0,.731.354.731.676,0,.379-.264.698-.566.866l-1.564.87.694,1.893c.134.367.013.778-.299,1.013h0c-.319.24-.759.237-1.075-.007l-1.556-1.203-1.556,1.203c-.316.244-.756.247-1.075.007h0c-.312-.235-.433-.646-.299-1.013l.694-1.893-1.564-.87c-.302-.168-.566-.487-.566-.866,0-.321.279-.676.731-.676Zm15.603-8.677v1H0v-1C0,4.243,2.243,2,5,2h1v-1c0-.552.448-1,1-1s1,.448,1,1v1h8v-1c0-.552.448-1,1-1s1,.448,1,1v1h1c2.757,0,5,2.243,5,5Z"/>
     </svg>

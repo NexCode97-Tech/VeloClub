@@ -2,8 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { IconCumpleanos, IconEvento } from '@/components/ui/custom-icons';
+import { IconCumpleanos, IconEvento, IconFlecha } from '@/components/ui/custom-icons';
 
 /**
  * Próximos eventos y Cumpleaños, en carrusel horizontal.
@@ -19,7 +18,6 @@ import { IconCumpleanos, IconEvento } from '@/components/ui/custom-icons';
  */
 
 const MUDO = '#8E87A8';
-const BORDE = 'rgba(120,80,200,0.10)';
 
 /**
  * Lo mínimo que tiene que sobrar para que valga la pena desplazar: media
@@ -69,7 +67,6 @@ function tituloDe(t: string) {
 /** Una flecha, con la máscara que desvanece las fichas por debajo. */
 function Flecha({ lado, onClick }: { lado: 'izq' | 'der'; onClick: () => void }) {
   const izq = lado === 'izq';
-  const Icono = izq ? ChevronLeft : ChevronRight;
   return (
     <div
       className={`absolute top-0 bottom-3 sm:bottom-4 flex items-center pointer-events-none ${izq ? 'left-0 pl-1.5 sm:pl-2 justify-start' : 'right-0 pr-1.5 sm:pr-2 justify-end'}`}
@@ -80,14 +77,19 @@ function Flecha({ lado, onClick }: { lado: 'izq' | 'der'; onClick: () => void })
         background: `linear-gradient(to ${izq ? 'right' : 'left'}, #fff 55%, rgba(255,255,255,0))`,
       }}
     >
+      {/* El ícono es el botón: trae su propio disco, así que el botón no lleva
+          fondo ni borde. Uno dentro del otro serían dos círculos concéntricos.
+          La izquierda es la misma flecha espejada. */}
       <button
         type="button"
         onClick={onClick}
         aria-label={izq ? 'Ver anteriores' : 'Ver siguientes'}
-        className="pointer-events-auto w-7 h-7 rounded-full bg-white flex items-center justify-center transition-colors hover:bg-secondary active:scale-95"
-        style={{ border: `1px solid ${BORDE}`, boxShadow: '0 2px 8px rgba(0,0,0,0.10)' }}
+        className="pointer-events-auto flex items-center justify-center transition-opacity hover:opacity-80 active:scale-95"
       >
-        <Icono className="w-4 h-4" style={{ color: '#381DA0' }} strokeWidth={2.5} />
+        <IconFlecha
+          className="w-7 h-7"
+          style={{ color: '#381DA0', transform: izq ? 'scaleX(-1)' : undefined }}
+        />
       </button>
     </div>
   );

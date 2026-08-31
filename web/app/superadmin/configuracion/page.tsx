@@ -7,7 +7,8 @@ import { motion } from 'framer-motion';
 import { stagger, cardVariant } from '@/lib/page-animations';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { User, Lock, UserCog, ChevronRight, LogOut } from 'lucide-react';
+import { User, Lock, UserCog, ChevronRight } from 'lucide-react';
+import { IconSalir } from '@/components/ui/custom-icons';
 
 export default function ConfiguracionPage() {
   const clerk = useClerk();
@@ -101,7 +102,7 @@ export default function ConfiguracionPage() {
           disabled={signingOut}
           className="w-full flex items-center gap-3 px-5 py-3.5 text-left hover:bg-red-50 active:bg-red-100 transition-colors disabled:opacity-60"
         >
-          <LogOut className="w-4 h-4 shrink-0" style={{ color: '#EF476F' }} />
+          <IconSalir className="w-4 h-4 shrink-0" style={{ color: '#EF476F' }} />
           <span className="flex-1 text-[13px] font-semibold" style={{ color: '#EF476F' }}>
             {signingOut ? 'Cerrando sesión...' : 'Cerrar sesión'}
           </span>

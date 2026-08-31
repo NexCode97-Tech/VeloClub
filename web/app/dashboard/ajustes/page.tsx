@@ -6,9 +6,9 @@ import { createPortal } from 'react-dom';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { apiFetch } from '@/lib/api-client';
 import {
-  CheckCircle2, Camera, Building2, ChevronDown, X, Crop, ChevronRight, HelpCircle, User, LogOut, Lock, UserCog, AlertTriangle,
+  CheckCircle2, Camera, Building2, ChevronDown, X, Crop, ChevronRight, User, Lock, UserCog, AlertTriangle,
 } from 'lucide-react';
-import { IconClub, IconPerfil, IconSuscripcion, IconEliminar } from '@/components/ui/custom-icons';
+import { IconAyuda, IconClub, IconPerfil, IconSalir, IconSuscripcion, IconEliminar } from '@/components/ui/custom-icons';
 import SuscripcionCard from '@/components/ajustes/suscripcion-card';
 import HorarioClases from '@/components/ajustes/horario-clases';
 import { DIAS_SEMANA } from '@/lib/dias';
@@ -482,7 +482,7 @@ function AjustesPageContent() {
         onClick={() => router.push('/dashboard/ajustes/ayuda')}
         className="w-full flex items-center gap-3 px-5 py-3.5 text-left hover:bg-secondary/40 active:bg-secondary/60 transition-colors border-b border-border"
       >
-        <HelpCircle className="w-4 h-4 text-muted-foreground shrink-0" />
+        <IconAyuda className="w-4 h-4 text-muted-foreground shrink-0" />
         <div className="flex-1 min-w-0">
           <p className="text-[13px] font-semibold text-foreground">Centro de ayuda</p>
           <p className="text-[11px] text-muted-foreground">Tutoriales y soporte técnico</p>
@@ -497,7 +497,7 @@ function AjustesPageContent() {
         disabled={signingOut}
         className="w-full flex items-center gap-3 px-5 py-3.5 text-left hover:bg-red-50 active:bg-red-100 transition-colors disabled:opacity-60"
       >
-        <LogOut className="w-4 h-4 shrink-0" style={{ color: '#EF476F' }} />
+        <IconSalir className="w-4 h-4 shrink-0" style={{ color: '#EF476F' }} />
         <span className="flex-1 text-[13px] font-semibold" style={{ color: '#EF476F' }}>
           {signingOut ? 'Cerrando sesión...' : 'Cerrar sesión'}
         </span>

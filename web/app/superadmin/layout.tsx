@@ -8,12 +8,11 @@ import { apiFetch } from '@/lib/api-client';
 import LoadingScreen, { LoadingCurtain, CURTAIN_MS, esperarPantallaCarga } from '@/components/ui/loading-screen';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Home, Building2, LogOut, Ticket, Info, CircleDollarSign, ArrowLeft, Flag } from 'lucide-react';
+import { Home, Building2, Ticket, Info, CircleDollarSign, ArrowLeft, Flag } from 'lucide-react';
 // Finanzas lleva el ícono propio del módulo: es el mismo que usa el panel del
 // club en su barra lateral, y sería raro que el mismo módulo se dibuje distinto
 // según desde dónde se mire.
-import { IconFinanzas } from '@/components/ui/custom-icons';
-import { IconAjustes } from '@/components/ui/custom-icons';
+import { IconAjustes, IconFinanzas, IconSalir } from '@/components/ui/custom-icons';
 import { motion, AnimatePresence } from 'framer-motion';
 import { idClubDeRuta } from './club-context';
 import { ID_ACCIONES } from '@/components/superadmin/acciones-cabecera';
@@ -302,7 +301,7 @@ const SuperadminSidebar = memo(function SuperadminSidebar({ pathname, noLeidas, 
             <button onClick={handleSignOut} title="Cerrar sesión"
               className="shrink-0 flex items-center justify-center rounded-lg transition-colors hover:bg-secondary"
               style={{ width: 28, height: 28, color: '#8E87A8' }}>
-              <LogOut size={15} />
+              <IconSalir className="w-[15px] h-[15px]" />
             </button>
           </>
         )}

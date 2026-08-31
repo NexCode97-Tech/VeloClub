@@ -7,8 +7,8 @@ import { useUser } from '@clerk/nextjs';
 import { useEffect, useRef, useState } from 'react';
 import { apiFetch } from '@/lib/api-client';
 import Link from 'next/link';
-import { IconUbicacion, IconResultados } from '@/components/ui/custom-icons';
-import { CalendarDays, BarChart2, Building2, HelpCircle, ChevronRight, Camera, Loader2, CheckCircle2 } from 'lucide-react';
+import { IconAyuda, IconUbicacion, IconResultados } from '@/components/ui/custom-icons';
+import { CalendarDays, BarChart2, Building2, ChevronRight, Camera, Loader2, CheckCircle2 } from 'lucide-react';
 
 const EASE_OUT: [number, number, number, number] = [0.23, 1, 0.32, 1];
 
@@ -19,14 +19,14 @@ const ITEMS_BY_ROLE: Record<string, { label: string; icon: React.ElementType; co
     { label: 'Sedes',      icon: IconUbicacion,            color: '#06D6A0', href: '/dashboard/sedes' },
     { label: 'Analíticas',   icon: BarChart2,         color: '#4361EE', href: '/dashboard/reportes' },
     { label: 'Club',       icon: Building2,         color: '#381DA0', href: '/dashboard/club' },
-    { label: 'Ayuda',      icon: HelpCircle,        color: '#8E87A8', href: '/dashboard/ajustes/ayuda' },
+    { label: 'Ayuda',      icon: IconAyuda,         color: '#8E87A8', href: '/dashboard/ajustes/ayuda' },
   ],
   ENTRENADOR: [
     { label: 'Rendimiento', icon: IconResultados,        color: '#F59E0B', href: '/dashboard/logros' },
     { label: 'Calendario', icon: CalendarDays,  color: '#EF476F', href: '/dashboard/calendario' },
     { label: 'Sedes',      icon: IconUbicacion,        color: '#06D6A0', href: '/dashboard/sedes' },
     { label: 'Club',       icon: Building2,     color: '#381DA0', href: '/dashboard/club' },
-    { label: 'Ayuda',      icon: HelpCircle,    color: '#8E87A8', href: '/dashboard/ajustes/ayuda' },
+    { label: 'Ayuda',      icon: IconAyuda,     color: '#8E87A8', href: '/dashboard/ajustes/ayuda' },
   ],
   DEPORTISTA: [],
 };

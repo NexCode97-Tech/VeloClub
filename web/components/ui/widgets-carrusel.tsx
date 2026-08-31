@@ -29,6 +29,20 @@ const BORDE = 'rgba(120,80,200,0.10)';
  */
 const MINIMO_PARA_DESPLAZAR = 48;
 
+/**
+ * La ficha no mide un ancho fijo: se reparte el del carril entre las que
+ * quepan. Con 88 px fijos sobraba un pedazo que no alcanzaba para una ficha
+ * más, así que en escritorio la sexta entraba 71 de sus 88: ni se veía entera
+ * ni se entendía que faltaba, y como el sobrante era de 17 px tampoco pasaba
+ * el umbral de las flechas. Repartiendo, lo que se ve son fichas enteras y lo
+ * que falta queda afuera, con su flecha.
+ *
+ * 88 es el mínimo con el que una ficha sigue siendo legible; de ahí sale
+ * cuántas caben, y el sobrante se les reparte a esas.
+ */
+const FICHA_MINIMA = 88;
+const HUECO = 8;
+
 interface Evento {
   id: string; title: string; type: string; startDate: string; allDay: boolean;
   location?: { name: string } | null;
@@ -91,6 +105,17 @@ function Carril({ children }: { children: React.ReactNode }) {
   const carril = useRef<HTMLDivElement>(null);
   const [hayIzq, setHayIzq] = useState(false);
   const [hayDer, setHayDer] = useState(false);
+  const [ancho, setAncho] = useState(0);
+
+  const repartir = useCallback(() => {
+    const el = carril.current;
+    if (!el || !el.clientWidth) return;
+    const css = getComputedStyle(el);
+    const util = el.clientWidth
+      - parseFloat(css.paddingLeft) - parseFloat(css.paddingRight);
+    const caben = Math.max(1, Math.floor((util + HUECO) / (FICHA_MINIMA + HUECO)));
+    setAncho(Math.floor((util - (caben - 1) * HUECO) / caben));
+  }, []);
 
   const medir = useCallback(() => {
     const el = carril.current;
@@ -108,16 +133,24 @@ function Carril({ children }: { children: React.ReactNode }) {
   }, []);
 
   // Sin dependencias a propósito: corre en cada render, que es justo cuando
-  // llegan los datos y el carril cambia de ancho. Medir cuesta dos lecturas.
-  useEffect(medir);
+  // llegan los datos y el carril cambia de ancho. Repartir va primero: medir
+  // sobre el ancho viejo daría un sobrante que no es. Ninguna de las dos
+  // reencadena renders, porque el estado que fijan es el mismo si nada cambió.
+  useEffect(() => {
+    repartir();
+    medir();
+  });
 
   useEffect(() => {
     const el = carril.current;
     if (!el || typeof ResizeObserver === 'undefined') return;
-    const observador = new ResizeObserver(medir);
+    const observador = new ResizeObserver(() => {
+      repartir();
+      medir();
+    });
     observador.observe(el);
     return () => observador.disconnect();
-  }, [medir]);
+  }, [repartir, medir]);
 
   const mover = (signo: 1 | -1) => {
     const el = carril.current;
@@ -131,7 +164,7 @@ function Carril({ children }: { children: React.ReactNode }) {
     const primera = fichas[0] as HTMLElement | undefined;
     if (!primera) return;
     const segunda = fichas[1] as HTMLElement | undefined;
-    const paso = segunda ? segunda.offsetLeft - primera.offsetLeft : primera.offsetWidth + 8;
+    const paso = segunda ? segunda.offsetLeft - primera.offsetLeft : primera.offsetWidth + HUECO;
     if (paso <= 0) return;
 
     // Cuántas caben a la vista, mínimo una: así el golpe nunca se queda corto
@@ -156,7 +189,11 @@ function Carril({ children }: { children: React.ReactNode }) {
           scrollSnapType: 'x proximity',
           WebkitOverflowScrolling: 'touch',
           overscrollBehaviorX: 'contain',
-        }}
+          // Por variable y no por prop: la ficha la pone la página dentro del
+          // carril, así que no hay dónde pasarle el ancho sin que cada llamada
+          // tenga que acordarse de reenviarlo.
+          ...(ancho ? { '--ficha': `${ancho}px` } : {}),
+        } as React.CSSProperties}
       >
         {children}
       </div>
@@ -170,7 +207,7 @@ function Ficha({ children }: { children: React.ReactNode }) {
   return (
     <div
       className="shrink-0 flex flex-col items-center text-center rounded-xl px-2 pt-2 pb-2.5 transition-colors hover:bg-secondary/60"
-      style={{ width: 88, scrollSnapAlign: 'start' }}
+      style={{ width: `var(--ficha, ${FICHA_MINIMA}px)`, scrollSnapAlign: 'start' }}
     >
       {children}
     </div>
@@ -190,7 +227,11 @@ function Cargando() {
   return (
     <div className="flex gap-2 px-3 pb-3 sm:px-4 sm:pb-4">
       {[1, 2, 3].map(i => (
-        <div key={i} className="shrink-0 rounded-xl bg-secondary animate-pulse" style={{ width: 88, height: 72 }} />
+        <div
+          key={i}
+          className="shrink-0 rounded-xl bg-secondary animate-pulse"
+          style={{ width: `var(--ficha, ${FICHA_MINIMA}px)`, height: 72 }}
+        />
       ))}
     </div>
   );

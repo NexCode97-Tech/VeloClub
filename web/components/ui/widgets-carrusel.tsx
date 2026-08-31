@@ -21,6 +21,14 @@ import { IconCumpleanos, IconEvento } from '@/components/ui/custom-icons';
 const MUDO = '#8E87A8';
 const BORDE = 'rgba(120,80,200,0.10)';
 
+/**
+ * Lo mínimo que tiene que sobrar para que valga la pena desplazar: media
+ * ficha. Por debajo de eso lo que queda fuera es el filo de una ficha, no
+ * información, y encender las flechas por ese pedazo cuesta más de lo que
+ * devuelve: la flecha tapa media ficha para recuperar quince píxeles.
+ */
+const MINIMO_PARA_DESPLAZAR = 48;
+
 interface Evento {
   id: string; title: string; type: string; startDate: string; allDay: boolean;
   location?: { name: string } | null;
@@ -87,10 +95,16 @@ function Carril({ children }: { children: React.ReactNode }) {
   const medir = useCallback(() => {
     const el = carril.current;
     if (!el) return;
+    const sobra = el.scrollWidth - el.clientWidth;
+    if (sobra < MINIMO_PARA_DESPLAZAR) {
+      setHayIzq(false);
+      setHayDer(false);
+      return;
+    }
     // El margen de 1 px absorbe los anchos fraccionarios del zoom del
     // navegador, que si no dejan la flecha derecha encendida para siempre.
     setHayIzq(el.scrollLeft > 1);
-    setHayDer(el.scrollWidth - el.clientWidth - el.scrollLeft > 1);
+    setHayDer(sobra - el.scrollLeft > 1);
   }, []);
 
   // Sin dependencias a propósito: corre en cada render, que es justo cuando
@@ -130,10 +144,14 @@ function Carril({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="relative">
+      {/* El scroll-padding iguala al padding: sin él, «start» alinea la ficha
+          con el borde del carril y se come el margen, así que volver al
+          principio dejaba la primera ficha cortada y la flecha izquierda
+          encendida como si faltara algo hacia atrás. */}
       <div
         ref={carril}
         onScroll={medir}
-        className="no-scrollbar flex gap-2 overflow-x-auto px-3 pb-3 sm:px-4 sm:pb-4"
+        className="no-scrollbar flex gap-2 overflow-x-auto px-3 pb-3 scroll-px-3 sm:px-4 sm:pb-4 sm:scroll-px-4"
         style={{
           scrollSnapType: 'x proximity',
           WebkitOverflowScrolling: 'touch',

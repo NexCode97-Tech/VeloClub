@@ -40,7 +40,7 @@ import ModuleLoader, { useCargaMinima } from '@/components/ui/module-loader';
 import ModuleReveal from '@/components/ui/module-reveal';
 import { ContenidoGuardado, MS_GUARDADO, type EstadoGuardado } from '@/components/ui/save-button-state';
 import {
-  IconAlDia, IconCandado, IconEvento, IconFoto, IconHoy, IconPendiente, IconPublico,
+  IconAlDia, IconAsistencias, IconCandado, IconEvento, IconFoto, IconPendiente, IconPublico,
   IconUbicacion, IconVideo,
 } from '@/components/ui/custom-icons';
 
@@ -741,8 +741,11 @@ export default function DashboardPage() {
         {/* Fichas — el dato ya existia, pero obligaba a entrar a cada módulo */}
         {resumen && (
           <div className="flex gap-2">
+            {/* 11 y no 13 como sus vecinas: este ícono no lleva el margen de dos
+                unidades que ellas tienen en el lienzo, así que a 13 su dibujo
+                saldría un sexto más grande. Con 11 los tres miden lo mismo. */}
             <FichaInicio
-              icono={<IconHoy className="w-[13px] h-[13px]" style={{ color: '#1D9E75' }} />}
+              icono={<IconAsistencias className="w-[11px] h-[11px]" style={{ color: '#1D9E75' }} />}
               etiqueta="Hoy"
               valor={String(resumen.asistenciaHoy)}
               sufijo={`/${resumen.deportistas}`}

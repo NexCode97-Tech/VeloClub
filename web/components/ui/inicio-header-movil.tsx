@@ -3,11 +3,10 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { BadgeCheck } from 'lucide-react';
 import { NotificationsBell } from '@/components/ui/notifications-bell';
 import { SearchModal } from '@/components/ui/search-modal';
 import { useMembers } from '@/hooks/useVeloQuery';
-import { IconAjustes, IconBuscar } from '@/components/ui/custom-icons';
+import { IconAjustes, IconBuscar, IconVerificado } from '@/components/ui/custom-icons';
 
 /**
  * Encabezado de Inicio en móvil.
@@ -116,7 +115,7 @@ export function InicioHeaderMovil({ clubName, clubLogoUrl, userName, userPicture
             <p className="text-[17px] font-semibold text-white truncate" style={{ fontFamily: 'inherit' }}>
               {clubName ?? 'VeloClub'}
             </p>
-            {verified && <BadgeCheck className="w-4 h-4 shrink-0" style={{ color: '#9FE1CB' }} />}
+            {verified && <IconVerificado className="w-4 h-4 shrink-0" style={{ color: '#9FE1CB' }} />}
           </div>
           {userName && (
             <p className="text-[12px] truncate" style={{ color: 'rgba(255,255,255,0.75)' }}>

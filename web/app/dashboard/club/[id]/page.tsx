@@ -5,8 +5,8 @@ import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@clerk/nextjs';
 import { motion, AnimatePresence } from 'framer-motion';
 import { apiFetch } from '@/lib/api-client';
-import { IconClub, IconUbicacion } from '@/components/ui/custom-icons';
-import { ArrowLeft, BadgeCheck, CalendarDays, UserPlus, UserCheck, Phone, Mail, Building2, Lock } from 'lucide-react';
+import { IconClub, IconUbicacion, IconVerificado } from '@/components/ui/custom-icons';
+import { ArrowLeft, CalendarDays, UserPlus, UserCheck, Phone, Mail, Building2, Lock } from 'lucide-react';
 import ModuleLoader, { useCargaMinima } from '@/components/ui/module-loader';
 import ModuleReveal from '@/components/ui/module-reveal';
 import { textoFundacion } from '@/lib/fundacion';
@@ -147,7 +147,7 @@ export default function PublicClubPage() {
               {club.verified && (
                 <div className="absolute bottom-0.5 right-0.5 rounded-full border-2 border-white flex items-center justify-center"
                   style={{ width: 28, height: 28, background: '#4361EE' }}>
-                  <BadgeCheck className="w-4 h-4 text-white" />
+                  <IconVerificado className="w-4 h-4 text-white" />
                 </div>
               )}
             </div>

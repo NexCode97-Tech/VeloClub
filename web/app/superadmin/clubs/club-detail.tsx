@@ -8,10 +8,10 @@ import { PhoneInput } from '@/components/ui/phone-input';
 import SportSelect from './sport-select';
 import { motion, AnimatePresence, type Variants } from 'framer-motion';
 import {
-  X, Check, TrendingUp, CalendarClock, Eye, Upload, RotateCcw, Power, BadgeCheck, Camera,
+  X, Check, TrendingUp, CalendarClock, Eye, Upload, RotateCcw, Power, Camera,
 } from 'lucide-react';
 import {
-  IconChat, IconEditar, IconEliminar,
+  IconChat, IconEditar, IconEliminar, IconVerificado,
 } from '@/components/ui/custom-icons';
 
 // ── Formateo ────────────────────────────────────────────────────────────────
@@ -564,7 +564,7 @@ export default function ClubDetail({ club, suscripcion, tab, onReload, onDeleted
               : suscripcion && <span style={{ fontSize: 10, fontWeight: 600, padding: '3px 9px', borderRadius: 99, background: pb.bg, color: pb.color }}>{pb.label}</span>}
             {club.verificationStatus === 'VERIFIED' && (
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10, fontWeight: 600, padding: '3px 9px', borderRadius: 99, background: 'rgba(6,214,160,0.12)', color: '#06D6A0' }}>
-                <BadgeCheck size={11} /> Verificado
+                <IconVerificado className="w-[11px] h-[11px]" /> Verificado
               </span>
             )}
           </div>
@@ -853,7 +853,7 @@ export default function ClubDetail({ club, suscripcion, tab, onReload, onDeleted
                 <div style={{ display: 'flex', gap: 8 }}>
                   <motion.button onClick={verificarClub} whileTap={{ scale: 0.97 }}
                     style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, padding: '10px 0', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg,#06D6A0,#0CB68D)', color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
-                    <BadgeCheck size={14} /> Verificar
+                    <IconVerificado className="w-[14px] h-[14px]" /> Verificar
                   </motion.button>
                   <motion.button onClick={rechazarClub} whileTap={{ scale: 0.97 }}
                     style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, padding: '10px 0', borderRadius: 10, border: '1px solid rgba(239,71,111,0.20)', background: 'rgba(239,71,111,0.05)', color: '#EF476F', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
@@ -867,7 +867,7 @@ export default function ClubDetail({ club, suscripcion, tab, onReload, onDeleted
             {club.verificationStatus === 'REJECTED' && (
               <motion.button onClick={verificarClub} whileTap={{ scale: 0.97 }}
                 style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, padding: '10px 0', borderRadius: 10, border: '1px solid rgba(120,80,200,0.14)', background: 'transparent', color: '#6B6580', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
-                <BadgeCheck size={14} /> Rechazado, verificar de todos modos
+                <IconVerificado className="w-[14px] h-[14px]" /> Rechazado, verificar de todos modos
               </motion.button>
             )}
           </div>

@@ -17,7 +17,7 @@ import { PostCard, Post, PostComment, LikeUser } from '@/components/ui/post-card
 import ModuleLoader, { useCargaMinima } from '@/components/ui/module-loader';
 import ModuleReveal from '@/components/ui/module-reveal';
 import {
-  IconEditar, IconEliminar, IconUbicacion,
+  IconEditar, IconEliminar, IconUbicacion, IconVerificado,
 } from '@/components/ui/custom-icons';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -485,9 +485,7 @@ export default function PerfilPage() {
               {user?.club?.verified && !user?.club?.logoUrl && (
                 <div className="absolute bottom-0.5 right-0.5 rounded-full border-2 border-white flex items-center justify-center"
                   style={{ width: 28, height: 28, background: '#4361EE' }}>
-                  <svg viewBox="0 0 24 24" fill="none" className="w-3.5 h-3.5">
-                    <path d="M5 13l4 4L19 7" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
+                  <IconVerificado className="w-3.5 h-3.5 text-white" />
                 </div>
               )}
             </div>

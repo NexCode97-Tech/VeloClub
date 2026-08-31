@@ -6,7 +6,7 @@ import { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { apiFetch } from '@/lib/api-client';
 import {
-  Camera, ImagePlus, BadgeCheck, Lock, CalendarDays, Building2, Check, X, UserPlus, UserCheck,
+  Camera, ImagePlus, Lock, CalendarDays, Building2, Check, X, UserPlus, UserCheck,
 } from 'lucide-react';
 import { PostCard, Post, PostComment, LikeUser } from '@/components/ui/post-card';
 import { PhoneInput } from '@/components/ui/phone-input';
@@ -14,7 +14,7 @@ import ModuleLoader, { useCargaMinima } from '@/components/ui/module-loader';
 import ModuleReveal from '@/components/ui/module-reveal';
 import { textoFundacion } from '@/lib/fundacion';
 import {
-  IconEditar, IconEliminar, IconMail, IconTelefono, IconUbicacion,
+  IconEditar, IconEliminar, IconMail, IconTelefono, IconUbicacion, IconVerificado,
 } from '@/components/ui/custom-icons';
 
 interface ClubMember {
@@ -492,7 +492,7 @@ export default function ClubProfilePage() {
               {club.verified && (
                 <div className="absolute bottom-0.5 right-0.5 rounded-full border-2 border-white flex items-center justify-center"
                   style={{ width: 28, height: 28, background: '#4361EE' }}>
-                  <BadgeCheck className="w-4 h-4 text-white" />
+                  <IconVerificado className="w-4 h-4 text-white" />
                 </div>
               )}
             </div>

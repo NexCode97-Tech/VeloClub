@@ -5,8 +5,8 @@ import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@clerk/nextjs';
 import { apiFetch } from '@/lib/api-client';
-import { X, Loader2, BadgeCheck } from 'lucide-react';
-import { IconClub, IconBuscar } from '@/components/ui/custom-icons';
+import { X, Loader2 } from 'lucide-react';
+import { IconClub, IconBuscar, IconVerificado } from '@/components/ui/custom-icons';
 
 interface ClubHit {
   id: string; name: string; city?: string | null; department?: string | null;
@@ -145,7 +145,7 @@ export function SearchModal({ open, onClose }: { open: boolean; onClose: () => v
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1">
                       <p className="text-[13px] font-semibold text-foreground truncate">{c.name}</p>
-                      {c.verified && <BadgeCheck className="w-3.5 h-3.5 shrink-0" style={{ color: '#4361EE' }} />}
+                      {c.verified && <IconVerificado className="w-3.5 h-3.5 shrink-0" style={{ color: '#4361EE' }} />}
                     </div>
                     <p className="text-[11px] text-muted-foreground truncate">
                       {[c.deporte, c.city, c.department].filter(Boolean).join(' · ') || 'Club'}

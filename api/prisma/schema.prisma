@@ -62,6 +62,7 @@ model Club {
   posts                     Post[]
   cuponCanjes               CuponCanje[]
   clases                    ClaseHorario[]
+  grupos                    Grupo[]
   deportes                  Deporte[]
 }
 
@@ -98,6 +99,7 @@ model Deporte {
   members          Member[]
   attendances      Attendance[]
   clases           ClaseHorario[]
+  grupos           Grupo[]
   payments         Payment[]
   cashEntries      CashEntry[]
   competitions     Competition[]
@@ -156,6 +158,7 @@ model Location {
   trainingSessions TrainingSession[]
   calendarEvents   CalendarEvent[]
   clases           ClaseHorario[]
+  grupos           Grupo[]
   payments         Payment[]
   cashEntries      CashEntry[]
   createdAt        DateTime          @default(now())
@@ -209,6 +212,7 @@ model Member {
   paymentDueDay     Int?
   monthlyFee        Float?
   locations         MemberLocation[]
+  grupos            MemberGrupo[]
   attendances       Attendance[]
   payments          Payment[]
   eventResults      EventResult[]
@@ -297,6 +301,57 @@ model Attendance {
   @@index([deporteId])
 }
 
+// ─── Grupo ───────────────────────────────────────────────────────────────────
+//
+// Un grupo es un nombre y una sede. Nada mas.
+//
+// El dia y la hora NO viven aca: viven en cada ClaseHorario. Un grupo de lunes,
+// miercoles y viernes a las 6 son tres clases colgadas del mismo grupo, no un
+// campo con tres valores. Importa porque la asistencia se toma por clase: si el
+// dia subiera al grupo, la asistencia perderia el detalle que ya tiene.
+//
+// Existe para que la pertenencia sea declarada y no deducida. Antes la planilla
+// salia de cruzar la sede de la clase con la categoria del deportista, y dos
+// clases que compartieran las dos cosas devolvian exactamente la misma lista.
+
+model Grupo {
+  id         String         @id @default(cuid())
+  clubId     String
+  club       Club           @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  deporteId  String
+  deporte    Deporte        @relation(fields: [deporteId], references: [id], onDelete: Cascade)
+  locationId String
+  location   Location       @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  nombre     String
+  // Desactivar no borra: el grupo deja de ofrecerse en el formulario y de
+  // aparecer al crear clases, pero conserva su gente y su historia.
+  activo     Boolean        @default(true)
+  clases     ClaseHorario[]
+  miembros   MemberGrupo[]
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+
+  // Dos grupos con el mismo nombre en la misma sede no se distinguen en el
+  // desplegable del formulario, que es donde los ve quien se inscribe.
+  @@unique([locationId, nombre])
+  @@index([clubId, deporteId])
+}
+
+// ─── MemberGrupo ─────────────────────────────────────────────────────────────
+//
+// Tabla puente, igual que MemberLocation y por la misma razon: un deportista
+// puede entrenar en dos grupos, y ese caso ya se dio con las sedes.
+
+model MemberGrupo {
+  memberId String
+  grupoId  String
+  member   Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  grupo    Grupo  @relation(fields: [grupoId], references: [id], onDelete: Cascade)
+
+  @@id([memberId, grupoId])
+  @@index([grupoId])
+}
+
 // ─── Horario de clases ────────────────────────────────────────────────────────
 //
 // Lo que el club dicta cada semana: sede, dia, hora. La asistencia se toma
@@ -321,7 +376,16 @@ model ClaseHorario {
   // "HH:mm" en 24h. Texto y no DateTime: es una hora de reloj que se repite
   // cada semana, no un instante, y guardarla como fecha arrastra husos.
   hora        String
+  // RESPALDO, no criterio principal. Desde que existe `Grupo`, la planilla sale
+  // del grupo; esto solo se usa en las clases que no tienen uno. Volver a armar
+  // listas con la categoria es reintroducir el cruce que el grupo vino a cerrar.
+  // Ver `api/src/lib/planilla.ts`.
   categoria   String?
+  // Opcional a proposito, y no por indecision del modelo. Es lo unico que deja
+  // seguir funcionando a un club que todavia no armo grupos: sin grupo, la
+  // planilla sale de la regla vieja.
+  grupoId     String?
+  grupo       Grupo?       @relation(fields: [grupoId], references: [id], onDelete: SetNull)
   // Quitar una clase del horario no borra su historial de asistencia: se
   // desactiva y deja de aparecer de hoy en adelante.
   activa      Boolean      @default(true)
@@ -331,6 +395,7 @@ model ClaseHorario {
 
   @@index([clubId, diaSemana, activa])
   @@index([deporteId])
+  @@index([grupoId])
 }
 
 // ─── Payment (pagos de mensualidad) ──────────────────────────────────────────

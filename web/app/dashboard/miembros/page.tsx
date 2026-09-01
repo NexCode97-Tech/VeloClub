@@ -38,6 +38,7 @@ import {
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface Location { id: string; name: string }
+interface Grupo { id: string; nombre: string; location: { id: string; name: string } }
 interface Member {
   id: string; fullName: string; email?: string; phone?: string;
   birthDate?: string; category?: string; tipo?: string;
@@ -52,6 +53,7 @@ interface Member {
   active?: boolean;
   desactivadoAt?: string | null;
   locations: { location: Location }[];
+  grupos?: { grupoId: string }[];
 }
 
 // ── Design tokens ──────────────────────────────────────────────────────────────
@@ -89,6 +91,7 @@ export default function MiembrosPage() {
   const [cambiandoEstado, setCambiandoEstado] = useState<string | null>(null);
   const [sortOrder, setSortOrder]     = useState<'az'|'za'|'recent'|'oldest'>('recent');
   const [catFilter, setCatFilter]     = useState<string>('ALL');
+  const [grupoFilter, setGrupoFilter] = useState<string>('ALL');
   const [locFilter, setLocFilter]     = useState<string>('ALL');
   const [clubName, setClubName] = useState('VeloClub');
 
@@ -143,10 +146,21 @@ export default function MiembrosPage() {
     },
   });
 
+  const { data: gruposData } = useQuery({
+    queryKey: QK.grupos(),
+    queryFn: async () => {
+      const token = await getToken();
+      return apiFetch<{ grupos: Grupo[] }>('/grupos', { token });
+    },
+  });
+
   // Memorizados porque el `??` crea un arreglo nuevo en cada render, y de estos
-  // dos cuelgan los filtros y sus conteos: sin esto se recalculan siempre.
+  // cuelgan los filtros y sus conteos: sin esto se recalculan siempre.
   const members   = useMemo(() => membersData?.members ?? [], [membersData]);
   const locations = useMemo(() => locsData?.locations  ?? [], [locsData]);
+  // `gruposClub` y no `grupos`: dentro del memo de filtros ya hay un `grupos`
+  // local que son los grupos DEL FILTRO, y uno taparia al otro.
+  const gruposClub = useMemo(() => gruposData?.grupos ?? [], [gruposData]);
 
   useEffect(() => {
     getToken().then(async token => {
@@ -380,14 +394,26 @@ export default function MiembrosPage() {
     setImportWarnings(warnings);
     const token = await getToken();
     const failed: string[] = [];
+    const avisosGrupo: string[] = [];
     for (const row of rows) {
       try {
-        const { locationName, ...rest } = row;
+        const { locationName, grupoName, ...rest } = row;
         let locationIds: string[] | undefined;
         if (locationName) {
           const found = locations.find(l => l.name.toLowerCase().trim() === locationName.toLowerCase().trim());
           if (!found) { failed.push(`${row.fullName}: la sede "${locationName}" no existe`); continue; }
           locationIds = [found.id];
+        }
+        // A diferencia de la sede, un grupo que no coincide NO descarta la
+        // fila: el deportista entra sin grupo y se avisa al final. Perder a
+        // alguien por un nombre mal escrito ya paso una vez con las sedes.
+        let grupoIds: string[] | undefined;
+        if (grupoName) {
+          const g = gruposClub.find(x =>
+            x.nombre.toLowerCase().trim() === grupoName.toLowerCase().trim()
+            && (!locationIds || x.location.id === locationIds[0]));
+          if (g) grupoIds = [g.id];
+          else avisosGrupo.push(`${row.fullName}: el grupo "${grupoName}" no existe en esa sede. Entró sin grupo.`);
         }
         // Buscar si el miembro ya existe por docNumber o email para evitar duplicados
         const existing = members.find(m =>
@@ -395,16 +421,19 @@ export default function MiembrosPage() {
           (rest.email && m.email && m.email.toLowerCase().trim() === rest.email.toLowerCase().trim())
         );
         if (existing) {
-          await apiFetch(`/members/${existing.id}`, { method: 'PUT', token, body: JSON.stringify({ ...rest, locationIds }) });
+          await apiFetch(`/members/${existing.id}`, { method: 'PUT', token, body: JSON.stringify({ ...rest, locationIds, grupoIds }) });
         } else {
-          await apiFetch('/members', { method: 'POST', token, body: JSON.stringify({ ...rest, locationIds }) });
+          await apiFetch('/members', { method: 'POST', token, body: JSON.stringify({ ...rest, locationIds, grupoIds }) });
         }
       } catch (e) { failed.push(`${row.fullName}: ${e instanceof Error ? e.message : 'Error'}`); }
     }
     setImporting(false);
+    // Los grupos que no coincidieron son avisos, no errores: la gente si entro.
+    const todosLosAvisos = [...warnings, ...avisosGrupo];
+    if (avisosGrupo.length > 0) setImportWarnings(todosLosAvisos);
     // Con avisos pendientes el modal se queda abierto, para que alcancen a leerse
     if (failed.length > 0) setImportErrors(failed);
-    else if (warnings.length === 0) setImportOpen(false);
+    else if (todosLosAvisos.length === 0) setImportOpen(false);
     qc.invalidateQueries({ queryKey: QK.members() });
   }
 
@@ -419,13 +448,15 @@ export default function MiembrosPage() {
       const matchSearch = !q || m.fullName.toLowerCase().includes(q) || m.email?.toLowerCase().includes(q);
       const matchRole   = roleFilter === 'ALL' || m.role === roleFilter;
       const matchCat    = catFilter  === 'ALL' || m.category === catFilter;
+      const matchGrupo  = grupoFilter === 'ALL'
+        || (m.grupos ?? []).some(g => g.grupoId === grupoFilter);
       const matchLoc = locFilter === 'ALL'
         || (locFilter === 'SIN_SEDE' ? m.locations.length === 0 : m.locations.some(l => l.location.id === locFilter));
       // Los desactivados se esconden por defecto: si no, el club que pausa 25
       // deportistas en noviembre sigue viendo la misma lista de siempre.
       const matchEstado = estadoFilter === 'TODOS'
         || (estadoFilter === 'ACTIVOS' ? m.active !== false : m.active === false);
-      return matchSearch && matchRole && matchCat && matchLoc && matchEstado;
+      return matchSearch && matchRole && matchCat && matchGrupo && matchLoc && matchEstado;
     });
     list = [...list].sort((a, b) => {
       if (sortOrder === 'az')     return a.fullName.localeCompare(b.fullName);
@@ -435,7 +466,7 @@ export default function MiembrosPage() {
       return 0;
     });
     return list;
-  }, [members, search, roleFilter, catFilter, locFilter, sortOrder, estadoFilter]);
+  }, [members, search, roleFilter, catFilter, grupoFilter, locFilter, sortOrder, estadoFilter]);
 
   const totalPausados = useMemo(() => members.filter(m => m.active === false).length, [members]);
 
@@ -451,6 +482,8 @@ export default function MiembrosPage() {
     const porBusqueda = (m: Member) => !q || m.fullName.toLowerCase().includes(q) || !!m.email?.toLowerCase().includes(q);
     const porRol      = (m: Member) => roleFilter === 'ALL' || m.role === roleFilter;
     const porCat      = (m: Member) => catFilter === 'ALL' || m.category === catFilter;
+    const porGrupo    = (m: Member) => grupoFilter === 'ALL'
+      || (m.grupos ?? []).some(g => g.grupoId === grupoFilter);
     const porSede     = (m: Member) => locFilter === 'ALL'
       || (locFilter === 'SIN_SEDE' ? m.locations.length === 0 : m.locations.some(l => l.location.id === locFilter));
     const porEstado   = (m: Member) => estadoFilter === 'TODOS'
@@ -500,6 +533,26 @@ export default function MiembrosPage() {
       });
     }
 
+    if (gruposClub.length > 0) {
+      const paraGrupo = salvo(porBusqueda, porRol, porCat, porSede, porEstado);
+      grupos.push({
+        id: 'grupo',
+        titulo: 'Grupo',
+        valor: grupoFilter,
+        neutro: 'ALL',
+        tono: 'violeta',
+        onElegir: setGrupoFilter,
+        opciones: [
+          { valor: 'ALL', texto: 'Todos', n: paraGrupo.length },
+          ...gruposClub.map(g => ({
+            valor: g.id,
+            texto: g.nombre,
+            n: paraGrupo.filter(m => (m.grupos ?? []).some(x => x.grupoId === g.id)).length,
+          })),
+        ],
+      });
+    }
+
     grupos.push({
       id: 'sede',
       titulo: 'Sede',
@@ -537,7 +590,7 @@ export default function MiembrosPage() {
     }
 
     return grupos;
-  }, [members, search, roleFilter, catFilter, locFilter, estadoFilter, sortOrder, allCategories, locations, totalPausados]);
+  }, [members, search, roleFilter, catFilter, grupoFilter, locFilter, estadoFilter, sortOrder, allCategories, locations, gruposClub, totalPausados]);
 
   // ── Initials ─────────────────────────────────────────────────────────────────
   function initials(name: string) {
@@ -601,7 +654,7 @@ export default function MiembrosPage() {
             className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold border border-border text-muted-foreground hover:bg-secondary active:scale-95 transition-all">
             <IconImportar className="w-4 h-4" /><span className="hidden sm:inline">Importar</span>
           </button>
-          <button onClick={() => downloadMembersTemplate(locations)}
+          <button onClick={() => downloadMembersTemplate(locations, gruposClub)}
             className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold border border-border text-muted-foreground hover:bg-secondary active:scale-95 transition-all">
             <FileSpreadsheet className="w-4 h-4" /><span className="hidden sm:inline">Plantilla</span>
           </button>
@@ -1402,6 +1455,19 @@ export default function MiembrosPage() {
                       {viewMember.category && (
                         <p className="text-white/80 text-[12px] mt-0.5">{viewMember.category}{viewMember.tipo ? ` · ${viewMember.tipo}` : ''}</p>
                       )}
+                      {/* El grupo va aparte de la categoría y no pegado a ella:
+                          dicen cosas distintas —una es su edad, el otro es con
+                          quién entrena— y juntarlas invita a confundirlas, que
+                          es justo lo que este modelo vino a separar. */}
+                      {(() => {
+                        const suyos = gruposClub.filter(g =>
+                          (viewMember.grupos ?? []).some(x => x.grupoId === g.id));
+                        return suyos.length > 0 && (
+                          <p className="text-white/70 text-[11px] mt-0.5">
+                            {suyos.map(g => g.nombre).join(' · ')}
+                          </p>
+                        );
+                      })()}
                     </div>
                   </div>
                 </div>
@@ -1633,7 +1699,7 @@ export default function MiembrosPage() {
               </div>
             )}
             <button
-              onClick={() => downloadMembersTemplate(locations)}
+              onClick={() => downloadMembersTemplate(locations, gruposClub)}
               className="w-full flex items-center justify-center gap-2 py-2 rounded-xl border border-border text-[12px] font-semibold text-muted-foreground hover:bg-secondary"
             >
               <FileSpreadsheet className="w-4 h-4" />Descargar plantilla

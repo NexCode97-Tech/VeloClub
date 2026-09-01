@@ -10,6 +10,8 @@ import {
   DOC_TIPOS_CON_NOTA, PARENTESCOS, CATEGORIAS, NIVELES, GENEROS, RH_TIPOS,
   edadDe, esMenorDeEdad,
 } from '@/lib/ficha-deportista';
+import { DIA_CORTO_3 } from '@/lib/dias';
+import { horaLegible } from '@/components/ajustes/horario-clases';
 
 /**
  * El formulario del deportista.
@@ -32,16 +34,40 @@ const API = process.env.NEXT_PUBLIC_API_URL ?? '';
 // la autorizacion de datos.
 const PASOS = ['Identidad', 'Acceso y contacto', 'Entrenamiento', 'Salud y permisos'];
 
+interface GrupoDelEnlace {
+  id: string;
+  nombre: string;
+  locationId: string;
+  clases: { diaSemana: number; hora: string }[];
+}
+
 interface Config {
   club: { nombre: string; logoUrl: string | null };
   sedes: { id: string; name: string }[];
+  grupos?: GrupoDelEnlace[];
+}
+
+/**
+ * "Lun, Mié, Vie · 6:00 a. m." — el horario del grupo, resumido.
+ *
+ * Los días juntos y la hora una sola vez cuando todas las clases coinciden, que
+ * es el caso normal de un grupo. La semana arranca en lunes y el domingo va al
+ * final, como se lee una semana de entrenamiento.
+ */
+function resumenHorario(clases: { diaSemana: number; hora: string }[]): string {
+  if (!clases.length) return 'Sin horario definido';
+  const dias = [...new Set(clases.map(c => c.diaSemana))]
+    .sort((a, b) => (a === 0 ? 7 : a) - (b === 0 ? 7 : b))
+    .map(v => DIA_CORTO_3[v]).join(', ');
+  const horas = [...new Set(clases.map(c => c.hora))].sort();
+  return `${dias} · ${horas.map(horaLegible).join(' / ')}`;
 }
 
 interface Datos {
   fullName: string; birthDate: string; docType: string; docNumber: string; phone: string;
   email: string; password: string; password2: string;
   guardianName: string; guardianRelation: string; guardianDocNumber: string; guardianPhone: string;
-  locationId: string; category: string; tipo: string;
+  locationId: string; grupoId: string; category: string; tipo: string;
   eps: string; gender: string; rh: string; allergies: string;
   aceptaTerminos: boolean;
 }
@@ -50,7 +76,7 @@ const VACIO: Datos = {
   fullName: '', birthDate: '', docType: '', docNumber: '', phone: '',
   email: '', password: '', password2: '',
   guardianName: '', guardianRelation: '', guardianDocNumber: '', guardianPhone: '',
-  locationId: '', category: '', tipo: '',
+  locationId: '', grupoId: '', category: '', tipo: '',
   eps: '', gender: '', rh: '', allergies: '',
   aceptaTerminos: false,
 };
@@ -62,7 +88,7 @@ type Ficha = Partial<Omit<Datos, 'password' | 'password2' | 'aceptaTerminos'>>;
 const CONTADOS: (keyof Datos)[] = [
   'fullName', 'birthDate', 'docType', 'docNumber', 'gender',
   'email', 'phone', 'guardianName', 'guardianRelation', 'guardianDocNumber', 'guardianPhone',
-  'locationId', 'category', 'tipo', 'eps', 'rh',
+  'locationId', 'grupoId', 'category', 'tipo', 'eps', 'rh',
 ];
 
 export default function FormularioInscripcion({ token }: { token: string }) {
@@ -125,6 +151,11 @@ export default function FormularioInscripcion({ token }: { token: string }) {
     return { llenos, total: aplican.length };
   }, [venia]);
 
+  // Solo los de la sede que acaba de elegir: un grupo es un nombre Y una sede.
+  const gruposDeLaSede = useMemo(
+    () => (config?.grupos ?? []).filter(g => g.locationId === d.locationId),
+    [config, d.locationId]);
+
   /** Lo que falta en el paso actual. Se revisa acá y de nuevo en el servidor. */
   const revisarPaso = useCallback((): Record<string, string> => {
     const e: Record<string, string> = {};
@@ -146,12 +177,15 @@ export default function FormularioInscripcion({ token }: { token: string }) {
     }
     if (paso === 2) {
       if (!d.locationId) e.locationId = 'Elige dónde va a entrenar';
+      // Obligatorio solo si la sede tiene grupos. Donde no los hay el campo ni
+      // se muestra, y exigirlo dejaria el formulario trancado sin salida.
+      if (gruposDeLaSede.length > 0 && !d.grupoId) e.grupoId = 'Elige tu grupo y horario';
     }
     if (paso === 3) {
       if (!d.aceptaTerminos) e.aceptaTerminos = 'Necesitamos tu autorización para continuar';
     }
     return e;
-  }, [paso, d, menor, yaTieneCuenta]);
+  }, [paso, d, menor, yaTieneCuenta, gruposDeLaSede]);
 
   /** El documento decide todo lo que sigue. */
   async function identificar() {
@@ -217,6 +251,7 @@ export default function FormularioInscripcion({ token }: { token: string }) {
           guardianDocNumber: d.guardianDocNumber || undefined,
           guardianPhone: d.guardianPhone || undefined,
           locationId: d.locationId,
+          grupoId: d.grupoId || undefined,
           category: d.category || undefined,
           tipo: d.tipo || undefined,
           eps: d.eps || undefined,
@@ -236,7 +271,7 @@ export default function FormularioInscripcion({ token }: { token: string }) {
           const pasoDelCampo: Record<string, number> = {
             fullName: 0, birthDate: 0,
             email: 1, password: 1, phone: 1,
-            locationId: 2,
+            locationId: 2, grupoId: 2,
           };
           const destino = pasoDelCampo[res.campo];
           if (destino !== undefined) setPaso(destino);
@@ -616,6 +651,28 @@ export default function FormularioInscripcion({ token }: { token: string }) {
               />
               <Ayuda>Las sedes son las de este club.</Ayuda>
             </Campo>
+            {/* Se oculta si la sede no tiene grupos: un club que todavia no los
+                armo no puede ver un campo obligatorio que no puede llenar. */}
+            {gruposDeLaSede.length > 0 && (
+              <Campo etiqueta="Grupo y horario" obligatorio error={errores.grupoId}
+                falta={faltaba('grupoId')} listo={traido('grupoId')}>
+                <Desplegable
+                  valor={d.grupoId}
+                  opciones={gruposDeLaSede.map(g => ({
+                    valor: g.id,
+                    texto: g.nombre,
+                    // El horario al lado del nombre: la persona elige por hora,
+                    // que es como piensa, no por un nombre que no conoce.
+                    nota: resumenHorario(g.clases),
+                  }))}
+                  vacio="Elegir grupo"
+                  error={!!errores.grupoId}
+                  falta={faltaba('grupoId')}
+                  onElegir={v => set('grupoId', v)}
+                />
+                <Ayuda>Es el horario en el que vas a entrenar.</Ayuda>
+              </Campo>
+            )}
             <Campo etiqueta="Categoría" falta={faltaba('category')} listo={traido('category')}>
               <Desplegable valor={d.category} opciones={[...CATEGORIAS]} vacio="Elegir categoría"
                 falta={faltaba('category')} onElegir={v => set('category', v)} />

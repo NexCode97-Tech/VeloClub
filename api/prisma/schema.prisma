@@ -330,6 +330,11 @@ model Grupo {
   locationId String
   location   Location       @relation(fields: [locationId], references: [id], onDelete: Cascade)
   nombre     String
+  // El color con el que se pinta en el horario, el calendario y la leyenda.
+  // Null = todavia no lo escogieron y se le asigna uno por su posicion en la
+  // lista. Se guarda como "#RRGGBB" y no como el nombre de un color: la paleta
+  // del selector puede cambiar y los grupos ya pintados no deberian moverse.
+  color      String?
   // Desactivar no borra: el grupo deja de ofrecerse en el formulario y de
   // aparecer al crear clases, pero conserva su gente y su historia.
   activo     Boolean        @default(true)
@@ -393,6 +398,11 @@ model ClaseHorario {
   // planilla sale de la regla vieja.
   grupoId     String?
   grupo       Grupo?       @relation(fields: [grupoId], references: [id], onDelete: SetNull)
+  // Pisa el color del grupo solo si alguien lo escogio a proposito. En null
+  // hereda el del grupo, que es lo que quiere casi todo el mundo: si cada clase
+  // arrancara con su propio color, dos clases del mismo grupo saldrian
+  // distintas y la leyenda dejaria de significar algo.
+  color       String?
   // Quitar una clase del horario no borra su historial de asistencia: se
   // desactiva y deja de aparecer de hoy en adelante.
   activa      Boolean      @default(true)

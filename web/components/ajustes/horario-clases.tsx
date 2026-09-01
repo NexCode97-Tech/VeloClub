@@ -13,6 +13,8 @@ import { Input } from '@/components/ui/input';
 import { TimePicker } from '@/components/ui/time-picker';
 import { Label } from '@/components/ui/label';
 import { DIAS_SEMANA } from '@/lib/dias';
+import { colorDeGrupo, colorDeClase } from '@/lib/colores-grupo';
+import { SelectorColor } from '@/components/ui/selector-color';
 import { CATEGORIAS } from '@/lib/categorias';
 import {
   IconCheck, IconEditar, IconEliminar, IconMas, IconUbicacion,
@@ -34,6 +36,8 @@ export interface Grupo {
   id: string;
   nombre: string;
   activo: boolean;
+  /** "#RRGGBB", o null si nadie lo escogió: ahí manda la posición. */
+  color: string | null;
   location: { id: string; name: string };
   clases: { id: string; diaSemana: number; hora: string; activa: boolean }[];
   _count: { miembros: number };
@@ -46,6 +50,8 @@ export interface Clase {
   hora: string;
   categoria: string | null;
   grupoId: string | null;
+  /** Pisa el color del grupo solo si alguien lo escogió a propósito. */
+  color: string | null;
   locationId: string;
   location: { id: string; name: string };
 }
@@ -59,7 +65,12 @@ export function horaLegible(hhmm: string): string {
   return `${h12}:${String(m).padStart(2, '0')} ${sufijo}`;
 }
 
-export default function HorarioClases() {
+/**
+ * @param sinEntrenamiento Dias que el club marco como «no se entrena» (0 = domingo).
+ *   La cuadricula no los pinta: una columna donde nunca va a haber clase solo
+ *   ocupa ancho, y el «+» de ese dia ofreceria algo que el club ya dijo que no.
+ */
+export default function HorarioClases({ sinEntrenamiento = [] }: { sinEntrenamiento?: number[] }) {
   const { getToken } = useAuth();
   const [clases, setClases]   = useState<Clase[]>([]);
   const [sedes, setSedes]     = useState<Sede[]>([]);
@@ -100,17 +111,55 @@ export default function HorarioClases() {
 
   useEffect(() => { cargar(); }, [cargar]);
 
-  function abrirNueva() {
+  /**
+   * @param dia El dia de la celda donde se toco «Agregar». Ya viene elegido y
+   *            por eso el modal no lo vuelve a preguntar: la cuadricula lo dijo.
+   */
+  function abrirNueva(dia = 1) {
     setError('');
+    // Con un solo grupo se propone ese: es lo que va a querer el 100 % de los
+    // clubes que apenas tienen uno, y ahorra un toque.
+    const unico = grupos.filter(g => g.activo).length === 1
+      ? grupos.filter(g => g.activo)[0]
+      : null;
     setEditando({
-      nombre: '', diaSemana: 1, hora: '06:00',
-      categoria: '', locationId: sedes[0]?.id ?? '', grupoId: null,
+      nombre: unico?.nombre ?? '',
+      diaSemana: dia,
+      hora: '06:00',
+      categoria: '',
+      locationId: unico?.location.id ?? sedes[0]?.id ?? '',
+      grupoId: unico?.id ?? null,
+      // Null y no el del grupo: guardar una copia haria que cambiarle el color
+      // al grupo dejara de arrastrar a sus clases, que es justo lo que se
+      // espera cuando se cambia el color de un grupo.
+      color: null,
+    });
+  }
+
+  /**
+   * Al elegir grupo se arrastran su sede y su nombre.
+   *
+   * El nombre se copia y NO se ata: una clase puede llamarse «Técnica» dentro
+   * del grupo «Mañana». Se propone porque es lo que casi siempre se quiere, y
+   * queda editable porque a veces no.
+   */
+  function elegirGrupo(g: Grupo | null) {
+    if (!editando) return;
+    setEditando({
+      ...editando,
+      grupoId: g?.id ?? null,
+      ...(g ? { locationId: g.location.id } : {}),
+      // Solo pisa el nombre si estaba vacio o si era el del grupo anterior:
+      // uno escrito a mano no se borra por cambiar de grupo.
+      ...(g && (!editando.nombre?.trim()
+                || grupos.some(x => x.nombre === editando.nombre))
+            ? { nombre: g.nombre } : {}),
     });
   }
 
   async function guardar() {
     if (!editando || guardando) return;
-    const { id, nombre, diaSemana, hora, categoria, locationId, grupoId } = editando;
+    const { id, nombre, diaSemana, hora, categoria, locationId, grupoId, color } = editando;
     if (!nombre?.trim() || !locationId || diaSemana === undefined || !hora) return;
 
     setGuardando(true); setError('');
@@ -120,6 +169,7 @@ export default function HorarioClases() {
         nombre: nombre.trim(), diaSemana, hora,
         categoria: categoria?.trim() || null, locationId,
         grupoId: grupoId ?? null,
+        color: color ?? null,
       });
       if (id) await apiFetch(`/clases/${id}`, { token, method: 'PATCH', body: cuerpo });
       else    await apiFetch('/clases',       { token, method: 'POST',  body: cuerpo });
@@ -144,7 +194,10 @@ export default function HorarioClases() {
 
   function abrirGrupoNuevo() {
     setError('');
-    setGrupoEdit({ nombre: '', locationId: sedes[0]?.id ?? '' });
+    // Se propone el que le tocaria por posicion, para que el boton no salga
+    // en gris y haya que abrirlo solo para ver de que color va a quedar.
+    setGrupoEdit({ nombre: '', locationId: sedes[0]?.id ?? '',
+                   color: colorDeGrupo('nuevo', [...idsGrupo, 'nuevo'], null) });
   }
 
   async function guardarGrupo() {
@@ -156,7 +209,7 @@ export default function HorarioClases() {
     setGuardando(true); setError('');
     try {
       const token = await getToken();
-      const cuerpo = JSON.stringify({ nombre, locationId });
+      const cuerpo = JSON.stringify({ nombre, locationId, color: grupoEdit.color ?? null });
       if (grupoEdit.id) await apiFetch(`/grupos/${grupoEdit.id}`, { token, method: 'PATCH', body: cuerpo });
       else              await apiFetch('/grupos',                 { token, method: 'POST',  body: cuerpo });
       setGrupoEdit(null);
@@ -217,9 +270,17 @@ export default function HorarioClases() {
     }
   }
 
-  const porDia = DIAS_SEMANA
-    .map(d => ({ ...d, clases: clases.filter(c => c.diaSemana === d.valor) }))
-    .filter(d => d.clases.length > 0);
+  // La semana completa, incluidos los dias vacios: la cuadricula los necesita
+  // para que el «+» de cada dia tenga donde ir.
+  const semana = DIAS_SEMANA
+    .filter(d => !sinEntrenamiento.includes(d.valor))
+    .map(d => ({
+      ...d,
+      clases: clases.filter(c => c.diaSemana === d.valor)
+                    .sort((a, b) => a.hora.localeCompare(b.hora)),
+    }));
+  const hayClases = clases.length > 0;
+  const idsGrupo = grupos.map(g => g.id);
 
   return (
     <div className="space-y-3 border-t border-border pt-5">
@@ -312,7 +373,18 @@ export default function HorarioClases() {
         </div>
       ) : (
         <>
-          {porDia.length === 0 && !cargando && (
+          {clases.some(c => sinEntrenamiento.includes(c.diaSemana)) && (
+            <div className="flex items-start gap-2 rounded-xl px-3 py-2.5"
+              style={{ background: 'rgba(255,183,3,0.10)', border: '1px solid rgba(255,183,3,0.28)' }}>
+              <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5" style={{ color: '#854F0B' }} />
+              <p className="text-[11.5px] m-0" style={{ color: '#854F0B' }}>
+                Hay clases en días que marcaste como sin entrenamiento. No se ven acá y no se
+                les toma asistencia. Quita el día de la lista de abajo para volver a verlas.
+              </p>
+            </div>
+          )}
+
+          {!hayClases && !cargando && (
             <div className="rounded-xl px-4 py-5 text-center"
               style={{ background: 'rgba(56,29,160,0.03)', border: '1px solid rgba(56,29,160,0.10)' }}>
               <p className="text-[12.5px] font-semibold text-foreground mb-1">Sin horario todavía</p>
@@ -322,61 +394,98 @@ export default function HorarioClases() {
             </div>
           )}
 
-          {porDia.map(d => (
-            <div key={d.valor} className="space-y-1.5">
-              <div className="flex items-center gap-2.5">
-                <p className="text-[10.5px] font-bold text-foreground">{d.nombre}</p>
-                <div className="flex-1 h-px" style={{ background: 'rgba(120,80,200,0.14)' }} />
-              </div>
-              {d.clases.map(c => (
-                <div key={c.id}
-                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-white"
-                  style={{ border: '1px solid rgba(120,80,200,0.14)' }}>
-                  <span className="text-[12px] font-bold shrink-0 w-[68px]"
-                    style={{ color: '#381DA0', fontVariantNumeric: 'tabular-nums' }}>
-                    {horaLegible(c.hora)}
-                  </span>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[12.5px] font-semibold text-foreground truncate">{c.nombre}</p>
-                    <div className="flex items-center gap-1.5 flex-wrap mt-0.5">
-                      <span className="inline-flex items-center gap-1 text-[9px] font-bold px-2 py-0.5 rounded-full"
-                        style={{ background: 'rgba(67,97,238,0.10)', color: '#2F4BC7' }}>
-                        <IconUbicacion className="w-2.5 h-2.5" /> {c.location.name}
-                      </span>
-                      {c.categoria && (
-                        <span className="text-[9px] font-bold px-2 py-0.5 rounded-full"
-                          style={{ background: 'rgba(56,29,160,0.10)', color: '#6D28D9' }}>
-                          {c.categoria}
+          {/* La semana en siete columnas. Se desplaza a lo ancho en vez de
+              apilarse: una semana partida en siete filas deja de ser una semana,
+              que es justo lo que esta vista existe para mostrar. */}
+          <div className="overflow-x-auto pb-1">
+            <div
+              className="grid gap-1.5"
+              style={{
+                gridTemplateColumns: `repeat(${semana.length}, minmax(112px, 1fr))`,
+                minWidth: semana.length * 118,
+              }}
+            >
+              {semana.map(d => (
+                <p
+                  key={'cab' + d.valor}
+                  className="text-[10px] font-bold text-center m-0 py-1"
+                  style={{ color: '#8E87A8', letterSpacing: '0.04em' }}
+                >
+                  {d.nombre.slice(0, 3)}
+                </p>
+              ))}
+              {semana.map(d => (
+                <div
+                  key={d.valor}
+                  className="group flex flex-col gap-2 rounded-xl p-2"
+                  style={{ background: '#FAF9FE', border: '1px solid rgba(120,80,200,0.14)', minHeight: 128 }}
+                >
+                  {d.clases.length === 0 && (
+                    <span
+                      className="flex-1 grid place-items-center text-[10px]"
+                      style={{ color: '#8E87A8', opacity: 0.55 }}
+                    >
+                      Sin clases
+                    </span>
+                  )}
+                  {d.clases.map(c => {
+                    const color = colorDeClase(c, grupos);
+                    return (
+                      <button
+                        key={c.id}
+                        type="button"
+                        onClick={() => { setError(''); setEditando(c); }}
+                        aria-label={'Editar ' + c.nombre + ', ' + d.nombre + ' ' + horaLegible(c.hora)}
+                        className="block w-full text-left pl-2.5 py-0.5 transition-opacity hover:opacity-70"
+                        style={{ borderLeft: '2.5px solid ' + color }}
+                      >
+                        <span className="block text-[10.5px] font-bold" style={{ color }}>
+                          {horaLegible(c.hora)}
                         </span>
-                      )}
-                    </div>
-                  </div>
-                  <button onClick={() => { setError(''); setEditando(c); }} aria-label="Editar clase"
-                    className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-colors hover:bg-secondary"
-                    style={{ color: '#8E87A8' }}>
-                    <IconEditar className="w-3.5 h-3.5" />
-                  </button>
-                  <button onClick={() => setPorBorrar(c)} aria-label="Quitar clase"
-                    className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-colors hover:bg-red-50"
-                    style={{ color: '#EF476F' }}>
-                    <IconEliminar className="w-3.5 h-3.5" />
+                        <span className="block text-[11px] font-semibold text-foreground leading-tight mt-px truncate">
+                          {c.nombre}
+                        </span>
+                        <span className="block text-[9.5px] truncate" style={{ color: '#8E87A8' }}>
+                          {c.location.name}
+                        </span>
+                      </button>
+                    );
+                  })}
+                  {/* El «+» solo al pasar por encima. Siete botones fijos compiten
+                      con las clases, que son lo que hay que ver. En pantalla tactil
+                      no existe el «encima», asi que ahi se queda visible. */}
+                  <button
+                    type="button"
+                    onClick={() => abrirNueva(d.valor)}
+                    aria-label={'Agregar clase el ' + d.nombre.toLowerCase()}
+                    className="mt-auto w-full flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-[10.5px] font-bold opacity-0 group-hover:opacity-100 focus-visible:opacity-100 [@media(hover:none)]:opacity-100 transition-opacity"
+                    style={{ border: '1.5px dashed rgba(120,80,200,0.26)', color: '#8E87A8' }}
+                  >
+                    <IconMas className="w-2.5 h-2.5" /> Agregar
                   </button>
                 </div>
               ))}
             </div>
-          ))}
+          </div>
 
-          <button
-            onClick={abrirNueva}
-            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-[11.5px] font-bold transition-colors"
-            style={{
-              color: '#381DA0',
-              background: 'rgba(56,29,160,0.06)',
-              border: '1.5px dashed rgba(56,29,160,0.30)',
-            }}
-          >
-            <IconMas className="w-3.5 h-3.5" /> Agregar clase
-          </button>
+          {/* Que color es cada grupo. Sin esto la cuadricula son rayas de colores
+              sin significado: el nombre del grupo no siempre cabe en el bloque. */}
+          {hayClases && grupos.length > 0 && (
+            <div
+              className="flex flex-wrap gap-x-3.5 gap-y-1.5 pt-2.5"
+              style={{ borderTop: '1px solid rgba(120,80,200,0.14)' }}
+            >
+              {grupos.map(g => (
+                <span key={g.id} className="inline-flex items-center gap-1.5 text-[11px]" style={{ color: '#5B5470' }}>
+                  <span
+                    className="w-2 h-2 rounded-sm shrink-0"
+                    style={{ background: colorDeGrupo(g.id, idsGrupo, g.color) }}
+                  />
+                  {g.nombre}
+                </span>
+              ))}
+            </div>
+          )}
         </>
       )}
 
@@ -412,14 +521,75 @@ export default function HorarioClases() {
               </div>
 
               <div className="px-5 py-4 overflow-y-auto flex flex-col gap-3">
+                {/* El grupo va primero porque de el salen la sede y el nombre
+                    propuesto: preguntarlo despues obliga a devolverse. */}
+                {grupos.filter(g => g.activo).length > 0 && (
+                  <div className="space-y-1.5">
+                    <Label className="text-[12px]">¿De qué grupo?</Label>
+                    <div className="flex flex-col gap-1.5">
+                      {[null, ...grupos.filter(g => g.activo)].map(g => {
+                        const puesto = (editando.grupoId ?? null) === (g?.id ?? null);
+                        // El punto del selector ES el color del grupo. Un cuadro
+                        // de color aparte repetia la misma informacion dos veces
+                        // en la misma fila, y con dos circulos seguidos —el radio
+                        // y el color— la fila se leia como si tuviera dos casillas.
+                        const tinta = g ? colorDeGrupo(g.id, idsGrupo, g.color) : '#381DA0';
+                        return (
+                          <button
+                            key={g?.id ?? 'ninguno'}
+                            type="button"
+                            onClick={() => elegirGrupo(g)}
+                            className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-left transition-colors"
+                            style={puesto
+                              ? { background: `${tinta}0F`, border: `1.5px solid ${tinta}` }
+                              : { background: '#fff', border: '1.5px solid rgba(26,16,40,0.08)' }}
+                          >
+                            {/* Sin elegir, el aro ya lleva el color: asi se ve de
+                                que color es cada grupo sin tener que tocarlos. */}
+                            <span className="w-4 h-4 rounded-full shrink-0 flex items-center justify-center"
+                              style={{ border: `1.5px solid ${g ? tinta : (puesto ? tinta : 'rgba(26,16,40,0.20)')}` }}>
+                              {puesto && <span className="w-2 h-2 rounded-full" style={{ background: tinta }} />}
+                            </span>
+                            <span className="text-[12.5px] font-medium text-foreground flex-1 min-w-0 truncate">
+                              {g ? g.nombre : 'Sin grupo'}
+                            </span>
+                            {g && (
+                              <span className="text-[10.5px] shrink-0" style={{ color: '#8E87A8' }}>
+                                {g.location.name}
+                              </span>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <p className="text-[11px] text-muted-foreground">
+                      Sin grupo, la lista sale de la sede y la categoría, y dos clases iguales traen la misma gente.
+                    </p>
+                  </div>
+                )}
+
                 <div className="space-y-1.5">
-                  <Label className="text-[12px]">Nombre</Label>
-                  <Input
-                    value={editando.nombre ?? ''}
-                    onChange={e => setEditando({ ...editando, nombre: e.target.value })}
-                    placeholder="Formativa, Competitiva, Iniciación…"
-                    autoFocus
-                  />
+                  <Label className="text-[12px]">Nombre de la clase</Label>
+                  <div className="flex items-start gap-2">
+                    <Input
+                      className="flex-1"
+                      value={editando.nombre ?? ''}
+                      onChange={e => setEditando({ ...editando, nombre: e.target.value })}
+                      placeholder="Formativa, Técnica, Iniciación…"
+                      autoFocus
+                    />
+                    <SelectorColor
+                      etiqueta="Color de la clase"
+                      value={colorDeClase(
+                        { color: editando.color ?? null, grupoId: editando.grupoId ?? null },
+                        grupos,
+                      )}
+                      onChange={color => setEditando({ ...editando, color })}
+                    />
+                  </div>
+                  <p className="text-[11px] text-muted-foreground">
+                    Vienen del grupo, pero los puedes cambiar los dos: el nombre y el color.
+                  </p>
                 </div>
 
                 <div className="space-y-1.5">
@@ -427,8 +597,9 @@ export default function HorarioClases() {
                   <div className="flex gap-1.5 flex-wrap">
                     {/* Mismo circulo que "Dias sin entrenamiento": 40px, borde
                         de 2 y la misma abreviatura. Solo cambia el color, y a
-                        proposito — el rojo de alla significa "no se entrena". */}
-                    {DIAS_SEMANA.map(d => (
+                        proposito — el rojo de alla significa "no se entrena".
+                        Los dias cerrados no se ofrecen. */}
+                    {DIAS_SEMANA.filter(d => !sinEntrenamiento.includes(d.valor)).map(d => (
                       <button
                         key={d.valor}
                         type="button"
@@ -454,64 +625,50 @@ export default function HorarioClases() {
                   />
                 </div>
 
-                <div className="space-y-1.5">
-                  <Label className="text-[12px]">Sede</Label>
-                  <div className="flex flex-col gap-1.5">
-                    {sedes.map(s => (
-                      <button
-                        key={s.id}
-                        type="button"
-                        onClick={() => setEditando({ ...editando, locationId: s.id })}
-                        className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-left transition-colors"
-                        style={editando.locationId === s.id
-                          ? { background: 'rgba(56,29,160,0.06)', border: '1.5px solid rgba(56,29,160,0.35)' }
-                          : { background: '#fff', border: '1.5px solid rgba(26,16,40,0.08)' }}
-                      >
-                        <span className="w-4 h-4 rounded-full shrink-0 flex items-center justify-center"
-                          style={{ border: `1.5px solid ${editando.locationId === s.id ? '#381DA0' : 'rgba(26,16,40,0.20)'}` }}>
-                          {editando.locationId === s.id && (
-                            <span className="w-2 h-2 rounded-full" style={{ background: '#381DA0' }} />
-                          )}
-                        </span>
-                        <span className="text-[12.5px] font-medium text-foreground">{s.name}</span>
-                      </button>
-                    ))}
+                {/* La sede sale del grupo cuando hay grupo: un grupo es un
+                    nombre Y una sede, asi que dejar el selector abierto permite
+                    decir una sede y un grupo de otra, y la clase quedaria
+                    contando gente que no entrena ahi. Se muestra, no se elige. */}
+                {editando.grupoId ? (
+                  <div className="space-y-1.5">
+                    <Label className="text-[12px]">Sede</Label>
+                    <div className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl"
+                      style={{ background: 'rgba(56,29,160,0.04)', border: '1.5px solid rgba(56,29,160,0.14)' }}>
+                      <IconUbicacion className="w-3.5 h-3.5 shrink-0" style={{ color: '#381DA0' }} />
+                      <span className="text-[12.5px] font-medium text-foreground flex-1 min-w-0 truncate">
+                        {grupos.find(g => g.id === editando.grupoId)?.location.name ?? '—'}
+                      </span>
+                      <span className="text-[10.5px] shrink-0" style={{ color: '#8E87A8' }}>
+                        la del grupo
+                      </span>
+                    </div>
                   </div>
-                </div>
-
-                {/* El grupo va despues de la sede porque se filtra por ella:
-                    un grupo es un nombre Y una sede, asi que ofrecer los de
-                    otra sede es ofrecer algo que no existe. */}
-                <div className="space-y-1.5">
-                  <Label className="text-[12px]">Grupo</Label>
-                  <div className="flex flex-col gap-1.5">
-                    {[{ id: '', nombre: 'Sin grupo' },
-                      ...grupos.filter(g => g.activo && g.location.id === editando.locationId)
-                    ].map(g => {
-                      const puesto = (editando.grupoId ?? '') === g.id;
-                      return (
+                ) : sedes.length > 1 ? (
+                  <div className="space-y-1.5">
+                    <Label className="text-[12px]">Sede</Label>
+                    <div className="flex flex-col gap-1.5">
+                      {sedes.map(s => (
                         <button
-                          key={g.id || 'ninguno'}
+                          key={s.id}
                           type="button"
-                          onClick={() => setEditando({ ...editando, grupoId: g.id || null })}
+                          onClick={() => setEditando({ ...editando, locationId: s.id })}
                           className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-left transition-colors"
-                          style={puesto
+                          style={editando.locationId === s.id
                             ? { background: 'rgba(56,29,160,0.06)', border: '1.5px solid rgba(56,29,160,0.35)' }
                             : { background: '#fff', border: '1.5px solid rgba(26,16,40,0.08)' }}
                         >
                           <span className="w-4 h-4 rounded-full shrink-0 flex items-center justify-center"
-                            style={{ border: `1.5px solid ${puesto ? '#381DA0' : 'rgba(26,16,40,0.20)'}` }}>
-                            {puesto && <span className="w-2 h-2 rounded-full" style={{ background: '#381DA0' }} />}
+                            style={{ border: `1.5px solid ${editando.locationId === s.id ? '#381DA0' : 'rgba(26,16,40,0.20)'}` }}>
+                            {editando.locationId === s.id && (
+                              <span className="w-2 h-2 rounded-full" style={{ background: '#381DA0' }} />
+                            )}
                           </span>
-                          <span className="text-[12.5px] font-medium text-foreground">{g.nombre}</span>
+                          <span className="text-[12.5px] font-medium text-foreground">{s.name}</span>
                         </button>
-                      );
-                    })}
+                      ))}
+                    </div>
                   </div>
-                  <p className="text-[11px] text-muted-foreground">
-                    Sin grupo, la lista sale de la sede y la categoría, y dos clases iguales traen la misma gente.
-                  </p>
-                </div>
+                ) : null}
 
                 <div className="space-y-1.5">
                   <Label className="text-[12px]">Categoría (opcional)</Label>
@@ -659,12 +816,24 @@ export default function HorarioClases() {
               <div className="px-5 py-4 overflow-y-auto flex flex-col gap-3">
                 <div className="space-y-1.5">
                   <Label className="text-[12px]">Nombre</Label>
-                  <Input
-                    value={grupoEdit.nombre ?? ''}
-                    onChange={e => setGrupoEdit({ ...grupoEdit, nombre: e.target.value })}
-                    placeholder="Mañana, Tarde, Competitivo…"
-                    autoFocus
-                  />
+                  <div className="flex items-start gap-2">
+                    <Input
+                      className="flex-1"
+                      value={grupoEdit.nombre ?? ''}
+                      onChange={e => setGrupoEdit({ ...grupoEdit, nombre: e.target.value })}
+                      placeholder="Mañana, Tarde, Competitivo…"
+                      autoFocus
+                    />
+                    <SelectorColor
+                      etiqueta="Color del grupo"
+                      value={grupoEdit.color
+                        ?? colorDeGrupo(grupoEdit.id ?? '', idsGrupo, null)}
+                      onChange={color => setGrupoEdit({ ...grupoEdit, color })}
+                    />
+                  </div>
+                  <p className="text-[11px] text-muted-foreground">
+                    Se usa en el horario, en el calendario y en la leyenda.
+                  </p>
                 </div>
 
                 <div className="space-y-1.5">

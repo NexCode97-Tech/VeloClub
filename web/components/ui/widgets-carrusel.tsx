@@ -250,7 +250,21 @@ function Marco({ children }: { children: React.ReactNode }) {
   );
 }
 
-export function CarruselEventos({ eventos, cargando }: { eventos: Evento[]; cargando: boolean }) {
+/**
+ * @param clasesHoy Las horas de las clases de hoy, ya legibles («6:00 a. m.»).
+ *
+ * Van en una linea aparte y NO como fichas del carrusel. Un club con tres
+ * grupos entrenando tres dias tiene nueve clases por semana, o sea entre una y
+ * tres por dia: mezcladas se comerian los cinco puestos del widget y la
+ * competencia del sabado no aparecería nunca. Un entrenamiento que se repite no
+ * es un proximo evento, es la rutina, y el valor de esto es avisar lo que se
+ * sale de ella.
+ */
+export function CarruselEventos({ eventos, cargando, clasesHoy = [] }: {
+  eventos: Evento[];
+  cargando: boolean;
+  clasesHoy?: string[];
+}) {
   return (
     <Marco>
       <div className="flex items-center justify-between px-3 pt-3 pb-2 sm:px-4 sm:pt-4">
@@ -271,8 +285,27 @@ export function CarruselEventos({ eventos, cargando }: { eventos: Evento[]; carg
         </Link>
       </div>
 
+      {!cargando && clasesHoy.length > 0 && (
+        <div
+          className="mx-3 sm:mx-4 mb-2 flex items-center gap-2 px-2.5 py-1.5 rounded-lg"
+          style={{ background: 'rgba(56,29,160,0.06)', border: '1px solid rgba(56,29,160,0.16)' }}
+        >
+          <span className="text-[9px] font-bold shrink-0" style={{ color: '#381DA0', letterSpacing: '.05em' }}>
+            HOY
+          </span>
+          <span className="text-[11px] font-semibold text-foreground truncate">
+            {clasesHoy.join(' · ')}
+          </span>
+        </div>
+      )}
+
       {cargando ? <Cargando />
-        : eventos.length === 0 ? <Vacio icono={IconEvento} texto="Sin eventos próximos" />
+        : eventos.length === 0 && clasesHoy.length === 0
+          ? <Vacio icono={IconEvento} texto="Sin eventos próximos" />
+        : eventos.length === 0
+          ? <p className="px-3 sm:px-4 pb-3 text-[11px] m-0" style={{ color: MUDO }}>
+              Nada más por ahora, solo el entrenamiento de hoy.
+            </p>
         : (
           <Carril>
             {eventos.map(ev => {

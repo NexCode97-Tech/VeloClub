@@ -11,6 +11,7 @@ import {
   Bell, BellOff, X, Paperclip, FileText, Trophy, Users,
 } from 'lucide-react';
 import { CarruselCumpleanos, CarruselEventos } from '@/components/ui/widgets-carrusel';
+import { horaLegible } from '@/components/ajustes/horario-clases';
 import { SelectorDeporteMovil } from '@/lib/contexto-deporte';
 import { Slideshow } from '@/components/ui/slideshow';
 // La tarjeta de publicacion es la misma en Inicio, Club y Mi perfil.
@@ -462,6 +463,9 @@ export default function DashboardPage() {
     birthDate: string; daysUntil: number;
   }[]>([]);
   const [widgetsLoading, setWidgetsLoading] = useState(true);
+  // Las horas de las clases de hoy, ya legibles. Van en una linea aparte del
+  // widget de eventos y no como fichas: ver la razon en `widgets-carrusel.tsx`.
+  const [clasesDeHoy, setClasesDeHoy] = useState<string[]>([]);
 
   // currentUserId (clerkId del usuario autenticado)
   const [currentUserId, setCurrentUserId] = useState('');
@@ -504,7 +508,7 @@ export default function DashboardPage() {
         setAuthToken(token ?? null);
 
         const [
-          meRes, notifRes, postsRes, eventsRes, birdaysRes, resumenRes,
+          meRes, notifRes, postsRes, eventsRes, birdaysRes, resumenRes, clasesRes,
         ] = await Promise.allSettled([
           apiFetch<MeResponse>('/me', { token }),
           apiFetch<{ notifications: typeof notifs }>('/payments/notifications', { token }),
@@ -513,6 +517,12 @@ export default function DashboardPage() {
           apiFetch<{ birthdays: typeof birthdays }>('/members/birthdays', { token }),
           apiFetch<{ deportistas: number; asistenciaHoy: number; pagosAlDia?: number | null }>(
             `/clubs/resumen-inicio?fecha=${new Date().toLocaleDateString('en-CA')}`, { token },
+          ),
+          // `/clases/dia` y no `/clases`: ese endpoint ya descuenta los dias sin
+          // entrenamiento y ya viene acotado al deporte activo. Filtrar aca
+          // pondria la misma regla en dos sitios.
+          apiFetch<{ clases: { hora: string }[] }>(
+            `/clases/dia?fecha=${new Date().toLocaleDateString('en-CA')}`, { token },
           ),
         ]);
 
@@ -544,6 +554,9 @@ export default function DashboardPage() {
         // Falla en silencio a proposito: un deportista no tiene permiso y las
         // fichas simplemente no se muestran, sin romper el resto de Inicio
         if (resumenRes.status === 'fulfilled') setResumen(resumenRes.value);
+        if (clasesRes.status === 'fulfilled') {
+          setClasesDeHoy((clasesRes.value.clases ?? []).map(c => horaLegible(c.hora)).sort());
+        }
         setWidgetsLoading(false);
 
       } catch { /* silencioso */ } finally {
@@ -789,7 +802,7 @@ export default function DashboardPage() {
         variants={cardVariant}
         className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 px-4 sm:px-6 pt-4 sm:pt-3"
       >
-        <CarruselEventos eventos={upcomingEvents} cargando={widgetsLoading} />
+        <CarruselEventos eventos={upcomingEvents} cargando={widgetsLoading} clasesHoy={clasesDeHoy} />
         <CarruselCumpleanos cumples={birthdays} cargando={widgetsLoading} />
       </motion.div>
 

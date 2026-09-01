@@ -42,12 +42,14 @@ interface Member {
   active?: boolean;
   pictureUrl?: string | null;
   locations: { location: { id: string; name: string } }[];
+  grupos?: { grupoId: string }[];
 }
 interface ClaseDia {
   id: string;
   nombre: string;
   hora: string;
   categoria: string | null;
+  grupoId: string | null;
   locationId: string;
   location: { id: string; name: string };
   diaSemana: number;
@@ -380,13 +382,17 @@ export default function AsistenciaPage() {
   // Depende de la categoria y no de `claseActiva`: el objeto de la clase se
   // reemplaza en cada refresco de la consulta aunque no haya cambiado nada, y
   // eso arrastraba al efecto de abajo.
+  // Misma regla que `api/src/lib/planilla.ts`, y los comentarios que la explican
+  // viven alla: con grupo manda el grupo, sin grupo manda sede + categoria.
+  const grupoClase     = claseActiva?.grupoId ?? null;
   const categoriaClase = claseActiva?.categoria ?? null;
   const perteneceALaClase = useCallback((m: Member) => {
     if (m.active === false) return false;
+    if (grupoClase) return (m.grupos ?? []).some(g => g.grupoId === grupoClase);
     if (!m.locations.some(l => l.location.id === selectedLoc)) return false;
     if (categoriaClase && m.category !== categoriaClase) return false;
     return true;
-  }, [selectedLoc, categoriaClase]);
+  }, [selectedLoc, categoriaClase, grupoClase]);
 
   // Identidad de la planilla: dia + clase + sede. Mientras no cambie, lo que el
   // entrenador marco manda sobre lo que diga el servidor.

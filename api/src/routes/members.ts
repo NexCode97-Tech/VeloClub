@@ -115,6 +115,9 @@ router.get('/', requireAuth, async (req, res) => {
           role: true, active: true, clerkId: true, inviteStatus: true,
           origen: true, aprobadoAt: true, createdAt: true,
           locations: { include: { location: true } },
+          // La planilla de una clase con grupo sale de aca. Solo el id: el
+          // nombre lo resuelve la pantalla contra su propia lista de grupos.
+          grupos: { select: { grupoId: true } },
         },
         orderBy: { fullName: 'asc' },
       });

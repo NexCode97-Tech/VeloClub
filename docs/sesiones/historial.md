@@ -5,6 +5,68 @@ Actualizar al final de cada sesión o cuando se complete un bloque de trabajo im
 
 ---
 
+## Sesión 2026-08-31
+
+**Modelo:** Claude Opus 5
+**Estado inicial:** `c24f423`, rama `main`
+**Estado final:** `81ff268`, desplegado
+
+Veintiséis commits, casi todos de interfaz: los carruseles de Inicio, el juego
+de íconos y la pantalla de carga.
+
+### Los carruseles de Inicio
+Las tarjetas de Próximos eventos y Cumpleaños tenían el carrusel montado pero
+sin manera de moverlo: la barra de scroll está escondida a propósito, así que
+con mouse no había forma de llegar a las fichas de la derecha. Llevaron flechas,
+y detrás salieron tres arreglos que no se veían a simple vista:
+
+- El salto iba por porcentaje del ancho y dejaba el carril a mitad de ficha. Ahora
+  va por fichas enteras, midiendo el paso del propio DOM.
+- Faltaba `scroll-padding`. Sin él, «start» alinea la ficha con el borde y se come
+  el relleno: volver al principio dejaba la primera ficha cortada.
+- La ficha medía 88 px fijos, y sobraba un pedazo que no alcanzaba para una más;
+  en escritorio la sexta entraba 71 de sus 88. Ahora 88 es el mínimo y el sobrante
+  se reparte, así que se ven fichas enteras y lo que falta queda afuera.
+
+De paso quedó documentado que el sidebar mide **210 px y no 240**, dato falso que
+venía en `CLAUDE.md` y que hizo calcular mal los anchos la primera vez.
+
+### El juego de íconos
+Entraron doce dibujos propios y salió Lucide de casi toda la plataforma. Lo que
+más apareció fue el mismo concepto dibujado de dos maneras según la pantalla: el
+verificado estaba en ocho sitios con dos dibujos distintos, el teléfono en cuatro,
+la billetera en tres, y Analíticas tenía uno en el menú y otro en «Más».
+
+Quedó escrita la regla en `CLAUDE.md`: al agregar un ícono propio se reemplaza en
+**todos** sus usos de una vez; el lienzo lleva margen si el dibujo llega al borde
+—el calendario se veía cortado por eso—; y el tamaño va por clase, nunca con
+`size`, que es prop de Lucide y no atributo de SVG. Los ~50 íconos viejos **no** se
+normalizan en masa: sus tamaños están calibrados a ojo por toda la plataforma.
+
+### La pantalla de carga
+El barrido de luz sobre el logo y la barra de progreso se reemplazaron por el logo
+con un aro de los doce colores de los deportes girando alrededor, en la apertura y
+en el cambio de módulo. Vive en `components/ui/aro-carga.tsx`, compartido por las
+dos, y la paleta se exporta desde `custom-icons.tsx` en vez de copiarse.
+
+Se descartó sumar GSAP: un aro en bucle corre en el compositor con CSS, y serían
+24 KB a descargar justo en la pantalla que existe para que la espera se sienta
+corta. El dibujado trazo a trazo que se evaluó —lo que GSAP vende como DrawSVG— se
+hizo con `stroke-dashoffset`.
+
+Dos detalles del dibujo: el anillo se recorta con una máscara radial porque un
+`border` no admite degradado cónico, y al largo de cada arco se le descuenta un
+trazo entero porque la punta redonda sobresale media anchura por lado.
+
+Con «reducir movimiento» el aro deja de girar pero sigue respirando. Antes se
+apagaba entero y quedaba un logo inmóvil que no decía que algo estaba cargando.
+
+### Nota de proceso
+El usuario señaló dos veces que las skills de diseño y animación no se estaban
+invocando solas, aunque su `CLAUDE.md` lo pide. Quedó en memoria.
+
+---
+
 ## Sesión 2026-08-28
 
 **Modelo:** Claude Opus 5

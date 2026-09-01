@@ -5,20 +5,19 @@
  * reporte del backend y la pantalla de asistencia— y cualquier cambio habia que
  * acordarse de hacerlo en los dos, que es exactamente como se desincronizan.
  *
- * La regla, en dos renglones:
+ * La regla, completa:
  *
- *   clase CON grupo  ->  los miembros de ese grupo. La categoria deja de mandar,
- *                        y la sede no hace falta: el grupo ya la tiene.
- *   clase SIN grupo  ->  la regla vieja, sede cruzada con categoria.
+ *   la sede de la clase, cruzada con su categoria.
  *
- * El segundo renglon no es una transicion hacia nada: es lo que deja seguir
- * funcionando a un club que nunca armo grupos, y se queda. Si la planilla
- * pasara a salir solo del grupo, el lunes siguiente las listas de todos los
- * clubes que ya operan amanecerian vacias.
+ * Hubo una segunda regla —una lista de deportistas marcada a mano por clase— y
+ * se quito a proposito. Resolvia un caso real, el club que parte en mañana y
+ * tarde sin que la edad los separe, pero costaba una pantalla mas, un campo mas
+ * en el formulario de inscripcion y una columna mas en el Excel, y obligaba a
+ * mantener a mano lo que la categoria ya dice. Un club que necesite separar dos
+ * clases le pone categorias distintas.
  */
 
 export interface ClaseDeLaPlanilla {
-  grupoId:    string | null;
   locationId: string | null;
   categoria:  string | null;
 }
@@ -30,15 +29,12 @@ export interface ClaseDeLaPlanilla {
  * (`api/src/lib/alcance.ts`). Escribirlos aca ademas seria repetirlos, y
  * repetir un filtro de aislamiento es como se terminan desviando uno del otro.
  */
-export function filtroDePlanilla({ grupoId, locationId, categoria }: ClaseDeLaPlanilla) {
+export function filtroDePlanilla({ locationId, categoria }: ClaseDeLaPlanilla) {
   // Un deportista en pausa nunca entra: quedaria ausente todos los dias de sus
   // vacaciones y le arruinaria el porcentaje del año.
-  const base = { role: 'DEPORTISTA' as const, active: true };
-
-  if (grupoId) return { ...base, grupos: { some: { grupoId } } };
-
   return {
-    ...base,
+    role: 'DEPORTISTA' as const,
+    active: true,
     ...(locationId ? { locations: { some: { locationId } } } : {}),
     // Sin categoria declarada no se filtra. Una clase abierta a todas las
     // categorias dejaria la planilla vacia si se comparara contra null.

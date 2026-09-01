@@ -10,7 +10,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 vi.mock('../db/client', () => ({
   prisma: {
     location: { count: vi.fn() },
-    grupo:    { count: vi.fn() },
+    claseHorario: { count: vi.fn() },
   },
   prismaClubEntero: {},
 }));
@@ -19,7 +19,7 @@ const { prisma } = await import('../db/client');
 const { estadoPrimerHorario } = await import('../lib/primer-horario');
 
 const sedes  = prisma.location.count as unknown as ReturnType<typeof vi.fn>;
-const grupos = prisma.grupo.count    as unknown as ReturnType<typeof vi.fn>;
+const clases = prisma.claseHorario.count as unknown as ReturnType<typeof vi.fn>;
 
 const BASE = {
   clubId: 'club-1',
@@ -34,11 +34,11 @@ const HACE = (dias: number) => new Date(Date.now() - dias * 24 * 60 * 60 * 1000)
 beforeEach(() => {
   vi.clearAllMocks();
   sedes.mockResolvedValue(3);
-  grupos.mockResolvedValue(0);
+  clases.mockResolvedValue(0);
 });
 
 describe('el caso para el que existe', () => {
-  it('administrador, con sedes y sin grupos: se muestra', async () => {
+  it('administrador, con sedes y sin clases: se muestra', async () => {
     expect(await estadoPrimerHorario(BASE)).toEqual({ mostrar: true, pendiente: true });
   });
 });
@@ -66,15 +66,15 @@ describe('a quien no le sirve, no se le muestra', () => {
   });
 });
 
-describe('con el primer grupo se acaba', () => {
+describe('con la primera clase se acaba', () => {
   it('deja de aparecer y deja de estar pendiente', async () => {
-    grupos.mockResolvedValue(1);
+    clases.mockResolvedValue(1);
     expect(await estadoPrimerHorario(BASE))
       .toEqual({ mostrar: false, pendiente: false });
   });
 
   it('y no lo revive un aplazamiento viejo', async () => {
-    grupos.mockResolvedValue(2);
+    clases.mockResolvedValue(2);
     expect(await estadoPrimerHorario({ ...BASE, aplazadoAt: HACE(30), aplazos: 1 }))
       .toEqual({ mostrar: false, pendiente: false });
   });
@@ -111,9 +111,9 @@ describe('la tarea es del club, no de la persona', () => {
 });
 
 describe('el aislamiento por deporte', () => {
-  it('cuenta sedes y grupos de la carpeta activa, no del club entero', async () => {
+  it('cuenta sedes y clases de la carpeta activa, no del club entero', async () => {
     await estadoPrimerHorario(BASE);
     expect(sedes).toHaveBeenCalledWith({ where: { clubId: 'club-1', deporteId: 'dep-1' } });
-    expect(grupos).toHaveBeenCalledWith({ where: { clubId: 'club-1', deporteId: 'dep-1' } });
+    expect(clases).toHaveBeenCalledWith({ where: { clubId: 'club-1', deporteId: 'dep-1' } });
   });
 });

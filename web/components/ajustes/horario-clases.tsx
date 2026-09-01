@@ -11,52 +11,25 @@ import { Input } from '@/components/ui/input';
 import { TimePicker } from '@/components/ui/time-picker';
 import { Label } from '@/components/ui/label';
 import { DIAS_SEMANA } from '@/lib/dias';
-import { colorDeGrupo, colorDeClase, gruposDeClases } from '@/lib/colores-grupo';
+import { colorDeClase, nombresDeClase } from '@/lib/colores-clase';
 import { SelectorColor } from '@/components/ui/selector-color';
 import { CATEGORIAS } from '@/lib/categorias';
-import { IconCheck, IconEliminar, IconMas, IconUsers } from '@/components/ui/custom-icons';
+import { IconEliminar, IconMas } from '@/components/ui/custom-icons';
 
 interface Sede { id: string; name: string }
-
-interface Candidato {
-  id: string;
-  fullName: string;
-  category?: string | null;
-  role: string;
-  active?: boolean;
-  locations: { location: { id: string } }[];
-  grupos?: { grupoId: string }[];
-}
-
-/**
- * El grupo es donde vive la lista de deportistas de la clase. **No es una
- * pantalla**: no se crea, no se elige y no se administra aparte. Sale del
- * nombre y la sede de la clase, y el backend lo resuelve solo. Acá llega
- * únicamente para pintar el color y decir cuánta gente trae la clase.
- */
-export interface GrupoDeClase {
-  id: string;
-  nombre: string;
-  /** "#RRGGBB", o null si nadie lo escogió: ahí manda la posición. */
-  color: string | null;
-  _count: { miembros: number; clases: number };
-}
 
 export interface Clase {
   id: string;
   nombre: string;
   diaSemana: number;
   hora: string;
+  /** Quiénes entran a la planilla: esto cruzado con la sede. */
   categoria: string | null;
-  /** Pisa el color del grupo solo si alguien lo escogió a propósito. */
+  /** "#RRGGBB", o null si nadie lo escogió: ahí manda la posición del nombre. */
   color: string | null;
   locationId: string;
   location: { id: string; name: string };
-  grupo: GrupoDeClase | null;
 }
-
-/** Lo que se edita en el modal. `memberIds` solo existe si tocaron la lista. */
-type EnEdicion = Partial<Clase> & { memberIds?: string[] };
 
 /** "06:00" → "6:00 a. m." — el horario se lee, no se calcula. */
 export function horaLegible(hhmm: string): string {
@@ -80,15 +53,9 @@ export default function HorarioClases({ sinEntrenamiento = [] }: { sinEntrenamie
   const [error, setError]     = useState('');
 
   // Clase en edición. `null` = cerrado; sin `id` = una nueva.
-  const [editando, setEditando] = useState<EnEdicion | null>(null);
+  const [editando, setEditando] = useState<Partial<Clase> | null>(null);
   const [guardando, setGuardando] = useState(false);
   const [porBorrar, setPorBorrar] = useState<Clase | null>(null);
-
-  // La hoja de deportistas, que se abre encima del modal de la clase.
-  const [eligiendo, setEligiendo] = useState(false);
-  const [candidatos, setCandidatos] = useState<Candidato[]>([]);
-  const [elegidos, setElegidos] = useState<Set<string>>(new Set());
-  const [cargandoCand, setCargandoCand] = useState(false);
 
   const cargar = useCallback(async () => {
     try {
@@ -122,60 +89,9 @@ export default function HorarioClases({ sinEntrenamiento = [] }: { sinEntrenamie
     });
   }
 
-  /**
-   * La clase con la que esta comparte lista: la del mismo nombre en la misma
-   * sede. Es la regla que usa el backend para resolver el grupo, y acá se
-   * repite para poder decir de antemano cuánta gente va a traer una clase nueva
-   * que se llama igual que una que ya existe.
-   */
-  function grupoEnEdicion(): GrupoDeClase | null {
-    if (!editando) return null;
-    const nombre = editando.nombre?.trim() ?? '';
-    const gemela = clases.find(c =>
-      c.id !== editando.id &&
-      c.locationId === editando.locationId &&
-      c.nombre.trim().toLowerCase() === nombre.toLowerCase());
-    if (gemela?.grupo) return gemela.grupo;
-    // Sin gemela, una clase que se está editando conserva el suyo: renombrarla
-    // renombra el grupo y la lista no se pierde.
-    return clases.find(c => c.id === editando.id)?.grupo ?? null;
-  }
-
-  /** Cuántos deportistas va a traer la clase tal como está el modal ahora. */
-  function cuantos(): number {
-    if (editando?.memberIds) return editando.memberIds.length;
-    return grupoEnEdicion()?._count.miembros ?? 0;
-  }
-
-  // Los candidatos son los deportistas de la sede de la clase. No los de todo
-  // el club: ofrecer gente de otra sede invita a armar una planilla que nadie
-  // de esa sede va a poder firmar.
-  async function abrirDeportistas() {
-    if (!editando) return;
-    setError(''); setEligiendo(true); setCargandoCand(true);
-    try {
-      const token = await getToken();
-      const res = await apiFetch<{ members: Candidato[] }>('/members', { token });
-      const deLaSede = res.members.filter(m =>
-        m.role === 'DEPORTISTA' && m.active !== false &&
-        m.locations.some(l => l.location.id === editando.locationId));
-      setCandidatos(deLaSede);
-      const grupoId = grupoEnEdicion()?.id;
-      setElegidos(new Set(
-        editando.memberIds
-        ?? (grupoId
-              ? deLaSede.filter(m => (m.grupos ?? []).some(x => x.grupoId === grupoId)).map(m => m.id)
-              : []),
-      ));
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'No se pudieron cargar los deportistas');
-      setEligiendo(false);
-    } finally { setCargandoCand(false); }
-  }
-
   async function guardar() {
     if (!editando || guardando) return;
-    const { id, nombre, diaSemana, hora, categoria, locationId, color, memberIds } = editando;
+    const { id, nombre, diaSemana, hora, categoria, locationId, color } = editando;
     if (!nombre?.trim() || !locationId || diaSemana === undefined || !hora) return;
 
     setGuardando(true); setError('');
@@ -185,9 +101,6 @@ export default function HorarioClases({ sinEntrenamiento = [] }: { sinEntrenamie
         nombre: nombre.trim(), diaSemana, hora,
         categoria: categoria?.trim() || null, locationId,
         color: color ?? null,
-        // Solo si tocaron la lista. Mandarla siempre borraría la gente de una
-        // clase que se abrió únicamente para corregirle la hora.
-        ...(memberIds ? { memberIds } : {}),
       });
       if (id) await apiFetch(`/clases/${id}`, { token, method: 'PATCH', body: cuerpo });
       else    await apiFetch('/clases',       { token, method: 'POST',  body: cuerpo });
@@ -220,23 +133,15 @@ export default function HorarioClases({ sinEntrenamiento = [] }: { sinEntrenamie
                     .sort((a, b) => a.hora.localeCompare(b.hora)),
     }));
   const hayClases = clases.length > 0;
-  const grupos = gruposDeClases(clases);
-  const idsGrupo = grupos.map(g => g.id);
-
-  const grupoActual = editando ? grupoEnEdicion() : null;
-  // Cuántas OTRAS clases comparten la lista. Si hay, hay que decirlo: tocar la
-  // lista acá también las cambia, y eso no se puede descubrir después.
-  const clasesQueComparten = grupoActual
-    ? grupoActual._count.clases - (editando?.id && clases.find(c => c.id === editando.id)?.grupo?.id === grupoActual.id ? 1 : 0)
-    : 0;
+  const nombres = nombresDeClase(clases);
 
   return (
     <div className="space-y-3 border-t border-border pt-5">
       <div>
         <h3 className="text-[13px] font-semibold text-foreground m-0">Horario de clases</h3>
         <p className="text-[11px] text-muted-foreground">
-          Las clases que dicta el club cada semana. La asistencia se toma sobre estas, y así
-          una misma persona puede entrenar en la mañana y en la tarde sin que se pisen.
+          Las clases que dicta el club cada semana. La asistencia se toma sobre estas, y cada
+          una trae a los deportistas de su sede y su categoría.
         </p>
       </div>
 
@@ -314,7 +219,7 @@ export default function HorarioClases({ sinEntrenamiento = [] }: { sinEntrenamie
                     </span>
                   )}
                   {d.clases.map(c => {
-                    const color = colorDeClase(c, grupos);
+                    const color = colorDeClase(c, nombres);
                     return (
                       <button
                         key={c.id}
@@ -356,18 +261,18 @@ export default function HorarioClases({ sinEntrenamiento = [] }: { sinEntrenamie
 
           {/* Que color es cada clase. Sin esto la cuadricula son rayas de
               colores sin significado: el nombre no siempre cabe en el bloque. */}
-          {hayClases && grupos.length > 0 && (
+          {hayClases && (
             <div
               className="flex flex-wrap gap-x-3.5 gap-y-1.5 pt-2.5"
               style={{ borderTop: '1px solid rgba(120,80,200,0.14)' }}
             >
-              {grupos.map(g => (
-                <span key={g.id} className="inline-flex items-center gap-1.5 text-[11px]" style={{ color: '#5B5470' }}>
+              {nombres.map(n => (
+                <span key={n} className="inline-flex items-center gap-1.5 text-[11px]" style={{ color: '#5B5470' }}>
                   <span
                     className="w-2 h-2 rounded-sm shrink-0"
-                    style={{ background: colorDeGrupo(g.id, idsGrupo, g.color) }}
+                    style={{ background: colorDeClase(clases.find(c => c.nombre.trim() === n)!, nombres) }}
                   />
-                  {g.nombre}
+                  {n}
                 </span>
               ))}
             </div>
@@ -420,8 +325,8 @@ export default function HorarioClases({ sinEntrenamiento = [] }: { sinEntrenamie
                     <SelectorColor
                       etiqueta="Color de la clase"
                       value={colorDeClase(
-                        { color: editando.color ?? null, grupoId: grupoActual?.id ?? null },
-                        grupos,
+                        { nombre: editando.nombre ?? '', color: editando.color ?? null },
+                        nombres,
                       )}
                       onChange={color => setEditando({ ...editando, color })}
                     />
@@ -469,10 +374,7 @@ export default function HorarioClases({ sinEntrenamiento = [] }: { sinEntrenamie
                         <button
                           key={s.id}
                           type="button"
-                          // Cambiar de sede vacia la lista: los deportistas que
-                          // se habian marcado son de la sede anterior y no
-                          // entrenan en la nueva.
-                          onClick={() => setEditando({ ...editando, locationId: s.id, memberIds: undefined })}
+                          onClick={() => setEditando({ ...editando, locationId: s.id })}
                           className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-left transition-colors"
                           style={editando.locationId === s.id
                             ? { background: 'rgba(56,29,160,0.06)', border: '1.5px solid rgba(56,29,160,0.35)' }
@@ -492,37 +394,11 @@ export default function HorarioClases({ sinEntrenamiento = [] }: { sinEntrenamie
                 )}
 
                 {/* ── Quiénes entran ──────────────────────────────────────────
-                    Es lo único que la cuadricula no puede decir: la semana
-                    muestra CUANDO es cada clase, no QUIENES van. Y no se puede
-                    deducir de la categoria, porque un niño de ocho años entrena
-                    en la tarde si a esa hora lo pueden llevar. */}
+                    La categoría no es un adorno de la clase: es lo que arma su
+                    planilla, cruzada con la sede. Por eso la ayuda de abajo
+                    dice a quién trae, no qué campo es. */}
                 <div className="space-y-1.5">
-                  <Label className="text-[12px]">Deportistas</Label>
-                  <button
-                    type="button"
-                    onClick={abrirDeportistas}
-                    className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-left transition-colors hover:bg-secondary"
-                    style={{ background: '#fff', border: '1.5px solid rgba(26,16,40,0.08)' }}
-                  >
-                    <IconUsers className="w-4 h-4 shrink-0" style={{ color: '#381DA0' }} />
-                    <span className="text-[12.5px] font-medium text-foreground flex-1 min-w-0">
-                      {cuantos() === 0
-                        ? 'Nadie todavía'
-                        : `${cuantos()} ${cuantos() === 1 ? 'deportista' : 'deportistas'}`}
-                    </span>
-                    <span className="text-[11px] font-semibold shrink-0" style={{ color: '#381DA0' }}>
-                      {cuantos() === 0 ? 'Elegir' : 'Cambiar'}
-                    </span>
-                  </button>
-                  <p className="text-[11px] text-muted-foreground">
-                    {clasesQueComparten > 0
-                      ? `Los mismos entran en las otras ${clasesQueComparten} ${clasesQueComparten === 1 ? 'clase' : 'clases'} que se llaman así en esta sede.`
-                      : 'Son los que salen en la planilla de asistencia de esta clase.'}
-                  </p>
-                </div>
-
-                <div className="space-y-1.5">
-                  <Label className="text-[12px]">Categoría (opcional)</Label>
+                  <Label className="text-[12px]">Categoría</Label>
                   {/* Desplegable y no texto libre: la categoria se compara letra
                       por letra contra la del deportista. Escribir "Menores"
                       donde el miembro dice "Menores 3-10 años" no da error, da
@@ -565,9 +441,8 @@ export default function HorarioClases({ sinEntrenamiento = [] }: { sinEntrenamie
                       );
                     })}
                   </div>
-                  <p className="text-[10px] text-muted-foreground">
-                    Recorta la lista de arriba a los de esa categoría. Sirve cuando la clase es de
-                    una sola edad.
+                  <p className="text-[11px] text-muted-foreground">
+                    Es quién entra a la planilla de esta clase. Con «Todas», la sede entera.
                   </p>
                 </div>
               </div>
@@ -606,103 +481,6 @@ export default function HorarioClases({ sinEntrenamiento = [] }: { sinEntrenamie
                     {guardando ? 'Guardando…' : editando.id ? 'Guardar cambios' : 'Agregar clase'}
                   </Button>
                 </div>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>,
-      document.body
-      )}
-
-      {/* ── Quiénes entran en la clase ───────────────────────────────────────
-          Encima del modal de la clase, no en vez de el: se elige y se vuelve.
-          Nada se guarda aca — la lista viaja con la clase cuando se guarda. */}
-      {typeof document !== 'undefined' && createPortal(
-      <AnimatePresence>
-        {eligiendo && (
-          <motion.div
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            transition={{ duration: 0.16 }}
-            onClick={() => setEligiendo(false)}
-            className="fixed inset-0 flex items-end sm:items-center justify-center p-0 sm:p-6"
-            style={{ background: 'rgba(20,12,36,0.55)', zIndex: 72 }}
-          >
-            <motion.div
-              initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 40 }}
-              transition={{ duration: 0.22, ease: [0.32, 0.72, 0, 1] }}
-              onClick={e => e.stopPropagation()}
-              className="bg-white w-full sm:max-w-sm rounded-t-2xl sm:rounded-2xl flex flex-col"
-              style={{ maxHeight: '90dvh' }}
-            >
-              <div className="flex items-center justify-between px-5 py-4 border-b border-border/60">
-                <div className="min-w-0">
-                  <p className="text-[15px] font-semibold text-foreground truncate">
-                    ¿Quiénes entran?
-                  </p>
-                  <p className="text-[11px] text-muted-foreground m-0 truncate">
-                    {sedes.find(s => s.id === editando?.locationId)?.name ?? ''} · {elegidos.size} elegidos
-                  </p>
-                </div>
-                <button onClick={() => setEligiendo(false)} aria-label="Cerrar"
-                  className="w-8 h-8 rounded-full flex items-center justify-center text-muted-foreground hover:bg-secondary transition-colors shrink-0">
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-
-              <div className="px-5 py-4 overflow-y-auto flex flex-col gap-1.5">
-                {cargandoCand ? (
-                  <p className="text-[12px] text-muted-foreground m-0">Cargando deportistas…</p>
-                ) : candidatos.length === 0 ? (
-                  <p className="text-[12px] text-muted-foreground m-0">
-                    Esta sede todavía no tiene deportistas.
-                  </p>
-                ) : candidatos.map(m => {
-                  const puesto = elegidos.has(m.id);
-                  return (
-                    <button
-                      key={m.id}
-                      type="button"
-                      onClick={() => setElegidos(prev => {
-                        const n = new Set(prev);
-                        if (n.has(m.id)) n.delete(m.id); else n.add(m.id);
-                        return n;
-                      })}
-                      className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-left transition-colors"
-                      style={puesto
-                        ? { background: 'rgba(56,29,160,0.06)', border: '1.5px solid rgba(56,29,160,0.35)' }
-                        : { background: '#fff', border: '1.5px solid rgba(26,16,40,0.08)' }}
-                    >
-                      {/* Cuadrado y no circulo: aca se eligen varios, y el
-                          circulo en el resto de la plataforma significa que
-                          solo se puede uno. */}
-                      <span className="w-4 h-4 rounded-[5px] shrink-0 flex items-center justify-center"
-                        style={{ border: `1.5px solid ${puesto ? '#381DA0' : 'rgba(26,16,40,0.20)'}`,
-                                 background: puesto ? '#381DA0' : '#fff' }}>
-                        {puesto && <IconCheck className="w-2.5 h-2.5" style={{ color: '#fff' }} />}
-                      </span>
-                      <span className="min-w-0 flex-1">
-                        <span className="block text-[12.5px] font-medium text-foreground truncate">{m.fullName}</span>
-                        {m.category && (
-                          <span className="block text-[10px] text-muted-foreground truncate">{m.category}</span>
-                        )}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-
-              <div className="px-5 pt-4 border-t border-border/60"
-                style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 1.25rem)' }}>
-                <Button
-                  onClick={() => {
-                    setEditando(e => (e ? { ...e, memberIds: [...elegidos] } : e));
-                    setEligiendo(false);
-                  }}
-                  disabled={cargandoCand}
-                  className="w-full h-12 text-[14px]"
-                >
-                  Listo, {elegidos.size}
-                </Button>
               </div>
             </motion.div>
           </motion.div>

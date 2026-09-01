@@ -5,7 +5,6 @@ import { carpetaDe } from '../lib/deportes';
 import { prisma } from '../db/client';
 import { emitToClub } from '../lib/sse';
 import { sedeEsDelClub } from '../lib/sedes';
-import { grupoParaClase } from '../lib/grupo-de-clase';
 
 const router = Router();
 
@@ -35,12 +34,10 @@ const claseSchema = z.object({
   locationId: z.string().min(1),
   diaSemana:  z.number().int().min(0).max(6),
   hora:       z.string().regex(HORA, 'La hora debe ir en formato 24h, por ejemplo 06:00'),
+  // Quienes entran a la planilla salen de esto cruzado con la sede. No hay
+  // lista aparte: ver `api/src/lib/planilla.ts`.
   categoria:  z.string().max(60).nullable().optional(),
-  // Quienes entran en esta clase. Sin la clave, la lista no se toca; con ella,
-  // se reemplaza entera. No se manda `grupoId`: el grupo no se elige, se deduce
-  // del nombre y la sede. Ver `grupoParaClase`.
-  memberIds:  z.array(z.string()).max(500).optional(),
-  // En null hereda el color de su grupo, que es lo normal.
+  // En null se le asigna uno por su posicion en el horario.
   color,
 });
 
@@ -54,38 +51,9 @@ function soloAdmin(role: string | undefined): boolean {
   return role === 'ADMIN';
 }
 
-/**
- * Reemplazo completo de la lista, no diferencial: la pantalla manda la lista
- * entera y calcular altas y bajas por separado deja la puerta abierta a que una
- * de las dos falle y el grupo quede a medias.
- *
- * Los ids se comprueban contra el club antes de escribir. `MemberGrupo` no
- * lleva `deporteId` propio —se llega a él por `Member` o por `Grupo`—, así que
- * esta consulta es la que hace de puerta.
- */
-async function ponerMiembros(grupoId: string, memberIds: string[], clubId: string) {
-  const validos = await prisma.member.findMany({
-    where: { id: { in: memberIds }, clubId },
-    select: { id: true },
-  });
-  await prisma.$transaction([
-    prisma.memberGrupo.deleteMany({ where: { grupoId } }),
-    prisma.memberGrupo.createMany({
-      data: validos.map(m => ({ memberId: m.id, grupoId })),
-      skipDuplicates: true,
-    }),
-  ]);
-}
-
-/** Lo que el horario necesita de cada clase: su sede, su grupo y cuánta gente trae. */
-const conGrupo = {
+/** Lo que el horario necesita de cada clase. */
+const conSede = {
   location: { select: { id: true, name: true } },
-  grupo: {
-    select: {
-      id: true, nombre: true, color: true,
-      _count: { select: { miembros: true, clases: true } },
-    },
-  },
 } as const;
 
 // GET /clases — el horario completo, ordenado como se lee: por dia y por hora
@@ -96,7 +64,7 @@ router.get('/', requireAuth, async (req, res) => {
 
   const clases = await prisma.claseHorario.findMany({
     where: { clubId, activa: true },
-    include: conGrupo,
+    include: conSede,
     orderBy: [{ diaSemana: 'asc' }, { hora: 'asc' }],
   });
 
@@ -130,7 +98,7 @@ router.get('/dia', requireAuth, async (req, res) => {
 
   const clases = await prisma.claseHorario.findMany({
     where: { clubId, diaSemana, activa: true },
-    include: conGrupo,
+    include: conSede,
     orderBy: { hora: 'asc' },
   });
 
@@ -158,6 +126,55 @@ router.get('/dia', requireAuth, async (req, res) => {
   });
 });
 
+// POST /clases/varias — la misma clase en varios dias, de un solo golpe.
+//
+// Existe para el modal de bienvenida, donde la persona marca «lunes, miercoles
+// y viernes a las 6» y espera que quede. Hacerlo con tres peticiones sueltas
+// deja el horario a medias si la segunda falla, y el que abre Ajustes despues
+// no tiene como saber cual falto. Va en una transaccion: o quedan todas o
+// ninguna.
+router.post('/varias', requireAuth, async (req, res) => {
+  if (!req.user) return res.status(401).json({ error: 'No autenticado' });
+  if (!soloAdmin(req.user.role)) return res.status(403).json({ error: 'Solo administradores' });
+
+  const parsed = z.object({
+    nombre:     z.string().min(1).max(60),
+    locationId: z.string().min(1),
+    // Al menos uno: una clase sin dias no aparece en ningun horario, y este
+    // endpoint existe justamente para crearlos.
+    dias:       z.array(z.number().int().min(0).max(6)).min(1).max(7),
+    hora:       z.string().regex(HORA, 'La hora debe ir en formato 24h, por ejemplo 06:00'),
+    categoria:  z.string().max(60).nullable().optional(),
+    color,
+  }).safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: parsed.error.issues[0].message });
+
+  const clubId = req.user.clubId ?? '';
+  if (!await sedeEsDelClub(parsed.data.locationId, clubId)) {
+    return res.status(400).json({ error: 'La sede no pertenece a tu club' });
+  }
+
+  // Los dias repetidos se descartan: el mismo dia a la misma hora con el mismo
+  // nombre es la misma clase dos veces.
+  const dias = [...new Set(parsed.data.dias)];
+
+  await prisma.claseHorario.createMany({
+    data: dias.map(d => ({
+      clubId,
+      deporteId:  carpetaDe(req),
+      nombre:     parsed.data.nombre.trim(),
+      locationId: parsed.data.locationId,
+      diaSemana:  d,
+      hora:       parsed.data.hora,
+      categoria:  parsed.data.categoria?.trim() || null,
+      color:      parsed.data.color ?? null,
+    })),
+  });
+
+  emitToClub(clubId, 'attendance');
+  res.status(201).json({ creadas: dias.length });
+});
+
 // POST /clases
 router.post('/', requireAuth, async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'No autenticado' });
@@ -171,33 +188,18 @@ router.post('/', requireAuth, async (req, res) => {
     return res.status(400).json({ error: 'La sede no pertenece a tu club' });
   }
 
-  const deporteId = carpetaDe(req);
-  const nombre    = parsed.data.nombre.trim();
-  const grupoId   = await grupoParaClase({
-    clubId, deporteId, locationId: parsed.data.locationId, nombre,
-  });
-
-  const creada = await prisma.claseHorario.create({
+  const clase = await prisma.claseHorario.create({
     data: {
       clubId,
-      deporteId,
-      nombre,
+      deporteId:  carpetaDe(req),
+      nombre:     parsed.data.nombre.trim(),
       locationId: parsed.data.locationId,
       diaSemana:  parsed.data.diaSemana,
       hora:       parsed.data.hora,
       categoria:  parsed.data.categoria?.trim() || null,
-      grupoId,
       color:      parsed.data.color ?? null,
     },
-    select: { id: true },
-  });
-
-  if (parsed.data.memberIds) await ponerMiembros(grupoId, parsed.data.memberIds, clubId);
-
-  // Se relee después de escribir la lista: si no, el conteo de la respuesta
-  // sería el de antes de asignar y la pantalla mostraría cero deportistas.
-  const clase = await prisma.claseHorario.findUnique({
-    where: { id: creada.id }, include: conGrupo,
+    include: conSede,
   });
 
   emitToClub(clubId, 'attendance');
@@ -223,40 +225,18 @@ router.patch('/:id', requireAuth, async (req, res) => {
     return res.status(400).json({ error: 'La sede no pertenece a tu club' });
   }
 
-  // El nombre y la sede definen el grupo, así que el grupo se recalcula cuando
-  // cambia cualquiera de los dos. Reactivar una clase apagada también pasa por
-  // acá y por eso se recalcula igual: mientras estuvo apagada pudo aparecer
-  // otra clase con ese nombre en esa sede.
-  const nombre     = parsed.data.nombre?.trim() ?? actual.nombre;
-  const locationId = parsed.data.locationId ?? actual.locationId;
-  const grupoId    = await grupoParaClase({
-    clubId,
-    deporteId: actual.deporteId,
-    locationId,
-    nombre,
-    claseId: actual.id,
-    grupoActualId: actual.grupoId,
-  });
-
-  await prisma.claseHorario.update({
+  const clase = await prisma.claseHorario.update({
     where: { id: actual.id },
     data: {
-      nombre,
-      locationId,
-      grupoId,
+      ...(parsed.data.nombre     !== undefined ? { nombre: parsed.data.nombre.trim() } : {}),
+      ...(parsed.data.locationId !== undefined ? { locationId: parsed.data.locationId } : {}),
       ...(parsed.data.diaSemana  !== undefined ? { diaSemana: parsed.data.diaSemana } : {}),
       ...(parsed.data.hora       !== undefined ? { hora: parsed.data.hora } : {}),
       ...(parsed.data.categoria  !== undefined ? { categoria: parsed.data.categoria?.trim() || null } : {}),
       ...(parsed.data.color      !== undefined ? { color: parsed.data.color } : {}),
       ...(parsed.data.activa     !== undefined ? { activa: parsed.data.activa } : {}),
     },
-    select: { id: true },
-  });
-
-  if (parsed.data.memberIds) await ponerMiembros(grupoId, parsed.data.memberIds, clubId);
-
-  const clase = await prisma.claseHorario.findUnique({
-    where: { id: actual.id }, include: conGrupo,
+    include: conSede,
   });
 
   emitToClub(clubId, 'attendance');

@@ -7,7 +7,7 @@ import { useClubStream } from '@/hooks/useClubStream';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { apiFetch } from '@/lib/api-client';
 import { parseLocalDate } from '@/lib/utils';
-import { colorDeClase, gruposDeClases } from '@/lib/colores-grupo';
+import { colorDeClase, nombresDeClase } from '@/lib/colores-clase';
 import { horaLegible } from '@/components/ajustes/horario-clases';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import ModuleLoader, { useCargaMinima } from '@/components/ui/module-loader';
@@ -35,7 +35,7 @@ interface CalEvent {
   location?: string | null;
   /** "06:00". Solo las clases del horario la traen. */
   hora?: string;
-  /** El color ya resuelto: el de la clase, o el de su grupo. */
+  /** El color ya resuelto de la clase. */
   color?: string;
 }
 
@@ -44,9 +44,7 @@ interface ClaseHorario {
   nombre: string;
   diaSemana: number;
   hora: string;
-  grupoId: string | null;
   color: string | null;
-  grupo?: { id: string; nombre: string; color: string | null } | null;
   location: { name: string };
 }
 
@@ -57,7 +55,7 @@ interface ClaseHorario {
  * dos sitios y que se separen la primera vez que alguien edite una. Aca se
  * calculan del horario, mes a mes, y se dibujan encima de los eventos de
  * verdad. Se ven distintas a proposito —una raya fina, no una pastilla— porque
- * un club con tres grupos entrenando tres dias tiene nueve por semana, y
+ * un club con tres clases entrenando tres dias tiene nueve por semana, y
  * mezclarlas con la competencia del sabado la entierra.
  */
 function clasesDelMes(
@@ -68,10 +66,10 @@ function clasesDelMes(
 ): CalEvent[] {
   const dias = getDaysInMonth(year, month);
   // Una sola vez y para todas: el color de respaldo sale de la POSICION del
-  // grupo en la lista, asi que armarla clase por clase —`[c.grupo]`— dejaba a
-  // todos los grupos sin color escogido en el primero de la paleta, y en el
-  // calendario salian todos del mismo color.
-  const grupos = gruposDeClases(clases);
+  // nombre en la lista, asi que armarla clase por clase dejaria a todas las
+  // clases sin color escogido en el primero de la paleta, y en el calendario
+  // saldrian todas iguales.
+  const nombres = nombresDeClase(clases);
   const salida: CalEvent[] = [];
   for (let d = 1; d <= dias; d++) {
     const fecha = new Date(year, month, d);
@@ -88,7 +86,7 @@ function clasesDelMes(
         date: fecha,
         location: c.location?.name ?? null,
         hora: c.hora,
-        color: colorDeClase(c, grupos),
+        color: colorDeClase(c, nombres),
       });
     }
   }
@@ -173,7 +171,7 @@ export default function CalendarioPage() {
     try {
       const token = await getToken();
       const [h, cfg] = await Promise.all([
-        apiFetch<{ clases: ClaseHorario[]; grupos?: unknown }>('/clases', { token }),
+        apiFetch<{ clases: ClaseHorario[] }>('/clases', { token }),
         apiFetch<{ club: { noAttendanceDays?: number[] } }>('/clubs/settings', { token }),
       ]);
       setClases(h.clases ?? []);
@@ -210,26 +208,15 @@ export default function CalendarioPage() {
   // Las clases del mes, calculadas del horario. Se recalculan solo al cambiar
   // de mes o el horario: son cuatro o cinco por clase y se recorren en cada
   // celda del calendario.
-  // Los grupos que salen en el horario, con su color ya resuelto. Se sacan de
-  // las clases y no de `/grupos` para no pedir una lista mas: un grupo sin
-  // ninguna clase no pinta nada en el calendario, asi que tampoco va en la
-  // leyenda. Las clases con color propio entran como su propia entrada.
-  const gruposDelHorario = useMemo(() => {
-    const vistos = new Map<string, { id: string; nombre: string; color: string }>();
-    const grupos = gruposDeClases(clases);
-    for (const c of clases) {
-      const color = colorDeClase(c, grupos);
-      // La clave es el color y no el grupo: dos clases del mismo grupo con
-      // colores distintos son dos entradas, que es lo que se ve en pantalla.
-      const clave = c.grupo ? `${c.grupo.id}|${color}` : `suelta|${color}`;
-      if (vistos.has(clave)) continue;
-      vistos.set(clave, {
-        id: clave,
-        nombre: c.grupo && !c.color ? c.grupo.nombre : c.nombre,
-        color,
-      });
-    }
-    return [...vistos.values()].sort((a, b) => a.nombre.localeCompare(b.nombre));
+  // Que color es cada clase. Una entrada por nombre: la clase de la mañana del
+  // lunes y la del miercoles son la misma clase dos veces en la semana, y
+  // repetirla en la leyenda solo la alarga.
+  const clasesDeLaLeyenda = useMemo(() => {
+    const nombres = nombresDeClase(clases);
+    return nombres.map(n => ({
+      nombre: n,
+      color: colorDeClase(clases.find(c => c.nombre.trim() === n)!, nombres),
+    }));
   }, [clases]);
 
   const clasesMes = useMemo(
@@ -341,10 +328,10 @@ export default function CalendarioPage() {
           )}
 
           {/* Leyenda.
-              Los grupos van aparte de los tipos de evento y separados por una
+              Las clases van aparte de los tipos de evento y separadas por una
               linea, no revueltos en la misma fila: responden preguntas
               distintas. Rojo y azul dicen QUE ES —competencia o entrenamiento—
-              y los grupos dicen DE QUIEN ES. Mezclarlos en un solo renglon los
+              y las clases dicen CUAL ES. Mezclarlas en un solo renglon las
               haria parecer la misma escala. */}
           <div className="flex flex-col gap-2 px-1">
             <div className="flex gap-4 flex-wrap">
@@ -356,14 +343,14 @@ export default function CalendarioPage() {
               ))}
             </div>
 
-            {verClases && gruposDelHorario.length > 0 && (
+            {verClases && clasesDeLaLeyenda.length > 0 && (
               <div className="flex gap-x-4 gap-y-1.5 flex-wrap pt-2"
                 style={{ borderTop: '1px solid rgba(120,80,200,0.14)' }}>
-                {gruposDelHorario.map(g => (
-                  <div key={g.id} className="flex items-center gap-1.5 min-w-0">
-                    <div className="w-2 h-2 rounded-full shrink-0" style={{ background: g.color }} />
+                {clasesDeLaLeyenda.map(c => (
+                  <div key={c.nombre} className="flex items-center gap-1.5 min-w-0">
+                    <div className="w-2 h-2 rounded-full shrink-0" style={{ background: c.color }} />
                     <span className="text-[11px] font-semibold text-muted-foreground truncate">
-                      {g.nombre}
+                      {c.nombre}
                     </span>
                   </div>
                 ))}
@@ -447,7 +434,7 @@ function toSentenceCase(str: string): string {
 
 function EventCard({ event, colorClase }: { event: CalEvent; colorClase?: string }) {
   // Una clase del horario no es un evento: se repite todas las semanas. Lleva
-  // el color de su grupo y la hora en vez de la fecha, para que se distinga sin
+  // su color y la hora en vez de la fecha, para que se distinga sin
   // tener que leer el nombre.
   const esClase = !!event.hora;
   const color = esClase ? (colorClase ?? TYPE_COLOR[event.type]) : TYPE_COLOR[event.type];

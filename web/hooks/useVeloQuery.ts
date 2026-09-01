@@ -16,7 +16,6 @@ export const QK = {
   members:      () => ['members'] as const,
   locations:    () => ['locations'] as const,
   deportes:     () => ['deportes'] as const,
-  grupos:       () => ['grupos'] as const,
   clubSettings: () => ['club', 'settings'] as const,
   payments:     (month: number, year: number) => ['payments', month, year] as const,
   cashflow:     (month: number, year: number) => ['cashflow', month, year] as const,
@@ -55,18 +54,6 @@ export function useLocations() {
     queryFn: async () => {
       const token = await getToken();
       return apiFetch<{ locations: unknown[] }>('/locations', { token });
-    },
-  });
-}
-
-export function useGrupos() {
-  const getToken = useToken();
-  return useQuery({
-    queryKey: QK.grupos(),
-    queryFn: async () => {
-      const token = await getToken();
-      return apiFetch<{ grupos: { id: string; nombre: string; location: { id: string; name: string } }[] }>(
-        '/grupos', { token });
     },
   });
 }
@@ -178,7 +165,6 @@ export function useSSEInvalidator() {
         // horario, y la pantalla se veia igual que un club sin clases.
         qc.invalidateQueries({ queryKey: ['clasesDia'] });
         qc.invalidateQueries({ queryKey: ['horarioClases'] });
-        qc.invalidateQueries({ queryKey: QK.grupos() });
         break;
       case 'calendar':
         qc.invalidateQueries({ queryKey: ['calendar'] });

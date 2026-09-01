@@ -137,23 +137,10 @@ router.get('/:token', guessLimiter, async (req, res) => {
     orderBy: { name: 'asc' },
   });
 
-  // Los grupos con sus clases: el formulario muestra el nombre y debajo los
-  // dias y la hora, para que la persona elija por horario, que es como piensa,
-  // y no por un nombre de grupo que no conoce.
-  const grupos = await prisma.grupo.findMany({
-    where: { clubId: carpeta.club.id, activo: true },
-    select: {
-      id: true, nombre: true, locationId: true,
-      clases: { where: { activa: true }, select: { diaSemana: true, hora: true } },
-    },
-    orderBy: { nombre: 'asc' },
-  });
-
   res.json({
     club: { nombre: carpeta.club.name, logoUrl: carpeta.club.logoUrl },
     deporte: carpeta.nombre,
     sedes,
-    grupos,
     categorias: CATEGORIAS,
     niveles: NIVELES,
   });
@@ -201,7 +188,6 @@ const inscripcionSchema = z.object({
   guardianDocNumber: z.string().max(30).optional(),
   guardianPhone:     z.string().max(30).optional(),
   locationId: z.string().min(1),
-  grupoId:    z.string().optional(),
   category:   z.string().max(60).optional(),
   tipo:       z.string().max(40).optional(),
   eps:        z.string().max(80).optional(),
@@ -248,18 +234,6 @@ router.post('/:token', inscripcionLimiter, inscripcionPorEnlaceLimiter, async (r
   });
   if (!sede) return res.status(400).json({ error: 'La sede seleccionada no existe.' });
 
-  // El grupo se comprueba contra la sede elegida y no solo contra el club: un
-  // id de otra sede metido a mano en la peticion entraria sin esto, y dejaria
-  // al deportista en una planilla donde nadie lo espera.
-  if (d.grupoId) {
-    const grupo = await prisma.grupo.findFirst({
-      where: { id: d.grupoId, locationId: sede.id, activo: true },
-      select: { id: true },
-    });
-    if (!grupo) {
-      return res.status(400).json({ error: 'Ese grupo no existe en la sede elegida.', campo: 'grupoId' });
-    }
-  }
 
   // ¿Es alguien que ya está en el club completando sus datos, o alguien nuevo?
   const quien = await buscarPorDocumento({ clubId: club.id, docNumber: d.docNumber });
@@ -473,7 +447,6 @@ router.post('/:token', inscripcionLimiter, inscripcionPorEnlaceLimiter, async (r
         origen: 'FORMULARIO',
         inscripcion: 'PENDIENTE',
         locations: { create: [{ locationId: sede.id }] },
-        ...(d.grupoId ? { grupos: { create: [{ grupoId: d.grupoId }] } } : {}),
       },
       select: { id: true, fullName: true },
     });

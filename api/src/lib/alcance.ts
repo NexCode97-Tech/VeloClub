@@ -37,7 +37,6 @@ const DENTRO_DE_LA_CARPETA = new Set([
   'Member',
   'Attendance',
   'ClaseHorario',
-  'Grupo',
   'Payment',
   'CashEntry',
   'Competition',

@@ -254,7 +254,7 @@ function Marco({ children }: { children: React.ReactNode }) {
  * @param clasesHoy Las horas de las clases de hoy, ya legibles («6:00 a. m.»).
  *
  * Van en una linea aparte y NO como fichas del carrusel. Un club con tres
- * grupos entrenando tres dias tiene nueve clases por semana, o sea entre una y
+ * clases entrenando tres dias tiene nueve por semana, o sea entre una y
  * tres por dia: mezcladas se comerian los cinco puestos del widget y la
  * competencia del sabado no aparecería nunca. Un entrenamiento que se repite no
  * es un proximo evento, es la rutina, y el valor de esto es avisar lo que se

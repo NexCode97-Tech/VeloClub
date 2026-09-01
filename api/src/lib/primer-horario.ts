@@ -11,10 +11,10 @@ import { prisma } from '../db/client';
  *
  *   1. Es ADMIN. Un entrenador no arma el horario del club, asi que pedirselo
  *      es hacerle perder el tiempo con algo que no puede decidir.
- *   2. El club tiene sedes. Sin sedes no hay donde poner un grupo, y el modal
+ *   2. El club tiene sedes. Sin sedes no hay donde poner una clase, y el modal
  *      lo unico que puede hacer es mandarlo a crearlas.
- *   3. El club no tiene ningun grupo. Con el primero hecho desaparece para
- *      siempre: los demas se agregan desde Ajustes, sin interrumpir.
+ *   3. El club no tiene ninguna clase. Con la primera hecha desaparece para
+ *      siempre: las demas se agregan desde Ajustes, sin interrumpir.
  *   4. Esta persona no lo aplazo en los ultimos tres dias.
  *   5. No lo ha aplazado tres veces. A la tercera se deja de insistir y queda
  *      el aviso fijo de Inicio, que no interrumpe.
@@ -49,9 +49,9 @@ export async function estadoPrimerHorario(args: {
   // Las dos consultas se acotan a la carpeta activa: un club con patinaje
   // armado y natacion recien abierta necesita el modal en natacion, y
   // preguntarlo por club entero lo daria por hecho.
-  const [sedes, grupos] = await Promise.all([
+  const [sedes, clases] = await Promise.all([
     prisma.location.count({ where: { clubId: args.clubId, ...(args.deporteId ? { deporteId: args.deporteId } : {}) } }),
-    prisma.grupo.count({ where: { clubId: args.clubId, ...(args.deporteId ? { deporteId: args.deporteId } : {}) } }),
+    prisma.claseHorario.count({ where: { clubId: args.clubId, ...(args.deporteId ? { deporteId: args.deporteId } : {}) } }),
   ]);
 
   // Sin sedes el modal no tiene nada que ofrecer, y tampoco hay nada pendiente
@@ -59,7 +59,7 @@ export async function estadoPrimerHorario(args: {
   if (sedes === 0) return APAGADO;
 
   // Ya lo hizo alguien. Se acabo para este club y esta carpeta.
-  if (grupos > 0) return APAGADO;
+  if (clases > 0) return APAGADO;
 
   if (args.aplazos >= MAXIMO_DE_VECES) return { mostrar: false, pendiente: true };
 

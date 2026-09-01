@@ -22,7 +22,7 @@ import { createPortal } from 'react-dom';
  *
  * **No hay rojo ni azul, y es a propósito.** El calendario los tiene reservados
  * para decir de qué tipo es un evento —rojo competencia, azul entrenamiento— y
- * lo declara en su leyenda. Un grupo rojo haría que un punto rojo dejara de
+ * lo declara en su leyenda. Una clase roja haría que un punto rojo dejara de
  * significar «competencia», y la leyenda estaría mintiendo.
  *
  * Las dos primeras intensidades son las únicas que se leen bien como texto sobre
@@ -53,7 +53,7 @@ interface Props {
   /** "#RRGGBB". El que se muestra en el botón. */
   value: string;
   onChange: (color: string) => void;
-  /** Para lectores de pantalla: «Color del grupo», «Color de la clase». */
+  /** Para lectores de pantalla: «Color de la clase». */
   etiqueta: string;
 }
 

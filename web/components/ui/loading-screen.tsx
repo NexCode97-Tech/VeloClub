@@ -42,11 +42,10 @@ export const CURTAIN_MS = 1100;
 
 const EASE_OUT: [number, number, number, number] = [0.23, 1, 0.32, 1];
 
-// Medidas del aro en la apertura. El logo conserva el ancho que ya tenía; el
-// diámetro sale de rodearlo sin apretarlo.
-const ARO_D    = 200;
-const ARO_GRUESO = 5;
-const LOGO_W   = 130;
+// Medidas del aro en la apertura, sacadas del banco de ajuste. El logo bajó de
+// 130 a 96: dentro del aro, a 130 se comía el aire y la pieza se leía apretada.
+const ARO_D  = 200;
+const LOGO_W = 96;
 
 // El morado de marca, plano
 const BRAND = '#381DA0';
@@ -82,7 +81,7 @@ export default function LoadingScreen({ retrying = false }: { retrying?: boolean
 
       {/* Sin barra de progreso: el aro ya dice que algo está cargando, y las dos
           juntas repiten el mismo mensaje. */}
-      <AroCarga diametro={ARO_D} grosor={ARO_GRUESO} logo={LOGO_W} tinta="#fff" />
+      <AroCarga diametro={ARO_D} logo={LOGO_W} tinta="#fff" />
 
       {/* Texto de etapa: el que sale se va hacia arriba, el que entra sube desde abajo */}
       <div style={{ position: 'relative', height: 20, width: 280, marginTop: 22 }}>
@@ -134,7 +133,7 @@ export function LoadingCurtain() {
           @keyframes vcls-curtain-fade { from { opacity: 1 } to { opacity: 0 } }
         }
       `}</style>
-      <AroCarga diametro={ARO_D} grosor={ARO_GRUESO} logo={LOGO_W} tinta="#fff" />
+      <AroCarga diametro={ARO_D} logo={LOGO_W} tinta="#fff" />
     </div>
   );
 }

@@ -11,13 +11,21 @@ import { PALETA_DEPORTES } from '@/components/ui/custom-icons';
  * cada una tenía su propio barrido de luz escrito por separado, y cualquier
  * arreglo había que acordarse de hacerlo dos veces.
  *
- * Todo se mueve con `transform` y `opacity`, que son las dos únicas
- * propiedades que el navegador puede animar sin rehacer el diseño en cada
- * fotograma. Por eso no hace falta ninguna librería de animación acá: un aro
- * girando en bucle es justo el caso donde CSS gana.
+ * Se dibuja con SVG y no con un degradado cónico, que sería más corto de
+ * escribir, porque un degradado corta los arcos en recto y no sabe
+ * redondearlos: `stroke-linecap` solo existe en SVG.
+ *
+ * Todo se mueve con `transform` y `opacity`, las dos únicas propiedades que el
+ * navegador anima sin rehacer el diseño en cada fotograma. Por eso no hace
+ * falta ninguna librería de animación: un aro girando en bucle es justo el
+ * caso donde CSS gana.
  */
 
-/** Un arco por deporte, con aire entre uno y otro. */
+/** El lienzo del SVG. Las medidas de adentro son de 0 a 100, no píxeles. */
+const R = 45;
+const PERIMETRO = 2 * Math.PI * R;
+
+/** Un arco por deporte. */
 const ARCO = 360 / PALETA_DEPORTES.length;
 
 /**
@@ -25,41 +33,36 @@ const ARCO = 360 / PALETA_DEPORTES.length;
  * colores se tocan y el aro se lee como una rueda de color en vez de como doce
  * deportes; es la diferencia entera entre las dos versiones que se probaron.
  */
-const AIRE = 6;
+const AIRE = 14;
 
-function degradado(): string {
-  const partes: string[] = [];
-  PALETA_DEPORTES.forEach((color, i) => {
-    const ini = i * ARCO;
-    partes.push(`${color} ${ini + AIRE / 2}deg ${ini + ARCO - AIRE / 2}deg`);
-    partes.push(`transparent ${ini + ARCO - AIRE / 2}deg ${ini + ARCO + AIRE / 2}deg`);
-  });
-  // Arranca arriba y no a la derecha, que es de donde el ojo espera que salga.
-  return `conic-gradient(from -90deg, ${partes.join(', ')})`;
-}
+/**
+ * Grosor del trazo, en unidades del lienzo. Al ser relativo, los 7 px del aro
+ * de la apertura y los 3,4 del módulo salen del mismo número: el dibujo es
+ * idéntico y solo cambia a qué tamaño se muestra.
+ */
+const TRAZO = 3.5;
 
-export const ARO_DEGRADADO = degradado();
+/**
+ * El largo pintado de cada arco.
+ *
+ * Se le descuenta un trazo entero porque la punta redonda sobresale media
+ * anchura por cada lado: sin ese descuento el aire real sería menor que el
+ * declarado, y encima cambiaría al tocar el grosor.
+ */
+const LARGO = PERIMETRO * (ARCO - AIRE) / 360 - TRAZO;
 
 /**
  * El CSS del aro, compartido por las dos pantallas y por la cortina de salida,
  * para que el relevo entre una y otra sea idéntico.
- *
- * El anillo se recorta de un disco con una máscara radial en vez de dibujarse
- * con `border`: un borde no admite un degradado cónico, así que la vuelta
- * completa quedaría con una costura visible donde se cierra.
  */
 export const ARO_CSS = `
-  .vc-aro {
-    position: relative; display: flex; align-items: center; justify-content: center;
-  }
-  .vc-aro::before {
-    content: ""; position: absolute; inset: 0; border-radius: 50%;
-    background: ${ARO_DEGRADADO};
-    -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - var(--grosor)), #000 calc(100% - var(--grosor) + 1px));
-            mask: radial-gradient(farthest-side, transparent calc(100% - var(--grosor)), #000 calc(100% - var(--grosor) + 1px));
+  .vc-aro { position: relative; display: flex; align-items: center; justify-content: center }
+  .vc-aro svg {
+    position: absolute; inset: 0; width: 100%; height: 100%;
     will-change: transform;
     animation: vc-aro-girar var(--vuelta) linear infinite;
   }
+  .vc-aro circle { fill: none; transform-origin: 50% 50% }
   /* Velocidad pareja a propósito: un giro con aceleración se lee como si
      tropezara en cada vuelta. */
   @keyframes vc-aro-girar { to { transform: rotate(1turn) } }
@@ -68,6 +71,7 @@ export const ARO_CSS = `
      sobre el morado y morado sobre el fondo claro, sin el degradado ni la «C»
      negra que trae el archivo. */
   .vc-aro-logo {
+    position: relative; z-index: 1; display: block;
     -webkit-mask: url('/logo.png') center / contain no-repeat;
             mask: url('/logo.png') center / contain no-repeat;
   }
@@ -76,7 +80,7 @@ export const ARO_CSS = `
      único aviso de que la aplicación está cargando. Se queda quieto y respira,
      que dice lo mismo sin desplazar nada. */
   @media (prefers-reduced-motion: reduce) {
-    .vc-aro::before { animation: none }
+    .vc-aro svg { animation: none }
     .vc-aro { animation: vc-aro-respirar 2.4s ease-in-out infinite }
     @keyframes vc-aro-respirar { 50% { opacity: .55 } }
   }
@@ -85,20 +89,18 @@ export const ARO_CSS = `
 interface Props {
   /** Diámetro del aro. El logo va dentro, en su proporción real de 1296×868. */
   diametro: number;
-  /** Ancho del anillo. */
-  grosor: number;
   /** Ancho del logo; el alto sale de su proporción. */
   logo: number;
   /** El color del logo: blanco sobre el morado, morado sobre el fondo claro. */
   tinta: string;
   /** Lo que tarda una vuelta. */
   vuelta?: string;
-  /** La cortina de salida lo apaga aparte, sin tocar el aro. */
+  /** La cortina de salida lo apaga aparte. */
   className?: string;
 }
 
 export default function AroCarga({
-  diametro, grosor, logo, tinta, vuelta = '2.6s', className = '',
+  diametro, logo, tinta, vuelta = '2.6s', className = '',
 }: Props) {
   return (
     <div
@@ -106,12 +108,28 @@ export default function AroCarga({
       style={{
         width: diametro,
         height: diametro,
-        ['--grosor' as string]: `${grosor}px`,
         ['--vuelta' as string]: vuelta,
       } as React.CSSProperties}
       role="img"
       aria-label="Cargando"
     >
+      <svg viewBox="0 0 100 100" aria-hidden="true">
+        {PALETA_DEPORTES.map((color, i) => (
+          <circle
+            key={color + i}
+            cx="50"
+            cy="50"
+            r={R}
+            stroke={color}
+            strokeWidth={TRAZO}
+            strokeLinecap="round"
+            strokeDasharray={`${LARGO.toFixed(2)} ${(PERIMETRO - LARGO).toFixed(2)}`}
+            // Arranca arriba y no a la derecha, que es de donde el ojo espera
+            // que salga.
+            style={{ transform: `rotate(${(-90 + i * ARCO + AIRE / 2).toFixed(1)}deg)` }}
+          />
+        ))}
+      </svg>
       <span
         className="vc-aro-logo"
         style={{ width: logo, height: Math.round(logo * 868 / 1296), background: tinta }}

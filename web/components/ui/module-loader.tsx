@@ -12,9 +12,9 @@ import AroCarga, { ARO_CSS } from '@/components/ui/aro-carga';
 // se ve decenas de veces al día, mientras que la apertura se ve una vez por
 // sesión. Lo que en la apertura sería un momento, acá cansaría.
 
-const ARO_D      = 96;
-const ARO_GRUESO = 3;
-const LOGO_W     = 62;
+// El 48 % de la apertura: el mismo dibujo a menos de la mitad.
+const ARO_D  = 96;
+const LOGO_W = 46;
 
 /**
  * Sostiene el indicador de carga un mínimo de tiempo. Si el módulo responde al
@@ -103,7 +103,7 @@ export default function ModuleLoader({ minHeight }: { minHeight?: number }) {
       <div className="vcml flex flex-col items-center">
         {/* El logo va en el morado de marca, plano: sobre el fondo claro su
             degradado original y la «C» negra desentonaban con el aro. */}
-        <AroCarga diametro={ARO_D} grosor={ARO_GRUESO} logo={LOGO_W} tinta="#381DA0" />
+        <AroCarga diametro={ARO_D} logo={LOGO_W} tinta="#381DA0" />
       </div>
     </div>
   );

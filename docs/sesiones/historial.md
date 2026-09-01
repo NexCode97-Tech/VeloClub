@@ -5,6 +5,73 @@ Actualizar al final de cada sesión o cuando se complete un bloque de trabajo im
 
 ---
 
+## Sesión 2026-09-01
+
+**Modelo:** Claude Opus 5
+**Estado inicial:** `5c3113d`, rama `main`
+**Estado final:** `a45cdf6`, desplegado
+
+### Lo que se construyó y se deshizo el mismo día
+
+Se construyó **Grupos**: un objeto con nombre, sede, color y una lista de
+deportistas marcada a mano, para que la planilla de una clase dejara de salir de
+sede cruzada con categoría. El motivo era real: dos clases de la misma sede y la
+misma categoría a horas distintas devolvían la misma lista.
+
+Quedó completo —modelo, migración con backfill, rutas, sección en Ajustes,
+campo en el formulario de inscripción, columna en la plantilla de Excel, filtro
+en Miembros, modal de bienvenida— y al final del día se **borró entero**
+(`a45cdf6`, migración `20260901230000_sin_grupos`).
+
+La razón la dio el cliente en una frase: «no entiendo cuál es la finalidad de
+haberle tenido una sección». Un concepto más que aprender, una pantalla más que
+mantener y un campo obligatorio más en el formulario, todo para declarar a mano
+lo que la categoría ya dice. **Una clase es sede + día + hora + categoría, y su
+planilla son los deportistas de esa sede en esa categoría.**
+
+Lo que se perdió a cambio: un club que parte en mañana y tarde sin que la edad
+los separe ya no puede separarlas. Se le advirtió tres veces y decidió igual.
+**No reintroducir el modelo sin que lo pida.**
+
+### Lo que sí se queda de ese día
+
+- **La cuadrícula semanal** de Ajustes → Horario de clases, en columnas por día,
+  con el «+» de cada celda al pasar por encima y el botón de quitar dentro del
+  modal. Reemplazó a una lista por día que mostraba lo mismo dos veces.
+- **Las clases en el calendario y en Inicio.** Se calculan del horario mes a mes,
+  nunca se copian. En «Próximos eventos» van como un renglón «HOY» aparte, no
+  como tarjetas: un club con tres clases al día enterraría la competencia del
+  sábado.
+- **`SelectorColor`**, el selector de color propio del proyecto. Cuarenta tonos y
+  un campo de código, sin `input type="color"`. Rechaza el rojo `#EF476F` y el
+  azul `#4361EE`, que el calendario tiene reservados para el tipo de evento.
+- **`TimePicker`**, que reemplazó al último `input type="time"` de la
+  plataforma.
+- **El modal «Arma tu horario»**, que se lanza al primer administrador que entra
+  a un club con sedes y sin clases. Se aplaza tres días y se rinde a la tercera.
+
+### Otros
+- La leyenda del calendario quedó en dos partes: arriba el tipo de evento
+  (rojo competencia, azul entrenamiento), abajo las clases con su color.
+- El color de una clase se resuelve por su **nombre**, no por su id: la de la
+  mañana del lunes y la del miércoles son la misma clase dos veces en la semana
+  y salen del mismo color.
+- Se corrigieron a mano dos clases de SBM que apuntaban a la lista cruzada.
+
+### Pendientes
+- Verificar en producción que la migración borró las tablas sin novedad.
+- El modal de novedades quedó diseñado y sin construir.
+- El importador de Excel descarta la fila entera cuando el nombre de la sede no
+  coincide. Debería avisar, no perder al deportista.
+- `api/eslint.config.mjs` no tiene parser de TypeScript, así que `npm run lint`
+  falla en los 57 archivos `.ts` de la API.
+- Grandes Paisas tiene 221 deportistas y ningún administrador, así que el modal
+  de bienvenida nunca le va a aparecer.
+- Borrar los administradores temporales `hodmanj59+wilk` y `hodmanj59+newpower`
+  cuando los dueños de esos clubes estén activos.
+
+---
+
 ## Sesión 2026-08-31
 
 **Modelo:** Claude Opus 5

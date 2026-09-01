@@ -7,8 +7,8 @@ import { motion } from 'framer-motion';
 import { stagger, cardVariant } from '@/lib/page-animations';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { User, Lock, UserCog, ChevronRight } from 'lucide-react';
-import { IconSalir } from '@/components/ui/custom-icons';
+import { User, Lock, ChevronRight } from 'lucide-react';
+import { IconAjustesCuenta, IconSalir } from '@/components/ui/custom-icons';
 
 export default function ConfiguracionPage() {
   const clerk = useClerk();
@@ -87,7 +87,7 @@ export default function ConfiguracionPage() {
           onClick={() => clerk.openUserProfile()}
           className="w-full flex items-center gap-3 px-5 py-3.5 text-left hover:bg-secondary/40 active:bg-secondary/60 transition-colors border-b border-border"
         >
-          <UserCog className="w-4 h-4 text-muted-foreground shrink-0" />
+          <IconAjustesCuenta className="w-4 h-4 text-muted-foreground shrink-0" />
           <div className="flex-1 min-w-0">
             <p className="text-[13px] font-semibold text-foreground">Gestionar cuenta</p>
             <p className="text-[11px] text-muted-foreground">Nombre, contraseña y datos de acceso</p>

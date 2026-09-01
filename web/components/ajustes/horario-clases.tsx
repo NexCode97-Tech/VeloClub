@@ -112,10 +112,8 @@ export default function HorarioClases() {
     .filter(d => d.clases.length > 0);
 
   return (
-    <div className="space-y-3">
-      <p style={{ fontSize: 11, fontWeight: 600, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-        Horario de clases
-      </p>
+    <div className="space-y-3 border-t border-border pt-5">
+      <h3 className="text-[13px] font-semibold text-foreground m-0">Horario de clases</h3>
       <p className="text-[11px] text-muted-foreground -mt-2">
         Las clases que dicta el club cada semana. La asistencia se toma sobre estas, y así
         una misma persona puede entrenar en la mañana y en la tarde sin que se pisen.

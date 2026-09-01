@@ -6,9 +6,9 @@ import { createPortal } from 'react-dom';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { apiFetch } from '@/lib/api-client';
 import {
-  Camera, Building2, ChevronDown, X, Crop, ChevronRight, User, Lock, UserCog, AlertTriangle,
+  Camera, Building2, ChevronDown, X, Crop, ChevronRight, User, Lock, AlertTriangle,
 } from 'lucide-react';
-import { IconAyuda, IconCheck, IconClub, IconPerfil, IconSalir, IconSuscripcion, IconEliminar } from '@/components/ui/custom-icons';
+import { IconAjustesCuenta, IconAyuda, IconCheck, IconClub, IconPerfil, IconSalir, IconSuscripcion, IconEliminar } from '@/components/ui/custom-icons';
 import SuscripcionCard from '@/components/ajustes/suscripcion-card';
 import HorarioClases from '@/components/ajustes/horario-clases';
 import { DIAS_SEMANA } from '@/lib/dias';
@@ -474,7 +474,7 @@ function AjustesPageContent() {
         onClick={() => clerk.openUserProfile()}
         className="w-full flex items-center gap-3 px-5 py-3.5 text-left hover:bg-secondary/40 active:bg-secondary/60 transition-colors border-b border-border disabled:opacity-55 disabled:cursor-default"
       >
-        <UserCog className="w-4 h-4 text-muted-foreground shrink-0" />
+        <IconAjustesCuenta className="w-4 h-4 text-muted-foreground shrink-0" />
         <div className="flex-1 min-w-0">
           <p className="text-[13px] font-semibold text-foreground">Gestionar cuenta</p>
           <p className="text-[11px] text-muted-foreground">
@@ -521,7 +521,7 @@ function AjustesPageContent() {
   /* ── Tarjeta Zona de peligro — eliminar cuenta ─────────────────────────── */
   const dangerCard = (
     <div className="rounded-2xl p-5" style={{ background: 'rgba(239,71,111,0.04)', border: '1px solid rgba(239,71,111,0.18)' }}>
-      <p className="text-[11px] font-semibold uppercase tracking-wide mb-1" style={{ color: '#EF476F' }}>Zona de peligro</p>
+      <h3 className="text-[13px] font-semibold m-0 mb-1" style={{ color: '#EF476F' }}>Zona de peligro</h3>
       <p className="text-[12px] text-muted-foreground mb-4">
         Al eliminar tu cuenta perderás el acceso de inmediato. Tus datos personales se eliminan; los registros de pagos y asistencia se conservan de forma anónima por obligaciones contables del club.
       </p>
@@ -581,10 +581,8 @@ function AjustesPageContent() {
       </div>
 
       {/* Información del club */}
-      <div className="space-y-3">
-        <p style={{ fontSize: 11, fontWeight: 600, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-          Información del club
-        </p>
+      <div className="space-y-3 border-t border-border pt-5">
+        <h3 className="text-[13px] font-semibold text-foreground m-0">Información del club</h3>
         <div className="space-y-1.5">
           <Label className="text-[12px]">Nombre del club</Label>
           <Input value={name} onChange={e => { setName(e.target.value); setSaved(false); }} placeholder="Nombre del club" />
@@ -632,10 +630,8 @@ function AjustesPageContent() {
       <HorarioClases />
 
       {/* Días sin entrenamiento */}
-      <div className="space-y-3">
-        <p style={{ fontSize: 11, fontWeight: 600, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-          Días sin entrenamiento
-        </p>
+      <div className="space-y-3 border-t border-border pt-5">
+        <h3 className="text-[13px] font-semibold text-foreground m-0">Días sin entrenamiento</h3>
         <p className="text-[11px] text-muted-foreground -mt-2">La asistencia no se registrará estos días</p>
         <div className="flex gap-2 flex-wrap">
           {DIAS_SEMANA.map(({ corto, valor: value, nombre }) => {

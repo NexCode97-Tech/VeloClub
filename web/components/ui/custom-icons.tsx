@@ -108,6 +108,27 @@ export function IconAjustes({ className, style, ...props }: IconProps) {
   );
 }
 
+/**
+ * Gestionar cuenta: la persona con el engranaje al lado.
+ *
+ * Se parece al de Ajustes y esa es justo la idea: uno es la pantalla de
+ * configuracion, el otro es la fila que abre la cuenta de Clerk dentro de ella.
+ * Lo que los separa es donde va el engranaje. En `IconAjustes` la persona esta
+ * dentro, y el dibujo habla de la pantalla; aca esta al lado, y habla de la
+ * persona.
+ *
+ * No reemplaza a `IconAjustes` en el sidebar ni en Finanzas: son dos conceptos
+ * distintos, aunque compartan las dos piezas.
+ */
+export function IconAjustesCuenta({ className, style, ...props }: IconProps) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="-2 -2 28 28" fill="currentColor"
+      className={className} style={style} {...props}>
+      <path d="m8,12c3.309,0,6-2.691,6-6S11.309,0,8,0,2,2.691,2,6s2.691,6,6,6Zm14.696,7.134l-.974-.562c.166-.497.278-1.019.278-1.572s-.111-1.075-.278-1.572l.974-.562c.478-.276.642-.888.366-1.366-.277-.479-.888-.643-1.366-.366l-.973.562c-.705-.794-1.644-1.375-2.723-1.594v-1.101c0-.552-.448-1-1-1s-1,.448-1,1v1.101c-1.079.22-2.018.801-2.723,1.594l-.973-.562c-.481-.277-1.09-.113-1.366.366-.276.479-.112,1.09.366,1.366l.974.562c-.166.497-.278,1.019-.278,1.572s.111,1.075.278,1.572l-.974.562c-.478.276-.642.888-.366,1.366.186.321.521.5.867.5.169,0,.341-.043.499-.134l.973-.562c.705.794,1.644,1.375,2.723,1.594v1.101c0,.552.448,1,1,1s1-.448,1-1v-1.101c1.079-.22,2.018-.801,2.723-1.594l.973.562c.158.091.33.134.499.134.346,0,.682-.179.867-.5.276-.479.112-1.09-.366-1.366Zm-5.696-.634c-.827,0-1.5-.673-1.5-1.5s.673-1.5,1.5-1.5,1.5.673,1.5,1.5-.673,1.5-1.5,1.5Zm-8.5-1.5c0-.549.055-1.106.165-1.658.066-.333-.042-.676-.285-.912-.243-.236-.589-.332-.92-.257-4.253.976-7.46,4.771-7.46,8.827,0,.552.448,1,1,1h8.637c.386,0,.738-.222.903-.571.166-.349.116-.762-.128-1.061-1.233-1.511-1.912-3.417-1.912-5.368Z"/>
+    </svg>
+  );
+}
+
 /** Ayuda: el globo con el signo de pregunta. */
 export function IconAyuda({ className, style, ...props }: IconProps) {
   return (

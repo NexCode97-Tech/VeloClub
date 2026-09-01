@@ -159,6 +159,12 @@ export function useSSEInvalidator() {
         break;
       case 'attendance':
         qc.invalidateQueries({ queryKey: ['attendance'] });
+        // El horario viaja por este mismo evento: `clases.ts` lo emite al crear,
+        // editar y borrar una clase. Sin estas dos, Asistencia seguia sirviendo
+        // durante cinco minutos la lista que cargo antes de que existiera el
+        // horario, y la pantalla se veia igual que un club sin clases.
+        qc.invalidateQueries({ queryKey: ['clasesDia'] });
+        qc.invalidateQueries({ queryKey: ['horarioClases'] });
         break;
       case 'calendar':
         qc.invalidateQueries({ queryKey: ['calendar'] });

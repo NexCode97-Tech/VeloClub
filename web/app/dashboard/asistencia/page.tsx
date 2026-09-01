@@ -5,9 +5,10 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { apiFetch } from '@/lib/api-client';
-import { QK } from '@/hooks/useVeloQuery';
+import { QK, useSSEInvalidator } from '@/hooks/useVeloQuery';
+import { useClubStream } from '@/hooks/useClubStream';
 import { horaLegible } from '@/components/ajustes/horario-clases';
-import { DIA_CORTO_3 } from '@/lib/dias';
+import { DIA_CORTO_3, DIAS_SEMANA } from '@/lib/dias';
 import { Users, FileSpreadsheet, FileText, ChevronDown } from 'lucide-react';
 import { IconCheck } from '@/components/ui/custom-icons';
 const EASE_OUT: [number,number,number,number] = [0.23, 1, 0.32, 1];
@@ -235,6 +236,13 @@ export default function AsistenciaPage() {
   // de la fila de sede: la clase ya trae su sede, asi que esa fila sobraba.
   const [hojaClases, setHojaClases]   = useState(false);
 
+  // Asistencia era la unica pantalla operativa que no escuchaba el canal del
+  // club. Sin esto, un horario recien creado en Ajustes no aparecia aca hasta
+  // que vencieran los cinco minutos de cache, y la pantalla se veia igual que
+  // la de un club que nunca armo clases.
+  const invalidar = useSSEInvalidator();
+  useClubStream(invalidar);
+
   // Week streak state
   const [animatingToday, setAnimating]  = useState(false);
 
@@ -303,6 +311,9 @@ export default function AsistenciaPage() {
     staleTime: 5 * 60 * 1000,
   });
   const horario = useMemo(() => horarioData?.clases ?? [], [horarioData]);
+  // A mediodia y no a medianoche: en Colombia (UTC-5) las 00:00 caen en el
+  // dia anterior, que es el mismo cuidado que ya tiene `/clases/dia`.
+  const diaSemanaSel = new Date(`${selectedDate}T12:00:00`).getDay();
   const claseActiva = clasesHoy.find(c => c.id === claseSel) ?? null;
   const sinPasar    = clasesHoy.filter(c => !c.guardada).length;
 
@@ -976,6 +987,21 @@ export default function AsistenciaPage() {
                     </div>
                   ) : null}
                 </motion.div>
+
+                {/* El club tiene horario, pero el dia elegido no tiene ninguna
+                    clase. Sin decirlo, la pantalla se ve identica a la de un club
+                    que nunca armo horario, y quien acaba de armarlo cree que no
+                    quedo guardado. Nombra el dia porque el error tipico es haber
+                    creado las clases en otros. */}
+                {horario.length > 0 && clasesHoy.length === 0 && !loadingClases && (
+                  <p className="flex items-start gap-1.5 text-[11px] m-0 px-2.5 py-2 rounded-lg"
+                    style={{ background: 'rgba(255,183,3,0.10)', color: '#854F0B' }}>
+                    <span>
+                      El horario no tiene clases el {DIAS_SEMANA.find(d => d.valor === diaSemanaSel)?.nombre.toLowerCase() ?? 'este día'}.
+                      Se marca por día, como siempre.
+                    </span>
+                  </p>
+                )}
 
                 {/* Donde se esta pasando lista, en texto plano. Sin esto, el
                     boton en puro icono deja al entrenador sin saber en que sede

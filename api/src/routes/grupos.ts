@@ -8,6 +8,10 @@ import { sedeEsDelClub } from '../lib/sedes';
 
 const router = Router();
 
+// "HH:mm" en 24h. Misma expresion que en `clases.ts`, y por la misma razon: la
+// hora se ordena como texto, asi que "6:00" se colaria antes que "16:00".
+const HORA = /^([01]\d|2[0-3]):([0-5]\d)$/;
+
 const grupoSchema = z.object({
   nombre:     z.string().min(1).max(60),
   locationId: z.string().min(1),
@@ -82,6 +86,62 @@ router.post('/', requireAuth, async (req, res) => {
   // de que cambio un grupo es justo quien esta mirando planillas.
   emitToClub(clubId, 'attendance');
   res.status(201).json({ grupo });
+});
+
+// POST /grupos/completo — el grupo y sus clases de un solo golpe.
+//
+// Existe para el modal de bienvenida, donde la persona marca «lunes, miercoles
+// y viernes a las 6» y espera que quede. Hacerlo con las rutas sueltas serian
+// cuatro peticiones, y si la segunda falla queda un grupo huerfano sin clases
+// que nadie pidio. Va en una transaccion: o queda entero o no queda nada.
+router.post('/completo', requireAuth, async (req, res) => {
+  if (!req.user) return res.status(401).json({ error: 'No autenticado' });
+  if (!soloAdmin(req.user.role)) return res.status(403).json({ error: 'Solo un administrador puede crear grupos' });
+
+  const parsed = z.object({
+    nombre:     z.string().min(1).max(60),
+    locationId: z.string().min(1),
+    // Al menos uno: un grupo sin dias no tiene ninguna clase, y este endpoint
+    // existe justamente para crearlas.
+    dias:       z.array(z.number().int().min(0).max(6)).min(1).max(7),
+    hora:       z.string().regex(HORA, 'La hora debe ir en formato 24h, por ejemplo 06:00'),
+    categoria:  z.string().max(60).nullable().optional(),
+  }).safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: parsed.error.issues[0].message });
+
+  const clubId = req.user.clubId ?? '';
+  if (!await sedeEsDelClub(parsed.data.locationId, clubId)) {
+    return res.status(403).json({ error: 'La sede no pertenece a este club' });
+  }
+
+  const nombre = parsed.data.nombre.trim();
+  const existe = await prisma.grupo.findFirst({
+    where: { locationId: parsed.data.locationId, nombre },
+    select: { id: true },
+  });
+  if (existe) return res.status(409).json({ error: 'Esa sede ya tiene un grupo con ese nombre' });
+
+  const deporteId = carpetaDe(req);
+  // Los dias repetidos se descartan: dos clases del mismo dia a la misma hora
+  // en el mismo grupo son la misma clase dos veces.
+  const dias = [...new Set(parsed.data.dias)];
+
+  const grupo = await prisma.$transaction(async tx => {
+    const g = await tx.grupo.create({
+      data: { clubId, deporteId, locationId: parsed.data.locationId, nombre },
+    });
+    await tx.claseHorario.createMany({
+      data: dias.map(d => ({
+        clubId, deporteId, locationId: parsed.data.locationId,
+        grupoId: g.id, nombre, diaSemana: d, hora: parsed.data.hora,
+        categoria: parsed.data.categoria?.trim() || null,
+      })),
+    });
+    return g;
+  });
+
+  emitToClub(clubId, 'attendance');
+  res.status(201).json({ grupo, clases: dias.length });
 });
 
 // PATCH /grupos/:id

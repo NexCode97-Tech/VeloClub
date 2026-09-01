@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { requireAuth } from '../auth/middleware';
 import { selectorDeDeporte } from '../lib/deportes';
+import { estadoPrimerHorario } from '../lib/primer-horario';
 import { prisma } from '../db/client';
 import { v2 as cloudinary } from 'cloudinary';
 import { removeFromAllowlist, revokeClerkAccess } from '../lib/clerk-allowlist';
@@ -246,6 +247,16 @@ if (superadminEmails.includes(email.toLowerCase())) {
       user: { ...user, coverUrl: user.coverUrl ?? null },
       trial,
       deportes: await selectorDeDeporte(req),
+      // Viaja en /me y no en una consulta aparte: el panel ya lo llama en cada
+      // carga, y una peticion mas solo para preguntar si abrir un modal se
+      // paga en cada entrada de cada usuario.
+      primerHorario: await estadoPrimerHorario({
+        clubId: user.clubId,
+        deporteId: req.deporteId,
+        rol: user.role,
+        aplazadoAt: user.horarioAplazadoAt,
+        aplazos: user.horarioAplazos,
+      }),
     });
   }
 
@@ -541,6 +552,25 @@ router.patch('/accept-terms', requireAuth, async (req, res) => {
     select: { termsAcceptedAt: true },
   });
   res.json({ termsAcceptedAt: user.termsAcceptedAt });
+});
+
+// POST /me/aplazar-horario — «Ahora no» del modal de armar el horario.
+//
+// Suma uno y guarda la fecha. La regla de que hacer con esos dos numeros vive
+// en `lib/primer-horario.ts`, no aca: esta ruta solo anota lo que paso.
+router.post('/aplazar-horario', requireAuth, async (req, res) => {
+  if (!req.auth) return res.status(401).json({ error: 'No autenticado' });
+
+  const user = await prisma.user.update({
+    where: { clerkId: req.auth.clerkId },
+    data: {
+      horarioAplazadoAt: new Date(),
+      horarioAplazos: { increment: 1 },
+    },
+    select: { horarioAplazos: true },
+  });
+
+  res.json({ ok: true, aplazos: user.horarioAplazos });
 });
 
 export default router;

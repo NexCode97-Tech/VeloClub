@@ -42,10 +42,11 @@ export const CURTAIN_MS = 1100;
 
 const EASE_OUT: [number, number, number, number] = [0.23, 1, 0.32, 1];
 
-// Medidas del aro en la apertura, sacadas del banco de ajuste. El logo bajó de
-// 130 a 96: dentro del aro, a 130 se comía el aire y la pieza se leía apretada.
-const ARO_D  = 200;
-const LOGO_W = 96;
+// Medidas de la apertura, sacadas del banco de ajuste. El logo ocupa la mitad
+// del aro: esa proporción es la que se conserva, no los píxeles, así que el
+// diámetro sale del ancho del logo y no al revés.
+const ARO_D  = 132;
+const LOGO_W = 66;
 
 // El morado de marca, plano
 const BRAND = '#381DA0';

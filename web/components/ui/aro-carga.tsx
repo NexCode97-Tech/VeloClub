@@ -40,7 +40,7 @@ const AIRE = 14;
  * de la apertura y los 3,4 del módulo salen del mismo número: el dibujo es
  * idéntico y solo cambia a qué tamaño se muestra.
  */
-const TRAZO = 3.5;
+const TRAZO = 5.3;
 
 /**
  * El largo pintado de cada arco.

@@ -12,9 +12,10 @@ import AroCarga, { ARO_CSS } from '@/components/ui/aro-carga';
 // se ve decenas de veces al día, mientras que la apertura se ve una vez por
 // sesión. Lo que en la apertura sería un momento, acá cansaría.
 
-// El 48 % de la apertura: el mismo dibujo a menos de la mitad.
-const ARO_D  = 96;
-const LOGO_W = 46;
+// El 48 % de la apertura: el mismo dibujo a menos de la mitad, con la misma
+// proporción entre el logo y el aro.
+const ARO_D  = 63;
+const LOGO_W = 32;
 
 /**
  * Sostiene el indicador de carga un mínimo de tiempo. Si el módulo responde al

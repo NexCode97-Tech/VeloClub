@@ -3,9 +3,11 @@
 import { useCallback, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useAuth } from '@clerk/nextjs';
+import { useLocations } from '@/hooks/useVeloQuery';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Check, Copy, Link2, RefreshCw, X } from 'lucide-react';
 import { apiFetch } from '@/lib/api-client';
+import { IconPendiente } from '@/components/ui/custom-icons';
 import { DatePicker } from '@/components/ui/date-picker';
 
 /**
@@ -44,6 +46,15 @@ function diasHasta(iso: string): number {
 
 export function PanelInscripcion({ abierto, onCerrar }: { abierto: boolean; onCerrar: () => void }) {
   const { getToken } = useAuth();
+  // El formulario pide la sede y no deja seguir sin ella. Si el club todavia no
+  // tiene ninguna, el desplegable sale vacio y el deportista queda atascado en
+  // el segundo paso sin entender por que. Preferimos frenar el enlace aca, que
+  // es donde alguien puede resolverlo, y no alla, donde nadie se entera.
+  const { data: sedesData, isLoading: cargandoSedes } = useLocations();
+  // Mientras la consulta viaja no hay respuesta, y darla por vacia dejaria los
+  // botones apagados un instante en un club que si tiene sedes. Se espera a que
+  // conteste: solo entonces la lista vacia significa algo.
+  const sinSedes = !cargandoSedes && (sedesData?.locations?.length ?? 0) === 0;
   const [estado, setEstado] = useState<Estado | null>(null);
   const [copiado, setCopiado] = useState(false);
   const [guardando, setGuardando] = useState(false);
@@ -209,16 +220,33 @@ export function PanelInscripcion({ abierto, onCerrar }: { abierto: boolean; onCe
                         <Link2 className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
                         <code className="flex-1 min-w-0 text-[11px] text-foreground truncate">{estado.url}</code>
                       </div>
+                      {sinSedes && (
+                        <div className="flex items-start gap-2 mt-2 p-2.5 rounded-xl"
+                          style={{ background: 'rgba(255,183,3,0.10)', border: '1px solid rgba(255,183,3,0.28)' }}>
+                          <IconPendiente className="w-3.5 h-3.5 shrink-0 mt-0.5" style={{ color: '#B77A00' }} />
+                          <p className="text-[11.5px] leading-snug m-0" style={{ color: '#7A5200' }}>
+                            Crea primero una sede. El formulario pide dónde entrena el deportista
+                            y sin sedes no va a poder terminar de inscribirse.
+                          </p>
+                        </div>
+                      )}
                       <div className="grid grid-cols-2 gap-2 mt-2">
-                        <button onClick={copiar}
-                          className="flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-primary text-white text-[12.5px] font-semibold">
+                        <button onClick={copiar} disabled={sinSedes}
+                          className="flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-primary text-white text-[12.5px] font-semibold disabled:opacity-45 disabled:cursor-not-allowed">
                           {copiado ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                           {copiado ? 'Copiado' : 'Copiar'}
                         </button>
-                        <a href={porWhatsApp} target="_blank" rel="noopener noreferrer"
-                          className="flex items-center justify-center gap-1.5 py-2.5 rounded-xl border border-border text-[12.5px] font-semibold text-foreground">
-                          WhatsApp
-                        </a>
+                        {sinSedes ? (
+                          <span aria-disabled="true"
+                            className="flex items-center justify-center gap-1.5 py-2.5 rounded-xl border border-border text-[12.5px] font-semibold text-muted-foreground opacity-45 cursor-not-allowed">
+                            WhatsApp
+                          </span>
+                        ) : (
+                          <a href={porWhatsApp} target="_blank" rel="noopener noreferrer"
+                            className="flex items-center justify-center gap-1.5 py-2.5 rounded-xl border border-border text-[12.5px] font-semibold text-foreground">
+                            WhatsApp
+                          </a>
+                        )}
                       </div>
 
                       <div className="mt-4">

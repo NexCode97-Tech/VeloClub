@@ -1,13 +1,13 @@
 'use client';
 
 import Link from 'next/link';
-import { Users, CheckCircle2, ChevronRight, Zap, Shield, Smartphone } from 'lucide-react';
+import { Users, ChevronRight, Zap, Shield, Smartphone } from 'lucide-react';
 import LandingHero from '@/components/ui/landing-hero';
 import LandingNav from '@/components/ui/landing-nav';
 import LandingFeaturesTabs from '@/components/ui/landing-features-tabs';
 import LandingTrustedBy from '@/components/ui/landing-trusted-by';
 import {
-  IconUsers, IconUbicacion, IconAsistencias, IconStatistics, IconFinanzas, IconResultados,
+  IconCheck, IconUsers, IconUbicacion, IconAsistencias, IconStatistics, IconFinanzas, IconResultados,
   IconMensualidades, IconFlujoCaja, IconCompetencias, IconEntrenamientos,
 } from '@/components/ui/custom-icons';
 
@@ -78,7 +78,7 @@ const benefits = [
   { icon: Shield, text: 'Acceso controlado: tú decides quién entra a tu club.' },
   { icon: Users, text: 'Roles diferenciados: admin, entrenador y deportista con acceso personalizado.' },
   { icon: Smartphone, text: 'Instálala como app en tu celular, sin pasar por tiendas.' },
-  { icon: CheckCircle2, text: 'Historial completo: asistencia, pagos y resultados de cada deportista.' },
+  { icon: IconCheck, text: 'Historial completo: asistencia, pagos y resultados de cada deportista.' },
 ];
 
 // El año del pie se fija en la zona de Colombia y no en la del reloj de quien

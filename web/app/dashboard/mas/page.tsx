@@ -7,8 +7,8 @@ import { useUser } from '@clerk/nextjs';
 import { useEffect, useRef, useState } from 'react';
 import { apiFetch } from '@/lib/api-client';
 import Link from 'next/link';
-import { IconAyuda, IconStatistics, IconUbicacion, IconResultados } from '@/components/ui/custom-icons';
-import { CalendarDays, Building2, ChevronRight, Camera, Loader2, CheckCircle2 } from 'lucide-react';
+import { IconAyuda, IconCheck, IconStatistics, IconUbicacion, IconResultados } from '@/components/ui/custom-icons';
+import { CalendarDays, Building2, ChevronRight, Camera, Loader2 } from 'lucide-react';
 
 const EASE_OUT: [number, number, number, number] = [0.23, 1, 0.32, 1];
 
@@ -143,7 +143,7 @@ export default function MasPage() {
                 <AnimatePresence mode="wait">
                   {uploaded
                     ? <motion.span key="ok" initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }} transition={{ duration: 0.15 }}>
-                        <CheckCircle2 className="w-3.5 h-3.5 text-white" />
+                        <IconCheck className="w-3.5 h-3.5 text-white" />
                       </motion.span>
                     : <motion.span key="cam" initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }} transition={{ duration: 0.15 }}>
                         <Camera className="w-3.5 h-3.5 text-white" />

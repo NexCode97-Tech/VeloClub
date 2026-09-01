@@ -6,9 +6,9 @@ import { createPortal } from 'react-dom';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { apiFetch } from '@/lib/api-client';
 import {
-  CheckCircle2, Camera, Building2, ChevronDown, X, Crop, ChevronRight, User, Lock, UserCog, AlertTriangle,
+  Camera, Building2, ChevronDown, X, Crop, ChevronRight, User, Lock, UserCog, AlertTriangle,
 } from 'lucide-react';
-import { IconAyuda, IconClub, IconPerfil, IconSalir, IconSuscripcion, IconEliminar } from '@/components/ui/custom-icons';
+import { IconAyuda, IconCheck, IconClub, IconPerfil, IconSalir, IconSuscripcion, IconEliminar } from '@/components/ui/custom-icons';
 import SuscripcionCard from '@/components/ajustes/suscripcion-card';
 import HorarioClases from '@/components/ajustes/horario-clases';
 import { DIAS_SEMANA } from '@/lib/dias';
@@ -441,7 +441,7 @@ function AjustesPageContent() {
           style={savedProfile ? { background: '#06D6A0' } : {}}
         >
           {savedProfile
-            ? <><CheckCircle2 className="w-4 h-4 mr-2" />Guardado</>
+            ? <><IconCheck className="w-4 h-4 mr-2" />Guardado</>
             : savingProfile ? 'Guardando...' : 'Guardar cambios'
           }
         </Button>
@@ -652,7 +652,7 @@ function AjustesPageContent() {
         style={saved ? { background: '#06D6A0' } : {}}
       >
         {saved
-          ? <><CheckCircle2 className="w-4 h-4 mr-2" />Cambios guardados</>
+          ? <><IconCheck className="w-4 h-4 mr-2" />Cambios guardados</>
           : saving ? 'Guardando...' : 'Guardar ajustes'
         }
       </Button>

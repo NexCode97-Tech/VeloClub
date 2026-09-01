@@ -8,7 +8,8 @@ import { apiFetch } from '@/lib/api-client';
 import { QK } from '@/hooks/useVeloQuery';
 import { horaLegible } from '@/components/ajustes/horario-clases';
 import { DIA_CORTO_3 } from '@/lib/dias';
-import { Users, CheckCircle2, FileSpreadsheet, FileText, ChevronDown } from 'lucide-react';
+import { Users, FileSpreadsheet, FileText, ChevronDown } from 'lucide-react';
+import { IconCheck } from '@/components/ui/custom-icons';
 const EASE_OUT: [number,number,number,number] = [0.23, 1, 0.32, 1];
 import { MemberAvatar } from '@/components/ui/member-avatar';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
@@ -605,7 +606,7 @@ export default function AsistenciaPage() {
             className="flex items-center gap-1.5 h-[34px] px-3 rounded-xl text-sm font-semibold text-white cursor-pointer transition-colors"
             style={{ background: saved ? '#06D6A0' : '#381DA0' }}
           >
-            {!saving && !saved && <CheckCircle2 className="w-4 h-4" />}
+            {!saving && !saved && <IconCheck className="w-4 h-4" />}
             <ContenidoGuardado
               estado={saving ? 'guardando' : saved ? 'guardado' : 'idle'}
               textoIdle="Guardar"

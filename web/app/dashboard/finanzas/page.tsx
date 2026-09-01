@@ -9,7 +9,7 @@ import { parseLocalDate } from '@/lib/utils';
 import { QK } from '@/hooks/useVeloQuery';
 import { HojaInferior, OpcionHoja } from '@/components/ui/hoja-inferior';
 import {
-  CreditCard, CheckCircle2, AlertCircle, Check, PhoneOff, ChevronUp, ExternalLink, ChevronDown,
+  CreditCard, AlertCircle, Check, PhoneOff, ChevronUp, ExternalLink, ChevronDown,
 } from 'lucide-react';
 import { downloadInvoicePDF } from '@/lib/pdf';
 import MemberHistoryPanel from '@/components/finanzas/member-history-panel';
@@ -27,7 +27,7 @@ import { stagger as pageStagger, cardVariant as pageCard } from '@/lib/page-anim
 import ModuleLoader, { useCargaMinima } from '@/components/ui/module-loader';
 import ModuleReveal from '@/components/ui/module-reveal';
 import {
-  IconAjustes, IconBuscar, IconChat, IconDescargar, IconEditar, IconEgresos, IconEliminar, IconGenerarCobros, IconIngresos, IconMas, IconNoMostrar, IconPendiente, IconRecibo, IconTarifa, IconVer,
+  IconAjustes, IconBuscar, IconChat, IconCheck, IconDescargar, IconEditar, IconEgresos, IconEliminar, IconGenerarCobros, IconIngresos, IconMas, IconNoMostrar, IconPendiente, IconRecibo, IconTarifa, IconVer,
 } from '@/components/ui/custom-icons';
 
 const fmt = new Intl.NumberFormat('es-CO', {
@@ -43,7 +43,7 @@ const STATUS_LABELS: Record<string, string> = {
   PAID: 'Pagado', PENDING: 'Pendiente', OVERDUE: 'Vencido', REFUNDED: 'Reembolsado',
 };
 const STATUS_COLORS: Record<string, { text: string; bg: string; icon: React.ElementType }> = {
-  PAID:     { text: '#06D6A0', bg: 'rgba(6,214,160,0.12)',   icon: CheckCircle2 },
+  PAID:     { text: '#06D6A0', bg: 'rgba(6,214,160,0.12)',   icon: IconCheck },
   PENDING:  { text: '#FFB703', bg: 'rgba(255,183,3,0.12)',   icon: IconPendiente },
   OVERDUE:  { text: '#EF476F', bg: 'rgba(239,71,111,0.12)',  icon: AlertCircle },
   REFUNDED: { text: '#8E87A8', bg: 'rgba(142,135,168,0.12)', icon: CreditCard },

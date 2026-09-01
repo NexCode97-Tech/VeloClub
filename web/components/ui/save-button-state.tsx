@@ -9,6 +9,8 @@
 // porque cierra el ciclo: sin el, el boton vuelve a su texto original y la
 // persona queda sin saber si el cambio entro.
 
+import { IconCheck } from '@/components/ui/custom-icons';
+
 export type EstadoGuardado = 'idle' | 'guardando' | 'guardado';
 
 const DURACION_ONDA_MS = 900;
@@ -80,20 +82,25 @@ export function ContenidoGuardado({
 // el guardado con el mismo gesto de escribir una marca a mano.
 function Palomita({ color = 'currentColor' }: { color?: string }) {
   return (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <span className="vcpo-listo" aria-hidden="true">
       <style>{`
-        .vcpo-check {
-          stroke-dasharray: 24; stroke-dashoffset: 24;
-          animation: vcpo-trazo .32s cubic-bezier(.23,1,.32,1) forwards;
+        .vcpo-listo {
+          display: inline-flex;
+          animation: vcpo-entra .26s cubic-bezier(.23,1,.32,1) both;
         }
-        @keyframes vcpo-trazo { to { stroke-dashoffset: 0 } }
+        /* Nunca desde scale(0): la pieza aparecería de la nada y el ojo se
+           pierde el arranque. Desde .6 el recorrido se ve entero. */
+        @keyframes vcpo-entra {
+          from { transform: scale(.6); opacity: 0 }
+          to   { transform: scale(1);  opacity: 1 }
+        }
         @media (prefers-reduced-motion: reduce) {
-          .vcpo-check { animation: none; stroke-dashoffset: 0 }
+          .vcpo-listo { animation: vcpo-aparece .2s ease-out both }
+          @keyframes vcpo-aparece { from { opacity: 0 } to { opacity: 1 } }
         }
       `}</style>
-      <path className="vcpo-check" d="M20 6L9 17l-5-5"
-        stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
+      <IconCheck className="w-[15px] h-[15px]" style={{ color }} />
+    </span>
   );
 }
 

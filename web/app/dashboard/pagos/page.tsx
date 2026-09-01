@@ -4,10 +4,10 @@ import { useAuth } from '@clerk/nextjs';
 import { useEffect, useState } from 'react';
 import { apiFetch } from '@/lib/api-client';
 import {
-  CheckCircle2, AlertCircle, CalendarDays, TrendingUp, Upload,
+  AlertCircle, CalendarDays, TrendingUp, Upload,
 } from 'lucide-react';
 import {
-  IconEliminar, IconMas, IconMisPagos, IconPendiente,
+  IconCheck, IconEliminar, IconMas, IconMisPagos, IconPendiente,
 } from '@/components/ui/custom-icons';
 import { motion } from 'framer-motion';
 import { stagger, cardVariant } from '@/lib/page-animations';
@@ -37,7 +37,7 @@ const STATUS_LABELS: Record<string, string> = {
   REFUNDED: 'Reembolsado',
 };
 const STATUS_COLORS: Record<string, { text: string; bg: string; icon: React.ElementType }> = {
-  PAID:     { text: '#06D6A0', bg: 'rgba(6,214,160,0.12)',   icon: CheckCircle2 },
+  PAID:     { text: '#06D6A0', bg: 'rgba(6,214,160,0.12)',   icon: IconCheck },
   PENDING:  { text: '#FFB703', bg: 'rgba(255,183,3,0.12)',   icon: IconPendiente },
   OVERDUE:  { text: '#EF476F', bg: 'rgba(239,71,111,0.12)',  icon: AlertCircle },
   REFUNDED: { text: '#8E87A8', bg: 'rgba(142,135,168,0.12)', icon: IconMisPagos },
@@ -265,7 +265,7 @@ export default function PagosPage() {
                   ) : pending.length > 0 ? (
                     <IconPendiente className="w-4 h-4" />
                   ) : (
-                    <CheckCircle2 className="w-4 h-4" />
+                    <IconCheck className="w-4 h-4" />
                   )}
                   <p className="text-[11px] font-semibold tracking-widest uppercase">
                     {hasOverdue ? 'Pago vencido' : pending.length > 0 ? 'Pago pendiente' : 'Al día'}
@@ -403,7 +403,7 @@ export default function PagosPage() {
                     {[...paid].reverse().map(p => (
                       <motion.div variants={cardVariant} key={p.id} className="bg-white border border-border rounded-xl px-4 py-3.5 flex items-center gap-3">
                         <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(6,214,160,0.10)' }}>
-                          <CheckCircle2 className="w-5 h-5" style={{ color: '#06D6A0' }} />
+                          <IconCheck className="w-5 h-5" style={{ color: '#06D6A0' }} />
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-[13px] font-semibold text-foreground">

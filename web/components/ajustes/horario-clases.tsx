@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { TimePicker } from '@/components/ui/time-picker';
 import { Label } from '@/components/ui/label';
 import { DIAS_SEMANA } from '@/lib/dias';
 import { CATEGORIAS } from '@/lib/categorias';
@@ -274,11 +275,10 @@ export default function HorarioClases() {
 
                 <div className="space-y-1.5">
                   <Label className="text-[12px]">Hora de inicio</Label>
-                  <Input
-                    type="time"
-                    className="max-w-[160px]"
+                  <TimePicker
+                    className="max-w-[180px]"
                     value={editando.hora ?? '06:00'}
-                    onChange={e => setEditando({ ...editando, hora: e.target.value })}
+                    onChange={hora => setEditando({ ...editando, hora })}
                   />
                 </div>
 

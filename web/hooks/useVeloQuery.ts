@@ -15,6 +15,7 @@ import { apiFetch } from '@/lib/api-client';
 export const QK = {
   members:      () => ['members'] as const,
   locations:    () => ['locations'] as const,
+  deportes:     () => ['deportes'] as const,
   clubSettings: () => ['club', 'settings'] as const,
   payments:     (month: number, year: number) => ['payments', month, year] as const,
   cashflow:     (month: number, year: number) => ['cashflow', month, year] as const,
@@ -137,6 +138,18 @@ export function useSSEInvalidator() {
     switch (event) {
       case 'members':
         qc.invalidateQueries({ queryKey: QK.members() });
+        break;
+      // Las sedes faltaban, y por eso al crear una no aparecia en Miembros
+      // hasta recargar: la lista quedaba fresca cinco minutos y nadie avisaba
+      // que habia cambiado.
+      case 'locations':
+        qc.invalidateQueries({ queryKey: QK.locations() });
+        break;
+      case 'deportes':
+        qc.invalidateQueries({ queryKey: QK.deportes() });
+        break;
+      case 'club':
+        qc.invalidateQueries({ queryKey: QK.clubSettings() });
         break;
       case 'payments':
         qc.invalidateQueries({ queryKey: ['payments'] });

@@ -11,7 +11,7 @@ import { stagger as pageStagger, cardVariant as pageCard } from '@/lib/page-anim
 import { apiFetch } from '@/lib/api-client';
 import { nombreDeporteActivo } from '@/lib/deporte-activo';
 import { parseLocalDate } from '@/lib/utils';
-import { QK } from '@/hooks/useVeloQuery';
+import { QK, useSSEInvalidator } from '@/hooks/useVeloQuery';
 import { Input } from '@/components/ui/input';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
@@ -175,9 +175,12 @@ export default function MiembrosPage() {
   }, []);
 
   // SSE invalida la caché → TanStack Query refetch en bg, sin spinner
-  useClubStream(ev => {
-    if (ev === 'members') qc.invalidateQueries({ queryKey: QK.members() });
-  });
+  // El invalidador general y no solo el caso de miembros: esta pantalla tambien
+  // usa la lista de sedes, y al escuchar unicamente 'members' se perdia el aviso
+  // de que habian creado una. La importacion la buscaba en la lista vieja y
+  // respondia que la sede no existe.
+  const invalidar = useSSEInvalidator();
+  useClubStream(invalidar);
 
   // ── Panel actions ───────────────────────────────────────────────────────────
   function openNew() {

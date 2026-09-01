@@ -5,6 +5,7 @@ import { carpetaDe } from '../lib/deportes';
 import { prisma } from '../db/client';
 import { Prisma } from '@prisma/client';
 import { cacheGet, cacheSet, cacheDel } from '../lib/redis';
+import { emitToClub } from '../lib/sse';
 
 const router = Router();
 
@@ -50,6 +51,7 @@ router.post('/', requireAuth, async (req, res) => {
     data: { ...parsed.data, clubId: req.user.clubId ?? '', deporteId: carpetaDe(req) },
   });
   await cacheDel(`locations:${req.user.clubId ?? ''}:${req.deporteId ?? ''}`);
+  emitToClub(req.user.clubId ?? '', 'locations');
   res.status(201).json({ location });
 });
 
@@ -70,6 +72,7 @@ router.put('/:id', requireAuth, async (req, res) => {
     data: parsed.data,
   });
   await cacheDel(`locations:${req.user.clubId ?? ''}:${req.deporteId ?? ''}`);
+  emitToClub(req.user.clubId ?? '', 'locations');
   res.json({ location: updated });
 });
 
@@ -102,6 +105,7 @@ router.delete('/:id', requireAuth, async (req, res) => {
   }
 
   await cacheDel(`locations:${req.user.clubId ?? ''}:${req.deporteId ?? ''}`);
+  emitToClub(req.user.clubId ?? '', 'locations');
   res.json({ ok: true });
 });
 

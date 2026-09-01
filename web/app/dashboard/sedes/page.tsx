@@ -7,6 +7,8 @@ import { useAuth } from '@clerk/nextjs';
 import { useEffect, useState, useRef } from 'react';
 import { COLOMBIA } from '@/lib/colombia';
 import { apiFetch } from '@/lib/api-client';
+import { useQueryClient } from '@tanstack/react-query';
+import { QK } from '@/hooks/useVeloQuery';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -75,6 +77,7 @@ function MapButtons({ lat, lng }: { lat: number; lng: number }) {
 
 export default function SedesPage() {
   const { getToken } = useAuth();
+  const qc = useQueryClient();
   const [locations, setLocations] = useState<Location[]>([]);
   const [busqueda, setBusqueda] = useState('');
   const [loading, setLoading] = useState(true);
@@ -188,6 +191,7 @@ export default function SedesPage() {
       }
       setOpen(false);
       await load();
+      qc.invalidateQueries({ queryKey: QK.locations() });
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Error');
     } finally {
@@ -214,6 +218,7 @@ export default function SedesPage() {
       const token = await getToken();
       await apiFetch(`/locations/${id}`, { method: 'DELETE', token });
       await load();
+      qc.invalidateQueries({ queryKey: QK.locations() });
     } catch (err) {
       setErrorSede(err instanceof Error ? err.message : 'No se pudo eliminar la sede');
     }

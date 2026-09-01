@@ -631,8 +631,10 @@ function AjustesPageContent() {
 
       {/* Días sin entrenamiento */}
       <div className="space-y-3 border-t border-border pt-5">
-        <h3 className="text-[13px] font-semibold text-foreground m-0">Días sin entrenamiento</h3>
-        <p className="text-[11px] text-muted-foreground -mt-1">La asistencia no se registrará estos días</p>
+        <div>
+          <h3 className="text-[13px] font-semibold text-foreground m-0">Días sin entrenamiento</h3>
+          <p className="text-[11px] text-muted-foreground">La asistencia no se registrará estos días</p>
+        </div>
         <div className="flex gap-2 flex-wrap">
           {DIAS_SEMANA.map(({ corto, valor: value, nombre }) => {
             const active = noAttDays.includes(value);

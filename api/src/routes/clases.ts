@@ -20,6 +20,8 @@ const claseSchema = z.object({
   categoria:  z.string().max(60).nullable().optional(),
   // Null es una clase suelta: su planilla sale de la regla vieja.
   grupoId:    z.string().nullable().optional(),
+  // En null hereda el color de su grupo, que es lo normal.
+  color:      z.string().regex(/^#[0-9a-fA-F]{6}$/, 'El color va en formato #RRGGBB').nullable().optional(),
 });
 
 const claseParcial = claseSchema.partial().extend({
@@ -41,7 +43,7 @@ router.get('/', requireAuth, async (req, res) => {
   const clases = await prisma.claseHorario.findMany({
     where: { clubId, activa: true },
     include: { location: { select: { id: true, name: true } },
-               grupo:    { select: { id: true, nombre: true } } },
+               grupo:    { select: { id: true, nombre: true, color: true } } },
     orderBy: [{ diaSemana: 'asc' }, { hora: 'asc' }],
   });
 
@@ -76,7 +78,7 @@ router.get('/dia', requireAuth, async (req, res) => {
   const clases = await prisma.claseHorario.findMany({
     where: { clubId, diaSemana, activa: true },
     include: { location: { select: { id: true, name: true } },
-               grupo:    { select: { id: true, nombre: true } } },
+               grupo:    { select: { id: true, nombre: true, color: true } } },
     orderBy: { hora: 'asc' },
   });
 
@@ -127,9 +129,10 @@ router.post('/', requireAuth, async (req, res) => {
       hora:       parsed.data.hora,
       categoria:  parsed.data.categoria?.trim() || null,
       grupoId:    parsed.data.grupoId ?? null,
+      color:      parsed.data.color ?? null,
     },
     include: { location: { select: { id: true, name: true } },
-               grupo:    { select: { id: true, nombre: true } } },
+               grupo:    { select: { id: true, nombre: true, color: true } } },
   });
 
   emitToClub(clubId, 'attendance');
@@ -164,10 +167,11 @@ router.patch('/:id', requireAuth, async (req, res) => {
       ...(parsed.data.hora       !== undefined ? { hora: parsed.data.hora } : {}),
       ...(parsed.data.categoria  !== undefined ? { categoria: parsed.data.categoria?.trim() || null } : {}),
       ...(parsed.data.grupoId    !== undefined ? { grupoId: parsed.data.grupoId } : {}),
+      ...(parsed.data.color      !== undefined ? { color: parsed.data.color } : {}),
       ...(parsed.data.activa     !== undefined ? { activa: parsed.data.activa } : {}),
     },
     include: { location: { select: { id: true, name: true } },
-               grupo:    { select: { id: true, nombre: true } } },
+               grupo:    { select: { id: true, nombre: true, color: true } } },
   });
 
   emitToClub(clubId, 'attendance');

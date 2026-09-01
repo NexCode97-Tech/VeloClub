@@ -15,6 +15,8 @@ const HORA = /^([01]\d|2[0-3]):([0-5]\d)$/;
 const grupoSchema = z.object({
   nombre:     z.string().min(1).max(60),
   locationId: z.string().min(1),
+  // "#RRGGBB". Null es «no lo han escogido» y ahi manda la posicion.
+  color:      z.string().regex(/^#[0-9a-fA-F]{6}$/, 'El color va en formato #RRGGBB').nullable().optional(),
 });
 
 const grupoParcial = grupoSchema.partial().extend({
@@ -74,6 +76,7 @@ router.post('/', requireAuth, async (req, res) => {
       deporteId:  carpetaDe(req),
       locationId: parsed.data.locationId,
       nombre,
+      color:      parsed.data.color ?? null,
     },
     include: {
       location: { select: { id: true, name: true } },
@@ -101,6 +104,8 @@ router.post('/completo', requireAuth, async (req, res) => {
   const parsed = z.object({
     nombre:     z.string().min(1).max(60),
     locationId: z.string().min(1),
+  // "#RRGGBB". Null es «no lo han escogido» y ahi manda la posicion.
+  color:      z.string().regex(/^#[0-9a-fA-F]{6}$/, 'El color va en formato #RRGGBB').nullable().optional(),
     // Al menos uno: un grupo sin dias no tiene ninguna clase, y este endpoint
     // existe justamente para crearlas.
     dias:       z.array(z.number().int().min(0).max(6)).min(1).max(7),
@@ -128,7 +133,8 @@ router.post('/completo', requireAuth, async (req, res) => {
 
   const grupo = await prisma.$transaction(async tx => {
     const g = await tx.grupo.create({
-      data: { clubId, deporteId, locationId: parsed.data.locationId, nombre },
+      data: { clubId, deporteId, locationId: parsed.data.locationId, nombre,
+              color: parsed.data.color ?? null },
     });
     await tx.claseHorario.createMany({
       data: dias.map(d => ({
@@ -168,6 +174,7 @@ router.patch('/:id', requireAuth, async (req, res) => {
       ...(parsed.data.nombre     !== undefined ? { nombre: parsed.data.nombre.trim() } : {}),
       ...(parsed.data.locationId !== undefined ? { locationId: parsed.data.locationId } : {}),
       ...(parsed.data.activo     !== undefined ? { activo: parsed.data.activo } : {}),
+      ...(parsed.data.color      !== undefined ? { color: parsed.data.color } : {}),
     },
     include: {
       location: { select: { id: true, name: true } },

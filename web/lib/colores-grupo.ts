@@ -37,14 +37,39 @@ const PALETA_GRUPOS = [
 ] as const;
 
 /**
- * @param id    id del grupo
- * @param todos ids de los grupos de la carpeta, en el orden que llegan de la API
+ * El color de un grupo.
+ *
+ * Manda el que alguien escogió y guardó. La posición en la lista es solo el
+ * respaldo para los que nunca lo escogieron, y hay que decir por qué no basta:
+ * si el color saliera siempre de la posición, renombrar un grupo reordenaría la
+ * lista y **todos** cambiarían de color de golpe, sin que nadie lo pidiera.
+ *
+ * @param id       id del grupo
+ * @param todos    ids de los grupos de la carpeta, en el orden que llegan de la API
+ * @param guardado el color que el grupo tiene puesto, si tiene
  */
-export function colorDeGrupo(id: string, todos: string[]): string {
+export function colorDeGrupo(id: string, todos: string[], guardado?: string | null): string {
+  if (guardado && /^#[0-9a-fA-F]{6}$/.test(guardado)) return guardado;
   const i = todos.indexOf(id);
   // Un grupo que no está en la lista —recién creado, o de otra carpeta— toma el
   // primero antes que romper: el color es una ayuda de lectura, no un dato.
   return PALETA_GRUPOS[(i < 0 ? 0 : i) % PALETA_GRUPOS.length];
+}
+
+/**
+ * El color de una clase: el suyo si lo escogieron, si no el de su grupo.
+ *
+ * Una clase sin grupo no hereda de nadie, así que va en gris. Se ve distinta a
+ * propósito: es la que todavía arma su lista con la regla vieja.
+ */
+export function colorDeClase(
+  clase: { color?: string | null; grupoId?: string | null },
+  grupos: { id: string; color?: string | null }[],
+): string {
+  if (clase.color && /^#[0-9a-fA-F]{6}$/.test(clase.color)) return clase.color;
+  if (!clase.grupoId) return '#8E87A8';
+  const g = grupos.find(x => x.id === clase.grupoId);
+  return colorDeGrupo(clase.grupoId, grupos.map(x => x.id), g?.color);
 }
 
 /** El mismo color al 10 %, para fondos suaves y pastillas. */

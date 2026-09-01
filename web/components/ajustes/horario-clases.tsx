@@ -13,7 +13,8 @@ import { Input } from '@/components/ui/input';
 import { TimePicker } from '@/components/ui/time-picker';
 import { Label } from '@/components/ui/label';
 import { DIAS_SEMANA } from '@/lib/dias';
-import { colorDeGrupo } from '@/lib/colores-grupo';
+import { colorDeGrupo, colorDeClase } from '@/lib/colores-grupo';
+import { SelectorColor } from '@/components/ui/selector-color';
 import { CATEGORIAS } from '@/lib/categorias';
 import {
   IconCheck, IconEditar, IconEliminar, IconMas, IconUbicacion,
@@ -35,6 +36,8 @@ export interface Grupo {
   id: string;
   nombre: string;
   activo: boolean;
+  /** "#RRGGBB", o null si nadie lo escogió: ahí manda la posición. */
+  color: string | null;
   location: { id: string; name: string };
   clases: { id: string; diaSemana: number; hora: string; activa: boolean }[];
   _count: { miembros: number };
@@ -47,6 +50,8 @@ export interface Clase {
   hora: string;
   categoria: string | null;
   grupoId: string | null;
+  /** Pisa el color del grupo solo si alguien lo escogió a propósito. */
+  color: string | null;
   locationId: string;
   location: { id: string; name: string };
 }
@@ -124,6 +129,10 @@ export default function HorarioClases({ sinEntrenamiento = [] }: { sinEntrenamie
       categoria: '',
       locationId: unico?.location.id ?? sedes[0]?.id ?? '',
       grupoId: unico?.id ?? null,
+      // Null y no el del grupo: guardar una copia haria que cambiarle el color
+      // al grupo dejara de arrastrar a sus clases, que es justo lo que se
+      // espera cuando se cambia el color de un grupo.
+      color: null,
     });
   }
 
@@ -150,7 +159,7 @@ export default function HorarioClases({ sinEntrenamiento = [] }: { sinEntrenamie
 
   async function guardar() {
     if (!editando || guardando) return;
-    const { id, nombre, diaSemana, hora, categoria, locationId, grupoId } = editando;
+    const { id, nombre, diaSemana, hora, categoria, locationId, grupoId, color } = editando;
     if (!nombre?.trim() || !locationId || diaSemana === undefined || !hora) return;
 
     setGuardando(true); setError('');
@@ -160,6 +169,7 @@ export default function HorarioClases({ sinEntrenamiento = [] }: { sinEntrenamie
         nombre: nombre.trim(), diaSemana, hora,
         categoria: categoria?.trim() || null, locationId,
         grupoId: grupoId ?? null,
+        color: color ?? null,
       });
       if (id) await apiFetch(`/clases/${id}`, { token, method: 'PATCH', body: cuerpo });
       else    await apiFetch('/clases',       { token, method: 'POST',  body: cuerpo });
@@ -184,7 +194,10 @@ export default function HorarioClases({ sinEntrenamiento = [] }: { sinEntrenamie
 
   function abrirGrupoNuevo() {
     setError('');
-    setGrupoEdit({ nombre: '', locationId: sedes[0]?.id ?? '' });
+    // Se propone el que le tocaria por posicion, para que el boton no salga
+    // en gris y haya que abrirlo solo para ver de que color va a quedar.
+    setGrupoEdit({ nombre: '', locationId: sedes[0]?.id ?? '',
+                   color: colorDeGrupo('nuevo', [...idsGrupo, 'nuevo'], null) });
   }
 
   async function guardarGrupo() {
@@ -196,7 +209,7 @@ export default function HorarioClases({ sinEntrenamiento = [] }: { sinEntrenamie
     setGuardando(true); setError('');
     try {
       const token = await getToken();
-      const cuerpo = JSON.stringify({ nombre, locationId });
+      const cuerpo = JSON.stringify({ nombre, locationId, color: grupoEdit.color ?? null });
       if (grupoEdit.id) await apiFetch(`/grupos/${grupoEdit.id}`, { token, method: 'PATCH', body: cuerpo });
       else              await apiFetch('/grupos',                 { token, method: 'POST',  body: cuerpo });
       setGrupoEdit(null);
@@ -416,7 +429,7 @@ export default function HorarioClases({ sinEntrenamiento = [] }: { sinEntrenamie
                     </span>
                   )}
                   {d.clases.map(c => {
-                    const color = c.grupoId ? colorDeGrupo(c.grupoId, idsGrupo) : '#8E87A8';
+                    const color = colorDeClase(c, grupos);
                     return (
                       <button
                         key={c.id}
@@ -466,7 +479,7 @@ export default function HorarioClases({ sinEntrenamiento = [] }: { sinEntrenamie
                 <span key={g.id} className="inline-flex items-center gap-1.5 text-[11px]" style={{ color: '#5B5470' }}>
                   <span
                     className="w-2 h-2 rounded-sm shrink-0"
-                    style={{ background: colorDeGrupo(g.id, idsGrupo) }}
+                    style={{ background: colorDeGrupo(g.id, idsGrupo, g.color) }}
                   />
                   {g.nombre}
                 </span>
@@ -516,6 +529,11 @@ export default function HorarioClases({ sinEntrenamiento = [] }: { sinEntrenamie
                     <div className="flex flex-col gap-1.5">
                       {[null, ...grupos.filter(g => g.activo)].map(g => {
                         const puesto = (editando.grupoId ?? null) === (g?.id ?? null);
+                        // El punto del selector ES el color del grupo. Un cuadro
+                        // de color aparte repetia la misma informacion dos veces
+                        // en la misma fila, y con dos circulos seguidos —el radio
+                        // y el color— la fila se leia como si tuviera dos casillas.
+                        const tinta = g ? colorDeGrupo(g.id, idsGrupo, g.color) : '#381DA0';
                         return (
                           <button
                             key={g?.id ?? 'ninguno'}
@@ -523,17 +541,15 @@ export default function HorarioClases({ sinEntrenamiento = [] }: { sinEntrenamie
                             onClick={() => elegirGrupo(g)}
                             className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-left transition-colors"
                             style={puesto
-                              ? { background: 'rgba(56,29,160,0.06)', border: '1.5px solid rgba(56,29,160,0.35)' }
+                              ? { background: `${tinta}0F`, border: `1.5px solid ${tinta}` }
                               : { background: '#fff', border: '1.5px solid rgba(26,16,40,0.08)' }}
                           >
+                            {/* Sin elegir, el aro ya lleva el color: asi se ve de
+                                que color es cada grupo sin tener que tocarlos. */}
                             <span className="w-4 h-4 rounded-full shrink-0 flex items-center justify-center"
-                              style={{ border: `1.5px solid ${puesto ? '#381DA0' : 'rgba(26,16,40,0.20)'}` }}>
-                              {puesto && <span className="w-2 h-2 rounded-full" style={{ background: '#381DA0' }} />}
+                              style={{ border: `1.5px solid ${g ? tinta : (puesto ? tinta : 'rgba(26,16,40,0.20)')}` }}>
+                              {puesto && <span className="w-2 h-2 rounded-full" style={{ background: tinta }} />}
                             </span>
-                            {g && (
-                              <span className="w-2 h-2 rounded-sm shrink-0"
-                                style={{ background: colorDeGrupo(g.id, idsGrupo) }} />
-                            )}
                             <span className="text-[12.5px] font-medium text-foreground flex-1 min-w-0 truncate">
                               {g ? g.nombre : 'Sin grupo'}
                             </span>
@@ -546,19 +562,33 @@ export default function HorarioClases({ sinEntrenamiento = [] }: { sinEntrenamie
                         );
                       })}
                     </div>
+                    <p className="text-[11px] text-muted-foreground">
+                      Sin grupo, la lista sale de la sede y la categoría, y dos clases iguales traen la misma gente.
+                    </p>
                   </div>
                 )}
 
                 <div className="space-y-1.5">
                   <Label className="text-[12px]">Nombre de la clase</Label>
-                  <Input
-                    value={editando.nombre ?? ''}
-                    onChange={e => setEditando({ ...editando, nombre: e.target.value })}
-                    placeholder="Formativa, Técnica, Iniciación…"
-                    autoFocus
-                  />
+                  <div className="flex items-start gap-2">
+                    <Input
+                      className="flex-1"
+                      value={editando.nombre ?? ''}
+                      onChange={e => setEditando({ ...editando, nombre: e.target.value })}
+                      placeholder="Formativa, Técnica, Iniciación…"
+                      autoFocus
+                    />
+                    <SelectorColor
+                      etiqueta="Color de la clase"
+                      value={colorDeClase(
+                        { color: editando.color ?? null, grupoId: editando.grupoId ?? null },
+                        grupos,
+                      )}
+                      onChange={color => setEditando({ ...editando, color })}
+                    />
+                  </div>
                   <p className="text-[11px] text-muted-foreground">
-                    Viene del grupo, pero lo puedes cambiar: una clase puede llamarse distinto.
+                    Vienen del grupo, pero los puedes cambiar los dos: el nombre y el color.
                   </p>
                 </div>
 
@@ -595,64 +625,50 @@ export default function HorarioClases({ sinEntrenamiento = [] }: { sinEntrenamie
                   />
                 </div>
 
-                <div className="space-y-1.5">
-                  <Label className="text-[12px]">Sede</Label>
-                  <div className="flex flex-col gap-1.5">
-                    {sedes.map(s => (
-                      <button
-                        key={s.id}
-                        type="button"
-                        onClick={() => setEditando({ ...editando, locationId: s.id })}
-                        className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-left transition-colors"
-                        style={editando.locationId === s.id
-                          ? { background: 'rgba(56,29,160,0.06)', border: '1.5px solid rgba(56,29,160,0.35)' }
-                          : { background: '#fff', border: '1.5px solid rgba(26,16,40,0.08)' }}
-                      >
-                        <span className="w-4 h-4 rounded-full shrink-0 flex items-center justify-center"
-                          style={{ border: `1.5px solid ${editando.locationId === s.id ? '#381DA0' : 'rgba(26,16,40,0.20)'}` }}>
-                          {editando.locationId === s.id && (
-                            <span className="w-2 h-2 rounded-full" style={{ background: '#381DA0' }} />
-                          )}
-                        </span>
-                        <span className="text-[12.5px] font-medium text-foreground">{s.name}</span>
-                      </button>
-                    ))}
+                {/* La sede sale del grupo cuando hay grupo: un grupo es un
+                    nombre Y una sede, asi que dejar el selector abierto permite
+                    decir una sede y un grupo de otra, y la clase quedaria
+                    contando gente que no entrena ahi. Se muestra, no se elige. */}
+                {editando.grupoId ? (
+                  <div className="space-y-1.5">
+                    <Label className="text-[12px]">Sede</Label>
+                    <div className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl"
+                      style={{ background: 'rgba(56,29,160,0.04)', border: '1.5px solid rgba(56,29,160,0.14)' }}>
+                      <IconUbicacion className="w-3.5 h-3.5 shrink-0" style={{ color: '#381DA0' }} />
+                      <span className="text-[12.5px] font-medium text-foreground flex-1 min-w-0 truncate">
+                        {grupos.find(g => g.id === editando.grupoId)?.location.name ?? '—'}
+                      </span>
+                      <span className="text-[10.5px] shrink-0" style={{ color: '#8E87A8' }}>
+                        la del grupo
+                      </span>
+                    </div>
                   </div>
-                </div>
-
-                {/* El grupo va despues de la sede porque se filtra por ella:
-                    un grupo es un nombre Y una sede, asi que ofrecer los de
-                    otra sede es ofrecer algo que no existe. */}
-                <div className="space-y-1.5">
-                  <Label className="text-[12px]">Grupo</Label>
-                  <div className="flex flex-col gap-1.5">
-                    {[{ id: '', nombre: 'Sin grupo' },
-                      ...grupos.filter(g => g.activo && g.location.id === editando.locationId)
-                    ].map(g => {
-                      const puesto = (editando.grupoId ?? '') === g.id;
-                      return (
+                ) : sedes.length > 1 ? (
+                  <div className="space-y-1.5">
+                    <Label className="text-[12px]">Sede</Label>
+                    <div className="flex flex-col gap-1.5">
+                      {sedes.map(s => (
                         <button
-                          key={g.id || 'ninguno'}
+                          key={s.id}
                           type="button"
-                          onClick={() => setEditando({ ...editando, grupoId: g.id || null })}
+                          onClick={() => setEditando({ ...editando, locationId: s.id })}
                           className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-left transition-colors"
-                          style={puesto
+                          style={editando.locationId === s.id
                             ? { background: 'rgba(56,29,160,0.06)', border: '1.5px solid rgba(56,29,160,0.35)' }
                             : { background: '#fff', border: '1.5px solid rgba(26,16,40,0.08)' }}
                         >
                           <span className="w-4 h-4 rounded-full shrink-0 flex items-center justify-center"
-                            style={{ border: `1.5px solid ${puesto ? '#381DA0' : 'rgba(26,16,40,0.20)'}` }}>
-                            {puesto && <span className="w-2 h-2 rounded-full" style={{ background: '#381DA0' }} />}
+                            style={{ border: `1.5px solid ${editando.locationId === s.id ? '#381DA0' : 'rgba(26,16,40,0.20)'}` }}>
+                            {editando.locationId === s.id && (
+                              <span className="w-2 h-2 rounded-full" style={{ background: '#381DA0' }} />
+                            )}
                           </span>
-                          <span className="text-[12.5px] font-medium text-foreground">{g.nombre}</span>
+                          <span className="text-[12.5px] font-medium text-foreground">{s.name}</span>
                         </button>
-                      );
-                    })}
+                      ))}
+                    </div>
                   </div>
-                  <p className="text-[11px] text-muted-foreground">
-                    Sin grupo, la lista sale de la sede y la categoría, y dos clases iguales traen la misma gente.
-                  </p>
-                </div>
+                ) : null}
 
                 <div className="space-y-1.5">
                   <Label className="text-[12px]">Categoría (opcional)</Label>
@@ -800,12 +816,24 @@ export default function HorarioClases({ sinEntrenamiento = [] }: { sinEntrenamie
               <div className="px-5 py-4 overflow-y-auto flex flex-col gap-3">
                 <div className="space-y-1.5">
                   <Label className="text-[12px]">Nombre</Label>
-                  <Input
-                    value={grupoEdit.nombre ?? ''}
-                    onChange={e => setGrupoEdit({ ...grupoEdit, nombre: e.target.value })}
-                    placeholder="Mañana, Tarde, Competitivo…"
-                    autoFocus
-                  />
+                  <div className="flex items-start gap-2">
+                    <Input
+                      className="flex-1"
+                      value={grupoEdit.nombre ?? ''}
+                      onChange={e => setGrupoEdit({ ...grupoEdit, nombre: e.target.value })}
+                      placeholder="Mañana, Tarde, Competitivo…"
+                      autoFocus
+                    />
+                    <SelectorColor
+                      etiqueta="Color del grupo"
+                      value={grupoEdit.color
+                        ?? colorDeGrupo(grupoEdit.id ?? '', idsGrupo, null)}
+                      onChange={color => setGrupoEdit({ ...grupoEdit, color })}
+                    />
+                  </div>
+                  <p className="text-[11px] text-muted-foreground">
+                    Se usa en el horario, en el calendario y en la leyenda.
+                  </p>
                 </div>
 
                 <div className="space-y-1.5">

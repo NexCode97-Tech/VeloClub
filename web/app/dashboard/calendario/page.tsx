@@ -7,7 +7,7 @@ import { useClubStream } from '@/hooks/useClubStream';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { apiFetch } from '@/lib/api-client';
 import { parseLocalDate } from '@/lib/utils';
-import { colorDeGrupo } from '@/lib/colores-grupo';
+import { colorDeClase } from '@/lib/colores-grupo';
 import { horaLegible } from '@/components/ajustes/horario-clases';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import ModuleLoader, { useCargaMinima } from '@/components/ui/module-loader';
@@ -35,8 +35,8 @@ interface CalEvent {
   location?: string | null;
   /** "06:00". Solo las clases del horario la traen. */
   hora?: string;
-  /** El grupo del que sale, para pintarla con su color. */
-  grupoId?: string | null;
+  /** El color ya resuelto: el de la clase, o el de su grupo. */
+  color?: string;
 }
 
 interface ClaseHorario {
@@ -45,7 +45,8 @@ interface ClaseHorario {
   diaSemana: number;
   hora: string;
   grupoId: string | null;
-  grupo?: { id: string; nombre: string } | null;
+  color: string | null;
+  grupo?: { id: string; nombre: string; color: string | null } | null;
   location: { name: string };
 }
 
@@ -60,7 +61,7 @@ interface ClaseHorario {
  * mezclarlas con la competencia del sabado la entierra.
  */
 function clasesDelMes(
-  clases: { id: string; nombre: string; diaSemana: number; hora: string; grupoId: string | null; location: { name: string } }[],
+  clases: ClaseHorario[],
   year: number,
   month: number,
   sinEntrenamiento: number[],
@@ -82,7 +83,7 @@ function clasesDelMes(
         date: fecha,
         location: c.location?.name ?? null,
         hora: c.hora,
-        grupoId: c.grupoId,
+        color: colorDeClase(c, c.grupo ? [c.grupo] : []),
       });
     }
   }
@@ -201,16 +202,6 @@ export default function CalendarioPage() {
     setSelectedDay(1);
   }
 
-  // Los ids de grupo en el mismo orden que `GET /grupos` los devuelve —por
-  // nombre— para que un grupo salga del mismo color aca y en Ajustes.
-  const idsGrupo = useMemo(() => {
-    const vistos = new Map<string, string>();
-    for (const c of clases) if (c.grupo) vistos.set(c.grupo.id, c.grupo.nombre);
-    return [...vistos.entries()]
-      .sort((a, b) => a[1].localeCompare(b[1]))
-      .map(([id]) => id);
-  }, [clases]);
-
   // Las clases del mes, calculadas del horario. Se recalculan solo al cambiar
   // de mes o el horario: son cuatro o cinco por clase y se recorren en cada
   // celda del calendario.
@@ -283,9 +274,7 @@ export default function CalendarioPage() {
                         <div
                           key={e.id}
                           className="w-1 h-1 rounded-full"
-                          style={{ background: e.hora && e.grupoId
-                            ? colorDeGrupo(e.grupoId, idsGrupo)
-                            : TYPE_COLOR[e.type] }}
+                          style={{ background: e.color ?? TYPE_COLOR[e.type] }}
                         />
                       ))}
                     </div>
@@ -363,7 +352,7 @@ export default function CalendarioPage() {
                   <EventCard
                     key={e.id}
                     event={e}
-                    colorClase={e.grupoId ? colorDeGrupo(e.grupoId, idsGrupo) : undefined}
+                    colorClase={e.color}
                   />
                 ))}
               </div>

@@ -5,20 +5,16 @@ import { createPortal } from 'react-dom';
 import { useAuth } from '@clerk/nextjs';
 import { motion, AnimatePresence } from 'framer-motion';
 import { apiFetch } from '@/lib/api-client';
-import {
-  X, AlertTriangle,
-} from 'lucide-react';
+import { X, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { TimePicker } from '@/components/ui/time-picker';
 import { Label } from '@/components/ui/label';
 import { DIAS_SEMANA } from '@/lib/dias';
-import { colorDeGrupo, colorDeClase } from '@/lib/colores-grupo';
+import { colorDeGrupo, colorDeClase, gruposDeClases } from '@/lib/colores-grupo';
 import { SelectorColor } from '@/components/ui/selector-color';
 import { CATEGORIAS } from '@/lib/categorias';
-import {
-  IconCheck, IconEditar, IconEliminar, IconMas, IconUbicacion,
-} from '@/components/ui/custom-icons';
+import { IconCheck, IconEliminar, IconMas, IconUsers } from '@/components/ui/custom-icons';
 
 interface Sede { id: string; name: string }
 
@@ -32,15 +28,18 @@ interface Candidato {
   grupos?: { grupoId: string }[];
 }
 
-export interface Grupo {
+/**
+ * El grupo es donde vive la lista de deportistas de la clase. **No es una
+ * pantalla**: no se crea, no se elige y no se administra aparte. Sale del
+ * nombre y la sede de la clase, y el backend lo resuelve solo. Acá llega
+ * únicamente para pintar el color y decir cuánta gente trae la clase.
+ */
+export interface GrupoDeClase {
   id: string;
   nombre: string;
-  activo: boolean;
   /** "#RRGGBB", o null si nadie lo escogió: ahí manda la posición. */
   color: string | null;
-  location: { id: string; name: string };
-  clases: { id: string; diaSemana: number; hora: string; activa: boolean }[];
-  _count: { miembros: number };
+  _count: { miembros: number; clases: number };
 }
 
 export interface Clase {
@@ -49,12 +48,15 @@ export interface Clase {
   diaSemana: number;
   hora: string;
   categoria: string | null;
-  grupoId: string | null;
   /** Pisa el color del grupo solo si alguien lo escogió a propósito. */
   color: string | null;
   locationId: string;
   location: { id: string; name: string };
+  grupo: GrupoDeClase | null;
 }
+
+/** Lo que se edita en el modal. `memberIds` solo existe si tocaron la lista. */
+type EnEdicion = Partial<Clase> & { memberIds?: string[] };
 
 /** "06:00" → "6:00 a. m." — el horario se lee, no se calcula. */
 export function horaLegible(hhmm: string): string {
@@ -74,21 +76,16 @@ export default function HorarioClases({ sinEntrenamiento = [] }: { sinEntrenamie
   const { getToken } = useAuth();
   const [clases, setClases]   = useState<Clase[]>([]);
   const [sedes, setSedes]     = useState<Sede[]>([]);
-  const [grupos, setGrupos]   = useState<Grupo[]>([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError]     = useState('');
 
   // Clase en edición. `null` = cerrado; sin `id` = una nueva.
-  const [editando, setEditando] = useState<Partial<Clase> | null>(null);
+  const [editando, setEditando] = useState<EnEdicion | null>(null);
   const [guardando, setGuardando] = useState(false);
   const [porBorrar, setPorBorrar] = useState<Clase | null>(null);
 
-  // Grupo en edición. `null` = cerrado; sin `id` = uno nuevo.
-  const [grupoEdit, setGrupoEdit] = useState<Partial<Grupo> & { locationId?: string } | null>(null);
-  const [grupoPorBorrar, setGrupoPorBorrar] = useState<Grupo | null>(null);
-
-  // Asignación de deportistas. `null` = cerrado.
-  const [asignando, setAsignando] = useState<Grupo | null>(null);
+  // La hoja de deportistas, que se abre encima del modal de la clase.
+  const [eligiendo, setEligiendo] = useState(false);
   const [candidatos, setCandidatos] = useState<Candidato[]>([]);
   const [elegidos, setElegidos] = useState<Set<string>>(new Set());
   const [cargandoCand, setCargandoCand] = useState(false);
@@ -96,14 +93,12 @@ export default function HorarioClases({ sinEntrenamiento = [] }: { sinEntrenamie
   const cargar = useCallback(async () => {
     try {
       const token = await getToken();
-      const [resClases, resSedes, resGrupos] = await Promise.all([
+      const [resClases, resSedes] = await Promise.all([
         apiFetch<{ clases: Clase[] }>('/clases', { token }),
         apiFetch<{ locations: Sede[] }>('/locations', { token }),
-        apiFetch<{ grupos: Grupo[] }>('/grupos', { token }),
       ]);
       setClases(resClases.clases);
       setSedes(resSedes.locations);
-      setGrupos(resGrupos.grupos);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'No se pudo cargar el horario');
     } finally { setCargando(false); }
@@ -117,49 +112,70 @@ export default function HorarioClases({ sinEntrenamiento = [] }: { sinEntrenamie
    */
   function abrirNueva(dia = 1) {
     setError('');
-    // Con un solo grupo se propone ese: es lo que va a querer el 100 % de los
-    // clubes que apenas tienen uno, y ahorra un toque.
-    const unico = grupos.filter(g => g.activo).length === 1
-      ? grupos.filter(g => g.activo)[0]
-      : null;
     setEditando({
-      nombre: unico?.nombre ?? '',
+      nombre: '',
       diaSemana: dia,
       hora: '06:00',
       categoria: '',
-      locationId: unico?.location.id ?? sedes[0]?.id ?? '',
-      grupoId: unico?.id ?? null,
-      // Null y no el del grupo: guardar una copia haria que cambiarle el color
-      // al grupo dejara de arrastrar a sus clases, que es justo lo que se
-      // espera cuando se cambia el color de un grupo.
+      locationId: sedes[0]?.id ?? '',
       color: null,
     });
   }
 
   /**
-   * Al elegir grupo se arrastran su sede y su nombre.
-   *
-   * El nombre se copia y NO se ata: una clase puede llamarse «Técnica» dentro
-   * del grupo «Mañana». Se propone porque es lo que casi siempre se quiere, y
-   * queda editable porque a veces no.
+   * La clase con la que esta comparte lista: la del mismo nombre en la misma
+   * sede. Es la regla que usa el backend para resolver el grupo, y acá se
+   * repite para poder decir de antemano cuánta gente va a traer una clase nueva
+   * que se llama igual que una que ya existe.
    */
-  function elegirGrupo(g: Grupo | null) {
+  function grupoEnEdicion(): GrupoDeClase | null {
+    if (!editando) return null;
+    const nombre = editando.nombre?.trim() ?? '';
+    const gemela = clases.find(c =>
+      c.id !== editando.id &&
+      c.locationId === editando.locationId &&
+      c.nombre.trim().toLowerCase() === nombre.toLowerCase());
+    if (gemela?.grupo) return gemela.grupo;
+    // Sin gemela, una clase que se está editando conserva el suyo: renombrarla
+    // renombra el grupo y la lista no se pierde.
+    return clases.find(c => c.id === editando.id)?.grupo ?? null;
+  }
+
+  /** Cuántos deportistas va a traer la clase tal como está el modal ahora. */
+  function cuantos(): number {
+    if (editando?.memberIds) return editando.memberIds.length;
+    return grupoEnEdicion()?._count.miembros ?? 0;
+  }
+
+  // Los candidatos son los deportistas de la sede de la clase. No los de todo
+  // el club: ofrecer gente de otra sede invita a armar una planilla que nadie
+  // de esa sede va a poder firmar.
+  async function abrirDeportistas() {
     if (!editando) return;
-    setEditando({
-      ...editando,
-      grupoId: g?.id ?? null,
-      ...(g ? { locationId: g.location.id } : {}),
-      // Solo pisa el nombre si estaba vacio o si era el del grupo anterior:
-      // uno escrito a mano no se borra por cambiar de grupo.
-      ...(g && (!editando.nombre?.trim()
-                || grupos.some(x => x.nombre === editando.nombre))
-            ? { nombre: g.nombre } : {}),
-    });
+    setError(''); setEligiendo(true); setCargandoCand(true);
+    try {
+      const token = await getToken();
+      const res = await apiFetch<{ members: Candidato[] }>('/members', { token });
+      const deLaSede = res.members.filter(m =>
+        m.role === 'DEPORTISTA' && m.active !== false &&
+        m.locations.some(l => l.location.id === editando.locationId));
+      setCandidatos(deLaSede);
+      const grupoId = grupoEnEdicion()?.id;
+      setElegidos(new Set(
+        editando.memberIds
+        ?? (grupoId
+              ? deLaSede.filter(m => (m.grupos ?? []).some(x => x.grupoId === grupoId)).map(m => m.id)
+              : []),
+      ));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'No se pudieron cargar los deportistas');
+      setEligiendo(false);
+    } finally { setCargandoCand(false); }
   }
 
   async function guardar() {
     if (!editando || guardando) return;
-    const { id, nombre, diaSemana, hora, categoria, locationId, grupoId, color } = editando;
+    const { id, nombre, diaSemana, hora, categoria, locationId, color, memberIds } = editando;
     if (!nombre?.trim() || !locationId || diaSemana === undefined || !hora) return;
 
     setGuardando(true); setError('');
@@ -168,8 +184,10 @@ export default function HorarioClases({ sinEntrenamiento = [] }: { sinEntrenamie
       const cuerpo = JSON.stringify({
         nombre: nombre.trim(), diaSemana, hora,
         categoria: categoria?.trim() || null, locationId,
-        grupoId: grupoId ?? null,
         color: color ?? null,
+        // Solo si tocaron la lista. Mandarla siempre borraría la gente de una
+        // clase que se abrió únicamente para corregirle la hora.
+        ...(memberIds ? { memberIds } : {}),
       });
       if (id) await apiFetch(`/clases/${id}`, { token, method: 'PATCH', body: cuerpo });
       else    await apiFetch('/clases',       { token, method: 'POST',  body: cuerpo });
@@ -192,84 +210,6 @@ export default function HorarioClases({ sinEntrenamiento = [] }: { sinEntrenamie
     }
   }
 
-  function abrirGrupoNuevo() {
-    setError('');
-    // Se propone el que le tocaria por posicion, para que el boton no salga
-    // en gris y haya que abrirlo solo para ver de que color va a quedar.
-    setGrupoEdit({ nombre: '', locationId: sedes[0]?.id ?? '',
-                   color: colorDeGrupo('nuevo', [...idsGrupo, 'nuevo'], null) });
-  }
-
-  async function guardarGrupo() {
-    if (!grupoEdit || guardando) return;
-    const nombre = grupoEdit.nombre?.trim();
-    const locationId = grupoEdit.locationId;
-    if (!nombre || !locationId) return;
-
-    setGuardando(true); setError('');
-    try {
-      const token = await getToken();
-      const cuerpo = JSON.stringify({ nombre, locationId, color: grupoEdit.color ?? null });
-      if (grupoEdit.id) await apiFetch(`/grupos/${grupoEdit.id}`, { token, method: 'PATCH', body: cuerpo });
-      else              await apiFetch('/grupos',                 { token, method: 'POST',  body: cuerpo });
-      setGrupoEdit(null);
-      await cargar();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'No se pudo guardar el grupo');
-    } finally { setGuardando(false); }
-  }
-
-  // Los candidatos son los deportistas de la sede del grupo. No los de todo el
-  // club: un grupo vive en una sede, y ofrecer gente de otra invita a armar un
-  // grupo que ninguna clase va a poder usar.
-  async function abrirAsignar(g: Grupo) {
-    setError(''); setAsignando(g); setCargandoCand(true);
-    try {
-      const token = await getToken();
-      const res = await apiFetch<{ members: Candidato[] }>('/members', { token });
-      const deLaSede = res.members.filter(m =>
-        m.role === 'DEPORTISTA' && m.active !== false &&
-        m.locations.some(l => l.location.id === g.location.id));
-      setCandidatos(deLaSede);
-      setElegidos(new Set(deLaSede.filter(m =>
-        (m.grupos ?? []).some(x => x.grupoId === g.id)).map(m => m.id)));
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'No se pudieron cargar los deportistas');
-      setAsignando(null);
-    } finally { setCargandoCand(false); }
-  }
-
-  async function guardarAsignacion() {
-    if (!asignando || guardando) return;
-    setGuardando(true); setError('');
-    try {
-      const token = await getToken();
-      await apiFetch(`/grupos/${asignando.id}/miembros`, {
-        token, method: 'PUT',
-        body: JSON.stringify({ memberIds: [...elegidos] }),
-      });
-      setAsignando(null);
-      await cargar();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'No se pudo guardar la asignación');
-    } finally { setGuardando(false); }
-  }
-
-  async function borrarGrupo() {
-    if (!grupoPorBorrar) return;
-    try {
-      const token = await getToken();
-      await apiFetch(`/grupos/${grupoPorBorrar.id}`, { token, method: 'DELETE' });
-      setGrupoPorBorrar(null);
-      await cargar();
-    } catch (err) {
-      // El backend rechaza borrar un grupo con clases y explica por que. Ese
-      // mensaje se muestra tal cual: es mas util que uno generico.
-      setError(err instanceof Error ? err.message : 'No se pudo quitar el grupo');
-      setGrupoPorBorrar(null);
-    }
-  }
-
   // La semana completa, incluidos los dias vacios: la cuadricula los necesita
   // para que el «+» de cada dia tenga donde ir.
   const semana = DIAS_SEMANA
@@ -280,7 +220,15 @@ export default function HorarioClases({ sinEntrenamiento = [] }: { sinEntrenamie
                     .sort((a, b) => a.hora.localeCompare(b.hora)),
     }));
   const hayClases = clases.length > 0;
+  const grupos = gruposDeClases(clases);
   const idsGrupo = grupos.map(g => g.id);
+
+  const grupoActual = editando ? grupoEnEdicion() : null;
+  // Cuántas OTRAS clases comparten la lista. Si hay, hay que decirlo: tocar la
+  // lista acá también las cambia, y eso no se puede descubrir después.
+  const clasesQueComparten = grupoActual
+    ? grupoActual._count.clases - (editando?.id && clases.find(c => c.id === editando.id)?.grupo?.id === grupoActual.id ? 1 : 0)
+    : 0;
 
   return (
     <div className="space-y-3 border-t border-border pt-5">
@@ -297,69 +245,6 @@ export default function HorarioClases({ sinEntrenamiento = [] }: { sinEntrenamie
           style={{ background: 'rgba(239,71,111,0.08)', border: '1px solid rgba(239,71,111,0.20)' }}>
           <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5" style={{ color: '#EF476F' }} />
           <p className="text-[11.5px]" style={{ color: '#B02A47' }}>{error}</p>
-        </div>
-      )}
-
-      {sedes.length > 0 && !cargando && (
-        <div className="space-y-1.5">
-          <div className="flex items-center gap-2.5">
-            <p className="text-[10.5px] font-bold text-foreground">Grupos</p>
-            <div className="flex-1 h-px" style={{ background: 'rgba(120,80,200,0.14)' }} />
-          </div>
-          {grupos.length === 0 ? (
-            <p className="text-[11px] text-muted-foreground m-0">
-              Sin grupos, la lista de una clase sale de la sede y la categoría, y dos clases
-              iguales traen la misma gente.
-            </p>
-          ) : grupos.map(g => (
-            <div key={g.id}
-              className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-white"
-              style={{ border: '1px solid rgba(120,80,200,0.14)' }}>
-              <div className="flex-1 min-w-0">
-                <p className="text-[12.5px] font-semibold text-foreground truncate">{g.nombre}</p>
-                <div className="flex items-center gap-1.5 flex-wrap mt-0.5">
-                  <span className="inline-flex items-center gap-1 text-[9px] font-bold px-2 py-0.5 rounded-full"
-                    style={{ background: 'rgba(67,97,238,0.10)', color: '#2F4BC7' }}>
-                    <IconUbicacion className="w-2.5 h-2.5" /> {g.location.name}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => abrirAsignar(g)}
-                    className="text-[9px] font-bold px-2 py-0.5 rounded-full transition-opacity hover:opacity-75"
-                    style={{ background: 'rgba(56,29,160,0.10)', color: '#6D28D9' }}>
-                    {g._count.miembros} {g._count.miembros === 1 ? 'deportista' : 'deportistas'} ·
-                    {' '}{g._count.miembros === 0 ? 'asignar' : 'cambiar'}
-                  </button>
-                  <span className="text-[9px] font-bold px-2 py-0.5 rounded-full"
-                    style={{ background: 'rgba(6,214,160,0.12)', color: '#0A7A5C' }}>
-                    {g.clases.length} {g.clases.length === 1 ? 'clase' : 'clases'}
-                  </span>
-                </div>
-              </div>
-              <button onClick={() => { setError(''); setGrupoEdit({ ...g, locationId: g.location.id }); }}
-                aria-label="Editar grupo"
-                className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-colors hover:bg-secondary"
-                style={{ color: '#8E87A8' }}>
-                <IconEditar className="w-3.5 h-3.5" />
-              </button>
-              <button onClick={() => setGrupoPorBorrar(g)} aria-label="Quitar grupo"
-                className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-colors hover:bg-red-50"
-                style={{ color: '#EF476F' }}>
-                <IconEliminar className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          ))}
-          <button
-            onClick={abrirGrupoNuevo}
-            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-[11.5px] font-bold transition-colors"
-            style={{
-              color: '#381DA0',
-              background: 'rgba(56,29,160,0.06)',
-              border: '1.5px dashed rgba(56,29,160,0.30)',
-            }}
-          >
-            <IconMas className="w-3.5 h-3.5" /> Agregar grupo
-          </button>
         </div>
       )}
 
@@ -394,9 +279,9 @@ export default function HorarioClases({ sinEntrenamiento = [] }: { sinEntrenamie
             </div>
           )}
 
-          {/* La semana en siete columnas. Se desplaza a lo ancho en vez de
-              apilarse: una semana partida en siete filas deja de ser una semana,
-              que es justo lo que esta vista existe para mostrar. */}
+          {/* La semana en columnas. Se desplaza a lo ancho en vez de apilarse:
+              una semana partida en filas deja de ser una semana, que es justo
+              lo que esta vista existe para mostrar. */}
           <div className="overflow-x-auto pb-1">
             <div
               className="grid gap-1.5"
@@ -437,7 +322,7 @@ export default function HorarioClases({ sinEntrenamiento = [] }: { sinEntrenamie
                         onClick={() => { setError(''); setEditando(c); }}
                         aria-label={'Editar ' + c.nombre + ', ' + d.nombre + ' ' + horaLegible(c.hora)}
                         className="block w-full text-left pl-2.5 py-0.5 transition-opacity hover:opacity-70"
-                        style={{ borderLeft: '2.5px solid ' + color }}
+                        style={{ border: 0, borderLeft: '2.5px solid ' + color }}
                       >
                         <span className="block text-[10.5px] font-bold" style={{ color }}>
                           {horaLegible(c.hora)}
@@ -451,9 +336,10 @@ export default function HorarioClases({ sinEntrenamiento = [] }: { sinEntrenamie
                       </button>
                     );
                   })}
-                  {/* El «+» solo al pasar por encima. Siete botones fijos compiten
-                      con las clases, que son lo que hay que ver. En pantalla tactil
-                      no existe el «encima», asi que ahi se queda visible. */}
+                  {/* El «+» solo al pasar por encima. Un boton fijo por dia
+                      compite con las clases, que son lo que hay que ver. En
+                      pantalla tactil no existe el «encima», asi que ahi se
+                      queda visible. */}
                   <button
                     type="button"
                     onClick={() => abrirNueva(d.valor)}
@@ -468,8 +354,8 @@ export default function HorarioClases({ sinEntrenamiento = [] }: { sinEntrenamie
             </div>
           </div>
 
-          {/* Que color es cada grupo. Sin esto la cuadricula son rayas de colores
-              sin significado: el nombre del grupo no siempre cabe en el bloque. */}
+          {/* Que color es cada clase. Sin esto la cuadricula son rayas de
+              colores sin significado: el nombre no siempre cabe en el bloque. */}
           {hayClases && grupos.length > 0 && (
             <div
               className="flex flex-wrap gap-x-3.5 gap-y-1.5 pt-2.5"
@@ -521,53 +407,6 @@ export default function HorarioClases({ sinEntrenamiento = [] }: { sinEntrenamie
               </div>
 
               <div className="px-5 py-4 overflow-y-auto flex flex-col gap-3">
-                {/* El grupo va primero porque de el salen la sede y el nombre
-                    propuesto: preguntarlo despues obliga a devolverse. */}
-                {grupos.filter(g => g.activo).length > 0 && (
-                  <div className="space-y-1.5">
-                    <Label className="text-[12px]">¿De qué grupo?</Label>
-                    <div className="flex flex-col gap-1.5">
-                      {[null, ...grupos.filter(g => g.activo)].map(g => {
-                        const puesto = (editando.grupoId ?? null) === (g?.id ?? null);
-                        // El punto del selector ES el color del grupo. Un cuadro
-                        // de color aparte repetia la misma informacion dos veces
-                        // en la misma fila, y con dos circulos seguidos —el radio
-                        // y el color— la fila se leia como si tuviera dos casillas.
-                        const tinta = g ? colorDeGrupo(g.id, idsGrupo, g.color) : '#381DA0';
-                        return (
-                          <button
-                            key={g?.id ?? 'ninguno'}
-                            type="button"
-                            onClick={() => elegirGrupo(g)}
-                            className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-left transition-colors"
-                            style={puesto
-                              ? { background: `${tinta}0F`, border: `1.5px solid ${tinta}` }
-                              : { background: '#fff', border: '1.5px solid rgba(26,16,40,0.08)' }}
-                          >
-                            {/* Sin elegir, el aro ya lleva el color: asi se ve de
-                                que color es cada grupo sin tener que tocarlos. */}
-                            <span className="w-4 h-4 rounded-full shrink-0 flex items-center justify-center"
-                              style={{ border: `1.5px solid ${g ? tinta : (puesto ? tinta : 'rgba(26,16,40,0.20)')}` }}>
-                              {puesto && <span className="w-2 h-2 rounded-full" style={{ background: tinta }} />}
-                            </span>
-                            <span className="text-[12.5px] font-medium text-foreground flex-1 min-w-0 truncate">
-                              {g ? g.nombre : 'Sin grupo'}
-                            </span>
-                            {g && (
-                              <span className="text-[10.5px] shrink-0" style={{ color: '#8E87A8' }}>
-                                {g.location.name}
-                              </span>
-                            )}
-                          </button>
-                        );
-                      })}
-                    </div>
-                    <p className="text-[11px] text-muted-foreground">
-                      Sin grupo, la lista sale de la sede y la categoría, y dos clases iguales traen la misma gente.
-                    </p>
-                  </div>
-                )}
-
                 <div className="space-y-1.5">
                   <Label className="text-[12px]">Nombre de la clase</Label>
                   <div className="flex items-start gap-2">
@@ -575,21 +414,18 @@ export default function HorarioClases({ sinEntrenamiento = [] }: { sinEntrenamie
                       className="flex-1"
                       value={editando.nombre ?? ''}
                       onChange={e => setEditando({ ...editando, nombre: e.target.value })}
-                      placeholder="Formativa, Técnica, Iniciación…"
+                      placeholder="Mañana, Tarde, Formativa…"
                       autoFocus
                     />
                     <SelectorColor
                       etiqueta="Color de la clase"
                       value={colorDeClase(
-                        { color: editando.color ?? null, grupoId: editando.grupoId ?? null },
+                        { color: editando.color ?? null, grupoId: grupoActual?.id ?? null },
                         grupos,
                       )}
                       onChange={color => setEditando({ ...editando, color })}
                     />
                   </div>
-                  <p className="text-[11px] text-muted-foreground">
-                    Vienen del grupo, pero los puedes cambiar los dos: el nombre y el color.
-                  </p>
                 </div>
 
                 <div className="space-y-1.5">
@@ -625,25 +461,7 @@ export default function HorarioClases({ sinEntrenamiento = [] }: { sinEntrenamie
                   />
                 </div>
 
-                {/* La sede sale del grupo cuando hay grupo: un grupo es un
-                    nombre Y una sede, asi que dejar el selector abierto permite
-                    decir una sede y un grupo de otra, y la clase quedaria
-                    contando gente que no entrena ahi. Se muestra, no se elige. */}
-                {editando.grupoId ? (
-                  <div className="space-y-1.5">
-                    <Label className="text-[12px]">Sede</Label>
-                    <div className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl"
-                      style={{ background: 'rgba(56,29,160,0.04)', border: '1.5px solid rgba(56,29,160,0.14)' }}>
-                      <IconUbicacion className="w-3.5 h-3.5 shrink-0" style={{ color: '#381DA0' }} />
-                      <span className="text-[12.5px] font-medium text-foreground flex-1 min-w-0 truncate">
-                        {grupos.find(g => g.id === editando.grupoId)?.location.name ?? '—'}
-                      </span>
-                      <span className="text-[10.5px] shrink-0" style={{ color: '#8E87A8' }}>
-                        la del grupo
-                      </span>
-                    </div>
-                  </div>
-                ) : sedes.length > 1 ? (
+                {sedes.length > 1 && (
                   <div className="space-y-1.5">
                     <Label className="text-[12px]">Sede</Label>
                     <div className="flex flex-col gap-1.5">
@@ -651,7 +469,10 @@ export default function HorarioClases({ sinEntrenamiento = [] }: { sinEntrenamie
                         <button
                           key={s.id}
                           type="button"
-                          onClick={() => setEditando({ ...editando, locationId: s.id })}
+                          // Cambiar de sede vacia la lista: los deportistas que
+                          // se habian marcado son de la sede anterior y no
+                          // entrenan en la nueva.
+                          onClick={() => setEditando({ ...editando, locationId: s.id, memberIds: undefined })}
                           className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-left transition-colors"
                           style={editando.locationId === s.id
                             ? { background: 'rgba(56,29,160,0.06)', border: '1.5px solid rgba(56,29,160,0.35)' }
@@ -668,7 +489,37 @@ export default function HorarioClases({ sinEntrenamiento = [] }: { sinEntrenamie
                       ))}
                     </div>
                   </div>
-                ) : null}
+                )}
+
+                {/* ── Quiénes entran ──────────────────────────────────────────
+                    Es lo único que la cuadricula no puede decir: la semana
+                    muestra CUANDO es cada clase, no QUIENES van. Y no se puede
+                    deducir de la categoria, porque un niño de ocho años entrena
+                    en la tarde si a esa hora lo pueden llevar. */}
+                <div className="space-y-1.5">
+                  <Label className="text-[12px]">Deportistas</Label>
+                  <button
+                    type="button"
+                    onClick={abrirDeportistas}
+                    className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-left transition-colors hover:bg-secondary"
+                    style={{ background: '#fff', border: '1.5px solid rgba(26,16,40,0.08)' }}
+                  >
+                    <IconUsers className="w-4 h-4 shrink-0" style={{ color: '#381DA0' }} />
+                    <span className="text-[12.5px] font-medium text-foreground flex-1 min-w-0">
+                      {cuantos() === 0
+                        ? 'Nadie todavía'
+                        : `${cuantos()} ${cuantos() === 1 ? 'deportista' : 'deportistas'}`}
+                    </span>
+                    <span className="text-[11px] font-semibold shrink-0" style={{ color: '#381DA0' }}>
+                      {cuantos() === 0 ? 'Elegir' : 'Cambiar'}
+                    </span>
+                  </button>
+                  <p className="text-[11px] text-muted-foreground">
+                    {clasesQueComparten > 0
+                      ? `Los mismos entran en las otras ${clasesQueComparten} ${clasesQueComparten === 1 ? 'clase' : 'clases'} que se llaman así en esta sede.`
+                      : 'Son los que salen en la planilla de asistencia de esta clase.'}
+                  </p>
+                </div>
 
                 <div className="space-y-1.5">
                   <Label className="text-[12px]">Categoría (opcional)</Label>
@@ -715,7 +566,8 @@ export default function HorarioClases({ sinEntrenamiento = [] }: { sinEntrenamie
                     })}
                   </div>
                   <p className="text-[10px] text-muted-foreground">
-                    Con una categoría, la planilla solo trae a los deportistas de esa categoría.
+                    Recorta la lista de arriba a los de esa categoría. Sirve cuando la clase es de
+                    una sola edad.
                   </p>
                 </div>
               </div>
@@ -746,13 +598,13 @@ export default function HorarioClases({ sinEntrenamiento = [] }: { sinEntrenamie
                       <span className="hidden sm:inline">Quitar</span>
                     </button>
                   )}
-                <Button
-                  onClick={guardar}
-                  disabled={guardando || !editando.nombre?.trim() || !editando.locationId}
-                  className="flex-1 h-12 text-[14px]"
-                >
-                  {guardando ? 'Guardando…' : editando.id ? 'Guardar cambios' : 'Agregar clase'}
-                </Button>
+                  <Button
+                    onClick={guardar}
+                    disabled={guardando || !editando.nombre?.trim() || !editando.locationId}
+                    className="flex-1 h-12 text-[14px]"
+                  >
+                    {guardando ? 'Guardando…' : editando.id ? 'Guardar cambios' : 'Agregar clase'}
+                  </Button>
                 </div>
               </div>
             </motion.div>
@@ -762,154 +614,18 @@ export default function HorarioClases({ sinEntrenamiento = [] }: { sinEntrenamie
       document.body
       )}
 
-      {/* ── Confirmar quitar ───────────────────────────────────────────────── */}
+      {/* ── Quiénes entran en la clase ───────────────────────────────────────
+          Encima del modal de la clase, no en vez de el: se elige y se vuelve.
+          Nada se guarda aca — la lista viaja con la clase cuando se guarda. */}
       {typeof document !== 'undefined' && createPortal(
       <AnimatePresence>
-        {porBorrar && (
+        {eligiendo && (
           <motion.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             transition={{ duration: 0.16 }}
-            onClick={() => setPorBorrar(null)}
-            className="fixed inset-0 flex items-center justify-center p-6"
-            style={{ background: 'rgba(20,12,36,0.55)', zIndex: 71 }}
-          >
-            <motion.div
-              initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.96 }}
-              onClick={e => e.stopPropagation()}
-              className="bg-white rounded-2xl w-full max-w-xs p-5"
-            >
-              <p className="text-[14.5px] font-semibold text-foreground mb-1.5">
-                ¿Quitar «{porBorrar.nombre}» del horario?
-              </p>
-              <p className="text-[12px] text-muted-foreground leading-relaxed mb-4">
-                Deja de aparecer de hoy en adelante. La asistencia que ya se tomó en esta clase
-                no se borra y sigue contando en los reportes.
-              </p>
-              <div className="flex gap-2">
-                <button onClick={borrar}
-                  className="flex-1 py-2.5 rounded-xl text-[12.5px] font-semibold text-white"
-                  style={{ background: '#EF476F' }}>
-                  Quitar
-                </button>
-                <button onClick={() => setPorBorrar(null)}
-                  className="flex-1 py-2.5 rounded-xl text-[12.5px] font-semibold"
-                  style={{ background: 'rgba(26,16,40,0.05)', color: '#5B5470' }}>
-                  Cancelar
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>,
-      document.body
-      )}
-
-      {/* ── Alta y edición de grupo ──────────────────────────────────────────
-          En portal por la misma razón que el de clase: dentro de la página
-          queda atrapado en el contexto de apilamiento de <main>. */}
-      {typeof document !== 'undefined' && createPortal(
-      <AnimatePresence>
-        {grupoEdit && (
-          <motion.div
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            transition={{ duration: 0.16 }}
-            onClick={() => setGrupoEdit(null)}
+            onClick={() => setEligiendo(false)}
             className="fixed inset-0 flex items-end sm:items-center justify-center p-0 sm:p-6"
-            style={{ background: 'rgba(20,12,36,0.55)', zIndex: 70 }}
-          >
-            <motion.div
-              initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 40 }}
-              transition={{ duration: 0.22, ease: [0.32, 0.72, 0, 1] }}
-              onClick={e => e.stopPropagation()}
-              className="bg-white w-full sm:max-w-sm rounded-t-2xl sm:rounded-2xl flex flex-col"
-              style={{ maxHeight: '90dvh' }}
-            >
-              <div className="flex items-center justify-between px-5 py-4 border-b border-border/60">
-                <p className="text-[15px] font-semibold text-foreground">
-                  {grupoEdit.id ? 'Editar grupo' : 'Nuevo grupo'}
-                </p>
-                <button onClick={() => setGrupoEdit(null)} aria-label="Cerrar"
-                  className="w-8 h-8 rounded-full flex items-center justify-center text-muted-foreground hover:bg-secondary transition-colors">
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-
-              <div className="px-5 py-4 overflow-y-auto flex flex-col gap-3">
-                <div className="space-y-1.5">
-                  <Label className="text-[12px]">Nombre</Label>
-                  <div className="flex items-start gap-2">
-                    <Input
-                      className="flex-1"
-                      value={grupoEdit.nombre ?? ''}
-                      onChange={e => setGrupoEdit({ ...grupoEdit, nombre: e.target.value })}
-                      placeholder="Mañana, Tarde, Competitivo…"
-                      autoFocus
-                    />
-                    <SelectorColor
-                      etiqueta="Color del grupo"
-                      value={grupoEdit.color
-                        ?? colorDeGrupo(grupoEdit.id ?? '', idsGrupo, null)}
-                      onChange={color => setGrupoEdit({ ...grupoEdit, color })}
-                    />
-                  </div>
-                  <p className="text-[11px] text-muted-foreground">
-                    Se usa en el horario, en el calendario y en la leyenda.
-                  </p>
-                </div>
-
-                <div className="space-y-1.5">
-                  <Label className="text-[12px]">Sede</Label>
-                  <div className="flex flex-col gap-1.5">
-                    {sedes.map(s => {
-                      const puesta = grupoEdit.locationId === s.id;
-                      return (
-                        <button
-                          key={s.id}
-                          type="button"
-                          onClick={() => setGrupoEdit({ ...grupoEdit, locationId: s.id })}
-                          className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-left transition-colors"
-                          style={puesta
-                            ? { background: 'rgba(56,29,160,0.06)', border: '1.5px solid rgba(56,29,160,0.35)' }
-                            : { background: '#fff', border: '1.5px solid rgba(26,16,40,0.08)' }}
-                        >
-                          <span className="w-4 h-4 rounded-full shrink-0 flex items-center justify-center"
-                            style={{ border: `1.5px solid ${puesta ? '#381DA0' : 'rgba(26,16,40,0.20)'}` }}>
-                            {puesta && <span className="w-2 h-2 rounded-full" style={{ background: '#381DA0' }} />}
-                          </span>
-                          <span className="text-[12.5px] font-medium text-foreground">{s.name}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
-
-              <div className="px-5 py-4 border-t border-border/60">
-                <Button
-                  onClick={guardarGrupo}
-                  disabled={guardando || !grupoEdit.nombre?.trim() || !grupoEdit.locationId}
-                  className="w-full"
-                >
-                  {guardando ? 'Guardando…' : grupoEdit.id ? 'Guardar cambios' : 'Agregar grupo'}
-                </Button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>,
-      document.body
-      )}
-
-      {/* ── Asignar deportistas al grupo ────────────────────────────────────── */}
-      {typeof document !== 'undefined' && createPortal(
-      <AnimatePresence>
-        {asignando && (
-          <motion.div
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            transition={{ duration: 0.16 }}
-            onClick={() => setAsignando(null)}
-            className="fixed inset-0 flex items-end sm:items-center justify-center p-0 sm:p-6"
-            style={{ background: 'rgba(20,12,36,0.55)', zIndex: 70 }}
+            style={{ background: 'rgba(20,12,36,0.55)', zIndex: 72 }}
           >
             <motion.div
               initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 40 }}
@@ -920,12 +636,14 @@ export default function HorarioClases({ sinEntrenamiento = [] }: { sinEntrenamie
             >
               <div className="flex items-center justify-between px-5 py-4 border-b border-border/60">
                 <div className="min-w-0">
-                  <p className="text-[15px] font-semibold text-foreground truncate">{asignando.nombre}</p>
+                  <p className="text-[15px] font-semibold text-foreground truncate">
+                    ¿Quiénes entran?
+                  </p>
                   <p className="text-[11px] text-muted-foreground m-0 truncate">
-                    {asignando.location.name} · {elegidos.size} elegidos
+                    {sedes.find(s => s.id === editando?.locationId)?.name ?? ''} · {elegidos.size} elegidos
                   </p>
                 </div>
-                <button onClick={() => setAsignando(null)} aria-label="Cerrar"
+                <button onClick={() => setEligiendo(false)} aria-label="Cerrar"
                   className="w-8 h-8 rounded-full flex items-center justify-center text-muted-foreground hover:bg-secondary transition-colors shrink-0">
                   <X className="w-4 h-4" />
                 </button>
@@ -973,9 +691,17 @@ export default function HorarioClases({ sinEntrenamiento = [] }: { sinEntrenamie
                 })}
               </div>
 
-              <div className="px-5 py-4 border-t border-border/60">
-                <Button onClick={guardarAsignacion} disabled={guardando || cargandoCand} className="w-full">
-                  {guardando ? 'Guardando…' : `Guardar ${elegidos.size}`}
+              <div className="px-5 pt-4 border-t border-border/60"
+                style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 1.25rem)' }}>
+                <Button
+                  onClick={() => {
+                    setEditando(e => (e ? { ...e, memberIds: [...elegidos] } : e));
+                    setEligiendo(false);
+                  }}
+                  disabled={cargandoCand}
+                  className="w-full h-12 text-[14px]"
+                >
+                  Listo, {elegidos.size}
                 </Button>
               </div>
             </motion.div>
@@ -985,36 +711,36 @@ export default function HorarioClases({ sinEntrenamiento = [] }: { sinEntrenamie
       document.body
       )}
 
-      {/* ── Confirmar quitar grupo ───────────────────────────────────────────── */}
+      {/* ── Confirmar quitar ───────────────────────────────────────────────── */}
       {typeof document !== 'undefined' && createPortal(
       <AnimatePresence>
-        {grupoPorBorrar && (
+        {porBorrar && (
           <motion.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             transition={{ duration: 0.16 }}
-            onClick={() => setGrupoPorBorrar(null)}
-            className="fixed inset-0 flex items-end sm:items-center justify-center p-0 sm:p-6"
-            style={{ background: 'rgba(20,12,36,0.55)', zIndex: 70 }}
+            onClick={() => setPorBorrar(null)}
+            className="fixed inset-0 flex items-center justify-center p-6"
+            style={{ background: 'rgba(20,12,36,0.55)', zIndex: 71 }}
           >
             <motion.div
-              initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 40 }}
-              transition={{ duration: 0.22, ease: [0.32, 0.72, 0, 1] }}
+              initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.96 }}
               onClick={e => e.stopPropagation()}
-              className="bg-white w-full sm:max-w-xs rounded-t-2xl sm:rounded-2xl p-5"
+              className="bg-white rounded-2xl w-full max-w-xs p-5"
             >
-              <p className="text-[14px] font-semibold text-foreground mb-1">
-                ¿Quitar «{grupoPorBorrar.nombre}»?
+              <p className="text-[14.5px] font-semibold text-foreground mb-1.5">
+                ¿Quitar «{porBorrar.nombre}» del horario?
               </p>
-              <p className="text-[12px] text-muted-foreground mb-4">
-                Sus {grupoPorBorrar._count.miembros} deportistas dejan de estar agrupados. No se borra nadie.
+              <p className="text-[12px] text-muted-foreground leading-relaxed mb-4">
+                Deja de aparecer de hoy en adelante. La asistencia que ya se tomó en esta clase
+                no se borra y sigue contando en los reportes.
               </p>
               <div className="flex gap-2">
-                <button onClick={borrarGrupo}
+                <button onClick={borrar}
                   className="flex-1 py-2.5 rounded-xl text-[12.5px] font-semibold text-white"
                   style={{ background: '#EF476F' }}>
                   Quitar
                 </button>
-                <button onClick={() => setGrupoPorBorrar(null)}
+                <button onClick={() => setPorBorrar(null)}
                   className="flex-1 py-2.5 rounded-xl text-[12.5px] font-semibold"
                   style={{ background: 'rgba(26,16,40,0.05)', color: '#5B5470' }}>
                   Cancelar

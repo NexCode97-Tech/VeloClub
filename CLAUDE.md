@@ -129,10 +129,13 @@ GET/POST   /locations
 GET        /me                       # bootstrap de sesión (incluye el selector de deporte)
 GET/PATCH  /clubs/:id               # configuración del club
 
-GET/POST   /grupos                     # los grupos de la carpeta
-PATCH      /grupos/:id
-DELETE     /grupos/:id                 # solo si no tiene clases colgadas
-PUT        /grupos/:id/miembros        # reemplaza la lista completa del grupo
+GET/POST   /clases                    # el horario. `memberIds` arma la lista
+PATCH      /clases/:id                # el grupo se recalcula del nombre y la sede
+DELETE     /clases/:id                # desactiva, no borra
+
+GET        /grupos                    # solo lectura: inscripción y filtros de Miembros
+POST       /grupos/completo           # el modal de bienvenida, en una transacción
+PUT        /grupos/:id/miembros       # reemplaza la lista completa
 
 GET/POST   /deportes                 # las carpetas del club
 PATCH      /deportes/:id             # renombrar, activar, desactivar
@@ -149,13 +152,25 @@ DELETE     /deportes/:id             # solo si está vacía
   cambia de deporte se decide por el rol.
 - `Member` = deportista. Puede o no tener `clerkId` (si fue invitado). Tiene su propio `role = STUDENT`.
 - `Payment` = mensualidad con `month` + `year` + `memberId`. Genera `CashEntry` automáticamente al pagarse.
-- `Grupo` = **con quién entrena** un deportista. Es un nombre y una sede; el día
-  y la hora viven en sus `ClaseHorario`. La planilla de una clase con grupo son
-  sus miembros; **sin grupo cae a la regla vieja**, sede cruzada con categoría.
-  Esa decisión vive en un solo sitio: `api/src/lib/planilla.ts`. La regla en una
-  línea: **la categoría describe al deportista, el grupo dice con quién
-  entrena**. Antes la categoría hacía las dos cosas, y por eso dos clases de la
-  misma sede y categoría a horas distintas devolvían la misma lista.
+- `Grupo` = **con quién entrena** un deportista, y **no es una pantalla**. Se
+  deduce del nombre y la sede de la clase (`api/src/lib/grupo-de-clase.ts`), que
+  es justo la llave de la tabla: `@@unique([locationId, nombre])`. Dos clases
+  que se llaman igual en la misma sede son la misma gente a dos horas distintas.
+  Nadie lo crea, lo elige ni lo administra: quien arma el horario piensa en
+  clases. La planilla de una clase con grupo son sus miembros; **sin grupo cae a
+  la regla vieja**, sede cruzada con categoría, y esa decisión vive en un solo
+  sitio: `api/src/lib/planilla.ts`. La regla en una línea: **la categoría
+  describe al deportista, el grupo dice con quién entrena**. Antes la categoría
+  hacía las dos cosas, y por eso dos clases de la misma sede y categoría a horas
+  distintas devolvían la misma lista.
+
+  El caso que hay que cuidar es **renombrar**. Si la clase es la única que usa su
+  grupo y el nombre nuevo está libre, se renombra el grupo y la lista se
+  conserva; crear uno nuevo ahí dejaría la clase con la planilla vacía por
+  haberle cambiado una letra al nombre. Hacia afuera la palabra «grupo» no
+  existe: en la inscripción, en el filtro de Miembros y en la plantilla de Excel
+  la columna se llama **Clase** (con «Grupo» aceptado al leer, porque los clubes
+  ya descargaron plantillas viejas).
 - `Attendance` tiene constraint `@@unique([memberId, date])` — un registro por miembro por día.
 - `CalendarEvent` soporta recurrencia: `NONE | DAILY | WEEKLY | CUSTOM` (con `weekDays: Int[]`).
 - `Competition → CompetitionEvent → EventResult` (resultados de competencias).

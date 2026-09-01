@@ -404,8 +404,8 @@ export default function MiembrosPage() {
           if (!found) { failed.push(`${row.fullName}: la sede "${locationName}" no existe`); continue; }
           locationIds = [found.id];
         }
-        // A diferencia de la sede, un grupo que no coincide NO descarta la
-        // fila: el deportista entra sin grupo y se avisa al final. Perder a
+        // A diferencia de la sede, una clase que no coincide NO descarta la
+        // fila: el deportista entra sin clase y se avisa al final. Perder a
         // alguien por un nombre mal escrito ya paso una vez con las sedes.
         let grupoIds: string[] | undefined;
         if (grupoName) {
@@ -413,7 +413,7 @@ export default function MiembrosPage() {
             x.nombre.toLowerCase().trim() === grupoName.toLowerCase().trim()
             && (!locationIds || x.location.id === locationIds[0]));
           if (g) grupoIds = [g.id];
-          else avisosGrupo.push(`${row.fullName}: el grupo "${grupoName}" no existe en esa sede. Entró sin grupo.`);
+          else avisosGrupo.push(`${row.fullName}: la clase "${grupoName}" no existe en esa sede. Entró sin clase.`);
         }
         // Buscar si el miembro ya existe por docNumber o email para evitar duplicados
         const existing = members.find(m =>
@@ -428,7 +428,7 @@ export default function MiembrosPage() {
       } catch (e) { failed.push(`${row.fullName}: ${e instanceof Error ? e.message : 'Error'}`); }
     }
     setImporting(false);
-    // Los grupos que no coincidieron son avisos, no errores: la gente si entro.
+    // Las clases que no coincidieron son avisos, no errores: la gente si entro.
     const todosLosAvisos = [...warnings, ...avisosGrupo];
     if (avisosGrupo.length > 0) setImportWarnings(todosLosAvisos);
     // Con avisos pendientes el modal se queda abierto, para que alcancen a leerse
@@ -537,7 +537,7 @@ export default function MiembrosPage() {
       const paraGrupo = salvo(porBusqueda, porRol, porCat, porSede, porEstado);
       grupos.push({
         id: 'grupo',
-        titulo: 'Grupo',
+        titulo: 'Clase',
         valor: grupoFilter,
         neutro: 'ALL',
         tono: 'violeta',

@@ -5,10 +5,11 @@
  * Ajustes, el calendario y el widget de Inicio— y un grupo que sale rojo en una
  * y verde en otra obliga a leer el nombre en cada una para saber cuál es.
  *
- * El color NO se guarda en la base. Sale de la posición del grupo en la lista
- * ordenada por nombre, que es la misma en todas partes porque `GET /grupos` la
- * devuelve así. Guardarlo obligaría a que alguien lo escogiera al crear el
- * grupo, y esa es una decisión que a un club no le aporta nada.
+ * Manda el color guardado. Cuando no hay ninguno —que es el caso de todo lo que
+ * existía antes de que se pudiera escoger— sale de la posición del grupo en la
+ * lista ordenada por nombre. Ese orden tiene que ser el mismo en todas partes o
+ * el respaldo deja de coincidir entre pantallas, y para eso está
+ * `gruposDeClases`: nadie ordena la lista a mano.
  */
 
 /**
@@ -74,6 +75,25 @@ export function colorDeClase(
   if (!clase.grupoId) return '#8E87A8';
   const g = grupos.find(x => x.id === clase.grupoId);
   return colorDeGrupo(clase.grupoId, grupos.map(x => x.id), g?.color);
+}
+
+/**
+ * Los grupos que salen de un horario, sin nombre repetido y ordenados como los
+ * ordena la API.
+ *
+ * Existe porque el color de respaldo depende de la POSICIÓN en la lista, y cada
+ * pantalla armaba la suya: el horario la pedía a `GET /grupos` y el calendario
+ * la deducía de las clases una por una, con lo que dos grupos sin color
+ * escogido caían los dos en el primero de la paleta y salían iguales. Ahora las
+ * dos pantallas arman la lista acá, con el mismo criterio que la API: por
+ * nombre.
+ */
+export function gruposDeClases<G extends { id: string; nombre: string; color?: string | null }>(
+  clases: { grupo?: G | null }[],
+): G[] {
+  const vistos = new Map<string, G>();
+  for (const c of clases) if (c.grupo && !vistos.has(c.grupo.id)) vistos.set(c.grupo.id, c.grupo);
+  return [...vistos.values()].sort((a, b) => a.nombre.localeCompare(b.nombre));
 }
 
 /** El mismo color al 10 %, para fondos suaves y pastillas. */

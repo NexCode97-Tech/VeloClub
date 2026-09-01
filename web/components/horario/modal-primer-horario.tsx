@@ -24,13 +24,13 @@ import { IconCheck, IconMas, IconUbicacion } from '@/components/ui/custom-icons'
  * Tres decisiones lo sostienen, y las tres son para que se conteste en vez de
  * cerrarse:
  *
- * - **El grupo y sus clases en una sola pantalla.** Marcar lunes, miércoles y
+ * - **La clase y sus días en una sola pantalla.** Marcar lunes, miércoles y
  *   viernes crea las tres clases de un golpe. Pedirlas una por una es donde la
  *   gente abandona.
  * - **«Ahora no» siempre visible.** Nunca bloquea. Quien lo aplaza no lo vuelve
  *   a ver en tres días, y a la tercera vez se deja de insistir.
- * - **Pide UN grupo, no el horario entero.** Hay clubes con ocho sedes:
- *   pedirles ocho grupos acá es pedirles que lo cierren. Con el primero hecho
+ * - **Pide UNA clase, no el horario entero.** Hay clubes con ocho sedes:
+ *   pedirles ocho clases acá es pedirles que lo cierren. Con la primera hecha
  *   ya entendieron, y siguen en Ajustes a su ritmo.
  *
  * Quién lo ve lo decide el backend (`api/src/lib/primer-horario.ts`) y llega en
@@ -114,7 +114,7 @@ export default function ModalPrimerHorario({ onCerrar }: { onCerrar: () => void 
       setNombre(''); setDias([]); setHora('06:00');
       setFase('hecho');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'No se pudo crear el grupo');
+      setError(err instanceof Error ? err.message : 'No se pudo crear la clase');
     } finally { setGuardando(false); }
   }
 
@@ -145,13 +145,13 @@ export default function ModalPrimerHorario({ onCerrar }: { onCerrar: () => void 
             <div className="min-w-0">
               <p className="text-[15px] font-semibold text-foreground m-0">
                 {fase === 'invitacion' ? 'Tu club no tiene horario'
-                  : fase === 'armar'   ? 'Tu primer grupo'
+                  : fase === 'armar'   ? 'Tu primera clase'
                   : 'Tu horario'}
               </p>
               <p className="text-[11.5px] text-muted-foreground m-0 mt-0.5 truncate">
                 {fase === 'invitacion' ? 'Se arma en menos de un minuto'
                   : fase === 'armar'   ? (sede?.name ?? 'Elige la sede')
-                  : `${hechos.length} ${hechos.length === 1 ? 'grupo creado' : 'grupos creados'}`}
+                  : `${hechos.length} ${hechos.length === 1 ? 'clase creada' : 'clases creadas'}`}
               </p>
             </div>
             <button
@@ -353,7 +353,7 @@ export default function ModalPrimerHorario({ onCerrar }: { onCerrar: () => void 
             {fase === 'armar' && (
               <>
                 <Button className="w-full" disabled={!listo || guardando} onClick={crear}>
-                  {guardando ? 'Creando…' : 'Crear grupo'}
+                  {guardando ? 'Creando…' : 'Crear clase'}
                 </Button>
                 <button type="button" onClick={hechos.length ? onCerrar : aplazar}
                   className="w-full py-1.5 text-[12.5px] font-medium text-muted-foreground hover:text-foreground transition-colors">
@@ -371,7 +371,7 @@ export default function ModalPrimerHorario({ onCerrar }: { onCerrar: () => void 
                   className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-[12.5px] font-semibold transition-colors"
                   style={{ color: '#381DA0', background: 'rgba(56,29,160,0.06)', border: '1.5px solid rgba(56,29,160,0.20)' }}
                 >
-                  <IconMas className="w-3.5 h-3.5" /> Agregar otro grupo
+                  <IconMas className="w-3.5 h-3.5" /> Agregar otra clase
                 </button>
                 <p className="text-[11px] text-muted-foreground text-center m-0 mt-0.5 flex items-center justify-center gap-1">
                   <IconUbicacion className="w-3 h-3 shrink-0" />

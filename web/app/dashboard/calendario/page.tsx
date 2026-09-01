@@ -7,7 +7,7 @@ import { useClubStream } from '@/hooks/useClubStream';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { apiFetch } from '@/lib/api-client';
 import { parseLocalDate } from '@/lib/utils';
-import { colorDeClase } from '@/lib/colores-grupo';
+import { colorDeClase, gruposDeClases } from '@/lib/colores-grupo';
 import { horaLegible } from '@/components/ajustes/horario-clases';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import ModuleLoader, { useCargaMinima } from '@/components/ui/module-loader';
@@ -67,6 +67,11 @@ function clasesDelMes(
   sinEntrenamiento: number[],
 ): CalEvent[] {
   const dias = getDaysInMonth(year, month);
+  // Una sola vez y para todas: el color de respaldo sale de la POSICION del
+  // grupo en la lista, asi que armarla clase por clase —`[c.grupo]`— dejaba a
+  // todos los grupos sin color escogido en el primero de la paleta, y en el
+  // calendario salian todos del mismo color.
+  const grupos = gruposDeClases(clases);
   const salida: CalEvent[] = [];
   for (let d = 1; d <= dias; d++) {
     const fecha = new Date(year, month, d);
@@ -83,7 +88,7 @@ function clasesDelMes(
         date: fecha,
         location: c.location?.name ?? null,
         hora: c.hora,
-        color: colorDeClase(c, c.grupo ? [c.grupo] : []),
+        color: colorDeClase(c, grupos),
       });
     }
   }
@@ -211,8 +216,9 @@ export default function CalendarioPage() {
   // leyenda. Las clases con color propio entran como su propia entrada.
   const gruposDelHorario = useMemo(() => {
     const vistos = new Map<string, { id: string; nombre: string; color: string }>();
+    const grupos = gruposDeClases(clases);
     for (const c of clases) {
-      const color = colorDeClase(c, c.grupo ? [c.grupo] : []);
+      const color = colorDeClase(c, grupos);
       // La clave es el color y no el grupo: dos clases del mismo grupo con
       // colores distintos son dos entradas, que es lo que se ve en pantalla.
       const clave = c.grupo ? `${c.grupo.id}|${color}` : `suelta|${color}`;

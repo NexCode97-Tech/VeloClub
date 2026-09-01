@@ -5,6 +5,7 @@ import { carpetaDe } from '../lib/deportes';
 import { prisma } from '../db/client';
 import { emitToClub } from '../lib/sse';
 import { sedeEsDelClub } from '../lib/sedes';
+import { grupoParaClase } from '../lib/grupo-de-clase';
 
 const router = Router();
 
@@ -35,8 +36,10 @@ const claseSchema = z.object({
   diaSemana:  z.number().int().min(0).max(6),
   hora:       z.string().regex(HORA, 'La hora debe ir en formato 24h, por ejemplo 06:00'),
   categoria:  z.string().max(60).nullable().optional(),
-  // Null es una clase suelta: su planilla sale de la regla vieja.
-  grupoId:    z.string().nullable().optional(),
+  // Quienes entran en esta clase. Sin la clave, la lista no se toca; con ella,
+  // se reemplaza entera. No se manda `grupoId`: el grupo no se elige, se deduce
+  // del nombre y la sede. Ver `grupoParaClase`.
+  memberIds:  z.array(z.string()).max(500).optional(),
   // En null hereda el color de su grupo, que es lo normal.
   color,
 });
@@ -51,6 +54,40 @@ function soloAdmin(role: string | undefined): boolean {
   return role === 'ADMIN';
 }
 
+/**
+ * Reemplazo completo de la lista, no diferencial: la pantalla manda la lista
+ * entera y calcular altas y bajas por separado deja la puerta abierta a que una
+ * de las dos falle y el grupo quede a medias.
+ *
+ * Los ids se comprueban contra el club antes de escribir. `MemberGrupo` no
+ * lleva `deporteId` propio —se llega a él por `Member` o por `Grupo`—, así que
+ * esta consulta es la que hace de puerta.
+ */
+async function ponerMiembros(grupoId: string, memberIds: string[], clubId: string) {
+  const validos = await prisma.member.findMany({
+    where: { id: { in: memberIds }, clubId },
+    select: { id: true },
+  });
+  await prisma.$transaction([
+    prisma.memberGrupo.deleteMany({ where: { grupoId } }),
+    prisma.memberGrupo.createMany({
+      data: validos.map(m => ({ memberId: m.id, grupoId })),
+      skipDuplicates: true,
+    }),
+  ]);
+}
+
+/** Lo que el horario necesita de cada clase: su sede, su grupo y cuánta gente trae. */
+const conGrupo = {
+  location: { select: { id: true, name: true } },
+  grupo: {
+    select: {
+      id: true, nombre: true, color: true,
+      _count: { select: { miembros: true, clases: true } },
+    },
+  },
+} as const;
+
 // GET /clases — el horario completo, ordenado como se lee: por dia y por hora
 router.get('/', requireAuth, async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'No autenticado' });
@@ -59,8 +96,7 @@ router.get('/', requireAuth, async (req, res) => {
 
   const clases = await prisma.claseHorario.findMany({
     where: { clubId, activa: true },
-    include: { location: { select: { id: true, name: true } },
-               grupo:    { select: { id: true, nombre: true, color: true } } },
+    include: conGrupo,
     orderBy: [{ diaSemana: 'asc' }, { hora: 'asc' }],
   });
 
@@ -94,8 +130,7 @@ router.get('/dia', requireAuth, async (req, res) => {
 
   const clases = await prisma.claseHorario.findMany({
     where: { clubId, diaSemana, activa: true },
-    include: { location: { select: { id: true, name: true } },
-               grupo:    { select: { id: true, nombre: true, color: true } } },
+    include: conGrupo,
     orderBy: { hora: 'asc' },
   });
 
@@ -136,20 +171,33 @@ router.post('/', requireAuth, async (req, res) => {
     return res.status(400).json({ error: 'La sede no pertenece a tu club' });
   }
 
-  const clase = await prisma.claseHorario.create({
+  const deporteId = carpetaDe(req);
+  const nombre    = parsed.data.nombre.trim();
+  const grupoId   = await grupoParaClase({
+    clubId, deporteId, locationId: parsed.data.locationId, nombre,
+  });
+
+  const creada = await prisma.claseHorario.create({
     data: {
       clubId,
-      deporteId:  carpetaDe(req),
-      nombre:     parsed.data.nombre.trim(),
+      deporteId,
+      nombre,
       locationId: parsed.data.locationId,
       diaSemana:  parsed.data.diaSemana,
       hora:       parsed.data.hora,
       categoria:  parsed.data.categoria?.trim() || null,
-      grupoId:    parsed.data.grupoId ?? null,
+      grupoId,
       color:      parsed.data.color ?? null,
     },
-    include: { location: { select: { id: true, name: true } },
-               grupo:    { select: { id: true, nombre: true, color: true } } },
+    select: { id: true },
+  });
+
+  if (parsed.data.memberIds) await ponerMiembros(grupoId, parsed.data.memberIds, clubId);
+
+  // Se relee después de escribir la lista: si no, el conteo de la respuesta
+  // sería el de antes de asignar y la pantalla mostraría cero deportistas.
+  const clase = await prisma.claseHorario.findUnique({
+    where: { id: creada.id }, include: conGrupo,
   });
 
   emitToClub(clubId, 'attendance');
@@ -175,20 +223,40 @@ router.patch('/:id', requireAuth, async (req, res) => {
     return res.status(400).json({ error: 'La sede no pertenece a tu club' });
   }
 
-  const clase = await prisma.claseHorario.update({
+  // El nombre y la sede definen el grupo, así que el grupo se recalcula cuando
+  // cambia cualquiera de los dos. Reactivar una clase apagada también pasa por
+  // acá y por eso se recalcula igual: mientras estuvo apagada pudo aparecer
+  // otra clase con ese nombre en esa sede.
+  const nombre     = parsed.data.nombre?.trim() ?? actual.nombre;
+  const locationId = parsed.data.locationId ?? actual.locationId;
+  const grupoId    = await grupoParaClase({
+    clubId,
+    deporteId: actual.deporteId,
+    locationId,
+    nombre,
+    claseId: actual.id,
+    grupoActualId: actual.grupoId,
+  });
+
+  await prisma.claseHorario.update({
     where: { id: actual.id },
     data: {
-      ...(parsed.data.nombre     !== undefined ? { nombre: parsed.data.nombre.trim() } : {}),
-      ...(parsed.data.locationId !== undefined ? { locationId: parsed.data.locationId } : {}),
+      nombre,
+      locationId,
+      grupoId,
       ...(parsed.data.diaSemana  !== undefined ? { diaSemana: parsed.data.diaSemana } : {}),
       ...(parsed.data.hora       !== undefined ? { hora: parsed.data.hora } : {}),
       ...(parsed.data.categoria  !== undefined ? { categoria: parsed.data.categoria?.trim() || null } : {}),
-      ...(parsed.data.grupoId    !== undefined ? { grupoId: parsed.data.grupoId } : {}),
       ...(parsed.data.color      !== undefined ? { color: parsed.data.color } : {}),
       ...(parsed.data.activa     !== undefined ? { activa: parsed.data.activa } : {}),
     },
-    include: { location: { select: { id: true, name: true } },
-               grupo:    { select: { id: true, nombre: true, color: true } } },
+    select: { id: true },
+  });
+
+  if (parsed.data.memberIds) await ponerMiembros(grupoId, parsed.data.memberIds, clubId);
+
+  const clase = await prisma.claseHorario.findUnique({
+    where: { id: actual.id }, include: conGrupo,
   });
 
   emitToClub(clubId, 'attendance');

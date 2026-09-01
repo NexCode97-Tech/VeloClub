@@ -41,7 +41,7 @@ export function downloadMembersTemplate(
     'Rol (ADMIN / ENTRENADOR / DEPORTISTA)',
     'Día de corte mensualidad (1-31)',
     'Sede',
-    'Grupo',
+    'Clase',
   ];
 
   const example = [
@@ -160,8 +160,8 @@ export function downloadMembersTemplate(
       type: 'list',
       formula1: `Listas!$B$1:$B$${GRUPOS.length}`,
       showErrorMessage: true,
-      errorTitle: 'Grupo inválido',
-      error: 'Selecciona un grupo de la lista',
+      errorTitle: 'Clase inválida',
+      error: 'Selecciona una clase de la lista',
     });
   }
 
@@ -387,7 +387,9 @@ export function parseMembersExcel(
         const paymentDueDay = !isNaN(dueDayRaw) && dueDayRaw >= 1 && dueDayRaw <= 31 ? dueDayRaw : undefined;
 
         const locationName = texto(r, 'Sede');
-        const grupoName = texto(r, 'Grupo');
+        // 'Grupo' de segundo: la columna se llama asi en las plantillas que
+        // los clubes ya descargaron, y esos archivos siguen entrando.
+        const grupoName = texto(r, 'Clase', 'Grupo');
 
         // Si la celda traía algo y no se pudo interpretar, se avisa en vez de
         // descartar la fecha en silencio, que era lo que pasaba antes.

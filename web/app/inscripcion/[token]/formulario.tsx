@@ -654,7 +654,7 @@ export default function FormularioInscripcion({ token }: { token: string }) {
             {/* Se oculta si la sede no tiene grupos: un club que todavia no los
                 armo no puede ver un campo obligatorio que no puede llenar. */}
             {gruposDeLaSede.length > 0 && (
-              <Campo etiqueta="Grupo y horario" obligatorio error={errores.grupoId}
+              <Campo etiqueta="Clase" obligatorio error={errores.grupoId}
                 falta={faltaba('grupoId')} listo={traido('grupoId')}>
                 <Desplegable
                   valor={d.grupoId}
@@ -665,7 +665,7 @@ export default function FormularioInscripcion({ token }: { token: string }) {
                     // que es como piensa, no por un nombre que no conoce.
                     nota: resumenHorario(g.clases),
                   }))}
-                  vacio="Elegir grupo"
+                  vacio="Elegir clase"
                   error={!!errores.grupoId}
                   falta={faltaba('grupoId')}
                   onElegir={v => set('grupoId', v)}

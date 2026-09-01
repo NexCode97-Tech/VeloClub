@@ -17,25 +17,35 @@ import { createPortal } from 'react-dom';
  */
 
 /**
- * Diez familias en cinco intensidades. Las columnas van de oscuro a claro para
+ * Ocho familias en cinco intensidades. Las columnas van de oscuro a claro para
  * que la rejilla se lea como una escala y no como un revoltijo.
  *
- * Las dos primeras intensidades son las únicas que se leen bien como texto
- * sobre blanco, y la hora de la clase va escrita en este color. Por eso son las
- * que ofrece la primera columna, que es donde cae el dedo.
+ * **No hay rojo ni azul, y es a propósito.** El calendario los tiene reservados
+ * para decir de qué tipo es un evento —rojo competencia, azul entrenamiento— y
+ * lo declara en su leyenda. Un grupo rojo haría que un punto rojo dejara de
+ * significar «competencia», y la leyenda estaría mintiendo.
+ *
+ * Las dos primeras intensidades son las únicas que se leen bien como texto sobre
+ * blanco, y la hora de la clase va escrita en este color. Por eso son las que
+ * ofrece la primera columna, que es donde cae el dedo.
  */
 const TONOS: string[] = [
-  '#7A0A0A', '#C51111', '#E2453F', '#F08A85', '#FBD5D3',
-  '#7A3B05', '#EF7D0D', '#F6A83F', '#FBCB8F', '#FDEBD5',
-  '#6B5A00', '#C79100', '#E8B400', '#F2D45C', '#FAEFC2',
   '#0A4D1C', '#117F2D', '#2BAE4E', '#7DD494', '#D3F0DB',
-  '#08414F', '#0E7490', '#1CA3C4', '#7CCEE0', '#D2EEF5',
-  '#0A1A7A', '#132ED1', '#4A63E8', '#94A5F2', '#D7DDFB',
+  '#7A3B05', '#EF7D0D', '#F6A83F', '#FBCB8F', '#FDEBD5',
   '#4A1B7A', '#6B2FBB', '#8F55DC', '#BC96EC', '#E6D8F8',
+  '#08414F', '#0E7490', '#1CA3C4', '#7CCEE0', '#D2EEF5',
   '#5F0F38', '#A11D5C', '#C93F84', '#E28FB6', '#F6DAE7',
   '#3B2412', '#71491E', '#9C6B34', '#C29A6E', '#E7D7C4',
+  '#063F35', '#0A6E5E', '#199C87', '#7FCFC1', '#D5EEE9',
   '#1E2226', '#3F474E', '#69737C', '#A3ACB4', '#DDE1E5',
 ];
+
+/**
+ * Los que el calendario ya usa para el tipo de evento. Un color escrito a mano
+ * en el campo de código que caiga en uno de estos se rechaza: es la única vía
+ * por la que se podrían colar, ya que la rejilla no los ofrece.
+ */
+const RESERVADOS = ['#EF476F', '#4361EE'];
 
 const HEX = /^#[0-9a-fA-F]{6}$/;
 
@@ -93,10 +103,16 @@ export function SelectorColor({ value, onChange, etiqueta }: Props) {
     setAbierto(a => !a);
   }, []);
 
+  const [choca, setChoca] = useState(false);
+
   function escribir(v: string) {
     const limpio = v.replace(/[^0-9a-fA-F]/g, '').slice(0, 6);
     setTexto(limpio);
-    if (limpio.length === 6) onChange('#' + limpio.toUpperCase());
+    if (limpio.length !== 6) { setChoca(false); return; }
+    const hex = '#' + limpio.toUpperCase();
+    if (RESERVADOS.includes(hex)) { setChoca(true); return; }
+    setChoca(false);
+    onChange(hex);
   }
 
   return (
@@ -132,7 +148,7 @@ export function SelectorColor({ value, onChange, etiqueta }: Props) {
           <p className="text-[10px] font-bold m-0 mb-2" style={{ color: '#8E87A8', letterSpacing: '.05em' }}>
             ELIGE UN COLOR
           </p>
-          <div className="grid gap-[5px]" style={{ gridTemplateColumns: 'repeat(10, 1fr)' }}>
+          <div className="grid gap-[5px]" style={{ gridTemplateColumns: 'repeat(8, 1fr)' }}>
             {TONOS.map(c => (
               <button
                 key={c}
@@ -163,9 +179,17 @@ export function SelectorColor({ value, onChange, etiqueta }: Props) {
               maxLength={6}
               aria-label="Código del color"
               className="flex-1 min-w-0 text-[12.5px] px-2.5 py-1.5 rounded-lg uppercase"
-              style={{ border: '1.5px solid rgba(120,80,200,0.26)', color: '#1A1028' }}
+              style={{
+                border: `1.5px solid ${choca ? '#EF476F' : 'rgba(120,80,200,0.26)'}`,
+                color: '#1A1028',
+              }}
             />
           </div>
+          {choca && (
+            <p className="text-[10.5px] m-0 mt-1.5" style={{ color: '#B02A47' }}>
+              Ese color lo usa el calendario para los eventos. Elige otro.
+            </p>
+          )}
         </div>,
         document.body,
       )}

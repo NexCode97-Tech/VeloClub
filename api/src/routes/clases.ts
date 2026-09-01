@@ -12,6 +12,23 @@ const router = Router();
 // "6:00" se colaria antes que "16:00" y el horario saldria desordenado.
 const HORA = /^([01]\d|2[0-3]):([0-5]\d)$/;
 
+/**
+ * Los colores que el calendario tiene reservados para el tipo de evento: rojo
+ * es competencia y azul es entrenamiento, y su leyenda lo declara. Un grupo o
+ * una clase de ese color harian que un punto rojo dejara de significar
+ * «competencia».
+ *
+ * La rejilla del selector ya no los ofrece, pero la comprobacion va tambien
+ * aca: lo que el navegador impide, una peticion a mano no lo impide.
+ */
+const RESERVADOS = ['#EF476F', '#4361EE'];
+
+const color = z.string()
+  .regex(/^#[0-9a-fA-F]{6}$/, 'El color va en formato #RRGGBB')
+  .refine(c => !RESERVADOS.includes(c.toUpperCase()),
+          'Ese color lo usa el calendario para los eventos')
+  .nullable().optional();
+
 const claseSchema = z.object({
   nombre:     z.string().min(1).max(60),
   locationId: z.string().min(1),
@@ -21,7 +38,7 @@ const claseSchema = z.object({
   // Null es una clase suelta: su planilla sale de la regla vieja.
   grupoId:    z.string().nullable().optional(),
   // En null hereda el color de su grupo, que es lo normal.
-  color:      z.string().regex(/^#[0-9a-fA-F]{6}$/, 'El color va en formato #RRGGBB').nullable().optional(),
+  color,
 });
 
 const claseParcial = claseSchema.partial().extend({

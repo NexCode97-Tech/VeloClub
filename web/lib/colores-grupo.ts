@@ -12,28 +12,32 @@
  */
 
 /**
- * No es `PALETA_DEPORTES`, y la razón es de lectura, no de gusto.
+ * No es `PALETA_DEPORTES`, y no lleva rojo ni azul. Las dos razones son de
+ * lectura, no de gusto.
  *
- * Aquel catálogo lleva un amarillo (`#F5F557`) y un azul muy claro (`#D6E0F0`)
- * que funcionan como relleno de un aro pero no como texto sobre blanco: la hora
- * de la clase va escrita en el color del grupo, y en esos dos no se lee.
+ * **Rojo y azul están reservados.** El calendario ya los usa para decir de qué
+ * tipo es un evento: rojo es competencia, azul es entrenamiento, y su leyenda lo
+ * declara. Si un grupo pudiera ser rojo, un punto rojo en el calendario dejaría
+ * de significar «competencia» y la leyenda estaría mintiendo.
  *
- * El orden tampoco es el mismo. Acá importa que dos grupos **seguidos** se
- * distingan, porque un club con dos grupos solo va a usar los dos primeros. Por
- * eso arranca rojo, azul, verde: el salto de tono más grande que hay, y no dos
- * morados parecidos como quedó la primera versión.
+ * **Y el amarillo y el azul claro de `PALETA_DEPORTES` tampoco sirven.** La hora
+ * de la clase va escrita en el color del grupo, y sobre blanco no se leen.
+ *
+ * El orden importa porque un club con dos grupos solo va a usar los dos
+ * primeros: arranca verde, naranja, morado, que es el salto de tono más grande
+ * que queda una vez fuera el rojo y el azul.
  */
 const PALETA_GRUPOS = [
-  '#C51111', // rojo
-  '#132ED1', // azul
   '#117F2D', // verde
   '#EF7D0D', // naranja
-  '#B0289C', // magenta
-  '#0E7490', // petróleo
   '#6B2FBB', // morado
+  '#0E7490', // petróleo
+  '#B0289C', // magenta
   '#71491E', // café
   '#3F474E', // pizarra
   '#A11D5C', // vino
+  '#0A6E5E', // esmeralda
+  '#7A5C00', // mostaza oscuro
 ] as const;
 
 /**

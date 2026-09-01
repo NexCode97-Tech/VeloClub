@@ -726,13 +726,34 @@ export default function HorarioClases({ sinEntrenamiento = [] }: { sinEntrenamie
                   segura se suma al relleno, no lo reemplaza. */}
               <div className="px-5 pt-4 border-t border-border/60"
                 style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 1.25rem)' }}>
+                {/* Borrar vive aca y no en la cuadricula. Un boton de basura
+                    por bloque llenaria la semana de iconos rojos, que es lo
+                    contrario de lo que la vista existe para mostrar; y sin el,
+                    una clase no se podia quitar de ninguna forma. */}
+                <div className="flex gap-2">
+                  {editando.id && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const c = clases.find(x => x.id === editando.id);
+                        if (c) { setEditando(null); setPorBorrar(c); }
+                      }}
+                      aria-label="Quitar esta clase"
+                      className="h-12 px-4 rounded-xl shrink-0 flex items-center justify-center gap-2 text-[13px] font-semibold transition-colors hover:bg-red-50"
+                      style={{ color: '#EF476F', border: '1.5px solid rgba(239,71,111,0.28)' }}
+                    >
+                      <IconEliminar className="w-4 h-4" />
+                      <span className="hidden sm:inline">Quitar</span>
+                    </button>
+                  )}
                 <Button
                   onClick={guardar}
                   disabled={guardando || !editando.nombre?.trim() || !editando.locationId}
-                  className="w-full h-12 text-[14px]"
+                  className="flex-1 h-12 text-[14px]"
                 >
                   {guardando ? 'Guardando…' : editando.id ? 'Guardar cambios' : 'Agregar clase'}
                 </Button>
+                </div>
               </div>
             </motion.div>
           </motion.div>

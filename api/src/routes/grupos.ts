@@ -12,11 +12,28 @@ const router = Router();
 // hora se ordena como texto, asi que "6:00" se colaria antes que "16:00".
 const HORA = /^([01]\d|2[0-3]):([0-5]\d)$/;
 
+/**
+ * Los colores que el calendario tiene reservados para el tipo de evento: rojo
+ * es competencia y azul es entrenamiento, y su leyenda lo declara. Un grupo o
+ * una clase de ese color harian que un punto rojo dejara de significar
+ * «competencia».
+ *
+ * La rejilla del selector ya no los ofrece, pero la comprobacion va tambien
+ * aca: lo que el navegador impide, una peticion a mano no lo impide.
+ */
+const RESERVADOS = ['#EF476F', '#4361EE'];
+
+const color = z.string()
+  .regex(/^#[0-9a-fA-F]{6}$/, 'El color va en formato #RRGGBB')
+  .refine(c => !RESERVADOS.includes(c.toUpperCase()),
+          'Ese color lo usa el calendario para los eventos')
+  .nullable().optional();
+
 const grupoSchema = z.object({
   nombre:     z.string().min(1).max(60),
   locationId: z.string().min(1),
   // "#RRGGBB". Null es «no lo han escogido» y ahi manda la posicion.
-  color:      z.string().regex(/^#[0-9a-fA-F]{6}$/, 'El color va en formato #RRGGBB').nullable().optional(),
+  color,
 });
 
 const grupoParcial = grupoSchema.partial().extend({
@@ -105,7 +122,7 @@ router.post('/completo', requireAuth, async (req, res) => {
     nombre:     z.string().min(1).max(60),
     locationId: z.string().min(1),
   // "#RRGGBB". Null es «no lo han escogido» y ahi manda la posicion.
-  color:      z.string().regex(/^#[0-9a-fA-F]{6}$/, 'El color va en formato #RRGGBB').nullable().optional(),
+  color,
     // Al menos uno: un grupo sin dias no tiene ninguna clase, y este endpoint
     // existe justamente para crearlas.
     dias:       z.array(z.number().int().min(0).max(6)).min(1).max(7),

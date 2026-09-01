@@ -126,6 +126,13 @@ model User {
   role            Role      @default(ADMIN)
   profileComplete Boolean   @default(false)
   termsAcceptedAt DateTime?
+  // Cuando este administrador aplazo el modal de «arma tu horario», y cuantas
+  // veces. Van en el User y no en el Club a proposito: la tarea SI es del club
+  // —sigue viva hasta que alguien la haga— pero el fastidio de que te la
+  // pregunten es de cada persona. Sin esto, quien la aplaza se la vuelve a
+  // encontrar en el siguiente refresco.
+  horarioAplazadoAt DateTime?
+  horarioAplazos    Int       @default(0)
   clubId          String?
   club            Club?     @relation(fields: [clubId], references: [id], onDelete: Cascade)
   // La carpeta a la que esta amarrado. En null cruza todas, que es el caso del

@@ -16,6 +16,7 @@ import { BottomCircleMenu } from '@/components/ui/bottom-circle-menu';
 import { SearchModal } from '@/components/ui/search-modal';
 import { NotificationsBell } from '@/components/ui/notifications-bell';
 import TermsGateModal from '@/components/ui/terms-gate-modal';
+import ModalPrimerHorario from '@/components/horario/modal-primer-horario';
 import { Settings, ChevronLeft, ChevronRight, ArrowLeft } from 'lucide-react';
 import { IconHome, IconUsers, IconCalendar, IconStatistics, IconClub, IconFinanzas, IconUbicacion, IconAsistencias, IconResultados, IconAjustes, IconMisPagos, IconPerfil, IconSuscripcion, IconCompetencias, IconEntrenamientos, IconBuscar } from '@/components/ui/custom-icons';
 
@@ -171,6 +172,9 @@ interface RespuestaMe {
     termsAcceptedAt?: string | null;
   };
   deportes?: SelectorDeportes;
+  /** Si a este administrador hay que lanzarle el modal de armar el horario.
+   *  Lo decide el backend en `api/src/lib/primer-horario.ts`. */
+  primerHorario?: { mostrar: boolean; pendiente: boolean };
 }
 
 
@@ -178,6 +182,10 @@ interface RespuestaMe {
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
+  // El modal de «arma tu horario». La decision viene de /me: aca no se
+  // vuelve a preguntar, que dos sitios decidiendo lo mismo es como se
+  // termina mostrando a quien ya lo lleno.
+  const [pedirHorario, setPedirHorario] = useState(false);
   const { isLoaded, isSignedIn, userId, sessionId } = useAuth();
   const { session } = useSession();
   const { user: clerkUser } = useUser();
@@ -386,6 +394,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         setUserName(res.user?.name ?? null);
         setUserPicture(res.user?.picture ?? null);
         setTermsAccepted(!!res.user?.termsAcceptedAt);
+        setPedirHorario(!!res.primerHorario?.mostrar);
 
         // La carpeta elegida se guarda en el navegador, y puede haber quedado
         // apuntando a un deporte que ya no existe o que dejo de ser suyo. El
@@ -1081,6 +1090,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </motion.nav>
       </div>
     </div>
+
+    {/* «Arma tu horario». Se monta en portal a document.body, así que su sitio
+        en el árbol no lo posiciona: está acá para que se lea como lo último. */}
+    {pedirHorario && <ModalPrimerHorario onCerrar={() => setPedirHorario(false)} />}
     </>
     </ProveedorDeporte>
   );

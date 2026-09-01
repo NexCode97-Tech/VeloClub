@@ -627,7 +627,7 @@ function AjustesPageContent() {
 
       {/* Horario de clases — junto a los días sin entrenamiento porque son lo
           mismo: reglas del club que gobiernan la asistencia. */}
-      <HorarioClases />
+      <HorarioClases sinEntrenamiento={noAttDays} />
 
       {/* Días sin entrenamiento */}
       <div className="space-y-3 border-t border-border pt-5">

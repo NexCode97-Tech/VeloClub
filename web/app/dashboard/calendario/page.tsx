@@ -4,9 +4,11 @@ import { stagger, cardVariant } from '@/lib/page-animations';
 
 import { useAuth } from '@clerk/nextjs';
 import { useClubStream } from '@/hooks/useClubStream';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { apiFetch } from '@/lib/api-client';
 import { parseLocalDate } from '@/lib/utils';
+import { colorDeGrupo } from '@/lib/colores-grupo';
+import { horaLegible } from '@/components/ajustes/horario-clases';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import ModuleLoader, { useCargaMinima } from '@/components/ui/module-loader';
 import ModuleReveal from '@/components/ui/module-reveal';
@@ -31,6 +33,60 @@ interface CalEvent {
   latitude?: number | null;
   longitude?: number | null;
   location?: string | null;
+  /** "06:00". Solo las clases del horario la traen. */
+  hora?: string;
+  /** El grupo del que sale, para pintarla con su color. */
+  grupoId?: string | null;
+}
+
+interface ClaseHorario {
+  id: string;
+  nombre: string;
+  diaSemana: number;
+  hora: string;
+  grupoId: string | null;
+  grupo?: { id: string; nombre: string } | null;
+  location: { name: string };
+}
+
+/**
+ * Las clases del horario NO se guardan como eventos del calendario.
+ *
+ * Son una regla semanal, no una fecha: copiarlas seria tener la misma clase en
+ * dos sitios y que se separen la primera vez que alguien edite una. Aca se
+ * calculan del horario, mes a mes, y se dibujan encima de los eventos de
+ * verdad. Se ven distintas a proposito —una raya fina, no una pastilla— porque
+ * un club con tres grupos entrenando tres dias tiene nueve por semana, y
+ * mezclarlas con la competencia del sabado la entierra.
+ */
+function clasesDelMes(
+  clases: { id: string; nombre: string; diaSemana: number; hora: string; grupoId: string | null; location: { name: string } }[],
+  year: number,
+  month: number,
+  sinEntrenamiento: number[],
+): CalEvent[] {
+  const dias = getDaysInMonth(year, month);
+  const salida: CalEvent[] = [];
+  for (let d = 1; d <= dias; d++) {
+    const fecha = new Date(year, month, d);
+    const dow = fecha.getDay();
+    if (sinEntrenamiento.includes(dow)) continue;
+    for (const c of clases) {
+      if (c.diaSemana !== dow) continue;
+      salida.push({
+        // El id lleva la fecha: la misma clase aparece cuatro veces al mes y
+        // React necesita distinguirlas.
+        id: `clase-${c.id}-${year}-${month}-${d}`,
+        title: c.nombre,
+        type: 'TRAINING',
+        date: fecha,
+        location: c.location?.name ?? null,
+        hora: c.hora,
+        grupoId: c.grupoId,
+      });
+    }
+  }
+  return salida;
 }
 
 const TYPE_COLOR: Record<EventType, string> = {
@@ -58,6 +114,12 @@ export default function CalendarioPage() {
   const [selectedDay, setSelectedDay] = useState(now.getDate());
   const [events, setEvents]           = useState<CalEvent[]>([]);
   const [loading, setLoading]         = useState(true);
+  // El horario del club, para dibujar las clases encima de los eventos.
+  const [clases, setClases]           = useState<ClaseHorario[]>([]);
+  const [sinEntrenar, setSinEntrenar] = useState<number[]>([]);
+  // Se pueden apagar: nueve clases por semana entierran la competencia del
+  // sabado, que es justo lo que alguien viene a buscar al calendario.
+  const [verClases, setVerClases]     = useState(true);
   // Sostiene el indicador un minimo de tiempo para que no parpadee
   const mostrarCarga = useCargaMinima(loading);
 
@@ -100,8 +162,26 @@ export default function CalendarioPage() {
 
   useEffect(() => { loadEvents(); }, [month, year]);
 
+  // El horario y los dias cerrados no dependen del mes: se piden una vez.
+  const cargarHorario = useCallback(async () => {
+    try {
+      const token = await getToken();
+      const [h, cfg] = await Promise.all([
+        apiFetch<{ clases: ClaseHorario[]; grupos?: unknown }>('/clases', { token }),
+        apiFetch<{ club: { noAttendanceDays?: number[] } }>('/clubs/settings', { token }),
+      ]);
+      setClases(h.clases ?? []);
+      setSinEntrenar(cfg.club?.noAttendanceDays ?? []);
+    } catch { /* sin horario el calendario sigue sirviendo igual */ }
+  }, [getToken]);
+
+  useEffect(() => { cargarHorario(); }, [cargarHorario]);
+
   // Tiempo real: SSE push desde el servidor
-  useClubStream((ev) => { if (ev === 'calendar' || ev === 'training') loadEvents(); });
+  useClubStream((ev) => {
+    if (ev === 'calendar' || ev === 'training') loadEvents();
+    if (ev === 'attendance') cargarHorario();
+  });
 
   const daysInMonth = getDaysInMonth(year, month);
   const firstDay    = getFirstDayOfMonth(year, month);
@@ -121,8 +201,25 @@ export default function CalendarioPage() {
     setSelectedDay(1);
   }
 
+  // Los ids de grupo en el mismo orden que `GET /grupos` los devuelve —por
+  // nombre— para que un grupo salga del mismo color aca y en Ajustes.
+  const idsGrupo = useMemo(() => {
+    const vistos = new Map<string, string>();
+    for (const c of clases) if (c.grupo) vistos.set(c.grupo.id, c.grupo.nombre);
+    return [...vistos.entries()]
+      .sort((a, b) => a[1].localeCompare(b[1]))
+      .map(([id]) => id);
+  }, [clases]);
+
+  // Las clases del mes, calculadas del horario. Se recalculan solo al cambiar
+  // de mes o el horario: son cuatro o cinco por clase y se recorren en cada
+  // celda del calendario.
+  const clasesMes = useMemo(
+    () => (verClases ? clasesDelMes(clases, year, month, sinEntrenar) : []),
+    [clases, year, month, sinEntrenar, verClases]);
+
   const eventsOnDay = (day: number) =>
-    events.filter(e => e.date.getDate() === day);
+    [...events, ...clasesMes].filter(e => e.date.getDate() === day);
 
   const selectedEvents = eventsOnDay(selectedDay);
 
@@ -186,7 +283,9 @@ export default function CalendarioPage() {
                         <div
                           key={e.id}
                           className="w-1 h-1 rounded-full"
-                          style={{ background: TYPE_COLOR[e.type] }}
+                          style={{ background: e.hora && e.grupoId
+                            ? colorDeGrupo(e.grupoId, idsGrupo)
+                            : TYPE_COLOR[e.type] }}
                         />
                       ))}
                     </div>
@@ -195,6 +294,35 @@ export default function CalendarioPage() {
               })}
             </div>
           </div>
+
+          {/* El interruptor de las clases, junto a la leyenda porque las dos
+              cosas responden lo mismo: que es cada punto del calendario.
+              Solo aparece si el club armo horario. */}
+          {clases.length > 0 && (
+            <button
+              type="button"
+              role="switch"
+              aria-checked={verClases}
+              onClick={() => setVerClases(v => !v)}
+              className="self-start inline-flex items-center gap-2.5 px-3 py-1.5 rounded-full text-[11.5px] transition-colors"
+              style={{
+                background: '#fff',
+                border: '1px solid rgba(120,80,200,0.14)',
+                color: '#5B5470',
+              }}
+            >
+              <span
+                className="relative w-7 h-4 rounded-full shrink-0 transition-colors"
+                style={{ background: verClases ? '#381DA0' : 'rgba(120,80,200,0.26)' }}
+              >
+                <span
+                  className="absolute top-[2px] w-3 h-3 rounded-full bg-white transition-all"
+                  style={{ left: verClases ? 14 : 2 }}
+                />
+              </span>
+              Mostrar las clases del horario
+            </button>
+          )}
 
           {/* Leyenda */}
           <div className="flex gap-4 px-1">
@@ -231,7 +359,13 @@ export default function CalendarioPage() {
               </div>
             ) : (
               <div className="space-y-2">
-                {selectedEvents.map(e => <EventCard key={e.id} event={e} />)}
+                {selectedEvents.map(e => (
+                  <EventCard
+                    key={e.id}
+                    event={e}
+                    colorClase={e.grupoId ? colorDeGrupo(e.grupoId, idsGrupo) : undefined}
+                  />
+                ))}
               </div>
             )}
           </div>
@@ -274,10 +408,16 @@ function toSentenceCase(str: string): string {
   return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
 }
 
-function EventCard({ event }: { event: CalEvent }) {
-  const color = TYPE_COLOR[event.type];
+function EventCard({ event, colorClase }: { event: CalEvent; colorClase?: string }) {
+  // Una clase del horario no es un evento: se repite todas las semanas. Lleva
+  // el color de su grupo y la hora en vez de la fecha, para que se distinga sin
+  // tener que leer el nombre.
+  const esClase = !!event.hora;
+  const color = esClase ? (colorClase ?? TYPE_COLOR[event.type]) : TYPE_COLOR[event.type];
   const Icon  = event.type === 'COMPETITION' ? IconCompetencias : IconEntrenamientos;
-  const dateStr = event.date.toLocaleDateString('es-CO', { day: 'numeric', month: 'short' });
+  const dateStr = esClase
+    ? horaLegible(event.hora as string)
+    : event.date.toLocaleDateString('es-CO', { day: 'numeric', month: 'short' });
   const sub = event.place ?? event.location;
 
   return (
@@ -294,7 +434,7 @@ function EventCard({ event }: { event: CalEvent }) {
             className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full"
             style={{ background: `${color}1A`, color }}
           >
-            {TYPE_LABEL[event.type]}
+            {esClase ? 'Clase' : TYPE_LABEL[event.type]}
           </span>
           <span className="text-[10px] text-muted-foreground">{dateStr}</span>
         </div>

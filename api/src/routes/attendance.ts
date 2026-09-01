@@ -5,6 +5,7 @@ import { carpetaDe } from '../lib/deportes';
 import { prisma } from '../db/client';
 import { emitToClub } from '../lib/sse';
 import { sedeEsDelClub } from '../lib/sedes';
+import { filtroDePlanilla } from '../lib/planilla';
 import { resumirAsistencia } from '../lib/asistencia';
 
 const router = Router();
@@ -199,14 +200,16 @@ router.get('/report', requireAuth, async (req, res) => {
   const claseId = req.query.claseId ? String(req.query.claseId) : undefined;
   let claseSede: string | undefined;
   let claseCategoria: string | null = null;
+  let claseGrupo: string | null = null;
   if (claseId) {
     const clase = await prisma.claseHorario.findFirst({
       where: { id: claseId, clubId },
-      select: { locationId: true, categoria: true },
+      select: { locationId: true, categoria: true, grupoId: true },
     });
     if (!clase) return res.status(403).json({ error: 'La clase no pertenece a este club' });
     claseSede = clase.locationId;
     claseCategoria = clase.categoria;
+    claseGrupo = clase.grupoId;
   }
   const sedeFiltro = claseSede ?? locationId;
 
@@ -217,12 +220,14 @@ router.get('/report', requireAuth, async (req, res) => {
   const members = await prisma.member.findMany({
     where: {
       clubId,
-      role: 'DEPORTISTA',
-      active: true,
-      ...(sedeFiltro ? { locations: { some: { locationId: sedeFiltro } } } : {}),
-      // La planilla de esa clase solo tiene a los de su categoria; el reporte
-      // debe listar exactamente a los mismos.
-      ...(claseCategoria ? { category: claseCategoria } : {}),
+      // La regla vive en `lib/planilla.ts` y no aca. El reporte tiene que
+      // listar exactamente a los mismos que la pantalla de asistencia, y
+      // escribirla dos veces es como se desincronizaron la vez pasada.
+      ...filtroDePlanilla({
+        grupoId:    claseGrupo,
+        locationId: sedeFiltro ?? null,
+        categoria:  claseCategoria,
+      }),
     },
     select: { id: true, fullName: true, category: true },
     orderBy: { fullName: 'asc' },

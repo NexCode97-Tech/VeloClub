@@ -114,7 +114,7 @@ export default function HorarioClases() {
   return (
     <div className="space-y-3 border-t border-border pt-5">
       <h3 className="text-[13px] font-semibold text-foreground m-0">Horario de clases</h3>
-      <p className="text-[11px] text-muted-foreground -mt-2">
+      <p className="text-[11px] text-muted-foreground -mt-1">
         Las clases que dicta el club cada semana. La asistencia se toma sobre estas, y así
         una misma persona puede entrenar en la mañana y en la tarde sin que se pisen.
       </p>

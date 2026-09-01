@@ -93,33 +93,29 @@ export function IconResultados({ className, style, ...props }: IconProps) {
 
 // El engranaje. Uno solo para el sidebar y para las tarjetas.
 /**
- * Ajustes: el engranaje con la persona dentro.
+ * Ajustes: el engranaje solo.
  *
- * Reemplaza a un engranaje suelto de lienzo 512. El dibujo nuevo dice mejor lo
- * que hay detras: la pantalla es mi perfil, mi club y mi suscripcion, no la
- * configuracion de una maquina.
+ * Vuelve al engranaje suelto despues de un rodeo por uno que llevaba la persona
+ * dentro. Ese decia mejor lo que hay detras de la pantalla, pero al entrar
+ * `IconAjustesCuenta` quedaron dos dibujos hechos de las mismas dos piezas
+ * separados nada mas por donde va el engranaje, y a 18 px no se distinguen. El
+ * concepto mas fino no sirve si el ojo no lo alcanza: la persona se queda en el
+ * de la cuenta, que es donde de verdad significa algo, y este vuelve a ser lo
+ * que todo el mundo lee como ajustes.
+ *
+ * El margen del lienzo es el mismo octavo de los de 24, trasladado a esta
+ * escala: 43 de 512, igual que en `IconHome`. Los dientes de arriba y de abajo
+ * llegan al borde.
  */
 export function IconAjustes({ className, style, ...props }: IconProps) {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="-2 -2 28 28" fill="currentColor"
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="-43 -43 598 598" fill="currentColor"
       className={className} style={style} {...props}>
-      <path d="m17,11c0-2.757-2.243-5-5-5s-5,2.243-5,5,2.243,5,5,5,5-2.243,5-5Zm-5,7c-3.104,0-5.892,1.868-6.937,4.648-.115.307-.072.651.114.921s.494.431.822.431h12c.328,0,.636-.161.822-.431s.229-.614.114-.921c-1.045-2.78-3.832-4.648-6.937-4.648Zm9.187-.95c-.304.461-.923.59-1.385.285l-1.27-.836c-.659-.434-.863-1.315-.465-2.005.769-1.332,1.071-2.856.875-4.409-.396-3.144-2.973-5.683-6.126-6.039-2.027-.226-3.973.388-5.479,1.733-1.485,1.328-2.337,3.231-2.337,5.221,0,1.228.322,2.436.932,3.492.397.691.194,1.572-.463,2.007l-1.271.836c-.169.111-.36.165-.549.165-.325,0-.645-.158-.836-.45-.304-.461-.176-1.082.285-1.385l.88-.579c-.642-1.259-.979-2.662-.979-4.085,0-1.433.354-2.825.991-4.077l-.893-.588c-.462-.304-.589-.924-.285-1.385.305-.46.925-.588,1.385-.285l.892.587c.282-.34.581-.667.914-.965,1.399-1.249,3.151-2.016,4.996-2.224v-1.064c0-.552.447-1,1-1s1,.448,1,1v1.056c.014.001.027,0,.041.002,2.333.263,4.418,1.458,5.868,3.194l.892-.588c.462-.304,1.081-.175,1.385.285.304.461.177,1.082-.285,1.385l-.884.582c.463.899.779,1.882.91,2.917.231,1.833-.082,3.639-.905,5.251l.88.58c.461.304.589.924.285,1.385Z"/>
+      <path d="M34.283,384c17.646,30.626,56.779,41.148,87.405,23.502c0.021-0.012,0.041-0.024,0.062-0.036l9.493-5.483c17.92,15.332,38.518,27.222,60.757,35.072V448c0,35.346,28.654,64,64,64s64-28.654,64-64v-10.944c22.242-7.863,42.841-19.767,60.757-35.115l9.536,5.504c30.633,17.673,69.794,7.167,87.467-23.467c17.673-30.633,7.167-69.794-23.467-87.467l0,0l-9.472-5.461c4.264-23.201,4.264-46.985,0-70.187l9.472-5.461c30.633-17.673,41.14-56.833,23.467-87.467c-17.673-30.633-56.833-41.14-87.467-23.467l-9.493,5.483C362.862,94.638,342.25,82.77,320,74.944V64c0-35.346-28.654-64-64-64s-64,28.654-64,64v10.944c-22.242,7.863-42.841,19.767-60.757,35.115l-9.536-5.525C91.073,86.86,51.913,97.367,34.24,128s-7.167,69.794,23.467,87.467l0,0l9.472,5.461c-4.264,23.201-4.264,46.985,0,70.187l-9.472,5.461C27.158,314.296,16.686,353.38,34.283,384zM256,170.667c47.128,0,85.333,38.205,85.333,85.333S303.128,341.333,256,341.333S170.667,303.128,170.667,256S208.872,170.667,256,170.667z"/>
     </svg>
   );
 }
 
-/**
- * Gestionar cuenta: la persona con el engranaje al lado.
- *
- * Se parece al de Ajustes y esa es justo la idea: uno es la pantalla de
- * configuracion, el otro es la fila que abre la cuenta de Clerk dentro de ella.
- * Lo que los separa es donde va el engranaje. En `IconAjustes` la persona esta
- * dentro, y el dibujo habla de la pantalla; aca esta al lado, y habla de la
- * persona.
- *
- * No reemplaza a `IconAjustes` en el sidebar ni en Finanzas: son dos conceptos
- * distintos, aunque compartan las dos piezas.
- */
 export function IconAjustesCuenta({ className, style, ...props }: IconProps) {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="-2 -2 28 28" fill="currentColor"

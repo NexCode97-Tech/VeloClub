@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
-import Image from 'next/image';
+import { useEffect, useState } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
+import AroCarga, { ARO_CSS } from '@/components/ui/aro-carga';
 
 // Etapas reales del arranque — cada layout va avisando en cuál va, para que el
 // texto diga lo que de verdad está pasando en vez de rotar mensajes al azar.
@@ -42,48 +42,14 @@ export const CURTAIN_MS = 1100;
 
 const EASE_OUT: [number, number, number, number] = [0.23, 1, 0.32, 1];
 
-// Dimensiones del logo respetando su relación real (1296x868)
-const LOGO_W = 130;
-const LOGO_H = 87;
+// Medidas del aro en la apertura. El logo conserva el ancho que ya tenía; el
+// diámetro sale de rodearlo sin apretarlo.
+const ARO_D    = 200;
+const ARO_GRUESO = 5;
+const LOGO_W   = 130;
 
-// Degradado de marca, el mismo del onboarding
+// El morado de marca, plano
 const BRAND = '#381DA0';
-
-// Estilos compartidos por la pantalla de carga y la cortina de salida, para que
-// el relevo entre una y otra sea visualmente idéntico.
-const SHARED_CSS = `
-  .vcls-logo { position: relative; }
-  /* El logo es morado y negro: en fondo de marca se pasa a blanco puro */
-  .vcls-logo img { filter: brightness(0) invert(1); opacity: .45; }
-  .vcls-shine {
-    position: absolute; inset: 0; overflow: hidden; pointer-events: none;
-    -webkit-mask: url('/logo.png') center / contain no-repeat;
-            mask: url('/logo.png') center / contain no-repeat;
-  }
-  .vcls-band {
-    position: absolute; top: 0; bottom: 0; left: -100%; width: 300%;
-    background: linear-gradient(100deg,
-      transparent 42%, #fff 48%, #fff 52%, transparent 58%);
-    animation: vcls-sweep 1.9s cubic-bezier(.4,0,.2,1) infinite;
-  }
-  @keyframes vcls-sweep {
-    from { transform: translateX(-16%) }
-    to   { transform: translateX(16%) }
-  }
-`;
-
-function BrandLogo({ shimmer }: { shimmer: boolean }) {
-  return (
-    <div className="vcls-logo" style={{ width: LOGO_W, height: LOGO_H }}>
-      <Image src="/logo.png" alt="VeloClub" width={LOGO_W} height={LOGO_H} priority className="object-contain" />
-      {shimmer && (
-        <span className="vcls-shine" aria-hidden="true">
-          <span className="vcls-band" />
-        </span>
-      )}
-    </div>
-  );
-}
 
 // ── Pantalla de carga ───────────────────────────────────────────────────────
 export default function LoadingScreen({ retrying = false }: { retrying?: boolean }) {
@@ -108,38 +74,15 @@ export default function LoadingScreen({ retrying = false }: { retrying?: boolean
       style={{ background: BRAND }}
     >
       <style>{`
-        ${SHARED_CSS}
+        ${ARO_CSS}
         .vcls-root { animation: vcls-fade .28s cubic-bezier(.23,1,.32,1) both; }
         @keyframes vcls-fade { from { opacity: 0 } to { opacity: 1 } }
-
-        .vcls-track {
-          width: 140px; height: 3px; border-radius: 99px; overflow: hidden;
-          background: rgba(255,255,255,.22);
-        }
-        .vcls-fill {
-          display: block; width: 100%; height: 100%; border-radius: 99px; background: #fff;
-          animation: vcls-bar 1.4s cubic-bezier(.65,0,.35,1) infinite;
-        }
-        @keyframes vcls-bar {
-          0%   { transform: translateX(-100%) scaleX(.6) }
-          50%  { transform: translateX(0%)    scaleX(1)  }
-          100% { transform: translateX(100%)  scaleX(.6) }
-        }
-
-        /* Con "reducir movimiento" activo: logo íntegro y sin barridos */
-        @media (prefers-reduced-motion: reduce) {
-          .vcls-root { animation: none }
-          .vcls-logo img { opacity: 1 }
-          .vcls-shine { display: none }
-          .vcls-fill { animation: none; opacity: .6 }
-        }
+        @media (prefers-reduced-motion: reduce) { .vcls-root { animation: none } }
       `}</style>
 
-      <BrandLogo shimmer />
-
-      <div className="vcls-track" style={{ marginTop: 26 }}>
-        <span className="vcls-fill" />
-      </div>
+      {/* Sin barra de progreso: el aro ya dice que algo está cargando, y las dos
+          juntas repiten el mismo mensaje. */}
+      <AroCarga diametro={ARO_D} grosor={ARO_GRUESO} logo={LOGO_W} tinta="#fff" />
 
       {/* Texto de etapa: el que sale se va hacia arriba, el que entra sube desde abajo */}
       <div style={{ position: 'relative', height: 20, width: 280, marginTop: 22 }}>
@@ -172,7 +115,7 @@ export function LoadingCurtain() {
       aria-hidden="true"
     >
       <style>{`
-        ${SHARED_CSS}
+        ${ARO_CSS}
         .vcls-curtain {
           animation: vcls-slide .9s cubic-bezier(.32,.72,0,1) .12s both;
         }
@@ -180,18 +123,18 @@ export function LoadingCurtain() {
           from { transform: translateX(0) }
           to   { transform: translateX(100%) }
         }
-        /* El logo se apaga primero para que la cortina salga limpia */
-        .vcls-curtain .vcls-logo {
-          animation: vcls-logo-out .24s ease-out both;
+        /* El aro se apaga primero para que la cortina salga limpia */
+        .vcls-curtain .vc-aro {
+          animation: vcls-aro-out .24s ease-out both;
         }
-        @keyframes vcls-logo-out { from { opacity: 1 } to { opacity: 0 } }
+        @keyframes vcls-aro-out { from { opacity: 1 } to { opacity: 0 } }
 
         @media (prefers-reduced-motion: reduce) {
           .vcls-curtain { animation: vcls-curtain-fade .3s ease-out both }
           @keyframes vcls-curtain-fade { from { opacity: 1 } to { opacity: 0 } }
         }
       `}</style>
-      <BrandLogo shimmer={false} />
+      <AroCarga diametro={ARO_D} grosor={ARO_GRUESO} logo={LOGO_W} tinta="#fff" />
     </div>
   );
 }

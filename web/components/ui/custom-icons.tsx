@@ -803,6 +803,16 @@ const COLORES_DE_DEPORTE: Record<string, { color: string; sombra: string }> = {
 // mano). Ahí cae en el morado de marca, que nunca se ve mal.
 const NEUTRO = { color: '#6B2FBB', sombra: '#3B177C' };
 
+/**
+ * Los doce colores del catálogo, en orden, para el aro de las pantallas de
+ * carga. Se exporta la lista y no una copia escrita a mano allá: el día que un
+ * deporte cambie de color, el aro lo hereda sin que nadie se acuerde de ir a
+ * buscarlo. El orden es el de este archivo, que es el que reparte los colores
+ * alrededor del aro.
+ */
+export const PALETA_DEPORTES: string[] =
+  Object.values(COLORES_DE_DEPORTE).map(({ color }) => color);
+
 function claveDe(nombre: string): string {
   return nombre.trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 }

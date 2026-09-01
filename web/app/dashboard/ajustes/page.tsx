@@ -302,9 +302,22 @@ function AjustesPageContent() {
     reader.readAsDataURL(file);
   }
 
+  /**
+   * El recorte inicial va en pixeles y sobre las medidas MOSTRADAS, no sobre
+   * las naturales ni en porcentaje.
+   *
+   * Antes se creaba en '%' y `handleCropConfirm` multiplicaba esos valores por
+   * la escala de la imagen como si fueran pixeles: con una foto de 1280 px
+   * mostrada a 400, recortaba un cuadro de 288 px desde la esquina superior
+   * izquierda en vez de los 1152 del centro. En un logo con fondo oscuro eso
+   * salia negro. Solo se arreglaba moviendo el recorte, porque
+   * `react-image-crop` entrega pixeles en `onChange` y ahi las unidades
+   * volvian a coincidir por casualidad.
+   */
   const onImageLoad = useCallback((e: React.SyntheticEvent<HTMLImageElement>) => {
-    const { naturalWidth: w, naturalHeight: h } = e.currentTarget;
-    setCrop(centerCrop(makeAspectCrop({ unit: '%', width: 90 }, 1, w, h), w, h));
+    const { width, height } = e.currentTarget;
+    const lado = Math.min(width, height) * 0.9;
+    setCrop(centerCrop(makeAspectCrop({ unit: 'px', width: lado }, 1, width, height), width, height));
   }, []);
 
   async function handleCropConfirm() {

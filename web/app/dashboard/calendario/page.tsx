@@ -205,6 +205,27 @@ export default function CalendarioPage() {
   // Las clases del mes, calculadas del horario. Se recalculan solo al cambiar
   // de mes o el horario: son cuatro o cinco por clase y se recorren en cada
   // celda del calendario.
+  // Los grupos que salen en el horario, con su color ya resuelto. Se sacan de
+  // las clases y no de `/grupos` para no pedir una lista mas: un grupo sin
+  // ninguna clase no pinta nada en el calendario, asi que tampoco va en la
+  // leyenda. Las clases con color propio entran como su propia entrada.
+  const gruposDelHorario = useMemo(() => {
+    const vistos = new Map<string, { id: string; nombre: string; color: string }>();
+    for (const c of clases) {
+      const color = colorDeClase(c, c.grupo ? [c.grupo] : []);
+      // La clave es el color y no el grupo: dos clases del mismo grupo con
+      // colores distintos son dos entradas, que es lo que se ve en pantalla.
+      const clave = c.grupo ? `${c.grupo.id}|${color}` : `suelta|${color}`;
+      if (vistos.has(clave)) continue;
+      vistos.set(clave, {
+        id: clave,
+        nombre: c.grupo && !c.color ? c.grupo.nombre : c.nombre,
+        color,
+      });
+    }
+    return [...vistos.values()].sort((a, b) => a.nombre.localeCompare(b.nombre));
+  }, [clases]);
+
   const clasesMes = useMemo(
     () => (verClases ? clasesDelMes(clases, year, month, sinEntrenar) : []),
     [clases, year, month, sinEntrenar, verClases]);
@@ -313,14 +334,35 @@ export default function CalendarioPage() {
             </button>
           )}
 
-          {/* Leyenda */}
-          <div className="flex gap-4 px-1">
-            {(['COMPETITION', 'TRAINING'] as EventType[]).map(t => (
-              <div key={t} className="flex items-center gap-1.5">
-                <div className="w-2 h-2 rounded-full" style={{ background: TYPE_COLOR[t] }} />
-                <span className="text-[11px] font-semibold text-muted-foreground">{TYPE_LABEL[t]}</span>
+          {/* Leyenda.
+              Los grupos van aparte de los tipos de evento y separados por una
+              linea, no revueltos en la misma fila: responden preguntas
+              distintas. Rojo y azul dicen QUE ES —competencia o entrenamiento—
+              y los grupos dicen DE QUIEN ES. Mezclarlos en un solo renglon los
+              haria parecer la misma escala. */}
+          <div className="flex flex-col gap-2 px-1">
+            <div className="flex gap-4 flex-wrap">
+              {(['COMPETITION', 'TRAINING'] as EventType[]).map(t => (
+                <div key={t} className="flex items-center gap-1.5">
+                  <div className="w-2 h-2 rounded-full" style={{ background: TYPE_COLOR[t] }} />
+                  <span className="text-[11px] font-semibold text-muted-foreground">{TYPE_LABEL[t]}</span>
+                </div>
+              ))}
+            </div>
+
+            {verClases && gruposDelHorario.length > 0 && (
+              <div className="flex gap-x-4 gap-y-1.5 flex-wrap pt-2"
+                style={{ borderTop: '1px solid rgba(120,80,200,0.14)' }}>
+                {gruposDelHorario.map(g => (
+                  <div key={g.id} className="flex items-center gap-1.5 min-w-0">
+                    <div className="w-2 h-2 rounded-full shrink-0" style={{ background: g.color }} />
+                    <span className="text-[11px] font-semibold text-muted-foreground truncate">
+                      {g.nombre}
+                    </span>
+                  </div>
+                ))}
               </div>
-            ))}
+            )}
           </div>
         </div>
 

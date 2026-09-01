@@ -106,9 +106,9 @@ export default function ModalPrimerHorario({ onCerrar }: { onCerrar: () => void 
     setGuardando(true); setError('');
     try {
       const token = await getToken();
-      await apiFetch('/clases/varias', {
-        token, method: 'POST',
-        body: JSON.stringify({ nombre: limpio, locationId: sedeId, dias, hora }),
+      await apiFetch('/clases/semana', {
+        token, method: 'PUT',
+        body: JSON.stringify({ ids: [], nombre: limpio, locationId: sedeId, dias, hora }),
       });
       setHechos(h => [...h, { nombre: limpio, horario: resumen(dias, hora), clases: dias.length }]);
       setNombre(''); setDias([]); setHora('06:00');

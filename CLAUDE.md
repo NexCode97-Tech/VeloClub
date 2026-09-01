@@ -129,10 +129,9 @@ GET/POST   /locations
 GET        /me                       # bootstrap de sesión (incluye el selector de deporte)
 GET/PATCH  /clubs/:id               # configuración del club
 
-GET/POST   /clases                    # el horario semanal
-POST       /clases/varias             # la misma clase en varios dias, en una transacción
+GET        /clases                    # el horario semanal
+PUT        /clases/semana             # la clase y todos sus días, en una transacción
 GET        /clases/dia?fecha=…        # lo que Asistencia necesita para el selector
-PATCH      /clases/:id
 DELETE     /clases/:id                # desactiva, no borra
 
 GET/POST   /deportes                 # las carpetas del club

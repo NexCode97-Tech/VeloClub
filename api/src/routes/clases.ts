@@ -29,22 +29,6 @@ const color = z.string()
           'Ese color lo usa el calendario para los eventos')
   .nullable().optional();
 
-const claseSchema = z.object({
-  nombre:     z.string().min(1).max(60),
-  locationId: z.string().min(1),
-  diaSemana:  z.number().int().min(0).max(6),
-  hora:       z.string().regex(HORA, 'La hora debe ir en formato 24h, por ejemplo 06:00'),
-  // Quienes entran a la planilla salen de esto cruzado con la sede. No hay
-  // lista aparte: ver `api/src/lib/planilla.ts`.
-  categoria:  z.string().max(60).nullable().optional(),
-  // En null se le asigna uno por su posicion en el horario.
-  color,
-});
-
-const claseParcial = claseSchema.partial().extend({
-  activa: z.boolean().optional(),
-});
-
 // El horario lo define quien dirige el club. Un entrenador lo consulta al
 // pasar asistencia, pero no le cambia el horario al club.
 function soloAdmin(role: string | undefined): boolean {
@@ -126,22 +110,29 @@ router.get('/dia', requireAuth, async (req, res) => {
   });
 });
 
-// POST /clases/varias — la misma clase en varios dias, de un solo golpe.
+// PUT /clases/semana — una clase y todos sus dias, de un solo golpe.
 //
-// Existe para el modal de bienvenida, donde la persona marca «lunes, miercoles
-// y viernes a las 6» y espera que quede. Hacerlo con tres peticiones sueltas
-// deja el horario a medias si la segunda falla, y el que abre Ajustes despues
-// no tiene como saber cual falto. Va en una transaccion: o quedan todas o
-// ninguna.
-router.post('/varias', requireAuth, async (req, res) => {
+// Una clase es una cosa que ocurre varios dias: «la de la mañana» es lunes,
+// miercoles y viernes a las 6. En la base cada dia es una fila, porque la
+// asistencia se toma por dia, pero quien arma el horario escribe el nombre, la
+// hora y la sede UNA vez y marca los dias.
+//
+// Por eso esta ruta recibe el conjunto entero y no una clase suelta: crea los
+// dias que faltan, actualiza los que siguen y apaga los que se desmarcaron. Con
+// tres peticiones sueltas, si la segunda falla el horario queda a medias y el
+// que lo abra despues no tiene como saber cual falto.
+//
+// `ids` son las filas que hoy forman esta clase; va vacio cuando es nueva.
+router.put('/semana', requireAuth, async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'No autenticado' });
   if (!soloAdmin(req.user.role)) return res.status(403).json({ error: 'Solo administradores' });
 
   const parsed = z.object({
+    ids:        z.array(z.string()).max(7).optional(),
     nombre:     z.string().min(1).max(60),
     locationId: z.string().min(1),
-    // Al menos uno: una clase sin dias no aparece en ningun horario, y este
-    // endpoint existe justamente para crearlos.
+    // Al menos uno: una clase sin dias no aparece en ningun horario. Para
+    // quitarla entera esta DELETE, que dice lo que hace.
     dias:       z.array(z.number().int().min(0).max(6)).min(1).max(7),
     hora:       z.string().regex(HORA, 'La hora debe ir en formato 24h, por ejemplo 06:00'),
     categoria:  z.string().max(60).nullable().optional(),
@@ -154,93 +145,48 @@ router.post('/varias', requireAuth, async (req, res) => {
     return res.status(400).json({ error: 'La sede no pertenece a tu club' });
   }
 
-  // Los dias repetidos se descartan: el mismo dia a la misma hora con el mismo
-  // nombre es la misma clase dos veces.
+  // Los dias repetidos se descartan: el mismo dia a la misma hora es la misma
+  // clase dos veces.
   const dias = [...new Set(parsed.data.dias)];
 
-  await prisma.claseHorario.createMany({
-    data: dias.map(d => ({
-      clubId,
-      deporteId:  carpetaDe(req),
-      nombre:     parsed.data.nombre.trim(),
-      locationId: parsed.data.locationId,
-      diaSemana:  d,
-      hora:       parsed.data.hora,
-      categoria:  parsed.data.categoria?.trim() || null,
-      color:      parsed.data.color ?? null,
-    })),
-  });
+  // Se atan al club antes de tocarlas: buscarlas solo por id dejaria editar el
+  // horario de otro mandando ids ajenos.
+  const actuales = parsed.data.ids?.length
+    ? await prisma.claseHorario.findMany({
+        where: { id: { in: parsed.data.ids }, clubId, activa: true },
+        select: { id: true, diaSemana: true },
+      })
+    : [];
+
+  const comun = {
+    nombre:     parsed.data.nombre.trim(),
+    locationId: parsed.data.locationId,
+    hora:       parsed.data.hora,
+    categoria:  parsed.data.categoria?.trim() || null,
+    color:      parsed.data.color ?? null,
+  };
+
+  const porDia = new Map(actuales.map(c => [c.diaSemana, c.id]));
+
+  await prisma.$transaction([
+    // Los dias que siguen conservan su fila, y con ella su asistencia: cambiar
+    // la hora de la clase del lunes no puede borrar quien fue el lunes pasado.
+    ...dias.filter(d => porDia.has(d)).map(d =>
+      prisma.claseHorario.update({ where: { id: porDia.get(d)! }, data: comun })),
+
+    ...dias.filter(d => !porDia.has(d)).map(d =>
+      prisma.claseHorario.create({
+        data: { ...comun, clubId, deporteId: carpetaDe(req), diaSemana: d },
+      })),
+
+    // Los desmarcados se apagan, no se borran: su historial de asistencia
+    // sigue contando en los reportes, igual que al quitar una clase entera.
+    ...actuales.filter(c => !dias.includes(c.diaSemana)).map(c =>
+      prisma.claseHorario.update({ where: { id: c.id }, data: { activa: false } })),
+  ]);
 
   emitToClub(clubId, 'attendance');
-  res.status(201).json({ creadas: dias.length });
-});
-
-// POST /clases
-router.post('/', requireAuth, async (req, res) => {
-  if (!req.user) return res.status(401).json({ error: 'No autenticado' });
-  if (!soloAdmin(req.user.role)) return res.status(403).json({ error: 'Solo administradores' });
-
-  const parsed = claseSchema.safeParse(req.body);
-  if (!parsed.success) return res.status(400).json({ error: parsed.error.issues });
-
-  const clubId = req.user.clubId ?? '';
-  if (!await sedeEsDelClub(parsed.data.locationId, clubId)) {
-    return res.status(400).json({ error: 'La sede no pertenece a tu club' });
-  }
-
-  const clase = await prisma.claseHorario.create({
-    data: {
-      clubId,
-      deporteId:  carpetaDe(req),
-      nombre:     parsed.data.nombre.trim(),
-      locationId: parsed.data.locationId,
-      diaSemana:  parsed.data.diaSemana,
-      hora:       parsed.data.hora,
-      categoria:  parsed.data.categoria?.trim() || null,
-      color:      parsed.data.color ?? null,
-    },
-    include: conSede,
-  });
-
-  emitToClub(clubId, 'attendance');
-  res.status(201).json({ clase });
-});
-
-// PATCH /clases/:id
-router.patch('/:id', requireAuth, async (req, res) => {
-  if (!req.user) return res.status(401).json({ error: 'No autenticado' });
-  if (!soloAdmin(req.user.role)) return res.status(403).json({ error: 'Solo administradores' });
-
-  const parsed = claseParcial.safeParse(req.body);
-  if (!parsed.success) return res.status(400).json({ error: parsed.error.issues });
-
-  const clubId = req.user.clubId ?? '';
-  // Se ata al club: buscarla solo por id dejaria editar el horario de otro.
-  const actual = await prisma.claseHorario.findFirst({
-    where: { id: String(req.params.id), clubId },
-  });
-  if (!actual) return res.status(404).json({ error: 'Clase no encontrada' });
-
-  if (parsed.data.locationId && !await sedeEsDelClub(parsed.data.locationId, clubId)) {
-    return res.status(400).json({ error: 'La sede no pertenece a tu club' });
-  }
-
-  const clase = await prisma.claseHorario.update({
-    where: { id: actual.id },
-    data: {
-      ...(parsed.data.nombre     !== undefined ? { nombre: parsed.data.nombre.trim() } : {}),
-      ...(parsed.data.locationId !== undefined ? { locationId: parsed.data.locationId } : {}),
-      ...(parsed.data.diaSemana  !== undefined ? { diaSemana: parsed.data.diaSemana } : {}),
-      ...(parsed.data.hora       !== undefined ? { hora: parsed.data.hora } : {}),
-      ...(parsed.data.categoria  !== undefined ? { categoria: parsed.data.categoria?.trim() || null } : {}),
-      ...(parsed.data.color      !== undefined ? { color: parsed.data.color } : {}),
-      ...(parsed.data.activa     !== undefined ? { activa: parsed.data.activa } : {}),
-    },
-    include: conSede,
-  });
-
-  emitToClub(clubId, 'attendance');
-  res.json({ clase });
+  res.json({ dias: dias.length });
 });
 
 // DELETE /clases/:id — desactiva, no borra.

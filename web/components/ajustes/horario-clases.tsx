@@ -31,6 +31,26 @@ export interface Clase {
   location: { id: string; name: string };
 }
 
+/**
+ * Lo que se edita en el modal.
+ *
+ * No es una `Clase`: una clase, para quien arma el horario, es una cosa que
+ * ocurre VARIOS dias —«la de la mañana» es lunes, miercoles y viernes a las 6—
+ * y en la base cada dia es una fila propia porque la asistencia se toma por
+ * dia. Aca se junta lo que el modal escribe una sola vez con la lista de dias.
+ *
+ * `ids` son las filas que hoy forman esta clase. Va vacio cuando es nueva.
+ */
+interface EnEdicion {
+  ids: string[];
+  nombre: string;
+  dias: number[];
+  hora: string;
+  categoria: string | null;
+  color: string | null;
+  locationId: string;
+}
+
 /** "06:00" → "6:00 a. m." — el horario se lee, no se calcula. */
 export function horaLegible(hhmm: string): string {
   const [h, m] = hhmm.split(':').map(Number);
@@ -52,10 +72,10 @@ export default function HorarioClases({ sinEntrenamiento = [] }: { sinEntrenamie
   const [cargando, setCargando] = useState(true);
   const [error, setError]     = useState('');
 
-  // Clase en edición. `null` = cerrado; sin `id` = una nueva.
-  const [editando, setEditando] = useState<Partial<Clase> | null>(null);
+  // Clase en edición. `null` = cerrado; sin `ids` = una nueva.
+  const [editando, setEditando] = useState<EnEdicion | null>(null);
   const [guardando, setGuardando] = useState(false);
-  const [porBorrar, setPorBorrar] = useState<Clase | null>(null);
+  const [porBorrar, setPorBorrar] = useState<EnEdicion | null>(null);
 
   const cargar = useCallback(async () => {
     try {
@@ -80,8 +100,9 @@ export default function HorarioClases({ sinEntrenamiento = [] }: { sinEntrenamie
   function abrirNueva(dia = 1) {
     setError('');
     setEditando({
+      ids: [],
       nombre: '',
-      diaSemana: dia,
+      dias: [dia],
       hora: '06:00',
       categoria: '',
       locationId: sedes[0]?.id ?? '',
@@ -89,21 +110,60 @@ export default function HorarioClases({ sinEntrenamiento = [] }: { sinEntrenamie
     });
   }
 
+  /**
+   * Abrir una clase que ya existe recoge TODOS sus dias.
+   *
+   * Se reconocen por nombre, sede y hora: es lo que el modal escribe una sola
+   * vez, asi que dos filas que coinciden en las tres son el lunes y el
+   * miercoles de la misma clase. La hora entra a proposito — «Mañana» a las 6 y
+   * «Mañana» a las 8 son dos clases distintas aunque se llamen igual.
+   */
+  function abrirExistente(c: Clase) {
+    setError('');
+    const hermanas = clases.filter(x =>
+      x.nombre.trim().toLowerCase() === c.nombre.trim().toLowerCase() &&
+      x.locationId === c.locationId &&
+      x.hora === c.hora);
+    setEditando({
+      ids: hermanas.map(x => x.id),
+      nombre: c.nombre,
+      dias: [...new Set(hermanas.map(x => x.diaSemana))],
+      hora: c.hora,
+      categoria: c.categoria ?? '',
+      color: c.color,
+      locationId: c.locationId,
+    });
+  }
+
+  /** Marcar y desmarcar. El ultimo no se quita: para eso esta «Quitar». */
+  function alternarDia(d: number) {
+    setEditando(e => {
+      if (!e) return e;
+      const puesto = e.dias.includes(d);
+      if (puesto && e.dias.length === 1) return e;
+      return { ...e, dias: puesto ? e.dias.filter(x => x !== d) : [...e.dias, d] };
+    });
+  }
+
   async function guardar() {
     if (!editando || guardando) return;
-    const { id, nombre, diaSemana, hora, categoria, locationId, color } = editando;
-    if (!nombre?.trim() || !locationId || diaSemana === undefined || !hora) return;
+    const { ids, nombre, dias, hora, categoria, locationId, color } = editando;
+    if (!nombre.trim() || !locationId || dias.length === 0 || !hora) return;
 
     setGuardando(true); setError('');
     try {
       const token = await getToken();
-      const cuerpo = JSON.stringify({
-        nombre: nombre.trim(), diaSemana, hora,
-        categoria: categoria?.trim() || null, locationId,
-        color: color ?? null,
+      // Una sola peticion con la clase entera. Los dias que se marcaron y los
+      // que se quitaron los resuelve el servidor en una transaccion: hacerlo
+      // aca con tres llamadas deja el horario a medias si una falla.
+      await apiFetch('/clases/semana', {
+        token, method: 'PUT',
+        body: JSON.stringify({
+          ids, nombre: nombre.trim(), dias, hora,
+          categoria: categoria?.trim() || null, locationId,
+          color: color ?? null,
+        }),
       });
-      if (id) await apiFetch(`/clases/${id}`, { token, method: 'PATCH', body: cuerpo });
-      else    await apiFetch('/clases',       { token, method: 'POST',  body: cuerpo });
       setEditando(null);
       await cargar();
     } catch (err) {
@@ -111,11 +171,15 @@ export default function HorarioClases({ sinEntrenamiento = [] }: { sinEntrenamie
     } finally { setGuardando(false); }
   }
 
+  // Quitarla la quita de todos sus dias: es una sola cosa, y dejarla suelta el
+  // miercoles despues de haberla borrado seria un fantasma.
   async function borrar() {
     if (!porBorrar) return;
     try {
       const token = await getToken();
-      await apiFetch(`/clases/${porBorrar.id}`, { token, method: 'DELETE' });
+      for (const id of porBorrar.ids) {
+        await apiFetch(`/clases/${id}`, { token, method: 'DELETE' });
+      }
       setPorBorrar(null);
       await cargar();
     } catch (err) {
@@ -224,7 +288,7 @@ export default function HorarioClases({ sinEntrenamiento = [] }: { sinEntrenamie
                       <button
                         key={c.id}
                         type="button"
-                        onClick={() => { setError(''); setEditando(c); }}
+                        onClick={() => abrirExistente(c)}
                         aria-label={'Editar ' + c.nombre + ', ' + d.nombre + ' ' + horaLegible(c.hora)}
                         className="block w-full text-left pl-2.5 py-0.5 transition-opacity hover:opacity-70"
                         style={{ border: 0, borderLeft: '2.5px solid ' + color }}
@@ -303,7 +367,7 @@ export default function HorarioClases({ sinEntrenamiento = [] }: { sinEntrenamie
             >
               <div className="flex items-center justify-between px-5 py-4 border-b border-border/60">
                 <p className="text-[15px] font-semibold text-foreground">
-                  {editando.id ? 'Editar clase' : 'Nueva clase'}
+                  {editando.ids.length ? 'Editar clase' : 'Nueva clase'}
                 </p>
                 <button onClick={() => setEditando(null)} aria-label="Cerrar"
                   className="w-8 h-8 rounded-full flex items-center justify-center text-muted-foreground hover:bg-secondary transition-colors">
@@ -317,7 +381,7 @@ export default function HorarioClases({ sinEntrenamiento = [] }: { sinEntrenamie
                   <div className="flex items-start gap-2">
                     <Input
                       className="flex-1"
-                      value={editando.nombre ?? ''}
+                      value={editando.nombre}
                       onChange={e => setEditando({ ...editando, nombre: e.target.value })}
                       placeholder="Mañana, Tarde, Formativa…"
                       autoFocus
@@ -325,7 +389,7 @@ export default function HorarioClases({ sinEntrenamiento = [] }: { sinEntrenamie
                     <SelectorColor
                       etiqueta="Color de la clase"
                       value={colorDeClase(
-                        { nombre: editando.nombre ?? '', color: editando.color ?? null },
+                        { nombre: editando.nombre, color: editando.color },
                         nombres,
                       )}
                       onChange={color => setEditando({ ...editando, color })}
@@ -334,34 +398,46 @@ export default function HorarioClases({ sinEntrenamiento = [] }: { sinEntrenamie
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label className="text-[12px]">Día</Label>
+                  <Label className="text-[12px]">Días</Label>
                   <div className="flex gap-1.5 flex-wrap">
                     {/* Mismo circulo que "Dias sin entrenamiento": 40px, borde
                         de 2 y la misma abreviatura. Solo cambia el color, y a
                         proposito — el rojo de alla significa "no se entrena".
-                        Los dias cerrados no se ofrecen. */}
-                    {DIAS_SEMANA.filter(d => !sinEntrenamiento.includes(d.valor)).map(d => (
-                      <button
-                        key={d.valor}
-                        type="button"
-                        aria-label={d.nombre}
-                        onClick={() => setEditando({ ...editando, diaSemana: d.valor })}
-                        className="w-10 h-10 rounded-full text-[12px] font-semibold border-2 transition-all flex items-center justify-center"
-                        style={editando.diaSemana === d.valor
-                          ? { background: 'rgba(56,29,160,0.08)', borderColor: '#381DA0', color: '#381DA0' }
-                          : { background: '#fff', borderColor: 'rgba(120,80,200,0.15)', color: '#8E87A8' }}
-                      >
-                        {d.corto}
-                      </button>
-                    ))}
+                        Los dias cerrados no se ofrecen.
+
+                        Se marcan varios y se desmarcan volviendo a oprimir. Con
+                        uno solo, una clase de lunes, miercoles y viernes habia
+                        que escribirla tres veces entera, repitiendo a mano el
+                        nombre, la hora, la sede y la categoria en cada una. */}
+                    {DIAS_SEMANA.filter(d => !sinEntrenamiento.includes(d.valor)).map(d => {
+                      const puesto = editando.dias.includes(d.valor);
+                      return (
+                        <button
+                          key={d.valor}
+                          type="button"
+                          aria-label={d.nombre}
+                          aria-pressed={puesto}
+                          onClick={() => alternarDia(d.valor)}
+                          className="w-10 h-10 rounded-full text-[12px] font-semibold border-2 transition-all flex items-center justify-center"
+                          style={puesto
+                            ? { background: 'rgba(56,29,160,0.08)', borderColor: '#381DA0', color: '#381DA0' }
+                            : { background: '#fff', borderColor: 'rgba(120,80,200,0.15)', color: '#8E87A8' }}
+                        >
+                          {d.corto}
+                        </button>
+                      );
+                    })}
                   </div>
+                  <p className="text-[11px] text-muted-foreground">
+                    Marca todos los días en que se dicta. Vuelve a oprimir uno para quitarlo.
+                  </p>
                 </div>
 
                 <div className="space-y-1.5">
                   <Label className="text-[12px]">Hora de inicio</Label>
                   <TimePicker
                     className="max-w-[180px]"
-                    value={editando.hora ?? '06:00'}
+                    value={editando.hora}
                     onChange={hora => setEditando({ ...editando, hora })}
                   />
                 </div>
@@ -458,13 +534,10 @@ export default function HorarioClases({ sinEntrenamiento = [] }: { sinEntrenamie
                     contrario de lo que la vista existe para mostrar; y sin el,
                     una clase no se podia quitar de ninguna forma. */}
                 <div className="flex gap-2">
-                  {editando.id && (
+                  {editando.ids.length > 0 && (
                     <button
                       type="button"
-                      onClick={() => {
-                        const c = clases.find(x => x.id === editando.id);
-                        if (c) { setEditando(null); setPorBorrar(c); }
-                      }}
+                      onClick={() => { const c = editando; setEditando(null); setPorBorrar(c); }}
                       aria-label="Quitar esta clase"
                       className="h-12 px-4 rounded-xl shrink-0 flex items-center justify-center gap-2 text-[13px] font-semibold transition-colors hover:bg-red-50"
                       style={{ color: '#EF476F', border: '1.5px solid rgba(239,71,111,0.28)' }}
@@ -475,10 +548,13 @@ export default function HorarioClases({ sinEntrenamiento = [] }: { sinEntrenamie
                   )}
                   <Button
                     onClick={guardar}
-                    disabled={guardando || !editando.nombre?.trim() || !editando.locationId}
+                    disabled={guardando || !editando.nombre.trim() || !editando.locationId || editando.dias.length === 0}
                     className="flex-1 h-12 text-[14px]"
                   >
-                    {guardando ? 'Guardando…' : editando.id ? 'Guardar cambios' : 'Agregar clase'}
+                    {guardando ? 'Guardando…'
+                      : editando.ids.length ? 'Guardar cambios'
+                      : editando.dias.length > 1 ? 'Agregar en ' + editando.dias.length + ' días'
+                      : 'Agregar clase'}
                   </Button>
                 </div>
               </div>
@@ -509,6 +585,9 @@ export default function HorarioClases({ sinEntrenamiento = [] }: { sinEntrenamie
                 ¿Quitar «{porBorrar.nombre}» del horario?
               </p>
               <p className="text-[12px] text-muted-foreground leading-relaxed mb-4">
+                {porBorrar.dias.length > 1
+                  ? 'Se quita de los ' + porBorrar.dias.length + ' días en que se dicta. '
+                  : ''}
                 Deja de aparecer de hoy en adelante. La asistencia que ya se tomó en esta clase
                 no se borra y sigue contando en los reportes.
               </p>

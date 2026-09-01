@@ -59,6 +59,18 @@ export function useLocations() {
   });
 }
 
+export function useGrupos() {
+  const getToken = useToken();
+  return useQuery({
+    queryKey: QK.grupos(),
+    queryFn: async () => {
+      const token = await getToken();
+      return apiFetch<{ grupos: { id: string; nombre: string; location: { id: string; name: string } }[] }>(
+        '/grupos', { token });
+    },
+  });
+}
+
 export function useClubSettings() {
   const getToken = useToken();
   return useQuery({

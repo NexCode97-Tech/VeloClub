@@ -14,11 +14,15 @@ const ROLES_VIEJOS: Record<string, string> = {
   STUDENT: 'DEPORTISTA',
 };
 
-export function downloadMembersTemplate(locations: LocationOption[] = []) {
+export function downloadMembersTemplate(
+  locations: LocationOption[] = [],
+  grupos: { nombre: string }[] = [],
+) {
   const ROLES      = ['ADMIN', 'ENTRENADOR', 'DEPORTISTA'];
 
   const NIVELES    = ['Escuela', 'Novatos', 'Intermedio', 'Avanzados', 'Federados'];
   const SEDES      = locations.map(l => l.name);
+  const GRUPOS     = grupos.map(g => g.nombre);
 
   const DOC_TYPES = ['CC', 'TI', 'RC', 'CE', 'Pasaporte', 'NIT', 'Otro'];
 
@@ -37,6 +41,7 @@ export function downloadMembersTemplate(locations: LocationOption[] = []) {
     'Rol (ADMIN / ENTRENADOR / DEPORTISTA)',
     'Día de corte mensualidad (1-31)',
     'Sede',
+    'Grupo',
   ];
 
   const example = [
@@ -54,6 +59,7 @@ export function downloadMembersTemplate(locations: LocationOption[] = []) {
     'DEPORTISTA',
     '15',
     SEDES[0] ?? '',
+    GRUPOS[0] ?? '',
   ];
 
   const notes = [
@@ -65,6 +71,7 @@ export function downloadMembersTemplate(locations: LocationOption[] = []) {
     '* Categoría y Nivel son opcionales (solo aplican a DEPORTISTA)',
     '* Día de corte: número entre 1 y 31',
     '* Sede: selecciona de la lista desplegable (opcional)',
+    '* Grupo: debe existir en la sede de esa fila. Si no coincide, el deportista se importa igual, sin grupo',
     '',
     'SOBRE LA FECHA DE NACIMIENTO',
     '* Escríbela como prefieras: 15/03/2005, 2005-03-15, 15-03-05 o 15 de marzo de 2005.',
@@ -82,18 +89,25 @@ export function downloadMembersTemplate(locations: LocationOption[] = []) {
   ws['!cols'] = [
     { wch: 25 }, { wch: 28 }, { wch: 14 }, { wch: 28 },
     { wch: 18 }, { wch: 20 }, { wch: 25 }, { wch: 24 },
-    { wch: 14 }, { wch: 22 }, { wch: 16 }, { wch: 28 }, { wch: 30 }, { wch: 25 },
+    { wch: 14 }, { wch: 22 }, { wch: 16 }, { wch: 28 }, { wch: 30 }, { wch: 25 }, { wch: 22 },
   ];
 
-  // ── Hoja oculta "Listas" con las sedes del club ────────────────────────────
-  if (SEDES.length > 0) {
-    const wsListas = XLSX.utils.aoa_to_sheet(SEDES.map(s => [s]));
-    wsListas['!cols'] = [{ wch: 30 }];
+  // ── Hoja oculta "Listas": sedes en A, grupos en B ──────────────────────────
+  //
+  // Las dos columnas van en la misma hoja porque Excel referencia los rangos
+  // por hoja, y dos hojas de listas obligan a mantener dos nombres en vez de
+  // uno. Las filas se rellenan hasta la mas larga: `aoa_to_sheet` recorta la
+  // fila corta y el rango de la otra columna quedaria mal calculado.
+  if (SEDES.length > 0 || GRUPOS.length > 0) {
+    const filas = Math.max(SEDES.length, GRUPOS.length);
+    const wsListas = XLSX.utils.aoa_to_sheet(
+      Array.from({ length: filas }, (_, i) => [SEDES[i] ?? '', GRUPOS[i] ?? '']));
+    wsListas['!cols'] = [{ wch: 30 }, { wch: 30 }];
     XLSX.utils.book_append_sheet(wb, wsListas, 'Listas');
   }
 
   // ── Validaciones de datos (dropdowns) ──────────────────────────────────────
-  // Columnas: E=TipoDoc(4), J=Categoría(9), K=Nivel(10), L=Rol(11), N=Sede(13)
+  // Columnas: E=TipoDoc(4), J=Categoría(9), K=Nivel(10), L=Rol(11), N=Sede(13), O=Grupo(14)
   const validations: object[] = [
     {
       sqref: 'E2:E1000',
@@ -140,6 +154,17 @@ export function downloadMembersTemplate(locations: LocationOption[] = []) {
     });
   }
 
+  if (GRUPOS.length > 0) {
+    validations.push({
+      sqref: 'O2:O1000',
+      type: 'list',
+      formula1: `Listas!$B$1:$B$${GRUPOS.length}`,
+      showErrorMessage: true,
+      errorTitle: 'Grupo inválido',
+      error: 'Selecciona un grupo de la lista',
+    });
+  }
+
   ws['!dataValidations'] = validations;
 
   XLSX.utils.book_append_sheet(wb, ws, 'Deportistas');
@@ -175,6 +200,7 @@ export interface MemberImportRow {
   role: 'ADMIN' | 'ENTRENADOR' | 'DEPORTISTA';
   paymentDueDay?: number;
   locationName?: string;
+  grupoName?: string;
 }
 
 const MESES: Record<string, number> = {
@@ -361,6 +387,7 @@ export function parseMembersExcel(
         const paymentDueDay = !isNaN(dueDayRaw) && dueDayRaw >= 1 && dueDayRaw <= 31 ? dueDayRaw : undefined;
 
         const locationName = texto(r, 'Sede');
+        const grupoName = texto(r, 'Grupo');
 
         // Si la celda traía algo y no se pudo interpretar, se avisa en vez de
         // descartar la fecha en silencio, que era lo que pasaba antes.
@@ -386,6 +413,7 @@ export function parseMembersExcel(
           role:             roleRaw as 'ADMIN' | 'ENTRENADOR' | 'DEPORTISTA',
           paymentDueDay,
           locationName,
+          grupoName,
         });
       });
 

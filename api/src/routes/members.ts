@@ -10,6 +10,23 @@ import { addToAllowlist, removeFromAllowlist, revokeClerkAccess, revokeClerkSess
 import { notifyClubStaff } from '../lib/notify';
 import { cacheGet, cacheSet, cacheDel } from '../lib/redis';
 import { sedesSonDelClub } from '../lib/sedes';
+
+/**
+ * Los grupos que de verdad son de este club, de los ids que llegaron.
+ *
+ * Devuelve la lista filtrada y no un booleano a proposito: MemberGrupo no lleva
+ * deporteId propio, asi que el alcance no lo cubre, y esta consulta es la unica
+ * puerta. Filtrar es mas seguro que rechazar: una fila de Excel con un grupo de
+ * otra sede entra sin grupo en vez de perderse.
+ */
+async function gruposDelClub(ids: string[], clubId: string): Promise<string[]> {
+  if (!ids.length) return [];
+  const validos = await prisma.grupo.findMany({
+    where: { id: { in: ids }, clubId },
+    select: { id: true },
+  });
+  return validos.map(g => g.id);
+}
 import { invalidateMembersCache } from '../lib/deportistas';
 import { yaExiste } from '../lib/inscripcion';
 import { validarSubida } from '../lib/upload-guard';
@@ -43,6 +60,7 @@ const memberSchema = z.object({
   paymentDueDay: z.number().min(1).max(31).nullable().optional(),
   monthlyFee: z.number().positive().nullable().optional(),
   locationIds: z.array(z.string()).optional(),
+  grupoIds: z.array(z.string()).optional(),
   role: z.enum(['ADMIN', 'ENTRENADOR', 'DEPORTISTA']).optional(),
 });
 
@@ -217,12 +235,14 @@ router.post('/', requireAuth, async (req, res) => {
   const parsed = memberSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.issues });
 
-  const { locationIds, birthDate, ...rest } = parsed.data;
+  const { locationIds, grupoIds, birthDate, ...rest } = parsed.data;
   rest.fullName = toTitleCase(rest.fullName);
 
   if (locationIds && !await sedesSonDelClub(locationIds, req.user.clubId ?? '')) {
     return res.status(403).json({ error: 'Una o más sedes no pertenecen a este club' });
   }
+
+  const gruposValidos = await gruposDelClub(grupoIds ?? [], req.user.clubId ?? '');
 
   // Correo y documento no se repiten dentro del club. La base todavia no lo
   // garantiza con un indice, asi que la comprobacion de verdad es esta.
@@ -250,8 +270,14 @@ router.post('/', requireAuth, async (req, res) => {
         locations: locationIds?.length
           ? { create: locationIds.map((locId) => ({ locationId: locId })) }
           : undefined,
+        grupos: gruposValidos.length
+          ? { create: gruposValidos.map((gid) => ({ grupoId: gid })) }
+          : undefined,
       },
-      include: { locations: { include: { location: true } } },
+      include: {
+        locations: { include: { location: true } },
+        grupos: { select: { grupoId: true } },
+      },
     });
   } catch (err) {
     if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
@@ -332,12 +358,14 @@ router.put('/:id', requireAuth, async (req, res) => {
   const parsed = memberSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.issues });
 
-  const { locationIds, birthDate, ...rest } = parsed.data;
+  const { locationIds, grupoIds, birthDate, ...rest } = parsed.data;
   if (rest.fullName) rest.fullName = toTitleCase(rest.fullName);
 
   if (locationIds && !await sedesSonDelClub(locationIds, req.user.clubId ?? '')) {
     return res.status(403).json({ error: 'Una o más sedes no pertenecen a este club' });
   }
+
+  const gruposValidos = await gruposDelClub(grupoIds ?? [], req.user.clubId ?? '');
 
   // Al editar, el propio miembro no cuenta como choque consigo mismo. Y solo se
   // revisa lo que de verdad cambio: si alguien viejo ya venia con el correo
@@ -359,6 +387,13 @@ router.put('/:id', requireAuth, async (req, res) => {
     await prisma.memberLocation.deleteMany({ where: { memberId: id } });
   }
 
+  // Solo se borra si vinieron declarados. Sin esta condicion, cualquier edicion
+  // que no mande grupos —cambiar un telefono, por ejemplo— sacaria al
+  // deportista de su grupo sin que nadie lo pidiera.
+  if (grupoIds !== undefined) {
+    await prisma.memberGrupo.deleteMany({ where: { memberId: id } });
+  }
+
   const member = await prisma.member.update({
     where: { id },
     data: {
@@ -368,8 +403,14 @@ router.put('/:id', requireAuth, async (req, res) => {
       locations: locationIds?.length
         ? { create: locationIds.map((locId) => ({ locationId: locId })) }
         : undefined,
+      grupos: gruposValidos.length
+        ? { create: gruposValidos.map((gid) => ({ grupoId: gid })) }
+        : undefined,
     },
-    include: { locations: { include: { location: true } } },
+    include: {
+      locations: { include: { location: true } },
+      grupos: { select: { grupoId: true } },
+    },
   });
 
   // Si cambió la tarifa mensual, reflejarla en los pagos aún no pagados

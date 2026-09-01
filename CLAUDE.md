@@ -129,6 +129,11 @@ GET/POST   /locations
 GET        /me                       # bootstrap de sesión (incluye el selector de deporte)
 GET/PATCH  /clubs/:id               # configuración del club
 
+GET/POST   /grupos                     # los grupos de la carpeta
+PATCH      /grupos/:id
+DELETE     /grupos/:id                 # solo si no tiene clases colgadas
+PUT        /grupos/:id/miembros        # reemplaza la lista completa del grupo
+
 GET/POST   /deportes                 # las carpetas del club
 PATCH      /deportes/:id             # renombrar, activar, desactivar
 DELETE     /deportes/:id             # solo si está vacía
@@ -144,6 +149,13 @@ DELETE     /deportes/:id             # solo si está vacía
   cambia de deporte se decide por el rol.
 - `Member` = deportista. Puede o no tener `clerkId` (si fue invitado). Tiene su propio `role = STUDENT`.
 - `Payment` = mensualidad con `month` + `year` + `memberId`. Genera `CashEntry` automáticamente al pagarse.
+- `Grupo` = **con quién entrena** un deportista. Es un nombre y una sede; el día
+  y la hora viven en sus `ClaseHorario`. La planilla de una clase con grupo son
+  sus miembros; **sin grupo cae a la regla vieja**, sede cruzada con categoría.
+  Esa decisión vive en un solo sitio: `api/src/lib/planilla.ts`. La regla en una
+  línea: **la categoría describe al deportista, el grupo dice con quién
+  entrena**. Antes la categoría hacía las dos cosas, y por eso dos clases de la
+  misma sede y categoría a horas distintas devolvían la misma lista.
 - `Attendance` tiene constraint `@@unique([memberId, date])` — un registro por miembro por día.
 - `CalendarEvent` soporta recurrencia: `NONE | DAILY | WEEKLY | CUSTOM` (con `weekDays: Int[]`).
 - `Competition → CompetitionEvent → EventResult` (resultados de competencias).

@@ -31,6 +31,21 @@ const Contexto = createContext<DatosDeporte | null>(null);
 export const ProveedorDeporte = Contexto.Provider;
 
 /**
+ * El nombre del deporte activo, para mostrarlo como dato y no como control.
+ *
+ * Lo usa Ajustes, donde el selector dejó de salir: ahí saber en qué carpeta
+ * estás parado sigue sirviendo, pero cambiarla no, porque en esa pantalla no
+ * hay nada que dependa del deporte.
+ *
+ * Fuera del proveedor devuelve `null` en vez de reventar, igual que el selector.
+ */
+export function useDeporteActivo(): string | null {
+  const datos = useContext(Contexto);
+  if (!datos) return null;
+  return datos.lista.find(d => d.id === datos.activo)?.nombre ?? null;
+}
+
+/**
  * El selector en su versión de móvil, para colocarlo donde cada pantalla lo
  * necesite. Fuera del proveedor no revienta: no dibuja nada.
  */

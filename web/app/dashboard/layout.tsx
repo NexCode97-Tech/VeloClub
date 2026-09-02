@@ -10,7 +10,7 @@ import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { apiFetch } from '@/lib/api-client';
 import { deporteActivo, fijarDeporteActivo, fijarNombreDeporte } from '@/lib/deporte-activo';
 import SelectorDeporte from '@/components/ui/selector-deporte';
-import { ProveedorDeporte, SelectorDeporteMovil } from '@/lib/contexto-deporte';
+import { ProveedorDeporte } from '@/lib/contexto-deporte';
 import LoadingScreen, { LoadingCurtain, CURTAIN_MS, esperarPantallaCarga } from '@/components/ui/loading-screen';
 import { BottomCircleMenu } from '@/components/ui/bottom-circle-menu';
 import { SearchModal } from '@/components/ui/search-modal';
@@ -507,7 +507,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const tabItems   = role ? (ROLE_TABS[role] ?? ROLE_TABS.DEPORTISTA) : ROLE_TABS.DEPORTISTA;
   const sideNavItems = role ? (ROLE_NAV[role] ?? ROLE_NAV.DEPORTISTA) : ROLE_NAV.DEPORTISTA;
   // Inicio dibuja el selector por su cuenta, debajo del encabezado morado.
-  const esInicio   = pathname === '/dashboard';
   const tabHrefs   = new Set(tabItems.map((t) => t.href));
   const isOnExtra  = !tabHrefs.has(pathname) && pathname !== '/dashboard' && pathname.startsWith('/dashboard/');
 
@@ -934,17 +933,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </div>
           )}
 
-          {/* En movil no hay sidebar, asi que el selector va dentro del
-              contenido. Cuesta una fila en cada pantalla, y se paga a
-              proposito: sirve para saber en que deporte estas parado antes de
-              tomar asistencia o cobrar.
+          {/* En movil el selector de deporte sale SOLO en Inicio, y alli lo
+              dibuja la propia pantalla, debajo del encabezado morado.
 
-              Inicio es la excepcion y lo dibuja ella misma: alli va debajo del
-              encabezado morado, junto a las fichas de resumen. Puesto aca
-              arriba quedaba ENCIMA del encabezado, suelto y sin pertenecer a
-              nada. */}
-          {!esInicio && <SelectorDeporteMovil className="px-4 pt-4" />}
+              Estaba en todas: costaba la primera fila de cada modulo para algo
+              que casi nunca se toca —un club tiene un deporte, y los que tienen
+              dos no cambian a media jornada—, y en Ajustes ademas ofrecia un
+              control que esa pantalla no usa para nada. Ahi el deporte quedo
+              como dato, dentro del retrato.
 
+              Lo que se pierde: con dos deportes hay que pasar por Inicio para
+              cambiar. */}
           {children}
         </main>
 

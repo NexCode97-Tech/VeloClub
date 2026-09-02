@@ -11,6 +11,7 @@ import {
 import { IconAjustesCuenta, IconAyuda, IconCheck, IconClub, IconPerfil, IconSalir, IconSuscripcion, IconEliminar } from '@/components/ui/custom-icons';
 import SuscripcionCard from '@/components/ajustes/suscripcion-card';
 import HorarioClases from '@/components/ajustes/horario-clases';
+import { useDeporteActivo } from '@/lib/contexto-deporte';
 import { DIAS_SEMANA } from '@/lib/dias';
 import { PhoneInput } from '@/components/ui/phone-input';
 import { DatePicker } from '@/components/ui/date-picker';
@@ -102,6 +103,49 @@ function SearchableSelect({
   );
 }
 
+/**
+ * Una fila del menú de Ajustes en móvil.
+ *
+ * Es el mismo formato que ya tenían «Gestionar cuenta» y «Centro de ayuda»:
+ * ícono, nombre, la explicación debajo y la flecha. Las secciones —Mi perfil,
+ * Mi club, Mi suscripción— pasaron a usarlo en vez de la pastilla de tres
+ * íconos que había arriba, donde tres dibujos sin rótulo tenían que explicar
+ * solos a dónde llevaba cada uno.
+ *
+ * La flecha no es adorno: estas filas abren OTRA pantalla, con su «Atrás». Las
+ * que no van a ningún lado —cerrar sesión— no la llevan.
+ */
+function FilaAjuste({ icono: Icono, titulo, detalle, onClick, disabled, tono, sufijo }: {
+  icono: React.ElementType;
+  titulo: string;
+  detalle?: string;
+  onClick: () => void;
+  disabled?: boolean;
+  /** 'rojo' para lo que se sale de la rutina: cerrar sesión. */
+  tono?: 'rojo';
+  /** Reemplaza la flecha. Para el indicador de carga de «Gestionar cuenta». */
+  sufijo?: React.ReactNode;
+}) {
+  const rojo = tono === 'rojo';
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className={`w-full flex items-center gap-3 px-4 py-3.5 text-left transition-colors disabled:opacity-55 disabled:cursor-default ${rojo ? 'hover:bg-red-50 active:bg-red-100' : 'hover:bg-secondary/40 active:bg-secondary/60'}`}
+    >
+      <Icono className="w-4 h-4 shrink-0" style={rojo ? { color: '#EF476F' } : { color: '#8E87A8' }} />
+      <span className="flex-1 min-w-0">
+        <span className="block text-[13px] font-semibold" style={rojo ? { color: '#EF476F' } : { color: '#1A1028' }}>
+          {titulo}
+        </span>
+        {detalle && <span className="block text-[11px] text-muted-foreground mt-0.5">{detalle}</span>}
+      </span>
+      {sufijo ?? (!rojo && <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />)}
+    </button>
+  );
+}
+
 function SectionHeader({ label, icon: Icon }: { label: string; icon: React.ElementType }) {
   return (
     <div className="flex items-center gap-2 mb-3">
@@ -157,6 +201,11 @@ function AjustesPageContent() {
 
   const tabParam = searchParams.get('tab');
   const validTab: Tab = tabParam === 'club' || tabParam === 'suscripcion' ? tabParam : 'perfil';
+  // Sin `?tab=` en la url, el móvil muestra el menú. Con él, la sección y su
+  // «Atrás». Va por la url y no por estado para que el botón de atrás del
+  // teléfono haga lo mismo que el de la pantalla.
+  const enMenu = !tabParam;
+  const deporteActivo = useDeporteActivo();
   const [tab, setTab]               = useState<Tab>(validTab);
   const [role, setRole]             = useState<string | null>(null);
   const [memberMe, setMemberMe]     = useState<MemberMe | null>(null);
@@ -518,6 +567,110 @@ function AjustesPageContent() {
     </div>
   );
 
+  /* ── Móvil: el retrato ────────────────────────────────────────────────
+     La foto grande y centrada, con quién eres debajo. Antes iba de 56 px al
+     lado del nombre, y los dos peleaban por la misma fila sin que ninguno
+     ganara. Club y deporte quedan acá como dato porque el selector de deporte
+     dejó de salir en esta pantalla: se sigue sabiendo dónde estás parado, sin
+     un control que en Ajustes no se usa. */
+  const retratoMovil = (
+    <div className="bg-white border border-border rounded-2xl px-5 pt-6 pb-5 flex flex-col items-center text-center">
+      <div className="w-[88px] h-[88px] rounded-full overflow-hidden bg-secondary border border-border shrink-0 flex items-center justify-center">
+        {avatarSrc
+          // eslint-disable-next-line @next/next/no-img-element
+          ? <img src={avatarSrc} alt={displayName} className="w-full h-full object-cover" />
+          : <User className="w-10 h-10 text-muted-foreground/40" />
+        }
+      </div>
+      <p className="text-[17px] font-semibold text-foreground mt-3 mb-0">{displayName}</p>
+      <span
+        className="inline-flex px-2.5 py-0.5 rounded-full text-[10px] font-semibold tracking-wide mt-2"
+        style={{ background: `${PROFILE_ROLE_COLOR[role ?? ''] ?? '#381DA0'}1A`, color: PROFILE_ROLE_COLOR[role ?? ''] ?? '#381DA0' }}
+      >
+        {ROLE_LABELS[role ?? ''] ?? role}
+      </span>
+      {memberMe?.createdAt && (
+        <p className="text-[11px] text-muted-foreground mt-2 mb-0">{formatJoinDate(memberMe.createdAt)}</p>
+      )}
+      {club?.name && (
+        <div className="w-full flex mt-4 pt-4 border-t border-border">
+          <div className="flex-1 min-w-0 px-2">
+            <p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground m-0">Club</p>
+            <p className="text-[11.5px] font-semibold text-foreground mt-1 mb-0 truncate">{club.name}</p>
+          </div>
+          {deporteActivo && (
+            <div className="flex-1 min-w-0 px-2 border-l border-border">
+              <p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground m-0">Deporte</p>
+              <p className="text-[11.5px] font-semibold text-foreground mt-1 mb-0 truncate">{deporteActivo}</p>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+
+  /* ── Móvil: los datos que se editan, sin las opciones pegadas ────────── */
+  const datosMovil = (
+    <div className="bg-white border border-border rounded-2xl px-4 py-4 space-y-3">
+      <div className="space-y-1.5">
+        <Label className="text-[12px]">Nombre de usuario</Label>
+        <Input
+          value={profileName}
+          onChange={e => { setProfileName(e.target.value); setSavedProfile(false); }}
+          placeholder="Tu nombre completo"
+          className="text-sm h-12"
+        />
+      </div>
+      <div className="space-y-1.5">
+        <Label className="text-[12px]">Teléfono</Label>
+        <PhoneInput
+          value={phone}
+          onChange={v => { setPhone(v); setSavedProfile(false); }}
+          placeholder="Número de contacto"
+        />
+      </div>
+      <div className="space-y-1.5">
+        <Label className="text-[12px]">Correo electrónico</Label>
+        <div className="relative">
+          <Input
+            value={displayEmail} readOnly
+            className="text-muted-foreground bg-muted/30 cursor-not-allowed pr-10 text-sm h-12"
+          />
+          <Lock className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground/40" />
+        </div>
+      </div>
+      <Button
+        onClick={handleSaveProfile}
+        disabled={savingProfile}
+        className="w-full transition-all"
+        style={savedProfile ? { background: '#06D6A0' } : {}}
+      >
+        {savedProfile
+          ? <><IconCheck className="w-4 h-4 mr-2" />Guardado</>
+          : savingProfile ? 'Guardando...' : 'Guardar cambios'
+        }
+      </Button>
+    </div>
+  );
+
+  /* ── Móvil: el encabezado de una sección, con su «Atrás» ──────────────
+     Vuelve a `/dashboard/ajustes` en vez de `router.back()`: a esta pantalla
+     se llega tambien por enlace directo desde el sidebar, y ahi «atrás» sacaría
+     de Ajustes en vez de subir un nivel. */
+  const atrasMovil = (titulo: string) => (
+    <div className="flex items-center gap-2 px-4 pt-4 pb-3">
+      <button
+        type="button"
+        onClick={() => router.push('/dashboard/ajustes')}
+        aria-label="Volver a Ajustes"
+        className="w-9 h-9 -ml-1.5 rounded-full flex items-center justify-center text-muted-foreground hover:bg-secondary transition-colors shrink-0"
+      >
+        <ChevronRight className="w-5 h-5 rotate-180" />
+      </button>
+      <h1 className="text-[19px] font-semibold text-foreground m-0 tracking-tight truncate">{titulo}</h1>
+    </div>
+  );
+
   /* ── Tarjeta Zona de peligro — eliminar cuenta ─────────────────────────── */
   const dangerCard = (
     <div className="rounded-2xl p-5" style={{ background: 'rgba(239,71,111,0.04)', border: '1px solid rgba(239,71,111,0.18)' }}>
@@ -778,60 +931,116 @@ function AjustesPageContent() {
         document.body
       )}
 
-      {/* ══ MOBILE (< md) — tabs de íconos; en tablet/escritorio el sidebar ya
-          tiene el submenú, así que estos tabs no se muestran ═══════════════ */}
+      {/* ══ MÓVIL (< md) — un menú que lleva a cada sección ═══════════════════
+          Antes eran tres íconos sin rótulo en una pastilla, y el contenido
+          cambiaba debajo sin moverse de sitio: tres dibujos tenían que explicar
+          solos a dónde llevaba cada uno, y el que entraba a «Mi club» no sabía
+          que se había movido.
+
+          Ahora el menú es una lista con el mismo formato que ya tenían
+          «Gestionar cuenta» y «Centro de ayuda» —nombre, explicación y flecha—,
+          y cada sección abre su propia pantalla con su «Atrás».
+
+          En tablet y escritorio no aplica: el sidebar ya tiene el submenú. */}
       <div className="md:hidden">
-        {isAdmin && (
-          <div className="px-4 pb-4">
-            <div
-              className="relative flex rounded-2xl p-1 gap-1"
-              style={{ background: '#FFFFFF', boxShadow: '0 1px 4px rgba(0,0,0,0.08), inset 0 0 0 1px rgba(0,0,0,0.06)' }}
-            >
-              {([
-                { key: 'perfil'      as Tab, label: 'Mi perfil',      icon: IconPerfil },
-                { key: 'club'        as Tab, label: 'Mi club',        icon: IconClub },
-                { key: 'suscripcion' as Tab, label: 'Mi suscripción', icon: IconSuscripcion },
-              ]).map(({ key, label, icon: Icon }) => {
-                const active = tab === key;
-                return (
-                  <button key={key} onClick={() => setTab(key)} aria-label={label}
-                    className="relative flex-1 flex items-center justify-center py-2.5 rounded-xl z-10">
-                    {active && (
-                      <motion.div layoutId="ajustes-tab-pill" className="absolute inset-0 rounded-xl"
-                        style={{ background: '#381DA0', boxShadow: '0 4px 20px rgba(56,29,160,0.40)' }}
-                        transition={{ type: 'spring', stiffness: 500, damping: 35 }} />
-                    )}
-                    <Icon className="relative w-4 h-4 z-10" style={{ color: active ? '#fff' : '#8E87A8' }} />
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        )}
         <AnimatePresence mode="wait">
-          {(!isAdmin || tab === 'perfil') && (
-            <motion.div key="perfil"
+          {enMenu && (
+            <motion.div key="menu"
               initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.26, ease: [0.23, 1, 0.32, 1] }}
               className="px-4 pb-28 space-y-4">
-              {perfilCard}
+
+              {retratoMovil}
+
+              <div className="bg-white border border-border rounded-2xl overflow-hidden divide-y divide-border">
+                <FilaAjuste
+                  icono={IconPerfil}
+                  titulo="Mi perfil"
+                  detalle="Tu nombre, teléfono y correo"
+                  onClick={() => router.push('/dashboard/ajustes?tab=perfil')}
+                />
+                {isAdmin && (
+                  <FilaAjuste
+                    icono={IconClub}
+                    titulo="Mi club"
+                    detalle="Datos del club, horario y días sin entrenamiento"
+                    onClick={() => router.push('/dashboard/ajustes?tab=club')}
+                  />
+                )}
+                {isAdmin && (
+                  <FilaAjuste
+                    icono={IconSuscripcion}
+                    titulo="Mi suscripción"
+                    detalle="Tu plan y los pagos de la plataforma"
+                    onClick={() => router.push('/dashboard/ajustes?tab=suscripcion')}
+                  />
+                )}
+              </div>
+
+              <div className="bg-white border border-border rounded-2xl overflow-hidden divide-y divide-border">
+                {/* El panel lo abre Clerk desde un script aparte. Mientras no
+                    carga, esto no hacía nada: ni abría, ni avisaba, ni se veía
+                    distinto, y la gente lo tocaba una y otra vez. Eso es lo que
+                    Sentry registró como rabia (VELOCLUB-WEB-19). */}
+                <FilaAjuste
+                  icono={IconAjustesCuenta}
+                  titulo="Gestionar cuenta"
+                  detalle={clerk.loaded ? 'Nombre, contraseña y datos de acceso' : 'Preparando tu cuenta…'}
+                  disabled={!clerk.loaded}
+                  onClick={() => clerk.openUserProfile()}
+                  sufijo={clerk.loaded ? undefined : (
+                    <span
+                      aria-hidden
+                      className="w-3.5 h-3.5 rounded-full border-2 border-muted-foreground/40 border-t-transparent animate-spin shrink-0"
+                    />
+                  )}
+                />
+                <FilaAjuste
+                  icono={IconAyuda}
+                  titulo="Centro de ayuda"
+                  detalle="Tutoriales y soporte técnico"
+                  onClick={() => router.push('/dashboard/ajustes/ayuda')}
+                />
+                <FilaAjuste
+                  icono={IconSalir}
+                  tono="rojo"
+                  titulo={signingOut ? 'Cerrando sesión...' : 'Cerrar sesión'}
+                  disabled={signingOut}
+                  onClick={handleSignOut}
+                />
+              </div>
+
               {dangerCard}
             </motion.div>
           )}
-          {isAdmin && tab === 'club' && (
-            <motion.div key="club"
-              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.26, ease: [0.23, 1, 0.32, 1] }}
-              className="px-4 pb-28">
-              {clubCard}
+
+          {!enMenu && tab === 'perfil' && (
+            <motion.div key="perfil"
+              initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -16 }}
+              transition={{ duration: 0.24, ease: [0.23, 1, 0.32, 1] }}
+              className="pb-28">
+              {atrasMovil('Mi perfil')}
+              <div className="px-4">{datosMovil}</div>
             </motion.div>
           )}
-          {isAdmin && tab === 'suscripcion' && (
+
+          {!enMenu && isAdmin && tab === 'club' && (
+            <motion.div key="club"
+              initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -16 }}
+              transition={{ duration: 0.24, ease: [0.23, 1, 0.32, 1] }}
+              className="pb-28">
+              {atrasMovil('Mi club')}
+              <div className="px-4">{clubCard}</div>
+            </motion.div>
+          )}
+
+          {!enMenu && isAdmin && tab === 'suscripcion' && (
             <motion.div key="suscripcion"
-              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.26, ease: [0.23, 1, 0.32, 1] }}
-              className="px-4 pb-28">
-              <SuscripcionCard />
+              initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -16 }}
+              transition={{ duration: 0.24, ease: [0.23, 1, 0.32, 1] }}
+              className="pb-28">
+              {atrasMovil('Mi suscripción')}
+              <div className="px-4"><SuscripcionCard /></div>
             </motion.div>
           )}
         </AnimatePresence>

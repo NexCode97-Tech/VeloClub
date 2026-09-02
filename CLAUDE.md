@@ -86,7 +86,12 @@ dedujo del ADMIN más antiguo y se corrige desde Superadmin → Clubes → el cl
 
 El **enlace de inscripción es por deporte** (`Deporte.inscripcionToken`): quien
 entra por él cae directo en esa carpeta, sin que nadie tenga que repartirlo
-después.
+después. **Quien se inscribe entra aprobado**, sin bandeja de por medio: el
+enlace ES la autorización, y pedirle al club que apruebe uno por uno a los que
+él mismo invitó era pedirle dos veces lo mismo. El control queda en el enlace —
+el interruptor, la fecha de vencimiento y «Rotar enlace»— y no en una cola.
+La bandeja de `PendientesInscripcion` se queda para los **cambios de datos** de
+quien ya estaba, y para los que quedaron pendientes antes del cambio.
 
 ### Autenticación y roles
 - Clerk gestiona identidades. El backend verifica el JWT con `verifyToken` de `@clerk/backend`.

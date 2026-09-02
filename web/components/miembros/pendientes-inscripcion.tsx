@@ -8,7 +8,17 @@ import { AlertTriangle, Check, ChevronRight, UserPlus, X } from 'lucide-react';
 import { apiFetch } from '@/lib/api-client';
 
 /**
- * Los que se inscribieron por el enlace y esperan el visto bueno del club.
+ * Lo que espera el visto bueno del club.
+ *
+ * Desde el 1 de septiembre de 2026 una inscripcion nueva **ya no cae aca**:
+ * entra aprobada y la persona puede usar la app de una. El enlace es la
+ * autorizacion, y pedirle al club que apruebe uno por uno a los que el mismo
+ * invito era pedirle dos veces lo mismo.
+ *
+ * La bandeja se queda por dos razones, y las dos son reales: los cambios de
+ * datos de quien ya estaba SI se revisan —ahi alguien esta editando una ficha
+ * que el club ya dio por buena— y los que quedaron pendientes antes del cambio
+ * siguen esperando a que alguien los acepte.
  *
  * Sale arriba de la lista de miembros y solo cuando hay alguien: es trabajo que
  * caduca, porque del otro lado hay alguien que ya entregó sus datos y no puede

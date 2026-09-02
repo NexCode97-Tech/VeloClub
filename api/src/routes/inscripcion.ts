@@ -200,9 +200,8 @@ const inscripcionSchema = z.object({
 /**
  * POST /inscripcion/:token — la familia envia sus datos.
  *
- * Crea el deportista en estado PENDIENTE y su cuenta de acceso con la
- * contrasena que eligieron. La cuenta existe desde ya, pero no sirve hasta que
- * el club apruebe: quien manda es el estado del miembro, no la cuenta.
+ * Crea el deportista ya aprobado y su cuenta de acceso con la contrasena que
+ * eligieron. De aca sale entrando: no hay bandeja de por medio.
  */
 router.post('/:token', inscripcionLimiter, inscripcionPorEnlaceLimiter, async (req, res) => {
   const carpeta = await carpetaDelEnlace(String(req.params.token));
@@ -445,7 +444,19 @@ router.post('/:token', inscripcionLimiter, inscripcionPorEnlaceLimiter, async (r
         clerkId,
         inviteStatus: 'ACCEPTED',
         origen: 'FORMULARIO',
-        inscripcion: 'PENDIENTE',
+        // Entra aprobado, sin pasar por una bandeja.
+        //
+        // El enlace ES la autorizacion: el club decide a quien se lo manda, y
+        // pedirle despues que apruebe uno por uno a los que el mismo invito era
+        // pedirle dos veces lo mismo. Mientras tanto la familia quedaba
+        // registrada pero sin poder entrar, sin nadie que le explicara por que.
+        //
+        // Lo que se pierde: cualquiera con el enlace entra directo y cuenta
+        // para el precio del plan. Contra eso estan el interruptor de
+        // inscripcion, la fecha de vencimiento y «Rotar enlace», que invalida
+        // el anterior. Ver `inscripcionVigente` en `lib/inscripcion.ts`.
+        inscripcion: 'APROBADO',
+        aprobadoAt: new Date(),
         locations: { create: [{ locationId: sede.id }] },
       },
       select: { id: true, fullName: true },
@@ -455,7 +466,7 @@ router.post('/:token', inscripcionLimiter, inscripcionPorEnlaceLimiter, async (r
       accion: 'INSCRIPCION_RECIBIDA',
       entidad: 'Member',
       entidadId: miembro.id,
-      resumen: `${miembro.fullName} se inscribió por el enlace de ${club.name} y espera visto bueno.`,
+      resumen: `${miembro.fullName} se inscribió por el enlace de ${club.name}.`,
       clubId: club.id,
       clubNombre: club.name,
       datos: { origen: 'FORMULARIO' },
@@ -464,7 +475,7 @@ router.post('/:token', inscripcionLimiter, inscripcionPorEnlaceLimiter, async (r
     await notifyClubStaff(club.id, {
       tipo: 'INSCRIPCION_RECIBIDA',
       titulo: 'Nueva inscripción',
-      cuerpo: `${miembro.fullName} se inscribió por el enlace y espera tu visto bueno.`,
+      cuerpo: `${miembro.fullName} se inscribió por el enlace y ya está en tu lista.`,
       link: '/dashboard/miembros',
     }).catch(() => { /* el aviso no puede tumbar la inscripcion */ });
 

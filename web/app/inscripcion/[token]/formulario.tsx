@@ -309,7 +309,7 @@ export default function FormularioInscripcion({ token }: { token: string }) {
           </h2>
           <p className="text-[13px] text-muted-foreground m-0">
             {resultado === 'nuevo'
-              ? `Cuando ${config.club.nombre} le dé el visto bueno podrá entrar a la app con su correo y la contraseña que acabas de crear.`
+              ? `Ya puede entrar a la app con su correo y la contraseña que acabas de crear.`
               : resultado === 'sin_cambios'
                 ? `Los datos que enviaste son los mismos que ${config.club.nombre} ya tiene, así que no hay nada pendiente.`
                 : yaTieneCuenta

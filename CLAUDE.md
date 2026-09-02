@@ -157,8 +157,12 @@ DELETE     /deportes/:id             # solo si está vacía
 - `Member` = deportista. Puede o no tener `clerkId` (si fue invitado). Tiene su propio `role = STUDENT`.
 - `Payment` = mensualidad con `month` + `year` + `memberId`. Genera `CashEntry` automáticamente al pagarse.
 - `ClaseHorario` = una clase del horario semanal. **Quién entra a su planilla
-  sale de su sede cruzada con su categoría**, y esa decisión vive en un solo
-  sitio: `api/src/lib/planilla.ts`. Sin categoría, la sede entera.
+  sale de su sede cruzada con sus categorías**, y esa decisión vive en un solo
+  sitio: `api/src/lib/planilla.ts`. `categorias` es una lista y la lista vacía
+  significa **todas**: compararla contra vacío devolvería cero deportistas, que
+  es lo contrario. Es lista porque una clase de la mañana puede recibir menores
+  y transición, y con un solo valor había que partirla en dos clases a la misma
+  hora en la misma sede.
 
   Hubo un modelo `Grupo` con una lista de deportistas marcada a mano por clase.
   Se borró el 1 de septiembre de 2026 (`20260901230000_sin_grupos`). Resolvía un

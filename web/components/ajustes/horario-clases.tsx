@@ -14,7 +14,7 @@ import { DIAS_SEMANA } from '@/lib/dias';
 import { colorDeClase, nombresDeClase } from '@/lib/colores-clase';
 import { SelectorColor } from '@/components/ui/selector-color';
 import { CATEGORIAS } from '@/lib/categorias';
-import { IconEliminar, IconMas } from '@/components/ui/custom-icons';
+import { IconCheck, IconEliminar, IconMas } from '@/components/ui/custom-icons';
 
 interface Sede { id: string; name: string }
 
@@ -23,8 +23,8 @@ export interface Clase {
   nombre: string;
   diaSemana: number;
   hora: string;
-  /** Quiénes entran a la planilla: esto cruzado con la sede. */
-  categoria: string | null;
+  /** Quiénes entran a la planilla: esto cruzado con la sede. Vacío = todas. */
+  categorias: string[];
   /** "#RRGGBB", o null si nadie lo escogió: ahí manda la posición del nombre. */
   color: string | null;
   locationId: string;
@@ -46,7 +46,7 @@ interface EnEdicion {
   nombre: string;
   dias: number[];
   hora: string;
-  categoria: string | null;
+  categorias: string[];
   color: string | null;
   locationId: string;
 }
@@ -104,7 +104,7 @@ export default function HorarioClases({ sinEntrenamiento = [] }: { sinEntrenamie
       nombre: '',
       dias: [dia],
       hora: '06:00',
-      categoria: '',
+      categorias: [],
       locationId: sedes[0]?.id ?? '',
       color: null,
     });
@@ -129,7 +129,7 @@ export default function HorarioClases({ sinEntrenamiento = [] }: { sinEntrenamie
       nombre: c.nombre,
       dias: [...new Set(hermanas.map(x => x.diaSemana))],
       hora: c.hora,
-      categoria: c.categoria ?? '',
+      categorias: c.categorias,
       color: c.color,
       locationId: c.locationId,
     });
@@ -145,9 +145,31 @@ export default function HorarioClases({ sinEntrenamiento = [] }: { sinEntrenamie
     });
   }
 
+  /**
+   * Marcar y desmarcar una categoría.
+   *
+   * Igual que los días, y por la misma razón: una clase de la mañana puede
+   * recibir menores Y transición. Con una sola había que partirla en dos clases
+   * a la misma hora en la misma sede, o dejarla abierta a todo el club.
+   *
+   * Quitar la última no deja la clase sin nadie: la lista vacía significa
+   * «todas», que es lo que el botón de arriba dice con todas las letras.
+   */
+  function alternarCategoria(c: string) {
+    setEditando(e => {
+      if (!e) return e;
+      return {
+        ...e,
+        categorias: e.categorias.includes(c)
+          ? e.categorias.filter(x => x !== c)
+          : [...e.categorias, c],
+      };
+    });
+  }
+
   async function guardar() {
     if (!editando || guardando) return;
-    const { ids, nombre, dias, hora, categoria, locationId, color } = editando;
+    const { ids, nombre, dias, hora, categorias, locationId, color } = editando;
     if (!nombre.trim() || !locationId || dias.length === 0 || !hora) return;
 
     setGuardando(true); setError('');
@@ -160,7 +182,7 @@ export default function HorarioClases({ sinEntrenamiento = [] }: { sinEntrenamie
         token, method: 'PUT',
         body: JSON.stringify({
           ids, nombre: nombre.trim(), dias, hora,
-          categoria: categoria?.trim() || null, locationId,
+          categorias, locationId,
           color: color ?? null,
         }),
       });
@@ -342,7 +364,7 @@ export default function HorarioClases({ sinEntrenamiento = [] }: { sinEntrenamie
         body: JSON.stringify({
           ids: hermanas.map(x => x.id),
           nombre: c.nombre, locationId: c.locationId, hora: c.hora,
-          categoria: c.categoria, color: c.color,
+          categorias: c.categorias, color: c.color,
           dias: dias.map(d => (d === c.diaSemana ? destino : d)),
         }),
       });
@@ -815,43 +837,55 @@ export default function HorarioClases({ sinEntrenamiento = [] }: { sinEntrenamie
                     planilla, cruzada con la sede. Por eso la ayuda de abajo
                     dice a quién trae, no qué campo es. */}
                 <div className="space-y-1.5">
-                  <Label className="text-[12px]">Categoría</Label>
-                  {/* Desplegable y no texto libre: la categoria se compara letra
-                      por letra contra la del deportista. Escribir "Menores"
-                      donde el miembro dice "Menores 3-10 años" no da error, da
-                      una planilla vacia. */}
+                  <Label className="text-[12px]">Categorías</Label>
+                  {/* Lista cerrada y no texto libre: la categoria se compara
+                      letra por letra contra la del deportista. Escribir
+                      "Menores" donde el miembro dice "Menores 3-10 años" no da
+                      error, da una planilla vacia.
+
+                      Se marcan VARIAS, igual que los dias: una clase de la
+                      mañana puede recibir menores y transicion, y con una sola
+                      habia que partirla en dos clases a la misma hora en la
+                      misma sede.
+
+                      Cuadrado y no circulo: el circulo, en el resto de la
+                      plataforma, significa que solo se puede una. */}
                   <div className="flex flex-col gap-1.5">
                     <button
                       type="button"
-                      onClick={() => setEditando({ ...editando, categoria: '' })}
+                      onClick={() => setEditando({ ...editando, categorias: [] })}
                       className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-left transition-colors"
-                      style={!editando.categoria
+                      style={editando.categorias.length === 0
                         ? { background: 'rgba(56,29,160,0.06)', border: '1.5px solid rgba(56,29,160,0.35)' }
                         : { background: '#fff', border: '1.5px solid rgba(26,16,40,0.08)' }}
                     >
-                      <span className="w-4 h-4 rounded-full shrink-0 flex items-center justify-center"
-                        style={{ border: `1.5px solid ${!editando.categoria ? '#381DA0' : 'rgba(26,16,40,0.20)'}` }}>
-                        {!editando.categoria && (
-                          <span className="w-2 h-2 rounded-full" style={{ background: '#381DA0' }} />
-                        )}
+                      <span className="w-4 h-4 rounded-[5px] shrink-0 flex items-center justify-center"
+                        style={{
+                          border: `1.5px solid ${editando.categorias.length === 0 ? '#381DA0' : 'rgba(26,16,40,0.20)'}`,
+                          background: editando.categorias.length === 0 ? '#381DA0' : '#fff',
+                        }}>
+                        {editando.categorias.length === 0 && <IconCheck className="w-2.5 h-2.5" style={{ color: '#fff' }} />}
                       </span>
                       <span className="text-[12.5px] font-medium text-foreground">Todas las categorías</span>
                     </button>
                     {CATEGORIAS.map(c => {
-                      const puesta = editando.categoria === c;
+                      const puesta = editando.categorias.includes(c);
                       return (
                         <button
                           key={c}
                           type="button"
-                          onClick={() => setEditando({ ...editando, categoria: c })}
+                          onClick={() => alternarCategoria(c)}
                           className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-left transition-colors"
                           style={puesta
                             ? { background: 'rgba(56,29,160,0.06)', border: '1.5px solid rgba(56,29,160,0.35)' }
                             : { background: '#fff', border: '1.5px solid rgba(26,16,40,0.08)' }}
                         >
-                          <span className="w-4 h-4 rounded-full shrink-0 flex items-center justify-center"
-                            style={{ border: `1.5px solid ${puesta ? '#381DA0' : 'rgba(26,16,40,0.20)'}` }}>
-                            {puesta && <span className="w-2 h-2 rounded-full" style={{ background: '#381DA0' }} />}
+                          <span className="w-4 h-4 rounded-[5px] shrink-0 flex items-center justify-center"
+                            style={{
+                              border: `1.5px solid ${puesta ? '#381DA0' : 'rgba(26,16,40,0.20)'}`,
+                              background: puesta ? '#381DA0' : '#fff',
+                            }}>
+                            {puesta && <IconCheck className="w-2.5 h-2.5" style={{ color: '#fff' }} />}
                           </span>
                           <span className="text-[12.5px] font-medium text-foreground">{c}</span>
                         </button>
@@ -859,17 +893,19 @@ export default function HorarioClases({ sinEntrenamiento = [] }: { sinEntrenamie
                     })}
                   </div>
                   <p className="text-[11px] text-muted-foreground">
-                    Es quién entra a la planilla de esta clase. Con «Todas», la sede entera.
+                    Es quién entra a la planilla de esta clase. Puedes marcar varias; sin
+                    ninguna, la sede entera.
                   </p>
                 </div>
               </div>
 
               {/* El boton por defecto mide 32px de alto, que en una hoja a pantalla
-                  completa se ve aplastado. Y el relleno de abajo era 1rem: en
-                  iPhone la barra de gestos se le montaba encima, porque el area
-                  segura se suma al relleno, no lo reemplaza. */}
+                  completa se ve aplastado. Y el relleno de abajo se suma al
+                  area segura, no la reemplaza: en iPhone la barra de gestos se
+                  le montaba encima. Con 1.25rem el boton seguia quedando pegado
+                  al filo de la pantalla; 2rem lo despega. */}
               <div className="px-5 pt-4 border-t border-border/60"
-                style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 1.25rem)' }}>
+                style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 2rem)' }}>
                 {/* Borrar vive aca y no en la cuadricula. Un boton de basura
                     por bloque llenaria la semana de iconos rojos, que es lo
                     contrario de lo que la vista existe para mostrar; y sin el,

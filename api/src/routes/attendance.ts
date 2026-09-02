@@ -199,15 +199,15 @@ router.get('/report', requireAuth, async (req, res) => {
   // sobre `locationId` si llegan las dos.
   const claseId = req.query.claseId ? String(req.query.claseId) : undefined;
   let claseSede: string | undefined;
-  let claseCategoria: string | null = null;
+  let claseCategorias: string[] = [];
   if (claseId) {
     const clase = await prisma.claseHorario.findFirst({
       where: { id: claseId, clubId },
-      select: { locationId: true, categoria: true },
+      select: { locationId: true, categorias: true },
     });
     if (!clase) return res.status(403).json({ error: 'La clase no pertenece a este club' });
     claseSede = clase.locationId;
-    claseCategoria = clase.categoria;
+    claseCategorias = clase.categorias;
   }
   const sedeFiltro = claseSede ?? locationId;
 
@@ -222,8 +222,8 @@ router.get('/report', requireAuth, async (req, res) => {
       // listar exactamente a los mismos que la pantalla de asistencia, y
       // escribirla dos veces es como se desincronizaron la vez pasada.
       ...filtroDePlanilla({
-        locationId: sedeFiltro ?? null,
-        categoria:  claseCategoria,
+        locationId:  sedeFiltro ?? null,
+        categorias:  claseCategorias,
       }),
     },
     select: { id: true, fullName: true, category: true },

@@ -328,9 +328,13 @@ model ClaseHorario {
   // "HH:mm" en 24h. Texto y no DateTime: es una hora de reloj que se repite
   // cada semana, no un instante, y guardarla como fecha arrastra husos.
   hora        String
-  // Quienes entran a la planilla: esto cruzado con la sede. En null, la sede
+  // Quienes entran a la planilla: esto cruzado con la sede. Vacio = la sede
   // entera. Ver `api/src/lib/planilla.ts`.
-  categoria   String?
+  //
+  // Lista y no una sola: una clase de la mañana puede ser de menores Y de
+  // transicion, y con un solo valor habia que partirla en dos clases a la misma
+  // hora en la misma sede, o dejarla abierta a todo el club.
+  categorias  String[]
   // "#RRGGBB" con el que se pinta en el horario y en el calendario. En null se
   // le asigna uno por su posicion, para que un club que nunca escogio ninguno
   // igual vea sus clases de colores distintos.

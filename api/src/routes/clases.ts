@@ -149,7 +149,8 @@ router.put('/semana', requireAuth, async (req, res) => {
     // quitarla entera esta DELETE, que dice lo que hace.
     dias:       z.array(z.number().int().min(0).max(6)).min(1).max(7),
     hora:       z.string().regex(HORA, 'La hora debe ir en formato 24h, por ejemplo 06:00'),
-    categoria:  z.string().max(60).nullable().optional(),
+    // Vacio = todas. Una clase puede recibir menores Y transicion.
+    categorias: z.array(z.string().max(60)).max(20).optional(),
     color,
   }).safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.issues[0].message });
@@ -176,7 +177,9 @@ router.put('/semana', requireAuth, async (req, res) => {
     nombre:     parsed.data.nombre.trim(),
     locationId: parsed.data.locationId,
     hora:       parsed.data.hora,
-    categoria:  parsed.data.categoria?.trim() || null,
+    // Sin repetidas y sin vacias: dos veces «Menores» no filtra distinto, y una
+    // cadena en blanco no coincide con la categoria de nadie.
+    categorias: [...new Set((parsed.data.categorias ?? []).map(c => c.trim()).filter(Boolean))],
     color:      parsed.data.color ?? null,
   };
 

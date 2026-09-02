@@ -6,32 +6,46 @@ import { filtroDePlanilla } from '../lib/planilla';
 // regla se equivoca, las listas de asistencia amanecen vacias o con gente de
 // mas.
 
-describe('una clase con categoria', () => {
+describe('una clase con una categoria', () => {
   it('trae a los de esa categoria en esa sede', () => {
     expect(filtroDePlanilla({
-      locationId: 'sede-1', categoria: 'Menores 3-10 años',
+      locationId: 'sede-1', categorias: ['Menores 3-10 años'],
     })).toEqual({
       role: 'DEPORTISTA',
       active: true,
       locations: { some: { locationId: 'sede-1' } },
-      category: 'Menores 3-10 años',
+      category: { in: ['Menores 3-10 años'] },
     });
   });
 });
 
-describe('una clase abierta a todas las categorias', () => {
+describe('una clase con varias categorias', () => {
+  it('trae a los de cualquiera de ellas', () => {
+    expect(filtroDePlanilla({
+      locationId: 'sede-1', categorias: ['Menores 3-10 años', 'Transición 11-13 años'],
+    })).toMatchObject({
+      category: { in: ['Menores 3-10 años', 'Transición 11-13 años'] },
+    });
+  });
+});
+
+// El caso que mas facil se rompe: comparar contra una lista vacia devuelve cero
+// deportistas, que es lo contrario de lo que «todas» significa.
+describe('una clase sin categorias', () => {
   it('trae la sede entera, no una lista vacia', () => {
-    expect(filtroDePlanilla({ locationId: 'sede-1', categoria: null })).toEqual({
+    const f = filtroDePlanilla({ locationId: 'sede-1', categorias: [] });
+    expect(f).toEqual({
       role: 'DEPORTISTA',
       active: true,
       locations: { some: { locationId: 'sede-1' } },
     });
+    expect(f).not.toHaveProperty('category');
   });
 });
 
 describe('sin clase ninguna', () => {
   it('sin sede tampoco, trae el club entero de esa carpeta', () => {
-    expect(filtroDePlanilla({ locationId: null, categoria: null }))
+    expect(filtroDePlanilla({ locationId: null, categorias: [] }))
       .toEqual({ role: 'DEPORTISTA', active: true });
   });
 });
@@ -40,10 +54,10 @@ describe('sin clase ninguna', () => {
 // propio y no como detalle de los de arriba, para que si alguien lo quita se
 // caiga una prueba que lo dice por su nombre.
 describe('el deportista en pausa', () => {
-  it('nunca entra, tenga categoria la clase o no', () => {
-    expect(filtroDePlanilla({ locationId: 'sede-1', categoria: 'Mayores 14+ años' }))
+  it('nunca entra, tenga categorias la clase o no', () => {
+    expect(filtroDePlanilla({ locationId: 'sede-1', categorias: ['Mayores 14+ años'] }))
       .toMatchObject({ active: true });
-    expect(filtroDePlanilla({ locationId: 'sede-1', categoria: null }))
+    expect(filtroDePlanilla({ locationId: 'sede-1', categorias: [] }))
       .toMatchObject({ active: true });
   });
 });

@@ -7,7 +7,7 @@
  *
  * La regla, completa:
  *
- *   la sede de la clase, cruzada con su categoria.
+ *   la sede de la clase, cruzada con sus categorias.
  *
  * Hubo una segunda regla —una lista de deportistas marcada a mano por clase— y
  * se quito a proposito. Resolvia un caso real, el club que parte en mañana y
@@ -19,7 +19,8 @@
 
 export interface ClaseDeLaPlanilla {
   locationId: string | null;
-  categoria:  string | null;
+  /** Vacio = todas. Una clase puede recibir menores Y transicion. */
+  categorias: string[];
 }
 
 /**
@@ -29,15 +30,16 @@ export interface ClaseDeLaPlanilla {
  * (`api/src/lib/alcance.ts`). Escribirlos aca ademas seria repetirlos, y
  * repetir un filtro de aislamiento es como se terminan desviando uno del otro.
  */
-export function filtroDePlanilla({ locationId, categoria }: ClaseDeLaPlanilla) {
+export function filtroDePlanilla({ locationId, categorias }: ClaseDeLaPlanilla) {
   // Un deportista en pausa nunca entra: quedaria ausente todos los dias de sus
   // vacaciones y le arruinaria el porcentaje del año.
   return {
     role: 'DEPORTISTA' as const,
     active: true,
     ...(locationId ? { locations: { some: { locationId } } } : {}),
-    // Sin categoria declarada no se filtra. Una clase abierta a todas las
-    // categorias dejaria la planilla vacia si se comparara contra null.
-    ...(categoria ? { category: categoria } : {}),
+    // Lista vacia = todas, y por eso no se filtra. Comparar contra una lista
+    // vacia devolveria cero deportistas, que es lo contrario de lo que «todas»
+    // significa.
+    ...(categorias.length > 0 ? { category: { in: categorias } } : {}),
   };
 }

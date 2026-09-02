@@ -47,7 +47,7 @@ interface ClaseDia {
   id: string;
   nombre: string;
   hora: string;
-  categoria: string | null;
+  categorias: string[];
   locationId: string;
   location: { id: string; name: string };
   diaSemana: number;
@@ -372,23 +372,29 @@ export default function AsistenciaPage() {
   }, []);
 
   // Quien entra a la planilla. La sede sale de la clase (o del selector, si el
-  // club no tiene horario) y la categoria solo filtra cuando la clase la
-  // declara: sin eso, una clase sin categoria dejaria la planilla vacia.
+  // club no tiene horario) y las categorias solo filtran cuando la clase las
+  // declara: una lista vacia significa «todas», y compararla dejaria la
+  // planilla sin nadie.
   //
   // Un deportista en pausa nunca entra: quedaria ausente todos los dias de sus
   // vacaciones y le arruinaria el porcentaje del ano.
-  // Depende de la categoria y no de `claseActiva`: el objeto de la clase se
-  // reemplaza en cada refresco de la consulta aunque no haya cambiado nada, y
-  // eso arrastraba al efecto de abajo.
-  // Misma regla que `api/src/lib/planilla.ts`, y los comentarios que la explican
-  // viven alla: la sede de la clase cruzada con su categoria.
-  const categoriaClase = claseActiva?.categoria ?? null;
+  //
+  // Se depende de las categorias y no de `claseActiva`: el objeto de la clase
+  // se reemplaza en cada refresco de la consulta aunque no haya cambiado nada,
+  // y eso arrastraba al efecto de abajo. Por eso se guardan como texto: dos
+  // arreglos con el mismo contenido no son iguales entre si, y el useCallback
+  // se volveria a crear en cada refresco igual que antes.
+  //
+  // Misma regla que `api/src/lib/planilla.ts`, y los comentarios que la
+  // explican viven alla: la sede de la clase cruzada con sus categorias.
+  const catsClase = (claseActiva?.categorias ?? []).join('|');
   const perteneceALaClase = useCallback((m: Member) => {
     if (m.active === false) return false;
     if (!m.locations.some(l => l.location.id === selectedLoc)) return false;
-    if (categoriaClase && m.category !== categoriaClase) return false;
+    const cats = catsClase ? catsClase.split('|') : [];
+    if (cats.length > 0 && !cats.includes(m.category ?? '')) return false;
     return true;
-  }, [selectedLoc, categoriaClase]);
+  }, [selectedLoc, catsClase]);
 
   // Identidad de la planilla: dia + clase + sede. Mientras no cambie, lo que el
   // entrenador marco manda sobre lo que diga el servidor.

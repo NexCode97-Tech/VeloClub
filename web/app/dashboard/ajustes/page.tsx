@@ -788,7 +788,14 @@ function AjustesPageContent() {
           <h3 className="text-[13px] font-semibold text-foreground m-0">Días sin entrenamiento</h3>
           <p className="text-[11px] text-muted-foreground">La asistencia no se registrará estos días</p>
         </div>
-        <div className="flex gap-2 flex-wrap">
+        {/* Los siete en una sola fila, siempre.
+            Con 40 px fijos y 8 de separación la semana pide 328, y la tarjeta
+            en un teléfono da menos: el domingo caía a un segundo renglón, solo,
+            y dejaba de leerse como una semana. Ahora se reparten el ancho y se
+            encogen hasta donde haga falta, con tope de 40 para que en
+            escritorio se vean igual que antes. `aspect-square` los mantiene
+            redondos al encogerse. */}
+        <div className="flex gap-1.5">
           {DIAS_SEMANA.map(({ corto, valor: value, nombre }) => {
             const active = noAttDays.includes(value);
             return (
@@ -796,7 +803,11 @@ function AjustesPageContent() {
                 key={value}
                 type="button"
                 onClick={() => toggleDay(value)}
-                className="w-10 h-10 rounded-full text-[12px] font-semibold border-2 transition-all flex items-center justify-center"
+                // El botón solo muestra la inicial, así que un lector de
+                // pantalla diría «L». El nombre completo va acá.
+                aria-label={nombre}
+                aria-pressed={active}
+                className="flex-1 max-w-[40px] aspect-square rounded-full text-[12px] font-semibold border-2 transition-all flex items-center justify-center"
                 style={active
                   ? { background: 'rgba(239,71,111,0.08)', borderColor: '#EF476F', color: '#EF476F' }
                   : { background: '#fff', borderColor: 'rgba(120,80,200,0.15)', color: '#8E87A8' }

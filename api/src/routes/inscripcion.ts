@@ -164,8 +164,9 @@ router.post('/:token/reconocer', guessLimiter, async (req, res) => {
   const quien = await buscarPorDocumento({ clubId: club.id, docNumber: parsed.data.docNumber });
 
   // El caso ambiguo no se le explica a quien llena: no es su problema que el
-  // club tenga dos fichas con el mismo numero. Sigue como inscripcion nueva y
-  // el club resuelve el choque cuando le llegue a la bandeja.
+  // club tenga dos fichas con el mismo numero. Sigue como inscripcion nueva, y
+  // al enviarla se manda a la bandeja para que el club resuelva el choque en
+  // vez de agregar una tercera ficha a la lista.
   if (quien.estado !== 'reconocido') return res.json({ modo: 'nuevo' });
 
   res.json({ modo: 'actualiza', tieneCuenta: quien.tieneCuenta, ficha: quien.ficha });
@@ -455,8 +456,15 @@ router.post('/:token', inscripcionLimiter, inscripcionPorEnlaceLimiter, async (r
         // para el precio del plan. Contra eso estan el interruptor de
         // inscripcion, la fecha de vencimiento y «Rotar enlace», que invalida
         // el anterior. Ver `inscripcionVigente` en `lib/inscripcion.ts`.
-        inscripcion: 'APROBADO',
-        aprobadoAt: new Date(),
+        //
+        // La excepcion es el documento repetido. Con dos fichas que ya llevan
+        // ese numero no se sabe cual de las dos es esta persona, asi que en vez
+        // de agregar una tercera a la lista se manda a la bandeja para que el
+        // club decida. Antes lo atrapaba ahi mismo, porque TODAS pasaban por la
+        // bandeja; ahora esta es la unica que lo hace, y por eso va dicho.
+        ...(quien.estado === 'ambiguo'
+              ? { inscripcion: 'PENDIENTE' as const }
+              : { inscripcion: 'APROBADO' as const, aprobadoAt: new Date() }),
         locations: { create: [{ locationId: sede.id }] },
       },
       select: { id: true, fullName: true },
@@ -466,7 +474,9 @@ router.post('/:token', inscripcionLimiter, inscripcionPorEnlaceLimiter, async (r
       accion: 'INSCRIPCION_RECIBIDA',
       entidad: 'Member',
       entidadId: miembro.id,
-      resumen: `${miembro.fullName} se inscribió por el enlace de ${club.name}.`,
+      resumen: quien.estado === 'ambiguo'
+        ? `${miembro.fullName} se inscribió por el enlace de ${club.name} con un documento repetido y espera visto bueno.`
+        : `${miembro.fullName} se inscribió por el enlace de ${club.name}.`,
       clubId: club.id,
       clubNombre: club.name,
       datos: { origen: 'FORMULARIO' },
@@ -475,7 +485,9 @@ router.post('/:token', inscripcionLimiter, inscripcionPorEnlaceLimiter, async (r
     await notifyClubStaff(club.id, {
       tipo: 'INSCRIPCION_RECIBIDA',
       titulo: 'Nueva inscripción',
-      cuerpo: `${miembro.fullName} se inscribió por el enlace y ya está en tu lista.`,
+      cuerpo: quien.estado === 'ambiguo'
+        ? `${miembro.fullName} se inscribió con un documento que ya tienen otras fichas. Espera tu visto bueno.`
+        : `${miembro.fullName} se inscribió por el enlace y ya está en tu lista.`,
       link: '/dashboard/miembros',
     }).catch(() => { /* el aviso no puede tumbar la inscripcion */ });
 

@@ -205,6 +205,20 @@ export default function HorarioClases({ sinEntrenamiento = [] }: { sinEntrenamie
   } | null>(null);
   const [moviendo, setMoviendo] = useState<{ id: string; dx: number; dy: number } | null>(null);
   const [diaSobre, setDiaSobre] = useState<number | null>(null);
+  /**
+   * El dia que se muestra en movil.
+   *
+   * En un telefono la semana no cabe: seis columnas en 360 px dejan 108 para
+   * cada dia, y ahi no entra «Clase de la mañana» ni el nombre de la sede, asi
+   * que todo salia cortado con puntos suspensivos. En vez de encoger mas, se
+   * muestra un dia a la vez, con los circulos de arriba —los mismos de
+   * Asistencia— para cambiar. En escritorio sigue la cuadricula, que ahi si
+   * tiene ancho de sobra.
+   */
+  const [diaSel, setDiaSel] = useState(() => {
+    const hoy = new Date().getDay();
+    return sinEntrenamiento.includes(hoy) ? 1 : hoy;
+  });
   /** Un arrastre termina en un clic del navegador. Este lo tapa. */
   const tapaClic = useRef(false);
 
@@ -350,6 +364,12 @@ export default function HorarioClases({ sinEntrenamiento = [] }: { sinEntrenamie
     }));
   const hayClases = clases.length > 0;
   const nombres = nombresDeClase(clases);
+  // Si el club marca como sin entrenamiento justo el dia que se estaba viendo,
+  // se cae al primero que quede. Se resuelve aca y no con un efecto que corrija
+  // `diaSel`: `semana` se arma en cada render, asi que ese efecto correria
+  // siempre, y entre que corre y no, la pantalla mostraria un dia que ya no
+  // existe.
+  const delDia = semana.find(d => d.valor === diaSel) ?? semana[0];
 
   return (
     <div className="space-y-3 border-t border-border pt-5">
@@ -357,8 +377,9 @@ export default function HorarioClases({ sinEntrenamiento = [] }: { sinEntrenamie
         <h3 className="text-[13px] font-semibold text-foreground m-0">Horario de clases</h3>
         <p className="text-[11px] text-muted-foreground">
           Las clases que dicta el club cada semana. La asistencia se toma sobre estas, y cada
-          una trae a los deportistas de su sede y su categoría. Arrastra una clase para
-          cambiarla de día.
+          una trae a los deportistas de su sede y su categoría.
+          <span className="hidden md:inline"> Arrastra una clase para cambiarla de día.</span>
+          <span className="md:hidden"> Arrastra una clase hasta otro día para moverla.</span>
         </p>
       </div>
 
@@ -403,8 +424,11 @@ export default function HorarioClases({ sinEntrenamiento = [] }: { sinEntrenamie
 
           {/* La semana en columnas. Se desplaza a lo ancho en vez de apilarse:
               una semana partida en filas deja de ser una semana, que es justo
-              lo que esta vista existe para mostrar. */}
-          <div className="overflow-x-auto pb-1">
+              lo que esta vista existe para mostrar.
+
+              Solo desde `md`: en un telefono estas seis columnas no caben y
+              cortan todos los nombres. Ahi manda el bloque de abajo. */}
+          <div className="hidden md:block overflow-x-auto pb-1">
             <div
               className="grid gap-1.5"
               style={{
@@ -511,6 +535,133 @@ export default function HorarioClases({ sinEntrenamiento = [] }: { sinEntrenamie
                 </div>
               ))}
             </div>
+          </div>
+
+          {/* ── Movil: un dia a la vez ────────────────────────────────── */}
+          <div className="md:hidden">
+            {/* Los circulos de los dias. Mismo control que el de Asistencia,
+                para que el gesto ya se conozca. Los puntos de abajo dicen que
+                dias tienen clase y de que color, asi el dia vacio se ve sin
+                tener que tocarlo. */}
+            <div
+              className="flex gap-1.5 rounded-2xl px-2 py-2.5 mb-3"
+              style={{ background: '#fff', border: '1px solid rgba(120,80,200,0.14)' }}
+            >
+              {semana.map(d => {
+                const puesto = d.valor === diaSel;
+                const marcado = diaSobre === d.valor;
+                return (
+                  <button
+                    key={d.valor}
+                    type="button"
+                    data-dia={d.valor}
+                    onClick={() => setDiaSel(d.valor)}
+                    aria-label={d.nombre}
+                    aria-pressed={puesto}
+                    className="flex-1 flex flex-col items-center gap-1 py-0.5 rounded-xl transition-colors"
+                    style={marcado ? { background: 'rgba(56,29,160,0.08)' } : undefined}
+                  >
+                    <span
+                      className="w-9 h-9 rounded-full flex items-center justify-center text-[12px] font-semibold border-2 transition-all"
+                      style={puesto || marcado
+                        ? { background: 'rgba(56,29,160,0.08)', borderColor: '#381DA0', color: '#381DA0' }
+                        : { background: '#fff', borderColor: 'rgba(120,80,200,0.15)', color: '#8E87A8' }}
+                    >
+                      {d.corto}
+                    </span>
+                    <span className="text-[9px] font-semibold" style={{ color: puesto ? '#381DA0' : '#8E87A8' }}>
+                      {d.nombre.slice(0, 3)}
+                    </span>
+                    {/* Tres como tope: mas puntos no dicen mas, solo aprietan. */}
+                    <span className="flex gap-[3px] h-1 items-center">
+                      {d.clases.slice(0, 3).map(c => (
+                        <span key={c.id} className="w-1 h-1 rounded-full"
+                          style={{ background: colorDeClase(c, nombres) }} />
+                      ))}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {delDia && (
+              <>
+                <div className="flex items-baseline gap-2 mb-2 px-0.5">
+                  <p className="text-[14.5px] font-semibold text-foreground m-0">{delDia.nombre}</p>
+                  <p className="text-[11px] text-muted-foreground m-0">
+                    {delDia.clases.length === 0 ? 'sin clases'
+                      : `· ${delDia.clases.length} ${delDia.clases.length === 1 ? 'clase' : 'clases'}`}
+                  </p>
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  {delDia.clases.map(c => {
+                    const color = colorDeClase(c, nombres);
+                    const suelto = moviendo?.id === c.id;
+                    return (
+                      <button
+                        key={c.id}
+                        type="button"
+                        onPointerDown={e => alPresionar(e, c)}
+                        onPointerMove={alMover}
+                        onPointerUp={alSoltar}
+                        onPointerCancel={limpiarArrastre}
+                        onClick={() => {
+                          if (tapaClic.current) { tapaClic.current = false; return; }
+                          abrirExistente(c);
+                        }}
+                        data-arrastrando={suelto ? '' : undefined}
+                        aria-label={'Editar ' + c.nombre + ', ' + delDia.nombre + ' ' + horaLegible(c.hora)}
+                        className="w-full flex items-center gap-3 text-left rounded-xl overflow-hidden relative"
+                        style={{
+                          background: '#fff',
+                          border: '1px solid rgba(120,80,200,0.14)',
+                          padding: '10px 12px',
+                          touchAction: suelto ? 'none' : 'pan-y',
+                          ...(suelto
+                            ? {
+                                transform: `translate(${moviendo.dx}px, ${moviendo.dy}px) scale(1.02)`,
+                                boxShadow: '0 10px 24px rgba(26,16,40,0.18)',
+                                zIndex: 30,
+                                opacity: 0.96,
+                              }
+                            : {}),
+                        }}
+                      >
+                        <span className="absolute left-0 top-0 bottom-0 w-[3px]" style={{ background: color }} />
+                        {/* La hora en dos renglones y con ancho fijo, para que
+                            los nombres arranquen todos en la misma columna.
+                            «6:00 a. m.» en una sola linea pide 70 px, y esos 70
+                            se los quita al nombre, que es lo que hay que leer. */}
+                        <span className="text-[11.5px] font-bold shrink-0 w-[46px] leading-[1.15]" style={{ color }}>
+                          {horaLegible(c.hora).split(' ')[0]}
+                          <span className="block text-[9.5px] font-semibold">
+                            {horaLegible(c.hora).split(' ').slice(1).join(' ')}
+                          </span>
+                        </span>
+                        <span className="min-w-0 flex-1">
+                          <span className="block text-[12.5px] font-semibold text-foreground leading-tight">
+                            {c.nombre}
+                          </span>
+                          <span className="block text-[10.5px] mt-0.5 truncate" style={{ color: '#8E87A8' }}>
+                            {c.location.name}
+                          </span>
+                        </span>
+                      </button>
+                    );
+                  })}
+
+                  <button
+                    type="button"
+                    onClick={() => abrirNueva(delDia.valor)}
+                    className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-[11.5px] font-bold"
+                    style={{ border: '1.5px dashed rgba(120,80,200,0.26)', color: '#8E87A8' }}
+                  >
+                    <IconMas className="w-3 h-3" /> Agregar clase el {delDia.nombre.toLowerCase()}
+                  </button>
+                </div>
+              </>
+            )}
           </div>
 
           {/* Que color es cada clase. Sin esto la cuadricula son rayas de

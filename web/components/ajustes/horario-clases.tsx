@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useAuth } from '@clerk/nextjs';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -187,6 +187,158 @@ export default function HorarioClases({ sinEntrenamiento = [] }: { sinEntrenamie
     }
   }
 
+  /**
+   * Arrastrar una clase de un dia a otro.
+   *
+   * Va con eventos de puntero a mano y no con una libreria. La cuadricula se
+   * desplaza a lo ancho con el dedo, asi que el mismo gesto sirve para dos
+   * cosas, y hay que decidir cual es cual: con mouse el arrastre arranca de
+   * una, y con el dedo hay que sostener un momento. Sin esa espera, deslizar la
+   * semana movia clases sin que nadie lo pidiera.
+   *
+   * `movido` distingue el arrastre del toque: sin el, soltar sobre el mismo dia
+   * abriria el modal, que es lo que hace un clic normal.
+   */
+  const arrastre = useRef<{
+    clase: Clase; x: number; y: number; armado: boolean; movido: boolean;
+    espera: ReturnType<typeof setTimeout> | null;
+  } | null>(null);
+  const [moviendo, setMoviendo] = useState<{ id: string; dx: number; dy: number } | null>(null);
+  const [diaSobre, setDiaSobre] = useState<number | null>(null);
+  /** Un arrastre termina en un clic del navegador. Este lo tapa. */
+  const tapaClic = useRef(false);
+
+  /**
+   * El dia de la celda que hay bajo el puntero.
+   *
+   * `elementsFromPoint` en plural y saltando el bloque que se mueve: el bloque
+   * viaja encima del puntero, y preguntarle a el por su celda devolveria
+   * siempre la de donde salio. Tampoco se le puede poner `pointer-events: none`
+   * para esquivarlo, porque es el que tiene capturado el puntero y dejaria de
+   * recibir el `pointerup`: el bloque se quedaria pegado al dedo.
+   */
+  function diaBajoElPuntero(x: number, y: number): number | null {
+    for (const nodo of document.elementsFromPoint(x, y)) {
+      if (nodo.closest('[data-arrastrando]')) continue;
+      const celda = nodo.closest('[data-dia]');
+      if (celda) {
+        const dia = Number(celda.getAttribute('data-dia'));
+        return Number.isNaN(dia) ? null : dia;
+      }
+    }
+    return null;
+  }
+
+  /** Cuanto hay que mover el dedo para que cuente como deslizar y no como sostener. */
+  const TOLERANCIA = 10;
+  /** Cuanto hay que sostener con el dedo antes de que el bloque se despegue. */
+  const ESPERA_TACTIL = 320;
+
+  function limpiarArrastre() {
+    if (arrastre.current?.espera) clearTimeout(arrastre.current.espera);
+    arrastre.current = null;
+    setMoviendo(null);
+    setDiaSobre(null);
+  }
+
+  function alPresionar(e: React.PointerEvent, c: Clase) {
+    // Solo el boton principal: con el derecho se abre el menu del navegador y
+    // el bloque se quedaria pegado al puntero.
+    if (e.button !== 0) return;
+    const el = e.currentTarget as HTMLElement;
+    el.setPointerCapture(e.pointerId);
+
+    const iniciar = () => {
+      if (!arrastre.current) return;
+      arrastre.current.armado = true;
+      setMoviendo({ id: c.id, dx: 0, dy: 0 });
+    };
+
+    arrastre.current = {
+      clase: c, x: e.clientX, y: e.clientY, armado: false, movido: false,
+      espera: e.pointerType === 'mouse' ? null : setTimeout(iniciar, ESPERA_TACTIL),
+    };
+    if (e.pointerType === 'mouse') iniciar();
+  }
+
+  function alMover(e: React.PointerEvent) {
+    const a = arrastre.current;
+    if (!a) return;
+    const dx = e.clientX - a.x;
+    const dy = e.clientY - a.y;
+
+    // Todavia sosteniendo: si el dedo se corre, es que esta deslizando la
+    // semana. Se cancela la espera y el gesto vuelve a ser del carril.
+    if (!a.armado) {
+      if (Math.hypot(dx, dy) > TOLERANCIA) limpiarArrastre();
+      return;
+    }
+
+    if (Math.hypot(dx, dy) > 3) a.movido = true;
+    setMoviendo({ id: a.clase.id, dx, dy });
+
+    setDiaSobre(diaBajoElPuntero(e.clientX, e.clientY));
+  }
+
+  function alSoltar(e: React.PointerEvent) {
+    const a = arrastre.current;
+    if (!a) return;
+    const { clase, armado, movido } = a;
+    // Del puntero y no de `diaSobre`: ese es estado de React y puede ir un
+    // fotograma atras. Soltar tiene que mirar donde esta el dedo AHORA.
+    const destino = armado && movido ? diaBajoElPuntero(e.clientX, e.clientY) : null;
+    limpiarArrastre();
+
+    // Sin arrastre no se hace nada aca: el clic que viene detras abre el modal,
+    // y hacerlo tambien aca lo abriria dos veces.
+    if (!armado || !movido) return;
+
+    tapaClic.current = true;
+    if (destino === null || destino === clase.diaSemana) return;
+    moverClase(clase, destino);
+  }
+
+  /**
+   * Mueve la clase del dia donde estaba al dia donde la soltaron.
+   *
+   * Va por `/clases/semana` y no por una fila suelta porque una clase son
+   * varios dias: mover el bloque del lunes es cambiar el lunes por el jueves
+   * dentro de su lista de dias, dejando el resto quieto.
+   *
+   * Se pinta antes de pedirlo. La cuadricula tiene que responder al soltar, no
+   * medio segundo despues; si el servidor falla, se recarga y vuelve a su sitio
+   * con el aviso al lado.
+   */
+  async function moverClase(c: Clase, destino: number) {
+    const hermanas = clases.filter(x =>
+      x.nombre.trim().toLowerCase() === c.nombre.trim().toLowerCase() &&
+      x.locationId === c.locationId &&
+      x.hora === c.hora);
+    const dias = [...new Set(hermanas.map(x => x.diaSemana))];
+    // Ya se dicta ese dia: mover el lunes al miercoles cuando ya hay miercoles
+    // seria perder el lunes a cambio de nada.
+    if (dias.includes(destino)) return;
+
+    setError('');
+    setClases(prev => prev.map(x => (x.id === c.id ? { ...x, diaSemana: destino } : x)));
+    try {
+      const token = await getToken();
+      await apiFetch('/clases/semana', {
+        token, method: 'PUT',
+        body: JSON.stringify({
+          ids: hermanas.map(x => x.id),
+          nombre: c.nombre, locationId: c.locationId, hora: c.hora,
+          categoria: c.categoria, color: c.color,
+          dias: dias.map(d => (d === c.diaSemana ? destino : d)),
+        }),
+      });
+      await cargar();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'No se pudo mover la clase');
+      await cargar();
+    }
+  }
+
   // La semana completa, incluidos los dias vacios: la cuadricula los necesita
   // para que el «+» de cada dia tenga donde ir.
   const semana = DIAS_SEMANA
@@ -205,7 +357,8 @@ export default function HorarioClases({ sinEntrenamiento = [] }: { sinEntrenamie
         <h3 className="text-[13px] font-semibold text-foreground m-0">Horario de clases</h3>
         <p className="text-[11px] text-muted-foreground">
           Las clases que dicta el club cada semana. La asistencia se toma sobre estas, y cada
-          una trae a los deportistas de su sede y su categoría.
+          una trae a los deportistas de su sede y su categoría. Arrastra una clase para
+          cambiarla de día.
         </p>
       </div>
 
@@ -271,8 +424,13 @@ export default function HorarioClases({ sinEntrenamiento = [] }: { sinEntrenamie
               {semana.map(d => (
                 <div
                   key={d.valor}
-                  className="group flex flex-col gap-2 rounded-xl p-2"
-                  style={{ background: '#FAF9FE', border: '1px solid rgba(120,80,200,0.14)', minHeight: 128 }}
+                  data-dia={d.valor}
+                  className="group flex flex-col gap-2 rounded-xl p-2 transition-colors"
+                  style={{
+                    background: diaSobre === d.valor ? 'rgba(56,29,160,0.06)' : '#FAF9FE',
+                    border: `1px solid ${diaSobre === d.valor ? 'rgba(56,29,160,0.40)' : 'rgba(120,80,200,0.14)'}`,
+                    minHeight: 128,
+                  }}
                 >
                   {d.clases.length === 0 && (
                     <span
@@ -284,14 +442,46 @@ export default function HorarioClases({ sinEntrenamiento = [] }: { sinEntrenamie
                   )}
                   {d.clases.map(c => {
                     const color = colorDeClase(c, nombres);
+                    const suelto = moviendo?.id === c.id;
                     return (
                       <button
                         key={c.id}
                         type="button"
-                        onClick={() => abrirExistente(c)}
+                        onPointerDown={e => alPresionar(e, c)}
+                        onPointerMove={alMover}
+                        onPointerUp={alSoltar}
+                        onPointerCancel={limpiarArrastre}
+                        // El clic abre el modal, venga del mouse o del dedo.
+                        // Despues de arrastrar el navegador manda uno igual, y
+                        // ese es el que hay que tapar.
+                        onClick={() => {
+                          if (tapaClic.current) { tapaClic.current = false; return; }
+                          abrirExistente(c);
+                        }}
                         aria-label={'Editar ' + c.nombre + ', ' + d.nombre + ' ' + horaLegible(c.hora)}
-                        className="block w-full text-left pl-2.5 py-0.5 transition-opacity hover:opacity-70"
-                        style={{ border: 0, borderLeft: '2.5px solid ' + color }}
+                        data-arrastrando={suelto ? '' : undefined}
+                        className="block w-full text-left pl-2.5 py-0.5 hover:opacity-70"
+                        style={{
+                          border: 0,
+                          borderLeft: '2.5px solid ' + color,
+                          cursor: suelto ? 'grabbing' : 'grab',
+                          // Quieto deja pasar el deslizamiento del carril, que
+                          // es lo que el bloque no puede robar. Ya despegado se
+                          // queda con el gesto, o el navegador desplaza la
+                          // semana mientras se arrastra.
+                          touchAction: suelto ? 'none' : 'pan-x',
+                          ...(suelto
+                            ? {
+                                transform: `translate(${moviendo.dx}px, ${moviendo.dy}px) scale(1.04)`,
+                                background: '#fff',
+                                borderRadius: 8,
+                                boxShadow: '0 10px 24px rgba(26,16,40,0.18)',
+                                position: 'relative' as const,
+                                zIndex: 30,
+                                opacity: 0.96,
+                              }
+                            : { transition: 'opacity .15s ease' }),
+                        }}
                       >
                         <span className="block text-[10.5px] font-bold" style={{ color }}>
                           {horaLegible(c.hora)}

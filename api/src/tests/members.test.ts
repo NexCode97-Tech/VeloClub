@@ -46,9 +46,7 @@ vi.mock('../lib/redis', () => ({
   cacheDel: vi.fn().mockResolvedValue(undefined),
 }));
 
-vi.mock('../lib/clerk-allowlist', () => ({
-  addToAllowlist: vi.fn().mockResolvedValue(undefined),
-  removeFromAllowlist: vi.fn().mockResolvedValue(undefined),
+vi.mock('../lib/clerk-sesiones', () => ({
   revokeClerkAccess: vi.fn().mockResolvedValue(undefined),
   revokeClerkSessions: vi.fn().mockResolvedValue(undefined),
 }));

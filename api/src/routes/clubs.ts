@@ -5,7 +5,6 @@ import { prisma } from '../db/client';
 import { z } from 'zod';
 import { v2 as cloudinary } from 'cloudinary';
 import { cacheGet, cacheSet, cacheDel } from '../lib/redis';
-import { addToAllowlist } from '../lib/clerk-allowlist';
 import { validarSubida } from '../lib/upload-guard';
 import { uploadLimiter, createLimiter } from '../lib/rate-limit';
 
@@ -637,9 +636,6 @@ router.post('/', createLimiter, requireAuth, async (req, res) => {
       data:  { deporteId: null },
     }),
   ]);
-
-  // Mantener el correo en el allowlist (consistencia con clubes creados por superadmin)
-  try { await addToAllowlist(req.auth.email); } catch { /* ignorar */ }
 
   // Avisar al superadmin que hay un club nuevo por verificar
   await prisma.notificacion.create({

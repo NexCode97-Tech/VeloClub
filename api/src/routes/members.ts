@@ -6,7 +6,7 @@ import { requireAuth } from '../auth/middleware';
 import { carpetaDe } from '../lib/deportes';
 import { prisma } from '../db/client';
 import { emitToClub } from '../lib/sse';
-import { addToAllowlist, removeFromAllowlist, revokeClerkAccess, revokeClerkSessions } from '../lib/clerk-allowlist';
+import { revokeClerkAccess, revokeClerkSessions } from '../lib/clerk-sesiones';
 import { notifyClubStaff } from '../lib/notify';
 import { cacheGet, cacheSet, cacheDel } from '../lib/redis';
 import { sedesSonDelClub } from '../lib/sedes';
@@ -262,11 +262,6 @@ router.post('/', requireAuth, async (req, res) => {
     return res.status(500).json({ error: msg });
   }
 
-  // Agregar email al allowlist de Clerk (ignorar si ya existe o falla)
-  if (member.email) {
-    try { await addToAllowlist(member.email); } catch { /* ya existe o error de Clerk */ }
-  }
-
   await invalidateMembersCache(req.user.clubId ?? '', req.deporteId ?? '');
   emitToClub(req.user.clubId ?? '', 'members');
   await notifyClubStaff(req.user.clubId ?? '', {
@@ -500,8 +495,8 @@ router.patch('/:id/estado', requireAuth, async (req, res) => {
 
   // Al desactivar se cierran las sesiones abiertas para que el bloqueo sea
   // inmediato y no espere a que caduque el token. La barrera de verdad es GET
-  // /me, que responde 'inactive' y manda a /inactivo. No se toca el allowlist
-  // de Clerk: reactivar debe ser un clic, no una reinvitación.
+  // /me, que responde 'inactive' y manda a /inactivo. La cuenta no se banea:
+  // reactivar debe ser un clic, no una reinvitación.
   if (!parsed.data.active && existing.clerkId) {
     try { await revokeClerkSessions(existing.clerkId); } catch { /* el gate de /me igual bloquea */ }
   }
@@ -539,10 +534,7 @@ router.delete('/:id', requireAuth, async (req, res) => {
     });
   }
 
-  // Revocar acceso Clerk: quitar del allowlist + banear cuenta si existe
-  if (existing.email) {
-    try { await removeFromAllowlist(existing.email); } catch { /* ignorar */ }
-  }
+  // Revocar acceso Clerk: banear la cuenta si existe
   if (existing.clerkId) {
     await revokeClerkAccess(existing.clerkId);
   }

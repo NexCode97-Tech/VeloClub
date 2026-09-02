@@ -4,7 +4,7 @@ import { selectorDeDeporte } from '../lib/deportes';
 import { estadoPrimerHorario } from '../lib/primer-horario';
 import { prisma } from '../db/client';
 import { v2 as cloudinary } from 'cloudinary';
-import { removeFromAllowlist, revokeClerkAccess } from '../lib/clerk-allowlist';
+import { revokeClerkAccess } from '../lib/clerk-sesiones';
 import { verificarYDesactivarSiVencido } from '../lib/sync-suscripciones';
 import { validarSubida } from '../lib/upload-guard';
 import { uploadLimiter } from '../lib/rate-limit';
@@ -498,10 +498,7 @@ router.delete('/', requireAuth, async (req, res) => {
     }
   }
 
-  // Revocar acceso Clerk (banea + revoca sesiones) y quitar del allowlist
-  if (req.auth.email) {
-    try { await removeFromAllowlist(req.auth.email); } catch { /* ignorar */ }
-  }
+  // Revocar acceso Clerk: banea y revoca sesiones
   await revokeClerkAccess(req.auth.clerkId);
 
   // Anonimizar el Member — conserva pagos/asistencia, borra datos personales

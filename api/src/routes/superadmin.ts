@@ -2,7 +2,6 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { requireAuth } from '../auth/middleware';
 import { prisma } from '../db/client';
-import { addToAllowlist, removeFromAllowlist } from '../lib/clerk-allowlist';
 import { invalidarTrustedCache, diasDePrueba } from './clubs';
 import { cacheDel, cacheDelPattern } from '../lib/redis';
 import { carpetaPorDefecto, primerDeporte } from '../lib/deportes';
@@ -111,7 +110,6 @@ router.post('/clubs', requireAuth, requireSuperadmin, async (req, res) => {
     });
   }
 
-  await addToAllowlist(adminEmail);
   await crearNotificacion('CLUB_CREADO', 'Nuevo club registrado', `${clubName} fue creado con admin ${adminName}.`);
 
   res.status(201).json({ club });
@@ -294,11 +292,6 @@ router.patch('/clubs/:id', requireAuth, requireSuperadmin, async (req, res) => {
       if (adminName)  memberData.fullName = adminName.trim();
       if (adminPhone !== undefined) memberData.phone = adminPhone || null;
       if (adminEmail && adminEmail !== adminMember.email) {
-        // Quitar email viejo del allowlist y agregar el nuevo
-        if (adminMember.email) {
-          try { await removeFromAllowlist(adminMember.email); } catch { /* ignorar */ }
-        }
-        await addToAllowlist(adminEmail);
         memberData.email = adminEmail;
       }
       if (Object.keys(memberData).length > 0) {
@@ -333,10 +326,6 @@ router.delete('/clubs/:id', requireAuth, requireSuperadmin, async (req, res) => 
     where: { clubId: id },
     select: { fullName: true, email: true, phone: true, role: true, category: true, monthlyFee: true },
   });
-
-  await Promise.all(
-    miembros.filter(m => m.email).map(m => removeFromAllowlist(m.email!))
-  );
 
   await prisma.club.delete({ where: { id } });
 
@@ -460,8 +449,6 @@ router.post('/clubs/:id/miembros', requireAuth, requireSuperadmin, async (req, r
     data: { clubId, deporteId: await carpetaPorDefecto(clubId), fullName, email, role, inviteStatus: 'PENDING' },
   });
 
-  await addToAllowlist(email);
-
   const club = await prisma.club.findUnique({ where: { id: clubId }, select: { name: true } });
   const roleLabel = role === 'ADMIN' ? 'administrador' : 'entrenador';
   await crearNotificacion('CLUB_CREADO', 'Nuevo miembro agregado', `${fullName} fue agregado como ${roleLabel} en ${club?.name}.`);
@@ -485,15 +472,6 @@ router.patch('/clubs/:clubId/miembros/:memberId', requireAuth, requireSuperadmin
   res.json({ member });
 });
 
-// POST /superadmin/clubs/:clubId/miembros/:memberId/allowlist — re-sync email to Clerk allowlist
-router.post('/clubs/:clubId/miembros/:memberId/allowlist', requireAuth, requireSuperadmin, async (req, res) => {
-  const memberId = String(req.params.memberId);
-  const member = await prisma.member.findUnique({ where: { id: memberId }, select: { email: true } });
-  if (!member?.email) return res.status(404).json({ error: 'Miembro no encontrado' });
-  await addToAllowlist(member.email);
-  res.json({ ok: true });
-});
-
 // DELETE /superadmin/clubs/:clubId/miembros/:memberId
 router.delete('/clubs/:clubId/miembros/:memberId', requireAuth, requireSuperadmin, async (req, res) => {
   const memberId = String(req.params.memberId);
@@ -510,7 +488,6 @@ router.delete('/clubs/:clubId/miembros/:memberId', requireAuth, requireSuperadmi
   });
   if (!member) return res.status(404).json({ error: 'Miembro no encontrado' });
 
-  if (member.email) await removeFromAllowlist(member.email);
   await prisma.member.delete({ where: { id: memberId } });
 
 

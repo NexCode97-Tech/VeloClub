@@ -32,11 +32,19 @@ function Unidad({ children, ultima, claro }: { children: string; ultima?: boolea
 }
 
 export function CronometroPromo({ claro = false }: { claro?: boolean }) {
-  // Se calcula también en el servidor para que el bloque ocupe su lugar desde
-  // el primer pintado y el titular no salte al hidratar. Servidor y navegador
-  // no comparten reloj, así que los dígitos pueden diferir por un minuto en ese
-  // primer render: de ahí el suppressHydrationWarning, que silencia solo eso.
-  const [restante, setRestante] = useState(() => restantePromo());
+  // El primer render no sabe qué hora es.
+  //
+  // Antes se calculaba también en el servidor, para que el bloque ocupara su
+  // lugar desde el primer pintado. Pero la landing es estática: su HTML se
+  // cocina al desplegar y ahí se queda, así que el conteo que lleva dentro
+  // envejece un minuto por minuto. El visitante que llegaba tres días después
+  // recibía «60d» en el HTML y su navegador calculaba «57d», y React reportaba
+  // la diferencia como error de hidratación en cada visita.
+  //
+  // Ahora el primer render es idéntico en los dos lados: el bloque se dibuja
+  // con su forma pero oculto, así reserva su alto y el titular no salta, y las
+  // cifras entran al montar, ya con el reloj del visitante.
+  const [restante, setRestante] = useState<number | null>(null);
 
   useEffect(() => {
     // Basta con un tic por minuto: es la unidad más fina que se muestra.
@@ -46,9 +54,12 @@ export function CronometroPromo({ claro = false }: { claro?: boolean }) {
     return () => clearInterval(id);
   }, []);
 
-  if (restante <= 0) return null;
+  // Solo se apaga cuando ya se sabe la hora. Con `restante` todavía en null la
+  // promoción no ha vencido: es que aún no se ha mirado el reloj.
+  if (restante !== null && restante <= 0) return null;
 
-  const { dias, horas, minutos } = desglosarRestante(restante);
+  const sinReloj = restante === null;
+  const { dias, horas, minutos } = desglosarRestante(restante ?? 0);
   const dosDigitos = (n: number) => String(n).padStart(2, '0');
 
   return (
@@ -56,7 +67,11 @@ export function CronometroPromo({ claro = false }: { claro?: boolean }) {
     // `items-end` la etiqueta quedaba montada sobre el renglón de las cifras:
     // estas llevaban el interlineado comprimido, así que su caja terminaba más
     // abajo que la de la etiqueta y el texto salía inclinado hacia arriba.
-    <div className="flex items-baseline gap-3">
+    //
+    // `invisible` y no `hidden`: oculta el bloque pero le deja su caja, que es
+    // justo lo que se necesita mientras no se sabe la hora. El lector de
+    // pantalla tampoco lo anuncia, así que no llega a leer un conteo en cero.
+    <div className={`flex items-baseline gap-3 ${sinReloj ? 'invisible' : ''}`}>
       {/* El conteo cambia solo; leerlo en voz alta cada minuto sería ruido.
           El lector de pantalla recibe la frase completa una vez. */}
       <span className="sr-only">
@@ -68,7 +83,6 @@ export function CronometroPromo({ claro = false }: { claro?: boolean }) {
           ayudaba a leerla. */}
       <span
         aria-hidden="true"
-        suppressHydrationWarning
         className={`font-bold text-[1.6rem] sm:text-[1.75rem] tracking-tight tabular-nums ${
           claro ? 'text-[#FFB703]' : 'font-semibold text-white'
         }`}

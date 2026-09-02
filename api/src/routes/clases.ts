@@ -100,12 +100,26 @@ router.get('/dia', requireAuth, async (req, res) => {
     : [];
   const conAsistencia = new Map(guardadas.map(g => [g.claseId, g._count._all]));
 
+  // Los nombres de TODO el horario, no solo los de hoy.
+  //
+  // El color de una clase que no escogio ninguno sale de la posicion de su
+  // nombre en esta lista, y la pantalla de Inicio solo pide el dia. Sin esto
+  // tendria que pedir el horario entero aparte, y las clases de hoy saldrian
+  // de un color en Inicio y de otro en Ajustes.
+  const nombres = await prisma.claseHorario.findMany({
+    where: { clubId, activa: true },
+    select: { nombre: true },
+    distinct: ['nombre'],
+    orderBy: { nombre: 'asc' },
+  });
+
   res.json({
     clases: clases.map(c => ({
       ...c,
       guardada: conAsistencia.has(c.id),
       registros: conAsistencia.get(c.id) ?? 0,
     })),
+    nombres: nombres.map(n => n.nombre),
     diaSinEntrenamiento: false,
   });
 });

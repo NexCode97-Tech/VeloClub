@@ -10,8 +10,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Bell, BellOff, X, Paperclip, FileText, Trophy, Users,
 } from 'lucide-react';
-import { CarruselCumpleanos, CarruselEventos } from '@/components/ui/widgets-carrusel';
+import { CarruselCumpleanos, CarruselEventos, type ClaseHoy } from '@/components/ui/widgets-carrusel';
 import { horaLegible } from '@/components/ajustes/horario-clases';
+import { colorDeClase } from '@/lib/colores-clase';
 import { SelectorDeporteMovil } from '@/lib/contexto-deporte';
 import { Slideshow } from '@/components/ui/slideshow';
 // La tarjeta de publicacion es la misma en Inicio, Club y Mi perfil.
@@ -52,6 +53,9 @@ interface MeResponse {
   user?: { name: string; role: string; picture?: string | null; clubId?: string | null; club?: { name: string; logoUrl?: string; verified?: boolean } };
   trial?: { daysLeft: number; endsAt: string } | null;
 }
+
+/** Lo que el endpoint del día devuelve de cada clase y esta pantalla necesita. */
+interface ClaseDelDia { id: string; nombre: string; hora: string; color: string | null }
 
 interface PostLike { userId: string }
 interface LikeUser { name: string; picture?: string | null; role?: string }
@@ -463,9 +467,8 @@ export default function DashboardPage() {
     birthDate: string; daysUntil: number;
   }[]>([]);
   const [widgetsLoading, setWidgetsLoading] = useState(true);
-  // Las horas de las clases de hoy, ya legibles. Van en una linea aparte del
-  // widget de eventos y no como fichas: ver la razon en `widgets-carrusel.tsx`.
-  const [clasesDeHoy, setClasesDeHoy] = useState<string[]>([]);
+  // Las clases de hoy, que entran como fichas al widget de eventos.
+  const [clasesDeHoy, setClasesDeHoy] = useState<ClaseHoy[]>([]);
 
   // currentUserId (clerkId del usuario autenticado)
   const [currentUserId, setCurrentUserId] = useState('');
@@ -521,7 +524,7 @@ export default function DashboardPage() {
           // `/clases/dia` y no `/clases`: ese endpoint ya descuenta los dias sin
           // entrenamiento y ya viene acotado al deporte activo. Filtrar aca
           // pondria la misma regla en dos sitios.
-          apiFetch<{ clases: { hora: string }[] }>(
+          apiFetch<{ clases: ClaseDelDia[]; nombres: string[] }>(
             `/clases/dia?fecha=${new Date().toLocaleDateString('en-CA')}`, { token },
           ),
         ]);
@@ -555,7 +558,21 @@ export default function DashboardPage() {
         // fichas simplemente no se muestran, sin romper el resto de Inicio
         if (resumenRes.status === 'fulfilled') setResumen(resumenRes.value);
         if (clasesRes.status === 'fulfilled') {
-          setClasesDeHoy((clasesRes.value.clases ?? []).map(c => horaLegible(c.hora)).sort());
+          const { clases = [], nombres = [] } = clasesRes.value;
+          setClasesDeHoy(
+            clases
+              // Por la hora en 24h, que es como viene: ordenar el texto ya
+              // legible ponia «8:20 a. m.» despues de «6:00 p. m.», porque
+              // compara letra por letra y el 8 va despues del 6.
+              .slice()
+              .sort((a, b) => a.hora.localeCompare(b.hora))
+              .map(c => ({
+                id: c.id,
+                nombre: c.nombre,
+                hora: horaLegible(c.hora),
+                color: colorDeClase(c, nombres),
+              })),
+          );
         }
         setWidgetsLoading(false);
 

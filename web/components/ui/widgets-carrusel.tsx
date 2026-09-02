@@ -50,6 +50,20 @@ interface Cumple {
   id: string; fullName: string; birthDate: string; daysUntil: number;
 }
 
+/** Una clase de hoy, con la hora ya legible y el color ya resuelto. */
+export interface ClaseHoy {
+  id: string; nombre: string; hora: string; color: string;
+}
+
+/**
+ * Cuantas clases de hoy caben antes de tapar lo demas.
+ *
+ * Un club con cinco clases al dia llenaria el carril con la rutina y la
+ * competencia del sabado quedaria fuera de la vista. Pasadas tres, la ultima
+ * ficha dice cuantas faltan y lleva al calendario.
+ */
+const CLASES_A_LA_VISTA = 3;
+
 const COLOR_EVENTO: Record<string, { bg: string; text: string }> = {
   TRAINING:    { bg: 'rgba(6,214,160,0.10)',  text: '#06D6A0' },
   MEETUP:      { bg: 'rgba(67,97,238,0.10)',  text: '#4361EE' },
@@ -205,14 +219,19 @@ function Carril({ children }: { children: React.ReactNode }) {
   );
 }
 
-function Ficha({ children }: { children: React.ReactNode }) {
+/** @param href La convierte en enlace. Sin el es una ficha que solo se lee. */
+function Ficha({ children, href, titulo }: {
+  children: React.ReactNode;
+  href?: string;
+  titulo?: string;
+}) {
+  const clases = 'shrink-0 flex flex-col items-center text-center rounded-xl px-2 pt-2 pb-2.5 transition-colors hover:bg-secondary/60';
+  const estilo = { width: `var(--ficha, ${FICHA_MINIMA}px)`, scrollSnapAlign: 'start' } as React.CSSProperties;
+  if (!href) return <div className={clases} style={estilo}>{children}</div>;
   return (
-    <div
-      className="shrink-0 flex flex-col items-center text-center rounded-xl px-2 pt-2 pb-2.5 transition-colors hover:bg-secondary/60"
-      style={{ width: `var(--ficha, ${FICHA_MINIMA}px)`, scrollSnapAlign: 'start' }}
-    >
+    <Link href={href} className={clases} style={estilo} title={titulo}>
       {children}
-    </div>
+    </Link>
   );
 }
 
@@ -251,20 +270,24 @@ function Marco({ children }: { children: React.ReactNode }) {
 }
 
 /**
- * @param clasesHoy Las horas de las clases de hoy, ya legibles («6:00 a. m.»).
+ * @param clasesHoy Las clases de hoy, ordenadas por hora.
  *
- * Van en una linea aparte y NO como fichas del carrusel. Un club con tres
- * clases entrenando tres dias tiene nueve por semana, o sea entre una y
- * tres por dia: mezcladas se comerian los cinco puestos del widget y la
- * competencia del sabado no aparecería nunca. Un entrenamiento que se repite no
- * es un proximo evento, es la rutina, y el valor de esto es avisar lo que se
- * sale de ella.
+ * Entran al carril como fichas, delante de los eventos, con la misma anatomia
+ * que las de Cumpleaños: el redondo, el nombre y el dato en pequeño. Antes iban
+ * en una franja aparte que solo listaba horas —«6:00 a. m. · 8:20 a. m.»— y no
+ * decia cual era cual ni de que color.
+ *
+ * Van primero porque son de hoy, y limitadas a `CLASES_A_LA_VISTA` porque la
+ * rutina no puede tapar lo que se sale de ella, que es para lo que sirve el
+ * widget.
  */
 export function CarruselEventos({ eventos, cargando, clasesHoy = [] }: {
   eventos: Evento[];
   cargando: boolean;
-  clasesHoy?: string[];
+  clasesHoy?: ClaseHoy[];
 }) {
+  const alaVista = clasesHoy.slice(0, CLASES_A_LA_VISTA);
+  const deMas    = clasesHoy.length - alaVista.length;
   return (
     <Marco>
       <div className="flex items-center justify-between px-3 pt-3 pb-2 sm:px-4 sm:pt-4">
@@ -285,29 +308,52 @@ export function CarruselEventos({ eventos, cargando, clasesHoy = [] }: {
         </Link>
       </div>
 
-      {!cargando && clasesHoy.length > 0 && (
-        <div
-          className="mx-3 sm:mx-4 mb-2 flex items-center gap-2 px-2.5 py-1.5 rounded-lg"
-          style={{ background: 'rgba(56,29,160,0.06)', border: '1px solid rgba(56,29,160,0.16)' }}
-        >
-          <span className="text-[9px] font-bold shrink-0" style={{ color: '#381DA0', letterSpacing: '.05em' }}>
-            HOY
-          </span>
-          <span className="text-[11px] font-semibold text-foreground truncate">
-            {clasesHoy.join(' · ')}
-          </span>
-        </div>
-      )}
-
       {cargando ? <Cargando />
         : eventos.length === 0 && clasesHoy.length === 0
           ? <Vacio icono={IconEvento} texto="Sin eventos próximos" />
-        : eventos.length === 0
-          ? <p className="px-3 sm:px-4 pb-3 text-[11px] m-0" style={{ color: MUDO }}>
-              Nada más por ahora, solo el entrenamiento de hoy.
-            </p>
         : (
           <Carril>
+            {alaVista.map(c => (
+              <Ficha key={c.id} href="/dashboard/calendario" titulo={`${c.nombre} · ${c.hora}`}>
+                <div
+                  className="flex items-center justify-center w-10 h-10 rounded-full shrink-0"
+                  style={{ background: c.color + '1F' }}
+                >
+                  <span className="text-[9px] font-bold leading-none" style={{ color: c.color, letterSpacing: '.05em' }}>
+                    HOY
+                  </span>
+                </div>
+                <p
+                  className="text-[11px] font-semibold text-foreground mt-1.5 leading-tight w-full"
+                  style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}
+                >
+                  {c.nombre}
+                </p>
+                <p className="text-[9.5px] font-semibold mt-0.5 truncate w-full" style={{ color: c.color }}>
+                  {c.hora}
+                </p>
+              </Ficha>
+            ))}
+
+            {deMas > 0 && (
+              <Ficha href="/dashboard/calendario">
+                <div
+                  className="flex items-center justify-center w-10 h-10 rounded-full shrink-0"
+                  style={{ background: 'rgba(56,29,160,0.10)' }}
+                >
+                  <span className="text-[13px] font-semibold leading-none" style={{ color: '#381DA0' }}>
+                    +{deMas}
+                  </span>
+                </div>
+                <p className="text-[11px] font-semibold text-foreground mt-1.5 leading-tight w-full">
+                  {deMas === 1 ? 'clase más' : 'clases más'}
+                </p>
+                <p className="text-[9.5px] font-semibold mt-0.5 truncate w-full" style={{ color: MUDO }}>
+                  Hoy
+                </p>
+              </Ficha>
+            )}
+
             {eventos.map(ev => {
               const d = new Date(ev.startDate);
               const c = COLOR_EVENTO[ev.type] ?? COLOR_EVENTO.MEETUP;

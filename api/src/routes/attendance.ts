@@ -316,6 +316,10 @@ router.post('/bulk', requireAuth, async (req, res) => {
   const validIds = new Set(validMembers.map(m => m.id));
   const invalidIds = memberIds.filter(id => !validIds.has(id));
   if (invalidIds.length > 0) {
+    // Los ids al log, no a la respuesta. Cuando esto salta, quien lo ve es un
+    // entrenador que no puede hacer nada con la lista, y el que necesita saber
+    // cuales son es quien revisa el error.
+    console.warn('[attendance] ids rechazados', { clubId, invalidIds });
     return res.status(403).json({ error: 'Uno o más miembros no pertenecen a este club o están desactivados' });
   }
 

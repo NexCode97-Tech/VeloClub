@@ -433,7 +433,18 @@ export default function AsistenciaPage() {
           locationId: selectedLoc,
           // Sin clase el backend guarda una fila por dia, como siempre.
           claseId:    claseSel ?? undefined,
-          records:    Object.entries(att).map(([memberId, status]) => ({ memberId, status })),
+          // Solo los que estan en la planilla, no todo lo que hay en `att`.
+          //
+          // `att` arranca con las marcas que ya estaban guardadas ese dia, y
+          // esas pueden ser de alguien que hoy ya no sale en la lista: se
+          // desactivo, lo cambiaron de sede o de categoria. Mandarlo hacia que
+          // el backend rechazara la peticion entera —«uno o mas miembros no
+          // pertenecen a este club o estan desactivados»— y el entrenador se
+          // quedaba sin poder guardar, sin saber por quien.
+          //
+          // No borra nada: `/attendance/bulk` solo crea y actualiza lo que
+          // recibe, asi que lo que ya estaba guardado de esa gente se queda.
+          records:    members.map(m => ({ memberId: m.id, status: att[m.id] ?? 'ABSENT' })),
         }),
       });
       setSaved(true);

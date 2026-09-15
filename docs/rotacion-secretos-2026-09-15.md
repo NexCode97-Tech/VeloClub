@@ -37,7 +37,7 @@ todas usadas por el código.
 
 ## Lo que falta borrar
 
-Trece nombres que siguen en `nex-code97` en texto plano, todos copia del
+Doce nombres que siguen en `nex-code97` en texto plano, todos copia del
 entorno de la API. Se confirmó que la API los lee y que el portafolio no los
 menciona en el HTML que sirve, pero **antes de borrarlos hay que revisar el
 código del portafolio**, porque despliega con raíz `web` y es una app de
@@ -46,11 +46,11 @@ Next.js con middleware y funciones, y esa carpeta no está en el repo local
 
 `CLERK_SECRET_KEY`, `CLERK_PUBLISHABLE_KEY`, `CLOUDINARY_API_KEY`,
 `CLOUDINARY_API_SECRET`, `CLOUDINARY_CLOUD_NAME`, `MP_ACCESS_TOKEN`,
-`MP_WEBHOOK_SECRET`, `BREB_LLAVE`, `BREB_TITULAR`, `RESET_SECRET`,
-`WEB_ORIGIN`, `SUPERADMIN_EMAILS`, `SENTRY_DSN`.
+`MP_WEBHOOK_SECRET`, `BREB_LLAVE`, `BREB_TITULAR`, `WEB_ORIGIN`,
+`SUPERADMIN_EMAILS`, `SENTRY_DSN`.
 
-`RESET_SECRET` ya no lo lee nadie. No aparece en `api/src`, así que se borra y
-no se rota.
+`RESET_SECRET` salía en esta lista y ya no. No aparecía en `api/src`, así que
+se borró en vez de rotarse. Quedan doce.
 
 ## Qué se rota y qué no
 
@@ -67,9 +67,10 @@ No todo lo expuesto es un secreto. Estos son públicos por diseño y no se tocan
 
 Se rotan estos seis, en este orden.
 
-### 1. `RESET_SECRET`, borrar
+### 1. `RESET_SECRET`, borrar — HECHO el 15 de septiembre
 
-Nadie lo lee. Se borra de Vercel y de Railway y se acabó. Sin riesgo.
+Nadie lo lee. Se borró de Vercel, en Preview y en Production, y de Railway.
+La API quedó respondiendo `db: ok` y `redis: ok` después del cambio.
 
 ### 2. `MP_WEBHOOK_SECRET` y `MP_ACCESS_TOKEN`
 

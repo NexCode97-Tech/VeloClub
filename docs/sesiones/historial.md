@@ -5,11 +5,121 @@ Actualizar al final de cada sesión o cuando se complete un bloque de trabajo im
 
 ---
 
+## Sesión 2026-09-15 — Secretos fuera de sitio, y tres hallazgos de Sentry
+
+**Modelo:** Claude Opus 5
+**Estado inicial:** `33e62bc`, rama `main`
+**Estado final:** `e740355`, desplegado
+
+### Secretos de producción en el proyecto equivocado
+
+El cliente mostró una captura de Vercel llena de avisos de «Needs Attention».
+No era VeloClub. Era **`nex-code97`**, el proyecto del portafolio, que tenía
+pegado el entorno completo de Railway de la API de VeloClub: 62 variables, 56 de
+ellas tipo `Config`, o sea texto plano legible desde el panel y desde la API de
+Vercel. Las más viejas llevaban 139 días ahí.
+
+Que fue un pegado y no una decisión se ve en los nombres: estaban `PGDATA`,
+`PGPORT`, `REDISHOST` y `RAILWAY_DEPLOYMENT_DRAINING_SECONDS`, que solo inyecta
+Railway y que en Vercel no los lee nadie.
+
+Lo hecho:
+
+- **Borrado el grupo de infraestructura**, 15 nombres en Preview y Production.
+  Trece son de Railway; `NODE_ENV` y `PORT` los pone Vercel por su cuenta y
+  pisar `NODE_ENV` a mano rompe builds.
+- **`RESET_SECRET` borrado de Vercel y de Railway.** No aparecía en `api/src`,
+  así que no había que rotarlo sino quitarlo.
+- **`MP_WEBHOOK_SECRET` rotado.** Clave nueva generada en Mercado Pago y escrita
+  en Railway por entrada estándar, verificada comparando hashes para no imprimir
+  el valor en ningún lado.
+
+**Lo pendiente vive en `docs/rotacion-secretos-2026-09-15.md`**: doce nombres por
+borrar de `nex-code97` una vez se revise el código del portafolio, y cinco
+secretos por rotar, `MP_ACCESS_TOKEN`, `BREB_LLAVE`, la pareja de Cloudinary y
+`CLERK_SECRET_KEY`. Ese documento explica por qué borrar la copia no basta:
+cierra la puerta de ahora en adelante, no deshace los cuatro meses en que el
+valor estuvo legible.
+
+Dos trampas anotadas ahí porque cambian cómo se hace. El Access Token de
+producción de Mercado Pago **no convive con el anterior**, así que entre
+generarlo y escribirlo en Railway los cobros fallan. Y `CLERK_SECRET_KEY` está
+en dos sitios, Railway y el proyecto `veloclub` de Vercel, apuntando a la misma
+instancia: se cambian juntos o media plataforma deja de autenticar.
+
+El proyecto `veloclub` de Vercel está limpio. Seis variables, todas cifradas,
+todas usadas por el código.
+
+### Tres hallazgos de Sentry
+
+**`PATCH /members/me/contact` caía con 500** (VELOCLUB-API-8, `e740355`). El
+miembro se buscaba por clerkId o por correo en un mismo `OR`, y sin `orderBy` el
+orden no está garantizado. Con dos fichas del mismo correo, una vinculada y otra
+sin vincular, podía devolver la que no tiene clerkId, y entonces el
+auto-vinculado intentaba escribirle un clerkId que ya era de la otra.
+**`Member.clerkId` es único en toda la tabla, no por club ni por deporte**, así
+que la base lo rechazaba y se caía la petición entera: el usuario no podía ni
+guardar su teléfono, que era lo único que había ido a hacer.
+
+Ahora busca primero por clerkId y solo después por correo, y el auto-vinculado
+va dentro de un `try`: si el clerkId ya es de otra ficha, que puede estar en otro
+deporte o en otro club donde la búsqueda no la ve, se guarda el teléfono igual y
+el vínculo queda pendiente. Dos pruebas nuevas, 83 en total.
+
+**La pantalla de Pagos se quedaba cargando para siempre** (VELOCLUB-WEB-1E).
+`/members/me` devuelve `{ member: null }` con todas las letras cuando el
+deportista no tiene ficha, pero el tipo escrito a mano decía
+`{ member: { id: string } }`. El `?.` cubría que fallara la petición, no que
+`member` viniera vacío. Al leerle `.id` a null se rompía la promesa, el
+`setLoading(false)` del final nunca corría y la pantalla quedaba cargando.
+Corregido el tipo, **que es lo que hace que el compilador lo atrape**, y el
+mismo patrón en Logros, que aún no había reventado.
+
+**El error de workbox, filtrado** (VELOCLUB-WEB-1A). Lo tira la librería con la
+que next-pwa registra el service worker, al leer `registration.waiting` de un
+registro que nunca existió. Los ocho eventos llegaron en dos ráfagas, desde
+Ashburn y desde Boardman, recorriendo cuatro páginas públicas en cinco segundos
+con el mismo Chrome sobre Linux. Bots, cero usuarios afectados, y el `.waiting`
+está dentro del paquete. A `ignoreErrors`.
+
+De paso quedó confirmado que **el arreglo del contador de la promo aguantó**: de
+once eventos de hidratación quedó uno, de Samsung Internet, que es otro
+problema.
+
+### OneDrive lleno
+
+La cuota de OneDrive Personal son 5 GB y la carpeta `GitHub` ocupaba 4,92.
+**4,40 GB eran `node_modules`, `.next` y `dist`**, 232.949 archivos que se
+regeneran con un comando. Borrados, después de verificar que git los ignora, que
+los cuatro proyectos tienen lockfile, que nadie había parcheado nada a mano
+dentro de `node_modules` y que los dos repos estaban limpios y subidos.
+
+Quedan 0,52 GB, que es el código de verdad.
+
+**Esto se repite en cuanto alguien corra `npm install`.** El arreglo de fondo es
+sacar los repos de OneDrive. Hay un segundo motivo además de la cuota: OneDrive
+toca los archivos mientras Next.js los escribe, y de ahí salieron los dos
+`EINVAL readlink` sobre `.next` que obligaron a borrar la carpeta y reconstruir.
+
+### Pendientes
+
+- **Rotar los cinco secretos** de `docs/rotacion-secretos-2026-09-15.md`, y
+  borrar los doce nombres que siguen en `nex-code97` tras revisar el código del
+  portafolio, que despliega con raíz `web` y no está en el repo local.
+- **Sacar los repos de OneDrive.**
+- Vaciar la papelera de OneDrive en la nube; en las cuentas Personal lo borrado
+  ocupa cuota 30 días.
+- Los tres cobros rechazados de Gladys Contreras del 18 de agosto. El webhook
+  entregó los tres con 200, así que la integración funcionó: los rechazó el
+  banco. Falta saber si ese club quedó sin pagar.
+
+---
+
 ## Sesión 2026-09-01
 
 **Modelo:** Claude Opus 5
 **Estado inicial:** `5c3113d`, rama `main`
-**Estado final:** `a45cdf6`, desplegado
+**Estado final:** `33e62bc`, desplegado
 
 ### Lo que se construyó y se deshizo el mismo día
 

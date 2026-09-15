@@ -130,8 +130,15 @@ export default function PagosPage() {
 
       let memberId: string | null = null;
       if (userRole === 'DEPORTISTA') {
-        const memberRes = await apiFetch<{ member: { id: string } }>('/members/me', { token }).catch(() => null);
-        memberId = memberRes?.member.id ?? null;
+        // El tipo lleva `| null` porque la API devuelve `{ member: null }` con
+        // todas las letras cuando el deportista no tiene ficha. Antes decia
+        // `{ member: { id: string } }`, que era mentira, y por eso el `?.` de
+        // abajo solo cubria que fallara la peticion y no que `member` viniera
+        // vacio. Al leerle `.id` a null la promesa se rompia sin que nadie la
+        // atrapara, el `setLoading(false)` del final nunca corria y la pantalla
+        // se quedaba cargando para siempre.
+        const memberRes = await apiFetch<{ member: { id: string } | null }>('/members/me', { token }).catch(() => null);
+        memberId = memberRes?.member?.id ?? null;
         setMyMemberId(memberId);
       }
 

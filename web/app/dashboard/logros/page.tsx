@@ -168,8 +168,11 @@ function LogrosPageInner() {
       const userRole = meRes.user?.role ?? '';
       setRole(userRole);
       if (userRole === 'DEPORTISTA') {
-        const memberRes = await apiFetch<{ member: { id: string } }>('/members/me', { token }).catch(() => null);
-        setMyMemberId(memberRes?.member.id ?? null);
+        // Mismo caso que en Pagos: la API devuelve `{ member: null }` cuando
+        // el deportista no tiene ficha, asi que el tipo lo dice y el `?.` va
+        // sobre `member`, no solo sobre la respuesta.
+        const memberRes = await apiFetch<{ member: { id: string } | null }>('/members/me', { token }).catch(() => null);
+        setMyMemberId(memberRes?.member?.id ?? null);
       }
       setRoleLoaded(true);
     });

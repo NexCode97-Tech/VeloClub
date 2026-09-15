@@ -32,6 +32,19 @@ Sentry.init({
     // usuario o una caida de ellos, no un fallo de la app, y ya se maneja: la
     // pantalla de Ajustes espera a que Clerk este listo antes de dejar pulsar.
     'Failed to load Clerk',
+    // Lo tira workbox, la libreria con la que next-pwa registra el service
+    // worker, cuando se queda con un registro que nunca llego a existir y aun
+    // asi le lee `registration.waiting`. Pasa en navegadores headless, donde el
+    // service worker no se registra: los ocho eventos llegaron en dos rafagas,
+    // una desde Ashburn y otra desde Boardman, los dos centros de datos de AWS,
+    // recorriendo cuatro paginas publicas en cinco segundos con el mismo Chrome
+    // sobre Linux. Cero usuarios afectados.
+    //
+    // No hay una linea nuestra que cambiar: el `.waiting` que revienta esta
+    // dentro del paquete. El unico `.waiting` propio, en `esHeredado` de
+    // providers.tsx, lee elementos de `getRegistrations()`, que nunca vienen
+    // indefinidos.
+    "Cannot read properties of undefined (reading 'waiting')",
   ],
   // Una respuesta 401 o 404 de la API no es un fallo de software: es la
   // respuesta correcta a una sesion que vencio o a un registro que ya no esta,

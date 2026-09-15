@@ -62,6 +62,7 @@ vi.mock('cloudinary', () => ({
 }));
 
 // ── Imports reales (después de los mocks) ─────────────────────────────────────
+import { Prisma } from '@prisma/client';
 import { prisma } from '../db/client';
 import { cacheGet } from '../lib/redis';
 import membersRouter from '../routes/members';
@@ -179,5 +180,72 @@ describe('DELETE /members/:id', () => {
 
     expect(res.status).toBe(404);
     expect(res.body.error).toBe('Miembro no encontrado');
+  });
+});
+
+describe('PATCH /members/me/contact', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    (requireAuth as ReturnType<typeof vi.fn>).mockImplementation((req: express.Request, _res: express.Response, next: express.NextFunction) => sesionDePrueba(req, next));
+  });
+
+  /**
+   * El caso que tumbaba la ruta en produccion (VELOCLUB-API-8).
+   *
+   * `Member.clerkId` es unico en toda la tabla, no por club ni por deporte, asi
+   * que la ficha que ya tiene esa cuenta puede estar donde esta busqueda no la
+   * ve. El auto-vinculado choca contra la restriccion y antes se caia la
+   * peticion entera, con lo cual el usuario no podia ni guardar su telefono.
+   */
+  it('guarda el telefono aunque el clerkId ya sea de otra ficha', async () => {
+    (prisma.member.findFirst as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce(null)                                   // no hay ficha por clerkId
+      .mockResolvedValueOnce({ id: 'member-1', clerkId: null });     // si la hay por correo
+
+    const choque = new Prisma.PrismaClientKnownRequestError(
+      'Unique constraint failed on the fields: (`clerkId`)',
+      { code: 'P2002', clientVersion: 'test' },
+    );
+    (prisma.member.update as ReturnType<typeof vi.fn>)
+      .mockRejectedValueOnce(choque)                                 // el intento con vinculo
+      .mockResolvedValueOnce({ id: 'member-1', phone: '3001234567' }); // el reintento sin vinculo
+
+    const res = await request(app)
+      .patch('/members/me/contact')
+      .set('Authorization', 'Bearer fake-token')
+      .send({ phone: '3001234567' });
+
+    expect(res.status).toBe(200);
+    expect(res.body.member.phone).toBe('3001234567');
+
+    // El reintento guarda el telefono y deja el vinculo quieto.
+    const segundo = (prisma.member.update as ReturnType<typeof vi.fn>).mock.calls[1][0];
+    expect(segundo.data).toEqual({ phone: '3001234567' });
+  });
+
+  /**
+   * Con dos fichas del mismo correo, una vinculada y otra no, manda la
+   * vinculada. Antes las dos entraban por un mismo OR y sin orderBy el orden no
+   * estaba garantizado, asi que podia devolver la que no tiene clerkId y de ahi
+   * salia el choque de arriba.
+   */
+  it('prefiere la ficha que ya tiene el clerkId sobre la del correo', async () => {
+    (prisma.member.findFirst as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce({ id: 'member-vinculado', clerkId: 'clerk-test-id' });
+    (prisma.member.update as ReturnType<typeof vi.fn>)
+      .mockResolvedValue({ id: 'member-vinculado', phone: '3009999999' });
+
+    const res = await request(app)
+      .patch('/members/me/contact')
+      .set('Authorization', 'Bearer fake-token')
+      .send({ phone: '3009999999' });
+
+    expect(res.status).toBe(200);
+    // Una sola busqueda: encontrada por clerkId, no se pregunta por correo.
+    expect(prisma.member.findFirst).toHaveBeenCalledTimes(1);
+
+    const llamada = (prisma.member.update as ReturnType<typeof vi.fn>).mock.calls[0][0];
+    expect(llamada.where).toEqual({ id: 'member-vinculado' });
+    expect(llamada.data).not.toHaveProperty('clerkId');
   });
 });

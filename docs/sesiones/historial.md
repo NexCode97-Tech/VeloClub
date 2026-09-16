@@ -161,6 +161,20 @@ La barra inferior del panel pasó a sumarle `env(safe-area-inset-bottom)` a su
 separación de siempre. Con `cover` la página llega hasta el borde de abajo, y
 sin eso se sentaría encima de la rayita del iPhone. Queda donde estaba.
 
+**El tercero tampoco funcionó, y por una razón concreta.** `ColorBarraEstado`
+encendía `viewport-fit` escribiendo la etiqueta después de cargar la página, y
+Safari no lo aplica: ese ajuste lo lee una sola vez, al parsear el documento. La
+etiqueta cambiaba y no pasaba nada.
+
+**`4.º intento.`** El panel declara su propio viewport, que es lo que el cliente
+venía diciendo desde el principio: que cada pantalla mandara sobre lo suyo en
+vez de que un solo sitio lo decidiera por ruta. `app/dashboard/layout.tsx` pasó
+a ser un componente de servidor de treinta líneas, con el `export const
+viewport` y nada más, y el panel entero se mudó a `app/dashboard/panel.tsx`.
+Next ignora los `viewport` de un componente de cliente, y el panel lo era: por
+eso nunca hubo declaración estática. Ahora el HTML de `/dashboard` sale del
+servidor con `viewport-fit=cover` y el de la landing sin él.
+
 ---
 
 ## Sesión 2026-09-15 — Secretos fuera de sitio, y tres hallazgos de Sentry

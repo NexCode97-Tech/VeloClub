@@ -42,15 +42,16 @@ function colorPara(pathname: string): string {
 /**
  * Ajusta el color de la barra de estado a la pantalla que se está viendo.
  *
- * Hace tres cosas. Escribe la etiqueta `theme-color`, que Android respeta.
- * Enciende `viewport-fit=cover` dentro del panel, que es lo que deja que la
- * pagina llegue hasta el borde de arriba del telefono. Y deja el color en
- * `--vc-barra`, que es con lo que el panel pinta esa franja.
+ * Hace dos cosas. Escribe la etiqueta `theme-color`, que Android respeta, y
+ * deja el color en `--vc-barra`, que es con lo que el panel pinta la franja de
+ * la barra de estado.
  *
- * En iPhone la franja no se le pide al navegador, se dibuja: con `cover` la
- * barra de estado queda dentro de la pagina y el panel le reserva el alto del
- * area segura. Pintar el fondo del documento no servia, porque esa franja no
- * era nuestra y el color terminaba saliendo en la barra de abajo.
+ * En iPhone esa franja no se le pide al navegador, se dibuja. El panel declara
+ * `viewport-fit=cover` en su propio `viewport` (`app/dashboard/layout.tsx`),
+ * con lo que la pagina llega hasta el borde de arriba del telefono, y le
+ * reserva el alto del area segura. Ese ajuste va en el HTML que llega del
+ * servidor y no se puede encender despues desde JavaScript: Safari lo lee una
+ * sola vez, al parsear el documento.
  *
  * Es el **único** sitio que escribe `theme-color`. El `viewport` de
  * `app/layout.tsx` lo declaraba también, y como Next reescribe esas etiquetas
@@ -69,11 +70,6 @@ export function ColorBarraEstado() {
   useEffect(() => {
     const color = colorPara(pathname || '/');
 
-    // El panel es el unico que se mete debajo de la barra de estado. Ahi la
-    // franja es nuestra y la pintamos nosotros; en el resto del sitio la
-    // pagina arranca debajo, como siempre.
-    const cubreLaBarra = (pathname || '/').startsWith('/dashboard');
-
     const aplicar = () => {
       // Todas y no la primera. Si alguna vez quedan dos etiquetas, el navegador
       // se queda con la última, así que actualizarlas todas es lo único que
@@ -86,21 +82,6 @@ export function ColorBarraEstado() {
         document.head.appendChild(meta);
       } else {
         metas.forEach(m => { if (m.content !== color) m.content = color; });
-      }
-
-      // `viewport-fit=cover` es lo que deja que la pagina llegue hasta el borde
-      // de arriba del telefono. Sin el, la franja de la barra de estado no es
-      // nuestra y la pinta el navegador con lo que se le antoje: por eso el
-      // color del fondo del documento terminaba saliendo abajo, en la barra de
-      // la direccion, en vez de arriba.
-      //
-      // Se enciende solo en el panel. En la landing y en el resto, encenderlo
-      // metería el contenido debajo del reloj en todas las pantallas.
-      const vp = document.querySelector<HTMLMetaElement>('meta[name="viewport"]');
-      if (vp) {
-        const base = vp.content.replace(/,?\s*viewport-fit=[\w-]+/g, '').replace(/,\s*$/, '').trim();
-        const quiero = cubreLaBarra ? `${base}, viewport-fit=cover` : base;
-        if (vp.content !== quiero) vp.content = quiero;
       }
     };
 

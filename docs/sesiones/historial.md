@@ -78,6 +78,33 @@ entrenador los de su carpeta —sin escribirlo, el cliente de Prisma ya filtra p
 deporte— y el deportista el suyo, en `/dashboard/carnet`. Un carnet que solo
 puede sacar el administrador no sirve el domingo en una pista.
 
+### Marca de agua y logo grande, aprobados sobre maqueta
+
+Segunda pasada del carnet, después de mostrarle al cliente cuatro tratamientos
+lado a lado con logos **reales** de la plataforma, sacados del endpoint público
+`GET /clubs/trusted` que alimenta el landing. Eligió marca de agua más logo
+grande.
+
+- **La marca de agua** del logo detrás de los datos, al 8,5 por ciento. Va en
+  las tres pinturas: pantalla, imagen y PDF.
+- **El logo pasa de 34 a 50 y de cuadrado redondeado a círculo.** El círculo es
+  lo que hace el resto de la plataforma, el perfil, el buscador y la pantalla
+  del club; el carnet iba por su lado. Y de paso le recorta el fondo cuadrado al
+  archivo, que es el problema real: **casi ningún logo de club llega con
+  transparencia**. Se verificaron dos, el de SBM Barbosa y el de Correcaminos, y
+  ninguno tiene canal alfa. El primero es un JPG, que no la admite; el segundo
+  es un PNG que el club exportó sin ella.
+- **Entra entero, no recortado**, a diferencia del perfil, que usa `cover`. A un
+  logo circular le da igual, pero a uno horizontal `cover` le corta el nombre
+  por la mitad, y el logo de un club en un carnet no se corta. Es una diferencia
+  deliberada con el resto de la app.
+- **Se puede apagar** desde Ajustes, con `Club.carnetMarcaAgua`. Un logo con
+  letras blancas o con mucho detalle se desvanece feo, y cuál aguanta no se sabe
+  de antemano. El interruptor queda deshabilitado mientras no haya logo.
+- El interruptor deslizante salió de la tarjeta de suscripción a
+  `components/ui/interruptor.tsx`. Dos dibujados aparte terminan con distinto
+  tamaño y distinto verde.
+
 ### `/members/verificar` no se ejecutaba nunca
 
 Express atiende la **primera** ruta que encaja, no la más específica, y

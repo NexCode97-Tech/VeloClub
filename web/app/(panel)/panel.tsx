@@ -593,17 +593,23 @@ export default function Panel({ children }: { children: React.ReactNode }) {
     {/* La cortina va encima del dashboard ya montado y se corre a la derecha */}
     {curtain && <LoadingCurtain />}
     {/* La franja de arriba es parte de la pagina, no del navegador.
-        `ColorBarraEstado` enciende `viewport-fit=cover` en el panel, asi que
-        aqui hay que devolverle al contenido el alto que se le come la barra de
-        estado, y pintar esa franja con el color de la pantalla: morado en
-        Inicio, para que el encabezado y la barra se lean como una sola pieza,
-        y el gris del fondo en los demas modulos.
+        `app/(panel)/layout.tsx` declara `viewport-fit=cover`, asi que la pagina
+        llega hasta el borde de la pantalla y aqui hay que devolverle al
+        contenido el alto que se le come la barra de estado.
 
-        El fondo va en linea y no en la clase a proposito: `bg-background` se
-        queda como respaldo para cuando la variable no existe todavia. */}
+        ── PRUEBA TEMPORAL ──
+        En Inicio esa franja va en rojo a proposito, para saber de una vez si
+        existe o no. Llevamos cinco intentos adivinando mirando alturas.
+        Si en el telefono sale una tira roja arriba, la franja esta reservada y
+        lo unico que falla es el color. Si no sale nada, `cover` no esta
+        entrando y el camino es otro.
+        Esto se devuelve al morado (o al gris) apenas se sepa. */}
     <div
       className="flex h-dvh overflow-hidden bg-background"
-      style={{ paddingTop: 'env(safe-area-inset-top, 0px)', background: 'var(--vc-barra, #F7F7FB)' }}
+      style={{
+        paddingTop: 'env(safe-area-inset-top, 0px)',
+        background: pathname === '/inicio' ? '#FF0000' : '#F7F7FB',
+      }}
     >
 
       {/* ── Desktop sidebar ─────────────────────────────────────────────── */}

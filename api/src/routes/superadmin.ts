@@ -13,6 +13,7 @@ import { validarSubida } from '../lib/upload-guard';
 import { emitToClub } from '../lib/sse';
 import { notifyClubStaff } from '../lib/notify';
 import { activarClubTrasPago } from '../lib/sync-suscripciones';
+import { usoPorClub } from '../lib/uso-plataforma';
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -1297,6 +1298,20 @@ router.delete('/finanzas/gastos/:id', requireAuth, requireSuperadmin, async (req
     return res.status(404).json({ error: 'Ese gasto ya no existe o lo registró el sistema.' });
   }
   res.json({ ok: true });
+});
+
+// ─── Uso de la plataforma ─────────────────────────────────────────────────────
+//
+// Cuanto usa cada club la app. Los calculos viven en `lib/uso-plataforma.ts`
+// por la misma razon que los de finanzas: este archivo ya va en mil trescientas
+// lineas y meterle aca la agregacion lo haria ilegible.
+//
+// Sin cache a proposito. Es una pantalla que abre una sola persona, de vez en
+// cuando, y lo que se le pregunta es justo si algo cambio hoy; servirle una
+// copia de hace diez minutos le quitaria el unico valor que tiene.
+router.get('/uso', requireAuth, requireSuperadmin, async (_req, res) => {
+  const resumen = await usoPorClub();
+  res.json(resumen);
 });
 
 export default router;

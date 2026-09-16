@@ -12,7 +12,7 @@ import { Home, Building2, Ticket, Info, CircleDollarSign, ArrowLeft, Flag } from
 // Finanzas lleva el ícono propio del módulo: es el mismo que usa el panel del
 // club en su barra lateral, y sería raro que el mismo módulo se dibuje distinto
 // según desde dónde se mire.
-import { IconAjustes, IconFinanzas, IconSalir } from '@/components/ui/custom-icons';
+import { IconAjustes, IconFinanzas, IconSalir, IconStatistics } from '@/components/ui/custom-icons';
 import { motion, AnimatePresence } from 'framer-motion';
 import { idClubDeRuta } from './club-context';
 import { ID_ACCIONES } from '@/components/superadmin/acciones-cabecera';
@@ -29,6 +29,10 @@ const TABS = [
   // desde donde se hace. Vive en el superadmin porque el feed publico cruza
   // clubes y ninguno puede mandar sobre lo que publica otro.
   { href: '/superadmin/reportes', label: 'Reportes',  exact: false, Icon: Flag             },
+  // Quien esta usando la plataforma y quien se enfrio. Va aparte de Finanzas a
+  // proposito: alli se ve lo que un club paga, aca si lo esta aprovechando, y
+  // un club al dia que lleva tres semanas sin entrar no renueva.
+  { href: '/superadmin/uso',      label: 'Uso',       exact: false, Icon: IconStatistics   },
 ];
 
 const SCREEN_LABELS: Record<string, string> = {
@@ -37,6 +41,7 @@ const SCREEN_LABELS: Record<string, string> = {
   '/superadmin/cupones':  'Cupones',
   '/superadmin/finanzas': 'Finanzas',
   '/superadmin/reportes': 'Reportes',
+  '/superadmin/uso':      'Uso',
 };
 
 // Modulos de un club. Dentro del detalle, estos reemplazan a TABS tanto en el

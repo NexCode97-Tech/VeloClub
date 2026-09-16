@@ -42,9 +42,15 @@ function colorPara(pathname: string): string {
 /**
  * Ajusta el color de la barra de estado a la pantalla que se está viendo.
  *
- * Hace dos cosas, y la segunda es la que funciona en iPhone. Escribe la
- * etiqueta `theme-color`, que Android respeta, y pinta el fondo del documento,
- * que iOS usa para la franja de la barra de estado sin preguntarle a nadie.
+ * Hace tres cosas. Escribe la etiqueta `theme-color`, que Android respeta.
+ * Enciende `viewport-fit=cover` dentro del panel, que es lo que deja que la
+ * pagina llegue hasta el borde de arriba del telefono. Y deja el color en
+ * `--vc-barra`, que es con lo que el panel pinta esa franja.
+ *
+ * En iPhone la franja no se le pide al navegador, se dibuja: con `cover` la
+ * barra de estado queda dentro de la pagina y el panel le reserva el alto del
+ * area segura. Pintar el fondo del documento no servia, porque esa franja no
+ * era nuestra y el color terminaba saliendo en la barra de abajo.
  *
  * Es el **único** sitio que escribe `theme-color`. El `viewport` de
  * `app/layout.tsx` lo declaraba también, y como Next reescribe esas etiquetas
@@ -63,6 +69,11 @@ export function ColorBarraEstado() {
   useEffect(() => {
     const color = colorPara(pathname || '/');
 
+    // El panel es el unico que se mete debajo de la barra de estado. Ahi la
+    // franja es nuestra y la pintamos nosotros; en el resto del sitio la
+    // pagina arranca debajo, como siempre.
+    const cubreLaBarra = (pathname || '/').startsWith('/dashboard');
+
     const aplicar = () => {
       // Todas y no la primera. Si alguna vez quedan dos etiquetas, el navegador
       // se queda con la última, así que actualizarlas todas es lo único que
@@ -73,26 +84,32 @@ export function ColorBarraEstado() {
         meta.name = 'theme-color';
         meta.content = color;
         document.head.appendChild(meta);
-        return;
+      } else {
+        metas.forEach(m => { if (m.content !== color) m.content = color; });
       }
-      metas.forEach(m => { if (m.content !== color) m.content = color; });
+
+      // `viewport-fit=cover` es lo que deja que la pagina llegue hasta el borde
+      // de arriba del telefono. Sin el, la franja de la barra de estado no es
+      // nuestra y la pinta el navegador con lo que se le antoje: por eso el
+      // color del fondo del documento terminaba saliendo abajo, en la barra de
+      // la direccion, en vez de arriba.
+      //
+      // Se enciende solo en el panel. En la landing y en el resto, encenderlo
+      // metería el contenido debajo del reloj en todas las pantallas.
+      const vp = document.querySelector<HTMLMetaElement>('meta[name="viewport"]');
+      if (vp) {
+        const base = vp.content.replace(/,?\s*viewport-fit=[\w-]+/g, '').replace(/,\s*$/, '').trim();
+        const quiero = cubreLaBarra ? `${base}, viewport-fit=cover` : base;
+        if (vp.content !== quiero) vp.content = quiero;
+      }
     };
 
     aplicar();
 
-    // Y el lienzo, que es lo que de verdad decide el color de la franja de
-    // arriba en iPhone.
-    //
-    // `theme-color` no siempre se respeta, pero el color de fondo del
-    // documento sí se respeta siempre: iOS pinta con el el area de la barra de
-    // estado y la del rebote del scroll. El fondo estaba en `body` y era el
-    // gris del panel, asi que en Inicio la barra salia gris aunque el
-    // encabezado de esa pantalla sea morado, porque el encabezado es una
-    // tarjeta DENTRO de la pagina y no llega hasta alla.
-    //
-    // Va en `html` y no en `body` porque es el de `html` el que gana cuando
-    // los dos estan puestos.
-    document.documentElement.style.backgroundColor = color;
+    // El color de la franja. El panel la pinta con esta variable; asi el
+    // encabezado morado de Inicio y la barra de estado se leen como una sola
+    // pieza, y en los demas modulos la franja vuelve al gris del fondo.
+    document.documentElement.style.setProperty('--vc-barra', color);
 
     // Y se vuelve a poner si algo la cambia. El framework reescribe la cabecera
     // al navegar, y sin esto el color duraba lo que tardara ese repintado.

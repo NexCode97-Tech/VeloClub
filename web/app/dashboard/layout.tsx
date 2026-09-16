@@ -593,7 +593,19 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     <>
     {/* La cortina va encima del dashboard ya montado y se corre a la derecha */}
     {curtain && <LoadingCurtain />}
-    <div className="flex h-dvh overflow-hidden bg-background">
+    {/* La franja de arriba es parte de la pagina, no del navegador.
+        `ColorBarraEstado` enciende `viewport-fit=cover` en el panel, asi que
+        aqui hay que devolverle al contenido el alto que se le come la barra de
+        estado, y pintar esa franja con el color de la pantalla: morado en
+        Inicio, para que el encabezado y la barra se lean como una sola pieza,
+        y el gris del fondo en los demas modulos.
+
+        El fondo va en linea y no en la clase a proposito: `bg-background` se
+        queda como respaldo para cuando la variable no existe todavia. */}
+    <div
+      className="flex h-dvh overflow-hidden bg-background"
+      style={{ paddingTop: 'env(safe-area-inset-top, 0px)', background: 'var(--vc-barra, #F7F7FB)' }}
+    >
 
       {/* ── Desktop sidebar ─────────────────────────────────────────────── */}
       <motion.aside
@@ -967,10 +979,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           )}
         </AnimatePresence>
 
-        {/* ── Mobile bottom tab bar ── */}
+        {/* ── Mobile bottom tab bar ──
+            El area segura se suma a la separacion de siempre. Con
+            `viewport-fit=cover` la pagina llega hasta el borde de abajo, asi
+            que sin esto la barra se sentaria encima de la rayita del iPhone. */}
         <motion.nav
           className="md:hidden fixed bottom-0 left-0 right-0 z-30"
-          style={{ padding: '0 16px 20px', pointerEvents: 'none' }}
+          style={{ padding: '0 16px calc(20px + env(safe-area-inset-bottom, 0px))', pointerEvents: 'none' }}
           animate={{ y: navOculta ? '150%' : '0%' }}
           initial={false}
           transition={reducedMotion ? { duration: 0 } : { duration: 0.7, ease: [0.32, 0.72, 0, 1] }}

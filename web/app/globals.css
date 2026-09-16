@@ -66,6 +66,10 @@
 :root {
   /* VeloClub light theme — bg #F7F7FB, accent #381DA0 */
   --background: #F7F7FB;
+  /* La franja de la barra de estado en movil. La escribe ColorBarraEstado
+     segun la pantalla: morada en Inicio, del color del fondo en el resto.
+     Arranca en el gris del panel para que no parpadee antes de que monte. */
+  --vc-barra: #F7F7FB;
   --foreground: #1A1028;
   --card: #FFFFFF;
   --card-foreground: #1A1028;

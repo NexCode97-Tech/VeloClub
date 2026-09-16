@@ -5,6 +5,106 @@ Actualizar al final de cada sesión o cuando se complete un bloque de trabajo im
 
 ---
 
+## Sesión 2026-09-16 — El carnet digital, y una ruta que se comía a otra
+
+**Modelo:** Claude Opus 5
+**Estado inicial:** `603e2ce`, rama `main`
+**Estado final:** ver el último commit de la sesión
+
+### Ajustes de la gráfica de Uso y de la de Finanzas
+
+Cuatro correcciones seguidas, todas pedidas por el cliente mirando la pantalla.
+
+- **El tamaño de Finanzas.** Dibujaba en un lienzo de 720x250 que se estiraba al
+  ancho de la tarjeta, así que en un monitor grande salía al doble: la línea de
+  2,2 se veía de 4,4 y el alto pasaba de 250 a medio millar de píxeles. Ahora se
+  mide el contenedor con un `ResizeObserver` y dibuja uno a uno, con alto fijo de
+  200, el mismo de Uso.
+- **El globo de Uso** había perdido el renglón con el nombre de la serie, que
+  nadie pidió quitar. Volvió, manteniendo el negro.
+- **El eje de Uso** usaba `minTickGap`, y recharts va botando marcas a medida que
+  no caben: las primeras quedaban pegadas y del doce en adelante separadas al
+  doble. Ahora el salto es fijo.
+- **El globo se apoya en el punto.** Recharts solo entrega la `x` del punto, la
+  `y` es la del cursor, así que se fijó la escala vertical para poder calcularla.
+- **El morado salía aguado.** La máscara del desvanecido estaba sobre la capa que
+  llevaba el relleno y la línea juntos, así que al trazo también le bajaba la
+  opacidad. Tres capas, como en Finanzas, con la línea fuera de la máscara.
+- **El globo decía «4 días» en la vista por día, y era falso.** El dato es un par
+  de club y día con asistencia tomada: en un punto por día solo cabe un par por
+  club, así que ese número son **clubes**. Por semana sí son días.
+
+### Carnet digital
+
+Módulo nuevo, pedido por el cliente y aprobado sobre una maqueta.
+
+El carnet no existe para verse bonito. Existe para cuando un deportista se cae
+en una competencia lejos de su ciudad y el entrenador necesita, en tres
+segundos, el tipo de sangre, la alergia, la EPS y el teléfono de quien responde
+por él. Eso vivía repartido en la ficha y nadie lo alcanza a buscar con el
+celular en la mano. **El frente identifica, el reverso es el que sirve.**
+
+**Los colores son del club**, no los nuestros, y se eligen en Ajustes. Dos
+columnas nuevas en `Club`, `colorPrimario` y `colorSecundario`. Uno deja la
+banda plana, dos hacen el degradado.
+
+El color es **libre**, decisión explícita del cliente, así que hubo que escribir
+un selector propio con cuadro de saturación, barra de tono y código escrito. Va
+en `selector-color-libre.tsx` y **no reemplaza** a `selector-color.tsx`, el de
+la rejilla de cincuenta tonos: aquel existe para el color de una clase, donde la
+rejilla es una virtud porque deja fuera el rojo y el azul que el calendario
+tiene reservados.
+
+Con color libre es fácil armar algo ilegible, así que tres cosas se calculan y
+no se preguntan, en `lib/color.ts`: el texto de la banda pasa a blanco o a negro
+según el fondo, el color de los datos se oscurece hasta contrastar contra el
+blanco conservando el tono, y si los dos colores quedan casi iguales sale un
+aviso porque ese degradado no se nota.
+
+**La vigencia va atada a la mensualidad**, decisión del cliente: el carnet vale
+hasta el último día del mes más reciente que el deportista tiene pago. Se mira
+el mes pagado y no la fecha del pago, porque quien paga adelantado queda
+cubierto hasta donde pagó. Sin un solo pago registrado **no sale vencido, sale
+sin fecha**: hay clubes que todavía no llevan las mensualidades acá y marcarles
+todo el equipo como vencido sería acusarlos de una mora que nadie registró.
+
+Sale en imagen y en PDF a tamaño real con líneas de corte. Los dos salen del
+mismo canvas, dibujado una sola vez en `lib/carnet.ts`, para que no se
+desincronicen. En pantalla el carnet es HTML, por accesibilidad y por el ancho
+del teléfono.
+
+Quién lo abre, también decisión del cliente: el admin cualquiera de su club, el
+entrenador los de su carpeta —sin escribirlo, el cliente de Prisma ya filtra por
+deporte— y el deportista el suyo, en `/dashboard/carnet`. Un carnet que solo
+puede sacar el administrador no sirve el domingo en una pista.
+
+### `/members/verificar` no se ejecutaba nunca
+
+Express atiende la **primera** ruta que encaja, no la más específica, y
+`/verificar` estaba declarada debajo de `/:id`. La petición entraba por ahí como
+si «verificar» fuera el id de alguien, devolvía 404, y el formulario se traga el
+error y responde que no. Así que el aviso de correo o documento repetido no
+salía **nunca** mientras alguien escribía.
+
+Quedó arriba de `/:id`, con dos pruebas que fallan si alguien la vuelve a mover
+y una nota en el archivo con la regla. 85 tests.
+
+### Correcciones al registro de la rotación de secretos
+
+- `BREB_LLAVE` **no se rota.** Una llave Bre-B es un alias, un teléfono o un
+  correo, y existe para repartirla: es lo que uno le da a otro para que le
+  pague. Estuvo en la lista por error.
+- El `MP_ACCESS_TOKEN` **sí se rotó** el 15, en la misma pasada del webhook. La
+  entrada del historial solo anotó el webhook, y por esa omisión el 16 se dio por
+  pendiente y se le propuso al cliente repetir una tarea terminada.
+
+De ahí salió una regla: **cada acción terminada se anota apenas se hace**, no al
+cerrar la sesión, y se anotan todos los elementos del lote, no el primero.
+
+Quedan por rotar la pareja de Cloudinary y `CLERK_SECRET_KEY`.
+
+---
+
 ## Sesión 2026-09-15 — Secretos fuera de sitio, y tres hallazgos de Sentry
 
 **Modelo:** Claude Opus 5

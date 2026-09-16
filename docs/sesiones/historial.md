@@ -30,20 +30,21 @@ Lo hecho:
   pisar `NODE_ENV` a mano rompe builds.
 - **`RESET_SECRET` borrado de Vercel y de Railway.** No aparecía en `api/src`,
   así que no había que rotarlo sino quitarlo.
-- **`MP_WEBHOOK_SECRET` rotado.** Clave nueva generada en Mercado Pago y escrita
-  en Railway por entrada estándar, verificada comparando hashes para no imprimir
-  el valor en ningún lado.
+- **`MP_WEBHOOK_SECRET` y `MP_ACCESS_TOKEN` rotados.** Los dos generados de
+  nuevo en Mercado Pago y escritos en Railway por entrada estándar, verificados
+  comparando hashes para no imprimir el valor en ningún lado. El archivo de
+  texto con el token nuevo se sobrescribió antes de borrarlo.
 
 **Lo pendiente vive en `docs/rotacion-secretos-2026-09-15.md`**: doce nombres por
 borrar de `nex-code97` una vez se revise el código del portafolio, y los
-secretos por rotar, la pareja de Cloudinary y `CLERK_SECRET_KEY`, más
-`MP_ACCESS_TOKEN` por confirmar.
+secretos por rotar, la pareja de Cloudinary y `CLERK_SECRET_KEY`.
 
 Corregido el 16 de septiembre. `BREB_LLAVE` **no se rota**: es el alias de la
 cuenta Bre-B, un teléfono o un correo que existe para repartirlo, no una
-credencial. Y del Access Token de Mercado Pago hay discrepancia, este registro
-dice que quedó pendiente y el usuario recuerda haberlo rotado en la misma
-pasada del webhook, así que se confirma mirando la fecha en el panel. Ese documento explica por qué borrar la copia no basta:
+credencial. Y el `MP_ACCESS_TOKEN` **sí se rotó** el 15, en la misma pasada del
+webhook; esta entrada solo anotó el webhook y por esa omisión el 16 se dio por
+pendiente. La lección es de registro, no de seguridad: lo que no queda escrito
+acá se vuelve a preguntar. Ese documento explica por qué borrar la copia no basta:
 cierra la puerta de ahora en adelante, no deshace los cuatro meses en que el
 valor estuvo legible.
 

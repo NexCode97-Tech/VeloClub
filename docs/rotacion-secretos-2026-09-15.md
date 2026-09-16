@@ -85,21 +85,15 @@ Clave nueva generada en Mercado Pago, en la configuración de notificaciones, y
 escrita en Railway por entrada estándar, verificada comparando hashes para no
 imprimir el valor en ningún lado.
 
-### 3. `MP_ACCESS_TOKEN` — POR CONFIRMAR
+### 3. `MP_ACCESS_TOKEN` — HECHO el 15 de septiembre
 
-El registro de la sesión del 15 de septiembre anota rotado únicamente el
-`MP_WEBHOOK_SECRET`. El 16 de septiembre el usuario recuerda haber rotado
-también el Access Token en la misma pasada. No hay forma de saberlo desde acá
-sin imprimir el valor, que no se hace.
+Se regeneró en el panel de Mercado Pago, en las credenciales de producción de
+la aplicación. El token nuevo llegó en un archivo de texto, se escribió en
+Railway por entrada estándar, se verificó comparando hashes sin imprimir el
+valor, y el archivo se sobrescribió antes de borrarlo.
 
-**Se confirma en el panel de Mercado Pago**, en las credenciales de producción
-de la aplicación: ahí se ve si el token se regeneró y cuándo. Si no se
-regeneró, se regenera.
-
-Ojo con la trampa si toca hacerlo. El token de producción **no convive con el
-anterior**: al regenerarlo el viejo muere de inmediato, así que el cambio en
-Railway va justo detrás y entre una cosa y la otra los cobros fallan. Hacerlo
-en una franja de poco movimiento.
+Esta entrada quedó sin anotar el 15 de septiembre y el 16 se dio por pendiente
+por error. **Lo que faltaba era el registro, no la rotación.**
 
 ### 4. `CLOUDINARY_API_KEY` y `CLOUDINARY_API_SECRET`
 

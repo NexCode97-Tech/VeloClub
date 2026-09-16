@@ -130,6 +130,37 @@ cerrar la sesión, y se anotan todos los elementos del lote, no el primero.
 
 Quedan por rotar la pareja de Cloudinary y `CLERK_SECRET_KEY`.
 
+### La barra de estado de Inicio, en morado
+
+El cliente reportó que al abrir la app en el celular la barra de arriba, la del
+reloj y la batería, salía gris en Inicio cuando debajo de ella hay un encabezado
+morado. En la pantalla de carga sí salía morada. Pasa igual en Safari, no solo
+en la app instalada, así que no era comportamiento de PWA.
+
+Tres intentos, y solo el tercero era el camino bueno.
+
+- **`3cc9cc2`.** `themeColor` estaba declarado en el `viewport` de
+  `app/layout.tsx` y también en `ColorBarraEstado`. Next reescribe las etiquetas
+  del `viewport` al cambiar de ruta, así que pisaba lo que el componente acababa
+  de poner. Quedó una sola mano encima, con un `MutationObserver` que la
+  reaplica. Correcto, pero no era la causa: siguió gris.
+- **`31f2a0f`.** Pintar el fondo del documento, que es lo que iOS usa para las
+  franjas. No sirvió y además salió mal: el morado apareció en la barra de
+  **abajo** de Safari, la de la dirección y los tres puntos. La franja de arriba
+  nunca fue nuestra, y el navegador la pinta como quiere.
+- **`7a838ce`.** El camino bueno. Con `viewport-fit=cover` la página llega hasta
+  el borde de arriba del teléfono y esa franja pasa a ser un elemento nuestro,
+  que se dibuja en vez de pedírsela al navegador. `ColorBarraEstado` lo enciende
+  **solo en `/dashboard`** —encenderlo en toda la plataforma metería el
+  contenido debajo del reloj en la landing y en las pantallas de cuenta— y deja
+  el color en `--vc-barra`. El panel reserva el alto del área segura y pinta esa
+  franja: morada en Inicio, para que el encabezado y la barra se lean como una
+  sola pieza, y el gris del fondo en los demás módulos.
+
+La barra inferior del panel pasó a sumarle `env(safe-area-inset-bottom)` a su
+separación de siempre. Con `cover` la página llega hasta el borde de abajo, y
+sin eso se sentaría encima de la rayita del iPhone. Queda donde estaba.
+
 ---
 
 ## Sesión 2026-09-15 — Secretos fuera de sitio, y tres hallazgos de Sentry

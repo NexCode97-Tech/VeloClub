@@ -1,6 +1,6 @@
 'use client';
 
-import { useId, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 
 /**
  * Entra y sale, en línea.
@@ -108,14 +108,37 @@ function curva(pts: [number, number][]): string {
   return p;
 }
 
+/**
+ * El alto de la grafica, en pixeles reales. Es el mismo de la grafica de Uso,
+ * que es la referencia de tamano para todas.
+ */
+const ALTO = 200;
+
 export function GraficaMeses({ meses }: { meses: MesFinanzas[] }) {
   const [encima, setEncima] = useState<number | null>(null);
   const caja = useRef<HTMLDivElement>(null);
   const id = useId().replace(/:/g, '');
 
+  /**
+   * El ancho real de la tarjeta.
+   *
+   * El lienzo media 720 de ancho y se estiraba al ancho disponible, asi que en
+   * un monitor grande la grafica entera salia al doble: la linea de 2,2 se veia
+   * de 4,4 y el alto pasaba de 250 a medio millar de pixeles. Midiendo el
+   * contenedor el dibujo va uno a uno, que es como trabaja la grafica de Uso.
+   */
+  const [ancho, setAncho] = useState(720);
+  useEffect(() => {
+    const el = caja.current;
+    if (!el) return;
+    const ro = new ResizeObserver(([e]) => setAncho(Math.round(e.contentRect.width) || 720));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
   if (meses.length === 0) return null;
 
-  const W = 720, H = 250, PAD_I = 10, PAD_D = 52, PAD_S = 18, PAD_B = 26;
+  const W = ancho, H = ALTO, PAD_I = 10, PAD_D = 52, PAD_S = 18, PAD_B = 26;
   const anchoUtil = W - PAD_I - PAD_D;
   const altoUtil = H - PAD_S - PAD_B;
   const tope = topeDe(meses.flatMap(m => [m.entra, m.sale]));
@@ -153,7 +176,7 @@ export function GraficaMeses({ meses }: { meses: MesFinanzas[] }) {
       {/* La descripción va en aria-label y no en <title>: el <title> de un SVG
           el navegador lo pinta encima como su propio tooltip, con su marco
           gris, tapando la gráfica. El lector de pantalla lee las dos igual. */}
-      <svg viewBox={`0 0 ${W} ${H}`} className="block w-full overflow-visible"
+      <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} className="block w-full overflow-visible"
         role="img"
         aria-label={`Ingresos y gastos, de ${tituloDe(meses[0].mes)} a ${tituloDe(meses[meses.length - 1].mes)}`}>
 
@@ -168,8 +191,8 @@ export function GraficaMeses({ meses }: { meses: MesFinanzas[] }) {
           {series.map((se, i) => (
             <g key={se.clave}>
               <linearGradient id={`ar${i}${id}`} x1={0} y1={0} x2={0} y2={1}>
-                <stop offset="0%" stopColor={se.color} stopOpacity={0.18} />
-                <stop offset="100%" stopColor={se.color} stopOpacity={0} />
+                <stop offset="0%" stopColor={se.color} stopOpacity={0.20} />
+                <stop offset="100%" stopColor={se.color} stopOpacity={0.01} />
               </linearGradient>
               {/* La cuadrícula que vive dentro del área, del color de su serie.
                   Cuadro chico y trazo fino: a esta escala se lee como una
@@ -212,7 +235,7 @@ export function GraficaMeses({ meses }: { meses: MesFinanzas[] }) {
           <g key={se.clave}>
             <path d={se.area} fill={`url(#ar${i}${id})`} />
             <path d={se.area} fill={`url(#cua${i}${id})`} mask={`url(#mk${i}${id})`} />
-            <path d={se.d} fill="none" stroke={se.color} strokeWidth={2.2}
+            <path d={se.d} fill="none" stroke={se.color} strokeWidth={2}
               strokeLinecap="round" strokeLinejoin="round" className="vc-linea" />
           </g>
         ) : null)}

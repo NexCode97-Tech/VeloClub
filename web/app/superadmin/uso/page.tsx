@@ -280,7 +280,21 @@ export default function UsoPage() {
                       const cuando = f
                         ? (datos.tramo === 'dia' ? fechaCorta(f, true) : `Semana del ${fechaCorta(f, true)}`)
                         : '';
-                      return `${cuando} \u00b7 ${valor} ${valor === 1 ? 'd\u00eda' : 'd\u00edas'}`;
+                      // El renglon de la serie se queda: es lo que dice que se
+                      // esta midiendo, y el titulo de la grafica no se alcanza
+                      // a leer con el cursor encima de la linea.
+                      return (
+                        <>
+                          <p className="font-bold m-0 mb-0.5">{cuando}</p>
+                          <p className="m-0 flex items-center gap-2">
+                            <span className="w-2 h-2 rounded-sm shrink-0" style={{ background: '#5B3DD6' }} />
+                            Con asistencia
+                            <b className="tabular-nums font-semibold ml-auto">
+                              {valor} {valor === 1 ? 'd\u00eda' : 'd\u00edas'}
+                            </b>
+                          </p>
+                        </>
+                      );
                     }}
                   />
                 }

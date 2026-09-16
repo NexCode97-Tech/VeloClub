@@ -9,10 +9,11 @@
  * porque era el de fábrica de recharts. Dos globos distintos en dos gráficas
  * que por lo demás se ven iguales.
  *
- * Una línea y no una lista: estas gráficas llevan **una sola serie**, así que
- * el renglón con el nombre de la serie no agrega nada y el título de la
- * gráfica ya dice qué se está midiendo.
+ * El contenido lo pone quien lo usa: acá vive la caja, no el texto. Finanzas
+ * arma el suyo a mano con la misma pinta; el de Uso pasa por este componente.
  */
+
+import { ReactNode } from 'react';
 
 interface PuntoDeGrafica {
   value?: number | string;
@@ -24,7 +25,7 @@ interface Props {
   active?: boolean;
   payload?: PuntoDeGrafica[];
   /** Qué dice el globo. Recibe el punto sobre el que está el cursor. */
-  texto: (punto: Record<string, unknown>, valor: number) => string;
+  texto: (punto: Record<string, unknown>, valor: number) => ReactNode;
 }
 
 export function GloboGrafica({ active, payload, texto }: Props) {
@@ -34,8 +35,8 @@ export function GloboGrafica({ active, payload, texto }: Props) {
   const valor = Number(punto.value ?? 0);
 
   return (
-    <div className="relative text-white text-[12px] font-semibold rounded-lg whitespace-nowrap"
-      style={{ background: '#1A1028', padding: '6px 10px', boxShadow: '0 6px 20px rgba(0,0,0,0.22)' }}>
+    <div className="relative text-white text-[11.5px] leading-relaxed rounded-lg whitespace-nowrap"
+      style={{ background: '#1A1028', padding: '7px 10px', boxShadow: '0 6px 20px rgba(0,0,0,0.22)' }}>
       {texto(punto.payload ?? {}, valor)}
       {/* La puntita. Es un cuadrado girado y no un borde, para que herede el
           mismo negro sin tener que repetirlo. */}

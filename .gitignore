@@ -37,3 +37,7 @@ api/prisma/dev.db
 # Capturas de pantalla sin anonimizar: llevan nombres de menores, cedulas y
 # enlaces de invitacion vivos. Se suben solo cuando esten limpias.
 web/public/capturas/
+
+# Restos de los scripts de mantenimiento
+__pycache__/
+*.pyc

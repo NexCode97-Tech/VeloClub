@@ -168,6 +168,20 @@
     .vc-linea { animation: none; stroke-dasharray: none; stroke-dashoffset: 0; }
   }
 
+  /* El pulgar de la barra de tono del selector de color. Va a mano porque
+     ningun navegador lo hereda del resto del formulario. */
+  .vc-tono::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 16px; height: 16px; border-radius: 999px; cursor: pointer;
+    background: #fff; border: 1px solid rgba(26,16,40,0.25);
+    box-shadow: 0 1px 4px rgba(26,16,40,0.3);
+  }
+  .vc-tono::-moz-range-thumb {
+    width: 16px; height: 16px; border-radius: 999px; cursor: pointer;
+    background: #fff; border: 1px solid rgba(26,16,40,0.25);
+    box-shadow: 0 1px 4px rgba(26,16,40,0.3);
+  }
+
   /* Oculta la barra de scroll horizontal (ej. tab bars con overflow-x-auto) */
   .no-scrollbar {
     scrollbar-width: none;

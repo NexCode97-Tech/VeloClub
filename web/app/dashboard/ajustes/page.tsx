@@ -24,12 +24,16 @@ import ReactCrop, { type Crop as CropType, centerCrop, makeAspectCrop } from 're
 import 'react-image-crop/dist/ReactCrop.css';
 import ModuleLoader, { useCargaMinima } from '@/components/ui/module-loader';
 import ModuleReveal from '@/components/ui/module-reveal';
+import { ColoresClub } from '@/components/ajustes/colores-club';
 
 interface Club {
   id: string; name: string; city?: string; department?: string;
   logoUrl?: string; noAttendanceDays: number[];
   // Fecha real de fundacion declarada por el club, no la de registro
   foundedAt?: string | null;
+  // Los del carnet digital. El segundo solo existe para el degradado.
+  colorPrimario?: string | null;
+  colorSecundario?: string | null;
 }
 interface MemberMe {
   id: string; fullName: string; role: string; pictureUrl?: string;
@@ -216,6 +220,8 @@ function AjustesPageContent() {
   const [foundedAt, setFoundedAt]   = useState('');
   const [city, setCity]             = useState('');
   const [noAttDays, setNoAttDays]   = useState<number[]>([]);
+  const [colorUno, setColorUno]     = useState<string | null>(null);
+  const [colorDos, setColorDos]     = useState<string | null>(null);
   const [loading, setLoading]       = useState(true);
   // Sostiene el indicador un minimo de tiempo para que no parpadee
   const mostrarCarga = useCargaMinima(loading);
@@ -279,6 +285,8 @@ function AjustesPageContent() {
         setCity(res.club.city ?? '');
         setNoAttDays(res.club.noAttendanceDays ?? []);
         setFoundedAt(res.club.foundedAt ? res.club.foundedAt.slice(0, 10) : '');
+        setColorUno(res.club.colorPrimario ?? null);
+        setColorDos(res.club.colorSecundario ?? null);
       }
       setLoading(false);
     })();
@@ -302,6 +310,8 @@ function AjustesPageContent() {
           noAttendanceDays: noAttDays,
           // null borra la fecha y devuelve el perfil a mostrar la de registro
           foundedAt: foundedAt || null,
+          colorPrimario: colorUno,
+          colorSecundario: colorDos,
         }),
       });
       setClub(res.club);
@@ -777,6 +787,14 @@ function AjustesPageContent() {
           </p>
         </div>
       </div>
+
+      {/* Los colores van pegados a la información del club y al logo, que es
+          lo otro que define cómo se ve el club hacia afuera. */}
+      <ColoresClub
+        primario={colorUno}
+        secundario={colorDos}
+        onChange={(uno, dos) => { setColorUno(uno); setColorDos(dos); setSaved(false); }}
+      />
 
       {/* Horario de clases — junto a los días sin entrenamiento porque son lo
           mismo: reglas del club que gobiernan la asistencia. */}

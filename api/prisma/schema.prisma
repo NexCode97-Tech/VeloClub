@@ -16,6 +16,13 @@ model Club {
   department                String?
   logoUrl                   String?
   logoPublicId              String?
+  // Los colores del club, en hexadecimal. El primero es obligatorio para que
+  // haya carnet con identidad; el segundo es opcional y solo existe para hacer
+  // el degradado, asi que en null la banda va plana. NO son el morado de
+  // VeloClub: este color es del club y solo aparece en lo que el club le
+  // entrega a su gente.
+  colorPrimario             String?
+  colorSecundario           String?
   coverUrl                  String? // portada del club
   coverPublicId             String? // public_id de Cloudinary
   verified                  Boolean           @default(false) // club verificado (sello) — espejo de verificationStatus == VERIFIED

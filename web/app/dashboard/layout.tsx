@@ -18,7 +18,7 @@ import { NotificationsBell } from '@/components/ui/notifications-bell';
 import TermsGateModal from '@/components/ui/terms-gate-modal';
 import ModalPrimerHorario from '@/components/horario/modal-primer-horario';
 import { Settings, ChevronLeft, ChevronRight, ArrowLeft } from 'lucide-react';
-import { IconHome, IconUsers, IconCalendar, IconStatistics, IconClub, IconFinanzas, IconUbicacion, IconAsistencias, IconResultados, IconAjustes, IconMisPagos, IconPerfil, IconSuscripcion, IconCompetencias, IconEntrenamientos, IconBuscar } from '@/components/ui/custom-icons';
+import { IconHome, IconUsers, IconCalendar, IconStatistics, IconClub, IconFinanzas, IconUbicacion, IconAsistencias, IconResultados, IconAjustes, IconMisPagos, IconPerfil, IconSuscripcion, IconCompetencias, IconEntrenamientos, IconBuscar, IconIdentificacion } from '@/components/ui/custom-icons';
 
 // Modal de aceptación de Términos y Política de Datos — desactivado hasta
 // completar razón social/NIT en docs/legal. Cambiar a true para publicar.
@@ -88,8 +88,11 @@ const ROLE_MAS_ITEMS: Record<string, { label: string; icon: React.ElementType; h
     { label: 'Club',       icon: IconClub,         href: '/dashboard/club',       color: '#381DA0' },
   ],
   DEPORTISTA: [
-    { label: 'Sedes', icon: IconUbicacion, href: '/dashboard/sedes', color: '#4361EE' },
-    { label: 'Club',  icon: IconClub,      href: '/dashboard/club',  color: '#06D6A0' },
+    // El carnet va de primero: es lo que se abre con una mano, de afan y a
+    // veces sin senal. Sedes y Club se miran una vez y no se vuelven a tocar.
+    { label: 'Mi carnet', icon: IconIdentificacion, href: '/dashboard/carnet', color: '#381DA0' },
+    { label: 'Sedes',     icon: IconUbicacion,      href: '/dashboard/sedes',  color: '#4361EE' },
+    { label: 'Club',      icon: IconClub,           href: '/dashboard/club',   color: '#06D6A0' },
   ],
 };
 
@@ -130,6 +133,7 @@ const DEPORTISTA_NAV = [
   { href: '/dashboard/calendario', label: 'Calendario',    icon: IconCalendar },
   { href: '/dashboard/logros',     label: 'Rendimiento',    icon: IconResultados },
   { href: '/dashboard/pagos',      label: 'Mis pagos',     icon: IconMisPagos},
+  { href: '/dashboard/carnet',     label: 'Mi carnet',     icon: IconIdentificacion },
   { href: '/dashboard/sedes',      label: 'Sedes',         icon: IconUbicacion },
   { href: '/dashboard/club',       label: 'Club',          icon: IconClub },
   { href: '/dashboard/perfil',     label: 'Mi perfil',     icon: IconPerfil },
@@ -407,7 +411,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         fijarNombreDeporte(sel.lista.find(d => d.id === sel.activo)?.nombre ?? null);
 
         if (userRole === 'DEPORTISTA') {
-          const DEPORTISTA_PERMITIDO = ['/dashboard', '/dashboard/logros', '/dashboard/calendario', '/dashboard/sedes', '/dashboard/club', '/dashboard/pagos', '/dashboard/mas', '/dashboard/perfil', '/dashboard/ajustes'];
+          const DEPORTISTA_PERMITIDO = ['/dashboard', '/dashboard/logros', '/dashboard/calendario', '/dashboard/sedes', '/dashboard/club', '/dashboard/pagos', '/dashboard/carnet', '/dashboard/mas', '/dashboard/perfil', '/dashboard/ajustes'];
           const allowed = DEPORTISTA_PERMITIDO.some(r => pathname === r || pathname.startsWith(r + '/'));
           if (!allowed) { router.replace('/dashboard'); return; }
         }

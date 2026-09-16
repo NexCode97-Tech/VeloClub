@@ -4,7 +4,7 @@ import { Prisma } from '@prisma/client';
 import { v2 as cloudinary } from 'cloudinary';
 import { requireAuth } from '../auth/middleware';
 import { carpetaDe } from '../lib/deportes';
-import { prisma } from '../db/client';
+import { prisma, prismaClubEntero } from '../db/client';
 import { emitToClub } from '../lib/sse';
 import { revokeClerkAccess, revokeClerkSessions } from '../lib/clerk-sesiones';
 import { notifyClubStaff } from '../lib/notify';
@@ -172,6 +172,44 @@ router.get('/me', requireAuth, async (req, res) => {
   res.json({ member });
 });
 
+
+/**
+ * Hasta cuando vale el carnet.
+ *
+ * La vigencia va atada a la mensualidad: el carnet vale hasta el ultimo dia del
+ * mes mas reciente que el deportista tiene pago. Se mira el mes pagado y no la
+ * fecha del pago porque quien paga adelantado tiene que quedar cubierto hasta
+ * donde pago, no hasta hoy.
+ *
+ * Sin un solo pago registrado el carnet NO sale vencido, sale sin fecha. Hay
+ * clubes que todavia no llevan las mensualidades en la plataforma, y marcarles
+ * a todo el mundo el carnet como vencido seria acusarlos de una mora que nadie
+ * registro.
+ */
+async function vigenciaDe(memberId: string): Promise<{
+  estado: 'vigente' | 'vencido' | 'sin_registro';
+  hasta: string | null;
+}> {
+  const pagado = await prisma.payment.findFirst({
+    where: { memberId, status: 'PAID' },
+    orderBy: [{ year: 'desc' }, { month: 'desc' }],
+    select: { year: true, month: true },
+  });
+  if (!pagado) {
+    const alguno = await prisma.payment.count({ where: { memberId } });
+    if (alguno === 0) return { estado: 'sin_registro', hasta: null };
+    return { estado: 'vencido', hasta: null };
+  }
+
+  // Dia cero del mes siguiente es el ultimo del mes pagado, sin tabla de dias.
+  const fin = new Date(Date.UTC(pagado.year, pagado.month, 0, 12));
+  const hoy = new Date();
+  return {
+    estado: fin.getTime() >= hoy.getTime() ? 'vigente' : 'vencido',
+    hasta: fin.toISOString().slice(0, 10),
+  };
+}
+
 // GET /members/:id
 router.get('/:id', requireAuth, async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'No autenticado' });
@@ -183,6 +221,91 @@ router.get('/:id', requireAuth, async (req, res) => {
   if (!member) return res.status(404).json({ error: 'Miembro no encontrado' });
   res.json({ member });
 });
+
+/**
+ * GET /members/:id/carnet - todo lo que el carnet digital necesita.
+ *
+ * Va en su propia ruta y no colgado de GET /:id porque el carnet lo abre
+ * tambien el deportista, y ese no puede ver la ficha completa de nadie, ni la
+ * suya con los campos administrativos. Aca sale lo justo del carnet.
+ *
+ * Quien puede abrirlo:
+ *  - ADMIN, cualquiera de su club.
+ *  - ENTRENADOR, los de su carpeta. No hace falta escribirlo: el cliente de
+ *    Prisma ya filtra por deporte, asi que la consulta no ve mas alla.
+ *  - DEPORTISTA, el suyo y solo el suyo.
+ */
+router.get('/:id/carnet', requireAuth, async (req, res) => {
+  if (!req.user) return res.status(401).json({ error: 'No autenticado' });
+  const id = getId(req);
+  const clubId = req.user.clubId ?? '';
+
+  const member = await prisma.member.findFirst({
+    where: { id, clubId },
+    select: {
+      id: true, fullName: true, pictureUrl: true, clerkId: true, email: true,
+      docType: true, docNumber: true, birthDate: true, gender: true,
+      category: true, tipo: true, role: true, active: true, createdAt: true,
+      rh: true, allergies: true, eps: true,
+      emergencyContact: true, emergencyPhone: true, guardianRelation: true,
+      deporte: { select: { nombre: true } },
+      locations: { select: { location: { select: { name: true } } } },
+    },
+  });
+  if (!member) return res.status(404).json({ error: 'Miembro no encontrado' });
+
+  // El deportista solo puede sacar el suyo. Se compara contra el clerkId y, si
+  // la ficha todavia no lo tiene, contra el correo, que es como /me resuelve
+  // el mismo vinculo.
+  if (req.user.role === 'DEPORTISTA') {
+    const propio = (member.clerkId && member.clerkId === req.auth?.clerkId)
+      || (!!member.email && !!req.auth?.email && member.email.toLowerCase() === req.auth.email.toLowerCase());
+    if (!propio) return res.status(403).json({ error: 'Solo puedes ver tu propio carnet' });
+  }
+
+  const club = await prismaClubEntero.club.findUnique({
+    where: { id: clubId },
+    select: { name: true, city: true, logoUrl: true, colorPrimario: true, colorSecundario: true },
+  });
+  if (!club) return res.status(404).json({ error: 'Club no encontrado' });
+
+  const vigencia = await vigenciaDe(member.id);
+
+  res.json({
+    carnet: {
+      miembro: {
+        id: member.id,
+        nombre: member.fullName,
+        foto: member.pictureUrl,
+        docTipo: member.docType,
+        docNumero: member.docNumber,
+        nacimiento: member.birthDate,
+        categoria: member.category,
+        tipo: member.tipo,
+        rol: member.role,
+        activo: member.active,
+        desde: member.createdAt,
+        rh: member.rh,
+        alergias: member.allergies,
+        eps: member.eps,
+        acudiente: member.emergencyContact,
+        acudienteTelefono: member.emergencyPhone,
+        acudienteParentesco: member.guardianRelation,
+        sede: member.locations[0]?.location.name ?? null,
+        deporte: member.deporte?.nombre ?? null,
+      },
+      club: {
+        nombre: club.name,
+        ciudad: club.city,
+        logo: club.logoUrl,
+        colorPrimario: club.colorPrimario,
+        colorSecundario: club.colorSecundario,
+      },
+      vigencia,
+    },
+  });
+});
+
 
 /**
  * GET /members/verificar — ¿este correo o este documento ya están usados?

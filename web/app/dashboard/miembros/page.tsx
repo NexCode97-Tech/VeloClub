@@ -25,6 +25,7 @@ import { downloadMembersPDF } from '@/lib/pdf';
 import { FichaDeportista } from '@/components/miembros/ficha-deportista';
 import { FICHA_VACIA, validarFicha, type DatosFicha, type ErroresFicha } from '@/lib/ficha-deportista';
 import { MenuImportar } from '@/components/miembros/menu-importar';
+import { CarnetModal } from '@/components/miembros/carnet-modal';
 import { PanelInscripcion } from '@/components/miembros/panel-inscripcion';
 import { BotonFiltros, ChipsFiltros, type GrupoFiltro } from '@/components/ui/filtros';
 import { PendientesInscripcion } from '@/components/miembros/pendientes-inscripcion';
@@ -117,6 +118,9 @@ export default function MiembrosPage() {
   // Miembro cuya hoja de acciones esta abierta en movil. En escritorio la
   // tarjeta muestra sus botones directamente y esto no se usa.
   const [accionesMember, setAccionesMember] = useState<Member | null>(null);
+  // El miembro cuyo carnet esta abierto. Se guarda el id y no la ficha: el
+  // carnet trae sus propios datos, que no son los mismos de la lista.
+  const [carnetId, setCarnetId] = useState<string | null>(null);
 
   // Solo el administrador gestiona miembros; el resto ve la lista sin editarla
   const [canManage, setCanManage] = useState(false);
@@ -1184,6 +1188,7 @@ export default function MiembrosPage() {
                 const opciones = [
                   { icon: IconEditar, label: 'Editar', hint: 'Datos, sede y rol', color: '#5B5470', onClick: cerrarY(() => openEdit(m)) },
                   { icon: IconVer, label: 'Ver detalle', hint: 'Ficha completa', color: '#5B5470', onClick: cerrarY(() => setViewMember(m)) },
+                  { icon: IconIdentificacion, label: 'Carnet digital', hint: 'Ver, compartir o imprimir', color: '#5B5470', onClick: cerrarY(() => setCarnetId(m.id)) },
                   ...(propio ? [] : [
                     enPausa
                       ? { icon: PlayCircle, label: 'Reactivar', hint: 'Vuelve a la asistencia y a la cuota', color: '#06D6A0', onClick: cerrarY(() => handleToggleEstado(m)) }
@@ -1554,8 +1559,20 @@ export default function MiembrosPage() {
                   )}
                 </div>
 
-                {/* Acción editar */}
-                <div className="px-6 py-4 border-t border-border shrink-0">
+                {/* Acciones. El carnet va de secundario: quien abre la ficha
+                    casi siempre viene a corregir un dato, y el boton principal
+                    no se le cambia de sitio a nadie. */}
+                <div className="px-6 py-4 border-t border-border shrink-0 flex flex-col gap-2.5">
+                  <motion.button
+                    whileTap={reducedMotion ? {} : { scale: 0.97 }}
+                    transition={{ duration: 0.12, ease: EASE_OUT }}
+                    onClick={() => { const id = viewMember.id; setViewMember(null); setCarnetId(id); }}
+                    className="w-full py-3.5 rounded-2xl font-semibold text-[14px] flex items-center justify-center gap-2"
+                    style={{ border: '1px solid rgba(56,29,160,0.25)', color: '#381DA0', background: '#fff' }}
+                  >
+                    <IconIdentificacion className="w-4 h-4" />
+                    Ver carnet
+                  </motion.button>
                   <motion.button
                     whileTap={reducedMotion ? {} : { scale: 0.97 }}
                     transition={{ duration: 0.12, ease: EASE_OUT }}
@@ -1587,6 +1604,8 @@ export default function MiembrosPage() {
         abierto={inscripcionAbierta}
         onCerrar={() => setInscripcionAbierta(false)}
       />
+
+      <CarnetModal memberId={carnetId} onCerrar={() => setCarnetId(null)} />
 
       <Dialog open={importOpen} onOpenChange={v => { if (!importing) { setImportOpen(v); setImportErrors([]); setImportWarnings([]); } }}>
         <DialogContent className="max-w-sm">

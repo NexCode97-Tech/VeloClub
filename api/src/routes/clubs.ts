@@ -79,6 +79,8 @@ const createClubSchema = z.object({
   memberCountApprox: z.number().int().min(0).max(100000).optional(),
 });
 
+const HEX = /^#[0-9A-Fa-f]{6}$/;
+
 const settingsSchema = z.object({
   name:             z.string().min(2).max(100).optional(),
   city:             z.string().max(100).optional(),
@@ -87,6 +89,11 @@ const settingsSchema = z.object({
   // Fecha de fundacion en YYYY-MM-DD. null la borra y devuelve el perfil a
   // mostrar la fecha de registro.
   foundedAt:        z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional(),
+  // Los colores del club. Solo hexadecimal de seis digitos con almohadilla: se
+  // pintan como fondo y como texto, asi que un valor libre seria dejar entrar
+  // CSS ajeno por el formulario de ajustes.
+  colorPrimario:    z.string().regex(HEX).nullable().optional(),
+  colorSecundario:  z.string().regex(HEX).nullable().optional(),
 });
 
 // Invalida la caché de la sección "confían en nosotros" del landing. Debe
@@ -183,6 +190,7 @@ router.get('/settings', requireAuth, async (req, res) => {
     select: {
       id: true, name: true, city: true, department: true,
       logoUrl: true, coverUrl: true, verified: true,
+      colorPrimario: true, colorSecundario: true,
       noAttendanceDays: true, createdAt: true, foundedAt: true,
       suscripcion: { select: { tipoPlan: true, createdAt: true } },
     },
@@ -205,6 +213,10 @@ router.patch('/settings', requireAuth, async (req, res) => {
   if (parsed.data.city             !== undefined) data.city             = parsed.data.city;
   if (parsed.data.department       !== undefined) data.department       = parsed.data.department;
   if (parsed.data.noAttendanceDays !== undefined) data.noAttendanceDays = parsed.data.noAttendanceDays;
+  if (parsed.data.colorPrimario    !== undefined) data.colorPrimario    = parsed.data.colorPrimario;
+  if (parsed.data.colorSecundario  !== undefined) data.colorSecundario  = parsed.data.colorSecundario;
+  // Sin color principal no hay degradado posible: el segundo se va con el.
+  if (parsed.data.colorPrimario === null) data.colorSecundario = null;
   if (parsed.data.foundedAt !== undefined) {
     if (parsed.data.foundedAt === null) {
       data.foundedAt = null;
@@ -232,6 +244,7 @@ router.patch('/settings', requireAuth, async (req, res) => {
     select: {
       id: true, name: true, city: true, department: true,
       logoUrl: true, noAttendanceDays: true, foundedAt: true,
+      colorPrimario: true, colorSecundario: true,
     },
   });
   await cacheDel(`club:settings:${clubId}`);

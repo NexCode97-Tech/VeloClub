@@ -237,6 +237,11 @@ puso al armazón quedaba justo detrás de la cortina de carga, que también es
 morada. El deslizamiento de salida era morado sobre morado y no se veía. Al
 quitar la franja, la cortina vuelve a correrse sobre el contenido real.
 
+Y el cierre de verdad: el cliente pidió quitar también el morado fijo. La barra
+queda como estaba antes de todo esto, sin forzarla desde el código. **El tema se
+retoma cuando la app salga en Play Store y App Store**, que es donde el sistema
+sí deja decirlo pantalla por pantalla.
+
 Lo que sí se queda de estos seis intentos son las direcciones sin `/dashboard`.
 
 ---

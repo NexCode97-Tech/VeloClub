@@ -13,15 +13,14 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
-  // La barra de estado va morada en toda la plataforma, y es el mismo morado
-  // del `theme_color` del manifiesto, así que la app instalada arranca con él
-  // y no cambia después.
+  // El color de la barra de estado se queda como estaba y no se fuerza desde
+  // acá. Se intentó de seis formas que siguiera a cada pantalla y ninguna
+  // funcionó en iPhone: la barra se pinta con el color de arranque del
+  // documento y no vuelve a leerlo cuando la pantalla cambia.
   //
-  // Se intentó que siguiera a cada pantalla, gris en los módulos y morada en
-  // Inicio. No se logró: en iPhone la barra se pinta con el color de arranque
-  // del documento y no vuelve a leerlo cuando la pantalla cambia. Un color
-  // fijo se ve mejor que uno que brinca a los milisegundos de abrir.
-  themeColor: '#381DA0',
+  // Se retoma cuando la app salga en Play Store y App Store, que es donde el
+  // sistema sí deja decirlo pantalla por pantalla.
+  themeColor: '#09090B',
 };
 
 const SITE_URL = "https://www.veloclubtech.com";

@@ -96,7 +96,7 @@ function Frente({ d }: { d: DatosCarnet }) {
             className="vc-agua absolute pointer-events-none object-contain"
             style={{
               left: '50%', top: '53%', transform: 'translate(-50%,-50%)',
-              width: 186, height: 186, opacity: 0.085, zIndex: 0,
+              width: 150, height: 150, opacity: 0.085, zIndex: 0,
             }}
           />
         )}

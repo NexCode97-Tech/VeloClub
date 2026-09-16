@@ -232,7 +232,7 @@ async function dibujarFrente(ctx: CanvasRenderingContext2D, d: DatosCarnet) {
   // del fondo y debajo de todo lo que se lee. La foto ya se pinto y esta mas
   // arriba, asi que no la toca.
   if (d.club.marcaAgua && logo) {
-    const caja = 186;
+    const caja = 150;
     const escala = Math.min(caja / logo.width, caja / logo.height);
     const w = logo.width * escala;
     const h = logo.height * escala;

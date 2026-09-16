@@ -4,10 +4,10 @@ import { useSession } from '@clerk/nextjs';
 import { useCallback, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { apiFetch } from '@/lib/api-client';
-import { Flag, ShieldCheck, Globe, Lock, AlertTriangle } from 'lucide-react';
+import { ShieldCheck, Globe, Lock, AlertTriangle } from 'lucide-react';
 import { AccionesCabecera } from '@/components/superadmin/acciones-cabecera';
 import ModuleLoader, { useCargaMinima } from '@/components/ui/module-loader';
-import { IconEliminar } from '@/components/ui/custom-icons';
+import { IconEliminar, IconReporte } from '@/components/ui/custom-icons';
 
 type Estado = 'PENDIENTE' | 'ELIMINADO' | 'DESESTIMADO';
 
@@ -167,7 +167,7 @@ export default function ReportesPage() {
                 <div className="flex items-start gap-3 px-4 pt-4 pb-3">
                   <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
                     style={{ background: 'rgba(239,71,111,0.10)' }}>
-                    <Flag className="w-4 h-4" style={{ color: '#EF476F' }} />
+                    <IconReporte className="w-4 h-4" style={{ color: '#EF476F' }} />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-[13.5px] font-semibold text-foreground leading-tight">

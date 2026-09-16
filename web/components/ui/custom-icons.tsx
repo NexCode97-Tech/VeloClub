@@ -55,6 +55,32 @@ export function IconClub({ className, style, ...props }: IconProps) {
   );
 }
 
+/**
+ * Cupones: el tiquete con sus muescas.
+ *
+ * El lienzo lleva el margen de -2 a 26 porque el dibujo llega a los cuatro
+ * bordes; sin el se veria un sexto mas grande que un Lucide del mismo tamano y
+ * las muescas de los costados saldrian cortadas a medio pixel.
+ */
+export function IconCupon({ className, style, ...props }: IconProps) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="-2 -2 28 28" fill="currentColor"
+      className={className} style={style} {...props}>
+      <path d="M19,21H5c-2.757,0-5-2.243-5-5v-.922c0-.552,.448-1,1-1,.024,0,.053,.001,.082,.003,1.106-.021,2-.928,2-2.04s-.894-2.02-2-2.041c-.029,.002-.058,.003-.081,.003-.552,0-1-.448-1-1v-1.004C0,5.243,2.243,3,5,3h14c2.757,0,5,2.243,5,5v1c0,.552-.448,1-1,1-1.103,0-2,.897-2,2s.897,2,2,2c.552,0,1,.448,1,1v1c0,2.757-2.243,5-5,5Z"/>
+    </svg>
+  );
+}
+
+/** Reportes: los banderines. */
+export function IconReporte({ className, style, ...props }: IconProps) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="-2 -2 28 28" fill="currentColor"
+      className={className} style={style} {...props}>
+      <path d="m10.926 13.742-2.995 7.624c-.201.519-.796.766-1.296.565-.515-.202-.768-.782-.565-1.296l2.224-5.662c.853-.491 1.669-1.225 2.451-1.693l.182.462zm12.762-7.815c-.333-.528-.88-.864-1.501-.922-1.356-.089-1.922-.355-2.94-1.304-.647-.556-1.316-1.131-2.082-1.411-.599-.219-1.318-.312-2.153-.284-.757.029-1.436.388-1.88.946.003.008 4.166 10.6 4.166 10.6.535.26 1.093.373 1.732.442 1.173.105 2.311-.547 2.798-1.648l2.05-4.647c.218-.592.148-1.238-.188-1.771zm-6.322 16.004c.515-.202.768-.782.565-1.296l-6.67-16.98c-.349-.963-1.24-1.61-2.272-1.65-.824-.028-1.553.065-2.152.284-.766.28-1.435.855-2.082 1.411-1.019.949-1.584 1.215-2.941 1.304-.62.058-1.167.394-1.5.922-.337.534-.406 1.179-.165 1.831l2.026 4.588c.487 1.101 1.609 1.763 2.798 1.648.525-.051 1.015-.158 1.455-.318.742-.271 1.434-.79 2.104-1.291.554-.415 1.126-.843 1.59-1.013.611-.224 1.479-.167 1.986-.094l3.963 10.088c.201.519.796.766 1.296.565z"/>
+    </svg>
+  );
+}
+
 export function IconFinanzas({ className, style, ...props }: IconProps) {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"

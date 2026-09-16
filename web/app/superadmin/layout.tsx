@@ -8,27 +8,29 @@ import { apiFetch } from '@/lib/api-client';
 import LoadingScreen, { LoadingCurtain, CURTAIN_MS, esperarPantallaCarga } from '@/components/ui/loading-screen';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Home, Building2, Ticket, Info, CircleDollarSign, ArrowLeft, Flag } from 'lucide-react';
+import { Info, CircleDollarSign, ArrowLeft } from 'lucide-react';
 // Finanzas lleva el ícono propio del módulo: es el mismo que usa el panel del
 // club en su barra lateral, y sería raro que el mismo módulo se dibuje distinto
 // según desde dónde se mire.
-import { IconAjustes, IconFinanzas, IconSalir, IconStatistics } from '@/components/ui/custom-icons';
+import {
+  IconAjustes, IconClub, IconCupon, IconFinanzas, IconHome, IconReporte, IconSalir, IconStatistics,
+} from '@/components/ui/custom-icons';
 import { motion, AnimatePresence } from 'framer-motion';
 import { idClubDeRuta } from './club-context';
 import { ID_ACCIONES } from '@/components/superadmin/acciones-cabecera';
 
 // Config fue fusionado con Perfil (UserButton) — 3 tabs + UserButton = 4 slots
 const TABS = [
-  { href: '/superadmin',          label: 'Inicio',    exact: true,  Icon: Home             },
-  { href: '/superadmin/clubs',    label: 'Clubes',    exact: false, Icon: Building2        },
-  { href: '/superadmin/cupones',  label: 'Cupones',   exact: false, Icon: Ticket           },
+  { href: '/superadmin',          label: 'Inicio',    exact: true,  Icon: IconHome         },
+  { href: '/superadmin/clubs',    label: 'Clubes',    exact: false, Icon: IconClub         },
+  { href: '/superadmin/cupones',  label: 'Cupones',   exact: false, Icon: IconCupon        },
   // La caja del negocio: lo que entra por las suscripciones y lo que sale por
   // sostener la plataforma. No se cruza con las finanzas de ningun club.
   { href: '/superadmin/finanzas', label: 'Finanzas',  exact: false, Icon: IconFinanzas     },
   // Los Terminos prometen retirar contenido que los incumpla; esta es la cola
   // desde donde se hace. Vive en el superadmin porque el feed publico cruza
   // clubes y ninguno puede mandar sobre lo que publica otro.
-  { href: '/superadmin/reportes', label: 'Reportes',  exact: false, Icon: Flag             },
+  { href: '/superadmin/reportes', label: 'Reportes',  exact: false, Icon: IconReporte      },
   // Quien esta usando la plataforma y quien se enfrio. Va aparte de Finanzas a
   // proposito: alli se ve lo que un club paga, aca si lo esta aprovechando, y
   // un club al dia que lleva tres semanas sin entrar no renueva.
@@ -176,7 +178,9 @@ const SuperadminSidebar = memo(function SuperadminSidebar({ pathname, noLeidas, 
       {/* Logo — con botones de actualizar y notificaciones (igual que el
           sidebar del admin, que lleva sus acciones en esta fila) */}
       <div className="flex items-center shrink-0" style={{ borderBottom: '1px solid rgba(0,0,0,0.06)', minHeight: 58, padding: '0 14px', gap: 9, justifyContent: collapsed ? 'center' : undefined }}>
-        <Image src="/logo-vc.png" alt="VeloClub" width={28} height={28} className="object-contain shrink-0" style={{ borderRadius: 7 }} />
+        {/* Circular, como en el dashboard y en la landing. Aca iba con radio 7 y
+            era el unico sitio de la plataforma donde el logo salia casi cuadrado. */}
+        <Image src="/logo-vc.png" alt="VeloClub" width={28} height={28} className="object-contain shrink-0" style={{ borderRadius: '50%' }} />
         {/* Igual que en la barra de arriba: estas dos son acciones del panel
             entero, asi que solo salen en Inicio. */}
         {!collapsed && pathname === '/superadmin' && (

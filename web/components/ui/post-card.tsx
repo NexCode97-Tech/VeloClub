@@ -10,10 +10,10 @@ import { MemberAvatar } from '@/components/ui/member-avatar';
 import { ContenidoGuardado } from '@/components/ui/save-button-state';
 import { VisorImagen } from '@/components/ui/visor-imagen';
 import {
-  IconCandado, IconChat, IconCompartir, IconEditar, IconEliminar, IconEnviar, IconMeGusta, IconMeGustaVacio, IconPublico, IconUbicacion,
+  IconCandado, IconChat, IconCompartir, IconEditar, IconEliminar, IconEnviar, IconMeGusta, IconMeGustaVacio, IconPublico, IconReporte, IconUbicacion,
 } from '@/components/ui/custom-icons';
 import {
-  ChevronRight, FileText, X, MoreHorizontal, Flag,
+  FileText, X, MoreHorizontal,
 } from 'lucide-react';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -458,7 +458,7 @@ export function PostCard({
                         onClick={() => { setCommentMenu(null); abrirReporte(c.id); }}
                         className="flex items-center gap-2 px-3.5 py-2.5 text-[12px] font-semibold text-foreground hover:bg-secondary/60 transition-colors text-left"
                       >
-                        <Flag className="w-3.5 h-3.5 text-muted-foreground" /> Reportar
+                        <IconReporte className="w-3.5 h-3.5 text-muted-foreground" /> Reportar
                       </button>
                       <div style={{ height: 1, background: 'rgba(56,29,160,0.07)' }} />
                     </>
@@ -610,7 +610,7 @@ export function PostCard({
                         onClick={() => { setPostMenuOpen(false); abrirReporte('post'); }}
                         className="w-full flex items-center gap-2.5 px-4 py-2.5 text-[13px] font-semibold text-foreground hover:bg-secondary transition-colors cursor-pointer"
                       >
-                        <Flag className="w-3.5 h-3.5" /> Reportar
+                        <IconReporte className="w-3.5 h-3.5" /> Reportar
                       </button>
                     )}
                     {esAutor && (
@@ -1072,7 +1072,7 @@ export function PostCard({
                   <div className="px-6 py-8 flex flex-col items-center text-center gap-2">
                     <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-1"
                       style={{ background: '#381DA0' }}>
-                      <Flag className="w-5 h-5 text-white" />
+                      <IconReporte className="w-5 h-5 text-white" />
                     </div>
                     <p className="text-[15px] font-semibold text-foreground">Gracias por avisar</p>
                     <p className="text-[13px] text-muted-foreground leading-relaxed max-w-[34ch]">

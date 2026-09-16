@@ -6,11 +6,11 @@ import { apiFetch } from '@/lib/api-client';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AccionesCabecera } from '@/components/superadmin/acciones-cabecera';
 import {
-  Ticket, X,
+  X,
 } from 'lucide-react';
 import { DatePicker } from '@/components/ui/date-picker';
 import {
-  IconEliminar, IconMas,
+  IconCupon, IconEliminar, IconMas,
 } from '@/components/ui/custom-icons';
 
 const EASE = [0.23, 1, 0.32, 1] as [number, number, number, number];
@@ -201,7 +201,7 @@ export default function CuponesPage() {
         ) : cupones.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 gap-3 text-center">
             <div style={{ width: 52, height: 52, borderRadius: 16, background: 'rgba(56,29,160,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(56,29,160,0.5)' }}>
-              <Ticket size={24} />
+              <IconCupon className="w-6 h-6" />
             </div>
             <p className="text-[13px] font-semibold m-0" style={{ color: '#8E87A8' }}>Aún no hay cupones</p>
             <p className="text-[11px] m-0" style={{ color: '#C4BFD8' }}>Crea el primero con el botón de arriba</p>
@@ -213,7 +213,7 @@ export default function CuponesPage() {
               return (
                 <div key={c.id} className="rounded-2xl bg-white border p-3.5 flex items-center gap-3" style={{ borderColor: 'rgba(120,80,200,0.10)' }}>
                   <div style={{ width: 40, height: 40, borderRadius: 12, background: 'rgba(56,29,160,0.10)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: ACCENT, flexShrink: 0 }}>
-                    <Ticket size={18} />
+                    <IconCupon className="w-[18px] h-[18px]" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">

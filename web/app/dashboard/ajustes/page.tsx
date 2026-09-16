@@ -34,6 +34,7 @@ interface Club {
   // Los del carnet digital. El segundo solo existe para el degradado.
   colorPrimario?: string | null;
   colorSecundario?: string | null;
+  carnetMarcaAgua?: boolean;
 }
 interface MemberMe {
   id: string; fullName: string; role: string; pictureUrl?: string;
@@ -222,6 +223,7 @@ function AjustesPageContent() {
   const [noAttDays, setNoAttDays]   = useState<number[]>([]);
   const [colorUno, setColorUno]     = useState<string | null>(null);
   const [colorDos, setColorDos]     = useState<string | null>(null);
+  const [marcaAgua, setMarcaAgua]   = useState(true);
   const [loading, setLoading]       = useState(true);
   // Sostiene el indicador un minimo de tiempo para que no parpadee
   const mostrarCarga = useCargaMinima(loading);
@@ -287,6 +289,7 @@ function AjustesPageContent() {
         setFoundedAt(res.club.foundedAt ? res.club.foundedAt.slice(0, 10) : '');
         setColorUno(res.club.colorPrimario ?? null);
         setColorDos(res.club.colorSecundario ?? null);
+        setMarcaAgua(res.club.carnetMarcaAgua ?? true);
       }
       setLoading(false);
     })();
@@ -312,6 +315,7 @@ function AjustesPageContent() {
           foundedAt: foundedAt || null,
           colorPrimario: colorUno,
           colorSecundario: colorDos,
+          carnetMarcaAgua: marcaAgua,
         }),
       });
       setClub(res.club);
@@ -793,7 +797,10 @@ function AjustesPageContent() {
       <ColoresClub
         primario={colorUno}
         secundario={colorDos}
+        marcaAgua={marcaAgua}
+        logo={club?.logoUrl ?? null}
         onChange={(uno, dos) => { setColorUno(uno); setColorDos(dos); setSaved(false); }}
+        onMarcaAgua={v => { setMarcaAgua(v); setSaved(false); }}
       />
 
       {/* Horario de clases — junto a los días sin entrenamiento porque son lo

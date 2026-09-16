@@ -41,6 +41,8 @@ export interface DatosCarnet {
     logo: string | null;
     colorPrimario: string | null;
     colorSecundario: string | null;
+    /** Si el logo va desvanecido detrás de los datos. */
+    marcaAgua: boolean;
   };
   vigencia: {
     estado: 'vigente' | 'vencido' | 'sin_registro';
@@ -132,8 +134,11 @@ async function dibujarFrente(ctx: CanvasRenderingContext2D, d: DatosCarnet) {
   ctx.fillStyle = '#FFFFFF';
   ctx.fillRect(0, 0, ANCHO, ALTO);
 
-  // La banda
-  const ALTO_BANDA = 108;
+  // La banda. El alto sale de sus partes y no de un numero suelto: 20 arriba,
+  // el logo de 50 y 46 abajo, que es donde monta la foto. Cambiar el logo sin
+  // esta cuenta descuadra todo lo que va debajo.
+  const LOGO = 50;
+  const ALTO_BANDA = 20 + LOGO + 46;
   if (c.b) {
     const g = ctx.createLinearGradient(0, 0, ANCHO, ALTO_BANDA);
     g.addColorStop(0, c.a);
@@ -144,33 +149,45 @@ async function dibujarFrente(ctx: CanvasRenderingContext2D, d: DatosCarnet) {
   }
   ctx.fillRect(0, 0, ANCHO, ALTO_BANDA);
 
-  // El logo del club, o sus iniciales
+  // El logo del club, o sus iniciales. Va en circulo, como en el resto de la
+  // plataforma, y el circulo le recorta el fondo cuadrado al archivo: casi
+  // ningun logo de club llega con transparencia. Entra entero y no recortado,
+  // porque el logo de un club en un carnet no se corta.
   const logo = d.club.logo ? await cargarImagen(d.club.logo) : null;
+  const logoCx = 18 + LOGO / 2;
+  const logoCy = 20 + LOGO / 2;
   ctx.save();
-  redondeado(ctx, 18, 18, 34, 34, 9);
-  ctx.fillStyle = 'rgba(255,255,255,0.92)';
+  ctx.beginPath();
+  ctx.arc(logoCx, logoCy, LOGO / 2, 0, Math.PI * 2);
+  ctx.fillStyle = '#FFFFFF';
   ctx.fill();
   ctx.clip();
   if (logo) {
-    ctx.drawImage(logo, 18, 18, 34, 34);
+    const caja = LOGO * 0.88;
+    const escala = Math.min(caja / logo.width, caja / logo.height);
+    const w = logo.width * escala;
+    const h = logo.height * escala;
+    ctx.drawImage(logo, logoCx - w / 2, logoCy - h / 2, w, h);
   } else {
     ctx.fillStyle = c.texto;
-    ctx.font = `700 12px ${FUENTE}`;
+    ctx.font = `700 15px ${FUENTE}`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(iniciales(d.club.nombre), 35, 36);
+    ctx.fillText(iniciales(d.club.nombre), logoCx, logoCy);
   }
   ctx.restore();
 
   ctx.textAlign = 'left';
   ctx.textBaseline = 'alphabetic';
+  const textoX = 18 + LOGO + 11;
+  const textoAncho = ANCHO - textoX - 18;
   ctx.fillStyle = c.tinta;
-  ctx.font = `600 13px ${FUENTE}`;
-  ctx.fillText(recortar(ctx, d.club.nombre, 168), 62, 32);
+  ctx.font = `600 14px ${FUENTE}`;
+  ctx.fillText(recortar(ctx, d.club.nombre, textoAncho), textoX, logoCy - 1);
   ctx.globalAlpha = 0.82;
   ctx.font = `400 10.5px ${FUENTE}`;
   const abajo = [d.miembro.deporte, d.club.ciudad].filter(Boolean).join(' · ');
-  ctx.fillText(recortar(ctx, abajo || 'VeloClub', 168), 62, 46);
+  ctx.fillText(recortar(ctx, abajo || 'VeloClub', textoAncho), textoX, logoCy + 14);
   ctx.globalAlpha = 1;
 
   // El sello de vigencia
@@ -178,11 +195,11 @@ async function dibujarFrente(ctx: CanvasRenderingContext2D, d: DatosCarnet) {
   ctx.font = `700 9px ${FUENTE}`;
   const anchoSello = ctx.measureText(sello.texto.toUpperCase()).width + 18;
   ctx.fillStyle = 'rgba(255,255,255,0.22)';
-  redondeado(ctx, ANCHO - 18 - anchoSello, 18, anchoSello, 18, 9);
+  redondeado(ctx, ANCHO - 18 - anchoSello, 20, anchoSello, 18, 9);
   ctx.fill();
   ctx.fillStyle = c.tinta;
   ctx.textAlign = 'center';
-  ctx.fillText(sello.texto.toUpperCase(), ANCHO - 18 - anchoSello / 2, 30.5);
+  ctx.fillText(sello.texto.toUpperCase(), ANCHO - 18 - anchoSello / 2, 32.5);
 
   // La foto, montada sobre la banda
   const foto = m.foto ? await cargarImagen(m.foto) : null;
@@ -210,6 +227,20 @@ async function dibujarFrente(ctx: CanvasRenderingContext2D, d: DatosCarnet) {
     ctx.fillText(iniciales(m.nombre), cx, cy + 1);
   }
   ctx.restore();
+
+  // La marca de agua. Va aca y no antes: tiene que quedar encima del blanco
+  // del fondo y debajo de todo lo que se lee. La foto ya se pinto y esta mas
+  // arriba, asi que no la toca.
+  if (d.club.marcaAgua && logo) {
+    const caja = 186;
+    const escala = Math.min(caja / logo.width, caja / logo.height);
+    const w = logo.width * escala;
+    const h = logo.height * escala;
+    ctx.save();
+    ctx.globalAlpha = 0.085;
+    ctx.drawImage(logo, cx - w / 2, (cy + 176) - h / 2, w, h);
+    ctx.restore();
+  }
 
   // Nombre y etiquetas
   ctx.textAlign = 'center';

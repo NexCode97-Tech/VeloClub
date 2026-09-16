@@ -23,6 +23,12 @@ model Club {
   // entrega a su gente.
   colorPrimario             String?
   colorSecundario           String?
+  // La marca de agua del logo en el carnet. Va prendida porque es lo que
+  // distingue un carnet institucional de una tarjeta cualquiera, pero se puede
+  // apagar: no todos los logos aguantan desvanecerse. Uno con letras blancas o
+  // con mucho detalle sale como un manchon, y eso no se puede adivinar de
+  // antemano desde aca.
+  carnetMarcaAgua           Boolean           @default(true)
   coverUrl                  String? // portada del club
   coverPublicId             String? // public_id de Cloudinary
   verified                  Boolean           @default(false) // club verificado (sello) — espejo de verificationStatus == VERIFIED

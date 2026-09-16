@@ -94,6 +94,7 @@ const settingsSchema = z.object({
   // CSS ajeno por el formulario de ajustes.
   colorPrimario:    z.string().regex(HEX).nullable().optional(),
   colorSecundario:  z.string().regex(HEX).nullable().optional(),
+  carnetMarcaAgua:  z.boolean().optional(),
 });
 
 // Invalida la caché de la sección "confían en nosotros" del landing. Debe
@@ -190,7 +191,7 @@ router.get('/settings', requireAuth, async (req, res) => {
     select: {
       id: true, name: true, city: true, department: true,
       logoUrl: true, coverUrl: true, verified: true,
-      colorPrimario: true, colorSecundario: true,
+      colorPrimario: true, colorSecundario: true, carnetMarcaAgua: true,
       noAttendanceDays: true, createdAt: true, foundedAt: true,
       suscripcion: { select: { tipoPlan: true, createdAt: true } },
     },
@@ -215,6 +216,7 @@ router.patch('/settings', requireAuth, async (req, res) => {
   if (parsed.data.noAttendanceDays !== undefined) data.noAttendanceDays = parsed.data.noAttendanceDays;
   if (parsed.data.colorPrimario    !== undefined) data.colorPrimario    = parsed.data.colorPrimario;
   if (parsed.data.colorSecundario  !== undefined) data.colorSecundario  = parsed.data.colorSecundario;
+  if (parsed.data.carnetMarcaAgua  !== undefined) data.carnetMarcaAgua  = parsed.data.carnetMarcaAgua;
   // Sin color principal no hay degradado posible: el segundo se va con el.
   if (parsed.data.colorPrimario === null) data.colorSecundario = null;
   if (parsed.data.foundedAt !== undefined) {
@@ -244,7 +246,7 @@ router.patch('/settings', requireAuth, async (req, res) => {
     select: {
       id: true, name: true, city: true, department: true,
       logoUrl: true, noAttendanceDays: true, foundedAt: true,
-      colorPrimario: true, colorSecundario: true,
+      colorPrimario: true, colorSecundario: true, carnetMarcaAgua: true,
     },
   });
   await cacheDel(`club:settings:${clubId}`);

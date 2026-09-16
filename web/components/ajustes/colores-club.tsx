@@ -2,6 +2,7 @@
 
 import { useRef, useState } from 'react';
 import { SelectorColorLibre } from '@/components/ui/selector-color-libre';
+import { Interruptor } from '@/components/ui/interruptor';
 import { coloresDelCarnet, contraste, paraTexto, COLOR_NEUTRO } from '@/lib/color';
 
 /**
@@ -19,10 +20,14 @@ import { coloresDelCarnet, contraste, paraTexto, COLOR_NEUTRO } from '@/lib/colo
 interface Props {
   primario: string | null;
   secundario: string | null;
+  marcaAgua: boolean;
+  /** El logo del club, para la vista previa. */
+  logo?: string | null;
   onChange: (primario: string | null, secundario: string | null) => void;
+  onMarcaAgua: (v: boolean) => void;
 }
 
-export function ColoresClub({ primario, secundario, onChange }: Props) {
+export function ColoresClub({ primario, secundario, marcaAgua, logo, onChange, onMarcaAgua }: Props) {
   const [abierto, setAbierto] = useState<0 | 1 | null>(null);
   const [anclaje, setAnclaje] = useState<{ top: number; left: number } | null>(null);
   const slots = useRef<(HTMLButtonElement | null)[]>([]);
@@ -123,9 +128,12 @@ export function ColoresClub({ primario, secundario, onChange }: Props) {
           punto es ver el color donde de verdad va a salir. */}
       <div className="flex items-center gap-3 rounded-[14px] px-3.5 py-3"
         style={{ background: colores.fondo, color: colores.tinta }}>
-        <span className="w-[30px] h-[30px] rounded-lg grid place-items-center text-[11px] font-bold"
-          style={{ background: 'rgba(255,255,255,0.92)', color: colores.texto }}>
-          CD
+        <span className="w-[34px] h-[34px] rounded-full shrink-0 grid place-items-center overflow-hidden text-[11px] font-bold"
+          style={{ background: '#fff', color: colores.texto }}>
+          {logo
+            // eslint-disable-next-line @next/next/no-img-element
+            ? <img src={logo} alt="" className="w-[88%] h-[88%] object-contain" />
+            : 'CD'}
         </span>
         <div className="min-w-0">
           <b className="block text-[13px] font-semibold">Así se ve la banda del carnet</b>
@@ -133,6 +141,27 @@ export function ColoresClub({ primario, secundario, onChange }: Props) {
             {primario ? 'El texto encima lo elige la plataforma para que se lea' : 'Sin color elegido va este gris neutro'}
           </span>
         </div>
+      </div>
+
+      {/* La marca de agua. Va prendida porque es lo que distingue un carnet
+          institucional de una tarjeta cualquiera, pero se puede apagar: un logo
+          con letras blancas o con mucho detalle se desvanece feo, y cuál
+          aguanta no se sabe de antemano desde acá. */}
+      <div className="flex items-start justify-between gap-4 pt-1">
+        <div className="min-w-0">
+          <p className="text-[12px] font-medium text-foreground m-0">Logo de fondo en el carnet</p>
+          <p className="text-[11px] text-muted-foreground m-0 mt-0.5 max-w-md leading-relaxed">
+            {logo
+              ? 'El logo va desvanecido detrás de los datos. Si el tuyo no se ve bien así, apágalo.'
+              : 'Necesita que primero subas el logo del club.'}
+          </p>
+        </div>
+        <Interruptor
+          etiqueta="Logo de fondo en el carnet"
+          checked={marcaAgua}
+          disabled={!logo}
+          onChange={onMarcaAgua}
+        />
       </div>
 
       {abierto !== null && (

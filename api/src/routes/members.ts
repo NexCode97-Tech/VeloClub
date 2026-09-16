@@ -295,7 +295,10 @@ router.get('/:id/carnet', requireAuth, async (req, res) => {
 
   const club = await prismaClubEntero.club.findUnique({
     where: { id: clubId },
-    select: { name: true, city: true, logoUrl: true, colorPrimario: true, colorSecundario: true },
+    select: {
+      name: true, city: true, logoUrl: true,
+      colorPrimario: true, colorSecundario: true, carnetMarcaAgua: true,
+    },
   });
   if (!club) return res.status(404).json({ error: 'Club no encontrado' });
 
@@ -330,6 +333,7 @@ router.get('/:id/carnet', requireAuth, async (req, res) => {
         logo: club.logoUrl,
         colorPrimario: club.colorPrimario,
         colorSecundario: club.colorSecundario,
+        marcaAgua: club.carnetMarcaAgua,
       },
       vigencia,
     },

@@ -44,22 +44,26 @@ function Frente({ d }: { d: DatosCarnet }) {
 
   return (
     <article className="rounded-[22px] overflow-hidden bg-white flex flex-col" style={{ boxShadow: SOMBRA }}>
-      <div className="relative px-[18px] pt-[18px] pb-[46px]" style={{ background: c.fondo, color: c.tinta }}>
-        <span className="absolute top-[18px] right-[18px] text-[9px] font-bold uppercase tracking-[0.1em] rounded-full px-2.5 py-1"
+      <div className="relative px-[18px] pt-5 pb-[46px]" style={{ background: c.fondo, color: c.tinta }}>
+        <span className="absolute top-5 right-[18px] text-[9px] font-bold uppercase tracking-[0.1em] rounded-full px-2.5 py-1"
           style={{ background: 'rgba(255,255,255,0.22)' }}>
           {sello.texto}
         </span>
-        <div className="flex items-center gap-2.5">
-          <span className="w-[34px] h-[34px] rounded-[9px] shrink-0 grid place-items-center overflow-hidden text-[12px] font-bold"
-            style={{ background: 'rgba(255,255,255,0.92)', color: c.texto }}>
+        <div className="flex items-center gap-[11px]">
+          {/* El logo va en círculo, como en el resto de la plataforma, y el
+              círculo le recorta el fondo cuadrado al archivo: casi ningún logo
+              de club llega con transparencia. Entra entero y no recortado,
+              porque el logo de un club en un carnet no se corta. */}
+          <span className="w-[50px] h-[50px] rounded-full shrink-0 grid place-items-center overflow-hidden text-[15px] font-bold"
+            style={{ background: '#fff', color: c.texto }}>
             {d.club.logo
               // eslint-disable-next-line @next/next/no-img-element
-              ? <img src={d.club.logo} alt="" className="w-full h-full object-cover" />
+              ? <img src={d.club.logo} alt="" className="w-[88%] h-[88%] object-contain" />
               : iniciales(d.club.nombre)}
           </span>
           <div className="min-w-0">
-            <p className="m-0 text-[13px] font-semibold leading-tight truncate">{d.club.nombre}</p>
-            <p className="m-0 mt-px text-[10.5px] opacity-80 truncate">{abajo || 'VeloClub'}</p>
+            <p className="m-0 text-[14px] font-semibold leading-tight truncate">{d.club.nombre}</p>
+            <p className="m-0 mt-0.5 text-[10.5px] opacity-80 truncate">{abajo || 'VeloClub'}</p>
           </div>
         </div>
       </div>
@@ -80,7 +84,23 @@ function Frente({ d }: { d: DatosCarnet }) {
         </span>
       </div>
 
-      <div className="px-5 pt-3 pb-[18px] flex flex-col flex-1 relative z-[1]">
+      <div className="px-5 pt-3 pb-[18px] flex flex-col flex-1 relative z-[1] [&>*:not(.vc-agua)]:relative [&>*:not(.vc-agua)]:z-[1]">
+        {/* La marca de agua. Es lo que separa un carnet institucional de una
+            tarjeta cualquiera, y no le quita un píxel a la cara. Muy poca
+            opacidad a propósito: a más, el texto de encima deja de leerse.
+            Se puede apagar desde Ajustes porque no todos los logos aguantan
+            desvanecerse, y cuál aguanta no se sabe de antemano. */}
+        {d.club.marcaAgua && d.club.logo && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={d.club.logo} alt="" aria-hidden
+            className="vc-agua absolute pointer-events-none object-contain"
+            style={{
+              left: '50%', top: '53%', transform: 'translate(-50%,-50%)',
+              width: 186, height: 186, opacity: 0.085, zIndex: 0,
+            }}
+          />
+        )}
+
         <p className="m-0 text-center text-[19px] font-semibold tracking-tight leading-tight text-[#1A1028]">
           {m.nombre}
         </p>

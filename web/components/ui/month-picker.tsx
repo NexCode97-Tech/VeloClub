@@ -4,13 +4,36 @@ import { useState, useRef, useEffect } from 'react';
 import {
   format, addMonths, subMonths, startOfMonth, endOfMonth,
   startOfWeek, endOfWeek, addDays, isSameMonth, isSameDay,
-  isWithinInterval, isAfter,
+  isWithinInterval, isAfter, startOfDay, startOfYear, endOfYear,
 } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { CalendarDays, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const MONTHS = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
 const WEEKDAYS = ['Lu','Ma','Mi','Ju','Vi','Sá','Do'];
+
+/**
+ * Los atajos de la columna izquierda.
+ *
+ * Son lo que se elige el noventa por ciento de las veces; el calendario queda
+ * para el caso raro de un rango exacto. Van uno por fila y no en una tira de
+ * pastillas: en una fila corrida hay que leerlos todos para encontrar el que
+ * se busca.
+ *
+ * «Últimos 3 meses» va en vez de «últimos 90 días» a propósito. Los planes del
+ * club son mensual y trimestral, así que el trimestre significa algo para el
+ * negocio y una ventana de noventa días no.
+ */
+const ATAJOS: { id: string; nombre: string; rango: () => DateRangeInterno }[] = [
+  { id: 'hoy',    nombre: 'Hoy',              rango: () => ({ start: startOfDay(new Date()), end: startOfDay(new Date()) }) },
+  { id: 'semana', nombre: 'Esta semana',      rango: () => ({ start: startOfWeek(new Date(), { weekStartsOn: 1 }), end: endOfWeek(new Date(), { weekStartsOn: 1 }) }) },
+  { id: 'mes',    nombre: 'Este mes',         rango: () => ({ start: startOfMonth(new Date()), end: endOfMonth(new Date()) }) },
+  { id: 'pasado', nombre: 'Mes pasado',       rango: () => ({ start: startOfMonth(subMonths(new Date(), 1)), end: endOfMonth(subMonths(new Date(), 1)) }) },
+  { id: 'tri',    nombre: 'Últimos 3 meses',  rango: () => ({ start: startOfMonth(subMonths(new Date(), 2)), end: endOfMonth(new Date()) }) },
+  { id: 'anio',   nombre: 'Este año',         rango: () => ({ start: startOfYear(new Date()), end: endOfYear(new Date()) }) },
+];
+
+type DateRangeInterno = { start: Date; end: Date };
 
 export interface DateRange { start: Date; end: Date }
 
@@ -79,6 +102,28 @@ export function MonthPicker({
   }, [dateRange]);
 
   const selected = value ?? currentMonth;
+
+  /**
+   * Qué atajo está puesto. Se deduce comparando el rango actual contra el de
+   * cada uno, y no se guarda en su propio estado: un estado aparte se
+   * desincroniza en cuanto alguien toca el calendario a mano.
+   */
+  const atajoActivo = (() => {
+    if (!dateRange) return null;
+    const hit = ATAJOS.find(a => {
+      const r = a.rango();
+      return isSameDay(r.start, dateRange.start) && isSameDay(r.end, dateRange.end);
+    });
+    return hit ? hit.id : null;
+  })();
+
+  function aplicarAtajo(a: typeof ATAJOS[number]) {
+    const r = a.rango();
+    onChange(format(r.end, 'yyyy-MM'), r);
+    setMesInicio(null);
+    setStep('month');
+    setOpen(false);
+  }
 
   function isAvailable(monthKey: string) {
     return availableMonths.length === 0 || monthKey === currentMonth || availableMonths.includes(monthKey);
@@ -249,13 +294,38 @@ export function MonthPicker({
       {/* Popover */}
       {open && (
         <div
-          className={`absolute top-11 z-50 rounded-2xl p-4 w-72 ${alignRight ? 'right-0' : 'left-0'}`}
+          className={`absolute top-11 z-50 rounded-2xl flex flex-col sm:flex-row items-stretch ${alignRight ? 'right-0' : 'left-0'}`}
           style={{
             background: '#fff',
             border: '1px solid rgba(56,29,160,0.14)',
             boxShadow: '0 12px 40px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)',
           }}
         >
+          {/* ── Atajos, uno por fila ── */}
+          <div className="flex sm:flex-col gap-0.5 flex-wrap p-2.5 sm:w-[136px] shrink-0 border-b sm:border-b-0 sm:border-r"
+            style={{ borderColor: 'rgba(56,29,160,0.10)' }}>
+            <span className="w-full px-2 pt-0.5 pb-1.5 text-[9.5px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Periodo
+            </span>
+            {ATAJOS.map(a => {
+              const puesto = atajoActivo === a.id;
+              return (
+                <button
+                  key={a.id}
+                  onClick={() => aplicarAtajo(a)}
+                  aria-pressed={puesto}
+                  className="flex-1 sm:flex-none text-center sm:text-left text-[12px] px-2.5 py-1.5 rounded-lg transition-colors cursor-pointer whitespace-nowrap"
+                  style={puesto
+                    ? { background: 'rgba(56,29,160,0.12)', color: '#381DA0', fontWeight: 600 }
+                    : { color: '#1A1028', fontWeight: 500 }}
+                >
+                  {a.nombre}
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="p-4 sm:w-72 shrink-0">
 
           {/* ── Step: Mes ── */}
           {step === 'month' && (
@@ -326,7 +396,7 @@ export function MonthPicker({
               {modo === 'meses' ? (
                 <p className="mt-3 mb-0 text-[11px] text-muted-foreground text-center leading-snug">
                   {mesInicio
-                    ? 'Elegí el mes final, o tocá el mismo para ver solo ese'
+                    ? 'Elige el mes final, o toca el mismo para ver solo ese'
                     : 'Un mes, dos para el rango entre ellos, o el año para verlo entero'}
                 </p>
               ) : value !== null && (
@@ -443,6 +513,7 @@ export function MonthPicker({
               </button>
             </>
           )}
+          </div>
         </div>
       )}
     </div>

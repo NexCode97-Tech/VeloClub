@@ -220,6 +220,20 @@ export default function UsoPage() {
                   <stop offset="0%"   stopColor="#381DA0" stopOpacity={0.20} />
                   <stop offset="100%" stopColor="#381DA0" stopOpacity={0.01} />
                 </linearGradient>
+                {/* La cuadrícula que vive dentro del área, la misma de las
+                    gráficas de Finanzas. Cuadro chico y trazo fino: a esta
+                    escala se lee como papel milimetrado y no como una reja. */}
+                <pattern id="usoCuadricula" width={5} height={5} patternUnits="userSpaceOnUse">
+                  <path d="M5 0H0V5" fill="none" stroke="#381DA0" strokeWidth={0.45} opacity={0.45} />
+                </pattern>
+                {/* Y se desvanece hacia abajo, para no competir con la línea. */}
+                <linearGradient id="usoDesvanece" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%"   stopColor="#fff" stopOpacity={0.85} />
+                  <stop offset="100%" stopColor="#fff" stopOpacity={0} />
+                </linearGradient>
+                <mask id="usoMascara" maskContentUnits="objectBoundingBox">
+                  <rect x="0" y="0" width="1" height="1" fill="url(#usoDesvanece)" />
+                </mask>
               </defs>
               <CartesianGrid vertical={false} stroke="rgba(120,80,200,0.08)" />
               <XAxis dataKey="semana" tickLine={false} axisLine={false}
@@ -235,8 +249,9 @@ export default function UsoPage() {
                 formatter={(v) => [`${Number(v ?? 0)} días`, 'Con asistencia']}
                 labelFormatter={(_, payload) => `Semana del ${payload?.[0]?.payload?.semana ?? ''}`}
               />
+              <Area type="monotone" dataKey="dias" stroke="none" fill="url(#usoRelleno)" />
               <Area type="monotone" dataKey="dias" stroke="#381DA0" strokeWidth={2}
-                fill="url(#usoRelleno)" />
+                fill="url(#usoCuadricula)" mask="url(#usoMascara)" />
             </AreaChart>
           </ResponsiveContainer>
         </div>

@@ -84,7 +84,22 @@ function fechaCorta(iso: string, conMes: boolean): string {
   return conMes ? `${dia} ${MESES[mes - 1]}` : String(dia);
 }
 
-/** «Septiembre 2026», o «3 sep \u2013 18 oct» cuando el periodo cruza meses. */
+/**
+ * Que cuenta cada punto de la serie.
+ *
+ * El dato que llega es siempre el mismo, un par de club y día con asistencia
+ * tomada, pero lo que significa depende del tramo. En un punto por día solo
+ * puede haber un par por club, así que el número **son clubes**. En un punto
+ * por semana se suman los días de cada club, y ahí sí son días.
+ *
+ * Decía «días» en los dos casos, que en la vista por día era falso.
+ */
+function unidadSerie(valor: number, tramo: 'dia' | 'semana'): string {
+  if (tramo === 'dia') return valor === 1 ? 'club' : 'clubes';
+  return valor === 1 ? 'día' : 'días';
+}
+
+/** «Septiembre 2026», o «3 sep – 18 oct» cuando el periodo cruza meses. */
 function rotuloPeriodo(desde: string, hasta: string): string {
   const [ad, md, dd] = desde.split('-').map(Number);
   const [ah, mh, dh] = hasta.split('-').map(Number);
@@ -282,7 +297,11 @@ export default function UsoPage() {
               {rotuloPeriodo(desde, hasta)}
             </span>
           </div>
-          <span className="text-[11.5px] text-[#8E87A8]">Días con asistencia tomada, todos los clubes</span>
+          <span className="text-[11.5px] text-[#8E87A8]">
+            {datos.tramo === 'dia'
+              ? 'Clubes que tomaron asistencia cada día'
+              : 'Días con asistencia tomada, sumando todos los clubes'}
+          </span>
         </div>
         <div className="w-full" style={{ height: ALTO_GRAFICA }}>
           <ResponsiveContainer width="100%" height="100%">
@@ -337,10 +356,10 @@ export default function UsoPage() {
                         <>
                           <p className="font-bold m-0 mb-0.5">{cuando}</p>
                           <p className="m-0 flex items-center gap-2">
-                            <span className="w-2 h-2 rounded-sm shrink-0" style={{ background: '#5B3DD6' }} />
-                            Con asistencia
+                            <span className="w-2 h-2 rounded-sm shrink-0" style={{ background: '#381DA0' }} />
+                            {datos.tramo === 'dia' ? 'Tomaron asistencia' : 'Con asistencia'}
                             <b className="tabular-nums font-semibold ml-auto">
-                              {valor} {valor === 1 ? 'd\u00eda' : 'd\u00edas'}
+                              {valor} {unidadSerie(valor, datos.tramo)}
                             </b>
                           </p>
                         </>
@@ -349,9 +368,17 @@ export default function UsoPage() {
                   />
                 }
               />
+              {/* Tres capas, como en Finanzas, y no dos.
+                  El desvanecido es para el relleno, no para la linea: puesto
+                  sobre una sola capa que llevaba las dos, le bajaba la opacidad
+                  tambien al trazo y el morado de marca salia aguado, distinto
+                  al de la misma grafica en Finanzas. La linea va aparte y sin
+                  mascara, que es lo unico que no debe desvanecerse. */}
               <Area type="monotone" dataKey="dias" stroke="none" fill="url(#usoRelleno)" tooltipType="none" />
-              <Area type="monotone" dataKey="dias" stroke="#381DA0" strokeWidth={2}
+              <Area type="monotone" dataKey="dias" stroke="none" tooltipType="none"
                 fill="url(#usoCuadricula)" mask="url(#usoMascara)" />
+              <Area type="monotone" dataKey="dias" fill="none"
+                stroke="#381DA0" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
             </AreaChart>
           </ResponsiveContainer>
         </div>

@@ -42,6 +42,10 @@ function colorPara(pathname: string): string {
 /**
  * Ajusta el color de la barra de estado a la pantalla que se está viendo.
  *
+ * Hace dos cosas, y la segunda es la que funciona en iPhone. Escribe la
+ * etiqueta `theme-color`, que Android respeta, y pinta el fondo del documento,
+ * que iOS usa para la franja de la barra de estado sin preguntarle a nadie.
+ *
  * Es el **único** sitio que escribe `theme-color`. El `viewport` de
  * `app/layout.tsx` lo declaraba también, y como Next reescribe esas etiquetas
  * al cambiar de ruta, pisaba lo que este componente acababa de poner.
@@ -75,6 +79,20 @@ export function ColorBarraEstado() {
     };
 
     aplicar();
+
+    // Y el lienzo, que es lo que de verdad decide el color de la franja de
+    // arriba en iPhone.
+    //
+    // `theme-color` no siempre se respeta, pero el color de fondo del
+    // documento sí se respeta siempre: iOS pinta con el el area de la barra de
+    // estado y la del rebote del scroll. El fondo estaba en `body` y era el
+    // gris del panel, asi que en Inicio la barra salia gris aunque el
+    // encabezado de esa pantalla sea morado, porque el encabezado es una
+    // tarjeta DENTRO de la pagina y no llega hasta alla.
+    //
+    // Va en `html` y no en `body` porque es el de `html` el que gana cuando
+    // los dos estan puestos.
+    document.documentElement.style.backgroundColor = color;
 
     // Y se vuelve a poner si algo la cambia. El framework reescribe la cabecera
     // al navegar, y sin esto el color duraba lo que tardara ese repintado.

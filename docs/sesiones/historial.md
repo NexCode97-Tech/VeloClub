@@ -106,7 +106,16 @@ toca los archivos mientras Next.js los escribe, y de ahí salieron los dos
 - **Rotar los cinco secretos** de `docs/rotacion-secretos-2026-09-15.md`, y
   borrar los doce nombres que siguen en `nex-code97` tras revisar el código del
   portafolio, que despliega con raíz `web` y no está en el repo local.
-- **Sacar los repos de OneDrive.**
+- **Sacar los repos de OneDrive.** HECHO. Los ocho quedaron en la carpeta
+  `GitHub` del perfil del usuario, fuera de la sincronizacion. VeloClub se
+  resolvio clonando de GitHub en vez de moviendo, porque la sesion tenia
+  tomada la carpeta vieja y Windows no la suelta.
+- **El repo paso a privado** el 15 de septiembre. Al reinstalar salieron dos
+  cosas que ya venian rotas: el `package-lock.json` de la web esta
+  desactualizado y `react-day-picker`, que nadie usa, provoca el choque de
+  peer dependencies que hace fallar `npm install` y `npm ci`; y el
+  `web/pnpm-workspace.yaml` tiene los permisos de compilacion con el texto de
+  plantilla `set this to true or false` sin llenar.
 - Vaciar la papelera de OneDrive en la nube; en las cuentas Personal lo borrado
   ocupa cuota 30 días.
 - Los tres cobros rechazados de Gladys Contreras del 18 de agosto. El webhook

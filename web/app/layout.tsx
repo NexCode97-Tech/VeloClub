@@ -14,9 +14,12 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
-  // Valor de arranque, el del landing. ColorBarraEstado lo ajusta a la pantalla
-  // que se esté viendo, para que la barra de estado no corte con el contenido.
-  themeColor: '#09090B',
+  // Aquí NO va themeColor. Lo escribe ColorBarraEstado y nadie más.
+  //
+  // Estaba declarado en los dos sitios, y Next reescribe las etiquetas del
+  // `viewport` cuando cambia de ruta: eso pisaba el color que el componente
+  // acababa de poner, y la barra de estado se quedaba en el valor de arranque
+  // en vez del de la pantalla. Una etiqueta, una sola mano encima.
 };
 
 const SITE_URL = "https://www.veloclubtech.com";

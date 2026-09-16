@@ -60,6 +60,19 @@ const MESES = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov'
 const MESES_LARGO = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 
 /**
+ * La geometria de la grafica, en pixeles, escrita una sola vez.
+ *
+ * El globo se apoya en el punto y para eso hay que saber a que altura cae cada
+ * valor, asi que estos tres numeros no pueden quedar sueltos en el JSX: el alto
+ * de la caja, el margen de arriba y el alto del eje horizontal se declaran aca
+ * y de ahi salen tanto el dibujo como la cuenta.
+ */
+const ALTO_GRAFICA = 200;
+const ALTO_GRAFICA_ARRIBA = 8;
+const ALTO_EJE_X = 30;
+const ALTO_GRAFICA_UTIL = ALTO_GRAFICA - ALTO_GRAFICA_ARRIBA - ALTO_EJE_X;
+
+/**
  * El rotulo de una marca del eje.
  *
  * Dentro de un mes va solo el dia: el mes ya esta escrito al lado del titulo y
@@ -197,6 +210,35 @@ export default function UsoPage() {
     dias: s.dias,
   }));
 
+  /**
+   * Cada cuantas marcas se escribe una en el eje.
+   *
+   * Con `minTickGap` recharts va botando marcas a medida que no caben, y el
+   * resultado son las primeras pegadas y las ultimas separadas al doble. Con un
+   * salto fijo la separacion es la misma de punta a punta. Dieciseis rotulos es
+   * lo que cabe comodo en el ancho de la tarjeta.
+   */
+  const saltoEje = Math.max(0, Math.ceil(serieGrafica.length / 16) - 1);
+
+  /**
+   * El tope del eje vertical, redondeado a un multiplo de cuatro para que las
+   * cinco marcas den numeros enteros.
+   *
+   * Se fija a mano, y no se deja en automatico, porque el globo necesita saber
+   * a que altura queda cada punto y para eso la escala tiene que ser conocida.
+   */
+  const topeEje = Math.max(4, Math.ceil(Math.max(0, ...serieGrafica.map(s => s.dias)) / 4) * 4);
+  const marcasEje = [0, 1, 2, 3, 4].map(i => (topeEje / 4) * i);
+
+  /**
+   * La altura de un valor dentro de la grafica, en pixeles.
+   *
+   * Sale de la geometria que esta escrita abajo y no de una medicion: el alto
+   * de la caja, el margen de arriba y el alto del eje horizontal estan fijos
+   * justo para que esta cuenta sea exacta. Si alguno cambia, cambia aca.
+   */
+  const alturaDe = (v: number) => ALTO_GRAFICA_ARRIBA + ALTO_GRAFICA_UTIL * (1 - v / topeEje);
+
   return (
     <div className="px-5 pt-4 pb-8 max-w-5xl mx-auto w-full flex flex-col gap-4">
 
@@ -242,9 +284,10 @@ export default function UsoPage() {
           </div>
           <span className="text-[11.5px] text-[#8E87A8]">Días con asistencia tomada, todos los clubes</span>
         </div>
-        <div className="h-[200px] w-full">
+        <div className="w-full" style={{ height: ALTO_GRAFICA }}>
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={serieGrafica} margin={{ top: 8, right: 6, bottom: 0, left: -18 }}>
+            <AreaChart data={serieGrafica}
+              margin={{ top: ALTO_GRAFICA_ARRIBA, right: 6, bottom: 0, left: -18 }}>
               <defs>
                 <linearGradient id="usoRelleno" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="0%"   stopColor="#381DA0" stopOpacity={0.20} />
@@ -266,15 +309,22 @@ export default function UsoPage() {
                 </mask>
               </defs>
               <CartesianGrid vertical={false} stroke="rgba(120,80,200,0.08)" />
-              <XAxis dataKey="semana" tickLine={false} axisLine={false}
-                tick={{ fontSize: 10.5, fill: '#8E87A8' }} minTickGap={24} />
+              <XAxis dataKey="semana" tickLine={false} axisLine={false} height={ALTO_EJE_X}
+                tick={{ fontSize: 10.5, fill: '#8E87A8' }} interval={saltoEje} />
               <YAxis tickLine={false} axisLine={false} width={40}
-                tick={{ fontSize: 10.5, fill: '#8E87A8' }} allowDecimals={false} />
+                tick={{ fontSize: 10.5, fill: '#8E87A8' }}
+                domain={[0, topeEje]} ticks={marcasEje} allowDecimals={false} />
+              {/* El globo se ubica solo, apoyado en el punto, asi que recharts
+                  no debe correrlo ni recortarlo contra el borde: en el pico mas
+                  alto se sale de la tarjeta, y asi debe ser. */}
               <Tooltip
                 cursor={{ stroke: '#381DA0', strokeOpacity: 0.3 }}
                 wrapperStyle={{ outline: 'none' }}
+                offset={0}
+                allowEscapeViewBox={{ x: true, y: true }}
                 content={
                   <GloboGrafica
+                    ancla={(_, valor) => alturaDe(valor)}
                     texto={(punto, valor) => {
                       const f = punto.fecha as string | undefined;
                       const cuando = f

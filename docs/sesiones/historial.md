@@ -118,9 +118,10 @@ toca los archivos mientras Next.js los escribe, y de ahí salieron los dos
   plantilla `set this to true or false` sin llenar.
 - Vaciar la papelera de OneDrive en la nube; en las cuentas Personal lo borrado
   ocupa cuota 30 días.
-- Los tres cobros rechazados de Gladys Contreras del 18 de agosto. El webhook
-  entregó los tres con 200, así que la integración funcionó: los rechazó el
-  banco. Falta saber si ese club quedó sin pagar.
+- Los tres cobros rechazados de Gladys Contreras del 18 de agosto quedaron
+  resueltos: pagó por llave Bre-B y el dinero ya se recibió. El webhook había
+  entregado los tres con 200, así que la integración nunca falló; los rechazó
+  el banco.
 
 ---
 

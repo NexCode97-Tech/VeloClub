@@ -35,9 +35,15 @@ Lo hecho:
   el valor en ningún lado.
 
 **Lo pendiente vive en `docs/rotacion-secretos-2026-09-15.md`**: doce nombres por
-borrar de `nex-code97` una vez se revise el código del portafolio, y cinco
-secretos por rotar, `MP_ACCESS_TOKEN`, `BREB_LLAVE`, la pareja de Cloudinary y
-`CLERK_SECRET_KEY`. Ese documento explica por qué borrar la copia no basta:
+borrar de `nex-code97` una vez se revise el código del portafolio, y los
+secretos por rotar, la pareja de Cloudinary y `CLERK_SECRET_KEY`, más
+`MP_ACCESS_TOKEN` por confirmar.
+
+Corregido el 16 de septiembre. `BREB_LLAVE` **no se rota**: es el alias de la
+cuenta Bre-B, un teléfono o un correo que existe para repartirlo, no una
+credencial. Y del Access Token de Mercado Pago hay discrepancia, este registro
+dice que quedó pendiente y el usuario recuerda haberlo rotado en la misma
+pasada del webhook, así que se confirma mirando la fecha en el panel. Ese documento explica por qué borrar la copia no basta:
 cierra la puerta de ahora en adelante, no deshace los cuatro meses en que el
 valor estuvo legible.
 

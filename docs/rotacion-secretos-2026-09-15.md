@@ -64,32 +64,42 @@ No todo lo expuesto es un secreto. Estos son públicos por diseño y no se tocan
 | `WEB_ORIGIN` | Es el dominio del frontend |
 | `SUPERADMIN_EMAILS` | Son correos, no credenciales |
 | `BREB_TITULAR` | Es el nombre del titular de la cuenta |
+| `BREB_LLAVE` | Es el alias de la cuenta Bre-B, no una credencial |
 
-Se rotan estos seis, en este orden.
+`BREB_LLAVE` salió de la lista de rotación el 16 de septiembre. Una llave Bre-B
+es un alias, un teléfono, un correo o un documento, y existe justamente para
+repartirla: es lo que uno le da a otro para que le pague. Conocerla no autoriza
+a mover plata, así que no es un secreto y no hay nada que rotar. Estuvo en la
+lista por error.
+
+Quedan estos, en este orden.
 
 ### 1. `RESET_SECRET`, borrar — HECHO el 15 de septiembre
 
 Nadie lo lee. Se borró de Vercel, en Preview y en Production, y de Railway.
 La API quedó respondiendo `db: ok` y `redis: ok` después del cambio.
 
-### 2. `MP_WEBHOOK_SECRET` y `MP_ACCESS_TOKEN`
+### 2. `MP_WEBHOOK_SECRET` — HECHO el 15 de septiembre
 
-Los primeros porque son los que mueven plata. En el panel de Mercado Pago, en
-las credenciales de producción de la aplicación, se regeneran.
+Clave nueva generada en Mercado Pago, en la configuración de notificaciones, y
+escrita en Railway por entrada estándar, verificada comparando hashes para no
+imprimir el valor en ningún lado.
 
-Ojo, el token de producción de Mercado Pago **no convive con el anterior**: al
-regenerarlo el viejo muere de inmediato. Así que el cambio en Railway va justo
-detrás, y entre una cosa y la otra los cobros fallan. Hacerlo en una franja de
-poco movimiento.
+### 3. `MP_ACCESS_TOKEN` — POR CONFIRMAR
 
-El `MP_WEBHOOK_SECRET` se cambia en la configuración de notificaciones. Mientras
-no coincida, los webhooks entrantes se rechazan por firma, y Mercado Pago
-reintenta, así que eso sí se recupera solo.
+El registro de la sesión del 15 de septiembre anota rotado únicamente el
+`MP_WEBHOOK_SECRET`. El 16 de septiembre el usuario recuerda haber rotado
+también el Access Token en la misma pasada. No hay forma de saberlo desde acá
+sin imprimir el valor, que no se hace.
 
-### 3. `BREB_LLAVE`
+**Se confirma en el panel de Mercado Pago**, en las credenciales de producción
+de la aplicación: ahí se ve si el token se regeneró y cuándo. Si no se
+regeneró, se regenera.
 
-Es la llave de la cuenta Bre-B. Se cambia donde esté emitida y se actualiza en
-Railway. Revisar de paso que `BREB_TITULAR` siga cuadrando con ella.
+Ojo con la trampa si toca hacerlo. El token de producción **no convive con el
+anterior**: al regenerarlo el viejo muere de inmediato, así que el cambio en
+Railway va justo detrás y entre una cosa y la otra los cobros fallan. Hacerlo
+en una franja de poco movimiento.
 
 ### 4. `CLOUDINARY_API_KEY` y `CLOUDINARY_API_SECRET`
 

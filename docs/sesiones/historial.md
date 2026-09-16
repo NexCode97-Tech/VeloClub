@@ -246,6 +246,47 @@ Lo que sí se queda de estos seis intentos son las direcciones sin `/dashboard`.
 
 ---
 
+### Un entorno de demostración, y el club falso que vive adentro
+
+El cliente necesita mostrar la aplicación por fuera, en publicaciones y en
+demostraciones, y no puede hacerlo con datos de clubes reales. Tomó un pantallazo
+de Miembros y le salían nombres y correos de gente de verdad.
+
+**Por qué no basta con un club marcado dentro de producción.** Cuatro cosas
+cruzan clubes a propósito, declaradas con `clubEntero` en `api/src/index.ts`: el
+muro, los perfiles, el buscador y los seguidores. Un club de demostración ahí
+adentro **le aparecería a los clubes reales**. El aislamiento por `clubId` no es
+lo que está en duda; el problema es al revés. Habría que excluirlo a mano de esos
+cuatro sitios más el carrusel de la landing, los conteos del superadmin y la
+facturación, y al octavo que alguien agregue se cuela en una cifra de negocio.
+
+Se decidió un **entorno aparte**, con su propia base. De paso resuelve algo que
+no existía: un sitio donde probar antes de producción.
+
+`api/prisma/seed-demo.ts` siembra el club. Seis meses de historia a propósito,
+porque un club recién creado tiene las gráficas planas. Azar con semilla fija,
+para que dos corridas den el mismo club y dos pantallazos de días distintos
+cuadren. Se niega a arrancar sin `ENTORNO_DEMO=si` e imprime a qué base apunta
+antes de sembrar; solo borra el club de demostración por su nombre exacto.
+
+**Nota de proceso.** La primera versión se armó tabla por tabla y quedaron
+pantallas vacías que el cliente detectó de una: el staff no tenía ficha en
+Miembros, así que las cifras de Admins y Entrenadores salían en cero, y
+Rendimiento estaba lleno en patinaje y vacío en natación. La segunda pasada se
+hizo **pantalla por pantalla**, que era como había que hacerlo desde el
+principio, y aparecieron el carrusel de comunidad vacío, los cumpleaños que
+podían no caer en la quincena, los seguidores en cero y la caja que se leía como
+una copia de Mensualidades. `docs/ENTORNO-DEMO.md` quedó con la tabla por módulo
+para poder contrastar.
+
+Tres cosas no las puede inventar el script y van a mano: el logo y la portada, las
+fotos de los deportistas y los documentos adjuntos —son archivos de Cloudinary y
+una dirección falsa queda como imagen rota— y el sello de verificado.
+
+Falta montar el entorno en Railway y Vercel. Eso es del cliente.
+
+---
+
 ## Sesión 2026-09-15 — Secretos fuera de sitio, y tres hallazgos de Sentry
 
 **Modelo:** Claude Opus 5

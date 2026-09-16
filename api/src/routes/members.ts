@@ -210,6 +210,36 @@ async function vigenciaDe(memberId: string): Promise<{
   };
 }
 
+/**
+ * GET /members/verificar — ¿este correo o este documento ya están usados?
+ *
+ * La usa el formulario mientras alguien escribe, para avisar en el momento en
+ * vez de al guardar, cuando ya llenó toda la ficha. Devuelve si está ocupado y
+ * nada más: decir de quién es le mostraría a un administrador el dato de otra
+ * persona, y bastaría con probar números para ir sacando nombres.
+ *
+ * Nunca reemplaza la comprobación del guardado. Dos pestañas abiertas pueden
+ * pasar las dos por acá y chocar después; la que manda es la de POST y PATCH.
+ */
+router.get('/verificar', requireAuth, async (req, res) => {
+  if (!req.user) return res.status(401).json({ error: 'No autenticado' });
+  const clubId = req.user.clubId ?? '';
+  if (!clubId) return res.json({ correo: false, documento: false });
+
+  const email = typeof req.query.email === 'string' ? req.query.email : undefined;
+  const docNumber = typeof req.query.docNumber === 'string' ? req.query.docNumber : undefined;
+  const excepto = typeof req.query.excepto === 'string' ? req.query.excepto : undefined;
+
+  const ocupado = await yaExiste({ clubId, email, docNumber, exceptoMemberId: excepto });
+  res.json(ocupado);
+});
+
+// ── Ojo con el orden ──────────────────────────────────────────────────────────
+// Express atiende la PRIMERA ruta que encaja, no la mas especifica. Todo lo que
+// cuelgue de /members con un solo tramo y nombre fijo tiene que ir ARRIBA de
+// `/:id`, o `/:id` se lo come. Le paso a `/verificar`: entraba como si
+// «verificar» fuera el id de alguien, devolvia 404, y el aviso de correo o
+// documento repetido no salia nunca porque el formulario se traga el error.
 // GET /members/:id
 router.get('/:id', requireAuth, async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'No autenticado' });
@@ -304,31 +334,6 @@ router.get('/:id/carnet', requireAuth, async (req, res) => {
       vigencia,
     },
   });
-});
-
-
-/**
- * GET /members/verificar — ¿este correo o este documento ya están usados?
- *
- * La usa el formulario mientras alguien escribe, para avisar en el momento en
- * vez de al guardar, cuando ya llenó toda la ficha. Devuelve si está ocupado y
- * nada más: decir de quién es le mostraría a un administrador el dato de otra
- * persona, y bastaría con probar números para ir sacando nombres.
- *
- * Nunca reemplaza la comprobación del guardado. Dos pestañas abiertas pueden
- * pasar las dos por acá y chocar después; la que manda es la de POST y PATCH.
- */
-router.get('/verificar', requireAuth, async (req, res) => {
-  if (!req.user) return res.status(401).json({ error: 'No autenticado' });
-  const clubId = req.user.clubId ?? '';
-  if (!clubId) return res.json({ correo: false, documento: false });
-
-  const email = typeof req.query.email === 'string' ? req.query.email : undefined;
-  const docNumber = typeof req.query.docNumber === 'string' ? req.query.docNumber : undefined;
-  const excepto = typeof req.query.excepto === 'string' ? req.query.excepto : undefined;
-
-  const ocupado = await yaExiste({ clubId, email, docNumber, exceptoMemberId: excepto });
-  res.json(ocupado);
 });
 
 // POST /members

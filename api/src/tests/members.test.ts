@@ -249,3 +249,43 @@ describe('PATCH /members/me/contact', () => {
     expect(llamada.data).not.toHaveProperty('clerkId');
   });
 });
+
+/**
+ * Express atiende la primera ruta que encaja, no la mas especifica. Con
+ * `/:id` declarada antes, `/members/verificar` entraba por ahi como si
+ * «verificar» fuera el id de alguien, devolvia 404 y el aviso de correo o
+ * documento repetido no salia nunca: el formulario se traga el error y sigue.
+ *
+ * Estas pruebas cuidan el orden. Si alguien vuelve a mover `/verificar`
+ * debajo de `/:id`, la primera falla de una.
+ */
+describe('GET /members/verificar', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    (requireAuth as ReturnType<typeof vi.fn>).mockImplementation(
+      (req: express.Request, _res: express.Response, next: express.NextFunction) => sesionDePrueba(req, next),
+    );
+  });
+
+  it('no la atiende la ruta de :id', async () => {
+    (prisma.member.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue(null);
+
+    const res = await request(app)
+      .get('/members/verificar?email=juan@test.com')
+      .set('Authorization', 'Bearer fake-token');
+
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({ correo: false, documento: false });
+  });
+
+  it('avisa cuando el correo ya esta usado en el club', async () => {
+    (prisma.member.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue({ id: 'member-1' });
+
+    const res = await request(app)
+      .get('/members/verificar?email=juan@test.com')
+      .set('Authorization', 'Bearer fake-token');
+
+    expect(res.status).toBe(200);
+    expect(res.body.correo).toBe(true);
+  });
+});

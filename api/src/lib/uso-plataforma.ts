@@ -20,9 +20,14 @@ import { prisma } from '../db/client';
  * ranking por volumen lo habría dejado arriba pareciendo sano.
  */
 
-/** Doce semanas: un trimestre, que es el ciclo de renovación más largo. */
-const SEMANAS = 12;
-const DIAS_VENTANA = SEMANAS * 7;
+/**
+ * Hasta dónde se cuenta por día y desde dónde por semana.
+ *
+ * Un mes en barras diarias son treinta marcas, que en una franja de cien
+ * píxeles todavía se distinguen. Un año serían trescientas sesenta y cinco y
+ * cada barra mediría menos de un píxel, así que ahí se agrupa por semana.
+ */
+const MAX_DIAS_POR_DIA = 45;
 
 /**
  * Los cortes de aviso, en días sin actividad.
@@ -44,14 +49,20 @@ export interface UsoDeClub {
   activo: boolean;
   /** Deportistas activos. Es el tamaño del club, no una medida de uso. */
   deportistas: number;
-  /** Días distintos con al menos una asistencia tomada, dentro de la ventana. */
+  /** Días distintos con al menos una asistencia tomada, dentro del periodo. */
   diasActivos: number;
   /** Escrituras de negocio en la bitácora: pagos, miembros, resultados, muro. */
   acciones: number;
-  /** Último día con asistencia, en `aaaa-mm-dd`. Null si nunca tomaron. */
+  /**
+   * Último día con asistencia, en `aaaa-mm-dd`. Null si nunca tomaron.
+   *
+   * Se busca SIN el filtro del periodo a proposito. Si alguien mira marzo,
+   * «última vez» tiene que seguir diciendo cuándo entraron de verdad, no
+   * cuándo entraron dentro de marzo, o un club activo hoy parecería muerto.
+   */
   ultimaAsistencia: string | null;
-  /** Doce semanas de días activos, de la más vieja a la más reciente. */
-  semanas: number[];
+  /** El periodo repartido en tramos, del más viejo al más reciente. */
+  barras: number[];
   /** Personas del club que entraron a la app en los últimos siete días. */
   personasActivas: number;
   /** El ingreso más reciente de cualquiera del club, en milisegundos. */
@@ -70,21 +81,15 @@ export interface ResumenDeUso {
     sinArrancar: number;
     acciones: number;
   };
-  /** Días con asistencia por semana, sumando todos los clubes. */
-  serie: { semana: string; dias: number }[];
+  /** Días con asistencia por tramo, sumando todos los clubes. */
+  serie: { fecha: string; dias: number }[];
+  /** `dia` o `semana`, para que la pantalla sepa cómo rotular el eje. */
+  tramo: 'dia' | 'semana';
   /**
    * Si Clerk respondió. Cuando es false las columnas de ingresos vienen en
    * null y la pantalla lo dice, en vez de mostrar ceros que parecen datos.
    */
   ingresosDisponibles: boolean;
-}
-
-/** La medianoche de hace `dias` días, para cortar la ventana. */
-function desdeHace(dias: number): Date {
-  const d = new Date();
-  d.setUTCHours(0, 0, 0, 0);
-  d.setUTCDate(d.getUTCDate() - dias);
-  return d;
 }
 
 function aFecha(d: Date): string {
@@ -139,12 +144,13 @@ async function ingresosPorClub(
   }
 }
 
-export async function usoPorClub(): Promise<ResumenDeUso> {
-  const desde = desdeHace(DIAS_VENTANA);
-  const hoy = new Date();
-  hoy.setUTCHours(0, 0, 0, 0);
+export async function usoPorClub(desde: Date, hasta: Date): Promise<ResumenDeUso> {
+  const largo = diasEntre(desde, hasta) + 1;
+  const tramo: 'dia' | 'semana' = largo <= MAX_DIAS_POR_DIA ? 'dia' : 'semana';
+  const ancho = tramo === 'dia' ? 1 : 7;
+  const nTramos = Math.max(1, Math.ceil(largo / ancho));
 
-  const [clubes, deportistas, asistencias, acciones, staff] = await Promise.all([
+  const [clubes, deportistas, asistencias, ultimas, acciones, staff] = await Promise.all([
     prisma.club.findMany({
       select: { id: true, name: true, active: true },
       orderBy: { name: 'asc' },
@@ -159,12 +165,18 @@ export async function usoPorClub(): Promise<ResumenDeUso> {
     // días distintos en el navegador.
     prisma.attendance.groupBy({
       by: ['clubId', 'date'],
-      where: { date: { gte: desde } },
+      where: { date: { gte: desde, lte: hasta } },
       _count: { _all: true },
+    }),
+    // Esta va SIN el periodo. Es la que responde «última vez», que tiene que
+    // seguir siendo hoy aunque se esté mirando un mes de hace medio año.
+    prisma.attendance.groupBy({
+      by: ['clubId'],
+      _max: { date: true },
     }),
     prisma.auditoria.groupBy({
       by: ['clubId'],
-      where: { createdAt: { gte: desde }, clubId: { not: null } },
+      where: { createdAt: { gte: desde, lte: hasta }, clubId: { not: null } },
       _count: { _all: true },
     }),
     prisma.user.findMany({
@@ -176,9 +188,9 @@ export async function usoPorClub(): Promise<ResumenDeUso> {
   const { porClub: ingresos, ok: ingresosDisponibles } = await ingresosPorClub(staff);
 
   const nDeportistas = new Map(deportistas.map(d => [d.clubId, d._count._all]));
-  const nAcciones = new Map(acciones.map(a => [a.clubId!, a._count._all]));
+  const nAcciones    = new Map(acciones.map(a => [a.clubId!, a._count._all]));
+  const ultimaDe     = new Map(ultimas.map(u => [u.clubId, u._max.date]));
 
-  // Días de asistencia por club, y en qué semana cae cada uno.
   const diasDe = new Map<string, Date[]>();
   for (const a of asistencias) {
     const lista = diasDe.get(a.clubId) ?? [];
@@ -186,24 +198,23 @@ export async function usoPorClub(): Promise<ResumenDeUso> {
     diasDe.set(a.clubId, lista);
   }
 
-  const serieGlobal = new Array<number>(SEMANAS).fill(0);
+  const serieGlobal = new Array<number>(nTramos).fill(0);
 
   const resultado: UsoDeClub[] = clubes.map(c => {
     const dias = (diasDe.get(c.id) ?? []).sort((a, b) => a.getTime() - b.getTime());
-    const semanas = new Array<number>(SEMANAS).fill(0);
+    const barras = new Array<number>(nTramos).fill(0);
 
     for (const d of dias) {
-      // Semana 0 es la más vieja de la ventana, SEMANAS-1 la actual.
-      const i = Math.min(SEMANAS - 1, Math.floor(diasEntre(desde, d) / 7));
-      if (i >= 0) { semanas[i] += 1; serieGlobal[i] += 1; }
+      const i = Math.min(nTramos - 1, Math.floor(diasEntre(desde, d) / ancho));
+      if (i >= 0) { barras[i] += 1; serieGlobal[i] += 1; }
     }
 
-    const ultimaFecha = dias.length ? dias[dias.length - 1] : null;
+    const ultimaFecha = ultimaDe.get(c.id) ?? null;
     const ingreso = ingresos.get(c.id) ?? null;
 
     // La última señal de vida es la más reciente entre tomar asistencia y
     // entrar a la app. Un club puede estar revisando pagos sin entrenar, y eso
-    // sigue siendo uso.
+    // sigue siendo uso. Nunca depende del periodo elegido.
     const marcas: number[] = [];
     if (ultimaFecha) marcas.push(ultimaFecha.getTime());
     if (ingreso?.ultimo) marcas.push(ingreso.ultimo);
@@ -226,7 +237,7 @@ export async function usoPorClub(): Promise<ResumenDeUso> {
       diasActivos: dias.length,
       acciones: nAcciones.get(c.id) ?? 0,
       ultimaAsistencia: ultimaFecha ? aFecha(ultimaFecha) : null,
-      semanas,
+      barras,
       personasActivas: ingreso?.activos ?? 0,
       ultimoIngreso: ingreso?.ultimo ?? null,
       diasSinUsar,
@@ -246,8 +257,8 @@ export async function usoPorClub(): Promise<ResumenDeUso> {
 
   const serie = serieGlobal.map((dias, i) => {
     const ini = new Date(desde);
-    ini.setUTCDate(ini.getUTCDate() + i * 7);
-    return { semana: aFecha(ini), dias };
+    ini.setUTCDate(ini.getUTCDate() + i * ancho);
+    return { fecha: aFecha(ini), dias };
   });
 
   return {
@@ -260,6 +271,7 @@ export async function usoPorClub(): Promise<ResumenDeUso> {
       acciones: resultado.reduce((s, c) => s + c.acciones, 0),
     },
     serie,
+    tramo,
     ingresosDisponibles,
   };
 }

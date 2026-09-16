@@ -1309,9 +1309,26 @@ router.delete('/finanzas/gastos/:id', requireAuth, requireSuperadmin, async (req
 // Sin cache a proposito. Es una pantalla que abre una sola persona, de vez en
 // cuando, y lo que se le pregunta es justo si algo cambio hoy; servirle una
 // copia de hace diez minutos le quitaria el unico valor que tiene.
-router.get('/uso', requireAuth, requireSuperadmin, async (_req, res) => {
-  const resumen = await usoPorClub();
-  res.json(resumen);
+router.get('/uso', requireAuth, requireSuperadmin, async (req, res) => {
+  // Sin rango se responde el mes en curso, que es lo que la pantalla abre por
+  // defecto y lo que se pregunta el noventa por ciento de las veces.
+  const hoy = new Date();
+  const parsed = z.object({
+    desde: z.string().regex(FECHA).optional(),
+    hasta: z.string().regex(FECHA).optional(),
+  }).safeParse(req.query);
+  if (!parsed.success) return res.status(400).json({ error: 'Fechas invalidas' });
+
+  const desde = parsed.data.desde
+    ? new Date(`${parsed.data.desde}T00:00:00.000Z`)
+    : new Date(Date.UTC(hoy.getUTCFullYear(), hoy.getUTCMonth(), 1));
+  const hasta = parsed.data.hasta
+    ? new Date(`${parsed.data.hasta}T00:00:00.000Z`)
+    : new Date(Date.UTC(hoy.getUTCFullYear(), hoy.getUTCMonth() + 1, 0));
+
+  if (hasta < desde) return res.status(400).json({ error: 'La fecha final va despues de la inicial' });
+
+  res.json(await usoPorClub(desde, hasta));
 });
 
 export default router;

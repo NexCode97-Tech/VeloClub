@@ -6,6 +6,8 @@ import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianG
 import { apiFetch } from '@/lib/api-client';
 import { AlertTriangle } from 'lucide-react';
 import ModuleLoader from '@/components/ui/module-loader';
+import { MonthPicker, DateRange } from '@/components/ui/month-picker';
+import { AccionesCabecera } from '@/components/superadmin/acciones-cabecera';
 
 /**
  * Uso de la plataforma, club por club.
@@ -29,7 +31,7 @@ interface UsoDeClub {
   diasActivos: number;
   acciones: number;
   ultimaAsistencia: string | null;
-  semanas: number[];
+  barras: number[];
   personasActivas: number;
   ultimoIngreso: number | null;
   diasSinUsar: number | null;
@@ -39,7 +41,8 @@ interface UsoDeClub {
 interface Resumen {
   clubes: UsoDeClub[];
   totales: { conActividad: number; total: number; enRiesgo: number; sinArrancar: number; acciones: number };
-  serie: { semana: string; dias: number }[];
+  serie: { fecha: string; dias: number }[];
+  tramo: 'dia' | 'semana';
   ingresosDisponibles: boolean;
 }
 
@@ -75,17 +78,20 @@ function haceCuanto(dias: number | null): string {
  * algo medido entre una semana y la siguiente. Las viejas van más claras y las
  * recientes más oscuras, así la dirección se lee sin comparar alturas.
  */
-function Chispa({ semanas, color }: { semanas: number[]; color: string }) {
-  const max = Math.max(...semanas, 1);
-  const an = 104, al = 26, hueco = 2;
-  const ancho = (an - hueco * (semanas.length - 1)) / semanas.length;
+function Chispa({ barras, color, tramo }: { barras: number[]; color: string; tramo: 'dia' | 'semana' }) {
+  const max = Math.max(...barras, 1);
+  const an = 104, al = 26;
+  // Con treinta barras el hueco de 2 se come la mitad del ancho, asi que se
+  // encoge cuando hay muchas.
+  const hueco = barras.length > 16 ? 1 : 2;
+  const ancho = (an - hueco * (barras.length - 1)) / barras.length;
 
   return (
     <svg viewBox={`0 0 ${an} ${al}`} className="block w-[104px] h-[26px]"
-      role="img" aria-label="Doce semanas de actividad">
-      {semanas.map((v, i) => {
+      role="img" aria-label={`Actividad por ${tramo} en el periodo`}>
+      {barras.map((v, i) => {
         const h = v === 0 ? 1.5 : Math.max(2.5, (v / max) * (al - 3));
-        const op = v === 0 ? 0.18 : 0.35 + 0.65 * (i / (semanas.length - 1));
+        const op = v === 0 ? 0.18 : 0.35 + 0.65 * (i / Math.max(1, barras.length - 1));
         return (
           <rect key={i} x={i * (ancho + hueco)} y={al - h} width={ancho} height={h}
             rx={1.5} fill={color} opacity={op} />
@@ -109,17 +115,35 @@ function Ficha({ rotulo, cifra, pie, alerta }: {
   );
 }
 
+/** `aaaa-mm-dd` en hora local, sin pasar por UTC, que correria un dia. */
+function aISO(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
 export default function UsoPage() {
   const { session } = useSession();
-  const [datos, setDatos]     = useState<Resumen | null>(null);
+  const [datos, setDatos]       = useState<Resumen | null>(null);
   const [cargando, setCargando] = useState(true);
-  const [error, setError]     = useState('');
+  const [error, setError]       = useState('');
 
-  const cargar = useCallback(async () => {
+  // El mes en curso es lo que se abre por defecto: es lo que se pregunta casi
+  // siempre, y pedir doce semanas de arranque hacia ver mas ruido que señal.
+  const ahora   = new Date();
+  const mesHoy  = `${ahora.getFullYear()}-${String(ahora.getMonth() + 1).padStart(2, '0')}`;
+  const [mes, setMes]     = useState<string | null>(null);
+  const [rango, setRango] = useState<DateRange | null>(null);
+
+  const mesActivo = mes ?? mesHoy;
+  const [anio, numeroMes] = mesActivo.split('-').map(Number);
+  // Sin rango marcado dentro del mes, el periodo es el mes completo.
+  const desde = rango ? aISO(rango.start) : aISO(new Date(anio, numeroMes - 1, 1));
+  const hasta = rango ? aISO(rango.end)   : aISO(new Date(anio, numeroMes, 0));
+
+  const cargar = useCallback(async (d: string, h: string) => {
     try {
       setCargando(true);
       const token = await session?.getToken();
-      setDatos(await apiFetch<Resumen>('/superadmin/uso', { token }));
+      setDatos(await apiFetch<Resumen>(`/superadmin/uso?desde=${d}&hasta=${h}`, { token }));
       setError('');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'No pudimos cargar el uso');
@@ -128,7 +152,7 @@ export default function UsoPage() {
     }
   }, [session]);
 
-  useEffect(() => { if (session) void cargar(); }, [session, cargar]);
+  useEffect(() => { if (session) void cargar(desde, hasta); }, [session, cargar, desde, hasta]);
 
   if (cargando) return <div className="px-5 pt-4 pb-8"><ModuleLoader /></div>;
 
@@ -139,7 +163,7 @@ export default function UsoPage() {
           style={{ background: 'rgba(198,47,80,0.04)', border: '1px solid rgba(198,47,80,0.14)' }}>
           <AlertTriangle className="w-6 h-6 mb-2" style={{ color: '#C62F50' }} />
           <p className="text-sm text-[#1A1028]">{error || 'No pudimos cargar el uso'}</p>
-          <button onClick={() => void cargar()}
+          <button onClick={() => void cargar(desde, hasta)}
             className="mt-3 text-[12.5px] font-semibold px-4 py-2 rounded-xl text-white"
             style={{ background: '#381DA0' }}>Reintentar</button>
         </div>
@@ -148,15 +172,21 @@ export default function UsoPage() {
   }
 
   const { clubes, totales, serie, ingresosDisponibles } = datos;
-  const serieGrafica = serie.map(s => ({ semana: fechaCorta(s.semana), dias: s.dias }));
+  const serieGrafica = serie.map(s => ({ semana: fechaCorta(s.fecha), dias: s.dias }));
 
   return (
     <div className="px-5 pt-4 pb-8 max-w-5xl mx-auto w-full flex flex-col gap-4">
 
-      <p className="text-[12.5px] text-[#8E87A8] leading-relaxed max-w-2xl">
-        Qué tanto abre cada club la plataforma. Sirve para ver quién se está enfriando antes
-        de que llegue la renovación, y quién nunca llegó a arrancar.
-      </p>
+      {/* El selector vive en la fila del titulo, que la pinta el layout. */}
+      <AccionesCabecera>
+        <MonthPicker
+          value={mes}
+          currentMonth={mesHoy}
+          dateRange={rango}
+          onChange={(m, r) => { setMes(m); setRango(r); }}
+          alignRight
+        />
+      </AccionesCabecera>
 
       {!ingresosDisponibles && (
         <div className="rounded-xl px-3.5 py-2.5 text-[12px] leading-relaxed flex gap-2"
@@ -250,7 +280,7 @@ export default function UsoPage() {
                     <td className="px-3.5 py-3 text-[13px] text-right tabular-nums text-[#1A1028]"
                       style={{ borderBottom: '1px solid rgba(120,80,200,0.06)' }}>{c.diasActivos}</td>
                     <td className="px-3.5 py-3" style={{ borderBottom: '1px solid rgba(120,80,200,0.06)' }}>
-                      <Chispa semanas={c.semanas} color={e.color} />
+                      <Chispa barras={c.barras} color={e.color} tramo={datos.tramo} />
                     </td>
                     <td className="px-3.5 py-3 text-[12.5px] text-[#8E87A8] whitespace-nowrap"
                       style={{ borderBottom: '1px solid rgba(120,80,200,0.06)' }}>{haceCuanto(c.diasSinUsar)}</td>
@@ -268,28 +298,6 @@ export default function UsoPage() {
             </tbody>
           </table>
         </div>
-      </div>
-
-      {/* ── De dónde sale cada número ───────────────────────────────────── */}
-      <div className="bg-white rounded-2xl px-4 py-4" style={{ border: '1px solid rgba(120,80,200,0.10)' }}>
-        <h2 className="text-[14px] font-semibold text-[#1A1028] mb-2.5">De dónde sale cada número</h2>
-        <dl className="grid gap-3 text-[12px] leading-relaxed">
-          <div>
-            <dt className="font-semibold text-[#1A1028]">Días activos</dt>
-            <dd className="text-[#8E87A8]">Días distintos con al menos una asistencia tomada. Es la señal
-            más honesta: tomar asistencia es lo que un club hace si de verdad está usando la app.</dd>
-          </div>
-          <div>
-            <dt className="font-semibold text-[#1A1028]">Acciones</dt>
-            <dd className="text-[#8E87A8]">Pagos, deportistas, resultados y publicaciones registrados.
-            Cubre lo que pasa fuera del entrenamiento.</dd>
-          </div>
-          <div>
-            <dt className="font-semibold text-[#1A1028]">Estado</dt>
-            <dd className="text-[#8E87A8]">Sale de la última señal de vida, sea asistencia o ingreso a la
-            app, y nunca del volumen. Activo hasta 7 días, enfriándose entre 7 y 14, inactivo pasados 14.</dd>
-          </div>
-        </dl>
       </div>
 
     </div>

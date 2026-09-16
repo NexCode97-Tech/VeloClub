@@ -185,6 +185,9 @@ async function main(): Promise<void> {
       name: 'Carolina Estrada Ruiz',
       role: 'ADMIN',
       profileComplete: true,
+      // La biografía sale en Mi perfil y en el perfil público. Vacía deja esa
+      // pantalla con un hueco justo debajo del nombre.
+      bio: 'Directora del club. Formación deportiva desde 2014.',
       termsAcceptedAt: dia(anioActual, mesActual, 1),
       clubId: club.id,
       // En null cruza las dos carpetas, que es lo que le toca al dueño.
@@ -201,6 +204,7 @@ async function main(): Promise<void> {
         name: 'Andrés Cardona Vélez',
         role: 'ENTRENADOR',
         profileComplete: true,
+        bio: 'Entrenador de la categoría competencia.',
         clubId: club.id,
         deporteId: patinaje.id,
       },
@@ -210,6 +214,7 @@ async function main(): Promise<void> {
         name: 'Paola Rincón Gómez',
         role: 'ENTRENADOR',
         profileComplete: true,
+        bio: 'Entrenadora de natación. Técnica y fondo.',
         clubId: club.id,
         deporteId: natacion.id,
       },
@@ -368,6 +373,35 @@ async function main(): Promise<void> {
   const enPatinaje = await sembrarDeportistas(patinaje.id, [pistaNorte, pistaCentro], 38, 95000, 1);
   const enNatacion = await sembrarDeportistas(natacion.id, [piscina], 16, 110000, 100);
   const todos = [...enPatinaje, ...enNatacion];
+
+  // La ficha de cumpleaños de Inicio mira los próximos 30 días. Con fechas al
+  // azar puede quedar vacía justo el día del pantallazo, así que a tres se les
+  // corre el cumpleaños a la semana que viene. El año de nacimiento no se toca:
+  // la edad y la categoría siguen cuadrando.
+  for (let i = 0; i < 3; i++) {
+    const quien = enPatinaje[i * 5];
+    const ficha = await prisma.member.findUnique({ where: { id: quien.id }, select: { birthDate: true } });
+    const anioNacimiento = ficha?.birthDate?.getUTCFullYear() ?? anioActual - 12;
+    const proximo = new Date(Date.now() + (i * 4 + 2) * 24 * 3600 * 1000);
+    await prisma.member.update({
+      where: { id: quien.id },
+      data: { birthDate: dia(anioNacimiento, proximo.getUTCMonth() + 1, proximo.getUTCDate()) },
+    });
+  }
+
+  // Un deportista con cuenta de verdad, para poder mostrar la otra mitad de la
+  // plataforma: Mi carnet, Mis pagos y su propio Rendimiento. Sin el clerkId de
+  // una cuenta real de Clerk no se puede entrar como deportista.
+  if (process.env.DEMO_DEPORTISTA_CLERK_ID) {
+    await prisma.member.update({
+      where: { id: enPatinaje[0].id },
+      data: {
+        clerkId: process.env.DEMO_DEPORTISTA_CLERK_ID,
+        email: process.env.DEMO_DEPORTISTA_EMAIL ?? undefined,
+        inviteStatus: 'ACCEPTED',
+      },
+    });
+  }
   console.log(`Deportistas: ${enPatinaje.length} en patinaje, ${enNatacion.length} en natación.`);
 
   // ── El staff, también en Miembros ─────────────────────────────────────────
@@ -571,6 +605,34 @@ async function main(): Promise<void> {
       } else {
         pendientes++;
       }
+    }
+
+    // Otros ingresos: no todo lo que entra a la caja de un club es mensualidad.
+    // Sin esto, Flujo de caja se lee como una copia de Mensualidades.
+    for (const [descripcion, monto] of [
+      ['Venta de uniformes', entre(180, 620) * 1000],
+      ['Inscripciones nuevas', entre(2, 6) * 60000],
+    ] as [string, number][]) {
+      await prisma.cashEntry.create({
+        data: {
+          clubId: club.id, deporteId: patinaje.id, type: 'INCOME',
+          amount: monto, description: descripcion,
+          locationId: pistaNorte.id, date: dia(anio, mes, entre(4, 24)),
+        },
+      });
+    }
+
+    // Una devolución de vez en cuando. Es un tipo de movimiento que existe en
+    // el producto y que nunca se vería si la caja solo tuviera entradas y
+    // salidas.
+    if (atras === 2) {
+      await prisma.cashEntry.create({
+        data: {
+          clubId: club.id, deporteId: patinaje.id, type: 'REFUND',
+          amount: 95000, description: 'Devolución de mensualidad por retiro',
+          locationId: pistaCentro.id, date: dia(anio, mes, 18),
+        },
+      });
     }
 
     // Gastos del mes. Sin ellos la caja solo sube y el balance no dice nada.
@@ -823,8 +885,13 @@ async function main(): Promise<void> {
   });
 
   // ── Publicaciones ─────────────────────────────────────────────────────────
-  // Privadas del club, no públicas: el muro público cruza clubes, y un club de
-  // demostración no tiene por qué aparecerle a nadie más.
+  // Van las dos clases. Las privadas son del club y salen en Club; las públicas
+  // salen en el carrusel de comunidad de Inicio, que sin ellas queda vacío.
+  //
+  // El muro público cruza clubes, y por eso esto SOLO es aceptable en el
+  // entorno de demostración, que tiene su propia base y ningún club real
+  // adentro. En producción un club de demostración le aparecería a todo el
+  // mundo en su feed.
   const PUBLICACIONES: [string, number, string | null][] = [
     ['Felicitaciones al grupo de competencia por los resultados de la válida departamental. Nos llevamos cuatro podios.', 4, 'Patinódromo de Floridablanca'],
     ['Recordatorio: el sábado el entrenamiento arranca a las 7:00 en el Patinódromo Norte. Llevar hidratación.', 1, null],
@@ -876,6 +943,41 @@ async function main(): Promise<void> {
       })),
     });
   }
+
+  // ── Publicaciones públicas ────────────────────────────────────────────────
+  // Las que salen en el carrusel de comunidad de Inicio.
+  const PUBLICAS: [string, number][] = [
+    ['Cerramos la válida departamental con cuatro podios. Orgullosos del trabajo de todo el semestre.', 3],
+    ['Abiertas las inscripciones para la escuela de formación. Niñas y niños desde los 3 años.', 7],
+  ];
+  for (const [contenido, diasAtras] of PUBLICAS) {
+    const post = await prisma.post.create({
+      data: {
+        clubId: club.id, deporteId: patinaje.id, clubName: club.name, scope: 'PUBLIC',
+        authorClerkId: admin.clerkId, authorName: admin.name, authorRole: 'ADMIN',
+        content: contenido, ubicacion: `${CIUDAD}, ${DEPARTAMENTO}`,
+        createdAt: new Date(Date.now() - diasAtras * 24 * 3600 * 1000),
+      },
+      select: { id: true },
+    });
+    const reaccionan = [...enPatinaje].sort(() => azar() - 0.5).slice(0, entre(8, 20));
+    await prisma.postLike.createMany({
+      data: reaccionan.map(m => ({ postId: post.id, userId: `demo_like_pub_${m.id}` })),
+      skipDuplicates: true,
+    });
+  }
+
+  // ── Seguidores del club ───────────────────────────────────────────────────
+  // El perfil del club muestra el conteo. En cero se lee como un club que nadie
+  // sigue, que es lo contrario de lo que se quiere mostrar.
+  await prisma.follow.createMany({
+    data: todos.slice(0, 34).map(m => ({
+      followerClerkId: `demo_seguidor_${m.id}`,
+      followingClerkId: `club:${club.id}`,
+      createdAt: new Date(Date.now() - entre(1, 200) * 24 * 3600 * 1000),
+    })),
+    skipDuplicates: true,
+  });
 
   // ── Notificaciones del administrador ──────────────────────────────────────
   // La campana vacía es lo primero que se ve en Inicio. Van dirigidas al

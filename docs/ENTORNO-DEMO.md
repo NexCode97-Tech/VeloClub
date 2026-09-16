@@ -86,57 +86,61 @@ nadie inicia sesión con él.
 
 ---
 
-## Qué siembra
+## Qué siembra, módulo por módulo
 
 Un club llamado **Club Deportivo Aurora**, en Bucaramanga, inventado de pies a
-cabeza. Nombre, logo y datos no se parecen a ningún club real a propósito: las
-piezas salen publicadas y nadie autorizó que su nombre apareciera ahí.
+cabeza. Nombre y datos no se parecen a ningún club real a propósito: las piezas
+salen publicadas y nadie autorizó que su nombre apareciera ahí.
 
-- **Dos deportes**, patinaje y natación, para poder mostrar que un club maneja
-  varias disciplinas sin que se le mezclen los datos.
-- **Tres sedes** y un horario semanal de ocho clases.
-- **54 deportistas**, unos pocos en pausa, con categorías y niveles del catálogo
-  real, datos de salud y acudiente.
-- **Los tres roles.** Dos administradores y tres entrenadores tienen ficha en
-  Miembros además de su cuenta de acceso. Sin esas fichas las cifras de Admins y
-  Entrenadores que van arriba de la lista salen en cero. El staff no lleva cuota
-  ni día de corte: ponérsela lo metería en las cuentas de Finanzas como si fuera
-  un deportista.
-- **Dos bandejas con algo adentro**, que vacías no se pueden mostrar y son de
-  las que mejor explican el producto: tres inscripciones esperando revisión, y
-  un deportista que ya estaba y cuya familia mandó una corrección de datos por
-  el enlace.
-- **Seis meses de asistencia**, solo en los días que el horario dicta y solo
-  desde que cada quien entró al club.
-- **Seis meses de mensualidades y caja**, con el mes en curso a medias, que es
-  lo normal a mitad de mes y lo que le da algo que mostrar a Finanzas.
-- **Rendimiento lleno en las dos carpetas.** Patinaje tiene tres competencias y
-  natación dos, cada una con sus pruebas, sus podios y la marca en la
-  observación. Seis entrenamientos por deporte, alternando pista y gimnasio para
-  que se vean los dos formularios y no siempre el mismo.
-- **Calendario** con un evento recurrente, no solo sueltos.
-- **Suscripción al día** con seis cobros de historial.
-- **Tres publicaciones** con sus «me gusta» y comentarios, y tres notificaciones
-  para la campana de Inicio.
+La lista está por módulo y no por tabla, porque lo que importa es que **ninguna
+pantalla quede vacía**. Una pantalla vacía en un pantallazo no vende nada.
+
+| Módulo | Qué tiene |
+|---|---|
+| **Inicio** | Las tres cifras del resumen, próximos eventos, tres cumpleaños dentro de la quincena, avisos de mensualidades por cobrar, dos publicaciones en el carrusel de comunidad y tres notificaciones en la campana |
+| **Miembros** | 54 deportistas y 5 fichas de staff, dos administradores y tres entrenadores, para que las cuatro cifras de arriba tengan número. Tres inscripciones esperando y una corrección de datos en la bandeja |
+| **Asistencia** | Seis meses, solo en los días que el horario dicta y solo desde que cada quien entró al club |
+| **Finanzas** | Seis meses de mensualidades con el mes en curso a medias, y una caja con mensualidades, venta de uniformes, inscripciones, una devolución y cinco gastos mensuales |
+| **Rendimiento** | Tres competencias en patinaje y dos en natación, con pruebas, podios y la marca en la observación. Seis entrenamientos por deporte, alternando pista y gimnasio |
+| **Calendario** | Competencias, una reunión, una toma de tiempos y un entrenamiento recurrente los lunes y miércoles |
+| **Analíticas** | Sale de lo anterior. Con seis meses de historia las gráficas tienen curva en vez de una línea plana |
+| **Sedes** | Tres, con dirección y coordenadas |
+| **Club** | Descripción, contacto, fecha de fundación, tres publicaciones internas con «me gusta» y comentarios, y 34 seguidores |
+| **Ajustes** | Horario semanal de ocho clases, dos deportes con su enlace de inscripción, colores del club, y la suscripción al día con seis cobros de historial |
+| **Mi perfil** | Biografía y datos del administrador y de los entrenadores |
+| **Carnet y Mis pagos** | Salen de la ficha del deportista y de sus mensualidades, así que quedan llenos solos |
 
 Dos decisiones que conviene conocer:
 
 - **Los datos son los mismos en cada corrida.** El azar va con semilla fija, así
   que dos pantallazos de la misma pantalla tomados en días distintos cuadran
   entre ellos. Si se quiere otro club, se cambia la semilla.
-- **Las publicaciones nacen privadas**, no públicas. El muro público cruza
-  clubes y un club de demostración no tiene por qué aparecerle a nadie.
+- **Hay publicaciones públicas.** El muro público cruza clubes, así que esto
+  **solo** es aceptable acá, donde la base es propia y no hay ningún club real
+  adentro. En producción ese club le aparecería a todo el mundo en su feed.
+
+## Para ver la mitad del deportista
+
+La plataforma tiene dos caras y la del deportista también se muestra: Mi carnet,
+Mis pagos y su propio rendimiento. Para entrar como deportista hace falta una
+cuenta de Clerk amarrada a una ficha:
+
+```bash
+DEMO_ADMIN_CLERK_ID=user_xxx DEMO_ADMIN_EMAIL=tucorreo@ejemplo.com DEMO_DEPORTISTA_CLERK_ID=user_yyy DEMO_DEPORTISTA_EMAIL=otro@ejemplo.com ENTORNO_DEMO=si npm run seed:demo
+```
 
 ## Lo que queda por fuera y se pone a mano
 
-- **El logo del club**, que se sube desde Ajustes.
+Son las tres cosas que el script no puede inventar.
+
+- **El logo y la portada del club**, que se suben desde Ajustes y desde Club.
+- **Las fotos de los deportistas y los documentos adjuntos.** Son archivos de
+  Cloudinary y una dirección inventada queda como imagen rota. Los deportistas
+  se ven con sus iniciales sobre el color del rol, que además evita ponerle cara
+  a personas que no existen.
 - **El sello de verificado.** El club nace sin él, así que no aparece en el
   carrusel de la landing aunque por error compartiera base con producción. Se
   activa desde Superadmin cuando una pieza lo necesite.
-- **Las fotos de los deportistas y los documentos adjuntos.** Son archivos de
-  Cloudinary y no se pueden inventar desde el script: una dirección falsa queda
-  como imagen rota. Los deportistas se ven con sus iniciales sobre el color del
-  rol, que además evita ponerle cara a personas que no existen.
 
 ## Volver a empezar
 

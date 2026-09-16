@@ -207,6 +207,38 @@ tres intentos seguidos. Cada módulo es ahora una ruta de primer nivel:
 39 archivos, incluidos los enlaces que la API mete en las notificaciones. Los 85
 tests de la API pasan.
 
+### La barra de estado se queda morada, y se cierra el tema
+
+La prueba que sacó la conclusión fue pintar esa franja de rojo y mirarla en el
+teléfono. Lo que se vio: la cortina de carga muestra el rojo detrás, **la barra
+de estado se queda morada** durante toda la carga, y al caer en Inicio sigue
+morada medio segundo y se pasa a gris.
+
+O sea el color sí llega. Lo que no se puede es cambiarlo después: en iPhone la
+barra se pinta con el color de arranque del documento y no vuelve a leerlo
+cuando cambia la pantalla. Quitar la declaración de gris que competía con la de
+Inicio tampoco lo resolvió.
+
+Decisión del cliente, y es la correcta: **morada en toda la plataforma**. Un
+color fijo se ve mejor que uno que brinca a los milisegundos de abrir, y es el
+mismo `theme_color` del manifiesto, así que la app instalada arranca con él.
+
+Se deshizo todo lo que se había montado para perseguirlo:
+
+- Fuera `ColorBarraEstado`. El `themeColor` queda declarado una sola vez, en el
+  `viewport` del layout raíz.
+- Fuera `viewport-fit=cover`, la franja del área segura y el `--vc-barra`. La
+  barra inferior vuelve a su separación de siempre.
+- El envoltorio de servidor del panel sobraba sin el `viewport`, así que
+  `panel.tsx` volvió a ser el `layout.tsx` del grupo de rutas.
+
+**Y había un daño colateral que el cliente detectó:** ese fondo morado que se le
+puso al armazón quedaba justo detrás de la cortina de carga, que también es
+morada. El deslizamiento de salida era morado sobre morado y no se veía. Al
+quitar la franja, la cortina vuelve a correrse sobre el contenido real.
+
+Lo que sí se queda de estos seis intentos son las direcciones sin `/dashboard`.
+
 ---
 
 ## Sesión 2026-09-15 — Secretos fuera de sitio, y tres hallazgos de Sentry

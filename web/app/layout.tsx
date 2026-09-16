@@ -4,7 +4,6 @@ import { GeistMono } from "geist/font/mono";
 import { ClerkProvider } from "@clerk/nextjs";
 import { esES } from "@clerk/localizations";
 import { Providers } from "./providers";
-import { ColorBarraEstado } from "@/components/ui/color-barra-estado";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
@@ -14,12 +13,15 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
-  // Aquí NO va themeColor. Lo escribe ColorBarraEstado y nadie más.
+  // La barra de estado va morada en toda la plataforma, y es el mismo morado
+  // del `theme_color` del manifiesto, así que la app instalada arranca con él
+  // y no cambia después.
   //
-  // Estaba declarado en los dos sitios, y Next reescribe las etiquetas del
-  // `viewport` cuando cambia de ruta: eso pisaba el color que el componente
-  // acababa de poner, y la barra de estado se quedaba en el valor de arranque
-  // en vez del de la pantalla. Una etiqueta, una sola mano encima.
+  // Se intentó que siguiera a cada pantalla, gris en los módulos y morada en
+  // Inicio. No se logró: en iPhone la barra se pinta con el color de arranque
+  // del documento y no vuelve a leerlo cuando la pantalla cambia. Un color
+  // fijo se ve mejor que uno que brinca a los milisegundos de abrir.
+  themeColor: '#381DA0',
 };
 
 const SITE_URL = "https://www.veloclubtech.com";
@@ -65,7 +67,6 @@ export default function RootLayout({
           <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
         </head>
         <body className="min-h-full flex flex-col">
-          <ColorBarraEstado />
           <Providers>{children}</Providers>
           <Analytics />
           <SpeedInsights />

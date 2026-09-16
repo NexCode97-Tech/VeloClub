@@ -4,13 +4,29 @@ import { useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 
 // Color de la barra de estado según la pantalla. La clave es el inicio de la
-// ruta; gana la coincidencia más larga, así /dashboard exacto puede ser violeta
+// ruta; gana la coincidencia más larga, así /inicio exacto puede ser violeta
 // mientras el resto del panel queda gris claro.
+//
+// Los módulos ya no cuelgan de /dashboard: cada uno es una ruta de primer
+// nivel. Por eso la lista los nombra uno por uno en vez de un solo prefijo.
 const COLOR_POR_RUTA: Array<{ ruta: string; color: string; exacta?: boolean }> = [
   // Inicio: el encabezado es #381DA0 sólido, así que la barra lleva el mismo
   // color y las dos se leen como una sola pieza.
-  { ruta: '/dashboard', color: '#381DA0', exacta: true },
-  { ruta: '/dashboard', color: '#F7F7FB' },
+  { ruta: '/inicio', color: '#381DA0', exacta: true },
+  { ruta: '/inicio', color: '#F7F7FB' },
+  { ruta: '/ajustes', color: '#F7F7FB' },
+  { ruta: '/asistencia', color: '#F7F7FB' },
+  { ruta: '/calendario', color: '#F7F7FB' },
+  { ruta: '/carnet', color: '#F7F7FB' },
+  { ruta: '/club', color: '#F7F7FB' },
+  { ruta: '/finanzas', color: '#F7F7FB' },
+  { ruta: '/logros', color: '#F7F7FB' },
+  { ruta: '/mas', color: '#F7F7FB' },
+  { ruta: '/miembros', color: '#F7F7FB' },
+  { ruta: '/pagos', color: '#F7F7FB' },
+  { ruta: '/perfil', color: '#F7F7FB' },
+  { ruta: '/reportes', color: '#F7F7FB' },
+  { ruta: '/sedes', color: '#F7F7FB' },
   { ruta: '/superadmin', color: '#F7F7FB' },
   { ruta: '/sign-in', color: '#F7F7FB' },
   { ruta: '/sign-up', color: '#F7F7FB' },
@@ -47,7 +63,7 @@ function colorPara(pathname: string): string {
  * la barra de estado.
  *
  * En iPhone esa franja no se le pide al navegador, se dibuja. El panel declara
- * `viewport-fit=cover` en su propio `viewport` (`app/dashboard/layout.tsx`),
+ * `viewport-fit=cover` en su propio `viewport` (`app/(panel)/layout.tsx`),
  * con lo que la pagina llega hasta el borde de arriba del telefono, y le
  * reserva el alto del area segura. Ese ajuste va en el HTML que llega del
  * servidor y no se puede encender despues desde JavaScript: Safari lo lee una

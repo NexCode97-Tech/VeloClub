@@ -400,7 +400,7 @@ router.post('/', requireAuth, async (req, res) => {
     tipo: 'NEW_MEMBER',
     titulo: 'Nuevo miembro',
     cuerpo: `${member.fullName} fue agregado al club.`,
-    link: '/dashboard/miembros',
+    link: '/miembros',
   }, req.auth?.clerkId);
   res.status(201).json({ member });
 });

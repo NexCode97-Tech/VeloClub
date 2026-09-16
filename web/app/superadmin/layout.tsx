@@ -384,7 +384,7 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
         if (stale) return;
         const res = await apiFetch<{ status: string }>('/me', { token });
         if (stale) return;
-        if (res.status !== 'superadmin') { router.replace('/dashboard'); return; }
+        if (res.status !== 'superadmin') { router.replace('/inicio'); return; }
         // Sostener la pantalla de carga su tiempo mínimo antes de la cortina
         await esperarPantallaCarga(mountedAtRef.current);
         if (stale) return;
@@ -394,7 +394,7 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
         console.error('Superadmin auth check failed:', err);
         // Falla cerrado: si no se pudo confirmar el rol, no se muestra el panel.
         // Antes cualquier error de red bastaba para renderizarlo.
-        router.replace('/dashboard');
+        router.replace('/inicio');
       }
     })();
 

@@ -354,7 +354,7 @@ export function PostCard({
       <div key={c.id} className="flex items-start gap-2.5 md:gap-2">
         <button
           type="button"
-          onClick={() => c.authorClerkId && router.push(`/dashboard/perfil/${c.authorClerkId}`)}
+          onClick={() => c.authorClerkId && router.push(`/perfil/${c.authorClerkId}`)}
           className={c.authorClerkId ? 'cursor-pointer shrink-0' : 'cursor-default shrink-0'}
         >
           <Avatar src={c.authorAvatar} name={c.authorName} size={tam} role={c.authorRole} />
@@ -546,7 +546,7 @@ export function PostCard({
           <div className="flex items-center gap-3 min-w-0">
             <button
               type="button"
-              onClick={() => post.authorClerkId && router.push(`/dashboard/perfil/${post.authorClerkId}`)}
+              onClick={() => post.authorClerkId && router.push(`/perfil/${post.authorClerkId}`)}
               className={post.authorClerkId ? 'cursor-pointer shrink-0' : 'cursor-default shrink-0'}
             >
               <Avatar src={post.authorAvatar} name={post.authorName} size={42} role={post.authorRole} />
@@ -555,7 +555,7 @@ export function PostCard({
               <div className="flex items-center gap-2 flex-wrap">
                 <p
                   className={`text-[14px] md:text-[13px] font-semibold text-foreground leading-tight ${post.authorClerkId ? 'cursor-pointer hover:underline' : ''}`}
-                  onClick={() => post.authorClerkId && router.push(`/dashboard/perfil/${post.authorClerkId}`)}
+                  onClick={() => post.authorClerkId && router.push(`/perfil/${post.authorClerkId}`)}
                 >{post.authorName || 'Usuario'}</p>
                 <span className="text-[11px] md:text-[10px] font-semibold px-2.5 md:px-2 py-0.5 rounded-full shrink-0"
                   style={{
@@ -790,7 +790,7 @@ export function PostCard({
                 La condicion va DENTRO de AnimatePresence: envolviendo al portal,
                 al cerrar se desmontaba todo de golpe y la animacion de salida
                 competia con el borrado de React sobre los mismos nodos, que es lo
-                que produce el "removeChild" repetido en /dashboard. Los hijos
+                que produce el "removeChild" repetido en /inicio. Los hijos
                 ademas necesitan key propia; un fragmento sin claves impide que
                 AnimatePresence los siga. */}
             {typeof document !== 'undefined' && createPortal(

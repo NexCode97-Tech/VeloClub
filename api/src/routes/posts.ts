@@ -337,7 +337,7 @@ router.post('/:id/comments', comunidadLimiter, requireAuth, async (req, res) => 
       tipo:   parentId ? 'COMMENT_REPLY' : 'POST_COMMENT',
       titulo: parentId ? 'Respondieron tu comentario' : 'Comentaron tu publicación',
       cuerpo: `${comment.authorName}: ${recorte}`,
-      link:   post.scope === 'PUBLIC' ? '/dashboard' : '/dashboard/club',
+      link:   post.scope === 'PUBLIC' ? '/inicio' : '/club',
     });
   }
 

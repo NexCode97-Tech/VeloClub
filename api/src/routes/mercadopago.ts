@@ -400,7 +400,7 @@ router.post('/pagar', paymentLimiter, requireAuth, async (req, res) => {
         },
       },
       transaction_details: { financial_institution: bancoId },
-      callback_url: `${process.env.WEB_ORIGIN}/dashboard/ajustes?tab=suscripcion`,
+      callback_url: `${process.env.WEB_ORIGIN}/ajustes?tab=suscripcion`,
       additional_info: { ip_address: req.ip ?? '127.0.0.1' },
     };
   } else {
@@ -658,7 +658,7 @@ router.post('/checkout', paymentLimiter, requireAuth, async (req, res) => {
       amount: monto,
       description: `Suscripción VeloClub — ${club?.name ?? 'Club'}`,
       payerEmail,
-      backUrl: `${process.env.WEB_ORIGIN}/dashboard/ajustes`,
+      backUrl: `${process.env.WEB_ORIGIN}/ajustes`,
     });
     res.json({ initPoint: pref.init_point });
   } catch (err) {
@@ -704,7 +704,7 @@ router.post('/subscribe', paymentLimiter, requireAuth, async (req, res) => {
       cardTokenId,
       frequency: meses,
       frequencyType: 'months',
-      backUrl: `${process.env.WEB_ORIGIN}/dashboard/ajustes`,
+      backUrl: `${process.env.WEB_ORIGIN}/ajustes`,
     });
 
     await prisma.clubSuscripcion.update({
@@ -840,7 +840,7 @@ router.post('/cancelar', requireAuth, async (req, res) => {
     cuerpo: reembolsado
       ? 'Cancelaste tu suscripción antes de que terminara tu período de prueba gratis. Se reembolsó el pago completo a tu tarjeta.'
       : `Cancelaste tu suscripción. Tu club sigue activo ${vig.diasRestantes} día${vig.diasRestantes !== 1 ? 's' : ''} más y no se harán nuevos cobros. Puedes reactivar cuando quieras.`,
-    link: '/dashboard/ajustes?tab=suscripcion',
+    link: '/ajustes?tab=suscripcion',
   });
 
   res.json({ ok: true, diasRestantes: reembolsado ? 0 : vig.diasRestantes, reembolsado });
@@ -915,7 +915,7 @@ router.post('/webhook', async (req, res) => {
           tipo: 'PAGO_VENCIDO',
           titulo: 'No pudimos cobrar tu renovación automática',
           cuerpo: `Mercado Pago va a reintentar el cobro. Verifica que tu tarjeta tenga fondos o actualízala desde Ajustes (intento ${intentos}).`,
-          link: '/dashboard/ajustes',
+          link: '/ajustes',
         });
         return;
       }
@@ -929,7 +929,7 @@ router.post('/webhook', async (req, res) => {
         tipo: 'PAGO_VENCIDO',
         titulo: 'Renovación automática desactivada',
         cuerpo: 'Mercado Pago canceló la renovación automática de tu suscripción tras varios intentos fallidos. Actívala de nuevo o paga manualmente desde Ajustes.',
-        link: '/dashboard/ajustes',
+        link: '/ajustes',
       });
       return;
     }
@@ -978,7 +978,7 @@ router.post('/webhook', async (req, res) => {
       tipo: 'PAGO_REGISTRADO',
       titulo: 'Suscripción pagada',
       cuerpo: `Se registró el pago de tu suscripción a VeloClub por ${new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(pago.transaction_amount)}.`,
-      link: '/dashboard/ajustes',
+      link: '/ajustes',
     });
   } catch (err) {
     console.error('[mercadopago/webhook]', err instanceof Error ? err.message : err);

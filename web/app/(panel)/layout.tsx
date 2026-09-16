@@ -17,6 +17,13 @@ import Panel from './panel';
  *
  * El alto lo reserva el panel, y el color de esa franja lo pone
  * `ColorBarraEstado` en `--vc-barra`.
+ *
+ * `(panel)` entre paréntesis es un grupo de rutas: agrupa los módulos para que
+ * compartan este armazón sin aportar nada a la dirección. Por eso Miembros es
+ * `/miembros` y no `/panel/miembros`.
+ *
+ * `themeColor` es el gris del panel, que es el de casi todos los módulos.
+ * Inicio declara el suyo en `inicio/layout.tsx` y gana por ser más profundo.
  */
 export const viewport: Viewport = {
   width: 'device-width',
@@ -24,8 +31,9 @@ export const viewport: Viewport = {
   maximumScale: 1,
   userScalable: false,
   viewportFit: 'cover',
+  themeColor: '#F7F7FB',
 };
 
-export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+export default function LayoutDelPanel({ children }: { children: React.ReactNode }) {
   return <Panel>{children}</Panel>;
 }

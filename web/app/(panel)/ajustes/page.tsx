@@ -555,7 +555,7 @@ function AjustesPageContent() {
       {/* Centro de ayuda */}
       <button
         type="button"
-        onClick={() => router.push('/dashboard/ajustes/ayuda')}
+        onClick={() => router.push('/ajustes/ayuda')}
         className="w-full flex items-center gap-3 px-5 py-3.5 text-left hover:bg-secondary/40 active:bg-secondary/60 transition-colors border-b border-border"
       >
         <IconAyuda className="w-4 h-4 text-muted-foreground shrink-0" />
@@ -668,14 +668,14 @@ function AjustesPageContent() {
   );
 
   /* ── Móvil: el encabezado de una sección, con su «Atrás» ──────────────
-     Vuelve a `/dashboard/ajustes` en vez de `router.back()`: a esta pantalla
+     Vuelve a `/ajustes` en vez de `router.back()`: a esta pantalla
      se llega tambien por enlace directo desde el sidebar, y ahi «atrás» sacaría
      de Ajustes en vez de subir un nivel. */
   const atrasMovil = (titulo: string) => (
     <div className="flex items-center gap-2 px-4 pt-4 pb-3">
       <button
         type="button"
-        onClick={() => router.push('/dashboard/ajustes')}
+        onClick={() => router.push('/ajustes')}
         aria-label="Volver a Ajustes"
         className="w-9 h-9 -ml-1.5 rounded-full flex items-center justify-center text-muted-foreground hover:bg-secondary transition-colors shrink-0"
       >
@@ -993,14 +993,14 @@ function AjustesPageContent() {
                   icono={IconPerfil}
                   titulo="Mi perfil"
                   detalle="Tu nombre, teléfono y correo"
-                  onClick={() => router.push('/dashboard/ajustes?tab=perfil')}
+                  onClick={() => router.push('/ajustes?tab=perfil')}
                 />
                 {isAdmin && (
                   <FilaAjuste
                     icono={IconClub}
                     titulo="Mi club"
                     detalle="Datos del club, horario y días sin entrenamiento"
-                    onClick={() => router.push('/dashboard/ajustes?tab=club')}
+                    onClick={() => router.push('/ajustes?tab=club')}
                   />
                 )}
                 {isAdmin && (
@@ -1008,7 +1008,7 @@ function AjustesPageContent() {
                     icono={IconSuscripcion}
                     titulo="Mi suscripción"
                     detalle="Tu plan y los pagos de la plataforma"
-                    onClick={() => router.push('/dashboard/ajustes?tab=suscripcion')}
+                    onClick={() => router.push('/ajustes?tab=suscripcion')}
                   />
                 )}
               </div>
@@ -1035,7 +1035,7 @@ function AjustesPageContent() {
                   icono={IconAyuda}
                   titulo="Centro de ayuda"
                   detalle="Tutoriales y soporte técnico"
-                  onClick={() => router.push('/dashboard/ajustes/ayuda')}
+                  onClick={() => router.push('/ajustes/ayuda')}
                 />
                 <FilaAjuste
                   icono={IconSalir}

@@ -762,7 +762,7 @@ export default function DashboardPage() {
               </p>
             </div>
             <Link
-              href="/dashboard/ajustes?tab=suscripcion"
+              href="/ajustes?tab=suscripcion"
               className="shrink-0 px-3 py-2 rounded-lg text-[11px] font-semibold text-white"
               style={{ background: trial.daysLeft <= 3 ? '#EF476F' : '#381DA0' }}
             >

@@ -362,7 +362,7 @@ router.post('/:token', inscripcionLimiter, inscripcionPorEnlaceLimiter, async (r
       tipo: 'ACTUALIZACION_RECIBIDA',
       titulo: 'Datos actualizados',
       cuerpo: `${actual.fullName} envió cambios en su ficha y esperan tu visto bueno.`,
-      link: '/dashboard/miembros',
+      link: '/miembros',
     }).catch(() => { /* el aviso no puede tumbar la actualizacion */ });
 
     emitToClub(club.id, 'members');
@@ -488,7 +488,7 @@ router.post('/:token', inscripcionLimiter, inscripcionPorEnlaceLimiter, async (r
       cuerpo: quien.estado === 'ambiguo'
         ? `${miembro.fullName} se inscribió con un documento que ya tienen otras fichas. Espera tu visto bueno.`
         : `${miembro.fullName} se inscribió por el enlace y ya está en tu lista.`,
-      link: '/dashboard/miembros',
+      link: '/miembros',
     }).catch(() => { /* el aviso no puede tumbar la inscripcion */ });
 
     await invalidateMembersCache(club.id, carpeta.id);

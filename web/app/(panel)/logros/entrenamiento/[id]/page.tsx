@@ -135,7 +135,7 @@ export default function TrainingDetailPage() {
       <ModuleReveal>
       {/* Header */}
       <div className="px-4 py-3 bg-background flex items-center gap-3">
-        <Link href="/dashboard/logros" className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-secondary transition-colors">
+        <Link href="/logros" className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-secondary transition-colors">
           <ArrowLeft className="w-4 h-4 text-muted-foreground" />
         </Link>
         <div className="flex-1 min-w-0">

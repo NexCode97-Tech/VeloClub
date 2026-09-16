@@ -132,7 +132,7 @@ function LogrosPageInner() {
   // Tab controlado por la URL (?tab=comp|train) para sincronizar con el sub-menú
   // del sidebar, igual que el módulo de Ajustes.
   const tab: 'comp' | 'train' = searchParams.get('tab') === 'train' ? 'train' : 'comp';
-  const setTab = (t: 'comp' | 'train') => router.replace(`/dashboard/logros?tab=${t}`, { scroll: false });
+  const setTab = (t: 'comp' | 'train') => router.replace(`/logros?tab=${t}`, { scroll: false });
   const [role, setRole]             = useState('');
   const [myMemberId, setMyMemberId] = useState<string | null>(null);
 
@@ -632,7 +632,7 @@ function CompCard({ comp: c, isStudent, myMemberId, canManage, deleting, onDelet
 
         {/* Acciones: ver + eliminar */}
         <div className="flex flex-col items-end gap-2 shrink-0">
-          <Link href={`/dashboard/logros/${c.id}`} className="w-8 h-8 rounded-full flex items-center justify-center cursor-pointer" style={{ background: 'rgba(67,97,238,0.08)', color: '#4361EE' }}>
+          <Link href={`/logros/${c.id}`} className="w-8 h-8 rounded-full flex items-center justify-center cursor-pointer" style={{ background: 'rgba(67,97,238,0.08)', color: '#4361EE' }}>
             <ChevronRight className="w-4 h-4" />
           </Link>
           {canManage && (
@@ -746,7 +746,7 @@ function TrainCard({ session: s, isStudent, myMemberId, canManage, deleting, onD
 
         {/* Acciones */}
         <div className="flex flex-col items-end gap-2 shrink-0">
-          <Link href={`/dashboard/logros/entrenamiento/${s.id}`} className="w-8 h-8 rounded-full flex items-center justify-center cursor-pointer" style={{ background: 'rgba(6,214,160,0.10)', color: '#06D6A0' }}>
+          <Link href={`/logros/entrenamiento/${s.id}`} className="w-8 h-8 rounded-full flex items-center justify-center cursor-pointer" style={{ background: 'rgba(6,214,160,0.10)', color: '#06D6A0' }}>
             <ChevronRight className="w-4 h-4" />
           </Link>
           {canManage && (

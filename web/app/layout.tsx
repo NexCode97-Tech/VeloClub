@@ -56,7 +56,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkProvider localization={esES} signInForceRedirectUrl="/dashboard" afterSignOutUrl="/sign-in">
+    <ClerkProvider localization={esES} signInForceRedirectUrl="/inicio" afterSignOutUrl="/sign-in">
       <html
         lang="es"
         className={`${GeistSans.variable} ${GeistMono.variable} h-full antialiased`}

@@ -1,8 +1,25 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
 
+// Los modulos del panel son rutas de primer nivel, una por modulo, asi que la
+// lista los nombra uno a uno. Antes bastaba con `/dashboard(.*)` porque todos
+// colgaban de ahi. Al agregar un modulo hay que agregarlo tambien aqui: sin
+// esta linea la pantalla queda abierta a cualquiera.
 const isProtectedRoute = createRouteMatcher([
-  '/dashboard(.*)',
+  '/inicio(.*)',
+  '/ajustes(.*)',
+  '/asistencia(.*)',
+  '/calendario(.*)',
+  '/carnet(.*)',
+  '/club(.*)',
+  '/finanzas(.*)',
+  '/logros(.*)',
+  '/mas(.*)',
+  '/miembros(.*)',
+  '/pagos(.*)',
+  '/perfil(.*)',
+  '/reportes(.*)',
+  '/sedes(.*)',
   '/superadmin(.*)',
   '/completar-perfil(.*)',
 ]);
@@ -36,7 +53,7 @@ export default clerkMiddleware(async (auth, req) => {
   if (isLandingRoute(req)) {
     const { userId } = await auth();
     if (userId) {
-      return NextResponse.redirect(new URL('/dashboard', req.url));
+      return NextResponse.redirect(new URL('/inicio', req.url));
     }
   }
 });

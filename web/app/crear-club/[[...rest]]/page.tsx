@@ -18,7 +18,7 @@ export default function CrearClubPage() {
   const router = useRouter();
 
   useEffect(() => {
-    if (isLoaded && isSignedIn) router.replace('/dashboard');
+    if (isLoaded && isSignedIn) router.replace('/inicio');
   }, [isLoaded, isSignedIn]);
 
   // Mientras Clerk arranca no se puede pintar el formulario, pero devolver null
@@ -83,7 +83,7 @@ export default function CrearClubPage() {
         <SignUp
           path="/crear-club"
           signInUrl="/sign-in"
-          forceRedirectUrl="/dashboard"
+          forceRedirectUrl="/inicio"
           appearance={{
             variables: { colorPrimary: '#381DA0' },
             elements: {

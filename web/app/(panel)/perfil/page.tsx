@@ -655,7 +655,7 @@ export default function PerfilPage() {
                   <p className="text-[12px] text-muted-foreground">
                     Comparte algo con tu equipo desde el inicio.
                   </p>
-                  <Link href="/dashboard">
+                  <Link href="/inicio">
                     <motion.div whileTap={{ scale: 0.97 }}
                       className="mt-4 px-5 py-2 rounded-full text-[13px] font-semibold text-white cursor-pointer"
                       style={{ background: '#381DA0' }}>

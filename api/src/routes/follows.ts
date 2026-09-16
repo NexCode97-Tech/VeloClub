@@ -34,7 +34,7 @@ router.post('/toggle/:targetClerkId', requireAuth, async (req, res) => {
       tipo: 'NEW_FOLLOWER',
       titulo: 'Nuevo seguidor',
       cuerpo: `${followerName} empezó a seguir al club.`,
-      link: '/dashboard/club',
+      link: '/club',
     });
   } else {
     let targetClubId: string | null = null;
@@ -48,7 +48,7 @@ router.post('/toggle/:targetClerkId', requireAuth, async (req, res) => {
       tipo: 'NEW_FOLLOWER',
       titulo: 'Nuevo seguidor',
       cuerpo: `${followerName} empezó a seguirte.`,
-      link: `/dashboard/perfil/${followerClerkId}`,
+      link: `/perfil/${followerClerkId}`,
     });
   }
 

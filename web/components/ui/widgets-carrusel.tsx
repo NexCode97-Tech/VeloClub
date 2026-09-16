@@ -301,7 +301,7 @@ export function CarruselEventos({ eventos, cargando, clasesHoy = [] }: {
           <p className="text-[12px] sm:text-[13px] font-semibold text-foreground truncate">Próximos eventos</p>
         </div>
         <Link
-          href="/dashboard/calendario"
+          href="/calendario"
           className="text-[11px] font-semibold text-purple-600 hover:underline shrink-0 ml-2"
         >
           Ver todos
@@ -314,7 +314,7 @@ export function CarruselEventos({ eventos, cargando, clasesHoy = [] }: {
         : (
           <Carril>
             {alaVista.map(c => (
-              <Ficha key={c.id} href="/dashboard/calendario" titulo={`${c.nombre} · ${c.hora}`}>
+              <Ficha key={c.id} href="/calendario" titulo={`${c.nombre} · ${c.hora}`}>
                 <div
                   className="flex items-center justify-center w-10 h-10 rounded-full shrink-0"
                   style={{ background: c.color + '1F' }}
@@ -336,7 +336,7 @@ export function CarruselEventos({ eventos, cargando, clasesHoy = [] }: {
             ))}
 
             {deMas > 0 && (
-              <Ficha href="/dashboard/calendario">
+              <Ficha href="/calendario">
                 <div
                   className="flex items-center justify-center w-10 h-10 rounded-full shrink-0"
                   style={{ background: 'rgba(56,29,160,0.10)' }}

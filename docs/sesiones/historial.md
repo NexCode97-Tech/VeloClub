@@ -175,6 +175,38 @@ Next ignora los `viewport` de un componente de cliente, y el panel lo era: por
 eso nunca hubo declaración estática. Ahora el HTML de `/dashboard` sale del
 servidor con `viewport-fit=cover` y el de la landing sin él.
 
+Tampoco funcionó.
+
+### Los módulos salen de `/dashboard`
+
+Lo que el cliente venía pidiendo desde el principio, y que se fue aplazando
+tres intentos seguidos. Cada módulo es ahora una ruta de primer nivel:
+`/miembros`, `/asistencia`, `/ajustes`, y así. Inicio, que era `/dashboard`, es
+`/inicio`; no puede ser `/` porque ahí vive la landing.
+
+- `app/dashboard/` pasó a `app/(panel)/`. Los paréntesis son un grupo de rutas:
+  agrupan los módulos para que compartan el armazón sin aportar nada a la
+  dirección. El sidebar y la barra de módulos siguen sin redibujarse al cambiar
+  de pantalla, que es la razón de que ese armazón sea compartido.
+- **El color de cada pantalla ahora se declara en la pantalla.** `(panel)/`
+  declara el gris en su `viewport` e `inicio/` declara el morado en el suyo, y
+  gana por ser más profundo. Sale en el HTML del servidor, no escrito desde
+  JavaScript después de cargar, que era la diferencia con la pantalla de carga.
+  Comprobado en el HTML compilado: `/inicio` sale con `#381DA0`, `/miembros`
+  con `#F7F7FB` y la landing sin la etiqueta.
+- **El middleware nombra los módulos uno por uno.** Antes bastaba con
+  `/dashboard(.*)`. Al agregar un módulo hay que agregarlo también ahí: sin esa
+  línea la pantalla queda abierta a cualquiera.
+- **Redirecciones permanentes** de `/dashboard` a `/inicio` y de
+  `/dashboard/:ruta*` a `/:ruta*`, en `next.config.ts`. Son para los enlaces
+  guardados, las notificaciones enviadas antes del cambio y la app instalada,
+  que arranca en la dirección que se le grabó el día que se instaló.
+- El `start_url` del manifiesto y el `signInForceRedirectUrl` de Clerk apuntan a
+  `/inicio`.
+
+39 archivos, incluidos los enlaces que la API mete en las notificaciones. Los 85
+tests de la API pasan.
+
 ---
 
 ## Sesión 2026-09-15 — Secretos fuera de sitio, y tres hallazgos de Sentry

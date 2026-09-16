@@ -22,7 +22,7 @@ export default function InactivoPage() {
         const res = await apiFetch<{ status: string; role?: string }>('/me', { token });
         // Si ya no está inactivo (pagó, o el superadmin lo reactivó), volver al panel
         if (res.status === 'ok' || res.status === 'complete_profile') {
-          router.replace('/dashboard');
+          router.replace('/inicio');
           return;
         }
         setRole(res.role ?? null);
@@ -70,7 +70,7 @@ export default function InactivoPage() {
           <SuscripcionCard />
 
           <div className="flex items-center justify-center gap-4 mt-6">
-            <Button variant="outline" onClick={() => router.push('/dashboard')} className="gap-1.5">
+            <Button variant="outline" onClick={() => router.push('/inicio')} className="gap-1.5">
               Ya activé mi plan <ArrowRight className="w-3.5 h-3.5" />
             </Button>
             <button

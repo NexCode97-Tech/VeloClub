@@ -156,7 +156,7 @@ router.post('/mark-overdue', requireCronSecret, async (_req, res) => {
         tipo: 'PAYMENT_DUE',
         titulo: 'Mensualidad vencida',
         cuerpo: `Tu mensualidad de ${MONTH_NAMES[p.month - 1]} está vencida.`,
-        link: '/dashboard/pagos',
+        link: '/pagos',
       });
     }
   }
@@ -166,7 +166,7 @@ router.post('/mark-overdue', requireCronSecret, async (_req, res) => {
       tipo: 'PAYMENT_DUE',
       titulo: 'Pagos vencidos',
       cuerpo: n === 1 ? 'Una mensualidad quedó vencida.' : `${n} mensualidades quedaron vencidas.`,
-      link: '/dashboard/finanzas',
+      link: '/finanzas',
     });
   }
 

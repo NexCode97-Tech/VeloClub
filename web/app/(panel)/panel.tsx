@@ -47,52 +47,52 @@ import { cn } from '@/lib/utils';
 import * as Sentry from '@sentry/nextjs';
 
 // "Más" va en el índice 2 (centro del bottom bar) para ADMIN y ENTRENADOR
-// El href '/dashboard/mas' es el centinela — no navega, activa el CircleMenu
+// El href '/mas' es el centinela — no navega, activa el CircleMenu
 const ROLE_TABS: Record<string, { href: string; label: string; icon: React.ElementType }[]> = {
   ADMIN: [
-    { href: '/dashboard',             label: 'Inicio',      icon: IconHome},
-    { href: '/dashboard/asistencia',  label: 'Asistencia',  icon: IconAsistencias },
-    { href: '/dashboard/mas',         label: 'Más',         icon: IconHome}, // reemplazado por CircleMenu
-    { href: '/dashboard/miembros',    label: 'Miembros',    icon: IconUsers },
-    { href: '/dashboard/finanzas',    label: 'Finanzas',    icon: IconFinanzas },
+    { href: '/inicio',             label: 'Inicio',      icon: IconHome},
+    { href: '/asistencia',  label: 'Asistencia',  icon: IconAsistencias },
+    { href: '/mas',         label: 'Más',         icon: IconHome}, // reemplazado por CircleMenu
+    { href: '/miembros',    label: 'Miembros',    icon: IconUsers },
+    { href: '/finanzas',    label: 'Finanzas',    icon: IconFinanzas },
   ],
   ENTRENADOR: [
-    { href: '/dashboard',             label: 'Inicio',      icon: IconHome},
-    { href: '/dashboard/asistencia',  label: 'Asistencia',  icon: IconAsistencias },
-    { href: '/dashboard/mas',         label: 'Más',         icon: IconHome}, // reemplazado por CircleMenu
-    { href: '/dashboard/miembros',    label: 'Miembros',    icon: IconUsers },
-    { href: '/dashboard/logros',      label: 'Rendimiento',  icon: IconResultados },
+    { href: '/inicio',             label: 'Inicio',      icon: IconHome},
+    { href: '/asistencia',  label: 'Asistencia',  icon: IconAsistencias },
+    { href: '/mas',         label: 'Más',         icon: IconHome}, // reemplazado por CircleMenu
+    { href: '/miembros',    label: 'Miembros',    icon: IconUsers },
+    { href: '/logros',      label: 'Rendimiento',  icon: IconResultados },
   ],
   DEPORTISTA: [
-    { href: '/dashboard',             label: 'Inicio',      icon: IconHome},
-    { href: '/dashboard/calendario',  label: 'Calendario',  icon: IconCalendar },
-    { href: '/dashboard/mas',         label: 'Más',         icon: IconHome}, // reemplazado por CircleMenu
-    { href: '/dashboard/logros',      label: 'Rendimiento',  icon: IconResultados },
-    { href: '/dashboard/pagos',       label: 'Mis pagos',   icon: IconMisPagos},
+    { href: '/inicio',             label: 'Inicio',      icon: IconHome},
+    { href: '/calendario',  label: 'Calendario',  icon: IconCalendar },
+    { href: '/mas',         label: 'Más',         icon: IconHome}, // reemplazado por CircleMenu
+    { href: '/logros',      label: 'Rendimiento',  icon: IconResultados },
+    { href: '/pagos',       label: 'Mis pagos',   icon: IconMisPagos},
   ],
 };
 
 // Ítems del CircleMenu por rol
 const ROLE_MAS_ITEMS: Record<string, { label: string; icon: React.ElementType; href: string; color: string }[]> = {
   ADMIN: [
-    { label: 'Calendario', icon: IconCalendar,     href: '/dashboard/calendario', color: '#EF476F' },
-    { label: 'Rendimiento', icon: IconResultados,   href: '/dashboard/logros',     color: '#F59E0B' },
-    { label: 'Analíticas', icon: IconStatistics,   href: '/dashboard/reportes',   color: '#4361EE' },
-    { label: 'Sedes',      icon: IconUbicacion,    href: '/dashboard/sedes',      color: '#06D6A0' },
-    { label: 'Club',       icon: IconClub,         href: '/dashboard/club',       color: '#381DA0' },
+    { label: 'Calendario', icon: IconCalendar,     href: '/calendario', color: '#EF476F' },
+    { label: 'Rendimiento', icon: IconResultados,   href: '/logros',     color: '#F59E0B' },
+    { label: 'Analíticas', icon: IconStatistics,   href: '/reportes',   color: '#4361EE' },
+    { label: 'Sedes',      icon: IconUbicacion,    href: '/sedes',      color: '#06D6A0' },
+    { label: 'Club',       icon: IconClub,         href: '/club',       color: '#381DA0' },
   ],
   ENTRENADOR: [
-    { label: 'Calendario', icon: IconCalendar,     href: '/dashboard/calendario', color: '#EF476F' },
-    { label: 'Rendimiento', icon: IconResultados,   href: '/dashboard/logros',     color: '#F59E0B' },
-    { label: 'Sedes',      icon: IconUbicacion,    href: '/dashboard/sedes',      color: '#06D6A0' },
-    { label: 'Club',       icon: IconClub,         href: '/dashboard/club',       color: '#381DA0' },
+    { label: 'Calendario', icon: IconCalendar,     href: '/calendario', color: '#EF476F' },
+    { label: 'Rendimiento', icon: IconResultados,   href: '/logros',     color: '#F59E0B' },
+    { label: 'Sedes',      icon: IconUbicacion,    href: '/sedes',      color: '#06D6A0' },
+    { label: 'Club',       icon: IconClub,         href: '/club',       color: '#381DA0' },
   ],
   DEPORTISTA: [
     // El carnet va de primero: es lo que se abre con una mano, de afan y a
     // veces sin senal. Sedes y Club se miran una vez y no se vuelven a tocar.
-    { label: 'Mi carnet', icon: IconIdentificacion, href: '/dashboard/carnet', color: '#381DA0' },
-    { label: 'Sedes',     icon: IconUbicacion,      href: '/dashboard/sedes',  color: '#4361EE' },
-    { label: 'Club',      icon: IconClub,           href: '/dashboard/club',   color: '#06D6A0' },
+    { label: 'Mi carnet', icon: IconIdentificacion, href: '/carnet', color: '#381DA0' },
+    { label: 'Sedes',     icon: IconUbicacion,      href: '/sedes',  color: '#4361EE' },
+    { label: 'Club',      icon: IconClub,           href: '/club',   color: '#06D6A0' },
   ],
 };
 
@@ -103,41 +103,41 @@ const ROLE_MAS_ITEMS: Record<string, { label: string; icon: React.ElementType; h
 // Asistencia, que el entrenador abre cada dia de entrenamiento. La linea
 // divisoria antes de Sedes separa lo que se opera de lo que se configura.
 const ADMIN_NAV = [
-  { href: '/dashboard',            label: 'Inicio',        icon: IconHome},
-  { href: '/dashboard/asistencia', label: 'Asistencia',    icon: IconAsistencias },
-  { href: '/dashboard/miembros',   label: 'Miembros',      icon: IconUsers },
-  { href: '/dashboard/calendario', label: 'Calendario',    icon: IconCalendar },
-  { href: '/dashboard/finanzas',   label: 'Finanzas',      icon: IconFinanzas },
-  { href: '/dashboard/logros',     label: 'Rendimiento',    icon: IconResultados },
-  { href: '/dashboard/reportes',   label: 'Analíticas',    icon: IconStatistics },
-  { href: '/dashboard/sedes',      label: 'Sedes',         icon: IconUbicacion },
-  { href: '/dashboard/club',       label: 'Club',          icon: IconClub },
-  { href: '/dashboard/perfil',     label: 'Mi perfil',     icon: IconPerfil },
-  { href: '/dashboard/ajustes',    label: 'Ajustes',       icon: IconAjustes},
+  { href: '/inicio',            label: 'Inicio',        icon: IconHome},
+  { href: '/asistencia', label: 'Asistencia',    icon: IconAsistencias },
+  { href: '/miembros',   label: 'Miembros',      icon: IconUsers },
+  { href: '/calendario', label: 'Calendario',    icon: IconCalendar },
+  { href: '/finanzas',   label: 'Finanzas',      icon: IconFinanzas },
+  { href: '/logros',     label: 'Rendimiento',    icon: IconResultados },
+  { href: '/reportes',   label: 'Analíticas',    icon: IconStatistics },
+  { href: '/sedes',      label: 'Sedes',         icon: IconUbicacion },
+  { href: '/club',       label: 'Club',          icon: IconClub },
+  { href: '/perfil',     label: 'Mi perfil',     icon: IconPerfil },
+  { href: '/ajustes',    label: 'Ajustes',       icon: IconAjustes},
 ];
 
 const ENTRENADOR_NAV = [
-  { href: '/dashboard',            label: 'Inicio',        icon: IconHome},
-  { href: '/dashboard/asistencia', label: 'Asistencia',    icon: IconAsistencias },
-  { href: '/dashboard/miembros',   label: 'Miembros',      icon: IconUsers },
-  { href: '/dashboard/calendario', label: 'Calendario',    icon: IconCalendar },
-  { href: '/dashboard/logros',     label: 'Rendimiento',    icon: IconResultados },
-  { href: '/dashboard/sedes',      label: 'Sedes',         icon: IconUbicacion },
-  { href: '/dashboard/club',       label: 'Club',          icon: IconClub },
-  { href: '/dashboard/perfil',     label: 'Mi perfil',     icon: IconPerfil },
-  { href: '/dashboard/ajustes',    label: 'Ajustes',       icon: IconAjustes},
+  { href: '/inicio',            label: 'Inicio',        icon: IconHome},
+  { href: '/asistencia', label: 'Asistencia',    icon: IconAsistencias },
+  { href: '/miembros',   label: 'Miembros',      icon: IconUsers },
+  { href: '/calendario', label: 'Calendario',    icon: IconCalendar },
+  { href: '/logros',     label: 'Rendimiento',    icon: IconResultados },
+  { href: '/sedes',      label: 'Sedes',         icon: IconUbicacion },
+  { href: '/club',       label: 'Club',          icon: IconClub },
+  { href: '/perfil',     label: 'Mi perfil',     icon: IconPerfil },
+  { href: '/ajustes',    label: 'Ajustes',       icon: IconAjustes},
 ];
 
 const DEPORTISTA_NAV = [
-  { href: '/dashboard',            label: 'Inicio',        icon: IconHome},
-  { href: '/dashboard/calendario', label: 'Calendario',    icon: IconCalendar },
-  { href: '/dashboard/logros',     label: 'Rendimiento',    icon: IconResultados },
-  { href: '/dashboard/pagos',      label: 'Mis pagos',     icon: IconMisPagos},
-  { href: '/dashboard/carnet',     label: 'Mi carnet',     icon: IconIdentificacion },
-  { href: '/dashboard/sedes',      label: 'Sedes',         icon: IconUbicacion },
-  { href: '/dashboard/club',       label: 'Club',          icon: IconClub },
-  { href: '/dashboard/perfil',     label: 'Mi perfil',     icon: IconPerfil },
-  { href: '/dashboard/ajustes',    label: 'Ajustes',       icon: IconAjustes},
+  { href: '/inicio',            label: 'Inicio',        icon: IconHome},
+  { href: '/calendario', label: 'Calendario',    icon: IconCalendar },
+  { href: '/logros',     label: 'Rendimiento',    icon: IconResultados },
+  { href: '/pagos',      label: 'Mis pagos',     icon: IconMisPagos},
+  { href: '/carnet',     label: 'Mi carnet',     icon: IconIdentificacion },
+  { href: '/sedes',      label: 'Sedes',         icon: IconUbicacion },
+  { href: '/club',       label: 'Club',          icon: IconClub },
+  { href: '/perfil',     label: 'Mi perfil',     icon: IconPerfil },
+  { href: '/ajustes',    label: 'Ajustes',       icon: IconAjustes},
 ];
 
 const ROLE_NAV: Record<string, typeof ADMIN_NAV> = {
@@ -324,7 +324,7 @@ export default function Panel({ children }: { children: React.ReactNode }) {
   // Debe declararse antes de cualquier return temprano (reglas de hooks).
   // Depende solo de la ruta (no de collapsed) — expandir/contraer el sidebar
   // nunca debe disparar la animación de deslizamiento del sub-menú.
-  const navDepthNow = (pathname.startsWith('/dashboard/ajustes') || pathname.startsWith('/dashboard/logros')) ? 1 : 0;
+  const navDepthNow = (pathname.startsWith('/ajustes') || pathname.startsWith('/logros')) ? 1 : 0;
   const prevNavDepthRef = useRef(navDepthNow);
   useEffect(() => { prevNavDepthRef.current = navDepthNow; }, [navDepthNow]);
 
@@ -411,14 +411,14 @@ export default function Panel({ children }: { children: React.ReactNode }) {
         fijarNombreDeporte(sel.lista.find(d => d.id === sel.activo)?.nombre ?? null);
 
         if (userRole === 'DEPORTISTA') {
-          const DEPORTISTA_PERMITIDO = ['/dashboard', '/dashboard/logros', '/dashboard/calendario', '/dashboard/sedes', '/dashboard/club', '/dashboard/pagos', '/dashboard/carnet', '/dashboard/mas', '/dashboard/perfil', '/dashboard/ajustes'];
+          const DEPORTISTA_PERMITIDO = ['/inicio', '/logros', '/calendario', '/sedes', '/club', '/pagos', '/carnet', '/mas', '/perfil', '/ajustes'];
           const allowed = DEPORTISTA_PERMITIDO.some(r => pathname === r || pathname.startsWith(r + '/'));
-          if (!allowed) { router.replace('/dashboard'); return; }
+          if (!allowed) { router.replace('/inicio'); return; }
         }
         if (userRole === 'ENTRENADOR') {
-          const ENTRENADOR_BLOQUEADO = ['/dashboard/finanzas', '/dashboard/reportes', '/dashboard/pagos'];
+          const ENTRENADOR_BLOQUEADO = ['/finanzas', '/reportes', '/pagos'];
           const blocked = ENTRENADOR_BLOQUEADO.some(r => pathname === r || pathname.startsWith(r + '/'));
-          if (blocked) { router.replace('/dashboard'); return; }
+          if (blocked) { router.replace('/inicio'); return; }
         }
 
         // Sostener la pantalla de carga hasta que la secuencia termine
@@ -479,7 +479,7 @@ export default function Panel({ children }: { children: React.ReactNode }) {
    */
   function cambiarDeporte(id: string) {
     fijarDeporteActivo(id);
-    window.location.assign('/dashboard');
+    window.location.assign('/inicio');
   }
 
   async function cargarCifrasDeportes() {
@@ -512,25 +512,24 @@ export default function Panel({ children }: { children: React.ReactNode }) {
   const sideNavItems = role ? (ROLE_NAV[role] ?? ROLE_NAV.DEPORTISTA) : ROLE_NAV.DEPORTISTA;
   // Inicio dibuja el selector por su cuenta, debajo del encabezado morado.
   const tabHrefs   = new Set(tabItems.map((t) => t.href));
-  const isOnExtra  = !tabHrefs.has(pathname) && pathname !== '/dashboard' && pathname.startsWith('/dashboard/');
 
   function isTabActive(href: string) {
-    if (href === '/dashboard/mas') return false; // el CircleMenu maneja su propio estado
-    if (href === '/dashboard') return pathname === '/dashboard';
+    if (href === '/mas') return false; // el CircleMenu maneja su propio estado
+    if (href === '/inicio') return pathname === '/inicio';
     return pathname === href || pathname.startsWith(href + '/');
   }
 
   function isSideActive(href: string) {
-    if (href === '/dashboard') return pathname === '/dashboard';
-    // El módulo "Club" solo se activa en la ruta exacta; /dashboard/club/[id] es la
+    if (href === '/inicio') return pathname === '/inicio';
+    // El módulo "Club" solo se activa en la ruta exacta; /club/[id] es la
     // vista pública de un club de la comunidad y no debe marcar el módulo.
-    if (href === '/dashboard/club') return pathname === '/dashboard/club';
+    if (href === '/club') return pathname === '/club';
     return pathname === href || pathname.startsWith(href + '/');
   }
 
   // Sub-menú de Ajustes en el sidebar expandido — reemplaza la nav principal
-  // mientras se está dentro de /dashboard/ajustes (Mi perfil / Mi club / Mi suscripción).
-  const onAjustes = pathname.startsWith('/dashboard/ajustes');
+  // mientras se está dentro de /ajustes (Mi perfil / Mi club / Mi suscripción).
+  const onAjustes = pathname.startsWith('/ajustes');
   const isAdmin = role === 'ADMIN';
   const AJUSTES_SUBNAV = [
     { key: 'perfil',      label: 'Mi perfil',      icon: IconPerfil, adminOnly: false },
@@ -539,8 +538,8 @@ export default function Panel({ children }: { children: React.ReactNode }) {
   ].filter(item => !item.adminOnly || isAdmin);
 
   // Sub-menú de Rendimiento en el sidebar expandido — igual que Ajustes.
-  // Dentro de /dashboard/logros muestra Competencias / Entrenamientos (?tab=).
-  const onLogros = pathname.startsWith('/dashboard/logros');
+  // Dentro de /logros muestra Competencias / Entrenamientos (?tab=).
+  const onLogros = pathname.startsWith('/logros');
   const LOGROS_SUBNAV = [
     { key: 'comp',  label: 'Competencias',   icon: IconCompetencias },
     // Planilla y no mancuerna: la mancuerna ahora significa gimnasio, y este
@@ -565,8 +564,8 @@ export default function Panel({ children }: { children: React.ReactNode }) {
   const activeTabIndex = tabItems.findIndex(t => isTabActive(t.href));
   // Cuando el sidebar está expandido, Ajustes está oculto — no mostrar su pill activo
   const activeSideIndex = sideNavItems.findIndex(t => {
-    if (!collapsed && t.href === '/dashboard/ajustes') return false;
-    if (!collapsed && t.href === '/dashboard/perfil') return false;
+    if (!collapsed && t.href === '/ajustes') return false;
+    if (!collapsed && t.href === '/perfil') return false;
     return isSideActive(t.href);
   });
 
@@ -699,7 +698,7 @@ export default function Panel({ children }: { children: React.ReactNode }) {
               {navView === 'ajustes' ? (
                 <div>
                   <Link
-                    href="/dashboard"
+                    href="/inicio"
                     className="flex items-center rounded-xl text-sm font-semibold transition-colors hover:bg-secondary mb-2"
                     style={{
                       height: 40, color: '#8E87A8',
@@ -724,7 +723,7 @@ export default function Panel({ children }: { children: React.ReactNode }) {
               ) : navView === 'logros' ? (
                 <div>
                   <Link
-                    href="/dashboard"
+                    href="/inicio"
                     className="flex items-center rounded-xl text-sm font-semibold transition-colors hover:bg-secondary mb-2"
                     style={{
                       height: 40, color: '#8E87A8',
@@ -761,8 +760,8 @@ export default function Panel({ children }: { children: React.ReactNode }) {
                   )}
                   {sideNavItems.map(({ href, label, icon: Icon }) => {
                     // Ajustes y Mi Perfil viven en el footer (ícono de ajustes sobre el avatar)
-                    if (href === '/dashboard/ajustes') return null;
-                    if (href === '/dashboard/perfil') return null;
+                    if (href === '/ajustes') return null;
+                    if (href === '/perfil') return null;
                     const active = isSideActive(href);
                     return (
                       <Link
@@ -789,7 +788,7 @@ export default function Panel({ children }: { children: React.ReactNode }) {
                             resaltado del activo se posiciona con el indice por
                             48px, asi que cualquier cosa que ocupe alto en el
                             flujo lo dejaria corrido de ahi para abajo. */}
-                        {href === '/dashboard/sedes' && (
+                        {href === '/sedes' && (
                           <span
                             aria-hidden
                             className="absolute left-0 right-0"
@@ -798,7 +797,7 @@ export default function Panel({ children }: { children: React.ReactNode }) {
                         )}
                         <Icon className="w-[18px] h-[18px] shrink-0" strokeWidth={active ? 2.5 : 2} />
                         {!collapsed && <span>{label}</span>}
-                        {!collapsed && href === '/dashboard/logros' && (
+                        {!collapsed && href === '/logros' && (
                           <ChevronRight className="w-4 h-4 ml-auto shrink-0" style={{ opacity: 0.7 }} />
                         )}
                       </Link>
@@ -823,10 +822,10 @@ export default function Panel({ children }: { children: React.ReactNode }) {
         >
           {/* Ícono de ajustes — colapsado: encima del avatar */}
           {collapsed && (() => {
-            const active = isSideActive('/dashboard/ajustes');
+            const active = isSideActive('/ajustes');
             return (
               <Link
-                href="/dashboard/ajustes"
+                href="/ajustes"
                 className="shrink-0 flex items-center justify-center rounded-xl transition-colors"
                 style={{ width: 40, height: 40, color: active ? accentColor : '#8E87A8', background: active ? accentBg : undefined }}
                 onMouseEnter={(e) => {
@@ -842,7 +841,7 @@ export default function Panel({ children }: { children: React.ReactNode }) {
 
           {/* Avatar — fuente: foto app > foto Google OAuth > imageUrl Clerk */}
           <Link
-            href="/dashboard/perfil"
+            href="/perfil"
             className="shrink-0"
             title={collapsed ? undefined : 'Mi perfil'}
             onMouseEnter={collapsed ? (e) => {
@@ -870,7 +869,7 @@ export default function Panel({ children }: { children: React.ReactNode }) {
 
           {/* Nombre + rol (solo expandido) */}
           {!collapsed && (
-            <Link href="/dashboard/perfil" className="flex-1 min-w-0">
+            <Link href="/perfil" className="flex-1 min-w-0">
               <div className="text-[12px] font-semibold truncate" style={{ color: '#1a1028' }}>
                 {userName ?? 'Usuario'}
               </div>
@@ -883,7 +882,7 @@ export default function Panel({ children }: { children: React.ReactNode }) {
           {/* Ícono de ajustes (solo expandido) */}
           {!collapsed && (
             <Link
-              href="/dashboard/ajustes"
+              href="/ajustes"
               title="Ajustes"
               className="shrink-0 flex items-center justify-center transition-colors hover:bg-secondary rounded-lg"
               style={{ width: 26, height: 26, color: '#8E87A8' }}
@@ -1047,7 +1046,7 @@ export default function Panel({ children }: { children: React.ReactNode }) {
                   )}
 
                   {tabItems.map(({ href, label, icon: Icon }) => {
-                    if (href === '/dashboard/mas') {
+                    if (href === '/mas') {
                       const masItems = ROLE_MAS_ITEMS[role ?? 'ADMIN'] ?? [];
                       return (
                         <div
@@ -1151,7 +1150,7 @@ function AjustesSubNavLinks({ items, accentColor, accentBg, collapsed, onTip }: 
         return (
           <Link
             key={key}
-            href={`/dashboard/ajustes?tab=${key}`}
+            href={`/ajustes?tab=${key}`}
             className={`flex items-center rounded-xl text-sm font-semibold transition-colors relative z-10 ${active ? '' : 'hover:bg-secondary'}`}
             style={{
               height: 44,
@@ -1192,7 +1191,7 @@ function LogrosSubNavLinks({ items, accentColor, accentBg, collapsed, onTip }: {
   // El detalle de un entrenamiento vive en /logros/entrenamiento/[id] y no lleva
   // ?tab=, asi que el submenu caia en el valor por defecto y resaltaba
   // Competencias estando dentro de un entrenamiento. La ruta manda cuando la hay.
-  const logrosTab = pathname.startsWith('/dashboard/logros/entrenamiento')
+  const logrosTab = pathname.startsWith('/logros/entrenamiento')
     ? 'train'
     : (searchParams.get('tab') ?? 'comp');
   const activeIndex = items.findIndex(item => item.key === logrosTab);
@@ -1217,7 +1216,7 @@ function LogrosSubNavLinks({ items, accentColor, accentBg, collapsed, onTip }: {
         return (
           <Link
             key={key}
-            href={`/dashboard/logros?tab=${key}`}
+            href={`/logros?tab=${key}`}
             className={`flex items-center rounded-xl text-sm font-semibold transition-colors relative z-10 ${active ? '' : 'hover:bg-secondary'}`}
             style={{
               height: 44,

@@ -28,7 +28,7 @@ export default function CuentaPausadaPage() {
         const res = await apiFetch<{ status: string }>('/me', { token });
         // Si el club ya lo reactivó, entrar directo sin que tenga que hacer nada
         if (res.status === 'ok' || res.status === 'complete_profile') {
-          router.replace('/dashboard');
+          router.replace('/inicio');
           return;
         }
       } catch { /* se muestra la vista genérica */ }

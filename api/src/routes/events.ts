@@ -122,7 +122,7 @@ router.post('/', requireAuth, async (req, res) => {
     tipo: 'NEW_EVENT',
     titulo: 'Nuevo evento',
     cuerpo: `${event.title} · ${new Date(event.startDate).toLocaleDateString('es-CO', { day: 'numeric', month: 'long' })}.`,
-    link: '/dashboard/calendario',
+    link: '/calendario',
   });
   res.status(201).json({ event });
 });

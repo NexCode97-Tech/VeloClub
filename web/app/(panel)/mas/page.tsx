@@ -14,19 +14,19 @@ const EASE_OUT: [number, number, number, number] = [0.23, 1, 0.32, 1];
 
 const ITEMS_BY_ROLE: Record<string, { label: string; icon: React.ElementType; color: string; href: string }[]> = {
   ADMIN: [
-    { label: 'Rendimiento', icon: IconResultados,            color: '#F59E0B', href: '/dashboard/logros' },
-    { label: 'Calendario', icon: CalendarDays,      color: '#EF476F', href: '/dashboard/calendario' },
-    { label: 'Sedes',      icon: IconUbicacion,            color: '#06D6A0', href: '/dashboard/sedes' },
-    { label: 'Analíticas',   icon: IconStatistics,    color: '#4361EE', href: '/dashboard/reportes' },
-    { label: 'Club',       icon: Building2,         color: '#381DA0', href: '/dashboard/club' },
-    { label: 'Ayuda',      icon: IconAyuda,         color: '#8E87A8', href: '/dashboard/ajustes/ayuda' },
+    { label: 'Rendimiento', icon: IconResultados,            color: '#F59E0B', href: '/logros' },
+    { label: 'Calendario', icon: CalendarDays,      color: '#EF476F', href: '/calendario' },
+    { label: 'Sedes',      icon: IconUbicacion,            color: '#06D6A0', href: '/sedes' },
+    { label: 'Analíticas',   icon: IconStatistics,    color: '#4361EE', href: '/reportes' },
+    { label: 'Club',       icon: Building2,         color: '#381DA0', href: '/club' },
+    { label: 'Ayuda',      icon: IconAyuda,         color: '#8E87A8', href: '/ajustes/ayuda' },
   ],
   ENTRENADOR: [
-    { label: 'Rendimiento', icon: IconResultados,        color: '#F59E0B', href: '/dashboard/logros' },
-    { label: 'Calendario', icon: CalendarDays,  color: '#EF476F', href: '/dashboard/calendario' },
-    { label: 'Sedes',      icon: IconUbicacion,        color: '#06D6A0', href: '/dashboard/sedes' },
-    { label: 'Club',       icon: Building2,     color: '#381DA0', href: '/dashboard/club' },
-    { label: 'Ayuda',      icon: IconAyuda,     color: '#8E87A8', href: '/dashboard/ajustes/ayuda' },
+    { label: 'Rendimiento', icon: IconResultados,        color: '#F59E0B', href: '/logros' },
+    { label: 'Calendario', icon: CalendarDays,  color: '#EF476F', href: '/calendario' },
+    { label: 'Sedes',      icon: IconUbicacion,        color: '#06D6A0', href: '/sedes' },
+    { label: 'Club',       icon: Building2,     color: '#381DA0', href: '/club' },
+    { label: 'Ayuda',      icon: IconAyuda,     color: '#8E87A8', href: '/ajustes/ayuda' },
   ],
   DEPORTISTA: [],
 };

@@ -71,7 +71,7 @@ export async function recordarVencimientosProximos(): Promise<{ avisados: number
         tipo: 'PAGO_PROXIMO_VENCER',
         titulo: vig.diasRestantes === 0 ? 'Tu plan vence hoy' : `Tu plan vence en ${vig.diasRestantes} día${vig.diasRestantes !== 1 ? 's' : ''}`,
         cuerpo: 'Paga ahora o activa la renovación automática desde Ajustes para no perder acceso a VeloClub.',
-        link: '/dashboard/ajustes?tab=suscripcion',
+        link: '/ajustes?tab=suscripcion',
       });
       avisados++;
     } catch (err) {
@@ -149,7 +149,7 @@ export async function verificarYDesactivarSiVencido(clubId: string): Promise<boo
     tipo: 'CLUB_DESACTIVADO_POR_VENCIMIENTO',
     titulo: 'Tu club fue desactivado',
     cuerpo: 'Tu plan venció y no se recibió un nuevo pago. VeloClub queda pausado hasta que actives un plan de nuevo.',
-    link: '/dashboard/ajustes?tab=suscripcion',
+    link: '/ajustes?tab=suscripcion',
   });
   return true;
 }

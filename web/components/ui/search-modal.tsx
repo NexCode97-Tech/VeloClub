@@ -73,11 +73,11 @@ export function SearchModal({ open, onClose }: { open: boolean; onClose: () => v
   const goPerson = (p: PersonHit) => {
     if (!p.clerkId) return;
     onClose();
-    router.push(`/dashboard/perfil/${p.clerkId}`);
+    router.push(`/perfil/${p.clerkId}`);
   };
   const goClub = (c: ClubHit) => {
     onClose();
-    router.push(`/dashboard/club/${c.id}`);
+    router.push(`/club/${c.id}`);
   };
 
   const total = results.clubs.length + results.athletes.length + results.coaches.length;

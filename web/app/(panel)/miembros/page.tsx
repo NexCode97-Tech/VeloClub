@@ -288,7 +288,7 @@ export default function MiembrosPage() {
         const isSelf = editing.email && user?.primaryEmailAddress?.emailAddress
           ? editing.email === user.primaryEmailAddress.emailAddress : false;
         await apiFetch(`/members/${editing.id}`, { method: 'PUT', token, body });
-        if (roleChanged && isSelf) { window.location.href = '/dashboard'; return; }
+        if (roleChanged && isSelf) { window.location.href = '/inicio'; return; }
       } else {
         const creado = await apiFetch<{ member: { id: string } }>('/members', { method: 'POST', token, body });
         memberId = creado.member.id;

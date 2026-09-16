@@ -38,6 +38,18 @@ const CSP = [
 ].join('; ');
 
 const nextConfig: NextConfig = {
+  // Los modulos salieron de /dashboard y quedaron en la raiz. Esto es para los
+  // que ya tenian la direccion vieja: un enlace guardado, una notificacion
+  // enviada antes del cambio, o la app instalada en el telefono, que arranca
+  // en la direccion que se le grabo el dia que se instalo.
+  //
+  // Permanente y no temporal porque la direccion vieja no vuelve.
+  async redirects() {
+    return [
+      { source: '/dashboard', destination: '/inicio', permanent: true },
+      { source: '/dashboard/:ruta*', destination: '/:ruta*', permanent: true },
+    ];
+  },
   async headers() {
     return [
       {

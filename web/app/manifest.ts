@@ -6,12 +6,12 @@ export default function manifest(): MetadataRoute.Manifest {
     short_name: "VeloClub",
     description: "Plataforma integral para la gestión de clubes deportivos",
     // El alcance debe ser la raiz. Sin declararlo, el navegador lo deduce de la
-    // carpeta de start_url y quedaria encerrado en /dashboard/: al abrir la app
-    // sin sesion, el redirect a /sign-in cae fuera del alcance y Android expulsa
+    // carpeta de start_url y quedaria encerrado ahi: al abrir la app sin
+    // sesion, el redirect a /sign-in cae fuera del alcance y Android expulsa
     // la navegacion al navegador, que se ve como que la app no abre.
     id: "/",
     scope: "/",
-    start_url: "/dashboard",
+    start_url: "/inicio",
     display: "standalone",
     background_color: "#F7F7FB",
     theme_color: "#381DA0",

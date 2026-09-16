@@ -243,7 +243,7 @@ router.post('/', requireAuth, async (req, res) => {
       tipo: 'PAYMENT_RECEIVED',
       titulo: 'Pago recibido',
       cuerpo: `${payment.member.fullName} pagó ${MONTH_NAMES[payment.month - 1]} (${fmtCOP(payment.amount)}).`,
-      link: '/dashboard/finanzas',
+      link: '/finanzas',
     }, req.auth?.clerkId);
   }
 
@@ -305,7 +305,7 @@ router.patch('/:id', requireAuth, async (req, res) => {
         tipo: 'PAYMENT_RECEIVED',
         titulo: 'Pago recibido',
         cuerpo: `${existing.member.fullName} pagó ${MONTH_NAMES[payment.month - 1]} (${fmtCOP(payment.amount)}).`,
-        link: '/dashboard/finanzas',
+        link: '/finanzas',
       }, req.auth?.clerkId);
     }
   }
@@ -419,7 +419,7 @@ router.post('/:id/my-receipt', requireAuth, async (req, res) => {
       tipo: 'RECEIPT_UPLOADED',
       titulo: 'Comprobante por verificar',
       cuerpo: `${member.fullName} subió el comprobante de ${MONTH_NAMES[existing.month - 1]}.`,
-      link: '/dashboard/finanzas',
+      link: '/finanzas',
     });
     res.json({ payment });
   } catch (err) {

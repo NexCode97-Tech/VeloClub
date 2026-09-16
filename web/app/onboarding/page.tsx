@@ -70,7 +70,7 @@ export default function OnboardingPage() {
           )}
           {mode === 'create' && (
             <motion.div key="create" initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -24 }} transition={{ duration: 0.22 }}>
-              <CreateClubForm getToken={getToken} onBack={() => setMode('choice')} onDone={() => router.push('/dashboard')} />
+              <CreateClubForm getToken={getToken} onBack={() => setMode('choice')} onDone={() => router.push('/inicio')} />
             </motion.div>
           )}
           {mode === 'contact' && (

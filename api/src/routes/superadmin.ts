@@ -672,7 +672,7 @@ router.post('/suscripciones/pagos/:pagoId/aprobar', requireAuth, requireSuperadm
     tipo: 'suscripcion',
     titulo: 'Pago verificado',
     cuerpo: `Confirmamos tu transferencia por $${pago.monto.toLocaleString('es-CO')}. Tu plan quedó activo.`,
-    link: '/dashboard/ajustes?tab=suscripcion',
+    link: '/ajustes?tab=suscripcion',
   });
 
   res.json({ pago: actualizado });
@@ -704,7 +704,7 @@ router.post('/suscripciones/pagos/:pagoId/rechazar', requireAuth, requireSuperad
     cuerpo: motivo?.trim()
       ? `${motivo.trim()} Puedes intentar de nuevo desde Ajustes.`
       : 'No encontramos la transferencia. Revisa el comprobante e intenta de nuevo desde Ajustes.',
-    link: '/dashboard/ajustes?tab=suscripcion',
+    link: '/ajustes?tab=suscripcion',
   });
 
   res.json({ ok: true });

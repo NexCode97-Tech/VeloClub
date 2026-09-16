@@ -49,7 +49,7 @@ export default function PublicClubPage() {
         const token = await getToken();
         const me = await apiFetch<{ user?: { clubId?: string | null } }>('/me', { token }).catch(() => null);
         if (me?.user?.clubId && me.user.clubId === id) {
-          router.replace('/dashboard/club');
+          router.replace('/club');
           return;
         }
         const res = await apiFetch<Payload>(`/clubs/${id}/public`, { token });

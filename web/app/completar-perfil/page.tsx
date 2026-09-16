@@ -5,6 +5,6 @@ import { useRouter } from 'next/navigation';
 
 export default function CompletarPerfilPage() {
   const router = useRouter();
-  useEffect(() => { router.replace('/dashboard'); }, []);
+  useEffect(() => { router.replace('/inicio'); }, []);
   return null;
 }

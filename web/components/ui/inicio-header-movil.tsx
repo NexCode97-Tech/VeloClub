@@ -78,7 +78,7 @@ export function InicioHeaderMovil({ clubName, clubLogoUrl, userName, userPicture
           <NotificationsBell sobreOscuro />
         </div>
         <Link
-          href="/dashboard/ajustes"
+          href="/ajustes"
           aria-label="Ajustes"
           className="w-9 h-9 rounded-full flex items-center justify-center shrink-0"
           style={{ background: 'rgba(255,255,255,0.18)' }}
@@ -126,9 +126,9 @@ export function InicioHeaderMovil({ clubName, clubLogoUrl, userName, userPicture
 
         {/* Mi perfil. Va aqui y no arriba para no dejar cuatro circulos
             seguidos: el club a la izquierda, la persona a la derecha. Es la
-            unica entrada a /dashboard/perfil en movil. */}
+            unica entrada a /perfil en movil. */}
         <Link
-          href="/dashboard/perfil"
+          href="/perfil"
           aria-label="Mi perfil"
           className="shrink-0 rounded-full overflow-hidden flex items-center justify-center"
           style={{ width: 34, height: 34, border: '2px solid rgba(255,255,255,0.45)', background: 'rgba(255,255,255,0.18)' }}

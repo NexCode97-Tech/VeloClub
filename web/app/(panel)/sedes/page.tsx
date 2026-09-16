@@ -278,7 +278,7 @@ export default function SedesPage() {
                   <AlertCircle className="w-4 h-4 shrink-0 text-muted-foreground" />
                   <p className="text-xs text-muted-foreground">
                     Configura el departamento del club en{' '}
-                    <a href="/dashboard/ajustes" className="text-primary underline underline-offset-2">Ajustes</a>
+                    <a href="/ajustes" className="text-primary underline underline-offset-2">Ajustes</a>
                     {' '}para seleccionar municipio.
                   </p>
                 </div>

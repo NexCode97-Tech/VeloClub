@@ -53,7 +53,7 @@ export default function GlobalError({
             página; si sigue igual, escríbenos.
           </p>
           <a
-            href="/dashboard"
+            href="/inicio"
             style={{
               display: 'inline-block',
               padding: '10px 20px',

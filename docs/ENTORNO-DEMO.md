@@ -97,15 +97,27 @@ piezas salen publicadas y nadie autorizó que su nombre apareciera ahí.
 - **Tres sedes** y un horario semanal de ocho clases.
 - **54 deportistas**, unos pocos en pausa, con categorías y niveles del catálogo
   real, datos de salud y acudiente.
-- **Tres esperando en la bandeja** de inscripción, porque esa pantalla vacía no
-  se puede mostrar y es de las que mejor explican el producto.
+- **Los tres roles.** Dos administradores y tres entrenadores tienen ficha en
+  Miembros además de su cuenta de acceso. Sin esas fichas las cifras de Admins y
+  Entrenadores que van arriba de la lista salen en cero. El staff no lleva cuota
+  ni día de corte: ponérsela lo metería en las cuentas de Finanzas como si fuera
+  un deportista.
+- **Dos bandejas con algo adentro**, que vacías no se pueden mostrar y son de
+  las que mejor explican el producto: tres inscripciones esperando revisión, y
+  un deportista que ya estaba y cuya familia mandó una corrección de datos por
+  el enlace.
 - **Seis meses de asistencia**, solo en los días que el horario dicta y solo
   desde que cada quien entró al club.
 - **Seis meses de mensualidades y caja**, con el mes en curso a medias, que es
   lo normal a mitad de mes y lo que le da algo que mostrar a Finanzas.
-- **Tres competencias** con sus pruebas y podios, y seis entrenamientos con
-  marcas.
-- Calendario, suscripción al día y un par de publicaciones internas.
+- **Rendimiento lleno en las dos carpetas.** Patinaje tiene tres competencias y
+  natación dos, cada una con sus pruebas, sus podios y la marca en la
+  observación. Seis entrenamientos por deporte, alternando pista y gimnasio para
+  que se vean los dos formularios y no siempre el mismo.
+- **Calendario** con un evento recurrente, no solo sueltos.
+- **Suscripción al día** con seis cobros de historial.
+- **Tres publicaciones** con sus «me gusta» y comentarios, y tres notificaciones
+  para la campana de Inicio.
 
 Dos decisiones que conviene conocer:
 
@@ -121,8 +133,10 @@ Dos decisiones que conviene conocer:
 - **El sello de verificado.** El club nace sin él, así que no aparece en el
   carrusel de la landing aunque por error compartiera base con producción. Se
   activa desde Superadmin cuando una pieza lo necesite.
-- **Las fotos de los deportistas.** Quedan en iniciales sobre el color del rol,
-  que además evita poner caras de personas que no existen.
+- **Las fotos de los deportistas y los documentos adjuntos.** Son archivos de
+  Cloudinary y no se pueden inventar desde el script: una dirección falsa queda
+  como imagen rota. Los deportistas se ven con sus iniciales sobre el color del
+  rol, que además evita ponerle cara a personas que no existen.
 
 ## Volver a empezar
 

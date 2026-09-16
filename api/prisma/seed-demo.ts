@@ -150,6 +150,11 @@ async function main(): Promise<void> {
       phone: '317 555 0148',
       email: 'contacto@example.com',
       foundedAt: dia(2014, 3, 12),
+      // Campo heredado de cuando un club era de un solo deporte. Lo siguen
+      // leyendo el perfil publico, el buscador y la ficha del superadmin, asi
+      // que vacio deja tres pantallas con un hueco.
+      deporte: 'Patinaje',
+      memberCountApprox: 55,
       // Domingo. El club no entrena ese día, así que la asistencia no lo pide.
       noAttendanceDays: [0],
       active: true,
@@ -177,7 +182,7 @@ async function main(): Promise<void> {
     data: {
       clerkId: process.env.DEMO_ADMIN_CLERK_ID ?? `demo_admin_${club.id}`,
       email: process.env.DEMO_ADMIN_EMAIL ?? 'admin.aurora@example.com',
-      name: 'Carolina Estrada',
+      name: 'Carolina Estrada Ruiz',
       role: 'ADMIN',
       profileComplete: true,
       termsAcceptedAt: dia(anioActual, mesActual, 1),
@@ -193,7 +198,7 @@ async function main(): Promise<void> {
       {
         clerkId: `demo_entrenador_1_${club.id}`,
         email: 'entrenador.patinaje@example.com',
-        name: 'Andrés Cardona',
+        name: 'Andrés Cardona Vélez',
         role: 'ENTRENADOR',
         profileComplete: true,
         clubId: club.id,
@@ -202,11 +207,31 @@ async function main(): Promise<void> {
       {
         clerkId: `demo_entrenador_2_${club.id}`,
         email: 'entrenadora.natacion@example.com',
-        name: 'Paola Rincón',
+        name: 'Paola Rincón Gómez',
         role: 'ENTRENADOR',
         profileComplete: true,
         clubId: club.id,
         deporteId: natacion.id,
+      },
+      {
+        clerkId: `demo_entrenador_3_${club.id}`,
+        email: 'entrenador2.patinaje@example.com',
+        name: 'Javier Ortega Pabón',
+        role: 'ENTRENADOR',
+        profileComplete: true,
+        clubId: club.id,
+        deporteId: patinaje.id,
+      },
+      {
+        clerkId: `demo_admin_2_${club.id}`,
+        email: 'admin2.aurora@example.com',
+        name: 'Mauricio Sandoval León',
+        role: 'ADMIN',
+        profileComplete: true,
+        clubId: club.id,
+        // Un segundo administrador amarrado a una carpeta, para que se vea que
+        // no todo administrador es el dueño del club.
+        deporteId: patinaje.id,
       },
     ],
   });
@@ -283,6 +308,9 @@ async function main(): Promise<void> {
 
       const sede = sedes[i % sedes.length];
       const menor = edad < 18;
+      // Se saca una vez y se usa en los dos sitios. Sacarlo dos veces dejaba la
+      // ficha diciendo un dia de corte y las mensualidades venciendo en otro.
+      const diaCorte = alguno([1, 5, 10, 15] as const);
 
       const m = await prisma.member.create({
         data: {
@@ -304,13 +332,16 @@ async function main(): Promise<void> {
           guardianDocNumber: menor ? String(entre(30000000, 1099999999)) : null,
           category,
           tipo: nivel,
-          paymentDueDay: alguno([1, 5, 10, 15] as const),
+          paymentDueDay: diaCorte,
           monthlyFee: cuota,
           role: 'DEPORTISTA',
           active,
           desactivadoAt: active ? null : dia(anioActual, mesActual, 3),
           inscripcion: 'APROBADO',
           origen: conProbabilidad(0.35) ? 'FORMULARIO' : 'MANUAL',
+          // Quien entra por el enlace entra aprobado, y esa es la fecha que
+          // muestra la ficha. Sin ella el campo sale vacio en media lista.
+          aprobadoAt: new Date(Date.UTC(anioActual, hoy.getUTCMonth() - desdeMes, entre(1, 28), 12)),
           inviteStatus: conProbabilidad(0.4) ? 'ACCEPTED' : 'PENDING',
           createdAt: new Date(Date.UTC(anioActual, hoy.getUTCMonth() - desdeMes, entre(1, 28), 12)),
           locations: { create: [{ locationId: sede.id }] },
@@ -325,7 +356,7 @@ async function main(): Promise<void> {
         fullName: m.fullName,
         category,
         monthlyFee: cuota,
-        paymentDueDay: alguno([1, 5, 10, 15] as const),
+        paymentDueDay: diaCorte,
         active,
         desdeMes,
       });
@@ -338,6 +369,49 @@ async function main(): Promise<void> {
   const enNatacion = await sembrarDeportistas(natacion.id, [piscina], 16, 110000, 100);
   const todos = [...enPatinaje, ...enNatacion];
   console.log(`Deportistas: ${enPatinaje.length} en patinaje, ${enNatacion.length} en natación.`);
+
+  // ── El staff, también en Miembros ─────────────────────────────────────────
+  // Miembros no es solo la lista de deportistas: las cifras de arriba cuentan
+  // Admins y Entrenadores aparte, y sin estas fichas esas dos salen en cero.
+  //
+  // No llevan cuota ni dia de corte: el staff no paga mensualidad, y ponerle
+  // una lo mete en las cuentas de Finanzas como si fuera un deportista mas.
+  const STAFF: [string, 'ADMIN' | 'ENTRENADOR', string, string][] = [
+    ['Carolina Estrada Ruiz', 'ADMIN', 'admin.aurora@example.com', patinaje.id],
+    ['Mauricio Sandoval León', 'ADMIN', 'admin2.aurora@example.com', patinaje.id],
+    ['Andrés Cardona Vélez', 'ENTRENADOR', 'entrenador.patinaje@example.com', patinaje.id],
+    ['Paola Rincón Gómez', 'ENTRENADOR', 'entrenadora.natacion@example.com', natacion.id],
+    ['Javier Ortega Pabón', 'ENTRENADOR', 'entrenador2.patinaje@example.com', patinaje.id],
+  ];
+
+  for (const [fullName, rol, correo, deporteId] of STAFF) {
+    await prisma.member.create({
+      data: {
+        clubId: club.id,
+        deporteId,
+        fullName,
+        email: correo,
+        phone: telefono(),
+        birthDate: dia(anioActual - entre(26, 45), entre(1, 12), entre(1, 28)),
+        docType: 'CC',
+        docNumber: String(entre(60000000, 1099999999)),
+        gender: /^(Carolina|Paola)/.test(fullName) ? 'Femenino' : 'Masculino',
+        rh: alguno(RH),
+        eps: alguno(EPS),
+        emergencyContact: `${alguno(NOMBRES_F)} ${alguno(APELLIDOS)}`,
+        emergencyPhone: telefono(),
+        role: rol,
+        active: true,
+        inscripcion: 'APROBADO',
+        origen: 'MANUAL',
+        inviteStatus: 'ACCEPTED',
+        aprobadoAt: dia(anioActual - 1, entre(1, 12), entre(1, 28)),
+        createdAt: dia(anioActual - 1, entre(1, 12), entre(1, 28)),
+        locations: { create: [{ locationId: deporteId === natacion.id ? piscina.id : pistaNorte.id }] },
+      },
+    });
+  }
+  console.log(`Staff en Miembros: ${STAFF.length} fichas, entre admins y entrenadores.`);
 
   // ── Tres esperando en la bandeja ──────────────────────────────────────────
   // La pantalla de pendientes vacía no se puede mostrar, y es de las que mejor
@@ -364,6 +438,25 @@ async function main(): Promise<void> {
       },
     });
   }
+
+  // ── Un cambio de datos esperando revisión ─────────────────────────────────
+  // Otra bandeja que vacía no se puede mostrar. Es distinta de la de
+  // inscripciones: acá el deportista ya estaba en el club y la familia mandó
+  // una corrección por el enlace. No se aplica sola, espera al club.
+  const aCorregir = enPatinaje[3];
+  await prisma.member.update({
+    where: { id: aCorregir.id },
+    data: {
+      cambiosPendientes: {
+        enviadoEn: new Date(Date.now() - 20 * 3600 * 1000).toISOString(),
+        cambios: {
+          phone: { antes: '314 555 0122', despues: '318 555 0977' },
+          eps: { antes: 'Coomeva', despues: 'Sura' },
+          emergencyPhone: { antes: '312 555 0410', despues: '300 555 0188' },
+        },
+      },
+    },
+  });
 
   // ── Asistencia, seis meses ────────────────────────────────────────────────
   // Solo en los días que el horario dicta, y solo desde que cada quien entró al
@@ -505,79 +598,160 @@ async function main(): Promise<void> {
   console.log(`Mensualidades: ${pagadas} pagadas, ${pendientes} por cobrar.`);
 
   // ── Competencias ──────────────────────────────────────────────────────────
-  const competidores = enPatinaje.filter(m => m.active && m.category !== CATEGORIAS[0]).slice(0, 14);
+  // Las dos carpetas tienen las suyas. Rendimiento en Natación vacío es una
+  // pantalla que no se puede mostrar, y es de las que más venden.
+  interface Prueba {
+    nombre: string;
+    // Cómo se llena la observación del resultado. Cada deporte mide lo suyo.
+    marca: () => string;
+  }
 
-  const COMPETENCIAS: [string, string, number][] = [
+  function tiempo(minSeg: number, maxSeg: number): string {
+    const s = entre(minSeg, maxSeg);
+    const c = String(entre(0, 99)).padStart(2, '0');
+    return s >= 60 ? `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}.${c}` : `${s}.${c}`;
+  }
+
+  const PRUEBAS_PATINAJE: Prueba[] = [
+    { nombre: '300 metros contrarreloj', marca: () => `${tiempo(27, 33)} s` },
+    { nombre: '500 metros más distancia', marca: () => `${tiempo(45, 52)} s` },
+    { nombre: '1000 metros', marca: () => `${tiempo(95, 115)} min` },
+  ];
+  const PRUEBAS_NATACION: Prueba[] = [
+    { nombre: '50 metros libre', marca: () => `${tiempo(28, 38)} s` },
+    { nombre: '100 metros libre', marca: () => `${tiempo(62, 85)} min` },
+    { nombre: '50 metros espalda', marca: () => `${tiempo(34, 46)} s` },
+  ];
+
+  const OBSERVACIONES = [
+    'Mejoró su marca personal.',
+    'Buena salida, se le fue el remate.',
+    'Primera vez en esta distancia.',
+    null,
+    null,
+    'Corrigió la técnica de curva.',
+  ];
+
+  async function sembrarCompetencias(
+    deporteId: string,
+    plantel: Sembrado[],
+    pruebas: Prueba[],
+    torneos: [string, string, number][],
+  ): Promise<void> {
+    // Solo los que compiten: los de la categoría más pequeña van a escuela, no
+    // a torneos, y meterlos en un podio se ve falso de una vez.
+    const elegibles = plantel.filter(m => m.active && m.category !== CATEGORIAS[0]);
+    if (elegibles.length === 0) return;
+
+    for (const [nombre, lugar, mesesAtras] of torneos) {
+      const ref = new Date(Date.UTC(anioActual, hoy.getUTCMonth() - mesesAtras, entre(8, 24), 12));
+      const competencia = await prisma.competition.create({
+        data: { clubId: club.id, deporteId, name: nombre, place: lugar, date: ref },
+      });
+
+      for (const prueba of pruebas) {
+        const evento = await prisma.competitionEvent.create({
+          data: { competitionId: competencia.id, name: prueba.nombre },
+        });
+
+        // Las posiciones se reparten sin repetirse: dos primeros puestos en la
+        // misma carrera se leen como un error de una vez.
+        const participantes = [...elegibles].sort(() => azar() - 0.5).slice(0, Math.min(8, elegibles.length));
+
+        await prisma.eventResult.createMany({
+          data: participantes.map((m, i) => ({
+            eventId: evento.id,
+            memberId: m.id,
+            position: i + 1,
+            category: m.category,
+            observations: i === 0 ? `${prueba.marca()}. Primer puesto.` : `${prueba.marca()}${alguno(OBSERVACIONES) ? '. ' + alguno(OBSERVACIONES) : ''}`,
+          })),
+          skipDuplicates: true,
+        });
+      }
+    }
+  }
+
+  await sembrarCompetencias(patinaje.id, enPatinaje, PRUEBAS_PATINAJE, [
     ['Válida Departamental', 'Patinódromo de Floridablanca', 4],
     ['Copa Ciudad de Bucaramanga', 'Patinódromo Norte', 2],
     ['Interclubes de Santander', 'Coliseo Centro', 1],
+  ]);
+  await sembrarCompetencias(natacion.id, enNatacion, PRUEBAS_NATACION, [
+    ['Festival Departamental de Natación', 'Complejo Acuático', 3],
+    ['Copa Aurora', 'Complejo Acuático', 1],
+  ]);
+
+  // ── Entrenamientos con marcas ─────────────────────────────────────────────
+  const EJERCICIOS = ['Sentadilla', 'Peso muerto', 'Prensa', 'Zancadas', 'Salto al cajón'] as const;
+  const NOTAS_ENTRENO = [
+    'Sesión completa, sin novedad.',
+    'Trabajo de fuerza previo a la válida.',
+    'Se bajó el volumen por carga de la semana pasada.',
   ];
 
-  for (const [nombre, lugar, mesesAtras] of COMPETENCIAS) {
-    const ref = new Date(Date.UTC(anioActual, hoy.getUTCMonth() - mesesAtras, entre(8, 24), 12));
-    const competencia = await prisma.competition.create({
-      data: { clubId: club.id, deporteId: patinaje.id, name: nombre, place: lugar, date: ref },
-    });
+  async function sembrarEntrenamientos(
+    deporteId: string,
+    plantel: Sembrado[],
+    sedePista: { id: string },
+    sedeGimnasio: { id: string },
+    titulosPista: readonly string[],
+  ): Promise<void> {
+    const elegibles = plantel.filter(m => m.active);
+    if (elegibles.length === 0) return;
 
-    for (const prueba of ['300 metros contrarreloj', '500 metros más distancia', '1000 metros']) {
-      const evento = await prisma.competitionEvent.create({
-        data: { competitionId: competencia.id, name: prueba },
+    for (let atras = 0; atras < 6; atras++) {
+      const ref = new Date(Date.UTC(anioActual, hoy.getUTCMonth() - atras, entre(5, 25), 12));
+      // Donde se entrena decide qué se mide: en pista se cronometra, en
+      // gimnasio se levanta peso. Se alternan para que Rendimiento muestre los
+      // dos formularios y no siempre el mismo.
+      const enPista = atras % 2 === 0;
+
+      const sesion = await prisma.trainingSession.create({
+        data: {
+          clubId: club.id,
+          deporteId,
+          title: enPista ? alguno(titulosPista) : 'Fuerza de piernas',
+          date: ref,
+          escenario: enPista ? 'PISTA' : 'GIMNASIO',
+          locationId: enPista ? sedePista.id : sedeGimnasio.id,
+          notes: alguno(NOTAS_ENTRENO),
+        },
       });
 
-      // Ocho por prueba, y las posiciones se reparten sin repetirse: dos
-      // primeros puestos en la misma carrera se ven de una vez como un error.
-      const participantes = [...competidores].sort(() => azar() - 0.5).slice(0, 8);
-      const puestos = Array.from({ length: participantes.length }, (_, i) => i + 1);
-
-      await prisma.eventResult.createMany({
-        data: participantes.map((m, i) => ({
-          eventId: evento.id,
-          memberId: m.id,
-          position: puestos[i],
-          category: m.category,
-        })),
+      const participantes = elegibles.slice(0, Math.min(12, elegibles.length));
+      await prisma.trainingResult.createMany({
+        data: participantes.map(m => enPista
+          ? {
+              sessionId: sesion.id,
+              memberId: m.id,
+              time: tiempo(27, 34),
+              distance: '300 m',
+              laps: 2,
+              observations: alguno(OBSERVACIONES),
+            }
+          : {
+              sessionId: sesion.id,
+              memberId: m.id,
+              exercise: alguno(EJERCICIOS),
+              weight: `${entre(30, 80)} kg`,
+              sets: 4,
+              reps: entre(6, 12),
+              mark: `${entre(30, 80)} kg x ${entre(6, 12)}`,
+              observations: alguno(OBSERVACIONES),
+            }),
         skipDuplicates: true,
       });
     }
   }
 
-  // ── Entrenamientos con marcas ─────────────────────────────────────────────
-  for (let atras = 0; atras < 6; atras++) {
-    const ref = new Date(Date.UTC(anioActual, hoy.getUTCMonth() - atras, entre(5, 25), 12));
-    const enPista = atras % 2 === 0;
-
-    const sesion = await prisma.trainingSession.create({
-      data: {
-        clubId: club.id,
-        deporteId: patinaje.id,
-        title: enPista ? 'Control de 300 metros' : 'Fuerza de piernas',
-        date: ref,
-        escenario: enPista ? 'PISTA' : 'GIMNASIO',
-        locationId: enPista ? pistaNorte.id : pistaCentro.id,
-      },
-    });
-
-    const participantes = competidores.slice(0, 10);
-    await prisma.trainingResult.createMany({
-      data: participantes.map(m => enPista
-        ? {
-            sessionId: sesion.id,
-            memberId: m.id,
-            time: `${entre(27, 32)}.${String(entre(0, 99)).padStart(2, '0')}`,
-            distance: '300 m',
-            laps: 2,
-          }
-        : {
-            sessionId: sesion.id,
-            memberId: m.id,
-            exercise: alguno(['Sentadilla', 'Peso muerto', 'Prensa'] as const),
-            weight: `${entre(30, 80)} kg`,
-            sets: 4,
-            reps: entre(6, 12),
-          }),
-      skipDuplicates: true,
-    });
-  }
+  await sembrarEntrenamientos(patinaje.id, enPatinaje, pistaNorte, pistaCentro, [
+    'Control de 300 metros', 'Series de velocidad', 'Fondo en pista',
+  ]);
+  await sembrarEntrenamientos(natacion.id, enNatacion, piscina, piscina, [
+    'Control de 50 libre', 'Series de técnica', 'Fondo continuo',
+  ]);
+  console.log('Competencias y entrenamientos sembrados en las dos carpetas.');
 
   // ── Calendario ────────────────────────────────────────────────────────────
   await prisma.calendarEvent.createMany({
@@ -596,8 +770,22 @@ async function main(): Promise<void> {
         locationId: pistaCentro.id,
       },
       {
+        // Recurrente, para que el calendario muestre también ese caso y no solo
+        // eventos sueltos. 1 y 3 son lunes y miércoles.
+        clubId: club.id, deporteId: patinaje.id, title: 'Entrenamiento de competencia',
+        type: 'TRAINING', startDate: new Date(Date.UTC(anioActual, hoy.getUTCMonth(), 1, 12)),
+        endDate: new Date(Date.UTC(anioActual, hoy.getUTCMonth() + 2, 28, 12)),
+        recurrence: 'WEEKLY', weekDays: [1, 3], allDay: false,
+        locationId: pistaNorte.id,
+      },
+      {
         clubId: club.id, deporteId: natacion.id, title: 'Festival de natación',
         type: 'COMPETITION', startDate: new Date(Date.UTC(anioActual, hoy.getUTCMonth() + 1, 5, 12)),
+        locationId: piscina.id,
+      },
+      {
+        clubId: club.id, deporteId: natacion.id, title: 'Toma de tiempos',
+        type: 'TRAINING', startDate: new Date(Date.UTC(anioActual, hoy.getUTCMonth(), Math.min(28, hoy.getUTCDate() + 2), 12)),
         locationId: piscina.id,
       },
     ],
@@ -605,40 +793,119 @@ async function main(): Promise<void> {
 
   // ── Suscripción del club ──────────────────────────────────────────────────
   // Al día, para que la demostración no salga con el aviso de vencimiento
-  // encima de todo.
-  await prisma.clubSuscripcion.create({
+  // encima de todo, y con historial de cobros para que esa pantalla tenga qué
+  // mostrar.
+  const activos = todos.filter(m => m.active).length;
+  const suscripcion = await prisma.clubSuscripcion.create({
     data: {
       clubId: club.id,
       planMonto: 450000,
       tipoPlan: 'MENSUAL',
       año: anioActual,
       autoRenew: false,
-      picoDeportistas: todos.filter(m => m.active).length,
+      picoDeportistas: activos,
+      consentimientoPagoAt: dia(anioActual, Math.max(1, mesActual - 5), 3),
     },
+  });
+
+  await prisma.suscripcionPago.createMany({
+    data: Array.from({ length: 6 }, (_, i) => {
+      const atras = 5 - i;
+      const ref = new Date(Date.UTC(anioActual, hoy.getUTCMonth() - atras, 3, 12));
+      return {
+        suscripcionId: suscripcion.id,
+        concepto: `Plan mensual — ${MESES[ref.getUTCMonth()]} ${ref.getUTCFullYear()}`,
+        monto: 450000,
+        fecha: ref,
+        estado: 'PAID' as PaymentStatus,
+      };
+    }),
   });
 
   // ── Publicaciones ─────────────────────────────────────────────────────────
   // Privadas del club, no públicas: el muro público cruza clubes, y un club de
   // demostración no tiene por qué aparecerle a nadie más.
-  await prisma.post.createMany({
+  const PUBLICACIONES: [string, number, string | null][] = [
+    ['Felicitaciones al grupo de competencia por los resultados de la válida departamental. Nos llevamos cuatro podios.', 4, 'Patinódromo de Floridablanca'],
+    ['Recordatorio: el sábado el entrenamiento arranca a las 7:00 en el Patinódromo Norte. Llevar hidratación.', 1, null],
+    ['Ya está abierta la inscripción para el semestre. El enlace lo encuentran en Miembros, en el botón Importar.', 9, null],
+  ];
+
+  const COMENTARIOS = [
+    'Muchas gracias por el acompañamiento.',
+    '¿A qué hora hay que estar?',
+    'Allá estaremos.',
+    'Excelente trabajo del equipo.',
+  ];
+
+  for (const [contenido, diasAtras, ubicacion] of PUBLICACIONES) {
+    const post = await prisma.post.create({
+      data: {
+        clubId: club.id,
+        deporteId: patinaje.id,
+        clubName: club.name,
+        scope: 'PRIVATE',
+        authorClerkId: admin.clerkId,
+        authorName: admin.name,
+        authorRole: 'ADMIN',
+        content: contenido,
+        ubicacion,
+        createdAt: new Date(Date.now() - diasAtras * 24 * 3600 * 1000),
+      },
+      select: { id: true },
+    });
+
+    // Los «me gusta» y los comentarios van a nombre de deportistas del club,
+    // que es de donde salen en la aplicación de verdad. Una publicación sin
+    // una sola reacción se ve como un muro muerto.
+    const reaccionan = [...enPatinaje].sort(() => azar() - 0.5).slice(0, entre(4, 11));
+    await prisma.postLike.createMany({
+      data: reaccionan.map(m => ({ postId: post.id, userId: `demo_like_${m.id}` })),
+      skipDuplicates: true,
+    });
+
+    const comentan = [...enPatinaje].sort(() => azar() - 0.5).slice(0, entre(1, 3));
+    await prisma.postComment.createMany({
+      data: comentan.map((m, i) => ({
+        postId: post.id,
+        authorClerkId: `demo_comentario_${m.id}`,
+        authorName: m.fullName,
+        authorRole: 'DEPORTISTA',
+        content: alguno(COMENTARIOS),
+        createdAt: new Date(Date.now() - (diasAtras * 24 - (i + 1) * 3) * 3600 * 1000),
+      })),
+    });
+  }
+
+  // ── Notificaciones del administrador ──────────────────────────────────────
+  // La campana vacía es lo primero que se ve en Inicio. Van dirigidas al
+  // `clerkId` del administrador, así que solo tienen efecto cuando se sembró
+  // con DEMO_ADMIN_CLERK_ID.
+  await prisma.notification.createMany({
     data: [
       {
-        clubId: club.id, deporteId: patinaje.id, clubName: club.name, scope: 'PRIVATE',
-        authorClerkId: admin.clerkId, authorName: admin.name, authorRole: 'ADMIN',
-        content: 'Felicitaciones al grupo de competencia por los resultados de la válida departamental. Nos llevamos cuatro podios.',
-        createdAt: new Date(Date.now() - 4 * 24 * 3600 * 1000),
+        recipientClerkId: admin.clerkId, clubId: club.id, tipo: 'NEW_MEMBER',
+        titulo: 'Nueva inscripción', cuerpo: 'Tres solicitudes esperan revisión en Miembros.',
+        link: '/miembros', leida: false,
+        createdAt: new Date(Date.now() - 6 * 3600 * 1000),
       },
       {
-        clubId: club.id, deporteId: patinaje.id, clubName: club.name, scope: 'PRIVATE',
-        authorClerkId: admin.clerkId, authorName: admin.name, authorRole: 'ADMIN',
-        content: 'Recordatorio: el sábado el entrenamiento arranca a las 7:00 en el Patinódromo Norte. Llevar hidratación.',
-        createdAt: new Date(Date.now() - 1 * 24 * 3600 * 1000),
+        recipientClerkId: admin.clerkId, clubId: club.id, tipo: 'PAYMENT_DUE',
+        titulo: 'Mensualidades por cobrar', cuerpo: `Hay ${pendientes} mensualidades sin pagar este mes.`,
+        link: '/finanzas', leida: false,
+        createdAt: new Date(Date.now() - 26 * 3600 * 1000),
+      },
+      {
+        recipientClerkId: admin.clerkId, clubId: club.id, tipo: 'NEW_COMPETITION',
+        titulo: 'Competencia registrada', cuerpo: 'Copa Aurora quedó en el calendario.',
+        link: '/logros', leida: true,
+        createdAt: new Date(Date.now() - 5 * 24 * 3600 * 1000),
       },
     ],
   });
 
   console.log('\nListo. El club de demostración quedó sembrado.');
-  console.log('El sello de verificado se pone a mano desde Superadmin si la pieza lo necesita.');
+  console.log('Falta a mano: el logo y la portada desde Ajustes, y el sello de verificado desde Superadmin.');
 }
 
 main()

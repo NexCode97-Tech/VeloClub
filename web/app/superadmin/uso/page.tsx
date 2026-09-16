@@ -7,6 +7,7 @@ import { apiFetch } from '@/lib/api-client';
 import { AlertTriangle } from 'lucide-react';
 import ModuleLoader from '@/components/ui/module-loader';
 import { MonthPicker, DateRange } from '@/components/ui/month-picker';
+import { GloboGrafica } from '@/components/ui/globo-grafica';
 import { AccionesCabecera } from '@/components/superadmin/acciones-cabecera';
 
 /**
@@ -56,12 +57,28 @@ const ESTADOS: Record<Estado, { texto: string; color: string; fondo: string }> =
 };
 
 const MESES = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+const MESES_LARGO = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 
-function fechaCorta(iso: string): string {
-  // El ano no se muestra: son doce semanas, todas del mismo o del anterior, y
-  // repetirlo en cada marca del eje solo lo ensucia.
+/**
+ * El rotulo de una marca del eje.
+ *
+ * Dentro de un mes va solo el dia: el mes ya esta escrito al lado del titulo y
+ * repetirlo treinta veces en el eje es ruido. En un periodo que cruza meses si
+ * hace falta, porque «3» solo no dice de cual.
+ */
+function fechaCorta(iso: string, conMes: boolean): string {
   const [, mes, dia] = iso.split('-').map(Number);
-  return `${dia} ${MESES[mes - 1]}`;
+  return conMes ? `${dia} ${MESES[mes - 1]}` : String(dia);
+}
+
+/** «Septiembre 2026», o «3 sep \u2013 18 oct» cuando el periodo cruza meses. */
+function rotuloPeriodo(desde: string, hasta: string): string {
+  const [ad, md, dd] = desde.split('-').map(Number);
+  const [ah, mh, dh] = hasta.split('-').map(Number);
+  const mesEntero = dd === 1 && dh === new Date(ah, mh, 0).getDate() && md === mh && ad === ah;
+  if (mesEntero) return `${MESES_LARGO[md - 1]} ${ad}`;
+  if (md === mh && ad === ah) return `${dd} \u2013 ${dh} ${MESES[mh - 1]} ${ah}`;
+  return `${dd} ${MESES[md - 1]} \u2013 ${dh} ${MESES[mh - 1]} ${ah}`;
 }
 
 function haceCuanto(dias: number | null): string {
@@ -172,7 +189,13 @@ export default function UsoPage() {
   }
 
   const { clubes, totales, serie, ingresosDisponibles } = datos;
-  const serieGrafica = serie.map(s => ({ semana: fechaCorta(s.fecha), dias: s.dias }));
+  // Si el periodo cabe en un mes, el eje no repite el mes.
+  const cruzaMeses = desde.slice(0, 7) !== hasta.slice(0, 7);
+  const serieGrafica = serie.map(s => ({
+    semana: fechaCorta(s.fecha, cruzaMeses),
+    fecha: s.fecha,
+    dias: s.dias,
+  }));
 
   return (
     <div className="px-5 pt-4 pb-8 max-w-5xl mx-auto w-full flex flex-col gap-4">
@@ -209,7 +232,14 @@ export default function UsoPage() {
       {/* Una sola serie, así que no lleva leyenda: el título ya dice qué es. */}
       <div className="bg-white rounded-2xl px-4 pt-4 pb-2" style={{ border: '1px solid rgba(120,80,200,0.10)' }}>
         <div className="flex flex-wrap gap-2 items-baseline justify-between mb-1">
-          <h2 className="text-[14px] font-semibold text-[#1A1028]">Actividad de la plataforma</h2>
+          <div className="flex items-baseline gap-2 flex-wrap">
+            <h2 className="text-[14px] font-semibold text-[#1A1028]">Actividad de la plataforma</h2>
+            {/* El periodo vive aca y no en cada marca del eje. */}
+            <span className="text-[11.5px] font-medium px-2 py-0.5 rounded-full"
+              style={{ background: 'rgba(56,29,160,0.08)', color: '#381DA0' }}>
+              {rotuloPeriodo(desde, hasta)}
+            </span>
+          </div>
           <span className="text-[11.5px] text-[#8E87A8]">Días con asistencia tomada, todos los clubes</span>
         </div>
         <div className="h-[200px] w-full">
@@ -242,14 +272,20 @@ export default function UsoPage() {
                 tick={{ fontSize: 10.5, fill: '#8E87A8' }} allowDecimals={false} />
               <Tooltip
                 cursor={{ stroke: '#381DA0', strokeOpacity: 0.3 }}
-                contentStyle={{
-                  borderRadius: 10, border: '1px solid rgba(120,80,200,0.14)',
-                  fontSize: 12, boxShadow: '0 4px 16px rgba(26,16,40,0.08)',
-                }}
-                formatter={(v) => [`${Number(v ?? 0)} días`, 'Con asistencia']}
-                labelFormatter={(_, payload) => `Semana del ${payload?.[0]?.payload?.semana ?? ''}`}
+                wrapperStyle={{ outline: 'none' }}
+                content={
+                  <GloboGrafica
+                    texto={(punto, valor) => {
+                      const f = punto.fecha as string | undefined;
+                      const cuando = f
+                        ? (datos.tramo === 'dia' ? fechaCorta(f, true) : `Semana del ${fechaCorta(f, true)}`)
+                        : '';
+                      return `${cuando} \u00b7 ${valor} ${valor === 1 ? 'd\u00eda' : 'd\u00edas'}`;
+                    }}
+                  />
+                }
               />
-              <Area type="monotone" dataKey="dias" stroke="none" fill="url(#usoRelleno)" />
+              <Area type="monotone" dataKey="dias" stroke="none" fill="url(#usoRelleno)" tooltipType="none" />
               <Area type="monotone" dataKey="dias" stroke="#381DA0" strokeWidth={2}
                 fill="url(#usoCuadricula)" mask="url(#usoMascara)" />
             </AreaChart>
@@ -259,12 +295,11 @@ export default function UsoPage() {
 
       {/* ── Club por club ───────────────────────────────────────────────── */}
       <div className="bg-white rounded-2xl overflow-hidden" style={{ border: '1px solid rgba(120,80,200,0.10)' }}>
+        {/* El orden es por riesgo y no por tamano. No se explica en pantalla:
+            la columna de estado ya lo deja ver, y una linea de texto debajo de
+            cada titulo termina siendo ruido que nadie relee. */}
         <div className="px-4 pt-4 pb-3" style={{ borderBottom: '1px solid rgba(120,80,200,0.06)' }}>
-          <h2 className="text-[14px] font-semibold text-[#1A1028] mb-0.5">Club por club</h2>
-          <p className="text-[11.5px] text-[#8E87A8] leading-relaxed max-w-xl">
-            Ordenado por riesgo, no por tamaño. Un club grande que dejó de entrar importa
-            más que uno pequeño que entra todos los días.
-          </p>
+          <h2 className="text-[14px] font-semibold text-[#1A1028]">Club por club</h2>
         </div>
 
         <div className="overflow-x-auto">

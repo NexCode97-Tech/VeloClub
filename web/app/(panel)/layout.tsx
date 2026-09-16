@@ -22,8 +22,12 @@ import Panel from './panel';
  * compartan este armazón sin aportar nada a la dirección. Por eso Miembros es
  * `/miembros` y no `/panel/miembros`.
  *
- * `themeColor` es el gris del panel, que es el de casi todos los módulos.
- * Inicio declara el suyo en `inicio/layout.tsx` y gana por ser más profundo.
+ * Acá **no** va `themeColor`, aunque el gris sea el color de casi todos los
+ * módulos. En el HTML del servidor ganaba el morado que declara Inicio, por ser
+ * más profundo, pero al hidratarse la página esas etiquetas se vuelven a
+ * escribir y el gris alcanzaba a quedar de último: la barra de estado salía
+ * morada medio segundo y se pasaba a gris. El color lo pone `ColorBarraEstado`,
+ * que es una sola mano y ya sabe qué le toca a cada ruta.
  */
 export const viewport: Viewport = {
   width: 'device-width',
@@ -31,7 +35,6 @@ export const viewport: Viewport = {
   maximumScale: 1,
   userScalable: false,
   viewportFit: 'cover',
-  themeColor: '#F7F7FB',
 };
 
 export default function LayoutDelPanel({ children }: { children: React.ReactNode }) {

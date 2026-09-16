@@ -597,18 +597,14 @@ export default function Panel({ children }: { children: React.ReactNode }) {
         llega hasta el borde de la pantalla y aqui hay que devolverle al
         contenido el alto que se le come la barra de estado.
 
-        ── PRUEBA TEMPORAL ──
-        En Inicio esa franja va en rojo a proposito, para saber de una vez si
-        existe o no. Llevamos cinco intentos adivinando mirando alturas.
-        Si en el telefono sale una tira roja arriba, la franja esta reservada y
-        lo unico que falla es el color. Si no sale nada, `cover` no esta
-        entrando y el camino es otro.
-        Esto se devuelve al morado (o al gris) apenas se sepa. */}
+        El color se decide aca mismo, con la ruta, y no leyendo una variable que
+        escribe un efecto: un efecto corre despues del primer pintado, asi que
+        la franja salia del color equivocado hasta que alcanzara a correr. */}
     <div
       className="flex h-dvh overflow-hidden bg-background"
       style={{
         paddingTop: 'env(safe-area-inset-top, 0px)',
-        background: pathname === '/inicio' ? '#FF0000' : '#F7F7FB',
+        background: pathname === '/inicio' ? '#381DA0' : '#F7F7FB',
       }}
     >
 

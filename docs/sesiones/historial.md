@@ -283,7 +283,28 @@ Tres cosas no las puede inventar el script y van a mano: el logo y la portada, l
 fotos de los deportistas y los documentos adjuntos —son archivos de Cloudinary y
 una dirección falsa queda como imagen rota— y el sello de verificado.
 
-Falta montar el entorno en Railway y Vercel. Eso es del cliente.
+**Montado el mismo día, todo desde los CLI**, y el cliente entró sin problema a
+`https://demo.veloclubtech.com`:
+
+- Railway, entorno `demo`: `api-demo`, `Postgres-7gHC` y `Redis-mgS2`. Sin Mercado
+  Pago, Bre-B ni Sentry. A un servicio nuevo Railway ya no le deja amarrar
+  `railway.toml`, así que el primer despliegue arrancó sin tablas; la migración
+  quedó puesta directo como `preDeployCommand`.
+- Vercel: proyecto aparte, `veloclub-demo`, con la rama `demo` como producción.
+  Se probó primero como rama del proyecto original y no sirvió: en Hobby la
+  protección de Vercel solo deja pasar los dominios propios de producción.
+- El DNS de `veloclubtech.com` resultó estar en **otra cuenta de Vercel**, el
+  equipo `veloclubtech`, y no en la de los proyectos. Se abrió una segunda
+  sesión del CLI solo para poner el TXT de verificación.
+- Clerk: app aparte, **VeloClub Demo**. La verificación por dispositivo nuevo
+  pedía un código a un correo que no existe, y apagarla lo bloqueó el control de
+  seguridad. Se resolvió con correos `+clerk_test`, que en desarrollo aceptan el
+  código fijo 424242.
+- La siembra corrió a la primera: 54 deportistas, 5 del staff, 2.408
+  asistencias y 299 mensualidades.
+
+Queda sin mapa en Sedes: la llave de Google Maps del proyecto original está
+guardada como secreta y no se puede leer para copiarla.
 
 ---
 

@@ -24,7 +24,65 @@ al revés: no que el demo vea datos ajenos, sino que los ajenos lo vean a él.
 
 ---
 
-## Montarlo
+## Lo que ya está montado
+
+Montado el 16 de septiembre de 2026. La siembra corrió a la primera.
+
+| Pieza | Dónde |
+|---|---|
+| Web | `https://demo.veloclubtech.com`, proyecto **`veloclub-demo`** en Vercel, con la rama `demo` como producción |
+| API | `https://api-demo-demo-d17d.up.railway.app`, servicio `api-demo` del entorno `demo` en Railway |
+| Base | `Postgres-7gHC`, entorno `demo` |
+| Redis | `Redis-mgS2`, entorno `demo` |
+| Clerk | Aplicación **VeloClub Demo**, instancia de desarrollo |
+
+Cuentas para entrar:
+
+| Rol | Correo |
+|---|---|
+| Administradora | `admin+clerk_test@demo.veloclubtech.com` |
+| Deportista | `deportista+clerk_test@demo.veloclubtech.com` |
+
+Las contraseñas no van en el repo.
+
+Los correos llevan `+clerk_test` a propósito. En una instancia de desarrollo,
+Clerk acepta el código fijo **424242** para esos correos, así que la
+verificación por dispositivo nuevo no se queda esperando un correo que no
+existe. Si algún día se apaga esa verificación en el panel de Clerk, el
+código deja de pedirse.
+
+### Tres cosas que se aprendieron montándolo
+
+- **Railway ya no deja amarrar `railway.toml` a un servicio nuevo.** Producción
+  lo sigue leyendo porque es anterior al cambio, pero `api-demo` no, y el primer
+  despliegue arrancó sin tablas. El comando de migración quedó puesto
+  directamente en el servicio. Si se crea otro servicio, hay que ponérselo igual.
+- **Las variables de la web viven en `veloclub-demo`.** Si se agrega una
+  variable nueva a la web, hay que decidir si la demo la necesita y ponerla
+  también en ese proyecto.
+- **La web de la demo es un proyecto aparte en Vercel, no una rama del
+  original.** La protección de Vercel del plan Hobby solo deja pasar los
+  dominios propios **de producción**. Una rama con dominio propio sigue pidiendo
+  iniciar sesión en Vercel. Por eso `veloclub-demo` es su propio proyecto, con el
+  mismo repo y la carpeta `web`, y su rama de producción es `demo`. El proyecto
+  original y sus despliegues de prueba siguen protegidos.
+- **El DNS de `veloclubtech.com` vive en otra cuenta de Vercel**, la del equipo
+  `veloclubtech`, no en `nexcode97-9675s-projects`, que es donde están los
+  proyectos. El registro TXT de verificación `_vercel` se pone desde esa cuenta.
+- **Sin mapa en Sedes.** `NEXT_PUBLIC_GOOGLE_MAPS_KEY` no se copió al proyecto
+  demo porque en el original está guardada como secreta y no se puede leer.
+
+### Actualizar la demo con lo último
+
+```bash
+git checkout demo && git merge main && git push origin demo
+```
+
+Railway y Vercel despliegan solos.
+
+---
+
+## Montarlo desde cero
 
 ### 1. La base y la API, en Railway
 

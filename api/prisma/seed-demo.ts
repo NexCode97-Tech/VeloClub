@@ -305,11 +305,20 @@ async function main(): Promise<void> {
 
       // Casi todos entraron hace tiempo; unos pocos son recientes, para que la
       // gráfica de crecimiento tenga escalones y no una recta.
-      const desdeMes = conProbabilidad(0.8) ? entre(6, 30) : entre(0, 5);
+      const desdeMesAzar = conProbabilidad(0.8) ? entre(6, 30) : entre(0, 5);
 
       // En pausa: los que se van en vacaciones. Es un estado real del producto
       // y conviene que se vea en los pantallazos.
-      const active = !conProbabilidad(0.08);
+      const activoAzar = !conProbabilidad(0.08);
+
+      // La primera de patinaje es la que se amarra a la cuenta de deportista
+      // con DEMO_DEPORTISTA_CLERK_ID. Tiene que llevar tiempo en el club y
+      // estar activa: si le tocara entrar este mes, Mis pagos saldría con una
+      // sola mensualidad y su Rendimiento vacío. Los valores al azar se sacan
+      // igual, para que el resto del club no cambie.
+      const esLaDeLaCuenta = inicio === 1 && i === 0;
+      const desdeMes = esLaDeLaCuenta ? Math.max(desdeMesAzar, 12) : desdeMesAzar;
+      const active = esLaDeLaCuenta ? true : activoAzar;
 
       const sede = sedes[i % sedes.length];
       const menor = edad < 18;

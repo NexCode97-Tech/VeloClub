@@ -975,12 +975,20 @@ export default function FinanzasPage() {
                       />
                     </div>
                   ) : (
-                    <img
-                      src="/icon-desktop-192.png"
-                      alt="VeloClub"
-                      className="w-11 h-11 object-contain"
+                    /* El de VeloClub también en círculo, igual que el del club.
+                       El archivo es un cuadrado de esquinas redondeadas: el
+                       círculo lo recorta, y el leve aumento evita que asome
+                       el borde transparente de esas esquinas. */
+                    <div
+                      className="w-11 h-11 rounded-full overflow-hidden shrink-0"
                       style={{ mixBlendMode: 'multiply', opacity: 0.92 }}
-                    />
+                    >
+                      <img
+                        src="/icon-desktop-192.png"
+                        alt="VeloClub"
+                        className="w-full h-full object-cover scale-[1.12]"
+                      />
+                    </div>
                   )}
                 </div>
               </div>

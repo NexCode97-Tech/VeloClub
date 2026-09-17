@@ -24,7 +24,51 @@ al revés: no que el demo vea datos ajenos, sino que los ajenos lo vean a él.
 
 ---
 
-## Montarlo
+## Lo que ya está montado
+
+Montado el 16 de septiembre de 2026. La siembra corrió a la primera.
+
+| Pieza | Dónde |
+|---|---|
+| Web | `https://demo.veloclubtech.com`, rama `demo` del proyecto `veloclub` en Vercel |
+| API | `https://api-demo-demo-d17d.up.railway.app`, servicio `api-demo` del entorno `demo` en Railway |
+| Base | `Postgres-7gHC`, entorno `demo` |
+| Redis | `Redis-mgS2`, entorno `demo` |
+| Clerk | Aplicación **VeloClub Demo**, instancia de desarrollo |
+
+Cuentas para entrar:
+
+| Rol | Correo |
+|---|---|
+| Administradora | `admin@demo.veloclubtech.com` |
+| Deportista | `deportista@demo.veloclubtech.com` |
+
+Las contraseñas no van en el repo.
+
+### Tres cosas que se aprendieron montándolo
+
+- **Railway ya no deja amarrar `railway.toml` a un servicio nuevo.** Producción
+  lo sigue leyendo porque es anterior al cambio, pero `api-demo` no, y el primer
+  despliegue arrancó sin tablas. El comando de migración quedó puesto
+  directamente en el servicio. Si se crea otro servicio, hay que ponérselo igual.
+- **Las variables de Vercel se amarran a la rama.** Las de vista previa
+  generales apuntan a producción; las de `demo` tienen prioridad solo en esa
+  rama. Si se agrega una variable nueva a la web, hay que decidir si la demo la
+  necesita.
+- **Vercel protege los despliegues que no tienen dominio propio.** Por eso la
+  demo va en `demo.veloclubtech.com` y no en la dirección larga de la rama.
+
+### Actualizar la demo con lo último
+
+```bash
+git checkout demo && git merge main && git push origin demo
+```
+
+Railway y Vercel despliegan solos.
+
+---
+
+## Montarlo desde cero
 
 ### 1. La base y la API, en Railway
 

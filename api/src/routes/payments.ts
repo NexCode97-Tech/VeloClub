@@ -9,6 +9,7 @@ import { v2 as cloudinary } from 'cloudinary';
 import { createQueue } from '../lib/queue';
 import { validarSubida } from '../lib/upload-guard';
 import { createLimiter } from '../lib/rate-limit';
+import { cortesComparativo, variacion } from '../lib/comparativo';
 
 const fmtCOP = (n: number) => `$${Math.round(n).toLocaleString('es-CO')}`;
 
@@ -152,6 +153,79 @@ router.get('/notifications', requireAuth, async (req, res) => {
     .filter(Boolean);
 
   res.json({ notifications });
+});
+
+// GET /payments/comparativo?month=&year=&locationId=
+// Cómo va el mes frente al anterior, al mismo día. Lo usan las tarjetas de
+// Pagados y Pendiente en Finanzas. Los cortes y el criterio para fin de mes
+// viven en lib/comparativo.
+//
+// Cuenta deportistas, no cobros, igual que las tarjetas: uno con dos cobros en
+// el mes cuenta una vez. Y se reconstruye por fechas, no por el estado de hoy:
+// quien pagó agosto el 25 no estaba pagado el 17 de agosto.
+//
+// «Sin cobro» no tiene comparación porque no se puede reconstruir: la
+// plataforma no guarda cuándo se le puso tarifa a cada deportista.
+const comparativoQuery = z.object({
+  month: z.coerce.number().int().min(1).max(12),
+  year: z.coerce.number().int().min(2020).max(2100),
+  locationId: z.string().min(1).optional(),
+});
+
+router.get('/comparativo', requireAuth, async (req, res) => {
+  if (!req.user) return res.status(401).json({ error: 'No autenticado' });
+  // Son cifras del club entero; un deportista solo ve lo suyo.
+  if (req.user.role === 'DEPORTISTA') return res.status(403).json({ error: 'Sin permiso' });
+
+  const parsed = comparativoQuery.safeParse(req.query);
+  if (!parsed.success) return res.status(400).json({ error: 'Mes o año inválido' });
+  const { month, year, locationId } = parsed.data;
+
+  const cortes = cortesComparativo(year, month, new Date());
+  if (!cortes) return res.json({ comparacion: null });
+
+  const clubId = req.user.clubId ?? '';
+  const mesAnt = month === 1 ? 12 : month - 1;
+  const anioAnt = month === 1 ? year - 1 : year;
+
+  // 'GENERAL' son las cuotas sin sede; omitirlo trae todas. Igual que la lista.
+  const sede = locationId === undefined ? {} : { locationId: locationId === 'GENERAL' ? null : locationId };
+  const base = (m: number, a: number) => ({
+    clubId, month: m, year: a, ...sede,
+    member: { role: 'DEPORTISTA' as const },
+  });
+
+  const contar = (where: Record<string, unknown>) =>
+    prisma.payment.findMany({ where, select: { memberId: true }, distinct: ['memberId'] })
+      .then(filas => filas.length);
+
+  const pagados = (m: number, a: number, corte: Date) =>
+    contar({ ...base(m, a), paidAt: { lte: corte } });
+
+  // Pendiente en el corte: el cobro ya existía y todavía no estaba pagado.
+  const pendientes = (m: number, a: number, corte: Date) =>
+    contar({
+      ...base(m, a),
+      createdAt: { lte: corte },
+      status: { not: 'REFUNDED' },
+      OR: [{ paidAt: null }, { paidAt: { gt: corte } }],
+    });
+
+  const [pagAct, pagAnt, penAct, penAnt] = await Promise.all([
+    pagados(month, year, cortes.actual),
+    pagados(mesAnt, anioAnt, cortes.anterior),
+    pendientes(month, year, cortes.actual),
+    pendientes(mesAnt, anioAnt, cortes.anterior),
+  ]);
+
+  res.json({
+    comparacion: {
+      etiqueta: cortes.etiqueta,
+      mesCerrado: cortes.mesCerrado,
+      pagados: { actual: pagAct, anterior: pagAnt, variacion: variacion(pagAct, pagAnt) },
+      pendientes: { actual: penAct, anterior: penAnt, variacion: variacion(penAct, penAnt) },
+    },
+  });
 });
 
 // GET /payments?month=&year=&status=

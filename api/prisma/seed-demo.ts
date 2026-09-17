@@ -577,7 +577,11 @@ async function main(): Promise<void> {
       const pagado = atras === 0 ? conProbabilidad(0.55) : conProbabilidad(0.93);
       const vence = dia(anio, mes, m.paymentDueDay);
       const status: PaymentStatus = pagado ? 'PAID' : vence < hoy ? 'OVERDUE' : 'PENDING';
-      const paidAt = pagado ? dia(anio, mes, Math.min(28, m.paymentDueDay + entre(0, 4))) : null;
+      // En el mes en curso nadie pudo pagar en un día que todavía no llega.
+      // El azar solo se saca si pagó, igual que antes, para no mover el resto
+      // del club sembrado.
+      const diaPago = pagado ? Math.min(28, m.paymentDueDay + entre(0, 4), atras === 0 ? hoy.getUTCDate() : 31) : 0;
+      const paidAt = pagado ? dia(anio, mes, diaPago) : null;
 
       const pago = await prisma.payment.create({
         data: {
@@ -591,6 +595,10 @@ async function main(): Promise<void> {
           dueDate: vence,
           paidAt,
           status,
+          // El cobro nace el día 1 de su mes, que es cuando un club genera los
+          // cobros. Con la fecha de la siembra, la comparación de Finanzas
+          // contra el mes anterior no encontraría ningún pendiente en el pasado.
+          createdAt: dia(anio, mes, 1),
         },
         select: { id: true },
       });

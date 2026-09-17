@@ -793,13 +793,9 @@ export default function FinanzasPage() {
           <div className="hidden md:block w-px h-6 bg-border shrink-0" />
           {/* Filtros. Mes y año son un solo control, y en el celular es solo el
               ícono: así la sede cabe en esta misma fila, que antes tenía que
-              bajar a su propio renglón porque las dos listas la llenaban. */}
+              bajar a su propio renglón porque las dos listas la llenaban. La
+              sede va primero y el calendario a su derecha, junto a los botones. */}
           <div className="flex gap-2 items-center w-full md:w-auto">
-            <SelectorMes
-              mes={filterMonth}
-              anio={filterYear}
-              onChange={(m, a) => { setFilterMonth(m); setFilterYear(a); setStatusFilter('ALL'); }}
-            />
             {hayVariasSedes && (
               <button
                 onClick={() => setHojaSede(true)}
@@ -810,9 +806,15 @@ export default function FinanzasPage() {
                 <ChevronDown className="w-3.5 h-3.5 shrink-0" />
               </button>
             )}
-            {/* Sin varias sedes no hay nada que estire la fila, y los botones
-                se quedarían pegados al calendario. */}
+            {/* Sin varias sedes no hay nada que estire la fila, y el calendario
+                y los botones se quedarían pegados a la izquierda. */}
             {!hayVariasSedes && <div className="flex-1 md:hidden" />}
+            <SelectorMes
+              mes={filterMonth}
+              anio={filterYear}
+              alinear="derecha"
+              onChange={(m, a) => { setFilterMonth(m); setFilterYear(a); setStatusFilter('ALL'); }}
+            />
             {tab === 'flujo' && (
               <motion.button
                 whileTap={reducedMotion ? {} : { scale: 0.96 }}

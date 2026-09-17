@@ -22,6 +22,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import { DatePicker } from '@/components/ui/date-picker';
+import { SelectorMes } from '@/components/ui/selector-mes';
 import { motion, AnimatePresence, useReducedMotion, type Variants } from 'framer-motion';
 import { stagger as pageStagger, cardVariant as pageCard } from '@/lib/page-animations';
 import ModuleLoader, { useCargaMinima } from '@/components/ui/module-loader';
@@ -790,39 +791,28 @@ export default function FinanzasPage() {
           </div>
           {/* Separador visual solo en desktop */}
           <div className="hidden md:block w-px h-6 bg-border shrink-0" />
-          {/* Filtros */}
+          {/* Filtros. Mes y año son un solo control, y en el celular es solo el
+              ícono: así la sede cabe en esta misma fila, que antes tenía que
+              bajar a su propio renglón porque las dos listas la llenaban. */}
           <div className="flex gap-2 items-center w-full md:w-auto">
-            <Select value={String(filterMonth)} onValueChange={v => { setFilterMonth(parseInt(v ?? '')); setStatusFilter('ALL'); }}>
-              <SelectTrigger className="flex-1 md:flex-none md:w-36 bg-white">
-                <span className="text-sm">{MONTH_NAMES[filterMonth - 1]}</span>
-              </SelectTrigger>
-              <SelectContent>
-                {MONTH_NAMES.map((name, idx) => (
-                  <SelectItem key={idx + 1} value={String(idx + 1)}>{name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select value={String(filterYear)} onValueChange={v => setFilterYear(parseInt(v ?? ''))}>
-              <SelectTrigger className="w-24 shrink-0 bg-white"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {[2024, 2025, 2026, 2027].map(y => (
-                  <SelectItem key={y} value={String(y)}>{y}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {/* Sede — desde tablet entra en esta misma fila. En movil baja al
-                renglon de abajo: mes, ano y "Nuevo" ya la llenan, y apretarla
-                aca la volveria ilegible. */}
+            <SelectorMes
+              mes={filterMonth}
+              anio={filterYear}
+              onChange={(m, a) => { setFilterMonth(m); setFilterYear(a); setStatusFilter('ALL'); }}
+            />
             {hayVariasSedes && (
               <button
                 onClick={() => setHojaSede(true)}
-                className="hidden md:flex items-center justify-between gap-2 h-9 px-3 rounded-xl bg-white text-[13px] font-semibold shrink-0"
-                style={{ border: '1.5px solid #381DA0', color: '#381DA0', minWidth: 132 }}
+                className="flex-1 md:flex-none min-w-0 flex items-center justify-between gap-2 h-9 px-3 rounded-xl bg-white text-[13px] font-semibold md:min-w-[132px]"
+                style={{ border: '1.5px solid #381DA0', color: '#381DA0' }}
               >
                 <span className="truncate">{nombreSede(filterSede)}</span>
                 <ChevronDown className="w-3.5 h-3.5 shrink-0" />
               </button>
             )}
+            {/* Sin varias sedes no hay nada que estire la fila, y los botones
+                se quedarían pegados al calendario. */}
+            {!hayVariasSedes && <div className="flex-1 md:hidden" />}
             {tab === 'flujo' && (
               <motion.button
                 whileTap={reducedMotion ? {} : { scale: 0.96 }}
@@ -864,19 +854,6 @@ export default function FinanzasPage() {
             )}
           </div>
         </motion.div>
-
-        {/* Sede en móvil — su propio renglón */}
-        {hayVariasSedes && (
-          <motion.button
-            variants={pageCard}
-            onClick={() => setHojaSede(true)}
-            className="md:hidden flex items-center justify-between gap-2 w-full h-10 px-3 rounded-xl bg-white text-[13px] font-semibold"
-            style={{ border: '1.5px solid #381DA0', color: '#381DA0' }}
-          >
-            <span className="truncate">{nombreSede(filterSede)}</span>
-            <ChevronDown className="w-4 h-4 shrink-0" />
-          </motion.button>
-        )}
 
         {/* ── MENSUALIDADES ─────────────────────────────────────────────────── */}
         {tab === 'mensualidades' && (

@@ -305,11 +305,20 @@ async function main(): Promise<void> {
 
       // Casi todos entraron hace tiempo; unos pocos son recientes, para que la
       // gráfica de crecimiento tenga escalones y no una recta.
-      const desdeMes = conProbabilidad(0.8) ? entre(6, 30) : entre(0, 5);
+      const desdeMesAzar = conProbabilidad(0.8) ? entre(6, 30) : entre(0, 5);
 
       // En pausa: los que se van en vacaciones. Es un estado real del producto
       // y conviene que se vea en los pantallazos.
-      const active = !conProbabilidad(0.08);
+      const activoAzar = !conProbabilidad(0.08);
+
+      // La primera de patinaje es la que se amarra a la cuenta de deportista
+      // con DEMO_DEPORTISTA_CLERK_ID. Tiene que llevar tiempo en el club y
+      // estar activa: si le tocara entrar este mes, Mis pagos saldría con una
+      // sola mensualidad y su Rendimiento vacío. Los valores al azar se sacan
+      // igual, para que el resto del club no cambie.
+      const esLaDeLaCuenta = inicio === 1 && i === 0;
+      const desdeMes = esLaDeLaCuenta ? Math.max(desdeMesAzar, 12) : desdeMesAzar;
+      const active = esLaDeLaCuenta ? true : activoAzar;
 
       const sede = sedes[i % sedes.length];
       const menor = edad < 18;
@@ -705,28 +714,45 @@ async function main(): Promise<void> {
     const elegibles = plantel.filter(m => m.active && m.category !== CATEGORIAS[0]);
     if (elegibles.length === 0) return;
 
-    for (const [nombre, lugar, mesesAtras] of torneos) {
+    for (const [t, [nombre, lugar, mesesAtras]] of torneos.entries()) {
       const ref = new Date(Date.UTC(anioActual, hoy.getUTCMonth() - mesesAtras, entre(8, 24), 12));
       const competencia = await prisma.competition.create({
         data: { clubId: club.id, deporteId, name: nombre, place: lugar, date: ref },
       });
 
-      for (const prueba of pruebas) {
+      for (const [k, prueba] of pruebas.entries()) {
         const evento = await prisma.competitionEvent.create({
           data: { competitionId: competencia.id, name: prueba.nombre },
         });
 
-        // Las posiciones se reparten sin repetirse: dos primeros puestos en la
-        // misma carrera se leen como un error de una vez.
+        // El club no gana todo. En cada competencia gana UNA prueba, queda
+        // segundo en otra y tercero en la otra, y cuál gana va rotando de una
+        // competencia a la siguiente. El pódio de la tarjeta toma los tres
+        // mejores puestos de toda la competencia: si el club ganara las tres
+        // pruebas, salen tres oros, que se ve falso de una vez.
+        //
+        // Detrás del mejor del club, los demás arrancan tres puestos más
+        // abajo: los que faltan en medio son de otros clubes. Así en toda la
+        // competencia hay un solo 1, un solo 2 y un solo 3.
+        const mejor = ((k + t) % pruebas.length) + 1;
         const participantes = [...elegibles].sort(() => azar() - 0.5).slice(0, Math.min(8, elegibles.length));
+        const puestos: number[] = [mejor];
+        let siguiente = mejor + 3;
+        while (puestos.length < participantes.length) {
+          siguiente += entre(0, 2);
+          puestos.push(siguiente);
+          siguiente += 1;
+        }
 
         await prisma.eventResult.createMany({
           data: participantes.map((m, i) => ({
             eventId: evento.id,
             memberId: m.id,
-            position: i + 1,
+            position: puestos[i],
             category: m.category,
-            observations: i === 0 ? `${prueba.marca()}. Primer puesto.` : `${prueba.marca()}${alguno(OBSERVACIONES) ? '. ' + alguno(OBSERVACIONES) : ''}`,
+            observations: puestos[i] <= 3
+              ? `${prueba.marca()}. ${['Primer', 'Segundo', 'Tercer'][puestos[i] - 1]} puesto.`
+              : `${prueba.marca()}${alguno(OBSERVACIONES) ? '. ' + alguno(OBSERVACIONES) : ''}`,
           })),
           skipDuplicates: true,
         });

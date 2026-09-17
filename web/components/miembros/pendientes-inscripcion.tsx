@@ -266,19 +266,21 @@ export function PendientesInscripcion({ puedeAprobar, onCambio }: {
           style={{ background: 'rgba(217,162,43,0.16)' }}>
           <UserPlus className="w-4 h-4" style={{ color: '#B8862A' }} />
         </div>
-        {/* Una sola línea con la cifra. Hubo un título encima («4 cosas
-            esperando tu visto bueno») que repetía el mismo número con otras
-            palabras y le daba al aviso dos renglones de más. */}
+        {/* Un renglón por tipo, con su cifra. Hubo un título encima («4 cosas
+            esperando tu visto bueno») que repetía el número con otras palabras.
+            Tampoco dice «por revisar»: eso ya lo dice el botón, y con esas dos
+            palabras el texto se partía en tres renglones en el celular. */}
         <div className="flex-1 min-w-[170px]">
-          <p className="text-[13px] font-semibold m-0" style={{ color: '#8A6216' }}>
-            {[
-              pendientes.length > 0 &&
-                (pendientes.length === 1 ? '1 inscripción nueva' : `${pendientes.length} inscripciones nuevas`),
-              actualizaciones.length > 0 &&
-                (actualizaciones.length === 1 ? '1 actualización de datos' : `${actualizaciones.length} actualizaciones de datos`),
-            ].filter(Boolean).join(' y ')}
-            {' por revisar'}
-          </p>
+          {pendientes.length > 0 && (
+            <p className="text-[13px] font-semibold m-0 leading-snug" style={{ color: '#8A6216' }}>
+              {pendientes.length === 1 ? '1 inscripción nueva' : `${pendientes.length} inscripciones nuevas`}
+            </p>
+          )}
+          {actualizaciones.length > 0 && (
+            <p className="text-[13px] font-semibold m-0 leading-snug" style={{ color: '#8A6216' }}>
+              {actualizaciones.length === 1 ? '1 actualización de datos' : `${actualizaciones.length} actualizaciones de datos`}
+            </p>
+          )}
         </div>
         <button onClick={() => setAbierto(true)}
           className="shrink-0 text-[12px] font-semibold px-3.5 py-2 rounded-lg text-white"

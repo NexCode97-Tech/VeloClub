@@ -40,10 +40,16 @@ Cuentas para entrar:
 
 | Rol | Correo |
 |---|---|
-| Administradora | `admin@demo.veloclubtech.com` |
-| Deportista | `deportista@demo.veloclubtech.com` |
+| Administradora | `admin+clerk_test@demo.veloclubtech.com` |
+| Deportista | `deportista+clerk_test@demo.veloclubtech.com` |
 
 Las contraseñas no van en el repo.
+
+Los correos llevan `+clerk_test` a propósito. En una instancia de desarrollo,
+Clerk acepta el código fijo **424242** para esos correos, así que la
+verificación por dispositivo nuevo no se queda esperando un correo que no
+existe. Si algún día se apaga esa verificación en el panel de Clerk, el
+código deja de pedirse.
 
 ### Tres cosas que se aprendieron montándolo
 

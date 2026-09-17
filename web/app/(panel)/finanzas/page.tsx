@@ -328,9 +328,12 @@ function StudentRow({
         </div>
 
         {/* Estado + acción */}
-        <div className="px-4 py-2.5 flex items-center justify-between gap-2"
+        {/* Si el estado y el botón no caben juntos, el botón baja. Antes el
+            contenedor del estado tenía `min-w-0`, y como la etiqueta no se
+            parte, en una columna angosta se salía y quedaba debajo del botón. */}
+        <div className="px-4 py-2.5 flex flex-wrap items-center justify-between gap-2"
           style={{ borderBottom: '1px solid rgba(120,80,200,0.06)' }}>
-          <div className="flex-1 min-w-0">{statusChip}</div>
+          <div className="flex-1">{statusChip}</div>
           {mainAction}
         </div>
 
@@ -764,14 +767,20 @@ export default function FinanzasPage() {
         </h1>
       </div>
 
+      {/* `@container`: el acomodo de abajo se decide por el ancho que le queda
+          al contenido, no por el del aparato. Con el menú lateral abierto una
+          tablet deja menos espacio que un celular acostado, y con `md:` se
+          seguía armando como escritorio aunque no cupiera. */}
       {mostrarCarga ? <ModuleLoader /> : (
-      <motion.div variants={pageStagger} initial="hidden" animate="show" className="px-4 pt-4 lg:pt-6 flex flex-col gap-4">
+      <motion.div variants={pageStagger} initial="hidden" animate="show" className="@container px-4 pt-4 lg:pt-6 flex flex-col gap-4">
         <ModuleReveal>
 
-        {/* Tabs + filtros — una sola fila en desktop */}
-        <motion.div variants={pageCard} className="flex flex-col gap-2 md:flex-row md:items-center md:gap-3 md:w-full">
+        {/* Tabs + filtros. En celular y tablet las pestañas van solas y a lo
+            ancho, y los filtros en su propia fila; solo en escritorio caben
+            juntas en una. */}
+        <motion.div variants={pageCard} className="flex flex-col gap-2 @min-[460px]:gap-3 @min-[900px]:flex-row @min-[900px]:items-center @min-[900px]:w-full">
           {/* Tabs */}
-          <div className="flex gap-1 bg-secondary rounded-xl p-1 md:flex-1">
+          <div className="flex gap-1 bg-secondary rounded-xl p-1 @min-[900px]:flex-1">
             {([
               { key: 'mensualidades', label: 'Mensualidades' },
               { key: 'flujo',        label: 'Flujo de caja' },
@@ -779,7 +788,7 @@ export default function FinanzasPage() {
               <button
                 key={key}
                 onClick={() => setTab(key)}
-                className="flex-1 py-2 rounded-lg text-[12px] font-semibold transition-all cursor-pointer"
+                className="flex-1 py-2 @min-[460px]:py-2.5 rounded-lg text-[12px] @min-[460px]:text-[13px] font-semibold transition-all cursor-pointer"
                 style={tab === key
                   ? { background: '#fff', color: '#1A1028', boxShadow: '0 1px 4px rgba(0,0,0,0.08)' }
                   : { color: '#8E87A8' }
@@ -790,16 +799,16 @@ export default function FinanzasPage() {
             ))}
           </div>
           {/* Separador visual solo en desktop */}
-          <div className="hidden md:block w-px h-6 bg-border shrink-0" />
+          <div className="hidden @min-[900px]:block w-px h-6 bg-border shrink-0" />
           {/* Filtros. Mes y año son un solo control, y en el celular es solo el
               ícono: así la sede cabe en esta misma fila, que antes tenía que
               bajar a su propio renglón porque las dos listas la llenaban. La
               sede va primero y el calendario a su derecha, junto a los botones. */}
-          <div className="flex gap-2 items-center w-full md:w-auto">
+          <div className="flex gap-2 items-center w-full @min-[900px]:w-auto">
             {hayVariasSedes && (
               <button
                 onClick={() => setHojaSede(true)}
-                className="flex-1 md:flex-none min-w-0 flex items-center justify-between gap-2 h-9 px-3 rounded-xl bg-white text-[13px] font-semibold md:min-w-[132px]"
+                className="flex-1 @min-[900px]:flex-none min-w-0 flex items-center justify-between gap-2 h-9 px-3 rounded-xl bg-white text-[13px] font-semibold @min-[900px]:min-w-[132px]"
                 style={{ border: '1.5px solid #381DA0', color: '#381DA0' }}
               >
                 <span className="truncate">{nombreSede(filterSede)}</span>
@@ -808,7 +817,7 @@ export default function FinanzasPage() {
             )}
             {/* Sin varias sedes no hay nada que estire la fila, y el calendario
                 y los botones se quedarían pegados a la izquierda. */}
-            {!hayVariasSedes && <div className="flex-1 md:hidden" />}
+            {!hayVariasSedes && <div className="flex-1 @min-[900px]:hidden" />}
             <SelectorMes
               mes={filterMonth}
               anio={filterYear}
@@ -834,11 +843,11 @@ export default function FinanzasPage() {
                 transition={{ duration: 0.12, ease: EASE_OUT }}
                 onClick={() => { setBulkFee(''); setBulkDay(''); setBulkError(null); setBulkOpen(true); }}
                 title="Tarifa general"
-                className="flex items-center justify-center gap-1.5 w-9 md:w-auto px-0 md:px-3 h-9 rounded-xl text-[12px] font-semibold cursor-pointer transition-opacity shrink-0"
+                className="flex items-center justify-center gap-1.5 w-9 @min-[460px]:w-auto px-0 @min-[460px]:px-3 h-9 rounded-xl text-[12px] font-semibold cursor-pointer transition-opacity shrink-0"
                 style={{ background: 'rgba(6,214,160,0.08)', color: '#06D6A0', border: '1.5px dashed rgba(6,214,160,0.25)' }}
               >
                 <IconTarifa className="w-3.5 h-3.5 shrink-0" />
-                <span className="hidden md:inline">Tarifa general</span>
+                <span className="hidden @min-[460px]:inline">Tarifa general</span>
               </motion.button>
               <motion.button
                 whileTap={reducedMotion ? {} : { scale: 0.96 }}
@@ -846,11 +855,11 @@ export default function FinanzasPage() {
                 onClick={handleGenerateMonth}
                 disabled={generatingMonth}
                 title={generatingMonth ? 'Generando...' : 'Generar cobros'}
-                className="flex items-center justify-center gap-1.5 w-9 md:w-auto px-0 md:px-3 h-9 rounded-xl text-[12px] font-semibold cursor-pointer transition-opacity disabled:opacity-60 shrink-0"
+                className="flex items-center justify-center gap-1.5 w-9 @min-[460px]:w-auto px-0 @min-[460px]:px-3 h-9 rounded-xl text-[12px] font-semibold cursor-pointer transition-opacity disabled:opacity-60 shrink-0"
                 style={{ background: 'rgba(56,29,160,0.08)', color: '#381DA0', border: '1.5px dashed rgba(56,29,160,0.25)' }}
               >
                 <IconGenerarCobros className="w-3.5 h-3.5 shrink-0" />
-                <span className="hidden md:inline">{generatingMonth ? 'Generando...' : 'Generar cobros'}</span>
+                <span className="hidden @min-[460px]:inline">{generatingMonth ? 'Generando...' : 'Generar cobros'}</span>
               </motion.button>
               </>
             )}
@@ -861,19 +870,21 @@ export default function FinanzasPage() {
         {tab === 'mensualidades' && (
           <>
           {/* ── Fila superior: tarjeta + filtros ── */}
-          <motion.div variants={pageCard} className="flex flex-col gap-3 md:flex-row md:gap-4 md:items-stretch">
+          {/* Menú abierto: la tarjeta a lo ancho y los estados en fila debajo,
+              como en el celular. Menú cerrado: lado a lado, con los estados uno
+              debajo del otro. Escritorio: como siempre. */}
+          <motion.div variants={pageCard} className="flex flex-col gap-3 @min-[660px]:flex-row @min-[660px]:items-stretch @min-[900px]:gap-4">
 
           {/* Tarjeta bancaria */}
-          <div className="md:w-96 md:shrink-0">
+          <div className="@min-[660px]:w-[55%] @min-[660px]:shrink-0 @min-[900px]:w-96">
 
             {/* Tarjeta débito bancaria */}
             <div
-              className="relative overflow-hidden text-white select-none w-full"
+              className="relative overflow-hidden text-white select-none w-full aspect-[1.586/1] @min-[460px]:aspect-[1.9/1] @min-[660px]:aspect-[1.586/1]"
               style={{
                 borderRadius: 20,
                 background: 'linear-gradient(135deg, #2B2D8E 0%, #4361EE 45%, #7209B7 100%)',
                 boxShadow: '0 8px 32px rgba(67,97,238,0.35), 0 2px 8px rgba(0,0,0,0.18)',
-                aspectRatio: '1.586 / 1',
               }}
             >
               {/* Círculos decorativos de fondo */}
@@ -990,12 +1001,12 @@ export default function FinanzasPage() {
 
           {/* Filtros de estado — columna derecha */}
           <div className="flex-1 min-w-0">
-            <div className="grid grid-cols-3 gap-2 md:gap-3 md:h-full">
+            <div className="grid grid-cols-3 gap-2 @min-[460px]:gap-2.5 @min-[660px]:grid-cols-1 @min-[660px]:grid-rows-3 @min-[660px]:h-full @min-[900px]:grid-cols-3 @min-[900px]:grid-rows-1 @min-[900px]:gap-3">
               {([
-                { key: 'PAID',    label: 'Pagados',   value: countPaid,    color: '#06D6A0', bg: 'rgba(6,214,160,0.10)' },
-                { key: 'PENDING', label: 'Pendiente', value: countPending, color: '#FFB703', bg: 'rgba(255,183,3,0.10)'  },
-                { key: 'NONE',    label: 'Sin cobro', value: countNone,    color: '#8E87A8', bg: 'rgba(142,135,168,0.08)'},
-              ] as const).map(({ key, label, value, color, bg }) => {
+                { key: 'PAID',    label: 'Pagados',   value: countPaid,    color: '#06D6A0', bg: 'rgba(6,214,160,0.10)',   monto: totalPaid },
+                { key: 'PENDING', label: 'Pendiente', value: countPending, color: '#FFB703', bg: 'rgba(255,183,3,0.10)',   monto: totalPending },
+                { key: 'NONE',    label: 'Sin cobro', value: countNone,    color: '#8E87A8', bg: 'rgba(142,135,168,0.08)', monto: null },
+              ] as const).map(({ key, label, value, color, bg, monto }) => {
                 const active = statusFilter === key;
                 return (
                   <motion.button
@@ -1003,15 +1014,25 @@ export default function FinanzasPage() {
                     whileTap={reducedMotion ? {} : { scale: 0.96 }}
                     transition={{ duration: 0.12, ease: EASE_OUT }}
                     onClick={() => setStatusFilter(active ? 'ALL' : key)}
-                    className="rounded-xl px-3 py-2.5 flex flex-col items-center justify-center gap-1 border-2 transition-all cursor-pointer"
+                    className="rounded-xl @min-[460px]:rounded-2xl px-3 py-2.5 @min-[460px]:py-3.5 flex flex-col items-center justify-center gap-1 border-2 transition-all cursor-pointer @min-[660px]:flex-row @min-[660px]:justify-start @min-[660px]:gap-3.5 @min-[660px]:px-4 @min-[660px]:py-2 @min-[900px]:flex-col @min-[900px]:justify-center @min-[900px]:gap-1 @min-[900px]:px-3 @min-[900px]:py-2.5"
                     style={{
                       background: active ? bg : '#fff',
                       borderColor: active ? color : 'transparent',
                       boxShadow: active ? `0 0 0 1px ${color}22` : '0 1px 3px rgba(0,0,0,0.06)',
                     }}
                   >
-                    <p className="text-[22px] md:text-[48px] font-semibold leading-none" style={{ fontFamily: 'inherit', color }}>{value}</p>
-                    <p className="text-[10px] md:text-[13px] font-semibold mt-0.5" style={{ color: active ? color : '#8E87A8' }}>{label}</p>
+                    <p className="text-[22px] @min-[460px]:text-[30px] @min-[660px]:min-w-[44px] @min-[900px]:min-w-0 @min-[900px]:text-[48px] font-semibold leading-none tabular-nums" style={{ fontFamily: 'inherit', color }}>{value}</p>
+                    <div className="flex flex-col items-center @min-[660px]:items-start @min-[900px]:items-center">
+                      <p className="text-[10px] @min-[460px]:text-[12px] @min-[900px]:text-[13px] font-semibold mt-0.5" style={{ color: active ? color : '#8E87A8' }}>{label}</p>
+                      {/* El monto, desde tablet. En el celular no cabe, y en
+                          escritorio ya lo dice la tarjeta al lado. Respeta el
+                          ojo que oculta el recaudo. */}
+                      {monto !== null && (
+                        <p className="hidden @min-[460px]:block @min-[900px]:hidden text-[11px] font-medium tabular-nums mt-0.5" style={{ color: '#8E87A8' }}>
+                          {montoOculto ? '••••' : fmt.format(monto)}
+                        </p>
+                      )}
+                    </div>
                   </motion.button>
                 );
               })}
@@ -1035,7 +1056,7 @@ export default function FinanzasPage() {
 
             {/* Lista deportistas */}
             {((loadingPay && !paymentsData) || (loadingMembers && !membersData)) ? (
-              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-3 md:grid-cols-3 md:gap-4">
+              <div className="grid grid-cols-1 gap-2 @min-[460px]:grid-cols-2 @min-[460px]:gap-3 @min-[900px]:grid-cols-3 @min-[900px]:gap-4">
                 {[1,2,3,4,5,6].map(i => (
                   <div key={i} className="bg-white rounded-2xl overflow-hidden animate-pulse" style={{ border: '1px solid rgba(120,80,200,0.08)' }}>
                     <div className="px-4 pt-4 pb-3 flex items-center gap-3" style={{ borderBottom: '1px solid rgba(120,80,200,0.06)' }}>
@@ -1057,7 +1078,7 @@ export default function FinanzasPage() {
               </div>
             ) : (
               <motion.div
-                className="grid grid-cols-1 gap-2 pb-28 sm:grid-cols-2 sm:gap-3 md:grid-cols-3 md:gap-4 md:pb-8"
+                className="grid grid-cols-1 gap-2 pb-28 @min-[460px]:grid-cols-2 @min-[460px]:gap-3 @min-[900px]:grid-cols-3 @min-[900px]:gap-4 md:pb-8"
                 variants={reducedMotion ? undefined : listVariants}
                 initial={reducedMotion ? undefined : 'hidden'}
                 animate={reducedMotion ? undefined : 'visible'}

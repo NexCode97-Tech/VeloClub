@@ -266,16 +266,18 @@ export function PendientesInscripcion({ puedeAprobar, onCambio }: {
           style={{ background: 'rgba(217,162,43,0.16)' }}>
           <UserPlus className="w-4 h-4" style={{ color: '#B8862A' }} />
         </div>
+        {/* Una sola línea con la cifra. Hubo un título encima («4 cosas
+            esperando tu visto bueno») que repetía el mismo número con otras
+            palabras y le daba al aviso dos renglones de más. */}
         <div className="flex-1 min-w-[170px]">
           <p className="text-[13px] font-semibold m-0" style={{ color: '#8A6216' }}>
-            {total === 1 ? '1 cosa esperando tu visto bueno' : `${total} cosas esperando tu visto bueno`}
-          </p>
-          <p className="text-[11.5px] m-0" style={{ color: '#B8862A' }}>
-            {pendientes.length > 0 && actualizaciones.length > 0
-              ? `${pendientes.length} inscripción(es) nueva(s) y ${actualizaciones.length} actualización(es) de datos.`
-              : pendientes.length > 0
-                ? 'Se inscribieron por el enlace y no entran hasta que las aceptes.'
-                : 'Enviaron sus datos por el enlace.'}
+            {[
+              pendientes.length > 0 &&
+                (pendientes.length === 1 ? '1 inscripción nueva' : `${pendientes.length} inscripciones nuevas`),
+              actualizaciones.length > 0 &&
+                (actualizaciones.length === 1 ? '1 actualización de datos' : `${actualizaciones.length} actualizaciones de datos`),
+            ].filter(Boolean).join(' y ')}
+            {' por revisar'}
           </p>
         </div>
         <button onClick={() => setAbierto(true)}

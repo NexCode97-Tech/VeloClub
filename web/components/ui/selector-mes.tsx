@@ -21,7 +21,7 @@ const MESES_CORTOS = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'S
  * meses que vienen, porque Finanzas genera los cobros del mes siguiente.
  */
 export function SelectorMes({
-  mes, anio, onChange, anioMin = 2024, anioMax = new Date().getFullYear() + 1,
+  mes, anio, onChange, anioMin = 2024, anioMax = new Date().getFullYear() + 1, alinear = 'izquierda',
 }: {
   /** 1 a 12 */
   mes: number;
@@ -29,6 +29,9 @@ export function SelectorMes({
   onChange: (mes: number, anio: number) => void;
   anioMin?: number;
   anioMax?: number;
+  /** Hacia dónde se abre la grilla. A la derecha cuando el control va al final
+   *  de la fila: abierta hacia la derecha se saldría de la pantalla. */
+  alinear?: 'izquierda' | 'derecha';
 }) {
   const [abierto, setAbierto] = useState(false);
   const [anioVista, setAnioVista] = useState(anio);
@@ -98,7 +101,7 @@ export function SelectorMes({
         <div
           role="dialog"
           aria-label="Elegir mes"
-          className="absolute left-0 top-11 z-50 w-[272px] rounded-2xl p-3.5"
+          className={`absolute top-11 z-50 w-[272px] rounded-2xl p-3.5 ${alinear === 'derecha' ? 'right-0' : 'left-0'}`}
           style={{
             background: '#fff',
             border: '1px solid rgba(56,29,160,0.14)',

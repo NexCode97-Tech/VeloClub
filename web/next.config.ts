@@ -2,6 +2,20 @@ import type { NextConfig } from "next";
 import withPWA from "@ducanh2912/next-pwa";
 import { withSentryConfig } from "@sentry/nextjs";
 
+// La API a la que habla este despliegue, sacada de su propia variable. La de
+// producción va escrita abajo de todas formas; esta es para el entorno de
+// demostración, que tiene su propia API y sin esto el navegador la bloquea.
+// Si la variable no trae una dirección válida, no se agrega nada.
+const API_ORIGEN = (() => {
+  try {
+    return new URL(process.env.NEXT_PUBLIC_API_URL ?? '').origin;
+  } catch {
+    return '';
+  }
+})();
+const PRODUCCION_API = 'https://veloclub-production.up.railway.app';
+const API_EXTRA = API_ORIGEN && API_ORIGEN !== PRODUCCION_API ? ` ${API_ORIGEN}` : '';
+
 const CSP = [
   "default-src 'self'",
   // Scripts: propio dominio + Clerk + Mercado Pago (SDK de tokenización de tarjeta) + Cloudflare (CAPTCHA anti-bot de Clerk)
@@ -16,7 +30,7 @@ const CSP = [
   // Fuentes: solo propio dominio + Google Maps
   "font-src 'self' data: https://fonts.gstatic.com",
   // Conexiones: propio dominio + API Railway + Clerk + Cloudflare (CAPTCHA anti-bot) + Cloudinary + Google Maps + Nominatim (geocodificación) + Mercado Pago (tokenización de tarjeta y fingerprint anti-fraude desde el navegador)
-  "connect-src 'self' https://veloclub-production.up.railway.app https://clerk.veloclubtech.com https://*.clerk.accounts.dev https://challenges.cloudflare.com https://api.cloudinary.com https://res.cloudinary.com https://maps.googleapis.com https://*.googleapis.com https://nominatim.openstreetmap.org https://*.sentry.io https://api.mercadopago.com https://sdk.mercadopago.com https://http2.mlstatic.com https://events.mercadopago.com https://www.mercadolibre.com https://www.mercadolivre.com",
+  `connect-src 'self' ${PRODUCCION_API}${API_EXTRA} https://clerk.veloclubtech.com https://*.clerk.accounts.dev https://challenges.cloudflare.com https://api.cloudinary.com https://res.cloudinary.com https://maps.googleapis.com https://*.googleapis.com https://nominatim.openstreetmap.org https://*.sentry.io https://api.mercadopago.com https://sdk.mercadopago.com https://http2.mlstatic.com https://events.mercadopago.com https://www.mercadolibre.com https://www.mercadolivre.com`,
   // Frames: Clerk (UI embebida) + Cloudflare (CAPTCHA anti-bot) + Google Maps (embeds) + Mercado Pago (iframe de fingerprint anti-fraude)
   "frame-src https://clerk.veloclubtech.com https://*.clerk.accounts.dev https://challenges.cloudflare.com https://maps.google.com https://www.google.com https://www.mercadolibre.com https://www.mercadolivre.com",
   // No permitir embeber la app en iframes externos

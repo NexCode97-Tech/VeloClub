@@ -14,7 +14,9 @@ const MESES_CORTOS = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'S
  * tenía que bajar a otro renglón.
  *
  * En el celular es solo el ícono: el mes elegido ya se lee en la tarjeta, justo
- * debajo («Cobrado septiembre 2026»). Desde tablet muestra además el mes.
+ * debajo («Cobrado septiembre 2026»). Con más espacio muestra además el mes.
+ * Eso se decide por el ancho del contenedor (`@container` en la página), no
+ * por el del aparato: una tablet con el menú abierto tiene poco espacio.
  *
  * No es el `MonthPicker` de Analíticas a propósito: ese trae atajos por días y
  * rangos de varios meses, y aquí la unidad es un solo mes. Tampoco apaga los
@@ -82,7 +84,7 @@ export function SelectorMes({
         aria-haspopup="dialog"
         aria-label={`Mes: ${etiqueta}`}
         title={etiqueta}
-        className="flex items-center justify-center gap-1.5 h-9 w-9 md:w-auto md:px-3 rounded-xl bg-white text-[12.5px] font-semibold cursor-pointer transition-colors"
+        className="flex items-center justify-center gap-1.5 h-9 w-9 @min-[460px]:w-auto @min-[460px]:px-3 rounded-xl bg-white text-[12.5px] font-semibold cursor-pointer transition-colors"
         style={{
           color: '#381DA0',
           background: abierto ? 'rgba(56,29,160,0.12)' : '#fff',
@@ -90,9 +92,9 @@ export function SelectorMes({
         }}
       >
         <IconCalendar className="w-4 h-4 shrink-0" />
-        <span className="hidden md:inline whitespace-nowrap">{etiqueta}</span>
+        <span className="hidden @min-[460px]:inline whitespace-nowrap">{etiqueta}</span>
         <ChevronDown
-          className="hidden md:block w-3.5 h-3.5 shrink-0 transition-transform duration-200"
+          className="hidden @min-[460px]:block w-3.5 h-3.5 shrink-0 transition-transform duration-200"
           style={{ transform: abierto ? 'rotate(180deg)' : 'none' }}
         />
       </button>

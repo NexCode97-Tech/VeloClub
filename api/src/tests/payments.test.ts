@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import request from 'supertest';
 import express from 'express';
 
@@ -211,5 +211,87 @@ describe('DELETE /payments/:id', () => {
 
     expect(res.status).toBe(404);
     expect(res.body.error).toBe('Pago no encontrado');
+  });
+});
+
+describe('GET /payments/comparativo', () => {
+  // Filas que devolvería la base según lo que se le pregunte. Se decide por los
+  // filtros y no por el orden de las llamadas, para que la prueba no dependa de
+  // cómo la ruta reparta sus consultas.
+  function responderSegun(where: Record<string, unknown>) {
+    const mes = where.month;
+    const esPagados = 'paidAt' in where && !('createdAt' in where);
+    if (esPagados) return mes === 9 ? filas(24) : filas(20);
+    return mes === 9 ? filas(12) : filas(16);
+  }
+  function filas(n: number) {
+    return Array.from({ length: n }, (_, i) => ({ memberId: `m-${i}` }));
+  }
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date('2026-09-17T15:00:00Z')); // 10 a. m. en Colombia
+    (requireAuth as ReturnType<typeof vi.fn>).mockImplementation((req: express.Request, _res: express.Response, next: express.NextFunction) => sesionDePrueba(req, next));
+    (prisma.payment.findMany as ReturnType<typeof vi.fn>).mockImplementation(
+      async ({ where }: { where: Record<string, unknown> }) => responderSegun(where),
+    );
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('compara el mes en curso contra el anterior al mismo día', async () => {
+    const res = await request(app).get('/payments/comparativo?month=9&year=2026');
+
+    expect(res.status).toBe(200);
+    expect(res.body.comparacion.etiqueta).toBe('17 ago');
+    expect(res.body.comparacion.pagados).toEqual({ actual: 24, anterior: 20, variacion: 20 });
+    expect(res.body.comparacion.pendientes).toEqual({ actual: 12, anterior: 16, variacion: -25 });
+  });
+
+  it('cuenta pagados por la fecha en que se pagaron, no por el estado de hoy', async () => {
+    await request(app).get('/payments/comparativo?month=9&year=2026');
+
+    const llamadas = (prisma.payment.findMany as ReturnType<typeof vi.fn>).mock.calls
+      .map(([arg]) => arg as { where: Record<string, unknown>; distinct?: string[] });
+    const pagadosAgosto = llamadas.find(c => c.where.month === 8 && !('createdAt' in c.where))!;
+    expect(pagadosAgosto.where.paidAt).toEqual({ lte: new Date('2026-08-18T04:59:59.999Z') });
+    // Por deportista, no por cobro: uno con dos cobros cuenta una vez.
+    expect(pagadosAgosto.distinct).toEqual(['memberId']);
+  });
+
+  it('respeta la sede elegida', async () => {
+    await request(app).get('/payments/comparativo?month=9&year=2026&locationId=sede-1');
+
+    const llamadas = (prisma.payment.findMany as ReturnType<typeof vi.fn>).mock.calls;
+    for (const [arg] of llamadas) {
+      expect((arg as { where: Record<string, unknown> }).where.locationId).toBe('sede-1');
+    }
+  });
+
+  it('un mes que no ha empezado no trae comparación', async () => {
+    const res = await request(app).get('/payments/comparativo?month=10&year=2026');
+
+    expect(res.status).toBe(200);
+    expect(res.body.comparacion).toBeNull();
+    expect(prisma.payment.findMany).not.toHaveBeenCalled();
+  });
+
+  it('un deportista no ve las cifras del club', async () => {
+    (requireAuth as ReturnType<typeof vi.fn>).mockImplementation((req: express.Request, _res: express.Response, next: express.NextFunction) => {
+      sesionDePrueba(req, () => {});
+      req.user = { ...req.user!, role: 'DEPORTISTA' };
+      next();
+    });
+
+    const res = await request(app).get('/payments/comparativo?month=9&year=2026');
+    expect(res.status).toBe(403);
+  });
+
+  it('rechaza un mes inválido', async () => {
+    const res = await request(app).get('/payments/comparativo?month=13&year=2026');
+    expect(res.status).toBe(400);
   });
 });

@@ -10,6 +10,7 @@ import { QK } from '@/hooks/useVeloQuery';
 import { HojaInferior, OpcionHoja } from '@/components/ui/hoja-inferior';
 import {
   CreditCard, AlertCircle, Check, PhoneOff, ChevronUp, ExternalLink, ChevronDown,
+  ArrowDown, ArrowUp,
 } from 'lucide-react';
 import { downloadInvoicePDF } from '@/lib/pdf';
 import MemberHistoryPanel from '@/components/finanzas/member-history-panel';
@@ -49,6 +50,51 @@ const STATUS_COLORS: Record<string, { text: string; bg: string; icon: React.Elem
   OVERDUE:  { text: '#EF476F', bg: 'rgba(239,71,111,0.12)',  icon: AlertCircle },
   REFUNDED: { text: '#8E87A8', bg: 'rgba(142,135,168,0.12)', icon: CreditCard },
 };
+
+interface Comparacion {
+  etiqueta: string;
+  mesCerrado: boolean;
+  pagados: { actual: number; anterior: number; variacion: number | null };
+  pendientes: { actual: number; anterior: number; variacion: number | null };
+}
+
+/**
+ * Cuánto cambió frente al mes anterior al mismo día.
+ *
+ * Verde es lo bueno y rojo lo malo, no «sube» y «baja»: en Pagados subir es
+ * bueno, en Pendiente es al revés. Sin base para comparar —el mes anterior no
+ * tenía ninguno— no se muestra nada, porque no hay porcentaje que decir.
+ */
+function ChipVariacion({ valor, subirEsBueno, contra, anterior }: {
+  valor: number | null;
+  subirEsBueno: boolean;
+  contra: string;
+  anterior: number;
+}) {
+  if (valor === null) return null;
+  const neutro = valor === 0;
+  const bueno = neutro ? null : (valor > 0) === subirEsBueno;
+  const color = neutro ? '#8E87A8' : bueno ? '#05A77E' : '#D63A5E';
+  const fondo = neutro ? 'rgba(142,135,168,0.12)' : bueno ? 'rgba(6,214,160,0.12)' : 'rgba(239,71,111,0.10)';
+  const Flecha = valor > 0 ? ArrowUp : valor < 0 ? ArrowDown : null;
+  return (
+    <span
+      className="inline-flex items-center gap-1 mt-1 flex-wrap justify-center"
+      title={`Al ${contra} eran ${anterior}`}
+    >
+      <span
+        className="inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[9.5px] @min-[460px]:text-[10.5px] font-semibold tabular-nums leading-none"
+        style={{ background: fondo, color }}
+      >
+        {Flecha && <Flecha className="w-2.5 h-2.5" strokeWidth={2.6} />}
+        {Math.abs(valor)}%
+      </span>
+      <span className="hidden @min-[460px]:inline text-[10.5px] font-medium leading-none" style={{ color: '#8E87A8' }}>
+        vs {contra}
+      </span>
+    </span>
+  );
+}
 
 const listVariants: Variants = {
   hidden: { opacity: 0 },
@@ -435,6 +481,18 @@ export default function FinanzasPage() {
       return apiFetch<{ payments: Payment[] }>(`/payments?month=${filterMonth}&year=${filterYear}${q}`, { token });
     },
   });
+  // Cómo va el mes frente al anterior al mismo día. Su clave cuelga de la de
+  // los pagos del mes, así que marcar un pago o generar cobros la refresca sola.
+  const { data: comparativoData } = useQuery({
+    queryKey: [...QK.payments(filterMonth, filterYear), 'comparativo', filterSede],
+    queryFn: async () => {
+      const token = await getToken();
+      const q = filterSede === SEDE_TODAS ? '' : `&locationId=${filterSede}`;
+      return apiFetch<{ comparacion: Comparacion | null }>(`/payments/comparativo?month=${filterMonth}&year=${filterYear}${q}`, { token });
+    },
+    enabled: tab === 'mensualidades',
+  });
+  const comparacion = comparativoData?.comparacion ?? null;
   const { data: sedesData } = useQuery({
     queryKey: QK.locations(),
     queryFn: async () => { const token = await getToken(); return apiFetch<{ locations: Sede[] }>('/locations', { token }); },
@@ -1011,10 +1069,13 @@ export default function FinanzasPage() {
           <div className="flex-1 min-w-0">
             <div className="grid grid-cols-3 gap-2 @min-[460px]:gap-2.5 @min-[660px]:grid-cols-1 @min-[660px]:grid-rows-3 @min-[660px]:h-full @min-[900px]:grid-cols-3 @min-[900px]:grid-rows-1 @min-[900px]:gap-3">
               {([
-                { key: 'PAID',    label: 'Pagados',   value: countPaid,    color: '#06D6A0', bg: 'rgba(6,214,160,0.10)',   monto: totalPaid },
-                { key: 'PENDING', label: 'Pendiente', value: countPending, color: '#FFB703', bg: 'rgba(255,183,3,0.10)',   monto: totalPending },
-                { key: 'NONE',    label: 'Sin cobro', value: countNone,    color: '#8E87A8', bg: 'rgba(142,135,168,0.08)', monto: null },
-              ] as const).map(({ key, label, value, color, bg, monto }) => {
+                { key: 'PAID',    label: 'Pagados',   value: countPaid,    color: '#06D6A0', bg: 'rgba(6,214,160,0.10)',   monto: totalPaid,    comp: comparacion?.pagados ?? null,    subirEsBueno: true },
+                { key: 'PENDING', label: 'Pendiente', value: countPending, color: '#FFB703', bg: 'rgba(255,183,3,0.10)',   monto: totalPending, comp: comparacion?.pendientes ?? null, subirEsBueno: false },
+                // Sin cobro no se compara: no se guarda cuándo se le puso tarifa
+                // a cada deportista, así que no hay forma de saber cuántos
+                // estaban sin cobro el mes pasado a esta fecha.
+                { key: 'NONE',    label: 'Sin cobro', value: countNone,    color: '#8E87A8', bg: 'rgba(142,135,168,0.08)', monto: null,         comp: null,                            subirEsBueno: false },
+              ] as const).map(({ key, label, value, color, bg, monto, comp, subirEsBueno }) => {
                 const active = statusFilter === key;
                 return (
                   <motion.button
@@ -1039,6 +1100,14 @@ export default function FinanzasPage() {
                         <p className="hidden @min-[460px]:block @min-[900px]:hidden text-[11px] font-medium tabular-nums mt-0.5" style={{ color: '#8E87A8' }}>
                           {montoOculto ? '••••' : fmt.format(monto)}
                         </p>
+                      )}
+                      {comp && comparacion && (
+                        <ChipVariacion
+                          valor={comp.variacion}
+                          subirEsBueno={subirEsBueno}
+                          contra={comparacion.etiqueta}
+                          anterior={comp.anterior}
+                        />
                       )}
                     </div>
                   </motion.button>

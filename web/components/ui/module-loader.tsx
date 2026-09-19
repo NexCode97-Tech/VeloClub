@@ -27,7 +27,8 @@ export function useCargaMinima(loading: boolean, minMs = 400): boolean {
   // módulo el indicador debe aparecer igual, si no la transición se siente
   // brusca unas veces sí y otras no.
   const [visible, setVisible] = useState(true);
-  const inicioRef = useRef(Date.now());
+  const inicioRef = useRef(0);
+  useEffect(() => { inicioRef.current = Date.now(); }, []);
 
   useEffect(() => {
     // Mientras siga cargando de verdad, el indicador se mantiene

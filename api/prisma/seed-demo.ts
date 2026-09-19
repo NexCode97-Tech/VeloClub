@@ -297,9 +297,19 @@ async function main(): Promise<void> {
       const apellido2 = alguno(APELLIDOS);
       const fullName = `${nombre} ${apellido1} ${apellido2}`;
 
+      // La primera de patinaje es la que se amarra a la cuenta de deportista
+      // con DEMO_DEPORTISTA_CLERK_ID.
+      const esLaDeLaCuenta = inicio === 1 && i === 0;
+
       // La edad decide la categoría: no tendría sentido un niño de seis años
       // marcado como mayor de catorce.
-      const edad = entre(5, 17);
+      //
+      // A la de la cuenta se le sube a la franja que compite: la categoría más
+      // pequeña va a escuela y nunca entra a un podio, así que su Rendimiento
+      // salía vacío. El número al azar se saca igual, para que el resto del
+      // club no se mueva.
+      const edadAzar = entre(5, 17);
+      const edad = esLaDeLaCuenta ? Math.max(edadAzar, 12) : edadAzar;
       const category = edad <= 10 ? CATEGORIAS[0] : edad <= 13 ? CATEGORIAS[1] : CATEGORIAS[2];
       const nivel = edad <= 10 ? alguno(['Escuela', 'Novatos'] as const) : alguno(NIVELES.slice(1, 5));
 
@@ -311,12 +321,8 @@ async function main(): Promise<void> {
       // y conviene que se vea en los pantallazos.
       const activoAzar = !conProbabilidad(0.08);
 
-      // La primera de patinaje es la que se amarra a la cuenta de deportista
-      // con DEMO_DEPORTISTA_CLERK_ID. Tiene que llevar tiempo en el club y
-      // estar activa: si le tocara entrar este mes, Mis pagos saldría con una
-      // sola mensualidad y su Rendimiento vacío. Los valores al azar se sacan
-      // igual, para que el resto del club no cambie.
-      const esLaDeLaCuenta = inicio === 1 && i === 0;
+      // Tiene que llevar tiempo en el club y estar activa: si le tocara entrar
+      // este mes, Mis pagos saldría con una sola mensualidad.
       const desdeMes = esLaDeLaCuenta ? Math.max(desdeMesAzar, 12) : desdeMesAzar;
       const active = esLaDeLaCuenta ? true : activoAzar;
 
@@ -716,6 +722,7 @@ async function main(): Promise<void> {
     plantel: Sembrado[],
     pruebas: Prueba[],
     torneos: [string, string, number][],
+    destacado?: Sembrado,
   ): Promise<void> {
     // Solo los que compiten: los de la categoría más pequeña van a escuela, no
     // a torneos, y meterlos en un podio se ve falso de una vez.
@@ -744,16 +751,33 @@ async function main(): Promise<void> {
         // competencia hay un solo 1, un solo 2 y un solo 3.
         const mejor = ((k + t) % pruebas.length) + 1;
         const participantes = [...elegibles].sort(() => azar() - 0.5).slice(0, Math.min(8, elegibles.length));
+
+        // La cuenta de deportista siempre compite. Su Rendimiento es la mitad
+        // de la demo que se ve desde el celular, y sorteando la lista podía
+        // quedarse por fuera de todas las pruebas.
+        if (destacado && !participantes.some(p => p.id === destacado.id)) {
+          participantes[participantes.length - 1] = destacado;
+        }
+
+        // Y en una prueba de cada competencia es ella la que sube al podio:
+        // bronce en la más vieja, plata en la del medio y oro en la más
+        // reciente. No gana siempre, que se vería falso, pero la pantalla
+        // tiene qué mostrar.
+        const leTocaPodio = destacado && mejor === torneos.length - t;
+        const enOrden = leTocaPodio && destacado
+          ? [destacado, ...participantes.filter(p => p.id !== destacado.id)]
+          : participantes;
+
         const puestos: number[] = [mejor];
         let siguiente = mejor + 3;
-        while (puestos.length < participantes.length) {
+        while (puestos.length < enOrden.length) {
           siguiente += entre(0, 2);
           puestos.push(siguiente);
           siguiente += 1;
         }
 
         await prisma.eventResult.createMany({
-          data: participantes.map((m, i) => ({
+          data: enOrden.map((m, i) => ({
             eventId: evento.id,
             memberId: m.id,
             position: puestos[i],
@@ -772,7 +796,7 @@ async function main(): Promise<void> {
     ['Válida Departamental', 'Patinódromo de Floridablanca', 4],
     ['Copa Ciudad de Bucaramanga', 'Patinódromo Norte', 2],
     ['Interclubes de Santander', 'Coliseo Centro', 1],
-  ]);
+  ], enPatinaje[0]);
   await sembrarCompetencias(natacion.id, enNatacion, PRUEBAS_NATACION, [
     ['Festival Departamental de Natación', 'Complejo Acuático', 3],
     ['Copa Aurora', 'Complejo Acuático', 1],

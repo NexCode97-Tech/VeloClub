@@ -3,6 +3,7 @@
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth, useSession, useUser, useClerk, UserButton } from '@clerk/nextjs';
 import { useEffect, useState, useRef, useCallback, memo } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { createPortal } from 'react-dom';
 import { apiFetch } from '@/lib/api-client';
 import LoadingScreen, { LoadingCurtain, CURTAIN_MS, esperarPantallaCarga } from '@/components/ui/loading-screen';
@@ -356,6 +357,7 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
   const router    = useRouter();
   const { isLoaded, isSignedIn, userId, sessionId } = useAuth();
   const { session } = useSession();
+  const qc = useQueryClient();
 
   // La verificación arranca siempre cerrada: partir de false cuando Clerk ya
   // estaba listo montaba el panel completo antes de saber si el usuario es
@@ -375,8 +377,7 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
   }, [checking]);
   const [spin, setSpin]               = useState(false);
   const [panelOpen, setPanelOpen]     = useState(false);
-  const [notifs, setNotifs]           = useState<Notif[]>([]);
-  const [notifsLoading, setNotifsLoading] = useState(false);
+
 
   // Auth check — stale flag evita condición de carrera al cambiar sesión activa
   useEffect(() => {
@@ -408,25 +409,23 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
     return () => { stale = true; };
   }, [isLoaded, isSignedIn, userId, sessionId]);
 
-  // Cargar notificaciones
-  const loadNotifs = useCallback(async () => {
-    if (!isSignedIn) return;
-    setNotifsLoading(true);
-    try {
+  // Las notificaciones del panel, con su refresco cada 60 segundos.
+  const CLAVE_NOTIFS = ['superadmin', 'notificaciones'];
+  const { data: datosNotifs, isFetching: notifsLoading, refetch: recargarNotifs } = useQuery({
+    queryKey: CLAVE_NOTIFS,
+    queryFn: async () => {
       const token = await session?.getToken();
-      const res = await apiFetch<{ notificaciones: Notif[] }>('/superadmin/notificaciones', { token });
-      setNotifs(res.notificaciones);
-    } catch { /* silencioso */ }
-    finally { setNotifsLoading(false); }
-  }, [isSignedIn, session]);
-
-  // Polling cada 60s
-  useEffect(() => {
-    if (checking) return;
-    loadNotifs();
-    const iv = setInterval(loadNotifs, 60000);
-    return () => clearInterval(iv);
-  }, [checking, loadNotifs]);
+      return apiFetch<{ notificaciones: Notif[] }>('/superadmin/notificaciones', { token });
+    },
+    enabled: !!isSignedIn && !checking,
+    refetchInterval: 60_000,
+    retry: false,
+  });
+  const notifs = datosNotifs?.notificaciones ?? [];
+  const loadNotifs = async () => { await recargarNotifs(); };
+  const cambiarNotifs = (fn: (n: Notif[]) => Notif[]) =>
+    qc.setQueryData(CLAVE_NOTIFS, (v: { notificaciones: Notif[] } | undefined) =>
+      v ? { notificaciones: fn(v.notificaciones) } : v);
 
   // Estable (useCallback) para no romper el memo del sidebar en cada render
   const openNotifs = useCallback(() => {
@@ -437,13 +436,13 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
   async function marcarLeida(id: string) {
     const token = await session?.getToken();
     await apiFetch(`/superadmin/notificaciones/${id}/leer`, { method: 'PATCH', token });
-    setNotifs(prev => prev.map(n => n.id === id ? { ...n, leida: true } : n));
+    cambiarNotifs(prev => prev.map(n => n.id === id ? { ...n, leida: true } : n));
   }
 
   async function marcarTodas() {
     const token = await session?.getToken();
     await apiFetch('/superadmin/notificaciones/leer-todas', { method: 'PATCH', token });
-    setNotifs(prev => prev.map(n => ({ ...n, leida: true })));
+    cambiarNotifs(prev => prev.map(n => ({ ...n, leida: true })));
   }
 
   if (checking) return <LoadingScreen />;

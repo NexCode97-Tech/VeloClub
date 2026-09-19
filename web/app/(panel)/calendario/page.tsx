@@ -120,8 +120,7 @@ export default function CalendarioPage() {
   const [selectedDay, setSelectedDay] = useState(now.getDate());
 
   // El horario del club, para dibujar las clases encima de los eventos.
-  const [clases, setClases]           = useState<ClaseHorario[]>([]);
-  const [sinEntrenar, setSinEntrenar] = useState<number[]>([]);
+
   // Se pueden apagar: nueve clases por semana entierran la competencia del
   // sabado, que es justo lo que alguien viene a buscar al calendario.
   const [verClases, setVerClases]     = useState(true);
@@ -167,20 +166,24 @@ export default function CalendarioPage() {
   // Sostiene el indicador un minimo de tiempo para que no parpadee
   const mostrarCarga = useCargaMinima(loading);
 
-  // El horario y los dias cerrados no dependen del mes: se piden una vez.
-  const cargarHorario = useCallback(async () => {
-    try {
+  // El horario y los dias cerrados no dependen del mes: tienen su propia clave
+  // y no se vuelven a pedir al cambiar de mes.
+  const { data: horario, refetch: recargarHorario } = useQuery({
+    queryKey: ['calendarioHorario'],
+    queryFn: async () => {
       const token = await getToken();
       const [h, cfg] = await Promise.all([
         apiFetch<{ clases: ClaseHorario[] }>('/clases', { token }),
         apiFetch<{ club: { noAttendanceDays?: number[] } }>('/clubs/settings', { token }),
       ]);
-      setClases(h.clases ?? []);
-      setSinEntrenar(cfg.club?.noAttendanceDays ?? []);
-    } catch { /* sin horario el calendario sigue sirviendo igual */ }
-  }, [getToken]);
-
-  useEffect(() => { cargarHorario(); }, [cargarHorario]);
+      return { clases: h.clases ?? [], sinEntrenar: cfg.club?.noAttendanceDays ?? [] };
+    },
+    // Sin horario el calendario sigue sirviendo igual.
+    retry: false,
+  });
+  const clases      = horario?.clases ?? [];
+  const sinEntrenar = horario?.sinEntrenar ?? [];
+  const cargarHorario = async () => { await recargarHorario(); };
 
   // Tiempo real: SSE push desde el servidor
   useClubStream((ev) => {

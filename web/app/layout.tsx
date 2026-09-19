@@ -3,6 +3,7 @@ import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
 import { ClerkProvider } from "@clerk/nextjs";
 import { esES } from "@clerk/localizations";
+import { SerwistProvider } from "@serwist/next/react";
 import { Providers } from "./providers";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
@@ -66,7 +67,11 @@ export default function RootLayout({
           <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
         </head>
         <body className="min-h-full flex flex-col">
-          <Providers>{children}</Providers>
+          {/* Registra /sw.js, la misma direccion de siempre. Antes lo inyectaba
+              el complemento del compilador; en modo configurador se declara. */}
+          <SerwistProvider swUrl="/sw.js">
+            <Providers>{children}</Providers>
+          </SerwistProvider>
           <Analytics />
           <SpeedInsights />
         </body>

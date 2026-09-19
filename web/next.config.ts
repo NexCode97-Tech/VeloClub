@@ -1,5 +1,4 @@
 import type { NextConfig } from "next";
-import withSerwistInit from "@serwist/next";
 import { withSentryConfig } from "@sentry/nextjs";
 
 // La API a la que habla este despliegue, sacada de su propia variable. La de
@@ -91,17 +90,9 @@ const nextConfig: NextConfig = {
   },
 };
 
-// El worker se escribe en public/sw.js, la misma direccion de siempre: los
-// celulares que ya tienen la app instalada lo llevan registrado ahi. Las reglas
-// de cacheo viven en app/sw.ts.
-const withSerwist = withSerwistInit({
-  swSrc: "app/sw.ts",
-  swDest: "public/sw.js",
-  reloadOnOnline: true,
-  disable: process.env.NODE_ENV === "development",
-});
-
-const pwaConfig = withSerwist(nextConfig);
+// La PWA ya no pasa por aca. El worker lo arma el CLI de Serwist despues del
+// build, con lo que hay en serwist.config.js, y asi el compilador queda libre.
+const pwaConfig = nextConfig;
 
 export default withSentryConfig(pwaConfig, {
   org: 'nexcode97',

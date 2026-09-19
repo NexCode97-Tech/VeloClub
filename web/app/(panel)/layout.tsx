@@ -199,7 +199,8 @@ export default function LayoutDelPanel({ children }: { children: React.ReactNode
   const [retrying, setRetrying] = useState(false);
   // Cortina de salida: se retira hacia la derecha dejando ver el dashboard ya montado
   const [curtain, setCurtain] = useState(true);
-  const mountedAtRef = useRef(Date.now());
+  const mountedAtRef = useRef(0);
+  useEffect(() => { mountedAtRef.current = Date.now(); }, []);
   // La espera de la pantalla de carga ocurre una sola vez, en el arranque.
   // Con un ref (y no con meRefresh) queda garantizada aunque el efecto se
   // vuelva a ejecutar por cualquier motivo.

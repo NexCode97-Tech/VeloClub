@@ -359,7 +359,8 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
   // Cortina de salida: se retira hacia la derecha dejando ver el panel ya montado.
   // Si la sesión ya venía lista (alreadyReady) no hubo carga, así que no hay cortina.
   const [curtain, setCurtain]         = useState(!alreadyReady);
-  const mountedAtRef                  = useRef(Date.now());
+  const mountedAtRef                  = useRef(0);
+  useEffect(() => { mountedAtRef.current = Date.now(); }, []);
 
   useEffect(() => {
     if (checking) return;

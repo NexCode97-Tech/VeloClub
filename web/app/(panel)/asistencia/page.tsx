@@ -227,6 +227,10 @@ export default function AsistenciaPage() {
   const [att, setAtt]                 = useState<Record<string, Status>>({});
   const [saving, setSaving]           = useState(false);
   const [saved, setSaved]             = useState(false);
+  // Lo que el guardado tenga que contar: a quien no se le registro, o por que
+  // no se pudo guardar. Antes un guardado fallido no decia nada y el entrenador
+  // se quedaba mirando el boton.
+  const [avisoGuardado, setAvisoGuardado] = useState<{ tono: 'aviso' | 'error'; texto: string } | null>(null);
   const [role, setRole]               = useState('');
   const [noAttDays, setNoAttDays]     = useState<number[]>([]);
   // Clase del horario sobre la que se esta pasando lista. `null` = el club no
@@ -429,10 +433,10 @@ export default function AsistenciaPage() {
 
   async function handleSave() {
     if (!selectedLoc) return;
-    setSaving(true); setSaved(false);
+    setSaving(true); setSaved(false); setAvisoGuardado(null);
     try {
       const token = await getToken();
-      await apiFetch('/attendance/bulk', {
+      const r = await apiFetch<{ saved: number; omitidos?: { id: string; nombre: string }[] }>('/attendance/bulk', {
         method: 'POST', token,
         body: JSON.stringify({
           date:       selectedDate,
@@ -454,6 +458,19 @@ export default function AsistenciaPage() {
         }),
       });
       setSaved(true);
+      // Al que esta en pausa no se le registra asistencia, y la pantalla puede
+      // llevar abierta desde antes de que lo pausaran. Se guarda al resto y se
+      // dice por quien, que es lo unico que el entrenador necesita saber.
+      const omitidos = r.omitidos ?? [];
+      if (omitidos.length > 0) {
+        const nombres = omitidos.map(o => o.nombre).join(', ');
+        setAvisoGuardado({
+          tono: 'aviso',
+          texto: omitidos.length === 1
+            ? `No se le registró a ${nombres}, está desactivado`
+            : `No se les registró a ${nombres}, están desactivados`,
+        });
+      }
       // Marcar el día guardado + lanzar animación (solo si es hoy)
       queryClient.setQueryData(['weekSaved', weekDates[0]], (old: Set<string> | undefined) => new Set([...(old ?? []), selectedDate]));
       // Para que el selector marque la clase como pasada sin recargar
@@ -463,6 +480,11 @@ export default function AsistenciaPage() {
         setTimeout(() => setAnimating(false), 800);
       }
       setTimeout(() => setSaved(false), 3000);
+    } catch (e) {
+      setAvisoGuardado({
+        tono: 'error',
+        texto: e instanceof Error ? e.message : 'No se pudo guardar la asistencia',
+      });
     } finally {
       setSaving(false);
     }
@@ -648,6 +670,20 @@ export default function AsistenciaPage() {
         )}
         </div>
       </div>
+
+      {/* Lo que el guardado tenga que contar. Va debajo de la barra y no en un
+          modal: es informacion, no una decision que haya que tomar. */}
+      {avisoGuardado && (
+        <div
+          className="mx-4 mb-3 rounded-xl px-3 py-2 text-[12px] font-medium leading-snug"
+          style={avisoGuardado.tono === 'error'
+            ? { background: 'rgba(239,71,111,0.10)', color: '#B4224A' }
+            : { background: 'rgba(255,183,3,0.12)', color: '#8A6216' }}
+          role="status"
+        >
+          {avisoGuardado.texto}
+        </div>
+      )}
 
       {/* ── Hoja de clases del día ─────────────────────────────────────────
           En portal a document.body: dentro de la página queda atrapada en el

@@ -306,21 +306,41 @@ router.post('/bulk', requireAuth, async (req, res) => {
     if (!clase) return res.status(403).json({ error: 'La clase no pertenece a este club' });
   }
 
-  // Validar que todos los memberIds pertenecen al club (previene ataque cross-tenant)
-  // y que están activos: a un deportista en pausa no se le registra asistencia.
-  const memberIds = records.map(r => r.memberId);
-  const validMembers = await prisma.member.findMany({
-    where: { id: { in: memberIds }, clubId, active: true },
-    select: { id: true },
+  // Los dos casos se separan a proposito, porque no son lo mismo.
+  //
+  // Un id que no es de este club es un intento de escribir en datos ajenos y se
+  // rechaza entero. Un deportista del club que esta en pausa no es eso: es la
+  // planilla que se abrio antes de que lo pausaran. Los dos se trataban igual y
+  // el 403 se llevaba por delante la jornada completa, asi que el entrenador
+  // perdia la asistencia de todos por uno solo. Ahora se salta al pausado y se
+  // guarda el resto, diciendo a quien no se le registro.
+  const pedidos = records.map(r => r.memberId);
+  const delClub = await prisma.member.findMany({
+    where: { id: { in: pedidos }, clubId },
+    select: { id: true, fullName: true, active: true },
   });
-  const validIds = new Set(validMembers.map(m => m.id));
-  const invalidIds = memberIds.filter(id => !validIds.has(id));
-  if (invalidIds.length > 0) {
+  const idsDelClub = new Set(delClub.map(m => m.id));
+  const ajenos = pedidos.filter(id => !idsDelClub.has(id));
+  if (ajenos.length > 0) {
     // Los ids al log, no a la respuesta. Cuando esto salta, quien lo ve es un
     // entrenador que no puede hacer nada con la lista, y el que necesita saber
     // cuales son es quien revisa el error.
-    console.warn('[attendance] ids rechazados', { clubId, invalidIds });
-    return res.status(403).json({ error: 'Uno o más miembros no pertenecen a este club o están desactivados' });
+    console.warn('[attendance] ids de otro club', { clubId, ajenos });
+    return res.status(403).json({ error: 'Uno o más miembros no pertenecen a este club' });
+  }
+
+  const enPausa = delClub.filter(m => !m.active);
+  const idsEnPausa = new Set(enPausa.map(m => m.id));
+  const omitidos = enPausa.map(m => ({ id: m.id, nombre: m.fullName }));
+  const aGuardar = idsEnPausa.size > 0
+    ? records.filter(r => !idsEnPausa.has(r.memberId))
+    : records;
+  const memberIds = aGuardar.map(r => r.memberId);
+
+  // Toda la planilla era de gente en pausa: no hay nada que escribir, pero
+  // tampoco es un error.
+  if (aGuardar.length === 0) {
+    return res.json({ ok: true, saved: 0, omitidos });
   }
 
   // Upsert en bloque: un upsert por registro generaba un N+1 (62 queries en una
@@ -340,12 +360,12 @@ router.post('/bulk', requireAuth, async (req, res) => {
   });
   const existingIds = new Set(existing.map(a => a.memberId));
 
-  const toCreate = records.filter(r => !existingIds.has(r.memberId));
-  const toUpdate = records.filter(r => existingIds.has(r.memberId));
+  const toCreate = aGuardar.filter(r => !existingIds.has(r.memberId));
+  const toUpdate = aGuardar.filter(r => existingIds.has(r.memberId));
 
   // Las actualizaciones se agrupan por valores idénticos para reducir el número
   // de queries: en la práctica los registros comparten estado y notas vacías.
-  const updateGroups = new Map<string, { status: typeof records[number]['status']; notes: string | null; memberIds: string[] }>();
+  const updateGroups = new Map<string, { status: typeof aGuardar[number]['status']; notes: string | null; memberIds: string[] }>();
   for (const r of toUpdate) {
     const notes = r.notes ?? null;
     const key = `${r.status}|${notes ?? ''}`;
@@ -378,7 +398,7 @@ router.post('/bulk', requireAuth, async (req, res) => {
   ]);
 
   emitToClub(clubId, 'attendance');
-  res.json({ ok: true, saved: records.length });
+  res.json({ ok: true, saved: aGuardar.length, omitidos });
 });
 
 export default router;

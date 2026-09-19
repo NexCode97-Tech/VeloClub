@@ -346,6 +346,97 @@ deportista, así que no hay con qué saber cuántos estaban sin cobro el mes pas
   De paso salió `react-day-picker`, que no se usa en ninguna pantalla y era el
   que rompía `npm install`: pide date-fns 3 y el proyecto va en 4.
 
+### La noche en que se cayó producción, y lo que salió de ahí
+
+**Lo que pasó.** El pendiente decía «el `package-lock.json` de la web está
+desactualizado». Se actualizó, salió `react-day-picker` —que no se usa en
+ninguna pantalla— y **producción quedó caída 25 minutos** con
+`ERR_PNPM_OUTDATED_LOCKFILE`.
+
+La causa: **Vercel construye `web/` con pnpm**, no con npm. El archivo que se
+actualizó no lo lee nadie. Y el CI tampoco lo habría atrapado, porque instalaba
+con npm: revisaba un árbol de dependencias distinto al que sale a producción.
+
+De ahí salió todo lo demás.
+
+- **Un lockfile por proyecto.** Sobraban tres: el `package-lock.json` de `web/`
+  y los dos de la raíz, más un `package.json` con prisma suelto y un
+  `pnpm-workspace.yaml` con el texto de plantilla sin llenar. El de dentro de
+  `web/` sí tiene contenido real y se queda.
+- **El CI de la web pasa a pnpm**, así valida lo mismo que se despliega. Y el
+  lint de la api deja de tragarse su resultado: llevaba un `|| true` puesto
+  cuando ESLint no sabía leer TypeScript.
+- **Cada proyecto de Vercel construye solo lo suyo.** Había dos conectados al
+  mismo repositorio, así que cada push generaba dos despliegues y en Hobby se
+  construye uno a la vez. La mitad de la cola era inútil.
+
+### Next 15.5.19 a 16.3.5
+
+Siete avisos de seguridad publicados, uno crítico: denegación de servicio con
+Server Actions, SSRF en los rewrites y confusión de caché entre respuestas, que
+con datos de menores es la que no se podía dejar pasar.
+
+**Lo que costó.** Next 16 usa Turbopack por defecto y **con Turbopack la PWA se
+rompe en silencio**: compila igual, pero `public/sw.js` no se genera y la
+aplicación deja de instalarse y de funcionar sin señal, sin que nada avise. El
+build quedó amarrado a webpack con `--webpack`.
+
+El ESLint de Next 16 viene en formato plano y ya no pasa por FlatCompat. Trae
+además 72 reglas nuevas del compilador de React puestas como error; no son
+fallas, así que quedaron en aviso y se limpian pantalla por pantalla.
+
+Se probó en la demo antes de producción, porque **las llaves de Clerk de
+producción solo funcionan en `veloclubtech.com`**: en cualquier dominio
+`.vercel.app` el formulario de ingreso no carga, así que un preview no sirve
+para probar sesión.
+
+### La PWA, de next-pwa a Serwist
+
+`@ducanh2912/next-pwa` no se actualiza desde septiembre de 2024. Lo reemplaza
+Serwist, que sí se mantiene y que, a diferencia del anterior, **avisa** cuando
+no puede correr en vez de fallar callado.
+
+El worker se sigue escribiendo en `public/sw.js`, la misma dirección: los
+celulares que ya tienen la app instalada lo llevan registrado ahí, y moverlo
+dejaría dos vivos a la vez, con el viejo sirviendo archivos que ya no existen.
+
+De paso se arregló algo que pasaba **en cada despliegue**: la app instalada se
+quedaba cargando y había que cerrarla y volverla a abrir, porque el worker nuevo
+toma el control mientras la pantalla abierta todavía pide archivos de la versión
+anterior. Ahora recarga sola. Probado en la demo desde el celular.
+
+Sigue atada a webpack. Soltarla es el modo configurador de Serwist, que queda
+pendiente.
+
+### Sentry, revisado entero
+
+19 issues abiertos y **ninguno vivo**: cero eventos en siete días. La mayoría
+apunta a rutas `/dashboard/...` que ya no existen, el de Prisma en
+`/members/me/contact` se arregló el 15 de septiembre y el de workbox muere solo
+con Serwist.
+
+**Salió un bug de verdad.** Guardar asistencia rechazaba la jornada completa con
+403 cuando venía un deportista desactivado: el entrenador perdía la lista de
+todos por uno solo, y la pantalla no decía nada porque el guardado fallaba en
+silencio. Los dos casos se separaron: el id de otro club sigue siendo un no
+rotundo, el del club en pausa se salta y se guarda el resto, diciendo a quién no
+se le registró.
+
+### Las auditorías, en cero
+
+- **La api**, de siete a cero. `deepmerge-ts` quedó fijado con overrides porque
+  el arreglo que proponía npm era bajar prisma dos versiones menores.
+- **La web**, de 30 altas y una crítica a cero. `sharp` a la 0.35, ocho
+  transitivos fijados con overrides, y **`xlsx` pasó al CDN de SheetJS**: el
+  paquete de npm está abandonado y la contaminación de prototipo no tiene
+  versión parchada ahí. Misma librería, misma API, ninguna línea de código.
+  La contrapartida es una dependencia que no viene del registro de npm, así que
+  la instalación necesita alcanzar `cdn.sheetjs.com`; se verificó en un preview.
+
+`brace-expansion` se quedó sin override a propósito: el aviso cubre tres
+familias a la vez y forzar una sola versión rompe minimatch 3, que espera la API
+de la 1.x. Subiendo los paquetes de arriba el aviso se fue solo.
+
 ### La cuenta de deportista de la demo, compitiendo
 
 Caía en la categoría más pequeña, que va a escuela y no entra a torneos, así que

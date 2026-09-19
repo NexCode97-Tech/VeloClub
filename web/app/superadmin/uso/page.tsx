@@ -1,9 +1,11 @@
 'use client';
 
 import { useSession } from '@clerk/nextjs';
-import { useCallback, useEffect, useState } from 'react';
+import { useState } from 'react';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
+import { useQuery } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
+import { QK } from '@/hooks/useVeloQuery';
 import { AlertTriangle } from 'lucide-react';
 import ModuleLoader from '@/components/ui/module-loader';
 import { MonthPicker, DateRange } from '@/components/ui/month-picker';
@@ -167,9 +169,8 @@ function aISO(d: Date): string {
 
 export default function UsoPage() {
   const { session } = useSession();
-  const [datos, setDatos]       = useState<Resumen | null>(null);
-  const [cargando, setCargando] = useState(true);
-  const [error, setError]       = useState('');
+
+  const [error] = useState('');
 
   // El mes en curso es lo que se abre por defecto: es lo que se pregunta casi
   // siempre, y pedir doce semanas de arranque hacia ver mas ruido que señal.
@@ -184,30 +185,29 @@ export default function UsoPage() {
   const desde = rango ? aISO(rango.start) : aISO(new Date(anio, numeroMes - 1, 1));
   const hasta = rango ? aISO(rango.end)   : aISO(new Date(anio, numeroMes, 0));
 
-  const cargar = useCallback(async (d: string, h: string) => {
-    try {
-      setCargando(true);
+  // El periodo entra en la clave: cambiar de mes o marcar un rango es otra
+  // consulta, no la misma con otros datos.
+  const { data: datos, isPending: cargando, error: errorConsulta, refetch } = useQuery({
+    queryKey: [...QK.superadmin.uso(), desde, hasta],
+    queryFn: async () => {
       const token = await session?.getToken();
-      setDatos(await apiFetch<Resumen>(`/superadmin/uso?desde=${d}&hasta=${h}`, { token }));
-      setError('');
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'No pudimos cargar el uso');
-    } finally {
-      setCargando(false);
-    }
-  }, [session]);
-
-  useEffect(() => { if (session) void cargar(desde, hasta); }, [session, cargar, desde, hasta]);
+      return apiFetch<Resumen>(`/superadmin/uso?desde=${desde}&hasta=${hasta}`, { token });
+    },
+    enabled: !!session,
+  });
+  const cargar = async (_d: string, _h: string) => { await refetch(); };
 
   if (cargando) return <div className="px-5 pt-4 pb-8"><ModuleLoader /></div>;
 
-  if (error || !datos) {
+  const mensajeError = error || (errorConsulta ? 'No pudimos cargar el uso' : '');
+
+  if (mensajeError || !datos) {
     return (
       <div className="px-5 pt-4 pb-8 max-w-5xl mx-auto w-full">
         <div className="rounded-2xl px-6 py-12 flex flex-col items-center text-center"
           style={{ background: 'rgba(198,47,80,0.04)', border: '1px solid rgba(198,47,80,0.14)' }}>
           <AlertTriangle className="w-6 h-6 mb-2" style={{ color: '#C62F50' }} />
-          <p className="text-sm text-[#1A1028]">{error || 'No pudimos cargar el uso'}</p>
+          <p className="text-sm text-[#1A1028]">{mensajeError || 'No pudimos cargar el uso'}</p>
           <button onClick={() => void cargar(desde, hasta)}
             className="mt-3 text-[12.5px] font-semibold px-4 py-2 rounded-xl text-white"
             style={{ background: '#381DA0' }}>Reintentar</button>

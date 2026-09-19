@@ -1,8 +1,10 @@
 'use client';
 
 import { useAuth } from '@clerk/nextjs';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { apiFetch } from '@/lib/api-client';
+import { useQuery } from '@tanstack/react-query';
+import { QK } from '@/hooks/useVeloQuery';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AccionesCabecera } from '@/components/superadmin/acciones-cabecera';
 import {
@@ -43,30 +45,23 @@ function estadoCupon(c: Cupon): { label: string; color: string; bg: string } {
 
 export default function CuponesPage() {
   const { getToken, isLoaded, isSignedIn } = useAuth();
-  const [cupones, setCupones] = useState<Cupon[]>([]);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
 
   const [form, setForm] = useState({ codigo: '', porcentaje: '', expiraEn: '', maxUsos: '' });
 
-  async function load() {
-    try {
+  const { data, isPending, refetch } = useQuery({
+    queryKey: QK.superadmin.cupones(),
+    queryFn: async () => {
       const token = await getToken();
-      const res = await apiFetch<{ cupones: Cupon[] }>('/superadmin/cupones', { token });
-      setCupones(res.cupones);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'No se pudieron cargar los cupones');
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  useEffect(() => {
-    if (isLoaded && isSignedIn) load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isLoaded, isSignedIn]);
+      return apiFetch<{ cupones: Cupon[] }>('/superadmin/cupones', { token });
+    },
+    enabled: isLoaded && isSignedIn,
+  });
+  const cupones = data?.cupones ?? [];
+  const loading = isPending;
+  async function load() { await refetch(); }
 
   async function crearCupon() {
     const porcentaje = Number(form.porcentaje);

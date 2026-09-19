@@ -1,9 +1,11 @@
 'use client';
 
 import { useSession } from '@clerk/nextjs';
-import { useCallback, useEffect, useState } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useQuery } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
+import { QK } from '@/hooks/useVeloQuery';
 import { ShieldCheck, Globe, Lock, AlertTriangle } from 'lucide-react';
 import { AccionesCabecera } from '@/components/superadmin/acciones-cabecera';
 import ModuleLoader, { useCargaMinima } from '@/components/ui/module-loader';
@@ -57,30 +59,27 @@ function cuando(iso: string): string {
 
 export default function ReportesPage() {
   const { session } = useSession();
-  const [reportes, setReportes]   = useState<Reporte[]>([]);
-  const [pendientes, setPendientes] = useState(0);
+
   const [estado, setEstado]       = useState<Estado>('PENDIENTE');
-  const [loading, setLoading]     = useState(true);
-  const mostrarCarga = useCargaMinima(loading);
   const [resolviendo, setResolviendo] = useState<string | null>(null);
   const [error, setError]         = useState('');
 
-  const cargar = useCallback(async (cual: Estado) => {
-    setLoading(true);
-    try {
+  // El estado entra en la clave: cada bandeja es una lista distinta y no
+  // pueden compartir cache.
+  const { data, isPending, refetch } = useQuery({
+    queryKey: [...QK.superadmin.reportes(), estado],
+    queryFn: async () => {
       const token = await session?.getToken();
-      const res = await apiFetch<{ reportes: Reporte[]; pendientes: number }>(
-        `/superadmin/reportes?estado=${cual}`, { token }
+      return apiFetch<{ reportes: Reporte[]; pendientes: number }>(
+        `/superadmin/reportes?estado=${estado}`, { token }
       );
-      setReportes(res.reportes);
-      setPendientes(res.pendientes);
-      setError('');
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'No se pudieron cargar los reportes');
-    } finally { setLoading(false); }
-  }, [session]);
-
-  useEffect(() => { cargar(estado); }, [cargar, estado]);
+    },
+  });
+  const reportes = data?.reportes ?? [];
+  const pendientes = data?.pendientes ?? 0;
+  const loading = isPending;
+  const mostrarCarga = useCargaMinima(loading);
+  const cargar = async (_cual: Estado) => { await refetch(); };
 
   async function resolver(id: string, accion: 'ELIMINAR' | 'DESESTIMAR') {
     if (resolviendo) return;

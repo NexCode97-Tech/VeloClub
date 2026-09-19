@@ -8,6 +8,7 @@ import { useSession } from '@clerk/nextjs';
 import { apiFetch } from '@/lib/api-client';
 import { DatosCarnet } from '@/lib/carnet';
 import { CarnetTarjetas, BotonesCarnet } from '@/components/miembros/carnet-tarjetas';
+import { useEsCliente } from '@/hooks/use-cliente';
 
 /**
  * El carnet de un miembro, en ventana sobre la lista.
@@ -29,12 +30,20 @@ export function CarnetModal({ memberId, onCerrar }: Props) {
   const reducedMotion = useReducedMotion();
   const [datos, setDatos] = useState<DatosCarnet | null>(null);
   const [error, setError] = useState('');
-  const [montado, setMontado] = useState(false);
+  const montado = useEsCliente();
 
-  useEffect(() => setMontado(true), []);
+  // Al cambiar de deportista se limpia lo que habia, durante el render y no en
+  // un efecto. De paso arregla algo: al pasar de una ficha a otra se seguia
+  // viendo el carnet del anterior hasta que llegaba el nuevo.
+  const [idPrevio, setIdPrevio] = useState(memberId);
+  if (idPrevio !== memberId) {
+    setIdPrevio(memberId);
+    setDatos(null);
+    setError('');
+  }
 
   useEffect(() => {
-    if (!memberId) { setDatos(null); setError(''); return; }
+    if (!memberId) return;
     let vivo = true;
     (async () => {
       try {

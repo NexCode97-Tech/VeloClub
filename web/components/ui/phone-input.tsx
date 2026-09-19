@@ -257,8 +257,19 @@ interface Props {
 }
 
 export function PhoneInput({ value, onChange, placeholder = 'Número de teléfono', className = '' }: Props) {
-  const [selected, setSelected] = useState<Country>(COUNTRIES[0]);
-  const [number, setNumber] = useState('');
+  // El valor que llega se parte una sola vez, al arrancar: el prefijo por un
+  // lado y el numero por el otro. Se ordena por longitud de prefijo para que
+  // «+57» no le gane a «+571».
+  const partido = () => {
+    if (!value) return { pais: COUNTRIES[0], numero: '' };
+    const porLongitud = [...COUNTRIES].sort((a, b) => b.dialCode.length - a.dialCode.length);
+    const encontrado = porLongitud.find(c => value.startsWith('+' + c.dialCode));
+    return encontrado
+      ? { pais: encontrado, numero: value.slice(encontrado.dialCode.length + 1).trim() }
+      : { pais: COUNTRIES[0], numero: value };
+  };
+  const [selected, setSelected] = useState<Country>(() => partido().pais);
+  const [number, setNumber] = useState(() => partido().numero);
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [coords, setCoords] = useState<{ left: number; width: number; top?: number; bottom?: number; maxHeight: number; openUp: boolean } | null>(null);
@@ -303,20 +314,6 @@ export function PhoneInput({ value, onChange, placeholder = 'Número de teléfon
     };
   }, [open]);
 
-  // Sincronizar valor externo → estado interno al montar o cuando cambia
-  useEffect(() => {
-    if (!value) return;
-    // Ordenar por longitud de dialCode desc para evitar falsos positivos
-    const sorted = [...COUNTRIES].sort((a, b) => b.dialCode.length - a.dialCode.length);
-    const match = sorted.find(c => value.startsWith('+' + c.dialCode));
-    if (match) {
-      setSelected(match);
-      setNumber(value.slice(match.dialCode.length + 1).trim());
-    } else {
-      setNumber(value);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   function handleNumberChange(n: string) {
     const clean = n.replace(/[^\d\s\-()]/g, '');

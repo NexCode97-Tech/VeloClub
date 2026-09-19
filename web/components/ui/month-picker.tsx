@@ -89,17 +89,21 @@ export function MonthPicker({
     return () => document.removeEventListener('mousedown', h);
   }, []);
 
-  // Sincronizar año con value
-  useEffect(() => {
-    const m = value ?? currentMonth;
-    if (m) setViewYear(parseInt(m.split('-')[0]));
-  }, [value, currentMonth]);
+  // Lo que llega de afuera se copia durante el render y no en un efecto: con
+  // efecto se pintaba una vez con el valor viejo y otra con el nuevo.
+  const mesDeFuera = value ?? currentMonth;
+  const [mesPrevio, setMesPrevio] = useState(mesDeFuera);
+  if (mesPrevio !== mesDeFuera) {
+    setMesPrevio(mesDeFuera);
+    if (mesDeFuera) setViewYear(parseInt(mesDeFuera.split('-')[0]));
+  }
 
-  // Sincronizar rango externo
-  useEffect(() => {
-    if (dateRange) { setRangeStart(dateRange.start); setRangeEnd(dateRange.end); }
-    else           { setRangeStart(null); setRangeEnd(null); }
-  }, [dateRange]);
+  const [rangoPrevio, setRangoPrevio] = useState(dateRange);
+  if (rangoPrevio !== dateRange) {
+    setRangoPrevio(dateRange);
+    setRangeStart(dateRange ? dateRange.start : null);
+    setRangeEnd(dateRange ? dateRange.end : null);
+  }
 
   const selected = value ?? currentMonth;
 

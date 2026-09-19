@@ -4,6 +4,7 @@ import { useAuth, useSession } from '@clerk/nextjs';
 import { useClubStream } from '@/hooks/useClubStream';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, useCallback, useRef, useLayoutEffect } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -433,6 +434,7 @@ function PostComposer({
 export default function DashboardPage() {
   const { isLoaded, isSignedIn, userId, sessionId } = useAuth();
   const { session } = useSession();
+  const qc = useQueryClient();
   const router = useRouter();
 
   const [me, setMe]         = useState<MeResponse | null>(null);
@@ -454,8 +456,13 @@ export default function DashboardPage() {
 
   // Feed
   const [feedScope, setFeedScope]   = useState<FeedScope>('public');
-  const [posts, setPosts]           = useState<Post[]>([]);
-  const [postsLoading, setPostsLoading] = useState(false);
+  // El muro vive en la cache, con la pestaña en la clave: Publico y Mi club
+  // son dos listas distintas, y cambiar de una a otra ya no vuelve a pedir la
+  // que ya se habia visto.
+  //
+  // Todas las actualizaciones al instante —publicar, me gusta, comentar,
+  // borrar— pasan por `cambiarPosts`, que escribe en esa misma cache. Antes
+  // escribian en un estado local, y era la unica diferencia.
 
   // Widgets — Próximos eventos y Cumpleaños
   const [upcomingEvents, setUpcomingEvents] = useState<{
@@ -483,27 +490,38 @@ export default function DashboardPage() {
     return () => document.removeEventListener('mousedown', handleClick);
   }, []);
 
-  const fetchPosts = useCallback(async (scope: FeedScope = 'public') => {
-    const token = await session?.getToken();
-    setPostsLoading(true);
-    try {
-      const res = await apiFetch<{ posts: Post[] }>(`/posts?scope=${scope}`, { token });
-      setPosts(res.posts);
-    } catch { /* silencioso */ } finally {
-      setPostsLoading(false);
-    }
-  }, [session]);
+  const clavePosts = (scope: FeedScope) => ['posts', scope];
+  const { data: posts = [], isFetching: postsLoading, refetch: recargarPosts } = useQuery({
+    queryKey: clavePosts(feedScope),
+    queryFn: async () => {
+      const token = await session?.getToken();
+      const res = await apiFetch<{ posts: Post[] }>(`/posts?scope=${feedScope}`, { token });
+      return res.posts;
+    },
+    enabled: !!session,
+    // Silencioso: si falla, el muro se queda con lo que tenia.
+    retry: false,
+  });
+  const setPosts = (fn: Post[] | ((prev: Post[]) => Post[])) =>
+    qc.setQueryData(clavePosts(feedScope), (prev: Post[] | undefined) =>
+      typeof fn === 'function' ? fn(prev ?? []) : fn);
+  const fetchPosts = async (_scope: FeedScope = 'public') => { await recargarPosts(); };
 
-  // Recargar posts cuando cambia el tab
-  useEffect(() => {
-    if (session) fetchPosts(feedScope).catch(() => {});
-  }, [feedScope, session]);
+  // La pantalla se vacia cuando cambia quien esta adentro, durante el render.
+  // En el efecto quedaba una pasada de mas: se pintaba Inicio con los datos de
+  // la sesion anterior y en la siguiente ya vacio. En la practica se veia al
+  // cambiar de cuenta, no al entrar normal.
+  const quienEntra = `${isLoaded}|${isSignedIn}|${userId}|${sessionId}`;
+  const [quienEntraba, setQuienEntraba] = useState(quienEntra);
+  if (quienEntraba !== quienEntra) {
+    setQuienEntraba(quienEntra);
+    setMe(null);
+    setLoading(true);
+  }
 
   useEffect(() => {
     if (!isLoaded) return;
     if (!isSignedIn) { router.push('/sign-in'); return; }
-
-    setMe(null); setLoading(true);
 
     (async () => {
       try {
@@ -549,7 +567,9 @@ export default function DashboardPage() {
         if (role === 'ADMIN' && notifRes.status === 'fulfilled') setNotifs(notifRes.value.notifications);
 
         // Posts
-        if (postsRes.status === 'fulfilled') setPosts(postsRes.value.posts);
+        // El muro publico ya viene en esta misma carga: se siembra la cache
+        // en vez de pedirlo otra vez por su cuenta.
+        if (postsRes.status === 'fulfilled') qc.setQueryData(clavePosts('public'), postsRes.value.posts);
 
         // Widgets
         if (eventsRes.status === 'fulfilled') setUpcomingEvents(eventsRes.value.events);

@@ -29,7 +29,7 @@ import { CarnetModal } from '@/components/miembros/carnet-modal';
 import { PanelInscripcion } from '@/components/miembros/panel-inscripcion';
 import { BotonFiltros, ChipsFiltros, type GrupoFiltro } from '@/components/ui/filtros';
 import { PendientesInscripcion } from '@/components/miembros/pendientes-inscripcion';
-import { downloadMembersTemplate, parseMembersExcel } from '@/lib/excel';
+import { downloadMembersTemplate, normalizarTexto, parseMembersExcel } from '@/lib/excel';
 import ModuleLoader, { useCargaMinima } from '@/components/ui/module-loader';
 import ModuleReveal from '@/components/ui/module-reveal';
 import { ContenidoGuardado, MS_GUARDADO, type EstadoGuardado } from '@/components/ui/save-button-state';
@@ -385,14 +385,23 @@ export default function MiembrosPage() {
     setImportWarnings(warnings);
     const token = await getToken();
     const failed: string[] = [];
+    // Los avisos de la importacion en si, que se suman a los del archivo.
+    const avisos: string[] = [];
     for (const row of rows) {
       try {
         const { locationName, ...rest } = row;
         let locationIds: string[] | undefined;
         if (locationName) {
-          const found = locations.find(l => l.name.toLowerCase().trim() === locationName.toLowerCase().trim());
-          if (!found) { failed.push(`${row.fullName}: la sede "${locationName}" no existe`); continue; }
-          locationIds = [found.id];
+          // Se compara sin tildes ni mayusculas: "Sede Norte" y "sede norte"
+          // son la misma sede, y escribirla distinto no deberia costar nada.
+          const buscada = normalizarTexto(locationName);
+          const found = locations.find(l => normalizarTexto(l.name) === buscada);
+          // Antes la fila entera se descartaba y el deportista no quedaba
+          // registrado. Una sede mal escrita es un dato suelto, no una ficha
+          // invalida: entra sin sede y el club se la asigna despues, que es lo
+          // mismo que pasa con el resto de campos que no se entienden.
+          if (found) locationIds = [found.id];
+          else avisos.push(`${row.fullName}: la sede "${locationName}" no existe en el club, quedó importado sin sede`);
         }
         // Buscar si el miembro ya existe por docNumber o email para evitar duplicados
         const existing = members.find(m =>
@@ -407,9 +416,11 @@ export default function MiembrosPage() {
       } catch (e) { failed.push(`${row.fullName}: ${e instanceof Error ? e.message : 'Error'}`); }
     }
     setImporting(false);
+    const todosLosAvisos = [...warnings, ...avisos];
+    setImportWarnings(todosLosAvisos);
     // Con avisos pendientes el modal se queda abierto, para que alcancen a leerse
     if (failed.length > 0) setImportErrors(failed);
-    else if (warnings.length === 0) setImportOpen(false);
+    else if (todosLosAvisos.length === 0) setImportOpen(false);
     qc.invalidateQueries({ queryKey: QK.members() });
   }
 

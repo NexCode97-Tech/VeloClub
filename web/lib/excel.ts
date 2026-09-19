@@ -268,7 +268,7 @@ export function parseBirthDate(raw: unknown): string | undefined {
 }
 
 /** Quita tildes, signos y espacios de más para comparar textos escritos a mano. */
-const normalizar = (s: string) =>
+export const normalizarTexto = (s: string) =>
   s.normalize('NFD').replace(/[̀-ͯ]/g, '')
     .toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
 
@@ -281,9 +281,9 @@ function columna(fila: Record<string, unknown>, ...nombres: string[]): unknown {
   for (const n of nombres) {
     if (n in fila) return fila[n];
   }
-  const buscados = nombres.map(normalizar);
+  const buscados = nombres.map(normalizarTexto);
   for (const clave of Object.keys(fila)) {
-    const k = normalizar(clave);
+    const k = normalizarTexto(clave);
     if (buscados.some(b => k === b || k.startsWith(b) || b.startsWith(k))) return fila[clave];
   }
   return undefined;
@@ -298,7 +298,7 @@ function columna(fila: Record<string, unknown>, ...nombres: string[]): unknown {
  * mostraba en blanco.
  */
 export function normalizarTipoDoc(raw: unknown): string | undefined {
-  const v = normalizar(String(raw ?? ''));
+  const v = normalizarTexto(String(raw ?? ''));
   if (!v) return undefined;
   if (/^(cc|cedula|cedula de ciudadania|c c)$/.test(v)) return 'CC';
   if (/^(ti|tarjeta de identidad)$/.test(v)) return 'TI';

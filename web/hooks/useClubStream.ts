@@ -21,7 +21,7 @@ export type SSEEvent = typeof SSE_EVENTS[number];
 export function useClubStream(onEvent: (event: SSEEvent) => void) {
   const { session, isLoaded } = useSession();
   const onEventRef = useRef(onEvent);
-  onEventRef.current = onEvent;
+  useEffect(() => { onEventRef.current = onEvent; });
 
   useEffect(() => {
     if (!isLoaded || !session) return;

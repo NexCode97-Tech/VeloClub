@@ -44,7 +44,7 @@ export function BottomCircleMenu({ items, pathname, isOpen, onToggle, onClose }:
   const router = useRouter();
   const reducedMotion = useReducedMotion();
   const onCloseRef = useRef(onClose);
-  onCloseRef.current = onClose;
+  useEffect(() => { onCloseRef.current = onClose; });
 
   useEffect(() => { onCloseRef.current(); }, [pathname]);
 

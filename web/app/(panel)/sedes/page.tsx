@@ -7,7 +7,7 @@ import { useAuth } from '@clerk/nextjs';
 import { useEffect, useState, useRef } from 'react';
 import { COLOMBIA } from '@/lib/colombia';
 import { apiFetch } from '@/lib/api-client';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { QK } from '@/hooks/useVeloQuery';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -78,13 +78,7 @@ function MapButtons({ lat, lng }: { lat: number; lng: number }) {
 export default function SedesPage() {
   const { getToken } = useAuth();
   const qc = useQueryClient();
-  const [locations, setLocations] = useState<Location[]>([]);
   const [busqueda, setBusqueda] = useState('');
-  const [loading, setLoading] = useState(true);
-  // Sostiene el indicador un minimo de tiempo para que no parpadee
-  const mostrarCarga = useCargaMinima(loading);
-  const [clubDepartment, setClubDepartment] = useState<string | null>(null);
-  const [canManage, setCanManage] = useState(false);
 
   // Dialog crear/editar
   const [open, setOpen] = useState(false);
@@ -107,12 +101,6 @@ export default function SedesPage() {
   // Dialog mapa
   const [mapOpen, setMapOpen] = useState(false);
 
-  // Municipios filtrados por departamento del club
-  const municipios = clubDepartment ? (COLOMBIA[clubDepartment] ?? []).sort() : [];
-  const filteredMunis = muniSearch.trim()
-    ? municipios.filter(m => m.toLowerCase().includes(muniSearch.toLowerCase()))
-    : municipios;
-
   // Cerrar dropdown al clic fuera
   useEffect(() => {
     function handler(e: MouseEvent) {
@@ -125,23 +113,37 @@ export default function SedesPage() {
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
-  async function load() {
-    const token = await getToken();
-    const [locRes, clubRes, meRes] = await Promise.allSettled([
-      apiFetch<{ locations: Location[] }>('/locations', { token }),
-      apiFetch<{ club: { department?: string } }>('/clubs/settings', { token }),
-      apiFetch<{ status: string; user?: { role: string } }>('/me', { token }),
-    ]);
-    if (locRes.status === 'fulfilled') setLocations(locRes.value.locations);
-    if (clubRes.status === 'fulfilled') setClubDepartment(clubRes.value.club.department ?? null);
-    if (meRes.status === 'fulfilled') {
-      // Solo el administrador gestiona sedes; el resto las ve sin editarlas
-      setCanManage(meRes.value.user?.role === 'ADMIN');
-    }
-    setLoading(false);
-  }
+  // Las tres consultas van juntas con allSettled a proposito: si el
+  // departamento del club o el rol fallan, las sedes igual se pintan.
+  const { data: pantalla, isPending: loading, refetch } = useQuery({
+    queryKey: ['sedes', 'pantalla'],
+    queryFn: async () => {
+      const token = await getToken();
+      const [locRes, clubRes, meRes] = await Promise.allSettled([
+        apiFetch<{ locations: Location[] }>('/locations', { token }),
+        apiFetch<{ club: { department?: string } }>('/clubs/settings', { token }),
+        apiFetch<{ status: string; user?: { role: string } }>('/me', { token }),
+      ]);
+      return {
+        locations: locRes.status === 'fulfilled' ? locRes.value.locations : [],
+        clubDepartment: clubRes.status === 'fulfilled' ? (clubRes.value.club.department ?? null) : null,
+        // Solo el administrador gestiona sedes; el resto las ve sin editarlas
+        canManage: meRes.status === 'fulfilled' && meRes.value.user?.role === 'ADMIN',
+      };
+    },
+  });
+  const locations = pantalla?.locations ?? [];
+  const clubDepartment = pantalla?.clubDepartment ?? null;
+  const canManage = pantalla?.canManage ?? false;
+  async function load() { await refetch(); }
+  // Sostiene el indicador un minimo de tiempo para que no parpadee
+  const mostrarCarga = useCargaMinima(loading);
 
-  useEffect(() => { load(); }, []);
+  // Municipios filtrados por departamento del club
+  const municipios = clubDepartment ? (COLOMBIA[clubDepartment] ?? []).sort() : [];
+  const filteredMunis = muniSearch.trim()
+    ? municipios.filter(m => m.toLowerCase().includes(muniSearch.toLowerCase()))
+    : municipios;
 
   function openNew() {
     setEditing(null);

@@ -90,14 +90,18 @@ export function DatePicker({
   const triggerRef = useRef<HTMLButtonElement>(null);
   const portalRef  = useRef<HTMLDivElement>(null);
 
-  // Sincronizar base cuando cambia el valor externo
-  useEffect(() => {
+  // El mes que se muestra sigue al valor que llega de afuera. Se ajusta durante
+  // el render y no en un efecto: asi el calendario nunca alcanza a abrirse en
+  // el mes anterior para saltar al correcto un instante despues.
+  const [valorPrevio, setValorPrevio] = useState(value);
+  if (valorPrevio !== value) {
+    setValorPrevio(value);
     if (value) {
       const d = new Date(value + 'T00:00:00');
       setBase(d);
       setDecadeStart(Math.floor(d.getFullYear() / 12) * 12);
     }
-  }, [value]);
+  }
 
   // Cerrar al clic fuera (incluye el portal)
   useEffect(() => {

@@ -145,10 +145,21 @@ function CreateClubForm({ getToken, onBack, onDone }: {
   const departments = Object.keys(COLOMBIA).sort();
   const municipios = department ? (COLOMBIA[department] ?? []).slice().sort() : [];
 
-  // Chequeo de disponibilidad del nombre en vivo (con debounce)
+  // Chequeo de disponibilidad del nombre en vivo (con debounce).
+  //
+  // El paso a «consultando» se hace durante el render, apenas cambia lo
+  // escrito: puesto en el efecto, el campo se quedaba un instante con el
+  // resultado anterior, diciendo «disponible» sobre un nombre que ya no era el
+  // que estaba en pantalla. La consulta si va en el efecto, que es donde
+  // corresponde.
+  const [nombrePrevio, setNombrePrevio] = useState(clubName);
+  if (nombrePrevio !== clubName) {
+    setNombrePrevio(clubName);
+    setNameStatus(clubName.trim().length < 2 ? 'idle' : 'checking');
+  }
+
   useEffect(() => {
-    if (clubName.trim().length < 2) { setNameStatus('idle'); return; }
-    setNameStatus('checking');
+    if (clubName.trim().length < 2) return;
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(async () => {
       try {

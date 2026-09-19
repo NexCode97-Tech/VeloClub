@@ -133,10 +133,13 @@ export default function SelectorDeporte({
   }, [abierto]);
 
   // Al cerrarlo vuelve a la lista de deportes: reabrirlo y encontrarse a mitad
-  // de «agregar» es desconcertante, porque no es donde se dejó.
-  useEffect(() => {
+  // de «agregar» es desconcertante, porque no es donde se dejó. Durante el
+  // render, para que la proxima apertura ya nazca en la lista.
+  const [abiertoPrevio, setAbiertoPrevio] = useState(abierto);
+  if (abiertoPrevio !== abierto) {
+    setAbiertoPrevio(abierto);
     if (!abierto) { setEligiendo(false); setError(null); }
-  }, [abierto]);
+  }
 
   // El menú se dibuja en un portal para que no lo recorte el sidebar, que tiene
   // scroll propio. Al vivir fuera, su posición hay que calcularla.

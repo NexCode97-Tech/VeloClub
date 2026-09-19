@@ -1,8 +1,10 @@
 'use client';
 
 import { useAuth } from '@clerk/nextjs';
-import { useCallback, useEffect, useState } from 'react';
+import { useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
+import { QK } from '@/hooks/useVeloQuery';
 import { motion } from 'framer-motion';
 import { cardVariant } from '@/lib/page-animations';
 import { Zap, ExternalLink, Check, X } from 'lucide-react';
@@ -44,19 +46,20 @@ function esperando(desde: string): string {
 
 export function PagosPorVerificar() {
   const { getToken } = useAuth();
-  const [pagos, setPagos] = useState<PagoPendiente[]>([]);
+  const qc = useQueryClient();
   const [trabajando, setTrabajando] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const cargar = useCallback(async () => {
-    try {
+  const { data } = useQuery({
+    queryKey: QK.superadmin.brebPendientes(),
+    queryFn: async () => {
       const token = await getToken();
-      const res = await apiFetch<{ pagos: PagoPendiente[] }>('/superadmin/suscripciones/breb-pendientes', { token });
-      setPagos(res.pagos);
-    } catch { /* el panel no puede caerse por esta sección */ }
-  }, [getToken]);
-
-  useEffect(() => { cargar(); }, [cargar]);
+      return apiFetch<{ pagos: PagoPendiente[] }>('/superadmin/suscripciones/breb-pendientes', { token });
+    },
+    // El panel no puede caerse por esta sección: si falla, se queda vacía.
+    retry: false,
+  });
+  const pagos = data?.pagos ?? [];
 
   async function resolver(pago: PagoPendiente, accion: 'aprobar' | 'rechazar') {
     // Aprobar activa el club y no se deshace con un clic: se confirma antes.
@@ -83,7 +86,10 @@ export function PagosPorVerificar() {
         method: 'POST', token,
         body: JSON.stringify({ motivo }),
       });
-      setPagos(p => p.filter(x => x.id !== pago.id));
+      // Se saca de la lista de una, sin esperar a recargar: el resultado ya se
+      // sabe y la espera se sentiria como que el boton no hizo nada.
+      qc.setQueryData(QK.superadmin.brebPendientes(), (v: { pagos: PagoPendiente[] } | undefined) =>
+        v ? { pagos: v.pagos.filter(x => x.id !== pago.id) } : v);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'No se pudo completar la acción.');
     } finally {

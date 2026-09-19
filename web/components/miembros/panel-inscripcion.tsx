@@ -1,9 +1,10 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useAuth } from '@clerk/nextjs';
-import { useLocations } from '@/hooks/useVeloQuery';
+import { useQuery } from '@tanstack/react-query';
+import { useLocations, QK } from '@/hooks/useVeloQuery';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Check, Copy, Link2, RefreshCw, X } from 'lucide-react';
 import { apiFetch } from '@/lib/api-client';
@@ -55,21 +56,22 @@ export function PanelInscripcion({ abierto, onCerrar }: { abierto: boolean; onCe
   // botones apagados un instante en un club que si tiene sedes. Se espera a que
   // conteste: solo entonces la lista vacia significa algo.
   const sinSedes = !cargandoSedes && (sedesData?.locations?.length ?? 0) === 0;
-  const [estado, setEstado] = useState<Estado | null>(null);
+
   const [copiado, setCopiado] = useState(false);
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const cargar = useCallback(async () => {
-    try {
+  // Solo se pide cuando el panel esta abierto: cerrado no hay nada que mostrar
+  // y pedirlo seria gastar una consulta por cada vez que se pinta Miembros.
+  const { data: estado, refetch: recargarEstado } = useQuery({
+    queryKey: QK.inscripcion.estado(),
+    queryFn: async () => {
       const token = await getToken();
-      setEstado(await apiFetch<Estado>('/inscripcion/club/estado', { token }));
-    } catch {
-      setError('No se pudo cargar el enlace. Intenta de nuevo.');
-    }
-  }, [getToken]);
-
-  useEffect(() => { if (abierto) cargar(); }, [abierto, cargar]);
+      return apiFetch<Estado>('/inscripcion/club/estado', { token });
+    },
+    enabled: abierto,
+    retry: false,
+  });
 
   // Escape cierra, y mientras está abierto la página de atrás no se mueve.
   useEffect(() => {
@@ -90,7 +92,7 @@ export function PanelInscripcion({ abierto, onCerrar }: { abierto: boolean; onCe
     try {
       const token = await getToken();
       await apiFetch('/inscripcion/club/estado', { method: 'PATCH', token, body: JSON.stringify(datos) });
-      await cargar();
+      await recargarEstado();
     } catch {
       setError('No se pudo guardar el cambio.');
     } finally {
@@ -104,7 +106,7 @@ export function PanelInscripcion({ abierto, onCerrar }: { abierto: boolean; onCe
     try {
       const token = await getToken();
       await apiFetch('/inscripcion/club/rotar', { method: 'POST', token });
-      await cargar();
+      await recargarEstado();
     } catch {
       setError('No se pudo generar el enlace nuevo.');
     } finally {

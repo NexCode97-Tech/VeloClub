@@ -26,6 +26,23 @@ export const QK = {
   competitions: () => ['competitions'] as const,
   training:     () => ['training'] as const,
   calendar:     (month: number, year: number) => ['calendar', month, year] as const,
+  // Inscripcion: la bandeja de la lista de miembros y el panel del enlace.
+  inscripcion: {
+    pendientes: () => ['inscripcion', 'pendientes'] as const,
+    estado:     () => ['inscripcion', 'estado'] as const,
+  },
+  // Las claves del panel de superadministracion viven aca por la misma razon
+  // que las demas: escrita a mano en cada archivo, una letra de mas crea una
+  // segunda cache que nadie invalida y la pantalla se queda con datos viejos.
+  superadmin: {
+    brebPendientes:   () => ['superadmin', 'breb-pendientes'] as const,
+    pagosRechazados:  () => ['superadmin', 'pagos-rechazados'] as const,
+    clubs:            () => ['superadmin', 'clubs'] as const,
+    cupones:          () => ['superadmin', 'cupones'] as const,
+    finanzas:         (anio: number) => ['superadmin', 'finanzas', anio] as const,
+    reportes:         () => ['superadmin', 'reportes'] as const,
+    uso:              () => ['superadmin', 'uso'] as const,
+  },
 } as const;
 
 // ── Helpers ───────────────────────────────────────────────────────────────────

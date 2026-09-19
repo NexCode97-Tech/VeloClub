@@ -140,7 +140,13 @@ const SuperadminSidebar = memo(function SuperadminSidebar({ pathname, noLeidas, 
   // Tooltip flotante al pasar el cursor sobre un módulo con el sidebar
   // comprimido — mismo patrón que el sidebar del dashboard (admin).
   const [navTip, setNavTip] = useState<{ label: string; top: number; left: number } | null>(null);
-  useEffect(() => { if (!collapsed) setNavTip(null); }, [collapsed]);
+  // Al expandir el sidebar el tooltip sobra. Se apaga durante el render: con
+  // efecto alcanzaba a quedar flotando un instante sobre el menu ya abierto.
+  const [collapsedPrevio, setCollapsedPrevio] = useState(collapsed);
+  if (collapsedPrevio !== collapsed) {
+    setCollapsedPrevio(collapsed);
+    if (!collapsed) setNavTip(null);
+  }
 
   function tipHandlers(label: string) {
     return collapsed

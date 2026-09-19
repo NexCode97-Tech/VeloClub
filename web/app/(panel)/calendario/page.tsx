@@ -5,6 +5,8 @@ import { stagger, cardVariant } from '@/lib/page-animations';
 import { useAuth } from '@clerk/nextjs';
 import { useClubStream } from '@/hooks/useClubStream';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { QK } from '@/hooks/useVeloQuery';
 import { apiFetch } from '@/lib/api-client';
 import { parseLocalDate } from '@/lib/utils';
 import { colorDeClase, nombresDeClase } from '@/lib/colores-clase';
@@ -116,23 +118,22 @@ export default function CalendarioPage() {
   const [year, setYear]               = useState(now.getFullYear());
   const [month, setMonth]             = useState(now.getMonth());
   const [selectedDay, setSelectedDay] = useState(now.getDate());
-  const [events, setEvents]           = useState<CalEvent[]>([]);
-  const [loading, setLoading]         = useState(true);
+
   // El horario del club, para dibujar las clases encima de los eventos.
   const [clases, setClases]           = useState<ClaseHorario[]>([]);
   const [sinEntrenar, setSinEntrenar] = useState<number[]>([]);
   // Se pueden apagar: nueve clases por semana entierran la competencia del
   // sabado, que es justo lo que alguien viene a buscar al calendario.
   const [verClases, setVerClases]     = useState(true);
-  // Sostiene el indicador un minimo de tiempo para que no parpadee
-  const mostrarCarga = useCargaMinima(loading);
 
   const today = now.getDate();
   const isCurrentMonth = year === now.getFullYear() && month === now.getMonth();
 
-  async function loadEvents() {
-    setLoading(true);
-    try {
+  // El mes entra en la clave: moverse a otro mes es otra consulta, y volver a
+  // uno ya visto sale de la cache en vez de pedirse de nuevo.
+  const { data: events = [], isPending: loading, refetch: recargarEventos } = useQuery({
+    queryKey: QK.calendar(month, year),
+    queryFn: async (): Promise<CalEvent[]> => {
       const token = await getToken();
       const [compRes, trainRes] = await Promise.all([
         apiFetch<{ competitions: Array<{ id: string; name: string; place?: string | null; latitude?: number | null; longitude?: number | null; date: string }> }>('/competitions', { token }),
@@ -159,12 +160,12 @@ export default function CalendarioPage() {
         location: s.location?.name ?? null,
       }));
 
-      setEvents([...comps, ...trains].sort((a, b) => a.date.getTime() - b.date.getTime()));
-    } catch { /* silencioso */ }
-    finally { setLoading(false); }
-  }
-
-  useEffect(() => { loadEvents(); }, [month, year]);
+      return [...comps, ...trains].sort((a, b) => a.date.getTime() - b.date.getTime());
+    },
+  });
+  const loadEvents = async () => { await recargarEventos(); };
+  // Sostiene el indicador un minimo de tiempo para que no parpadee
+  const mostrarCarga = useCargaMinima(loading);
 
   // El horario y los dias cerrados no dependen del mes: se piden una vez.
   const cargarHorario = useCallback(async () => {

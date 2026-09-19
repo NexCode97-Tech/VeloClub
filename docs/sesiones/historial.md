@@ -306,6 +306,57 @@ una dirección falsa queda como imagen rota— y el sello de verificado.
 Queda sin mapa en Sedes: la llave de Google Maps del proyecto original está
 guardada como secreta y no se puede leer para copiarla.
 
+### Finanzas, primero en el celular y después en la tablet
+
+- **Mes y año dejaron de ser dos selectores** y quedaron en uno solo,
+  `SelectorMes`: un ícono con el datepicker del proyecto, con navegación de año
+  y cuadrícula de doce meses. La sede pasó a esa misma fila y el calendario
+  quedó a su derecha.
+- **La tablet se rehízo calcada del celular**, con container queries sobre el
+  envoltorio de Finanzas: `@min-[460px]` es tablet con el menú abierto,
+  `@min-[660px]` con el menú cerrado y `@min-[900px]` escritorio. Se mide el
+  contenedor y no la ventana, que es lo que hacía que un portátil de 1024 con
+  el menú abierto se viera apretado.
+
+### La variación contra el mes anterior
+
+Las tarjetas de estado dicen cuánto cambió el mes frente al anterior **al mismo
+día**: el 17 de septiembre contra el 17 de agosto, no contra agosto completo,
+que castiga al mes en curso. El criterio vive en `api/src/lib/comparativo.ts` y
+tiene dos reglas para los meses que no miden lo mismo: el día del mes anterior
+nunca pasa de su último día (el 30 de marzo compara contra el 28 de febrero) y
+el último día de un mes compara contra el mes anterior completo. Todo en hora de
+Colombia, que es la del club. `GET /payments/comparativo` devuelve los conteos y
+trece pruebas fijan el criterio.
+
+Sin cobro no se compara: no se guarda cuándo se le puso tarifa a cada
+deportista, así que no hay con qué saber cuántos estaban sin cobro el mes pasado.
+
+### Tres pendientes viejos, cerrados
+
+- **El lint de la api no leía TypeScript** (`184af9f`). Sin parser, ESLint abría
+  los `.ts` con el de JavaScript y los 61 archivos fallaban con «Parsing error»:
+  `eslint-plugin-security` estaba instalado sin revisar una sola línea. Quedan
+  36 avisos, todos de `detect-object-injection` sobre índices ya validados.
+- **Una sede mal escrita botaba al deportista** (`426d7c7`). La importación de
+  Excel descartaba la fila entera, y por un dato que se arregla en dos clics el
+  deportista no quedaba registrado. Ahora entra sin sede y se avisa cuál
+  asignarle. La comparación además ignora tildes y mayúsculas.
+- **El lock de `web/`** (`bd40db3`), trece paquetes por detrás de lo instalado.
+  De paso salió `react-day-picker`, que no se usa en ninguna pantalla y era el
+  que rompía `npm install`: pide date-fns 3 y el proyecto va en 4.
+
+### La cuenta de deportista de la demo, compitiendo
+
+Caía en la categoría más pequeña, que va a escuela y no entra a torneos, así que
+su Rendimiento salía vacío y esa pantalla es la mitad de la demostración que se
+ve desde el celular del deportista (`9659cb7`). El seed ahora la sube a la franja
+que compite y le da un podio por competencia: bronce, plata y oro, de la más
+vieja a la más reciente. En la base ya sembrada se aplicó a mano, sin volver a
+sembrar, para no perder el logo, la portada y el verificado que van puestos así;
+su asistencia se pasó a la clase que le corresponde por categoría. En Clerk pasó
+de «Deportista Demo» al nombre que lleva su ficha.
+
 ---
 
 ## Sesión 2026-09-15 — Secretos fuera de sitio, y tres hallazgos de Sentry

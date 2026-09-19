@@ -2,6 +2,7 @@
 
 import { useAuth } from '@clerk/nextjs';
 import { useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useParams } from 'next/navigation';
 import { apiFetch } from '@/lib/api-client';
 import { parseLocalDate, toSentenceCase } from '@/lib/utils';
@@ -47,33 +48,36 @@ export default function TrainingDetailPage() {
   const params = useParams();
   const id = String(params.id);
 
-  const [session, setSession]   = useState<TrainingSession | null>(null);
-  const [members, setMembers]   = useState<Member[]>([]);
-  const [role, setRole]         = useState('');
-  const [loading, setLoading]   = useState(true);
-  // Sostiene el indicador un minimo de tiempo para que no parpadee
-  const mostrarCarga = useCargaMinima(loading);
+
   const [open, setOpen]         = useState(false);
   const [form, setForm]         = useState(emptyForm);
   const [saving, setSaving]     = useState(false);
   const [error, setError]       = useState<string | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
 
-  async function load() {
-    const token = await getToken();
-    const [meRes, sessionRes, membersRes] = await Promise.all([
-      apiFetch<{ status: string; user?: { role: string } }>('/me', { token }),
-      apiFetch<{ session: TrainingSession }>(`/training/${id}`, { token }),
-      apiFetch<{ members: Member[] }>('/members', { token }),
-    ]);
-    setRole(meRes.user?.role ?? '');
-    setSession(sessionRes.session);
-    // Un deportista en pausa no recibe resultados nuevos
-    setMembers(membersRes.members.filter(m => m.active !== false));
-    setLoading(false);
-  }
-
-  useEffect(() => { load(); }, []);
+  const { data: pantalla, isPending: loading, refetch } = useQuery({
+    queryKey: ['training', id],
+    queryFn: async () => {
+      const token = await getToken();
+      const [meRes, sessionRes, membersRes] = await Promise.all([
+        apiFetch<{ status: string; user?: { role: string } }>('/me', { token }),
+        apiFetch<{ session: TrainingSession }>(`/training/${id}`, { token }),
+        apiFetch<{ members: Member[] }>('/members', { token }),
+      ]);
+      return {
+        role: meRes.user?.role ?? '',
+        session: sessionRes.session,
+        // Un deportista en pausa no recibe resultados nuevos
+        members: membersRes.members.filter(m => m.active !== false),
+      };
+    },
+  });
+  const session = pantalla?.session ?? null;
+  const members = pantalla?.members ?? [];
+  const role    = pantalla?.role ?? '';
+  async function load() { await refetch(); }
+  // Sostiene el indicador un minimo de tiempo para que no parpadee
+  const mostrarCarga = useCargaMinima(loading);
 
   const canManage   = role === 'ADMIN' || role === 'ENTRENADOR';
   const escenario   = infoEscenario(session?.escenario);

@@ -1,6 +1,7 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { createPortal } from 'react-dom';
 import { useAuth } from '@clerk/nextjs';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -67,9 +68,8 @@ export function horaLegible(hhmm: string): string {
  */
 export default function HorarioClases({ sinEntrenamiento = [] }: { sinEntrenamiento?: number[] }) {
   const { getToken } = useAuth();
-  const [clases, setClases]   = useState<Clase[]>([]);
-  const [sedes, setSedes]     = useState<Sede[]>([]);
-  const [cargando, setCargando] = useState(true);
+  const qc = useQueryClient();
+
   const [error, setError]     = useState('');
 
   // Clase en edición. `null` = cerrado; sin `ids` = una nueva.
@@ -77,21 +77,20 @@ export default function HorarioClases({ sinEntrenamiento = [] }: { sinEntrenamie
   const [guardando, setGuardando] = useState(false);
   const [porBorrar, setPorBorrar] = useState<EnEdicion | null>(null);
 
-  const cargar = useCallback(async () => {
-    try {
+  const { data: horario, isPending: cargando, refetch } = useQuery({
+    queryKey: ['horarioClases'],
+    queryFn: async () => {
       const token = await getToken();
       const [resClases, resSedes] = await Promise.all([
         apiFetch<{ clases: Clase[] }>('/clases', { token }),
         apiFetch<{ locations: Sede[] }>('/locations', { token }),
       ]);
-      setClases(resClases.clases);
-      setSedes(resSedes.locations);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'No se pudo cargar el horario');
-    } finally { setCargando(false); }
-  }, [getToken]);
-
-  useEffect(() => { cargar(); }, [cargar]);
+      return { clases: resClases.clases, sedes: resSedes.locations };
+    },
+  });
+  const clases = horario?.clases ?? [];
+  const sedes  = horario?.sedes  ?? [];
+  const cargar = async () => { await refetch(); };
 
   /**
    * @param dia El dia de la celda donde se toco «Agregar». Ya viene elegido y
@@ -356,7 +355,10 @@ export default function HorarioClases({ sinEntrenamiento = [] }: { sinEntrenamie
     if (dias.includes(destino)) return;
 
     setError('');
-    setClases(prev => prev.map(x => (x.id === c.id ? { ...x, diaSemana: destino } : x)));
+    qc.setQueryData(['horarioClases'], (v: { clases: Clase[]; sedes: Sede[] } | undefined) => v && ({
+      ...v,
+      clases: v.clases.map(x => (x.id === c.id ? { ...x, diaSemana: destino } : x)),
+    }));
     try {
       const token = await getToken();
       await apiFetch('/clases/semana', {

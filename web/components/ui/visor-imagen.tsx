@@ -51,8 +51,13 @@ export function VisorImagen({ url, alt, abierto, onCerrar }: {
   }, []);
 
   // Cada vez que se abre arranca sin zoom: reabrirla y encontrarla ampliada
-  // donde la dejaste la vez pasada se siente roto.
-  useEffect(() => { if (abierto) reiniciar(); }, [abierto, reiniciar]);
+  // donde la dejaste la vez pasada se siente roto. Se reinicia durante el
+  // render para que no alcance a pintarse una vez con el zoom anterior.
+  const [abiertoPrevio, setAbiertoPrevio] = useState(abierto);
+  if (abiertoPrevio !== abierto) {
+    setAbiertoPrevio(abierto);
+    if (abierto) reiniciar();
+  }
 
   // Escape cierra, y el fondo de la pagina no se desplaza mientras esta abierto
   useEffect(() => {

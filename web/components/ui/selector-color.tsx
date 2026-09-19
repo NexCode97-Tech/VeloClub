@@ -64,7 +64,15 @@ export function SelectorColor({ value, onChange, etiqueta }: Props) {
   const boton  = useRef<HTMLButtonElement>(null);
   const panel  = useRef<HTMLDivElement>(null);
 
-  useEffect(() => { setTexto(value.replace('#', '')); }, [value]);
+  // El campo de texto se puede editar, asi que tiene estado propio, pero cuando
+  // el color cambia desde afuera hay que volver a copiarlo. Se hace durante el
+  // render y no en un efecto: asi React lo resuelve antes de pintar, en vez de
+  // pintar el valor viejo y volver a pintar.
+  const [valorPrevio, setValorPrevio] = useState(value);
+  if (valorPrevio !== value) {
+    setValorPrevio(value);
+    setTexto(value.replace('#', ''));
+  }
 
   // Cerrar al tocar fuera, contando el panel como «dentro»
   useEffect(() => {

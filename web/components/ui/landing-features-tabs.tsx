@@ -1,7 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
+import { useMediaQuery } from '@/hooks/use-media-query';
 
 // Easing/timing por la skill emilkowal-animations: ease-out fuerte para UI,
 // duraciones cortas (<300ms). El contenido usa fade+slide corto al cambiar
@@ -29,18 +30,10 @@ export interface FeatureTab {
 export default function LandingFeaturesTabs({ features }: { features: FeatureTab[] }) {
   const [mainKey, setMainKey] = useState(features[0].key);
   const reducedMotion = useReducedMotion();
-  const [isMobile, setIsMobile] = useState(false);
-
   // La compresión (solo ícono, se expande al seleccionar) es un patrón
   // pensado para el poco espacio horizontal del móvil. En pantallas más
   // grandes las pestañas se muestran siempre expandidas con su texto.
-  useEffect(() => {
-    const mql = window.matchMedia('(max-width: 639px)');
-    setIsMobile(mql.matches);
-    const listener = (e: MediaQueryListEvent) => setIsMobile(e.matches);
-    mql.addEventListener('change', listener);
-    return () => mql.removeEventListener('change', listener);
-  }, []);
+  const isMobile = useMediaQuery('(max-width: 639px)');
 
   const main = features.find(f => f.key === mainKey) ?? features[0];
 

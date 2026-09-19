@@ -16,6 +16,17 @@ import {
 
 // ── Formateo ────────────────────────────────────────────────────────────────
 const fmt = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 });
+
+/**
+ * El reloj, leido una vez al cargar la pantalla y no en cada render.
+ *
+ * Leerlo mientras se pinta es lo que marca el compilador de React: dos renders
+ * seguidos devolvian numeros distintos y el resultado dejaba de ser
+ * predecible. Los dias que le quedan a una prueba no cambian mientras alguien
+ * tiene la pantalla abierta, asi que congelarlo no le quita nada, y quien
+ * recarga ve la cuenta al dia.
+ */
+const AL_CARGAR = Date.now();
 function formatMiles(raw: string): string {
   const digits = raw.replace(/\D/g, '');
   if (!digits) return '';
@@ -111,7 +122,7 @@ function vigencia(pagos: { estado: string; fecha?: string | null }[], tipo: Tipo
   if (pagados.length === 0) return null;
   const ultimo = pagados.reduce((a, b) => (new Date(a.fecha!) > new Date(b.fecha!) ? a : b));
   const inicio = new Date(ultimo.fecha!);
-  const diasPasados   = Math.floor((Date.now() - inicio.getTime()) / 86_400_000);
+  const diasPasados   = Math.floor((AL_CARGAR - inicio.getTime()) / 86_400_000);
   const diasRestantes = Math.max(0, dur - diasPasados);
   const pct = Math.max(0, Math.min(100, Math.round((diasRestantes / dur) * 100)));
   return { pct, diasRestantes, vencido: diasRestantes <= 0 };
@@ -640,8 +651,8 @@ export default function ClubDetail({ club, suscripcion, tab, onReload, onDeleted
                   {(() => {
                     if (!club.trialEndsAt) return <p style={{ margin: '0 0 8px', fontSize: 11, color: '#8E87A8' }}>Sin período de prueba asignado</p>;
                     const ends = new Date(club.trialEndsAt);
-                    const expired = ends < new Date();
-                    const daysLeft = expired ? 0 : Math.ceil((ends.getTime() - Date.now()) / 86_400_000);
+                    const expired = ends.getTime() < AL_CARGAR;
+                    const daysLeft = expired ? 0 : Math.ceil((ends.getTime() - AL_CARGAR) / 86_400_000);
                     return <p style={{ margin: '0 0 8px', fontSize: 11, color: expired ? '#EF476F' : '#B88A00', fontWeight: 600 }}>{expired ? `Vencido el ${ends.toLocaleDateString('es-CO', { day: 'numeric', month: 'short' })}` : `${daysLeft} días restantes (vence ${ends.toLocaleDateString('es-CO', { day: 'numeric', month: 'short' })})`}</p>;
                   })()}
                   <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>

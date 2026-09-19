@@ -32,12 +32,19 @@ export function SearchModal({ open, onClose }: { open: boolean; onClose: () => v
   const [loading, setLoading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Enfocar el input y limpiar al abrir
+  // Al abrir se limpia lo de la busqueda anterior. Durante el render, no en un
+  // efecto: asi el modal nunca alcanza a pintarse con los resultados viejos.
+  const [abiertoPrevio, setAbiertoPrevio] = useState(open);
+  if (abiertoPrevio !== open) {
+    setAbiertoPrevio(open);
+    if (open) { setQ(''); setResults(EMPTY); }
+  }
+
+  // El foco si es un efecto: toca el DOM, que es justo para lo que sirven.
   useEffect(() => {
-    if (open) {
-      setQ(''); setResults(EMPTY);
-      setTimeout(() => inputRef.current?.focus(), 40);
-    }
+    if (!open) return;
+    const id = setTimeout(() => inputRef.current?.focus(), 40);
+    return () => clearTimeout(id);
   }, [open]);
 
   // Cerrar con Escape

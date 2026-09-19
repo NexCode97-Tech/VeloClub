@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { hexARgb, hsvARgb, rgbAHex, rgbAHsv, HEX } from '@/lib/color';
+import { useEsCliente } from '@/hooks/use-cliente';
 
 /**
  * El selector de color sin lista cerrada.
@@ -38,9 +39,7 @@ export function SelectorColorLibre({ valor, onChange, onCerrar, anclaje }: Props
   const [texto, setTexto] = useState(valor.toUpperCase());
   const panel = useRef<HTMLDivElement>(null);
   const cuadro = useRef<HTMLDivElement>(null);
-  const [montado, setMontado] = useState(false);
-
-  useEffect(() => setMontado(true), []);
+  const montado = useEsCliente();
 
   // Cerrar al tocar afuera o con Escape. El panel vive en un portal, así que
   // «afuera» se decide con contains y no con el árbol de React. El botón que lo

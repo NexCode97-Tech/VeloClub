@@ -47,8 +47,41 @@ function usePurgeLegacyServiceWorkers() {
   }, []);
 }
 
+/**
+ * Recarga sola cuando entra una version nueva.
+ *
+ * Al desplegar, el worker nuevo toma el control de una (skipWaiting), pero la
+ * pantalla que esta abierta se quedo con los archivos de la version anterior,
+ * que ya no existen en el servidor. Resultado: se queda cargando y toca cerrar
+ * la app y volver a abrirla. Eso le pasa a cualquiera que tenga la app
+ * instalada, cada vez que subimos algo.
+ *
+ * Recargar en cuanto el worker nuevo toma el control hace lo mismo que hacia el
+ * usuario a mano, sin que se entere.
+ *
+ * El guardia del controlador importa: en el primer registro tambien salta este
+ * evento, y ahi no hay ninguna version vieja que reemplazar. Sin el, todo el
+ * que entra por primera vez se come una recarga, que puede caerle en mitad del
+ * ingreso.
+ */
+function useRecargarConVersionNueva() {
+  useEffect(() => {
+    if (!('serviceWorker' in navigator)) return;
+    if (!navigator.serviceWorker.controller) return;
+    let yaRecargando = false;
+    const alCambiar = () => {
+      if (yaRecargando) return;
+      yaRecargando = true;
+      window.location.reload();
+    };
+    navigator.serviceWorker.addEventListener('controllerchange', alCambiar);
+    return () => navigator.serviceWorker.removeEventListener('controllerchange', alCambiar);
+  }, []);
+}
+
 export function Providers({ children }: { children: React.ReactNode }) {
   usePurgeLegacyServiceWorkers();
+  useRecargarConVersionNueva();
   const [client] = useState(() => new QueryClient({
     defaultOptions: {
       queries: {

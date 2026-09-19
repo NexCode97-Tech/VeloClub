@@ -1,5 +1,5 @@
 import type { NextConfig } from "next";
-import withPWA from "@ducanh2912/next-pwa";
+import withSerwistInit from "@serwist/next";
 import { withSentryConfig } from "@sentry/nextjs";
 
 // La API a la que habla este despliegue, sacada de su propia variable. La de
@@ -91,64 +91,17 @@ const nextConfig: NextConfig = {
   },
 };
 
-const pwaConfig = withPWA({
-  dest: "public",
+// El worker se escribe en public/sw.js, la misma direccion de siempre: los
+// celulares que ya tienen la app instalada lo llevan registrado ahi. Las reglas
+// de cacheo viven en app/sw.ts.
+const withSerwist = withSerwistInit({
+  swSrc: "app/sw.ts",
+  swDest: "public/sw.js",
   reloadOnOnline: true,
   disable: process.env.NODE_ENV === "development",
-  // Sin fallback de documento y sin ruta especial para la raiz. Ambas opciones
-  // hacen que next-pwa inyecte manejadores async en el service worker, y al
-  // compilarlos quedan llamando a _async_to_generator y _ts_generator, que
-  // nunca se incluyen en el paquete del worker. El resultado es un
-  // ReferenceError al interceptar la navegacion: la app instalada no abre.
-  cacheStartUrl: false,
-  dynamicStartUrl: false,
-  workboxOptions: {
-    skipWaiting: true,
-    clientsClaim: true,
-    // No interceptar rutas de Clerk, sign-in, sign-up ni APIs
-    navigateFallbackDenylist: [
-      /^\/sign-in/,
-      /^\/sign-up/,
-      /^\/api\//,
-      /^\/inactivo/,
-      /^\/trial-expirado/,
-    ],
-    runtimeCaching: [
-      // No cachear dominios de Clerk
-      {
-        urlPattern: /^https:\/\/clerk\.veloclubtech\.com\/.*/i,
-        handler: 'NetworkOnly',
-      },
-      {
-        urlPattern: /^https:\/\/[\w-]+\.clerk\.accounts\.dev\/.*/i,
-        handler: 'NetworkOnly',
-      },
-      // No cachear la API de Railway
-      {
-        urlPattern: /^https:\/\/veloclub-production\.up\.railway\.app\/.*/i,
-        handler: 'NetworkOnly',
-      },
-      // Statics de Next.js — cache first
-      {
-        urlPattern: /^\/_next\/static\/.*/i,
-        handler: 'CacheFirst',
-        options: {
-          cacheName: 'next-static',
-          expiration: { maxEntries: 200, maxAgeSeconds: 60 * 60 * 24 * 30 },
-        },
-      },
-      // Imágenes — stale while revalidate
-      {
-        urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp|ico)$/i,
-        handler: 'StaleWhileRevalidate',
-        options: {
-          cacheName: 'images',
-          expiration: { maxEntries: 100, maxAgeSeconds: 60 * 60 * 24 * 7 },
-        },
-      },
-    ],
-  },
-})(nextConfig);
+});
+
+const pwaConfig = withSerwist(nextConfig);
 
 export default withSentryConfig(pwaConfig, {
   org: 'nexcode97',

@@ -1,6 +1,10 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+
+/** La clave del contador, fuera del componente para que sea siempre la misma. */
+const CLAVE_CONTEO = ['notificaciones', 'sin-leer'];
 import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@clerk/nextjs';
@@ -53,31 +57,36 @@ function timeAgo(iso: string): string {
 export function NotificationsBell({ sobreOscuro = false }: { sobreOscuro?: boolean } = {}) {
   const { getToken } = useAuth();
   const router = useRouter();
+  const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState<Notif[]>([]);
-  const [unread, setUnread] = useState(0);
   const [coords, setCoords] = useState<{ top: number; left: number } | null>(null);
   const btnRef = useRef<HTMLButtonElement>(null);
 
-  const load = useCallback(async () => {
+  // El contador vive en la cache y no en un estado aparte. Con los dos, la
+  // campana mostraba un numero y la lista otro segun cual se hubiera
+  // actualizado de ultimo.
+  const { data: conteo, refetch: recargarConteo } = useQuery({
+    queryKey: CLAVE_CONTEO,
+    queryFn: async () => {
+      const token = await getToken();
+      return apiFetch<{ unread: number }>('/notifications/unread-count', { token });
+    },
+    // Silencioso: si falla, la campana simplemente no muestra numero.
+    retry: false,
+  });
+  const loadCount = async () => { await recargarConteo(); };
+  const unread = conteo?.unread ?? 0;
+  const ponerConteo = (n: number) => qc.setQueryData(CLAVE_CONTEO, { unread: Math.max(0, n) });
+
+  async function load() {
     try {
       const token = await getToken();
       const data = await apiFetch<{ notifications: Notif[]; unread: number }>('/notifications', { token });
       setItems(data.notifications);
-      setUnread(data.unread);
+      ponerConteo(data.unread);
     } catch { /* silencioso */ }
-  }, [getToken]);
-
-  const loadCount = useCallback(async () => {
-    try {
-      const token = await getToken();
-      const data = await apiFetch<{ unread: number }>('/notifications/unread-count', { token });
-      setUnread(data.unread);
-    } catch { /* silencioso */ }
-  }, [getToken]);
-
-  // Carga inicial del contador
-  useEffect(() => { loadCount(); }, [loadCount]);
+  }
 
   // Tiempo real: al recibir el evento SSE 'notifications', refrescar
   useClubStream((ev) => {
@@ -101,7 +110,7 @@ export function NotificationsBell({ sobreOscuro = false }: { sobreOscuro?: boole
   }
 
   async function markAll() {
-    setUnread(0);
+    ponerConteo(0);
     setItems(prev => prev.map(n => ({ ...n, leida: true })));
     try { const token = await getToken(); await apiFetch('/notifications/read', { token, method: 'PATCH', body: JSON.stringify({}) }); }
     catch { /* silencioso */ }
@@ -110,7 +119,7 @@ export function NotificationsBell({ sobreOscuro = false }: { sobreOscuro?: boole
   async function openItem(n: Notif) {
     setOpen(false);
     if (!n.leida) {
-      setUnread(u => Math.max(0, u - 1));
+      ponerConteo(unread - 1);
       try { const token = await getToken(); await apiFetch('/notifications/read', { token, method: 'PATCH', body: JSON.stringify({ id: n.id }) }); }
       catch { /* silencioso */ }
     }

@@ -345,23 +345,28 @@ export default function AsistenciaPage() {
   // Sostiene el indicador un minimo de tiempo para que no parpadee
   const mostrarCarga = useCargaMinima(loading);
 
-  useEffect(() => {
-    if (locations.length > 0 && !selectedLoc) setSelectedLoc(locations[0].id);
-  }, [locations, selectedLoc]);
+  // Los tres ajustes de abajo se hacen durante el render y no en efectos.
+  // Encadenados como efectos, la pantalla se pintaba una vez sin sede, otra con
+  // la primera, otra con la clase propuesta y otra con la sede de esa clase:
+  // cuatro pasadas antes de quedar quieta, que es el parpadeo que se veia al
+  // entrar a Asistencia.
+  if (locations.length > 0 && !selectedLoc) setSelectedLoc(locations[0].id);
 
   // Al cambiar de dia se propone la primera clase sin pasar; si ya estan todas
   // guardadas, la primera. Asi el entrenador entra y marca sin elegir nada.
-  useEffect(() => {
-    if (clasesHoy.length === 0) { setClaseSel(null); return; }
-    if (claseSel && clasesHoy.some(c => c.id === claseSel)) return;
+  if (clasesHoy.length === 0) {
+    if (claseSel !== null) setClaseSel(null);
+  } else if (!claseSel || !clasesHoy.some(c => c.id === claseSel)) {
     setClaseSel((clasesHoy.find(c => !c.guardada) ?? clasesHoy[0]).id);
-  }, [clasesHoy, claseSel]);
+  }
 
   // La sede la manda la clase: no tiene sentido pasar lista de la clase de El
   // Bosque con la planilla de La Flora.
-  useEffect(() => {
+  const [claseActivaPrevia, setClaseActivaPrevia] = useState(claseActiva);
+  if (claseActivaPrevia !== claseActiva) {
+    setClaseActivaPrevia(claseActiva);
     if (claseActiva) setSelectedLoc(claseActiva.locationId);
-  }, [claseActiva]);
+  }
 
   useEffect(() => {
     getToken().then(async token => {

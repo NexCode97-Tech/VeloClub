@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@clerk/nextjs';
 import { apiFetch } from '@/lib/api-client';
 import { DatePicker } from '@/components/ui/date-picker';
@@ -268,15 +269,14 @@ export default function ClubDetail({ club, suscripcion, tab, onReload, onDeleted
   const [editForm, setEditForm] = useState({ clubName: '', adminName: '', adminEmail: '', adminPhone: '', deporte: '', trialDays: '' });
 
   // ── Estado: miembros ─────────────────────────────────────────────────────
-  const [members, setMembers] = useState<Member[]>([]);
-  const [membersLoading, setMembersLoading] = useState(true);
+
   const [showAddMember, setShowAddMember] = useState(false);
   const [memberForm, setMemberForm] = useState({ fullName: '', email: '', role: 'ENTRENADOR' as 'ADMIN' | 'ENTRENADOR' });
   const [memberSaving, setMemberSaving] = useState(false);
   const [memberError, setMemberError] = useState<string | null>(null);
 
   // ── Estado: dueño del club ───────────────────────────────────────────────
-  const [dueno, setDueno] = useState<{ ownerUserId: string | null; candidatos: Candidato[] } | null>(null);
+
   const [cambiandoDueno, setCambiandoDueno] = useState<string | null>(null);
 
   // ── Estado: finanzas ─────────────────────────────────────────────────────
@@ -324,24 +324,25 @@ export default function ClubDetail({ club, suscripcion, tab, onReload, onDeleted
   }
 
   // ── Carga de miembros ────────────────────────────────────────────────────
-  async function loadMembers() {
-    setMembersLoading(true);
-    try {
+  const { data: datosMiembros, isPending: membersLoading, refetch: recargarMiembros } = useQuery({
+    queryKey: ['superadmin', 'club', club.id, 'miembros'],
+    queryFn: async () => {
       const token = await getToken();
-      const res = await apiFetch<{ members: Member[] }>(`/superadmin/clubs/${club.id}/miembros`, { token });
-      setMembers(res.members);
-    } finally { setMembersLoading(false); }
-  }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { loadMembers(); }, [club.id]);
+      return apiFetch<{ members: Member[] }>(`/superadmin/clubs/${club.id}/miembros`, { token });
+    },
+  });
+  const members = datosMiembros?.members ?? [];
+  async function loadMembers() { await recargarMiembros(); }
 
   // ── Dueño del club ───────────────────────────────────────────────────────
-  async function loadDueno() {
-    const token = await getToken();
-    setDueno(await apiFetch(`/superadmin/clubs/${club.id}/dueno`, { token }));
-  }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { loadDueno(); }, [club.id]);
+  const { data: dueno = null, refetch: recargarDueno } = useQuery({
+    queryKey: ['superadmin', 'club', club.id, 'dueno'],
+    queryFn: async () => {
+      const token = await getToken();
+      return apiFetch<{ ownerUserId: string | null; candidatos: Candidato[] }>(`/superadmin/clubs/${club.id}/dueno`, { token });
+    },
+  });
+  async function loadDueno() { await recargarDueno(); }
 
   async function hacerDueno(userId: string) {
     setCambiandoDueno(userId);

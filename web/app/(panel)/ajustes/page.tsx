@@ -263,8 +263,13 @@ function AjustesPageContent() {
   const cityOptions = department ? (COLOMBIA[department] ?? []).sort() : [];
 
   // Sincroniza el tab si cambia el query param (clic en el sub-menú del sidebar
-  // estando ya en esta página, sin remount del componente).
-  useEffect(() => { setTab(validTab); }, [validTab]);
+  // estando ya en esta página, sin remount del componente). Durante el render:
+  // con efecto se alcanzaba a ver un instante el tab anterior.
+  const [tabPrevio, setTabPrevio] = useState(validTab);
+  if (tabPrevio !== validTab) {
+    setTabPrevio(validTab);
+    setTab(validTab);
+  }
 
   useEffect(() => {
     (async () => {

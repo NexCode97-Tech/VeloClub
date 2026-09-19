@@ -114,9 +114,10 @@ export default function MemberHistoryPanel({
     return Array.from(s).sort((a, b) => b - a);
   }, [payments]);
 
-  useEffect(() => {
-    if (years.length > 0 && !years.includes(year)) setYear(years[0]);
-  }, [years, year]);
+  // Si el año elegido dejo de existir en la lista, se pasa al primero que si
+  // esta. Durante el render y no en un efecto: asi la tabla no alcanza a
+  // pintarse vacia con un año que ya no aplica.
+  if (years.length > 0 && !years.includes(year)) setYear(years[0]);
 
   const stats = useMemo(() => {
     const pagados    = payments.filter(p => p.status === 'PAID');

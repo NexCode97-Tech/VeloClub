@@ -2,6 +2,8 @@
 
 import { useAuth } from '@clerk/nextjs';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { QK } from '@/hooks/useVeloQuery';
 import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { apiFetch } from '@/lib/api-client';
@@ -260,8 +262,6 @@ export default function ClubsPage() {
   // Hora viva: re-renderiza cada 30s para que los días de prueba se descuenten
   const now = useNow(30_000);
 
-  const [clubs,   setClubs]   = useState<Club[]>([]);
-  const [loading, setLoading] = useState(true);
   const [error,   setError]   = useState<string | null>(null);
 
   // El detalle del club vive en su propia ruta; abrirlo es navegar, no cambiar estado
@@ -278,28 +278,28 @@ export default function ClubsPage() {
   const [newForm, setNewForm] = useState({ clubName: '', adminEmail: '', adminName: '', adminPhone: '', deporte: '' });
   const [saving,  setSaving]  = useState(false);
 
-  async function load(silent = false) {
-    try {
+  // La lista solo necesita los clubes: las suscripciones las carga ahora la
+  // pantalla del club, que es donde se usan.
+  //
+  // Se refresca sola cada 60 segundos, sin spinner ni parpadeo, para que los
+  // clubes auto-registrados o verificados por otro superadmin aparezcan solos.
+  // 60s y no menos: a 15s el panel chocaba con el rate limit del backend.
+  const { data, isPending: loading, refetch } = useQuery({
+    queryKey: QK.superadmin.clubs(),
+    queryFn: async () => {
       const token = await getToken();
-      // La lista solo necesita los clubes: las suscripciones las carga ahora la
-      // pantalla del club, que es donde se usan
-      const clubsRes = await apiFetch<{ clubs: Club[] }>('/superadmin/clubs', { token });
-      setClubs(clubsRes.clubs);
-    } catch (e) {
-      if (!silent) setError(e instanceof Error ? e.message : 'Error al cargar clubs');
-    } finally { setLoading(false); }
-  }
+      return apiFetch<{ clubs: Club[] }>('/superadmin/clubs', { token });
+    },
+    enabled: isLoaded && isSignedIn,
+    refetchInterval: 60_000,
+  });
+  const clubs = data?.clubs ?? [];
+  async function load() { await refetch(); }
 
+  // Sin sesion no hay panel que mostrar.
   useEffect(() => {
-    if (!isLoaded) return;
-    if (!isSignedIn) { router.push('/sign-in'); return; }
-    load();
-    // Refresco silencioso en tiempo real — sin spinner ni parpadeo, para que
-    // clubes auto-registrados o verificados por otro superadmin aparezcan solos.
-    // 60s: a 15s el panel chocaba con el rate limit del backend (429).
-    const interval = setInterval(() => load(true), 60_000);
-    return () => clearInterval(interval);
-  }, [isLoaded, isSignedIn]);
+    if (isLoaded && !isSignedIn) router.push('/sign-in');
+  }, [isLoaded, isSignedIn, router]);
 
   // Opciones de deporte disponibles, derivadas de los clubes cargados
   const deporteOptions = useMemo(() => {

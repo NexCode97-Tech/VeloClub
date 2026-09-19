@@ -1,6 +1,8 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { QK } from '@/hooks/useVeloQuery';
 import { useAuth } from '@clerk/nextjs';
 import {
   Building2, CreditCard, DollarSign, TrendingUp, Zap,
@@ -140,10 +142,7 @@ export default function FinanzasSuperadmin() {
   // entre dos. No hay un segundo filtro con el que pelear.
   const [mesElegido, setMesElegido] = useState<string | null>(() => `${new Date().getFullYear()}-01`);
   const [rangoFechas, setRangoFechas] = useState<DateRange | null>(anioEnCurso);
-  const [datos, setDatos] = useState<Finanzas | null>(null);
-  const [gastos, setGastos] = useState<Gasto[]>([]);
-  const [ingresos, setIngresos] = useState<Ingreso[]>([]);
-  const [cargando, setCargando] = useState(true);
+
   const [error, setError] = useState<string | null>(null);
 
   const [abierto, setAbierto] = useState(false);
@@ -156,8 +155,11 @@ export default function FinanzasSuperadmin() {
   // un aviso arriba de la pagina queda detras del velo y nadie lo lee.
   const [errorModal, setErrorModal] = useState<string | null>(null);
 
-  const cargar = useCallback(async () => {
-    try {
+  // El periodo entra en la clave: cambiar de mes o marcar un rango es otra
+  // consulta, y volver a uno ya visto sale de la cache.
+  const { data: pantalla, isPending: cargando, refetch } = useQuery({
+    queryKey: [...QK.superadmin.finanzas(new Date().getFullYear()), mesElegido, rangoFechas],
+    queryFn: async () => {
       const token = await getToken();
       // El servidor redondea a meses completos, así que el día que se mande da
       // igual mientras caiga dentro del mes.
@@ -172,18 +174,13 @@ export default function FinanzasSuperadmin() {
         apiFetch<{ gastos: Gasto[] }>('/superadmin/finanzas/gastos', { token }),
         apiFetch<{ ingresos: Ingreso[] }>('/superadmin/finanzas/ingresos', { token }),
       ]);
-      setDatos(f);
-      setGastos(g.gastos);
-      setIngresos(i.ingresos);
-      setError(null);
-    } catch {
-      setError('No se pudieron cargar las finanzas. Intenta de nuevo.');
-    } finally {
-      setCargando(false);
-    }
-  }, [getToken, mesElegido, rangoFechas]);
-
-  useEffect(() => { cargar(); }, [cargar]);
+      return { datos: f, gastos: g.gastos, ingresos: i.ingresos };
+    },
+  });
+  const datos    = pantalla?.datos ?? null;
+  const gastos   = pantalla?.gastos ?? [];
+  const ingresos = pantalla?.ingresos ?? [];
+  const cargar = async () => { await refetch(); };
 
   // Las cifras son del periodo completo que se está viendo, no del mes en
   // curso: al mover el filtro, unas tarjetas que no cambian confunden más de lo

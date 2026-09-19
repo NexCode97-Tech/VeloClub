@@ -2,6 +2,7 @@
 
 import { useAuth } from '@clerk/nextjs';
 import { useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useParams, useRouter } from 'next/navigation';
 import { apiFetch } from '@/lib/api-client';
 import { parseLocalDate } from '@/lib/utils';
@@ -144,12 +145,7 @@ export default function CompetitionDetailPage() {
   const params = useParams();
   const id = String(params.id);
 
-  const [competition, setCompetition] = useState<Competition | null>(null);
-  const [members, setMembers]         = useState<Member[]>([]);
-  const [role, setRole]               = useState('');
-  const [loading, setLoading]         = useState(true);
-  // Sostiene el indicador un minimo de tiempo para que no parpadee
-  const mostrarCarga = useCargaMinima(loading);
+
 
   // Modal prueba
   const [eventOpen, setEventOpen]   = useState(false);
@@ -172,22 +168,31 @@ export default function CompetitionDetailPage() {
   const [savingEdit, setSavingEdit] = useState(false);
   const [editError, setEditError]   = useState<string | null>(null);
 
-  async function load() {
-    const token = await getToken();
-    const [compRes, membersRes, meRes] = await Promise.all([
-      apiFetch<{ competition: Competition }>(`/competitions/${id}`, { token }),
-      apiFetch<{ members: Member[] }>('/members', { token }),
-      apiFetch<{ status: string; user?: { role: string } }>('/me', { token }),
-    ]);
-    setCompetition(compRes.competition);
-    // Los pausados no se pueden inscribir en resultados nuevos, pero los que ya
-    // tienen quedan visibles porque el resultado guarda su propio miembro.
-    setMembers(membersRes.members.filter(m => m.active !== false));
-    setRole(meRes.user?.role ?? '');
-    setLoading(false);
-  }
-
-  useEffect(() => { load(); }, [id]);
+  const { data: pantalla, isPending: loading, refetch } = useQuery({
+    queryKey: ['competitions', id],
+    queryFn: async () => {
+      const token = await getToken();
+      const [compRes, membersRes, meRes] = await Promise.all([
+        apiFetch<{ competition: Competition }>(`/competitions/${id}`, { token }),
+        apiFetch<{ members: Member[] }>('/members', { token }),
+        apiFetch<{ status: string; user?: { role: string } }>('/me', { token }),
+      ]);
+      return {
+        competition: compRes.competition,
+        // Los pausados no se pueden inscribir en resultados nuevos, pero los
+        // que ya tienen quedan visibles porque el resultado guarda su propio
+        // miembro.
+        members: membersRes.members.filter(m => m.active !== false),
+        role: meRes.user?.role ?? '',
+      };
+    },
+  });
+  const competition = pantalla?.competition ?? null;
+  const members     = pantalla?.members ?? [];
+  const role        = pantalla?.role ?? '';
+  async function load() { await refetch(); }
+  // Sostiene el indicador un minimo de tiempo para que no parpadee
+  const mostrarCarga = useCargaMinima(loading);
 
   async function handleAddEvent() {
     if (!eventName.trim()) return;

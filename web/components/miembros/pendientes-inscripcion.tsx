@@ -1,11 +1,13 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useAuth } from '@clerk/nextjs';
 import { AnimatePresence, motion } from 'framer-motion';
 import { AlertTriangle, Check, ChevronRight, UserPlus, X } from 'lucide-react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
+import { QK } from '@/hooks/useVeloQuery';
 
 /**
  * Lo que espera el visto bueno del club.
@@ -105,26 +107,27 @@ export function PendientesInscripcion({ puedeAprobar, onCambio }: {
   onCambio: () => void;
 }) {
   const { getToken } = useAuth();
-  const [pendientes, setPendientes] = useState<Pendiente[]>([]);
-  const [actualizaciones, setActualizaciones] = useState<Actualizacion[]>([]);
+  const qc = useQueryClient();
+
   const [abierto, setAbierto] = useState(false);
   const [detalle, setDetalle] = useState<Fila | null>(null);
   const [marcados, setMarcados] = useState<Set<string>>(new Set());
   const [trabajando, setTrabajando] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const cargar = useCallback(async () => {
-    try {
+  const { data: bandeja } = useQuery({
+    queryKey: QK.inscripcion.pendientes(),
+    queryFn: async () => {
       const token = await getToken();
-      const r = await apiFetch<{ pendientes: Pendiente[]; actualizaciones: Actualizacion[] }>(
+      return apiFetch<{ pendientes: Pendiente[]; actualizaciones: Actualizacion[] }>(
         '/inscripcion/club/pendientes', { token }
       );
-      setPendientes(r.pendientes);
-      setActualizaciones(r.actualizaciones ?? []);
-    } catch { /* la lista de miembros no puede caerse por esto */ }
-  }, [getToken]);
-
-  useEffect(() => { cargar(); }, [cargar]);
+    },
+    // La lista de miembros no puede caerse por esto: si falla, no hay bandeja.
+    retry: false,
+  });
+  const pendientes = bandeja?.pendientes ?? [];
+  const actualizaciones = bandeja?.actualizaciones ?? [];
 
   useEffect(() => {
     if (!abierto) return;
@@ -159,8 +162,13 @@ export function PendientesInscripcion({ puedeAprobar, onCambio }: {
   }
 
   function quitarDeLaLista(fila: Fila) {
-    if (fila.clase === 'nueva') setPendientes(p => p.filter(x => x.id !== fila.id));
-    else setActualizaciones(p => p.filter(x => x.id !== fila.id));
+    // Se saca de la bandeja de una, sin esperar a recargar: ya se resolvio y
+    // verla un segundo mas se lee como que el boton no hizo nada.
+    qc.setQueryData(QK.inscripcion.pendientes(), (v: { pendientes: Pendiente[]; actualizaciones: Actualizacion[] } | undefined) => v && (
+      fila.clase === 'nueva'
+        ? { ...v, pendientes: v.pendientes.filter(x => x.id !== fila.id) }
+        : { ...v, actualizaciones: v.actualizaciones.filter(x => x.id !== fila.id) }
+    ));
     setMarcados(s => { const n = new Set(s); n.delete(fila.id); return n; });
   }
 

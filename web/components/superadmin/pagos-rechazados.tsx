@@ -1,8 +1,9 @@
 'use client';
 
 import { useAuth } from '@clerk/nextjs';
-import { useCallback, useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
+import { QK } from '@/hooks/useVeloQuery';
 import { motion } from 'framer-motion';
 import { cardVariant } from '@/lib/page-animations';
 import { CreditCard } from 'lucide-react';
@@ -60,17 +61,17 @@ function cuandoFue(iso: string): string {
 
 export function PagosRechazados() {
   const { getToken } = useAuth();
-  const [rechazos, setRechazos] = useState<Rechazo[]>([]);
 
-  const cargar = useCallback(async () => {
-    try {
+  const { data } = useQuery({
+    queryKey: QK.superadmin.pagosRechazados(),
+    queryFn: async () => {
       const token = await getToken();
-      const res = await apiFetch<{ rechazos: Rechazo[] }>('/superadmin/pagos-rechazados?dias=7', { token });
-      setRechazos(res.rechazos);
-    } catch { /* el panel no puede caerse por esta sección */ }
-  }, [getToken]);
-
-  useEffect(() => { cargar(); }, [cargar]);
+      return apiFetch<{ rechazos: Rechazo[] }>('/superadmin/pagos-rechazados?dias=7', { token });
+    },
+    // El panel no puede caerse por esta sección: si falla, se queda vacía.
+    retry: false,
+  });
+  const rechazos = data?.rechazos ?? [];
 
   if (rechazos.length === 0) return null;
 

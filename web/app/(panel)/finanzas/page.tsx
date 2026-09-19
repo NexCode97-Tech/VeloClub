@@ -7,6 +7,7 @@ import { useEffect, useState, useMemo } from 'react';
 import { apiFetch } from '@/lib/api-client';
 import { parseLocalDate } from '@/lib/utils';
 import { QK } from '@/hooks/useVeloQuery';
+import { useBanderaLocal, guardarBanderaLocal } from '@/hooks/use-bandera-local';
 import { HojaInferior, OpcionHoja } from '@/components/ui/hoja-inferior';
 import {
   CreditCard, AlertCircle, Check, PhoneOff, ChevronUp, ExternalLink, ChevronDown,
@@ -401,22 +402,12 @@ export default function FinanzasPage() {
   const [tab, setTab]             = useState<'mensualidades' | 'flujo'>('mensualidades');
   const [clubName, setClubName]     = useState('VeloClub');
   const [clubLogoUrl, setClubLogoUrl] = useState<string | null>(null);
-  // Recaudo oculto. Arranca en false y se corrige tras montar: leer
-  // localStorage durante el render rompe la hidratacion, porque el servidor no
-  // tiene acceso a el y pintaria un valor distinto al del navegador.
-  const [montoOculto, setMontoOculto] = useState(false);
-  useEffect(() => {
-    setMontoOculto(localStorage.getItem('finanzas-monto-oculto') === '1');
-  }, []);
-  // Se guarda en el clic y no en un efecto: un efecto sobre [montoOculto] corre
-  // tambien al montar, con el valor inicial, y pisaria la preferencia guardada
-  // justo antes de que la lectura de arriba alcance a aplicarse.
+  // Recaudo oculto. La preferencia vive en el navegador y se lee con el hook,
+  // que sabe dar una respuesta en el servidor y otra en el navegador sin
+  // pintar dos veces.
+  const montoOculto = useBanderaLocal('finanzas-monto-oculto');
   function alternarMonto() {
-    setMontoOculto(v => {
-      const siguiente = !v;
-      localStorage.setItem('finanzas-monto-oculto', siguiente ? '1' : '0');
-      return siguiente;
-    });
+    guardarBanderaLocal('finanzas-monto-oculto', !montoOculto);
   }
   const [clubPlan, setClubPlan]     = useState<{ tipoPlan: string; createdAt: string } | null>(null);
   const [clubCreatedAt, setClubCreatedAt] = useState<string | null>(null);

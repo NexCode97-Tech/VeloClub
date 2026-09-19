@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@clerk/nextjs';
 import { apiFetch } from '@/lib/api-client';
@@ -18,33 +19,34 @@ export default function ClubScreen({ id, tab }: { id: string; tab: 'info' | 'fin
   const { getToken, isLoaded, isSignedIn } = useAuth();
   const router = useRouter();
 
-  const [club, setClub]   = useState<Club | null>(null);
-  const [sus, setSus]     = useState<Suscripcion | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const mostrarCarga = useCargaMinima(loading);
-
-  const load = useCallback(async () => {
-    try {
+  const { data, isPending: loading, error: fallo, refetch } = useQuery({
+    queryKey: ['superadmin', 'club', id],
+    queryFn: async () => {
       const token = await getToken();
       const [clubsRes, susRes] = await Promise.all([
         apiFetch<{ clubs: Club[] }>('/superadmin/clubs', { token }),
         apiFetch<{ clubs: { id: string; suscripcion: Suscripcion | null }[] }>('/superadmin/suscripciones', { token }),
       ]);
       const encontrado = clubsRes.clubs.find(c => c.id === id) ?? null;
-      if (!encontrado) { setError('Este club ya no existe'); return; }
-      setClub(encontrado);
-      setSus(susRes.clubs.find(c => c.id === id)?.suscripcion ?? null);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Error al cargar el club');
-    } finally { setLoading(false); }
-  }, [getToken, id]);
+      if (!encontrado) throw new Error('Este club ya no existe');
+      return {
+        club: encontrado,
+        sus: susRes.clubs.find(c => c.id === id)?.suscripcion ?? null,
+      };
+    },
+    enabled: isLoaded && isSignedIn,
+    retry: false,
+  });
+  const club = data?.club ?? null;
+  const sus  = data?.sus ?? null;
+  const error = fallo ? (fallo instanceof Error ? fallo.message : 'Error al cargar el club') : null;
+  const mostrarCarga = useCargaMinima(loading);
+  const load = async () => { await refetch(); };
 
+  // Sin sesion no hay pantalla que mostrar.
   useEffect(() => {
-    if (!isLoaded) return;
-    if (!isSignedIn) { router.push('/sign-in'); return; }
-    load();
-  }, [isLoaded, isSignedIn, load, router]);
+    if (isLoaded && !isSignedIn) router.push('/sign-in');
+  }, [isLoaded, isSignedIn, router]);
 
   const volver = () => router.push('/superadmin/clubs');
 

@@ -346,6 +346,62 @@ deportista, así que no hay con qué saber cuántos estaban sin cobro el mes pas
   De paso salió `react-day-picker`, que no se usa en ninguna pantalla y era el
   que rompía `npm install`: pide date-fns 3 y el proyecto va en 4.
 
+### Las reglas del compilador de React, de 72 a 9
+
+Next 16 trajo las reglas nuevas del compilador puestas como error. No eran
+fallas, así que quedaron en aviso y se fueron limpiando. Al mirarlas una por una
+resultaron ser cinco patrones distintos, no uno.
+
+**Lo que de afuera se copia durante el render, no en un efecto.** Con efecto la
+pantalla se pinta una vez con el valor viejo y otra con el nuevo. Es el selector
+de color, el de mes, el de deporte, el carnet, el buscador, el visor de
+imágenes, el date picker y el tab de Ajustes.
+
+**Cuatro hooks nuevos** para los patrones que se repetían por toda la
+plataforma, los cuatro con `useSyncExternalStore`, que es la pieza que React
+trae justo para consultar algo que vive fuera:
+
+- `useEsCliente`, para los portales. Reemplaza el `const [montado] = useState(false)`
+  con efecto.
+- `useMediaQuery`, para seguir una media query sin copiarla a un estado.
+- `useBanderaLocal`, para una preferencia guardada en el navegador sin romper la
+  hidratación.
+- `useSdkMercadoPago`, para saber si el SDK ya está cargado. Puede haberlo hecho
+  en una navegación anterior, y ahí el `onLoad` del `<Script>` no vuelve a
+  saltar.
+
+**Veinte componentes pasaron a TanStack Query**, que es como carga datos el
+resto de la plataforma. Las claves quedaron centralizadas en `QK`: escrita a
+mano en cada archivo, una letra de más crea una segunda caché que nadie invalida
+y la pantalla se queda con datos viejos.
+
+**Lo que se arregló de paso, que es lo que de verdad se nota**
+
+- **Asistencia dejó de parpadear al entrar.** Encadenaba tres efectos para
+  elegir sede y clase, así que la pantalla se pintaba cuatro veces antes de
+  quedar quieta: sin sede, con la primera, con la clase propuesta y con la sede
+  de esa clase.
+- **El panel** hacía lo mismo con cuatro efectos al navegar, y por eso la
+  pantalla nueva aparecía con la barra escondida o con el tooltip del módulo
+  anterior flotando.
+- **En el carnet**, al pasar de una ficha a otra se seguía viendo la anterior
+  hasta que llegaba la nueva.
+- **En la campana**, el contador y la lista eran dos fuentes de verdad y podían
+  mostrar números distintos.
+- **En Finanzas**, el recaudo oculto se alcanzaba a ver antes de taparse.
+- **En Onboarding**, el campo decía «disponible» sobre un nombre que ya no era
+  el que estaba escrito.
+- **El calendario** ya no vuelve a pedir el horario cada vez que se cambia de
+  mes: tiene su propia clave.
+- **Reportes** guardaba diez estados para diez cifras que salían todas de la
+  misma respuesta. Ahora la consulta trae lo crudo y las cifras se calculan al
+  pintar.
+
+**Los 9 que quedan son código correcto** que la regla marca igual: cinco son
+medidas del DOM para posicionar menús en portales, dos son lecturas de
+referencias durante un gesto en el visor de imágenes, uno es el debounce del
+buscador y uno es un ícono que se arma al pintar.
+
 ### La noche en que se cayó producción, y lo que salió de ahí
 
 **Lo que pasó.** El pendiente decía «el `package-lock.json` de la web está

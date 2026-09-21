@@ -284,17 +284,33 @@ export default function LayoutDelPanel({ children }: { children: React.ReactNode
     };
   }, [checking]);
 
-  // Con el megamenu abierto la barra es parte del menu: no puede irse.
-  useEffect(() => { if (masMenuOpen) setNavOculta(false); }, [masMenuOpen]);
+  // Los cuatro ajustes de abajo eran cuatro efectos encadenados. Al navegar
+  // corrian todos despues de pintar, asi que la pantalla nueva alcanzaba a
+  // aparecer con la barra escondida o con el tooltip del modulo anterior
+  // todavia flotando. Hechos durante el render, la pantalla nueva ya nace bien.
+  const [masMenuPrevio, setMasMenuPrevio] = useState(masMenuOpen);
+  if (masMenuPrevio !== masMenuOpen) {
+    setMasMenuPrevio(masMenuOpen);
+    // Con el megamenu abierto la barra es parte del menu: no puede irse.
+    if (masMenuOpen) setNavOculta(false);
+  }
 
-  // Cada modulo arranca desde arriba, con la barra a la vista.
-  useEffect(() => { setNavOculta(false); }, [pathname]);
+  const [rutaPrevia, setRutaPrevia] = useState(pathname);
+  if (rutaPrevia !== pathname) {
+    setRutaPrevia(pathname);
+    // Cada modulo arranca desde arriba, con la barra a la vista, y sin el
+    // tooltip pegado del modulo anterior: el onMouseLeave no siempre salta
+    // cuando el contenido del sidebar cambia debajo del cursor.
+    setNavOculta(false);
+    setNavTip(null);
+  }
 
-  // Ocultar el tooltip si el sidebar deja de estar colapsado
-  useEffect(() => { if (!collapsed) setNavTip(null); }, [collapsed]);
-  // Limpiar el tooltip al navegar — evita que quede pegado si el onMouseLeave
-  // no se dispara porque el contenido del sidebar cambió.
-  useEffect(() => { setNavTip(null); }, [pathname]);
+  const [collapsedPrevio, setCollapsedPrevio] = useState(collapsed);
+  if (collapsedPrevio !== collapsed) {
+    setCollapsedPrevio(collapsed);
+    // El tooltip solo existe con el sidebar angosto.
+    if (!collapsed) setNavTip(null);
+  }
 
   // Refresco en vivo de nombre/foto/logo en toda la página, sin recargar:
   // 1) el evento global 'vc:me-updated' (lo disparan Ajustes y otros al guardar)
@@ -326,8 +342,12 @@ export default function LayoutDelPanel({ children }: { children: React.ReactNode
   // Depende solo de la ruta (no de collapsed) — expandir/contraer el sidebar
   // nunca debe disparar la animación de deslizamiento del sub-menú.
   const navDepthNow = (pathname.startsWith('/ajustes') || pathname.startsWith('/logros')) ? 1 : 0;
-  const prevNavDepthRef = useRef(navDepthNow);
-  useEffect(() => { prevNavDepthRef.current = navDepthNow; }, [navDepthNow]);
+  const [navDepthPrevio, setNavDepthPrevio] = useState(navDepthNow);
+  const [navDir, setNavDir] = useState(1);
+  if (navDepthPrevio !== navDepthNow) {
+    setNavDir(navDepthNow >= navDepthPrevio ? 1 : -1);
+    setNavDepthPrevio(navDepthNow);
+  }
 
   // Atajo de teclado para abrir el buscador (Ctrl/Cmd + K)
   useEffect(() => {
@@ -341,6 +361,17 @@ export default function LayoutDelPanel({ children }: { children: React.ReactNode
     return () => window.removeEventListener('keydown', onKey);
   }, []);
 
+  // La pantalla de carga solo se muestra en el primer chequeo: los refrescos en
+  // vivo (meRefresh > 0) actualizan nombre y foto en silencio, sin parpadeo.
+  // Se enciende durante el render y no en el efecto, que corria despues de
+  // pintar: al cambiar de cuenta se alcanzaba a ver el panel de la anterior.
+  const quienEntra = `${isLoaded}|${isSignedIn}|${userId}|${sessionId}`;
+  const [quienEntraba, setQuienEntraba] = useState(quienEntra);
+  if (quienEntraba !== quienEntra) {
+    setQuienEntraba(quienEntra);
+    if (meRefresh === 0) setChecking(true);
+  }
+
   useEffect(() => {
     if (!isLoaded) return;
     if (!isSignedIn) { router.push('/sign-in'); return; }
@@ -348,9 +379,6 @@ export default function LayoutDelPanel({ children }: { children: React.ReactNode
     // Flag para cancelar operaciones async si el userId cambia antes de que terminen
     let stale = false;
 
-    // Solo mostrar pantalla de carga en el primer chequeo — los refrescos en vivo
-    // (meRefresh > 0) actualizan nombre/foto en silencio, sin parpadeo.
-    if (meRefresh === 0) setChecking(true);
 
     (async () => {
       try {
@@ -558,8 +586,7 @@ export default function LayoutDelPanel({ children }: { children: React.ReactNode
   // desaparecian de la navegacion segun como tuviera el sidebar.
   const navView: 'ajustes' | 'logros' | 'main' =
     onAjustes ? 'ajustes' : onLogros ? 'logros' : 'main';
-  const navDepth = navView === 'main' ? 0 : 1;
-  const navDir = navDepth >= prevNavDepthRef.current ? 1 : -1;
+  // `navDir` se calcula arriba, donde cambia la profundidad.
 
   // Índice activo para el pill deslizante del bottom bar
   const activeTabIndex = tabItems.findIndex(t => isTabActive(t.href));

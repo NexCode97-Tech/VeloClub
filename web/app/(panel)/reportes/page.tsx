@@ -4,7 +4,8 @@ import { stagger, cardVariant } from '@/lib/page-animations';
 
 import { useAuth, useSession } from '@clerk/nextjs';
 import { useClubStream } from '@/hooks/useClubStream';
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
 import { Users, CalendarCheck, CreditCard, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import {
@@ -54,53 +55,37 @@ export default function ReportesPage() {
   }
 
   // ── Estado ──
-  const [loading, setLoading] = useState(true);
-  // Sostiene el indicador un minimo de tiempo para que no parpadee
-  const mostrarCarga = useCargaMinima(loading);
   const [barsReady, setBarsReady] = useState(false);
 
-  // KPIs
-  const [totalMembers, setTotalMembers]   = useState<number | null>(null);
-  const [asistenciaHoy, setAsistenciaHoy] = useState<number | null>(null);
-  const [asistenciaMes, setAsistenciaMes] = useState<number | null>(null);
-  const [ingresosMes, setIngresosMes]     = useState<number | null>(null);
-  const [pagosAlDia, setPagosAlDia]       = useState<number | null>(null);
-  const [totalLogros, setTotalLogros]     = useState<number | null>(null);
-
-  // Gráficas
-  const [monthlyAtt, setMonthlyAtt]       = useState<MonthlyAttendance[]>([]);
-  const [paymentDist, setPaymentDist]     = useState<PaymentDist[]>([]);
-  const [monthlyIncome, setMonthlyIncome] = useState<{ month: string; total: number }[]>([]);
-
-  // Datos de rango de asistencia
-  const [rangeData, setRangeData]         = useState<{ date: string; presentes: number }[]>([]);
-  const [loadingRange, setLoadingRange]   = useState(false);
-
-  // ── Carga de rango de asistencia ──
-  const fetchRangeStats = useCallback(async (from: string, to: string) => {
-    if (!isSignedIn) return;
-    setLoadingRange(true);
-    try {
+  // ── Datos del rango de asistencia ──
+  // Solo se pide cuando hay un rango marcado. Sin rango la consulta queda
+  // apagada y la grafica de rango no se dibuja.
+  const desdeRango = selectedDateRange ? toISO(selectedDateRange.start) : null;
+  const hastaRango = selectedDateRange ? toISO(selectedDateRange.end) : null;
+  const { data: datosRango, isFetching: loadingRange } = useQuery({
+    queryKey: ['reportes', 'rango', desdeRango, hastaRango],
+    queryFn: async () => {
       const token = await session?.getToken({ skipCache: true });
       const res = await apiFetch<{ days: { date: string; presentes: number }[] }>(
-        `/attendance/range-stats?from=${from}&to=${to}`, { token }
+        `/attendance/range-stats?from=${desdeRango}&to=${hastaRango}`, { token }
       );
-      setRangeData(res.days);
-    } catch { /* silencioso */ } finally {
-      setLoadingRange(false);
-    }
-  }, [isSignedIn, session]);
+      return res.days;
+    },
+    enabled: !!isSignedIn && !!desdeRango && !!hastaRango,
+    retry: false,
+  });
+  const rangeData = datosRango ?? [];
 
   // ── Carga principal ──
-  const loadReportes = useCallback(async () => {
-    if (!isSignedIn) return;
-    setLoading(true);
-    setBarsReady(false);
-    try {
-      const token       = await session?.getToken({ skipCache: true });
-      const now         = new Date();
-      const todayISO    = toISO(now);
-
+  //
+  // La consulta trae lo crudo y las cifras se calculan al pintar. Antes cada
+  // una se guardaba en su propio estado desde dentro del efecto: diez estados
+  // para diez numeros que salen todos de la misma respuesta.
+  const { data: crudo, isPending: loading, refetch } = useQuery({
+    queryKey: ['reportes', 'principal', activeYear],
+    queryFn: async () => {
+      const token    = await session?.getToken({ skipCache: true });
+      const todayISO = toISO(new Date());
       const [membersRes, attTodayRes, paymentsRes, compsRes, attMonthlyRes] = await Promise.allSettled([
         apiFetch<{ members: { id: string }[] }>('/members', { token }),
         apiFetch<{ records: { status: string }[] }>(`/attendance?date=${todayISO}`, { token }),
@@ -108,71 +93,79 @@ export default function ReportesPage() {
         apiFetch<{ competitions: { id: string; events: { results: { id: string }[] }[] }[] }>('/competitions', { token }),
         apiFetch<{ months: { month: number; year: number; presentes: number }[] }>('/attendance/monthly-stats', { token }),
       ]);
+      // Con allSettled: lo que falle se queda en null y el resto de la pantalla
+      // se pinta igual.
+      return {
+        members:    membersRes.status    === 'fulfilled' ? membersRes.value.members        : null,
+        asistHoy:   attTodayRes.status   === 'fulfilled' ? attTodayRes.value.records       : null,
+        payments:   paymentsRes.status   === 'fulfilled' ? paymentsRes.value.payments      : null,
+        comps:      compsRes.status      === 'fulfilled' ? compsRes.value.competitions     : null,
+        asistMeses: attMonthlyRes.status === 'fulfilled' ? attMonthlyRes.value.months      : null,
+      };
+    },
+    enabled: !!isSignedIn,
+  });
+  const loadReportes = async () => { await refetch(); };
 
-      if (membersRes.status === 'fulfilled') setTotalMembers(membersRes.value.members.length);
-      if (attTodayRes.status === 'fulfilled') {
-        setAsistenciaHoy(attTodayRes.value.records.filter(r => r.status === 'PRESENT').length);
-      }
-      if (paymentsRes.status === 'fulfilled') {
-        const payments = paymentsRes.value.payments;
-        const ingMes = payments
-          .filter(p => p.status === 'PAID' && p.month === activeMonthNum && p.year === activeYear)
-          .reduce((s, p) => s + p.amount, 0);
-        setIngresosMes(ingMes);
-        const totalMes   = payments.filter(p => p.month === activeMonthNum && p.year === activeYear).length;
-        const pagadosMes = payments.filter(p => p.status === 'PAID' && p.month === activeMonthNum && p.year === activeYear).length;
-        setPagosAlDia(totalMes > 0 ? Math.round((pagadosMes / totalMes) * 100) : 0);
-        const dist: Record<string, number> = { PAID: 0, PENDING: 0, OVERDUE: 0 };
-        payments.filter(p => p.month === activeMonthNum && p.year === activeYear).forEach(p => {
-          if (dist[p.status] !== undefined) dist[p.status]++;
-        });
-        setPaymentDist([
-          { name: 'Pagado',    value: dist.PAID,    color: GREEN  },
-          { name: 'Pendiente', value: dist.PENDING, color: YELLOW },
-          { name: 'Vencido',   value: dist.OVERDUE, color: RED    },
-        ].filter(d => d.value > 0));
+  // Sostiene el indicador un minimo de tiempo para que no parpadee
+  const mostrarCarga = useCargaMinima(loading);
 
-        // Ingresos mensuales del año activo
-        const incomeByMonth = Array.from({ length: 12 }, (_, i) => ({
-          month: MONTH_NAMES[i],
-          total: payments.filter(p => p.status === 'PAID' && p.year === activeYear && p.month === i + 1)
-            .reduce((s, p) => s + p.amount, 0),
-        }));
-        setMonthlyIncome(incomeByMonth);
-      }
-      if (compsRes.status === 'fulfilled') {
-        const total = compsRes.value.competitions.reduce(
-          (s, c) => s + c.events.reduce((es, ev) => es + ev.results.length, 0), 0
-        );
-        setTotalLogros(total);
-      }
-      if (attMonthlyRes.status === 'fulfilled') {
-        const attMonths: MonthlyAttendance[] = attMonthlyRes.value.months.map(m => ({
-          month: MONTH_NAMES[m.month - 1],
-          presentes: m.presentes,
-        }));
-        // Para "asistencia mes" usar el mes activo
-        const activeMData = attMonthlyRes.value.months.find(m => m.month === activeMonthNum && m.year === activeYear);
-        setAsistenciaMes(activeMData?.presentes ?? attMonths[attMonths.length - 1]?.presentes ?? 0);
-        setMonthlyAtt(attMonths);
-      }
-    } catch { /* silencioso */ } finally {
-      setLoading(false);
-      setTimeout(() => setBarsReady(true), 60);
-    }
-  }, [isSignedIn, session, activeYear, activeMonthNum]);
+  const totalMembers  = crudo?.members ? crudo.members.length : null;
+  const asistenciaHoy = crudo?.asistHoy ? crudo.asistHoy.filter(r => r.status === 'PRESENT').length : null;
+  const totalLogros   = crudo?.comps
+    ? crudo.comps.reduce((s, c) => s + c.events.reduce((es, ev) => es + ev.results.length, 0), 0)
+    : null;
 
-  // Re-cargar cuando cambia el mes seleccionado
-  useEffect(() => { loadReportes(); }, [loadReportes]);
+  const delMes = crudo?.payments?.filter(p => p.month === activeMonthNum && p.year === activeYear) ?? [];
+  const ingresosMes = crudo?.payments
+    ? delMes.filter(p => p.status === 'PAID').reduce((s, p) => s + p.amount, 0)
+    : null;
+  const pagosAlDia = crudo?.payments
+    ? (delMes.length > 0 ? Math.round((delMes.filter(p => p.status === 'PAID').length / delMes.length) * 100) : 0)
+    : null;
 
-  // Cuando hay rango → cargar datos de rango automáticamente
+  const paymentDist: PaymentDist[] = crudo?.payments
+    ? ([
+        { name: 'Pagado',    value: delMes.filter(p => p.status === 'PAID').length,    color: GREEN  },
+        { name: 'Pendiente', value: delMes.filter(p => p.status === 'PENDING').length, color: YELLOW },
+        { name: 'Vencido',   value: delMes.filter(p => p.status === 'OVERDUE').length, color: RED    },
+      ].filter(d => d.value > 0))
+    : [];
+
+  const monthlyIncome = crudo?.payments
+    ? Array.from({ length: 12 }, (_, i) => ({
+        month: MONTH_NAMES[i],
+        total: crudo.payments!
+          .filter(p => p.status === 'PAID' && p.year === activeYear && p.month === i + 1)
+          .reduce((s, p) => s + p.amount, 0),
+      }))
+    : [];
+
+  const monthlyAtt: MonthlyAttendance[] = crudo?.asistMeses
+    ? crudo.asistMeses.map(m => ({ month: MONTH_NAMES[m.month - 1], presentes: m.presentes }))
+    : [];
+  const asistenciaMes = crudo?.asistMeses
+    ? (crudo.asistMeses.find(m => m.month === activeMonthNum && m.year === activeYear)?.presentes
+        ?? monthlyAtt[monthlyAtt.length - 1]?.presentes
+        ?? 0)
+    : null;
+
+  // Las barras arrancan en cero y crecen. El apagado va durante el render, al
+  // volver a cargar, y el encendido en el efecto porque es lo que hace la
+  // espera de un instante: sin ella las barras aparecen ya en su tamaño y no
+  // se ve el crecimiento.
+  const [cargandoPrevio, setCargandoPrevio] = useState(loading);
+  if (cargandoPrevio !== loading) {
+    setCargandoPrevio(loading);
+    if (loading) setBarsReady(false);
+  }
+
   useEffect(() => {
-    if (selectedDateRange) {
-      fetchRangeStats(toISO(selectedDateRange.start), toISO(selectedDateRange.end));
-    } else {
-      setRangeData([]);
-    }
-  }, [selectedDateRange, fetchRangeStats]);
+    if (loading) return;
+    const id = setTimeout(() => setBarsReady(true), 60);
+    return () => clearTimeout(id);
+  }, [loading]);
+
 
   // Tiempo real SSE
   useClubStream((ev) => {

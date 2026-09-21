@@ -23,3 +23,28 @@ const enElServidor = () => false;
 export function useEsCliente(): boolean {
   return useSyncExternalStore(sinCambios, enElNavegador, enElServidor);
 }
+
+/**
+ * `true` cuando el SDK de Mercado Pago ya esta cargado en la pagina.
+ *
+ * Puede haberse cargado en una navegacion anterior, y en ese caso el `onLoad`
+ * del `<Script>` no vuelve a dispararse. Por eso no basta con escuchar ese
+ * evento: hay que preguntarle al `window`. Se pregunta cada 300 ms hasta que
+ * aparezca, y ahi se deja de preguntar.
+ *
+ * Va como almacen externo y no como estado con efecto porque eso es: algo que
+ * vive fuera de React y que React consulta.
+ */
+export function useSdkMercadoPago(): boolean {
+  return useSyncExternalStore(
+    (avisar) => {
+      if (typeof window === 'undefined' || window.MercadoPago) return () => {};
+      const iv = setInterval(() => {
+        if (window.MercadoPago) { clearInterval(iv); avisar(); }
+      }, 300);
+      return () => clearInterval(iv);
+    },
+    () => typeof window !== 'undefined' && !!window.MercadoPago,
+    () => false,
+  );
+}

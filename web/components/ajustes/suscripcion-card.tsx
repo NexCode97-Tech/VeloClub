@@ -4,7 +4,9 @@ import { useAuth } from '@clerk/nextjs';
 import { useEffect, useRef, useState } from 'react';
 import Script from 'next/script';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
+import { useSdkMercadoPago } from '@/hooks/use-cliente';
 import { Desplegable } from '@/components/ui/desplegable';
 import { Interruptor } from '@/components/ui/interruptor';
 import { IconPendiente } from '@/components/ui/custom-icons';
@@ -317,6 +319,7 @@ function PasosVerificacion({ recibidoEn, comprobanteUrl }: {
 
 export default function SuscripcionCard() {
   const { getToken } = useAuth();
+  const qc = useQueryClient();
   const reduce = useReducedMotion();
   const [data, setData] = useState<MiSuscripcionResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -327,7 +330,9 @@ export default function SuscripcionCard() {
   const [confirmarCancelar, setConfirmarCancelar] = useState(false);
   const [reactivating, setReactivating] = useState(false);
   const [avisoReembolso, setAvisoReembolso] = useState(false);
-  const [sdkReady, setSdkReady] = useState(false);
+  // Se le pregunta al navegador si el SDK ya esta, en vez de guardarlo en un
+  // estado: pudo haberse cargado en una navegacion anterior.
+  const sdkReady = useSdkMercadoPago();
   const [error, setError] = useState<string | null>(null);
 
   // Intención de renovación automática en el flujo de pago (caso: sin plan / vencido)
@@ -382,41 +387,47 @@ export default function SuscripcionCard() {
 
   // Tipo de tarjeta (débito/crédito) y cuotas disponibles — se consultan a Mercado
   // Pago apenas se completa el BIN (primeros 6 dígitos), antes de tokenizar.
-  const [cardTipo, setCardTipo] = useState<'credit_card' | 'debit_card' | null>(null);
-  const [cuotas, setCuotas] = useState<PayerCost[]>([]);
   const [cuotasSeleccionadas, setCuotasSeleccionadas] = useState(1);
-  const [loadingCuotas, setLoadingCuotas] = useState(false);
+
 
   const bin = card.number.replace(/\D/g, '').slice(0, 6);
   const montoParaCuotas = data
     ? (activarAutoRenovacion ? data.suscripcion.planMontoConAutoRenew : data.suscripcion.planMontoSinAutoRenew)
     : 0;
 
-  useEffect(() => {
-    setCardTipo(null); setCuotas([]); setCuotasSeleccionadas(1);
-    if (bin.length !== 6 || !sdkReady || !window.MercadoPago || !montoParaCuotas) return;
-    const publicKey = process.env.NEXT_PUBLIC_MP_PUBLIC_KEY;
-    if (!publicKey) return;
+  // Al cambiar de tarjeta o de monto se vuelve a una cuota: las del banco
+  // anterior no aplican.
+  const consultaCuotas = `${bin}|${montoParaCuotas}`;
+  const [consultaCuotasPrevia, setConsultaCuotasPrevia] = useState(consultaCuotas);
+  if (consultaCuotasPrevia !== consultaCuotas) {
+    setConsultaCuotasPrevia(consultaCuotas);
+    setCuotasSeleccionadas(1);
+  }
 
-    let cancelado = false;
-    setLoadingCuotas(true);
-    const mp = new window.MercadoPago(publicKey);
-    mp.getInstallments({ bin, amount: String(montoParaCuotas) })
-      .then(results => {
-        if (cancelado || !results?.[0]) return;
-        setCardTipo(results[0].payment_type_id === 'debit_card' ? 'debit_card' : 'credit_card');
-        setCuotas(results[0].payer_costs ?? []);
-      })
-      .catch(() => { /* si falla, se sigue con 1 cuota por defecto */ })
-      .finally(() => { if (!cancelado) setLoadingCuotas(false); });
+  // Las cuotas las contesta el SDK de Mercado Pago y no nuestra API, pero la
+  // espera se maneja igual: la tarjeta y el monto van en la clave, asi que
+  // volver a una tarjeta ya consultada no la vuelve a preguntar.
+  const { data: respuestaCuotas, isFetching: loadingCuotas } = useQuery({
+    queryKey: ['suscripcion', 'cuotas', bin, montoParaCuotas],
+    queryFn: async () => {
+      const publicKey = process.env.NEXT_PUBLIC_MP_PUBLIC_KEY;
+      if (!publicKey || !window.MercadoPago) return null;
+      const mp = new window.MercadoPago(publicKey);
+      const results = await mp.getInstallments({ bin, amount: String(montoParaCuotas) });
+      return results?.[0] ?? null;
+    },
+    enabled: bin.length === 6 && sdkReady && !!montoParaCuotas,
+    // Si falla, se sigue con una cuota por defecto.
+    retry: false,
+  });
 
-    return () => { cancelado = true; };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [bin, sdkReady, montoParaCuotas]);
+  const cardTipo: 'credit_card' | 'debit_card' | null = respuestaCuotas
+    ? (respuestaCuotas.payment_type_id === 'debit_card' ? 'debit_card' : 'credit_card')
+    : null;
+  const cuotas: PayerCost[] = respuestaCuotas?.payer_costs ?? [];
 
   // Pago dentro de la app (Checkout API) — medios y datos
-  const [metodos, setMetodos] = useState<MetodosDisponibles | null>(null);
-  const [loadingMetodos, setLoadingMetodos] = useState(false);
+  // Igual que los planes: se piden cuando hay algo por pagar, no antes.
   const [metodo, setMetodo] = useState<MetodoPago>('CARD');
 
   // Dirección del deslizamiento entre formularios de pago: hacia la derecha si
@@ -434,7 +445,6 @@ export default function SuscripcionCard() {
     direccion: '', numeroDireccion: '', codigoPostal: '', barrio: '', ciudad: '',
   });
   const [efecty, setEfecty] = useState({ docType: 'CC', docNumber: '' });
-  const [breb, setBreb] = useState<DatosBreb | null>(null);
   const [comprobante, setComprobante] = useState<{ base64: string; nombre: string } | null>(null);
   const [copiado, setCopiado] = useState<string | null>(null);
   const [aceptaTerminos, setAceptaTerminos] = useState(false);
@@ -443,23 +453,55 @@ export default function SuscripcionCard() {
 
   // Selección de plan — se muestra mientras el club no tenga ningún pago registrado
   const [pickedPlan, setPickedPlan] = useState(false);
-  const [planes, setPlanes] = useState<PlanOpcion[] | null>(null);
-  const [loadingPlanes, setLoadingPlanes] = useState(false);
   const [settingPlan, setSettingPlan] = useState<TipoPlan | null>(null);
+
+  // Los precios de los tres planes se piden solos cuando hacen falta: club sin
+  // pagos registrados y sin plan elegido en esta sesion. La condicion vive en
+  // `enabled` y no en un efecto que se pregunta lo mismo en cada render.
+  const { data: datosPlanes, isFetching: loadingPlanes } = useQuery({
+    queryKey: ['suscripcion', 'planes'],
+    queryFn: async () => {
+      const token = await getToken();
+      return apiFetch<{ cantidadDeportistas: number; planes: PlanOpcion[] }>('/mercadopago/planes', { token });
+    },
+    enabled: !!data && !data.vigencia && !pickedPlan,
+    retry: false,
+  });
+  const planes = datosPlanes?.planes ?? null;
+
+  // Los medios de pago, igual: cuando hay algo por pagar y no antes. Bre-B se
+  // consulta aparte y no bloquea; si falla, quedan los de Mercado Pago, que
+  // cubren el caso normal.
+  const debePagar = !!data && ((!data.vigencia && pickedPlan) || !!data.vigencia?.vencido);
+  const { data: datosMetodos, isFetching: loadingMetodos } = useQuery({
+    queryKey: ['suscripcion', 'metodos-pago'],
+    queryFn: async () => {
+      const token = await getToken();
+      const [res, datosBreb] = await Promise.all([
+        apiFetch<MetodosDisponibles>('/mercadopago/metodos-pago', { token }),
+        apiFetch<DatosBreb>('/mercadopago/breb', { token }).catch(() => null),
+      ]);
+      return { metodos: res, breb: datosBreb };
+    },
+    enabled: debePagar,
+    // La seccion de pago muestra solo tarjeta como respaldo.
+    retry: false,
+  });
+  const metodos = datosMetodos?.metodos ?? null;
+  const breb    = datosMetodos?.breb ?? null;
+
+  // Si la tarjeta no esta disponible, se propone el primer medio que si lo
+  // este. Durante el render, apenas llega la respuesta.
+  const [metodosPrevios, setMetodosPrevios] = useState(metodos);
+  if (metodosPrevios !== metodos) {
+    setMetodosPrevios(metodos);
+    if (metodos && !metodos.tarjeta) setMetodo(metodos.pse.disponible ? 'PSE' : 'EFECTY');
+  }
   // En móvil el plan se elige en dos pasos: primero se selecciona (la tarjeta se
   // expande y muestra qué incluye) y luego se confirma. En escritorio las tres
   // columnas ya muestran todo a la vez, así que se elige de un solo clic.
   const [planEnfocado, setPlanEnfocado] = useState<TipoPlan>('TRIMESTRAL');
 
-  async function loadPlanes() {
-    setLoadingPlanes(true);
-    try {
-      const token = await getToken();
-      const res = await apiFetch<{ cantidadDeportistas: number; planes: PlanOpcion[] }>('/mercadopago/planes', { token });
-      setPlanes(res.planes);
-    } catch (e) { setError(e instanceof Error ? e.message : 'Error al cargar los planes'); }
-    finally { setLoadingPlanes(false); }
-  }
 
   async function handleElegirPlan(tipoPlan: TipoPlan) {
     setSettingPlan(tipoPlan); setError(null);
@@ -498,39 +540,8 @@ export default function SuscripcionCard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // El SDK de Mercado Pago puede haberse cargado ya en una navegación previa,
-  // en cuyo caso el onLoad del <Script> no vuelve a dispararse. Verificamos
-  // directamente window.MercadoPago para no dejar el botón deshabilitado.
-  useEffect(() => {
-    if (typeof window !== 'undefined' && window.MercadoPago) { setSdkReady(true); return; }
-    const iv = setInterval(() => {
-      if (typeof window !== 'undefined' && window.MercadoPago) { setSdkReady(true); clearInterval(iv); }
-    }, 300);
-    return () => clearInterval(iv);
-  }, []);
 
-  // Sin pagos registrados aún y sin elegir plan en esta sesión → cargar precios de los 3 planes
-  useEffect(() => {
-    if (data && !data.vigencia && !pickedPlan && !planes && !loadingPlanes) loadPlanes();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data, pickedPlan]);
 
-  async function loadMetodos() {
-    setLoadingMetodos(true);
-    try {
-      const token = await getToken();
-      // Bre-B se consulta aparte y no bloquea: si falla, quedan los medios de
-      // Mercado Pago, que son los que cubren el caso normal.
-      const [res, datosBreb] = await Promise.all([
-        apiFetch<MetodosDisponibles>('/mercadopago/metodos-pago', { token }),
-        apiFetch<DatosBreb>('/mercadopago/breb', { token }).catch(() => null),
-      ]);
-      setMetodos(res);
-      if (datosBreb) setBreb(datosBreb);
-      if (!res.tarjeta) setMetodo(res.pse.disponible ? 'PSE' : 'EFECTY');
-    } catch { /* la sección de pago mostrará solo tarjeta como fallback */ }
-    finally { setLoadingMetodos(false); }
-  }
 
   /** Lee el comprobante como data URL, que es lo que espera el backend. */
   function tomarComprobante(archivo: File | null) {
@@ -570,8 +581,12 @@ export default function SuscripcionCard() {
         body: JSON.stringify({ base64: comprobante.base64, aceptaTerminos }),
       });
       setComprobante(null);
+      // Tras enviar el comprobante, Bre-B cambia de estado: se refresca en la
+      // misma cache de donde sale.
       const actualizado = await apiFetch<DatosBreb>('/mercadopago/breb', { token });
-      setBreb(actualizado);
+      qc.setQueryData(['suscripcion', 'metodos-pago'],
+        (v: { metodos: MetodosDisponibles; breb: DatosBreb | null } | undefined) =>
+          v ? { ...v, breb: actualizado } : v);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'No se pudo enviar el comprobante.');
     } finally {
@@ -579,12 +594,6 @@ export default function SuscripcionCard() {
     }
   }
 
-  // Cargar los medios de pago cuando hay algo por pagar
-  useEffect(() => {
-    const debePagar = data && ((!data.vigencia && pickedPlan) || data.vigencia?.vencido);
-    if (debePagar && !metodos && !loadingMetodos) loadMetodos();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data, pickedPlan]);
 
   // Tokeniza la tarjeta en el navegador (nunca toca nuestro backend) y detecta el tipo
   async function tokenizarTarjeta(): Promise<{ tokenId: string; paymentMethodId?: string }> {
@@ -608,8 +617,10 @@ export default function SuscripcionCard() {
   }
 
   function resetCard() {
+    // El tipo de tarjeta y las cuotas salen de la consulta, que se apaga sola
+    // al quedar el numero vacio: no hay nada que limpiar a mano.
     setCard({ number: '', name: '', expiry: '', cvv: '', docNumber: '' });
-    setCardTipo(null); setCuotas([]); setCuotasSeleccionadas(1);
+    setCuotasSeleccionadas(1);
   }
 
   // Flujo de pago del caso "sin plan / vencido"
@@ -1018,12 +1029,15 @@ export default function SuscripcionCard() {
 
   return (
     <>
-      <Script src="https://sdk.mercadopago.com/js/v2" strategy="afterInteractive" onLoad={() => setSdkReady(true)} />
+      {/* El hook de arriba se entera solo: pregunta por window.MercadoPago. */}
+      <Script src="https://sdk.mercadopago.com/js/v2" strategy="afterInteractive" />
 
       <div className="bg-white border border-border rounded-2xl p-5 space-y-5">
         {!vigencia && (
           <button
-            onClick={() => { setPickedPlan(false); setPlanes(null); setActivarAutoRenovacion(false); }}
+            // Al volver a «Cambiar plan» los precios se piden de nuevo: con
+            // `pickedPlan` en falso la consulta se vuelve a encender sola.
+            onClick={() => { setPickedPlan(false); setActivarAutoRenovacion(false); }}
             className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
           >
             <ArrowLeft className="w-3.5 h-3.5" /> Cambiar plan

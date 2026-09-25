@@ -6,6 +6,7 @@ import LandingHero from '@/components/ui/landing-hero';
 import LandingNav from '@/components/ui/landing-nav';
 import LandingFeaturesTabs from '@/components/ui/landing-features-tabs';
 import LandingTrustedBy from '@/components/ui/landing-trusted-by';
+import LandingVitrina from '@/components/ui/landing-vitrina';
 import {
   IconCheck, IconUsers, IconUbicacion, IconAsistencias, IconStatistics, IconFinanzas, IconResultados,
   IconMensualidades, IconFlujoCaja, IconCompetencias, IconEntrenamientos,
@@ -120,6 +121,10 @@ export default function HomePage() {
 
       {/* Clubes que confían en VeloClub */}
       <LandingTrustedBy />
+
+      {/* Las dos pantallas por dentro. Va después de los clubes a propósito:
+          primero quién ya lo usa y enseguida qué es lo que usan. */}
+      <LandingVitrina />
 
       {/* Benefits */}
       <section id="por-que" className="px-[22px] py-16 max-w-[1200px] mx-auto">

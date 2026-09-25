@@ -17,6 +17,28 @@ export function getRedis(): Redis | null {
   return client;
 }
 
+/**
+ * Abre la conexión al arrancar, sin esperar a que alguien pida algo.
+ *
+ * El cliente se crea con `lazyConnect`, así que el socket no existe hasta el
+ * primer comando, y con `enableOfflineQueue` apagado ese primer comando no hace
+ * fila: falla. Eso está bien mientras corre —si el caché se cae, la consulta se
+ * va a la base en vez de quedarse esperando— pero en el arranque convierte la
+ * primera petición de cada despliegue en un error gratis.
+ *
+ * No se espera el resultado a propósito. Redis es opcional acá: si no levanta,
+ * la API tiene que arrancar igual y servir contra la base.
+ */
+export function conectarRedis(): void {
+  const redis = getRedis();
+  if (!redis || redis.status !== 'wait') return;
+  redis.connect().catch(err => {
+    console.error(JSON.stringify({
+      level: 'ERROR', msg: 'Redis no conecto al arrancar', err: err.message,
+    }));
+  });
+}
+
 export async function cacheGet<T>(key: string): Promise<T | null> {
   const redis = getRedis();
   if (!redis) return null;

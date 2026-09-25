@@ -34,7 +34,8 @@ import { clubEntero } from './auth/middleware';
 import { SinCarpeta } from './lib/deportes';
 import { startWorkers } from './workers';
 import { prisma } from './db/client';
-import { getRedis } from './lib/redis';
+import { getRedis, conectarRedis } from './lib/redis';
+import { revisarSalud } from './lib/salud';
 import { sincronizarMontosSuscripciones, recordarVencimientosProximos, desactivarClubesVencidos } from './lib/sync-suscripciones';
 import { conciliarComisiones } from './lib/finanzas-plataforma';
 
@@ -93,37 +94,12 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   next();
 });
 
-// ── Health check profundo ─────────────────────────────────────────────────────
+// ── Health check profundo ──────────────────────────────────────
+// La decision de que cuenta como averia y que como arranque vive en
+// `lib/salud.ts`, que se puede probar sin levantar el servidor entero.
 app.get('/health', async (_req, res) => {
-  const checks: Record<string, string> = {};
-
-  // DB check
-  try {
-    await prisma.$queryRaw`SELECT 1`;
-    checks.db = 'ok';
-  } catch {
-    checks.db = 'error';
-  }
-
-  // Redis check
-  try {
-    const redis = getRedis();
-    if (redis) {
-      await redis.ping();
-      checks.redis = 'ok';
-    } else {
-      checks.redis = 'disabled';
-    }
-  } catch {
-    checks.redis = 'error';
-  }
-
-  const allOk = Object.values(checks).every(v => v === 'ok' || v === 'disabled');
-  res.status(allOk ? 200 : 503).json({
-    status: allOk ? 'ok' : 'degraded',
-    service: 'veloclub-api',
-    checks,
-  });
+  const salud = await revisarSalud(prisma, getRedis());
+  res.status(salud.status === 'ok' ? 200 : 503).json(salud);
 });
 
 // Rate limiting para /me: por usuario (header clerk), no por IP
@@ -210,6 +186,17 @@ app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
 const server = app.listen(PORT, () => {
   console.log(`API en http://localhost:${PORT}`);
   startWorkers();
+
+  // Las dos conexiones se abren acá y no en la primera consulta. Prisma y
+  // Redis las crean perezosamente, así que sin esto la primera petición de
+  // cada despliegue paga el establecimiento y puede pasarse de tiempo. No se
+  // esperan: si alguna tarda, la API ya está escuchando.
+  prisma.$connect().catch(err => {
+    console.error(JSON.stringify({
+      level: 'ERROR', msg: 'Prisma no conecto al arrancar', err: err.message,
+    }));
+  });
+  conectarRedis();
 
   // Sincroniza el monto de las suscripciones con renovación automática y avisa
   // a los clubes sin ella que están por vencer (dunning) una vez al día — no

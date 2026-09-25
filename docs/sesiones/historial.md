@@ -5,6 +5,86 @@ Actualizar al final de cada sesión o cuando se complete un bloque de trabajo im
 
 ---
 
+## Sesión 2026-09-24 — Las dos pantallas por dentro, en el home
+
+**Modelo:** Claude Opus 5
+**Estado inicial:** `5d06008`, rama `main`
+**Estado final:** `a33a307`
+
+La landing no mostraba la app por dentro. Se armó el bloque, tomando de
+referencia la sección de producto de ElevenLabs, y entró después de los clubes
+que confían en VeloClub: primero quién ya lo usa y enseguida qué es lo que usan.
+
+### Lo que hay
+
+Dos pantallas dibujadas en HTML dentro de una vitrina gris. Miembros a la
+izquierda y Finanzas a la derecha, pisándose en el medio. No son capturas, y no
+por capricho: pesan unos pocos kB en vez de trescientos, se ven nítidas a
+cualquier tamaño, y una captura real llevaría cédulas, teléfonos, correos y EPS
+de personas de verdad, varias menores de edad, en una página abierta.
+
+### La mecánica, sacada del CSS de la referencia
+
+Se bajó el HTML de la página y se leyeron los dos estados, que vienen servidos:
+uno activo y otro inactivo. De ahí salen los cuatro números, no de un cálculo
+propio.
+
+| Pieza | Cómo |
+|---|---|
+| Reparto | `40% / 20% / 40%`, cada pantalla en 60% y el solape en el 20% del medio |
+| Desnivel | la inactiva en `translateY(12px)`, la activa en `0`. No hay rebote |
+| Barrido | máscara del doble de ancho, con el degradado en 75% → 83,333% |
+| Posiciones | izquierda `-100%` ↔ `-150%`, derecha `0%` ↔ `50%` |
+| Bordes | arriba y a los lados, nunca abajo. Radio solo en las dos esquinas de arriba |
+
+**El barrido va en `mask-position` y no en `mask-image`**, que es el truco
+entero: `mask-image` no transiciona y `mask-position` sí, así que correr la
+máscara saca el degradado del cuadro y el costado tapado se descubre de un lado
+al otro. Las dos se mueven en sentidos opuestos, hacia adentro, hacia donde se
+pisan; con un signo invertido el movimiento se lee al revés, como si la pantalla
+se escondiera en vez de asomarse.
+
+Sobre la referencia se agregó una cosa que ella no tiene: **el rótulo y su
+pantalla son un par**. El que no manda se apaga y el texto también releva. Sin
+eso el movimiento parece un adorno que pasa solo.
+
+### Tres errores que costaron una vuelta cada uno
+
+- **Las esquinas salían cuadradas.** `.ventana` no tenía `position:relative`, así
+  que el lienzo de adentro, que es absoluto, se colgaba de la ranura en vez de la
+  ventana. El `overflow` dejaba de recortarlo y el radio no se veía.
+- **El filo del marco desaparecía abajo.** Iba como `box-shadow: inset`, que se
+  pinta en el fondo de la caja, y las dos pantallas están pegadas a ese borde.
+  Pasó a una capa propia por encima, con `pointer-events:none`.
+- **El barrido iba al revés.** Los quiebres estaban en 83,333% → 94% en vez de
+  75% → 83,333%, y las posiciones recorrían el doble en la dirección contraria.
+
+Y una regla que ya estaba escrita y se saltó igual: el rótulo de la sección salió
+en mayúsculas. **La regla no distingue entre la app, la landing y un prototipo**,
+y así quedó anotada.
+
+### Cómo entró al repo
+
+El componente no se reescribió, se convirtió desde el prototipo aprobado para que
+fuera idéntico. Tres cambios, ninguno visible:
+
+- **El CSS va prefijado por `.vt-zona`.** Trae selectores de elemento (`h2`,
+  `svg`) que sueltos le pegaban al resto de la landing.
+- **El logo pasó de base64 a `/logo-vc.png`.** El mismo dato dos veces eran 16 kB
+  de más teniendo el archivo ahí.
+- **La escala del lienzo la mide un `ResizeObserver` contra el ancho real**, por
+  `ref` y no por estado: es un número que solo lee el CSS, y pasarlo por React
+  volvería a dibujar las dos pantallas en cada píxel de arrastre.
+
+Cuesta lo suyo: la landing pasó a **225 kB de HTML, 42 kB comprimida**. Son dos
+pantallas completas dibujadas. Si alguna vez estorba, lo que más ocupa y menos se
+ve son las filas de fichas de abajo, que están cortadas por el borde.
+
+`tsc` limpio, lint sin avisos nuevos, build bien y el service worker sigue
+saliendo.
+
+---
+
 ## Sesión 2026-09-16 — El carnet digital, y una ruta que se comía a otra
 
 **Modelo:** Claude Opus 5

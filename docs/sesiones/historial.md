@@ -38,6 +38,29 @@ ventana queda en cero y se pierde la medida de la que sale la escala.
 Verificado con `tsc`, `lint` (111 avisos, 0 errores, todos previos) y build de
 producción. La maqueta del antes y el después se revisó antes de tocar nada.
 
+### El menú de Importar (`9dfc5c2`)
+
+Salió al copiar las pantallas para las imágenes del canal.
+
+- **Se salía de la pantalla en el celular.** El botón queda a 120px del borde
+  derecho y el menú mide 282, así que colgado de ahí se salía unos 12px por la
+  izquierda. Ahora se cuelga del botón sin quedar nunca a menos de 12px de un
+  borde.
+- **El rótulo iba en mayúsculas** y en monoespaciada. Pasó a texto normal.
+
+Quedan **unos 100 `uppercase` en 30 archivos** de la app y el superadmin. No se
+tocaron: cada uno hay que mirarlo en su pantalla.
+
+### Imágenes para el canal
+
+Cuatro láminas de 1080 × 1350 para el mensaje de importar deportistas, con las
+pantallas copiadas del código y el club inventado de la demo dentro de un
+iPhone 14 Pro Max: el menú de Importar, el panel del enlace, el formulario del
+deportista y el diálogo de Excel. Se exportaron con Chrome sin ventana. El
+`backdrop-filter` dentro de un elemento escalado sale corrido y duplica la
+pantalla de atrás al exportar, así que el desenfoque va con `filter` sobre el
+contenido de atrás.
+
 ---
 
 ## Sesión 2026-09-24 — Las dos pantallas por dentro, en el home

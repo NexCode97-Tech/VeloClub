@@ -5,6 +5,41 @@ Actualizar al final de cada sesión o cuando se complete un bloque de trabajo im
 
 ---
 
+## Sesión 2026-10-01 — La vitrina, legible en el teléfono
+
+**Modelo:** Claude Opus 5
+**Estado inicial:** `4dab093`, rama `main`
+**Estado final:** `7b62b25`
+
+El bloque de las dos pantallas entraba mal en móvil. Dos cosas, no una.
+
+**El panel se veía pero no se distinguía.** El lienzo está dibujado a 1440 y la
+escala salía de dividir el ancho de la ventana entre esos 1440. En un teléfono
+de 390 eso da 0,22: el panel completo, con su barra lateral, encogido a un
+cuarto. En computador la misma cuenta da 0,45, que es el doble. Se arregló
+entrando en la pantalla en vez de encogerla: la barra lateral se corre fuera
+del cuadro (`--corre:-240px`) y la escala se calcula contra el ancho del
+contenido (`--base:1020`), no contra el del lienzo. El costado derecho queda
+cortado a propósito, que es el mismo gesto que hace la máscara en pantalla
+grande. El divisor lo manda la hoja de estilos y el guion solo lo lee, así que
+el ajuste vive en un solo sitio.
+
+**Finanzas quedaba con texto y sin pantalla.** La regla que debía esconder ese
+rótulo en móvil apuntaba a `.letrero[data-panel="der"]`, y el componente nunca
+tuvo ese atributo, así que la regla no se aplicó nunca. En vez de esconder el
+texto se recuperó la pantalla: las dos ranuras ocupan el mismo sitio y se
+cambian con opacidad, y los dos rótulos pasan a ser pestañas. El relevo por
+cursor no existe en algo que se toca, así que el `onMouseEnter` va acompañado
+de un `onClick`.
+
+Las dos ranuras siguen midiendo aunque solo se vea una. Con `display:none` la
+ventana queda en cero y se pierde la medida de la que sale la escala.
+
+Verificado con `tsc`, `lint` (111 avisos, 0 errores, todos previos) y build de
+producción. La maqueta del antes y el después se revisó antes de tocar nada.
+
+---
+
 ## Sesión 2026-09-24 — Las dos pantallas por dentro, en el home
 
 **Modelo:** Claude Opus 5

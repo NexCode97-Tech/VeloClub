@@ -1295,7 +1295,7 @@ export default function MiembrosPage() {
             {/* Header */}
             <div className="px-6 pt-5 pb-3 flex items-start justify-between shrink-0">
               <div>
-                <p className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: '#381DA0' }}>
+                <p className="text-[11px] font-semibold" style={{ color: '#381DA0' }}>
                   {editing ? 'Editar miembro' : 'Nuevo miembro'}
                 </p>
                 <h2 className="text-[22px] font-semibold text-foreground leading-tight mt-0.5" style={{ fontFamily: 'inherit' }}>
@@ -1411,7 +1411,7 @@ export default function MiembrosPage() {
                       {initials(viewMember.fullName)}
                     </div>
                     <div>
-                      <p className="text-white/70 text-[11px] font-semibold uppercase tracking-widest mb-0.5">
+                      <p className="text-white/70 text-[11px] font-semibold mb-0.5">
                         {ROLES[viewMember.role]}
                       </p>
                       <h2 className="text-white font-semibold text-[18px] leading-tight" style={{ fontFamily: 'inherit' }}>
@@ -1430,7 +1430,7 @@ export default function MiembrosPage() {
                   {/* 1. Documento */}
                   {(viewMember.docType || viewMember.docNumber) && (
                     <div>
-                      <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-3">Documento</p>
+                      <p className="text-[11px] font-semibold text-muted-foreground mb-3">Documento</p>
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(56,29,160,0.08)' }}>
                           <IconIdentificacion className="w-3.5 h-3.5" style={{ color: '#381DA0' }} />
@@ -1449,7 +1449,7 @@ export default function MiembrosPage() {
 
                   {/* 2. Contacto */}
                   <div>
-                    <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-3">Contacto</p>
+                    <p className="text-[11px] font-semibold text-muted-foreground mb-3">Contacto</p>
                     <div className="space-y-2.5">
                       {viewMember.phone && (() => {
                         const { iso2, dialCode, number } = parsePhoneDisplay(viewMember.phone);
@@ -1501,7 +1501,7 @@ export default function MiembrosPage() {
                   {/* 3. Acudiente */}
                   {(viewMember.emergencyContact || viewMember.emergencyPhone) && (
                     <div>
-                      <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-3">Acudiente</p>
+                      <p className="text-[11px] font-semibold text-muted-foreground mb-3">Acudiente</p>
                       <div className="space-y-2.5">
                         {viewMember.emergencyContact && (
                           <div className="flex items-center gap-3">
@@ -1541,7 +1541,7 @@ export default function MiembrosPage() {
                   {/* 4. Salud */}
                   {viewMember.eps && (
                     <div>
-                      <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-3">Salud</p>
+                      <p className="text-[11px] font-semibold text-muted-foreground mb-3">Salud</p>
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(6,214,160,0.08)' }}>
                           <IconEps className="w-3.5 h-3.5" style={{ color: '#06D6A0' }} />
@@ -1557,7 +1557,7 @@ export default function MiembrosPage() {
                   {/* Sedes */}
                   {viewMember.locations.length > 0 && (
                     <div>
-                      <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-3">Sedes</p>
+                      <p className="text-[11px] font-semibold text-muted-foreground mb-3">Sedes</p>
                       <div className="flex flex-wrap gap-2">
                         {viewMember.locations.map(l => (
                           <div key={l.location.id} className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl" style={{ background: 'rgba(56,29,160,0.08)' }}>

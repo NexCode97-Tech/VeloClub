@@ -59,7 +59,7 @@ function ContactCard({ isAdmin, phone, email, phoneDraft, emailDraft, editingCon
       style={{ background: 'white', border: '1px solid rgba(67,97,238,0.10)', boxShadow: '0 1px 12px rgba(0,0,0,0.06)' }}>
       {/* Header */}
       <div className="flex items-center justify-between px-5 py-4 border-b border-border/50">
-        <p className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: '#8E87A8' }}>
+        <p className="text-[11px] font-semibold" style={{ color: '#8E87A8' }}>
           Información de contacto
         </p>
         {isAdmin && !editingContact && (
@@ -91,7 +91,7 @@ function ContactCard({ isAdmin, phone, email, phoneDraft, emailDraft, editingCon
             <IconTelefono className="w-4 h-4" style={{ color: '#4361EE' }} />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-[10px] font-semibold uppercase tracking-widest mb-0.5" style={{ color: '#8E87A8' }}>Teléfono</p>
+            <p className="text-[11px] font-semibold mb-0.5" style={{ color: '#8E87A8' }}>Teléfono</p>
             {editingContact ? (
               <PhoneInput value={phoneDraft} onChange={onPhoneChange} placeholder="+57 300 000 0000" />
             ) : (
@@ -107,7 +107,7 @@ function ContactCard({ isAdmin, phone, email, phoneDraft, emailDraft, editingCon
             <IconMail className="w-4 h-4" style={{ color: '#4361EE' }} />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-[10px] font-semibold uppercase tracking-widest mb-0.5" style={{ color: '#8E87A8' }}>Correo electrónico</p>
+            <p className="text-[11px] font-semibold mb-0.5" style={{ color: '#8E87A8' }}>Correo electrónico</p>
             {editingContact ? (
               <input value={emailDraft} onChange={e => onEmailChange(e.target.value)} placeholder="club@ejemplo.com" type="email"
                 className="w-full text-[13px] font-medium outline-none bg-transparent border-b border-dashed pb-0.5"
@@ -125,7 +125,7 @@ function ContactCard({ isAdmin, phone, email, phoneDraft, emailDraft, editingCon
             <Building2 className="w-4 h-4" style={{ color: '#4361EE' }} />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-[10px] font-semibold uppercase tracking-widest mb-0.5" style={{ color: '#8E87A8' }}>Sede principal</p>
+            <p className="text-[11px] font-semibold mb-0.5" style={{ color: '#8E87A8' }}>Sede principal</p>
             {mainLocation ? (
               <>
                 <p className="text-[13px] font-semibold text-foreground">{mainLocation.name}</p>
@@ -143,7 +143,7 @@ function ContactCard({ isAdmin, phone, email, phoneDraft, emailDraft, editingCon
               <IconUbicacion className="w-4 h-4" style={{ color: '#4361EE' }} />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-[10px] font-semibold uppercase tracking-widest mb-0.5" style={{ color: '#8E87A8' }}>Ubicación</p>
+              <p className="text-[11px] font-semibold mb-0.5" style={{ color: '#8E87A8' }}>Ubicación</p>
               <p className="text-[13px] font-medium text-foreground">
                 {[clubCity, clubDept].filter(Boolean).join(', ')}
               </p>
@@ -660,7 +660,7 @@ export default function ClubProfilePage() {
                 className="px-4 sm:px-6 py-4">
                 <div className="flex items-center gap-2 mb-3">
                   <Lock className="w-3.5 h-3.5" style={{ color: '#8E87A8' }} />
-                  <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Solo visibles para el club</p>
+                  <p className="text-[11px] font-semibold text-muted-foreground">Solo visibles para el club</p>
                 </div>
                 {posts.length === 0 ? (
                   <div className="rounded-2xl px-6 py-10 flex flex-col items-center text-center"

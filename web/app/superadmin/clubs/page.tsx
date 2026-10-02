@@ -450,19 +450,19 @@ export default function ClubsPage() {
                 { label: 'Email del admin',  key: 'adminEmail', type: 'email', placeholder: 'admin@ejemplo.com' },
               ].map(({ label, key, type, placeholder }) => (
                 <div key={key} style={{ marginBottom: 10 }}>
-                  <p style={{ margin: '0 0 4px', fontSize: 9, fontWeight: 600, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</p>
+                  <p style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 600, color: '#8E87A8' }}>{label}</p>
                   <input type={type} placeholder={placeholder} value={(newForm as Record<string, string>)[key]}
                     onChange={e => setNewForm(f => ({ ...f, [key]: e.target.value }))} style={inp} />
                 </div>
               ))}
               <div style={{ marginBottom: 10 }}>
-                <p style={{ margin: '0 0 4px', fontSize: 9, fontWeight: 600, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                <p style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 600, color: '#8E87A8' }}>
                   Teléfono del admin <span style={{ textTransform: 'none', fontWeight: 400 }}>(opcional)</span>
                 </p>
                 <PhoneInput value={newForm.adminPhone} onChange={v => setNewForm(f => ({ ...f, adminPhone: v }))} placeholder="300 000 0000" />
               </div>
               <div style={{ marginBottom: 10 }}>
-                <p style={{ margin: '0 0 4px', fontSize: 9, fontWeight: 600, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Deporte principal</p>
+                <p style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 600, color: '#8E87A8' }}>Deporte principal</p>
                 <SportSelect value={newForm.deporte} onChange={v => setNewForm(f => ({ ...f, deporte: v }))} />
               </div>
               <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>

@@ -154,7 +154,7 @@ function Ficha({ rotulo, cifra, pie, alerta }: {
   return (
     <div className="bg-white rounded-2xl px-4 py-3.5 flex flex-col gap-1.5"
       style={{ border: `1px solid ${alerta ? 'rgba(198,47,80,0.28)' : 'rgba(120,80,200,0.10)'}` }}>
-      <span className="text-[10.5px] font-semibold uppercase tracking-wider text-[#8E87A8]">{rotulo}</span>
+      <span className="text-[11px] font-semibold text-[#8E87A8]">{rotulo}</span>
       <span className="text-[26px] font-semibold leading-none tracking-tight"
         style={{ color: alerta ? '#C62F50' : '#1A1028' }}>{cifra}</span>
       <span className="text-[11.5px] text-[#8E87A8]">{pie}</span>
@@ -399,7 +399,7 @@ export default function UsoPage() {
               <tr>
                 {['Club', 'Deportistas', 'Días activos', 'Últimas 12 semanas', 'Última vez', 'Estado'].map((h, i) => (
                   <th key={h} scope="col"
-                    className={`text-[10px] font-semibold uppercase tracking-wider text-[#8E87A8] px-3.5 py-2.5 whitespace-nowrap ${i === 1 || i === 2 ? 'text-right' : 'text-left'}`}
+                    className={`text-[11px] font-semibold text-[#8E87A8] px-3.5 py-2.5 whitespace-nowrap ${i === 1 || i === 2 ? 'text-right' : 'text-left'}`}
                     style={{ borderBottom: '1px solid rgba(120,80,200,0.06)' }}>{h}</th>
                 ))}
               </tr>

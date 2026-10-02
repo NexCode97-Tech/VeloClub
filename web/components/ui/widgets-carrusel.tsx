@@ -366,8 +366,13 @@ export function CarruselEventos({ eventos, cargando, clasesHoy = [] }: {
                     <span className="text-[13px] font-semibold leading-none" style={{ color: c.text }}>
                       {d.getDate()}
                     </span>
-                    <span className="text-[8.5px] font-semibold uppercase leading-none mt-0.5" style={{ color: c.text }}>
-                      {d.toLocaleDateString('es-CO', { month: 'short' })}
+                    <span className="text-[8.5px] font-semibold leading-none mt-0.5" style={{ color: c.text }}>
+                      {/* «oct.» llega en minúscula y con punto. Iba en mayúsculas por
+                          clase; sin ellas se escribe como rótulo: «Oct». */}
+                      {(() => {
+                        const mes = d.toLocaleDateString('es-CO', { month: 'short' }).replace('.', '');
+                        return mes.charAt(0).toUpperCase() + mes.slice(1);
+                      })()}
                     </span>
                   </div>
                   {/* Dos renglones como tope: con uno, la mitad de los títulos
@@ -429,8 +434,8 @@ export function CarruselCumpleanos({ cumples, cargando }: { cumples: Cumple[]; c
                         <p className="text-[14px] font-semibold leading-none" style={{ color: tinta }}>
                           {mañana ? '1' : b.daysUntil}
                         </p>
-                        <p className="text-[7.5px] font-semibold uppercase leading-none mt-0.5" style={{ color: tinta }}>
-                          {mañana ? 'mañana' : 'días'}
+                        <p className="text-[7.5px] font-semibold leading-none mt-0.5" style={{ color: tinta }}>
+                          {mañana ? 'Mañana' : 'Días'}
                         </p>
                       </>
                     )}

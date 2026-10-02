@@ -306,7 +306,7 @@ function StudentRow({
           <div className="px-4 py-3 flex items-end gap-3 flex-wrap"
             style={{ background: 'rgba(56,29,160,0.04)', borderTop: '1px solid rgba(56,29,160,0.10)' }}>
             <div className="flex-1 min-w-[120px]">
-              <label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground block mb-1">Tarifa mensual</label>
+              <label className="text-[11px] font-semibold text-muted-foreground block mb-1">Tarifa mensual</label>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[12px] font-semibold" style={{ color: '#381DA0' }}>$</span>
                 <input className="w-full pl-6 pr-3 h-9 rounded-lg border border-border text-[13px] bg-white focus:outline-none focus:ring-2 focus:ring-purple-300"
@@ -316,7 +316,7 @@ function StudentRow({
               </div>
             </div>
             <div className="w-24">
-              <label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground block mb-1">Día de cobro</label>
+              <label className="text-[11px] font-semibold text-muted-foreground block mb-1">Día de cobro</label>
               <input type="number" min={1} max={31}
                 className="w-full px-3 h-9 rounded-lg border border-border text-[13px] bg-white focus:outline-none focus:ring-2 focus:ring-purple-300"
                 placeholder="ej. 5" value={dayInput} onChange={e => setDayInput(e.target.value)} />
@@ -945,7 +945,7 @@ export default function FinanzasPage() {
               <div className="relative h-full flex flex-col justify-between p-5">
                 {/* Fila superior: nombre del club + chip */}
                 <div className="flex items-center justify-between">
-                  <p className="text-[11px] font-semibold tracking-[0.15em] uppercase opacity-90"
+                  <p className="text-[11px] font-semibold opacity-90"
                     style={{ fontFamily: 'inherit' }}>
                     {clubName}
                   </p>
@@ -964,7 +964,7 @@ export default function FinanzasPage() {
                     porque quien lo oculta lo quiere oculto siempre, no una vez. */}
                 <div>
                   <div className="flex items-center gap-2 mb-1">
-                    <p className="text-[10px] font-semibold tracking-widest uppercase opacity-60">
+                    <p className="text-[10px] font-semibold opacity-60">
                       Cobrado {MONTH_NAMES[filterMonth - 1]} {filterYear}
                     </p>
                     <button
@@ -1004,7 +1004,7 @@ export default function FinanzasPage() {
                       const venceStr = vence.toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' });
                       return (
                         <>
-                          <p className="text-[8px] opacity-50 uppercase tracking-widest mb-0.5">Plan {planLabel}</p>
+                          <p className="text-[8px] opacity-50 mb-0.5">Plan {planLabel}</p>
                           <p className="text-[12px] font-semibold opacity-90" style={{ fontFamily: 'inherit' }}>
                             Vence {venceStr}
                           </p>
@@ -1012,7 +1012,7 @@ export default function FinanzasPage() {
                       );
                     })() : (
                       <>
-                        <p className="text-[8px] opacity-50 uppercase tracking-widest mb-0.5">Plan</p>
+                        <p className="text-[8px] opacity-50 mb-0.5">Plan</p>
                         <p className="text-[12px] font-semibold opacity-60">Sin plan asignado</p>
                       </>
                     )}

@@ -308,7 +308,7 @@ export function MonthPicker({
           {/* ── Atajos, uno por fila ── */}
           <div className="flex sm:flex-col gap-0.5 flex-wrap p-2.5 sm:w-[136px] shrink-0 border-b sm:border-b-0 sm:border-r"
             style={{ borderColor: 'rgba(56,29,160,0.10)' }}>
-            <span className="w-full px-2 pt-0.5 pb-1.5 text-[9.5px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <span className="w-full px-2 pt-0.5 pb-1.5 text-[11px] font-semibold text-muted-foreground">
               Periodo
             </span>
             {ATAJOS.map(a => {
@@ -441,7 +441,7 @@ export function MonthPicker({
               {/* Días de semana */}
               <div className="grid grid-cols-7 text-center mb-1">
                 {WEEKDAYS.map(d => (
-                  <div key={d} className="text-[10px] font-semibold text-muted-foreground uppercase">{d}</div>
+                  <div key={d} className="text-[10px] font-semibold text-muted-foreground">{d}</div>
                 ))}
               </div>
 

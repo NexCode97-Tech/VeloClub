@@ -817,7 +817,7 @@ export function PostCard({
                       padding: '10px 0',
                     }}
                   >
-                    <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-3.5 mb-2">
+                    <p className="text-[11px] font-semibold text-muted-foreground px-3.5 mb-2">
                       Les gustó a
                     </p>
                     {loadingLikes ? (

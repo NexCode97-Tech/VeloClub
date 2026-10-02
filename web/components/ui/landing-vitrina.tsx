@@ -354,13 +354,11 @@ export default function LandingVitrina() {
   .vt-zona .tarjeta .dentro{position:relative;height:100%;display:flex;flex-direction:column;
     justify-content:space-between;padding:20px}
   .vt-zona .tarjeta .arriba{display:flex;align-items:center;justify-content:space-between}
-  .vt-zona .tarjeta .club{margin:0;font-size:11px;font-weight:600;letter-spacing:.15em;
-    text-transform:uppercase;opacity:.9}
+  .vt-zona .tarjeta .club{margin:0;font-size:11px;font-weight:600;opacity:.9}
   .vt-zona .tarjeta .chip-emv{width:32px;height:24px;border-radius:4px;opacity:.8;
     background:linear-gradient(135deg,#FFD166,#F4A623);box-shadow:0 1px 3px rgba(0,0,0,.3)}
   .vt-zona .tarjeta .rot{display:flex;align-items:center;gap:8px;margin-bottom:4px}
-  .vt-zona .tarjeta .rot p{margin:0;font-size:10px;font-weight:600;letter-spacing:.1em;
-    text-transform:uppercase;opacity:.6}
+  .vt-zona .tarjeta .rot p{margin:0;font-size:10px;font-weight:600;opacity:.6}
   .vt-zona .tarjeta .ojo{width:24px;height:24px;border-radius:6px;display:flex;
     align-items:center;justify-content:center;opacity:.6}
   .vt-zona .tarjeta .ojo svg{width:14px;height:14px}
@@ -370,8 +368,7 @@ export default function LandingVitrina() {
   .vt-zona .tarjeta .falta{margin:4px 0 0;font-size:11px;opacity:.75}
   .vt-zona .tarjeta .falta b{color:#FFD166;font-weight:400}
   .vt-zona .tarjeta .abajo{display:flex;align-items:flex-end;justify-content:space-between}
-  .vt-zona .tarjeta .plan{margin:0 0 2px;font-size:8px;opacity:.5;text-transform:uppercase;
-    letter-spacing:.1em}
+  .vt-zona .tarjeta .plan{margin:0 0 2px;font-size:8px;opacity:.5}
   .vt-zona .tarjeta .vence{margin:0;font-size:12px;font-weight:600;opacity:.9}
   .vt-zona .tarjeta .vc-logo{width:44px;height:44px;object-fit:contain;
     mix-blend-mode:multiply;opacity:.92}

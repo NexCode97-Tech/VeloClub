@@ -48,8 +48,26 @@ Salió al copiar las pantallas para las imágenes del canal.
   borde.
 - **El rótulo iba en mayúsculas** y en monoespaciada. Pasó a texto normal.
 
-Quedan **unos 100 `uppercase` en 30 archivos** de la app y el superadmin. No se
-tocaron: cada uno hay que mirarlo en su pantalla.
+### Fuera las mayúsculas de toda la app
+
+Se quitaron 91 `uppercase` en 26 archivos, con el `tracking` que los acompañaba:
+sin mayúsculas, ese espaciado deja las letras sueltas. Los rótulos de 10px o
+menos pasaron a 11px, porque en minúscula 9px casi no se lee. El precedente
+estaba en `superadmin/finanzas`, donde los rótulos de las cifras ya iban así.
+
+No se agrandaron los que viven en espacios justos: los chips de fecha del
+carrusel, el sello del carnet, los días de la semana de los calendarios y la
+tarjeta de Finanzas.
+
+**Se quedan en mayúscula cuatro campos donde la mayúscula es el dato**: el
+código de cupón en Ajustes y en superadmin, y el color hexadecimal en los dos
+selectores de color. La etiqueta del carrusel de publicidad es la otra
+excepción, y no estaba entre estos.
+
+Dos textos venían en minúscula y dependían de la clase: el mes del chip de
+fecha (`oct.` del navegador, ahora «Oct») y «mañana» / «días» del contador de
+cumpleaños. La tarjeta de Finanzas de la landing se cambió igual que la de la
+app, porque es copia de ella.
 
 ### Imágenes para el canal
 

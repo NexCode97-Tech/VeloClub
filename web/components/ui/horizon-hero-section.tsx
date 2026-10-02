@@ -612,7 +612,7 @@ export const HorizonHeroSection: React.FC = () => {
           ref={scrollProgressRef}
           className="absolute bottom-6 sm:bottom-8 left-1/2 -translate-x-1/2 z-20 flex items-center gap-3 sm:gap-4"
         >
-          <span className="text-[10px] sm:text-xs uppercase tracking-[0.3em] text-violet-200/70 font-semibold">
+          <span className="text-[10px] sm:text-xs text-violet-200/70 font-semibold">
             Scroll
           </span>
           <div className="w-24 sm:w-32 h-[2px] bg-white/15 rounded-full overflow-hidden">

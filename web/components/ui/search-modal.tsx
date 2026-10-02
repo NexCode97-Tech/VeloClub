@@ -185,7 +185,7 @@ export function SearchModal({ open, onClose }: { open: boolean; onClose: () => v
 function Group({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="py-1.5">
-      <p className="px-4 py-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{title}</p>
+      <p className="px-4 py-1 text-[11px] font-semibold text-muted-foreground">{title}</p>
       {children}
     </div>
   );

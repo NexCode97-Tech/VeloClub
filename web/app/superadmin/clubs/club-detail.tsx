@@ -633,17 +633,17 @@ export default function ClubDetail({ club, suscripcion, tab, onReload, onDeleted
                   { label: 'Email del admin',  key: 'adminEmail', type: 'email', placeholder: 'admin@ejemplo.com' },
                 ].map(({ label, key, type, placeholder }) => (
                   <div key={key} style={{ marginBottom: 8 }}>
-                    <p style={{ margin: '0 0 3px', fontSize: 9, fontWeight: 600, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</p>
+                    <p style={{ margin: '0 0 3px', fontSize: 11, fontWeight: 600, color: '#8E87A8' }}>{label}</p>
                     <input type={type} placeholder={placeholder} value={(editForm as Record<string, string>)[key]}
                       onChange={e => setEditForm(f => ({ ...f, [key]: e.target.value }))} style={inp} />
                   </div>
                 ))}
                 <div style={{ marginBottom: 8 }}>
-                  <p style={{ margin: '0 0 3px', fontSize: 9, fontWeight: 600, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Teléfono del admin <span style={{ textTransform: 'none', fontWeight: 400 }}>(opcional)</span></p>
+                  <p style={{ margin: '0 0 3px', fontSize: 11, fontWeight: 600, color: '#8E87A8' }}>Teléfono del admin <span style={{ fontWeight: 400 }}>(opcional)</span></p>
                   <PhoneInput value={editForm.adminPhone} onChange={v => setEditForm(f => ({ ...f, adminPhone: v }))} placeholder="300 000 0000" />
                 </div>
                 <div style={{ marginBottom: 12 }}>
-                  <p style={{ margin: '0 0 3px', fontSize: 9, fontWeight: 600, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Deporte principal</p>
+                  <p style={{ margin: '0 0 3px', fontSize: 11, fontWeight: 600, color: '#8E87A8' }}>Deporte principal</p>
                   <SportSelect value={editForm.deporte} onChange={v => setEditForm(f => ({ ...f, deporte: v }))} placeholder="Sin especificar" />
                 </div>
                 {/* Período de prueba */}
@@ -774,15 +774,15 @@ export default function ClubDetail({ club, suscripcion, tab, onReload, onDeleted
                 <motion.div key="add" variants={expandY} initial="hidden" animate="show" exit="exit"
                   style={{ padding: '12px 14px', background: '#FAFAFA', borderBottom: '1px solid rgba(120,80,200,0.07)' }}>
                   <div style={{ marginBottom: 8 }}>
-                    <p style={{ margin: '0 0 4px', fontSize: 9, fontWeight: 600, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Nombre completo</p>
+                    <p style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 600, color: '#8E87A8' }}>Nombre completo</p>
                     <input type="text" value={memberForm.fullName} placeholder="Nombre completo" onChange={e => setMemberForm(f => ({ ...f, fullName: e.target.value }))} style={{ ...inp, fontSize: 13 }} />
                   </div>
                   <div style={{ marginBottom: 8 }}>
-                    <p style={{ margin: '0 0 4px', fontSize: 9, fontWeight: 600, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Email</p>
+                    <p style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 600, color: '#8E87A8' }}>Email</p>
                     <input type="email" value={memberForm.email} placeholder="email@ejemplo.com" onChange={e => setMemberForm(f => ({ ...f, email: e.target.value }))} style={{ ...inp, fontSize: 13 }} />
                   </div>
                   <div style={{ marginBottom: 10 }}>
-                    <p style={{ margin: '0 0 6px', fontSize: 9, fontWeight: 600, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Rol</p>
+                    <p style={{ margin: '0 0 6px', fontSize: 11, fontWeight: 600, color: '#8E87A8' }}>Rol</p>
                     <RoleToggle value={memberForm.role} onChange={r => setMemberForm(f => ({ ...f, role: r }))} />
                   </div>
                   {memberError && <p style={{ fontSize: 11, color: '#EF476F', margin: '0 0 8px' }}>{memberError}</p>}
@@ -998,19 +998,19 @@ export default function ClubDetail({ club, suscripcion, tab, onReload, onDeleted
                             style={{ background: '#F7F5FF', border: '1.5px solid rgba(56,29,160,0.15)', borderRadius: 14, padding: 14, margin: i > 0 ? '10px 0 0' : 0 }}>
                             <p style={{ margin: '0 0 12px', fontSize: 11, fontWeight: 600, color: '#381DA0' }}>Editar abono</p>
                             <div style={{ marginBottom: 10 }}>
-                              <p style={{ margin: '0 0 4px', fontSize: 9, fontWeight: 600, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Concepto</p>
+                              <p style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 600, color: '#8E87A8' }}>Concepto</p>
                               <input type="text" value={editPagoForm.concepto} onChange={e => setEditPagoForm(f => ({ ...f, concepto: e.target.value }))} style={inp} />
                             </div>
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 10 }}>
                               <div>
-                                <p style={{ margin: '0 0 4px', fontSize: 9, fontWeight: 600, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Monto</p>
+                                <p style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 600, color: '#8E87A8' }}>Monto</p>
                                 <div style={{ position: 'relative' }}>
                                   <span style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', fontSize: 12, color: '#8E87A8', pointerEvents: 'none' }}>$</span>
                                   <MoneyInput value={editPagoForm.monto} onChange={v => setEditPagoForm(f => ({ ...f, monto: v }))} style={{ ...inp, paddingLeft: 22 }} />
                                 </div>
                               </div>
                               <div>
-                                <p style={{ margin: '0 0 4px', fontSize: 9, fontWeight: 600, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Fecha pago</p>
+                                <p style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 600, color: '#8E87A8' }}>Fecha pago</p>
                                 <DatePicker value={editPagoForm.fecha} onChange={v => setEditPagoForm(f => ({ ...f, fecha: v }))} />
                               </div>
                             </div>
@@ -1077,19 +1077,19 @@ export default function ClubDetail({ club, suscripcion, tab, onReload, onDeleted
                 style={{ background: '#F7F5FF', border: '1.5px solid rgba(56,29,160,0.15)', borderRadius: 16, padding: 16 }}>
                 <p style={{ margin: '0 0 14px', fontSize: 13, fontWeight: 600, color: '#1A1028', fontFamily: 'inherit' }}>Registrar abono</p>
                 <div style={{ marginBottom: 10 }}>
-                  <p style={{ margin: '0 0 4px', fontSize: 9, fontWeight: 600, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Concepto</p>
+                  <p style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 600, color: '#8E87A8' }}>Concepto</p>
                   <input type="text" placeholder="Ej: Cuota Mayo" value={abonoForm.concepto} onChange={e => setAbonoForm(f => ({ ...f, concepto: e.target.value }))} style={inp} />
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 14 }}>
                   <div>
-                    <p style={{ margin: '0 0 4px', fontSize: 9, fontWeight: 600, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Monto</p>
+                    <p style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 600, color: '#8E87A8' }}>Monto</p>
                     <div style={{ position: 'relative' }}>
                       <span style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', fontSize: 12, color: '#8E87A8', pointerEvents: 'none' }}>$</span>
                       <MoneyInput value={abonoForm.monto} onChange={v => setAbonoForm(f => ({ ...f, monto: v }))} placeholder="0" style={{ ...inp, paddingLeft: 22 }} />
                     </div>
                   </div>
                   <div>
-                    <p style={{ margin: '0 0 4px', fontSize: 9, fontWeight: 600, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Fecha pago</p>
+                    <p style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 600, color: '#8E87A8' }}>Fecha pago</p>
                     <DatePicker value={abonoForm.fecha} onChange={v => setAbonoForm(f => ({ ...f, fecha: v }))} />
                   </div>
                 </div>

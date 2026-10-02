@@ -298,7 +298,7 @@ function ContactCard({ club, mainLocation }: { club: PublicClub; mainLocation: M
       <div className="rounded-2xl overflow-hidden"
         style={{ background: 'white', border: '1px solid rgba(67,97,238,0.10)', boxShadow: '0 1px 12px rgba(0,0,0,0.06)' }}>
         <div className="px-5 py-4 border-b border-border/50">
-          <p className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: '#8E87A8' }}>Información de contacto</p>
+          <p className="text-[11px] font-semibold" style={{ color: '#8E87A8' }}>Información de contacto</p>
         </div>
         <div className="divide-y divide-border/40">
           <ContactRow icon={<IconTelefono className="w-4 h-4" style={{ color: '#4361EE' }} />} label="Teléfono" value={club.phone} />
@@ -339,7 +339,7 @@ function ContactRow({ icon, label, value }: { icon: React.ReactNode; label: stri
         {icon}
       </div>
       <div className="min-w-0">
-        <p className="text-[10px] font-semibold uppercase tracking-widest mb-0.5" style={{ color: '#8E87A8' }}>{label}</p>
+        <p className="text-[11px] font-semibold mb-0.5" style={{ color: '#8E87A8' }}>{label}</p>
         <p className="text-[13px] font-medium text-foreground">
           {value || <span className="text-muted-foreground/50 italic text-[12px]">Sin registrar</span>}
         </p>

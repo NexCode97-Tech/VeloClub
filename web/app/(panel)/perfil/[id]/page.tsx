@@ -314,7 +314,7 @@ export default function PublicProfilePage() {
   const fichaClub = profile.club?.name ? (
     <div className="rounded-2xl bg-white p-4"
       style={{ border: '1px solid rgba(120,80,200,0.10)' }}>
-      <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-3">Club</p>
+      <p className="text-[11px] font-semibold text-muted-foreground mb-3">Club</p>
       <div className="flex items-center gap-3">
         {profile.club.logoUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -348,7 +348,7 @@ export default function PublicProfilePage() {
   const fichaResumen = (
     <div className="rounded-2xl bg-white p-4"
       style={{ border: '1px solid rgba(120,80,200,0.10)' }}>
-      <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-3">Resumen</p>
+      <p className="text-[11px] font-semibold text-muted-foreground mb-3">Resumen</p>
       <div className="flex flex-col gap-1.5">
         <div className="flex items-baseline justify-between gap-3">
           <span className="text-[12px] text-muted-foreground">Rol</span>
@@ -558,7 +558,7 @@ export default function PublicProfilePage() {
                   className="flex flex-col gap-3">
                   {profile.bio && (
                     <div className="rounded-2xl bg-white p-4" style={{ border: '1px solid rgba(120,80,200,0.10)' }}>
-                      <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-2">Sobre</p>
+                      <p className="text-[11px] font-semibold text-muted-foreground mb-2">Sobre</p>
                       <p className="text-[13px] text-foreground/80 leading-relaxed">{profile.bio}</p>
                     </div>
                   )}
@@ -577,7 +577,7 @@ export default function PublicProfilePage() {
           <div className="flex-1 min-w-0">{feed}</div>
           <aside className="w-[300px] shrink-0 sticky top-4 flex flex-col gap-3">
             <div className="rounded-2xl bg-white p-4" style={{ border: '1px solid rgba(120,80,200,0.10)' }}>
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-3">Fotos</p>
+              <p className="text-[11px] font-semibold text-muted-foreground mb-3">Fotos</p>
               {mosaico(3, setPostoAbierto)}
             </div>
             {fichaClub}

@@ -250,7 +250,7 @@ export function DatePicker({
               {/* Días de semana */}
               <div className="grid grid-cols-7 mb-0.5">
                 {WEEKDAYS.map(d => (
-                  <div key={d} className="text-center text-[9px] font-semibold text-muted-foreground uppercase py-0.5">
+                  <div key={d} className="text-center text-[9px] font-semibold text-muted-foreground py-0.5">
                     {d}
                   </div>
                 ))}

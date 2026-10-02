@@ -281,7 +281,7 @@ export default function ReportesPage() {
         {/* Tendencia de ingresos */}
         <motion.div variants={cardVariant} className="bg-white border border-border rounded-xl p-4">
           <div className="flex items-baseline gap-1.5 mb-4">
-            <p style={{ fontSize: 11, fontWeight: 600, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+            <p style={{ fontSize: 11, fontWeight: 600, color: '#8E87A8' }}>
               Tendencia
             </p>
             <span style={{ fontSize: 11, fontWeight: 600, color: ACCENT }}>· Total facturado {activeYear}</span>
@@ -339,7 +339,7 @@ export default function ReportesPage() {
 
           {/* Distribución de pagos */}
           <div className="bg-white border border-border rounded-xl p-4">
-            <p style={{ fontSize: 11, fontWeight: 600, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 16 }}>
+            <p style={{ fontSize: 11, fontWeight: 600, color: '#8E87A8', marginBottom: 16 }}>
               Estado de pagos · {paymentPeriodLabel}
             </p>
             {loading ? (
@@ -413,7 +413,7 @@ export default function ReportesPage() {
 
           {/* Asistencia */}
           <div className="bg-white border border-border rounded-xl p-4">
-            <p className="mb-3" style={{ fontSize: 11, fontWeight: 600, color: '#8E87A8', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+            <p className="mb-3" style={{ fontSize: 11, fontWeight: 600, color: '#8E87A8' }}>
               Asistencia
             </p>
             {selectedDateRange ? (

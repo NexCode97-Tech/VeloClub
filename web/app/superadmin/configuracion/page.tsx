@@ -34,7 +34,7 @@ export default function ConfiguracionPage() {
 
       {/* Mi cuenta — misma tarjeta de perfil que el administrador */}
       <motion.div variants={cardVariant}>
-      <p className="text-[11px] font-semibold uppercase mb-3 m-0" style={{ color: '#8E87A8', letterSpacing: '0.8px' }}>
+      <p className="text-[11px] font-semibold mb-3 m-0" style={{ color: '#8E87A8' }}>
         Mi cuenta
       </p>
       <div className="bg-white border border-border rounded-2xl overflow-hidden mb-4">
@@ -112,7 +112,7 @@ export default function ConfiguracionPage() {
 
       {/* Sistema */}
       <motion.div variants={cardVariant}>
-      <p className="text-[11px] font-semibold uppercase mb-2 m-0" style={{ color: '#8E87A8', letterSpacing: '0.8px' }}>
+      <p className="text-[11px] font-semibold mb-2 m-0" style={{ color: '#8E87A8' }}>
         Sistema
       </p>
       {[

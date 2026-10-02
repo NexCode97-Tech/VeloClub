@@ -274,14 +274,14 @@ export default function PagosPage() {
                   ) : (
                     <IconCheck className="w-4 h-4" />
                   )}
-                  <p className="text-[11px] font-semibold tracking-widest uppercase">
+                  <p className="text-[11px] font-semibold">
                     {hasOverdue ? 'Pago vencido' : pending.length > 0 ? 'Pago pendiente' : 'Al día'}
                   </p>
                 </div>
 
                 {pending.length > 0 ? (
                   <>
-                    <p className="text-[11px] opacity-75 uppercase tracking-wide mb-1">Por pagar</p>
+                    <p className="text-[11px] opacity-75 mb-1">Por pagar</p>
                     <p className="text-4xl font-semibold mb-1" style={{ fontFamily: 'inherit' }}>
                       {fmt.format(totalOwed)}
                     </p>
@@ -304,7 +304,7 @@ export default function PagosPage() {
                 <div className="bg-white border border-border rounded-2xl p-4 flex flex-col gap-1">
                   <div className="flex items-center gap-1.5 mb-1">
                     <TrendingUp className="w-3.5 h-3.5" style={{ color: '#06D6A0' }} />
-                    <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Total pagado</p>
+                    <p className="text-[11px] font-semibold text-muted-foreground">Total pagado</p>
                   </div>
                   <p className="text-[18px] font-semibold text-foreground" style={{ fontFamily: 'inherit' }}>
                     {fmt.format(totalPaidStudent)}
@@ -314,7 +314,7 @@ export default function PagosPage() {
                 <div className="bg-white border border-border rounded-2xl p-4 flex flex-col gap-1">
                   <div className="flex items-center gap-1.5 mb-1">
                     <CalendarDays className="w-3.5 h-3.5" style={{ color: '#4361EE' }} />
-                    <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Historial</p>
+                    <p className="text-[11px] font-semibold text-muted-foreground">Historial</p>
                   </div>
                   <p className="text-[18px] font-semibold text-foreground" style={{ fontFamily: 'inherit' }}>
                     {payments.length}
@@ -326,7 +326,7 @@ export default function PagosPage() {
               {/* Pendientes / vencidos primero */}
               {pending.length > 0 && (
                 <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground mb-2 px-1">
+                  <p className="text-[11px] font-semibold text-muted-foreground mb-2 px-1">
                     Pendientes
                   </p>
                   <div className="space-y-2">
@@ -403,7 +403,7 @@ export default function PagosPage() {
               {/* Historial de pagados */}
               {paid.length > 0 && (
                 <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground mb-2 px-1">
+                  <p className="text-[11px] font-semibold text-muted-foreground mb-2 px-1">
                     Historial
                   </p>
                   <div className="space-y-2">
@@ -496,7 +496,7 @@ export default function PagosPage() {
           className="rounded-2xl p-4 text-white"
           style={{ background: 'linear-gradient(135deg,#4361EE,#7209B7)' }}
         >
-          <p className="text-[10px] font-semibold tracking-widest opacity-80 uppercase mb-1">
+          <p className="text-[11px] font-semibold opacity-80 mb-1">
             Cobrado en {MONTH_NAMES[filterMonth - 1]} {filterYear}
           </p>
           <p className="text-4xl font-semibold mb-3" style={{ fontFamily: 'inherit' }}>
@@ -504,13 +504,13 @@ export default function PagosPage() {
           </p>
           <div className="flex gap-6">
             <div>
-              <p className="text-[10px] opacity-70 uppercase tracking-wide">Total pagado</p>
+              <p className="text-[11px] opacity-70">Total pagado</p>
               <p className="text-base font-semibold" style={{ fontFamily: 'inherit' }}>
                 {fmt.format(totalPaid)}
               </p>
             </div>
             <div>
-              <p className="text-[10px] opacity-70 uppercase tracking-wide">Pendiente</p>
+              <p className="text-[11px] opacity-70">Pendiente</p>
               <p className="text-base font-semibold" style={{ fontFamily: 'inherit', color: '#FFB703' }}>
                 {fmt.format(totalPending)}
               </p>

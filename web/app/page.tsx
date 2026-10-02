@@ -131,7 +131,7 @@ export default function HomePage() {
         {/* Gris sobre blanco, al reves que antes: con la pagina en blanco puro
             una tarjeta blanca no se separaria del fondo. */}
         <div className="bg-[#F4F3F8] rounded-3xl border border-[rgba(26,16,40,0.05)] p-7 sm:p-10">
-          <p className="text-xs font-semibold uppercase tracking-widest text-[#8E87A8] mb-3">¿Por qué VeloClub?</p>
+          <p className="text-xs font-semibold text-[#8E87A8] mb-3">¿Por qué VeloClub?</p>
           <h2
             className="text-2xl font-semibold text-[#1A1028] mb-8 tracking-tight"
           >

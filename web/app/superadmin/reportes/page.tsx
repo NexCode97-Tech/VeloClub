@@ -193,7 +193,7 @@ export default function ReportesPage() {
                 <div className="px-4 pb-3 flex flex-col gap-2">
                   <div className="rounded-xl px-3 py-2.5"
                     style={{ background: 'rgba(26,16,40,0.03)', border: '1px solid rgba(26,16,40,0.06)' }}>
-                    <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-1">
+                    <p className="text-[11px] font-semibold text-muted-foreground mb-1">
                       Al momento de reportar
                     </p>
                     <p className="text-[12.5px] text-foreground leading-relaxed whitespace-pre-wrap">
@@ -206,7 +206,7 @@ export default function ReportesPage() {
                   {r.existe && r.contenidoActual !== null && r.contenidoActual !== r.contenidoCopia && (
                     <div className="rounded-xl px-3 py-2.5"
                       style={{ background: 'rgba(255,183,3,0.06)', border: '1px solid rgba(255,183,3,0.22)' }}>
-                      <p className="text-[10px] font-semibold uppercase tracking-widest mb-1" style={{ color: '#854F0B' }}>
+                      <p className="text-[11px] font-semibold mb-1" style={{ color: '#854F0B' }}>
                         Editado desde entonces, así está ahora
                       </p>
                       <p className="text-[12.5px] text-foreground leading-relaxed whitespace-pre-wrap">

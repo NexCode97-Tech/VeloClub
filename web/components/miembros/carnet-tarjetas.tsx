@@ -45,7 +45,7 @@ function Frente({ d }: { d: DatosCarnet }) {
   return (
     <article className="rounded-[22px] overflow-hidden bg-white flex flex-col" style={{ boxShadow: SOMBRA }}>
       <div className="relative px-[18px] pt-5 pb-[46px]" style={{ background: c.fondo, color: c.tinta }}>
-        <span className="absolute top-5 right-[18px] text-[9px] font-bold uppercase tracking-[0.1em] rounded-full px-2.5 py-1"
+        <span className="absolute top-5 right-[18px] text-[9px] font-bold rounded-full px-2.5 py-1"
           style={{ background: 'rgba(255,255,255,0.22)' }}>
           {sello.texto}
         </span>
@@ -152,7 +152,7 @@ function Reverso({ d }: { d: DatosCarnet }) {
 
   return (
     <article className="rounded-[22px] bg-white p-5 flex flex-col" style={{ boxShadow: SOMBRA }}>
-      <p className="m-0 flex items-center gap-2 text-[12px] font-bold uppercase tracking-wide" style={{ color: '#C62F50' }}>
+      <p className="m-0 flex items-center gap-2 text-[12px] font-bold" style={{ color: '#C62F50' }}>
         <span className="w-[9px] h-[9px] rounded-full shrink-0" style={{ background: '#C62F50' }} />
         En caso de emergencia
       </p>
@@ -174,7 +174,7 @@ function Reverso({ d }: { d: DatosCarnet }) {
       </div>
 
       <div className="mt-4">
-        <h4 className="m-0 mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-[#8E87A8]">Responsable</h4>
+        <h4 className="m-0 mb-1.5 text-[11px] font-semibold text-[#8E87A8]">Responsable</h4>
         <div className="rounded-[14px] px-3.5 py-3 flex flex-col gap-0.5"
           style={{ border: '1px solid rgba(120,80,200,0.12)' }}>
           <b className="text-[13.5px] font-semibold text-[#1A1028]">{m.acudiente ?? 'Sin registrar'}</b>
@@ -194,7 +194,7 @@ function Reverso({ d }: { d: DatosCarnet }) {
       </div>
 
       <div className="mt-4">
-        <h4 className="m-0 mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-[#8E87A8]">Salud</h4>
+        <h4 className="m-0 mb-1.5 text-[11px] font-semibold text-[#8E87A8]">Salud</h4>
         <div className="[&>div:first-child]:border-t-0">
           <Dato rotulo="EPS" valor={m.eps ?? '—'} />
           <Dato rotulo="Estado" valor={m.activo ? 'Activo en el club' : 'En pausa'} />

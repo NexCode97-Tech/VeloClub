@@ -614,12 +614,12 @@ function AjustesPageContent() {
       {club?.name && (
         <div className="w-full flex mt-4 pt-4 border-t border-border">
           <div className="flex-1 min-w-0 px-2">
-            <p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground m-0">Club</p>
+            <p className="text-[11px] font-bold text-muted-foreground m-0">Club</p>
             <p className="text-[11.5px] font-semibold text-foreground mt-1 mb-0 truncate">{club.name}</p>
           </div>
           {deporteActivo && (
             <div className="flex-1 min-w-0 px-2 border-l border-border">
-              <p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground m-0">Deporte</p>
+              <p className="text-[11px] font-bold text-muted-foreground m-0">Deporte</p>
               <p className="text-[11.5px] font-semibold text-foreground mt-1 mb-0 truncate">{deporteActivo}</p>
             </div>
           )}

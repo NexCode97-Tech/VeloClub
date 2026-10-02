@@ -177,7 +177,7 @@ export default function TrainingDetailPage() {
         </div>
 
         {/* Resultados */}
-        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest px-1">
+        <p className="text-[11px] font-semibold text-muted-foreground px-1">
           Resultados por deportista
         </p>
 

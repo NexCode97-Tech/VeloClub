@@ -656,7 +656,7 @@ function CompCard({ comp: c, isStudent, myMemberId, canManage, deleting, onDelet
       {podium.length > 0 && (
         <div className="mx-4 mb-4 rounded-2xl overflow-hidden" style={{ background: 'rgba(247,245,255,0.8)', border: '1px solid rgba(56,29,160,0.08)' }}>
           <div className="flex items-center justify-between px-3 py-2 border-b" style={{ borderColor: 'rgba(56,29,160,0.08)' }}>
-            <span className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: '#381DA0' }}>Pódio</span>
+            <span className="text-[11px] font-semibold" style={{ color: '#381DA0' }}>Pódio</span>
             <IconCompetencias className="w-3 h-3" style={{ color: '#381DA0', opacity: 0.5 }} />
           </div>
           <div className="flex divide-x" style={{ '--tw-divide-opacity': 1, borderColor: 'rgba(56,29,160,0.06)' } as React.CSSProperties}>

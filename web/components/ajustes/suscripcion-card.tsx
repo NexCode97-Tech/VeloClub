@@ -1467,7 +1467,7 @@ export default function SuscripcionCard() {
                         <div className="rounded-xl border border-border p-3 space-y-2">
                           <div className="flex items-center justify-between gap-2">
                             <div className="min-w-0">
-                              <p className="text-[10px] uppercase tracking-wider text-muted-foreground m-0">Llave Bre-B</p>
+                              <p className="text-[11px] text-muted-foreground m-0">Llave Bre-B</p>
                               <p className="text-[15px] font-bold text-foreground m-0 tabular-nums">{breb?.llave}</p>
                             </div>
                             <button type="button" onClick={() => copiar(breb?.llave ?? '', 'llave')}
@@ -1482,7 +1482,7 @@ export default function SuscripcionCard() {
 
                           <div className="flex items-center justify-between gap-2 pt-1">
                             <div className="min-w-0">
-                              <p className="text-[10px] uppercase tracking-wider text-muted-foreground m-0">
+                              <p className="text-[11px] text-muted-foreground m-0">
                                 Referencia, escríbela en la nota
                               </p>
                               <p className="text-[14px] font-bold text-foreground m-0">{breb?.referencia}</p>

@@ -735,7 +735,7 @@ export default function PerfilPage() {
           <div className="rounded-2xl overflow-hidden"
             style={{ background: 'white', border: '1px solid rgba(56,29,160,0.10)', boxShadow: '0 1px 12px rgba(0,0,0,0.06)' }}>
             <div className="flex items-center justify-between px-5 py-4 border-b border-border/50">
-              <p className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: '#8E87A8' }}>Información de contacto</p>
+              <p className="text-[11px] font-semibold" style={{ color: '#8E87A8' }}>Información de contacto</p>
               <button
                 onClick={openContactEdit}
                 className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors hover:bg-secondary cursor-pointer"
@@ -749,7 +749,7 @@ export default function PerfilPage() {
                   <IconTelefono className="w-4 h-4" style={{ color: '#381DA0' }} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-[10px] font-semibold uppercase tracking-widest mb-0.5" style={{ color: '#8E87A8' }}>Teléfono</p>
+                  <p className="text-[11px] font-semibold mb-0.5" style={{ color: '#8E87A8' }}>Teléfono</p>
                   <p className="text-[13px] font-medium text-foreground truncate">
                     {memberMe?.phone || <span className="text-muted-foreground/50 italic text-[12px]">Sin registrar</span>}
                   </p>
@@ -760,7 +760,7 @@ export default function PerfilPage() {
                   <Mail className="w-4 h-4" style={{ color: '#381DA0' }} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-[10px] font-semibold uppercase tracking-widest mb-0.5" style={{ color: '#8E87A8' }}>Correo electrónico</p>
+                  <p className="text-[11px] font-semibold mb-0.5" style={{ color: '#8E87A8' }}>Correo electrónico</p>
                   <p className="text-[13px] font-medium text-foreground truncate">
                     {(memberMe?.email || user?.email) || <span className="text-muted-foreground/50 italic text-[12px]">Sin registrar</span>}
                   </p>
@@ -775,7 +775,7 @@ export default function PerfilPage() {
                       : <Building2 className="w-4 h-4" style={{ color: '#381DA0' }} />}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-[10px] font-semibold uppercase tracking-widest mb-0.5" style={{ color: '#8E87A8' }}>Club</p>
+                    <p className="text-[11px] font-semibold mb-0.5" style={{ color: '#8E87A8' }}>Club</p>
                     <p className="text-[13px] font-medium text-foreground truncate">{user.club.name}</p>
                   </div>
                 </div>
@@ -786,7 +786,7 @@ export default function PerfilPage() {
                     <Users className="w-4 h-4" style={{ color: '#381DA0' }} />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-[10px] font-semibold uppercase tracking-widest mb-0.5" style={{ color: '#8E87A8' }}>Categoría</p>
+                    <p className="text-[11px] font-semibold mb-0.5" style={{ color: '#8E87A8' }}>Categoría</p>
                     <p className="text-[13px] font-medium text-foreground">{[memberMe.category, memberMe.tipo].filter(Boolean).join(' · ')}</p>
                   </div>
                 </div>
@@ -797,7 +797,7 @@ export default function PerfilPage() {
                     <IconUbicacion className="w-4 h-4" style={{ color: '#381DA0' }} />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-[10px] font-semibold uppercase tracking-widest mb-0.5" style={{ color: '#8E87A8' }}>Ubicación</p>
+                    <p className="text-[11px] font-semibold mb-0.5" style={{ color: '#8E87A8' }}>Ubicación</p>
                     <p className="text-[13px] font-medium text-foreground">{[user.club.city, user.club.department].filter(Boolean).join(', ')}</p>
                   </div>
                 </div>
@@ -814,7 +814,7 @@ export default function PerfilPage() {
 
           {/* Header */}
           <div className="flex items-center justify-between px-5 py-4 border-b border-border/50">
-            <p className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: '#8E87A8' }}>
+            <p className="text-[11px] font-semibold" style={{ color: '#8E87A8' }}>
               Información de contacto
             </p>
             <button
@@ -835,7 +835,7 @@ export default function PerfilPage() {
                 <IconTelefono className="w-4 h-4" style={{ color: '#381DA0' }} />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-[10px] font-semibold uppercase tracking-widest mb-0.5" style={{ color: '#8E87A8' }}>Teléfono</p>
+                <p className="text-[11px] font-semibold mb-0.5" style={{ color: '#8E87A8' }}>Teléfono</p>
                 <p className="text-[13px] font-medium text-foreground truncate">
                   {memberMe?.phone || <span className="text-muted-foreground/50 italic text-[12px]">Sin registrar</span>}
                 </p>
@@ -849,7 +849,7 @@ export default function PerfilPage() {
                 <Mail className="w-4 h-4" style={{ color: '#381DA0' }} />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-[10px] font-semibold uppercase tracking-widest mb-0.5" style={{ color: '#8E87A8' }}>Correo electrónico</p>
+                <p className="text-[11px] font-semibold mb-0.5" style={{ color: '#8E87A8' }}>Correo electrónico</p>
                 <p className="text-[13px] font-medium text-foreground truncate">
                   {(memberMe?.email || user?.email) || <span className="text-muted-foreground/50 italic text-[12px]">Sin registrar</span>}
                 </p>
@@ -868,7 +868,7 @@ export default function PerfilPage() {
                   }
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-[10px] font-semibold uppercase tracking-widest mb-0.5" style={{ color: '#8E87A8' }}>Club</p>
+                  <p className="text-[11px] font-semibold mb-0.5" style={{ color: '#8E87A8' }}>Club</p>
                   <div className="flex items-center gap-1.5">
                     <p className="text-[13px] font-medium text-foreground truncate">{user.club.name}</p>
                     {user.club.verified && (
@@ -891,7 +891,7 @@ export default function PerfilPage() {
                   <Users className="w-4 h-4" style={{ color: '#381DA0' }} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-[10px] font-semibold uppercase tracking-widest mb-0.5" style={{ color: '#8E87A8' }}>Categoría</p>
+                  <p className="text-[11px] font-semibold mb-0.5" style={{ color: '#8E87A8' }}>Categoría</p>
                   <p className="text-[13px] font-medium text-foreground">
                     {[memberMe.category, memberMe.tipo].filter(Boolean).join(' · ')}
                   </p>
@@ -907,7 +907,7 @@ export default function PerfilPage() {
                   <IconUbicacion className="w-4 h-4" style={{ color: '#381DA0' }} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-[10px] font-semibold uppercase tracking-widest mb-0.5" style={{ color: '#8E87A8' }}>Ubicación</p>
+                  <p className="text-[11px] font-semibold mb-0.5" style={{ color: '#8E87A8' }}>Ubicación</p>
                   <p className="text-[13px] font-medium text-foreground">
                     {[user.club.city, user.club.department].filter(Boolean).join(', ')}
                   </p>
@@ -946,11 +946,11 @@ export default function PerfilPage() {
 
             <div className="space-y-4">
               <div>
-                <label className="text-[11px] font-semibold uppercase tracking-widest mb-1.5 block" style={{ color: '#8E87A8' }}>Teléfono</label>
+                <label className="text-[11px] font-semibold mb-1.5 block" style={{ color: '#8E87A8' }}>Teléfono</label>
                 <PhoneInput value={contactPhone} onChange={setContactPhone} />
               </div>
               <div>
-                <label className="text-[11px] font-semibold uppercase tracking-widest mb-1.5 block" style={{ color: '#8E87A8' }}>Correo electrónico</label>
+                <label className="text-[11px] font-semibold mb-1.5 block" style={{ color: '#8E87A8' }}>Correo electrónico</label>
                 <input
                   type="email"
                   value={contactEmail}

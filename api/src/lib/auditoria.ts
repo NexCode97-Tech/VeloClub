@@ -214,6 +214,22 @@ export function extensionAuditoria() {
 
             const resultado = await query(args);
 
+            // Una escritura en lote que no toco ninguna fila no es un hecho que
+            // auditar: no cambio nada. Registrarla igual llenaba la bitacora de
+            // acciones que nunca pasaron —12.988 filas, el 65% del total, de un
+            // `updateMany` que corria en cada arranque del panel y casi siempre
+            // encontraba cero publicaciones que corregir— y encima se las
+            // atribuia al club de quien hacia la peticion, asi que clubes sin
+            // una sola publicacion aparecian moviendo publicaciones a diario.
+            //
+            // Se mira el `count` que devuelve Prisma y no la lista de cambios,
+            // porque un `updateMany` que si toco filas pero con los mismos
+            // valores si es una accion de alguien y tiene que quedar.
+            const lote = op === 'updateMany' || op === 'deleteMany';
+            if (lote && (resultado as { count?: number } | null)?.count === 0) {
+              return resultado;
+            }
+
             // El club afectado sale del registro cuando lo tiene; si no, del
             // club de quien hizo la peticion.
             const fila = (resultado ?? antes) as Record<string, unknown> | null;

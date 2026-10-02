@@ -137,6 +137,11 @@ model User {
   role            Role      @default(ADMIN)
   profileComplete Boolean   @default(false)
   termsAcceptedAt DateTime?
+  // Que version de los documentos acepto. Sin esto, cambiar el texto no
+  // vuelve a preguntarle a nadie y la aceptacion vieja queda amparando un
+  // documento que ya no existe. La prueba vive en AceptacionLegal; esto es
+  // solo el atajo para no consultar la bitacora en cada carga.
+  terminosVersion String?
   // Cuando este administrador aplazo el modal de «arma tu horario», y cuantas
   // veces. Van en el User y no en el Club a proposito: la tarea SI es del club
   // —sigue viva hasta que alguien la haga— pero el fastidio de que te la
@@ -1012,4 +1017,57 @@ enum TipoPlan {
 enum PostScope {
   PUBLIC
   PRIVATE
+}
+
+// ─── AceptacionLegal ─────────────────────────────────────────────────────────
+
+enum OrigenAceptacion {
+  COMPUERTA    // la pantalla que bloquea el panel hasta aceptar
+  INSCRIPCION  // la casilla del formulario de inscripcion por enlace
+}
+
+/// Una fila por cada vez que alguien acepta. **Nunca se edita ni se borra.**
+///
+/// El campo `termsAcceptedAt` del User no sirve como prueba: es uno solo y se
+/// sobrescribe, asi que al cambiar el documento la aceptacion anterior
+/// desaparece y no queda rastro de que fue lo que se acepto. Esto es lo que se
+/// muestra cuando alguien pregunta, y por eso solo crece.
+///
+/// **El titular va copiado en texto y no por relacion, a proposito.** Una
+/// relacion con borrado en cascada se llevaria justo la evidencia el dia que se
+/// borre la cuenta, que es el dia en que mas falta hace. Conservar estos datos
+/// despues de una supresion esta amparado en el deber de probar el
+/// consentimiento; no se usan para nada mas.
+model AceptacionLegal {
+  id String @id @default(cuid())
+
+  userId        String?
+  titularNombre String
+  titularEmail  String
+  clubId        String?
+  clubNombre    String?
+
+  // Dos casillas, dos respuestas. El contrato del servicio y la autorizacion
+  // de datos son actos distintos y se prueban por separado.
+  aceptoTerminos Boolean
+  autorizoDatos  Boolean
+
+  // La fecha de la version aceptada. El texto de esa version queda congelado en
+  // `docs/legal/` dentro del repositorio, asi que siempre se puede recuperar.
+  version String
+
+  // Cuando el titular es menor de edad, quien autorizo en su nombre. Sin esto
+  // una casilla marcada en la cuenta de un menor no prueba nada.
+  porMenor          Boolean @default(false)
+  autorizanteNombre String?
+  autorizanteDoc    String?
+
+  ip        String?
+  navegador String?
+  origen    OrigenAceptacion
+  creadoEn  DateTime         @default(now())
+
+  @@index([userId])
+  @@index([clubId])
+  @@index([creadoEn])
 }

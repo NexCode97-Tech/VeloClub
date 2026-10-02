@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { z } from 'zod';
 import { requireAuth } from '../auth/middleware';
 import { selectorDeDeporte } from '../lib/deportes';
 import { estadoPrimerHorario } from '../lib/primer-horario';
@@ -6,6 +7,7 @@ import { prisma } from '../db/client';
 import { v2 as cloudinary } from 'cloudinary';
 import { revokeClerkAccess } from '../lib/clerk-sesiones';
 import { verificarYDesactivarSiVencido } from '../lib/sync-suscripciones';
+import { registrarAceptacion, VERSION_DOCUMENTOS } from '../lib/aceptaciones';
 import { validarSubida } from '../lib/upload-guard';
 import { uploadLimiter } from '../lib/rate-limit';
 
@@ -132,8 +134,11 @@ if (superadminEmails.includes(email.toLowerCase())) {
         data: { fullName: resolvedName },
       });
     }
-    if (user.name !== resolvedName || user.picture !== picture) {
-      const nombreCambio = user.name !== resolvedName;
+    // Las dos se miran antes de escribir: despues del update `user` ya trae los
+    // valores nuevos y no queda forma de saber que se movio.
+    const nombreCambio = user.name !== resolvedName;
+    const fotoCambio   = user.picture !== picture;
+    if (nombreCambio || fotoCambio) {
       user = await prisma.user.update({
         where: { clerkId },
         data: { name: resolvedName, picture },
@@ -162,9 +167,6 @@ if (superadminEmails.includes(email.toLowerCase())) {
     }
 
     // Sincronizar foto de Clerk/Google al Member, Posts y Comentarios si cambió
-    if (picture && user.picture === picture) {
-      // La foto es la misma que ya tenemos — verificar si posts/comments están desactualizados
-    }
     if (picture) {
       // Se busca por clerkId O por email, igual que el nombre unas líneas más
       // arriba. Antes solo miraba clerkId, y un miembro creado por el club no
@@ -184,19 +186,30 @@ if (superadminEmails.includes(email.toLowerCase())) {
         });
       }
 
-      // Sincronizar authorAvatar en Posts y Comentarios del usuario
-      // Se hace siempre (no solo cuando cambia) para cubrir posts creados antes de la sincronización
-      const userName = user.name;
-      await Promise.all([
-        prisma.post.updateMany({
-          where: { authorName: userName, clubId: user.clubId ?? undefined, authorAvatar: { not: picture } },
-          data: { authorAvatar: picture },
-        }),
-        prisma.postComment.updateMany({
-          where: { authorName: userName, authorAvatar: { not: picture } },
-          data: { authorAvatar: picture },
-        }),
-      ]);
+      // La firma de lo ya publicado tambien lleva la foto, asi que al cambiarla
+      // hay que bajarla a lo que ya esta en el muro.
+      //
+      // **Solo cuando cambio.** Esto corria en cada llamada a /me, que es el
+      // arranque de cada carga del panel, con el argumento de alcanzar las
+      // publicaciones viejas. El costo era dos escrituras, dos lecturas del
+      // «antes» que hace la auditoria y dos filas de bitacora por cada visita
+      // de cada persona, aunque no hubiera una sola publicacion que corregir:
+      // 12.988 registros fantasma, el 65% de la bitacora entera, en clubes que
+      // ni siquiera habian publicado nada. Lo historico se arregla una vez con
+      // un script, no en cada arranque de cada usuario para siempre.
+      if (fotoCambio) {
+        const userName = user.name;
+        await Promise.all([
+          prisma.post.updateMany({
+            where: { authorName: userName, clubId: user.clubId ?? undefined, authorAvatar: { not: picture } },
+            data: { authorAvatar: picture },
+          }),
+          prisma.postComment.updateMany({
+            where: { authorName: userName, authorAvatar: { not: picture } },
+            data: { authorAvatar: picture },
+          }),
+        ]);
+      }
     }
 
     // Check club active — incluir el rol es imprescindible: la página /inactivo
@@ -538,17 +551,85 @@ router.delete('/', requireAuth, async (req, res) => {
   res.json({ ok: true });
 });
 
-// PATCH /me/accept-terms — el usuario acepta la Política de Tratamiento de Datos
-// y los Términos y Condiciones. Aplica a todos los roles con User (ADMIN, ENTRENADOR,
-// DEPORTISTA); el superadmin nunca llega aquí porque /me lo redirige antes.
+// PATCH /me/accept-terms — acepta los Terminos y autoriza el tratamiento de
+// datos. Aplica a todos los roles con User; el superadmin nunca llega aca
+// porque /me lo redirige antes.
+//
+// Las dos casillas van por separado y las dos son obligatorias. Son actos
+// distintos —un contrato y una autorizacion de habeas data— y el Decreto 1377
+// pide que la de datos sea especifica: con una sola respuesta no se puede
+// demostrar cual de las dos cosas acepto la persona.
+//
+// En la cuenta de un menor la autorizacion la da su representante legal, y sin
+// saber quien fue no prueba nada, asi que el nombre y el documento son
+// obligatorios en ese caso.
+const esquemaAceptacion = z.object({
+  aceptoTerminos: z.literal(true),
+  autorizoDatos: z.literal(true),
+  porMenor: z.boolean().optional(),
+  autorizanteNombre: z.string().trim().min(3).max(120).optional(),
+  autorizanteDoc: z.string().trim().min(4).max(30).optional(),
+}).refine(
+  d => !d.porMenor || (!!d.autorizanteNombre && !!d.autorizanteDoc),
+  { message: 'Falta el nombre y el documento de quien autoriza' },
+);
+
 router.patch('/accept-terms', requireAuth, async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'No autenticado' });
+
+  const datos = esquemaAceptacion.safeParse(req.body ?? {});
+  if (!datos.success) {
+    return res.status(400).json({ error: datos.error.issues[0]?.message ?? 'Faltan datos' });
+  }
+
+  const quien = await prisma.user.findUnique({
+    where: { id: req.user.id },
+    select: { name: true, email: true, clubId: true, club: { select: { name: true } } },
+  });
+  if (!quien) return res.status(404).json({ error: 'Usuario no encontrado' });
+
+  // Primero la constancia y despues la marca. Al reves, una caida entre las dos
+  // dejaria a alguien adentro sin prueba de que acepto, que es el unico caso que
+  // esta tabla existe para evitar.
+  await registrarAceptacion(req, {
+    userId: req.user.id,
+    titularNombre: quien.name,
+    titularEmail: quien.email,
+    clubId: quien.clubId,
+    clubNombre: quien.club?.name ?? null,
+    aceptoTerminos: true,
+    autorizoDatos: true,
+    origen: 'COMPUERTA',
+    porMenor: datos.data.porMenor ?? false,
+    autorizanteNombre: datos.data.autorizanteNombre ?? null,
+    autorizanteDoc: datos.data.autorizanteDoc ?? null,
+  });
+
   const user = await prisma.user.update({
     where: { id: req.user.id },
-    data: { termsAcceptedAt: new Date() },
-    select: { termsAcceptedAt: true },
+    data: { termsAcceptedAt: new Date(), terminosVersion: VERSION_DOCUMENTOS },
+    select: { termsAcceptedAt: true, terminosVersion: true },
   });
-  res.json({ termsAcceptedAt: user.termsAcceptedAt });
+  res.json(user);
+});
+
+// GET /me/aceptaciones — lo que esta persona ha aceptado, y cuando.
+//
+// La politica promete que el titular puede consultar su autorizacion en
+// cualquier momento. Esta ruta es esa promesa; sin ella el documento dice algo
+// que el producto no hace.
+router.get('/aceptaciones', requireAuth, async (req, res) => {
+  if (!req.user) return res.status(401).json({ error: 'No autenticado' });
+  const filas = await prisma.aceptacionLegal.findMany({
+    where: { userId: req.user.id },
+    orderBy: { creadoEn: 'desc' },
+    select: {
+      id: true, creadoEn: true, version: true, origen: true,
+      aceptoTerminos: true, autorizoDatos: true,
+      porMenor: true, autorizanteNombre: true,
+    },
+  });
+  res.json({ aceptaciones: filas, versionVigente: VERSION_DOCUMENTOS });
 });
 
 // POST /me/aplazar-horario — «Ahora no» del modal de armar el horario.

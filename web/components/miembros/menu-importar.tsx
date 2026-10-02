@@ -24,6 +24,10 @@ interface Props {
   onExcel: () => void;
 }
 
+/** Ancho del menú y el aire mínimo que deja contra el borde de la pantalla. */
+const ANCHO = 282;
+const AIRE = 12;
+
 export function MenuImportar({ abierto, onCerrar, anclaje, onFormulario, onExcel }: Props) {
   const caja = useRef<HTMLDivElement>(null);
 
@@ -35,6 +39,13 @@ export function MenuImportar({ abierto, onCerrar, anclaje, onFormulario, onExcel
   }, [abierto, onCerrar]);
 
   if (typeof document === 'undefined') return null;
+
+  // Se cuelga del botón, pero sin salirse de la pantalla. En el celular el botón
+  // de Importar queda a 120px del borde derecho, y un menú de 282 colgado de ahí
+  // se salía unos 12px por la izquierda: se cortaba el inicio de cada opción.
+  const derecha = anclaje
+    ? Math.max(AIRE, Math.min(anclaje.right, window.innerWidth - ANCHO - AIRE))
+    : 0;
 
   return createPortal(
     <AnimatePresence>
@@ -51,12 +62,12 @@ export function MenuImportar({ abierto, onCerrar, anclaje, onFormulario, onExcel
             style={{
               zIndex: 119,
               top: anclaje.top,
-              right: anclaje.right,
-              width: 282,
+              right: derecha,
+              width: ANCHO,
               boxShadow: '0 10px 30px rgba(20,10,40,0.16)',
             }}
           >
-            <p className="text-[9.5px] font-mono uppercase tracking-[0.11em] text-muted-foreground/70 px-2.5 pt-1.5 pb-1 m-0">
+            <p className="text-[11px] font-semibold text-muted-foreground px-2.5 pt-1.5 pb-1 m-0">
               Traer varios deportistas
             </p>
 

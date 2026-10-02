@@ -39,7 +39,12 @@ export default function LandingVitrina() {
 
     const escalar = () => {
       const ancho = primera.clientWidth;
-      if (ancho > 0) vitrina.style.setProperty('--esc', String(ancho / 1440));
+      if (ancho <= 0) return;
+      // Contra qué se encoge. En pantalla grande entra el lienzo completo; en
+      // móvil el CSS baja `--base` para entrar en la pantalla en vez de
+      // encogerla, así que el divisor lo manda la hoja de estilos y no esto.
+      const base = parseFloat(getComputedStyle(vitrina).getPropertyValue('--base')) || 1440;
+      vitrina.style.setProperty('--esc', String(ancho / base));
     };
     escalar();
 
@@ -179,23 +184,39 @@ export default function LandingVitrina() {
      la fija el guion de abajo contra el ancho real de la ventana, porque una
      escala escrita a mano solo cuadra al ancho para el que se calculó. */
   .vt-zona .lienzo{width:1440px;transform-origin:0 0;position:absolute;inset:0;
-    transform:scale(var(--esc,.48))}
+    transform:scale(var(--esc,.48)) translateX(var(--corre,0px))}
 
   @media (prefers-reduced-motion:reduce){
     .vt-zona .ventana{transition:none}
   }
 
-  /* En móvil solo cabe una, y es la de la izquierda. Dos pantallas apiladas en
-     390px quedan ilegibles las dos, y el relevo por cursor no existe en algo
-     que se toca. */
+  /* En móvil se turnan: el texto que se toca trae su pantalla. Dos a la vez
+     en 390px quedan ilegibles las dos, y el relevo por cursor no existe en
+     algo que se toca.
+
+     Y hay que **entrar** en la pantalla, no encogerla entera. El panel
+     completo a ese ancho queda en una cuarta parte de su tamaño y no se
+     distingue nada: se corre la barra lateral fuera del cuadro y la escala se
+     calcula contra el ancho del contenido, no contra los 1440 del lienzo. El
+     costado derecho queda cortado a propósito, que es el mismo gesto que la
+     máscara hace en pantalla grande. */
   @media (max-width:760px){
-    .vt-zona .vitrina{aspect-ratio:760/420}
-    .vt-zona .r-der{display:none}
-    .vt-zona .letreros{grid-template-columns:1fr}
-    .vt-zona .letrero[data-panel="der"]{display:none}
-    .vt-zona .r-izq{left:3%;width:94%}
-    .vt-zona .r-izq .ventana{-webkit-mask-image:none;mask-image:none;
+    .vt-zona .vitrina{--base:1020;aspect-ratio:760/500}
+    .vt-zona .lienzo{--corre:-240px}
+
+    .vt-zona .letreros{grid-template-columns:1fr;gap:18px;margin-top:28px}
+    .vt-zona .letrero{cursor:pointer}
+    .vt-zona .letrero p{max-width:none}
+
+    /* Las dos ocupan el mismo sitio y se cambian con opacidad. Las dos siguen
+       midiendo a propósito: con \`display:none\` la ventana queda en cero y la
+       medida de la que sale la escala se pierde. */
+    .vt-zona .ranura{left:3%;width:94%;opacity:0;pointer-events:none;
+      transition:opacity .35s cubic-bezier(.22,.61,.36,1)}
+    .vt-zona .ranura.activa{opacity:1;pointer-events:auto}
+    .vt-zona .ranura .ventana{-webkit-mask-image:none;mask-image:none;
       transform:translateY(0)}
+    .vt-zona .ranura.activa .ventana{transform:translateY(0)}
   }
 
   /* ── La app ────────────────────────────────────────────── */
@@ -450,6 +471,7 @@ export default function LandingVitrina() {
             <div
               className={`letrero${activa === 'izq' ? '' : ' apagado'}`}
               onMouseEnter={() => setActiva('izq')}
+              onClick={() => setActiva('izq')}
             >
               <h3>Miembros</h3>
               <p>Cada deportista con su ficha completa, su sede y su acudiente. Se
@@ -458,6 +480,7 @@ export default function LandingVitrina() {
             <div
               className={`letrero${activa === 'der' ? '' : ' apagado'}`}
               onMouseEnter={() => setActiva('der')}
+              onClick={() => setActiva('der')}
             >
               <h3>Finanzas</h3>
               <p>Quién pagó y quién no, mes a mes. El recordatorio sale por WhatsApp

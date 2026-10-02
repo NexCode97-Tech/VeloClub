@@ -47,6 +47,10 @@ model Club {
   // Se limpia al registrar un pago real o al desactivar manualmente.
   activadoManualmente       Boolean           @default(false)
   trialEndsAt               DateTime?
+  // El ultimo aviso de fin de prueba que se le mando, en dias antes del
+  // final: 7, 3 o 0. Sin esto el recorrido diario le repetiria el mismo
+  // aviso cada dia, que es como se entrena a la gente a ignorarlos.
+  trialUltimoAviso Int?
   deporte                   String?
   // Fecha real de fundacion del club, la que el admin declara en Ajustes. No
   // confundir con createdAt, que es cuando se registraron en la plataforma.

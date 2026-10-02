@@ -36,6 +36,7 @@ import { startWorkers } from './workers';
 import { prisma } from './db/client';
 import { getRedis, conectarRedis } from './lib/redis';
 import { revisarSalud } from './lib/salud';
+import { avisarTrialesPorVencer } from './lib/trial';
 import { sincronizarMontosSuscripciones, recordarVencimientosProximos, desactivarClubesVencidos } from './lib/sync-suscripciones';
 import { conciliarComisiones } from './lib/finanzas-plataforma';
 
@@ -205,11 +206,16 @@ const server = app.listen(PORT, () => {
   setTimeout(() => {
     sincronizarMontosSuscripciones().catch(err => console.error('[sync-suscripciones-monto:boot]', err));
     recordarVencimientosProximos().catch(err => console.error('[recordar-vencimientos:boot]', err));
+    // El de arriba solo le habla a quien ya tiene suscripcion. Este cubre a los
+    // que siguen en prueba y nunca abrieron el flujo de pago, que no recibian
+    // ningun aviso de que se les acababa.
+    avisarTrialesPorVencer().catch(err => console.error('[trial-por-vencer:boot]', err));
     desactivarClubesVencidos().catch(err => console.error('[desactivar-vencidos:boot]', err));
     conciliarComisiones().catch(err => console.error('[conciliar-comisiones:boot]', err));
     setInterval(() => {
       sincronizarMontosSuscripciones().catch(err => console.error('[sync-suscripciones-monto:interval]', err));
       recordarVencimientosProximos().catch(err => console.error('[recordar-vencimientos:interval]', err));
+      avisarTrialesPorVencer().catch(err => console.error('[trial-por-vencer:interval]', err));
       desactivarClubesVencidos().catch(err => console.error('[desactivar-vencidos:interval]', err));
     }, 24 * 60 * 60 * 1000);
   }, 2 * 60 * 1000);

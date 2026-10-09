@@ -5,6 +5,50 @@ Actualizar al final de cada sesión o cuando se complete un bloque de trabajo im
 
 ---
 
+## Sesión 2026-10-09 — Crear club y la inscripción por enlace
+
+**Modelo:** Claude Opus 5.5
+
+Se reportaron problemas al crear clubes. Se revisaron los logs de Railway,
+Sentry y la base.
+
+### Crear club desde el superadmin
+
+El 9 de octubre se crearon bien NIEVES JAB CLUB y ORGULLO PAISA, y después
+hubo siete intentos fallidos de crear un tercero. La ruta tiene dos rechazos:
+el correo del admin ya está en otro club, que la pantalla sí decía, y un dato
+que no pasa la validación, que no decía. Para eso devolvía la lista de zod, y
+`apiFetch` solo pinta el `error` cuando es texto, así que salía un mensaje
+genérico.
+
+- `lib/mensaje-validacion.ts` convierte el primer problema en una frase con el
+  nombre del campo («El correo del admin no es un correo válido»).
+- El esquema recorta antes de validar y pasa el correo a minúscula. El
+  autocompletado del celular deja un espacio al final y `email()` lo rechazaba.
+- El correo repetido se busca sin distinguir mayúsculas.
+
+No se sabe cuál de los dos casos fue el del 9 de octubre: el log no guarda el
+cuerpo de la petición.
+
+### La inscripción por enlace nunca había funcionado en producción
+
+De 1.668 fichas, ninguna tiene `origen = FORMULARIO`, y no hay un solo
+`INSCRIPCION_RECIBIDA` en la auditoría. El único club que lo usó, Nueva
+Generación, falló doce veces el 7 de octubre (VELOCLUB-API-9).
+
+La causa está en la configuración de Clerk de producción, que se lee en
+`clerk.veloclubtech.com/v1/environment`: exige una clave de fuerza zxcvbn 2 y
+rechaza las filtradas. El formulario solo pide 8 caracteres, así que «12345678»
+pasaba el formulario y Clerk la rechazaba. El arreglo de `2c3890c` ya lee el
+código de Clerk y lleva al campo de la clave con el motivo. Se revisó y se le
+agregaron pruebas con los códigos reales (`tests/clerk-errores.test.ts`).
+Todavía no hay una inscripción real que lo confirme.
+
+Pendiente propuesto y no aprobado: avisar en el paso de la clave que no puede
+ser fácil, para que no se entere al final.
+
+---
+
 ## Sesión 2026-10-01 — La vitrina, legible en el teléfono
 
 **Modelo:** Claude Opus 5

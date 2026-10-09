@@ -14,6 +14,16 @@ import { emitToClub } from '../lib/sse';
 import { notifyClubStaff } from '../lib/notify';
 import { activarClubTrasPago } from '../lib/sync-suscripciones';
 import { usoPorClub } from '../lib/uso-plataforma';
+import { mensajeDeValidacion } from '../lib/mensaje-validacion';
+
+/** Cómo se llama cada campo del formulario de crear club, para el mensaje de error. */
+const CAMPOS_CLUB: Record<string, string> = {
+  clubName:   'El nombre del club',
+  adminEmail: 'El correo del admin',
+  adminName:  'El nombre del admin',
+  adminPhone: 'El celular del admin',
+  deporte:    'El deporte',
+};
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -39,10 +49,13 @@ async function crearNotificacion(tipo: any, titulo: string, cuerpo: string) {
 // ─── Clubs ────────────────────────────────────────────────────────────────────
 
 const createClubSchema = z.object({
-  clubName:   z.string().min(2).max(100),
-  adminEmail: z.string().email(),
-  adminName:  z.string().min(2).max(100),
-  adminPhone: z.string().max(30).optional(),
+  // Recortados antes de validar: un correo pegado o autocompletado en el
+  // celular suele traer un espacio al final, y con él `email()` lo rechaza
+  // aunque el correo esté bien.
+  clubName:   z.string().trim().min(2).max(100),
+  adminEmail: z.string().trim().toLowerCase().email(),
+  adminName:  z.string().trim().min(2).max(100),
+  adminPhone: z.string().trim().max(30).optional(),
   deporte:    z.string().optional(),
 });
 
@@ -60,11 +73,15 @@ router.get('/clubs', requireAuth, requireSuperadmin, async (_req, res) => {
 
 router.post('/clubs', requireAuth, requireSuperadmin, async (req, res) => {
   const parsed = createClubSchema.safeParse(req.body);
-  if (!parsed.success) return res.status(400).json({ error: parsed.error.issues });
+  // En texto y no la lista de zod: la pantalla solo sabe pintar un mensaje, y
+  // con la lista mostraba un error genérico sin decir qué dato estaba mal.
+  if (!parsed.success) return res.status(400).json({ error: mensajeDeValidacion(parsed.error.issues, CAMPOS_CLUB) });
 
   const { clubName, adminEmail, adminName, adminPhone, deporte } = parsed.data;
 
-  const existing = await prisma.member.findFirst({ where: { email: adminEmail } });
+  // Sin distinguir mayúsculas: las fichas viejas guardan el correo como se
+  // escribió, y «Juan@gmail.com» y «juan@gmail.com» son la misma persona.
+  const existing = await prisma.member.findFirst({ where: { email: { equals: adminEmail, mode: 'insensitive' } } });
   if (existing) return res.status(400).json({ error: 'Este email ya está registrado en otro club' });
 
   // Si ese correo ya tiene una cuenta de login (User) de un club anterior, la

@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import * as Sentry from '@sentry/node';
+import { codigosClerk, traducirErrorClerk } from '../lib/clerk-errores';
 import { Prisma } from '@prisma/client';
 import { prisma, prismaClubEntero } from '../db/client';
 import { fijarAlcance } from '../lib/contexto-peticion';
@@ -316,14 +317,10 @@ router.post('/:token', inscripcionLimiter, inscripcionPorEnlaceLimiter, async (r
         cuentaNueva = cuenta.id;
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
-        if (/already|taken|exists/i.test(msg)) {
-          return res.status(409).json({ campo: 'email', error: 'Ese correo ya tiene una cuenta. Usa otro para este deportista.' });
-        }
-        if (/password|pwned|breach|weak|common/i.test(msg)) {
-          return res.status(400).json({ campo: 'password', error: 'Esa contraseña es muy fácil de adivinar. Elige otra.' });
-        }
-        console.error('[inscripcion] no se pudo crear la cuenta del reconocido', msg);
-        Sentry.captureException(err, { tags: { route: 'inscripcion/actualizar' }, extra: { clubId: club.id } });
+        const t = traducirErrorClerk(err);
+        if (t) return res.status(t.status).json({ campo: t.campo, error: t.error });
+        console.error('[inscripcion] no se pudo crear la cuenta del reconocido', msg, codigosClerk(err));
+        Sentry.captureException(err, { tags: { route: 'inscripcion/actualizar' }, extra: { clubId: club.id, clerk: codigosClerk(err) } });
         return res.status(500).json({ error: 'No se pudo crear la cuenta. Intenta de nuevo.' });
       }
     }
@@ -402,18 +399,12 @@ router.post('/:token', inscripcionLimiter, inscripcionPorEnlaceLimiter, async (r
     clerkId = cuenta.id;
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
-    console.error('[inscripcion] no se pudo crear la cuenta', msg);
-    // Clerk responde con detalle util (correo ya usado en otro club, clave
-    // debil). Se traduce a algo accionable en vez del error crudo.
-    const yaUsado = /already|taken|exists/i.test(msg);
-    const claveDebil = /password|pwned|breach|weak|common/i.test(msg);
-    if (yaUsado) {
-      return res.status(409).json({ campo: 'email', error: 'Ese correo ya tiene una cuenta. Usa otro para este deportista.' });
-    }
-    if (claveDebil) {
-      return res.status(400).json({ campo: 'password', error: 'Esa contraseña es muy fácil de adivinar. Elige otra.' });
-    }
-    Sentry.captureException(err, { tags: { route: 'inscripcion/enviar' }, extra: { clubId: club.id } });
+    console.error('[inscripcion] no se pudo crear la cuenta', msg, codigosClerk(err));
+    // Clerk responde 422 con el motivo en errors[].code (correo ya usado, clave débil o corta, correo
+    // inválido): se traduce a algo accionable en vez del error crudo (VELOCLUB-API-9).
+    const t = traducirErrorClerk(err);
+    if (t) return res.status(t.status).json({ campo: t.campo, error: t.error });
+    Sentry.captureException(err, { tags: { route: 'inscripcion/enviar' }, extra: { clubId: club.id, clerk: codigosClerk(err) } });
     return res.status(500).json({ error: 'No se pudo crear la cuenta. Intenta de nuevo.' });
   }
 

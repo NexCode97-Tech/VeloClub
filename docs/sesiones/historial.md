@@ -5,6 +5,27 @@ Actualizar al final de cada sesión o cuando se complete un bloque de trabajo im
 
 ---
 
+## 2026-10-17 — Warrior Team, trimestre pagado por fuera
+
+El club pagó $180.000 directamente, sin pasar por la plataforma, y le salía que
+no tenía membresía porque no había ningún `SuscripcionPago`. Nunca llegó a
+intentar pagar por la app (`consentimientoPagoAt` vacío). El plan ya estaba en
+trimestral.
+
+Se registró a mano en una transacción, con la aprobación del usuario y
+saltándose a propósito la regla de registrar estos pagos por el panel:
+
+- `SuscripcionPago` PAID de $180.000, concepto «Trimestre pagado por fuera».
+- Fecha del 30 de septiembre, el fin de su prueba: un pago hecho durante la
+  prueba cuenta desde que termina. Vigente hasta el 29 de diciembre.
+- `planMonto` pasó de 50.000 a 180.000, que es lo que vale el trimestre.
+- Al club se le limpió `trialEndsAt`, igual que hace `activarClubTrasPago`.
+- Fila `PAGO_REGISTRADO_A_MANO` en la auditoría, a nombre de NexCode97.
+
+No se anotó como ingreso manual en Finanzas: ya cuenta por `SuscripcionPago`.
+
+---
+
 ## Sesión 2026-10-09 — Crear club y la inscripción por enlace
 
 **Modelo:** Claude Opus 5.5

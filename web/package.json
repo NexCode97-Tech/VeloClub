@@ -32,7 +32,7 @@
     "jspdf-autotable": "^5.0.7",
     "leaflet": "^1.9.4",
     "lucide-react": "^1.12.0",
-    "next": "16.3.5",
+    "next": "16.3.8",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "react-image-crop": "^11.0.10",
@@ -57,9 +57,9 @@
     "@types/three": "^0.184.1",
     "esbuild": "^0.28.2",
     "eslint": "^9",
-    "eslint-config-next": "16.3.5",
+    "eslint-config-next": "16.3.8",
     "serwist": "9.5.12",
-    "sharp": "^0.35.4",
+    "sharp": "^0.35.5",
     "tailwindcss": "^4",
     "typescript": "^5"
   },
@@ -72,7 +72,10 @@
       "ip-address": ">=10.3.1",
       "nanoid": ">=3.3.16",
       "postcss": ">=8.5.18",
-      "browserslist": ">=4.28.7"
+      "browserslist": ">=4.28.7",
+      "proxy-addr": ">=2.0.8",
+      "@modelcontextprotocol/sdk": ">=1.31.0",
+      "source-map-js": ">=1.2.2"
     }
   }
 }

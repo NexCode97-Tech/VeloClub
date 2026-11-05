@@ -41,16 +41,16 @@ const TABS = [
 ];
 
 // La barra de abajo del celular, armada igual que la del club: dos modulos, el
-// boton Mas en el centro, Finanzas y el perfil. Seis modulos mas el perfil en
-// una fila no cabian en un telefono.
+// boton Mas en el centro y dos modulos mas. Seis modulos mas el perfil en una
+// fila no cabian en un telefono. El perfil va arriba, en la cabecera, como el
+// del admin de un club.
 const TABS_MOVIL_IZQ = ['/superadmin', '/superadmin/clubs'];
-const TABS_MOVIL_DER = ['/superadmin/finanzas'];
+const TABS_MOVIL_DER = ['/superadmin/finanzas', '/superadmin/uso'];
 
 // Lo que no se abre todos los dias va detras de Mas.
 const MAS_ITEMS: CircleMenuItem[] = [
   { label: 'Cupones',  icon: IconCupon,      href: '/superadmin/cupones',  color: '#F59E0B' },
   { label: 'Reportes', icon: IconReporte,    href: '/superadmin/reportes', color: '#EF476F' },
-  { label: 'Uso',      icon: IconStatistics, href: '/superadmin/uso',      color: '#4361EE' },
 ];
 
 const SCREEN_LABELS: Record<string, string> = {
@@ -538,6 +538,19 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
             </div>
           )}
         </motion.button>
+
+        {/* Mi perfil, como el del admin de un club: la persona a la derecha de
+            la cabecera, no en la barra de abajo, que queda para los modulos. */}
+        <div className="md:hidden w-[34px] h-[34px] flex items-center justify-center">
+          <UserButton
+            appearance={{
+              elements: {
+                avatarBox: { width: 34, height: 34, borderRadius: '50%' },
+                userButtonPopoverCard: { borderRadius: 16 },
+              },
+            }}
+          />
+        </div>
         </>
         )}
       </div>
@@ -712,11 +725,11 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
           </div>
         ) : (() => {
           // Mismo orden y mismas piezas que la barra del club: dos tabs, el
-          // circulo de Mas con su joroba, y a la derecha Finanzas y el perfil.
+          // circulo de Mas con su joroba, y a la derecha Finanzas y Uso.
           const tab = (href: string) => TABS.find(t => t.href === href)!;
           const esActivo = (t: (typeof TABS)[number]) => t.exact ? pathname === t.href : pathname.startsWith(t.href);
           const ranuras = [...TABS_MOVIL_IZQ.map(tab), null, ...TABS_MOVIL_DER.map(tab)];
-          const total = ranuras.length + 1; // + el perfil
+          const total = ranuras.length;
           const activeIdx = ranuras.findIndex(t => t !== null && esActivo(t));
           return (
             <div
@@ -792,22 +805,6 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
                 );
               })}
 
-              {/* Perfil — UserButton (fusiona Config + Perfil) */}
-              <div className="flex-1 flex flex-col items-center relative z-10" style={{ gap: 4, paddingBottom: 2 }}>
-                <div className="flex items-center justify-center" style={{ width: 44, height: 44 }}>
-                  <UserButton
-                    appearance={{
-                      elements: {
-                        avatarBox: { width: 38, height: 38, borderRadius: '50%' },
-                        userButtonPopoverCard: { borderRadius: 16 },
-                      },
-                    }}
-                  />
-                </div>
-                <span className="text-[9px] tracking-wide leading-none" style={{ color: '#8E87A8', fontWeight: 500 }}>
-                  Perfil
-                </span>
-              </div>
             </div>
           );
         })()}

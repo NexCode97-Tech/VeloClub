@@ -45,6 +45,9 @@ const COLOR_CATEGORIA: Record<string, string> = {
   PUBLICIDAD:      '#38BDF8',
   HERRAMIENTAS:    '#0E7C57',
   OTROS:           '#1A1028',
+  // Plata devuelta a un club. Ambar: no es un costo de operar, es un ingreso
+  // que se deshizo, y no debe confundirse con el rojo de las comisiones.
+  REEMBOLSOS:      '#F59E0B',
 };
 
 /**
@@ -58,7 +61,14 @@ const CATEGORIAS = [
   { valor: 'PUBLICIDAD',      texto: 'Publicidad',      nota: 'Pauta y promoción' },
   { valor: 'HERRAMIENTAS',    texto: 'Herramientas',    nota: 'Programas y servicios de trabajo' },
   { valor: 'OTROS',           texto: 'Otros' },
+  { valor: 'REEMBOLSOS',      texto: 'Reembolsos',      nota: 'Plata devuelta a un club' },
 ].map(c => ({ ...c, color: COLOR_CATEGORIA[c.valor] }));
+
+/**
+ * Las que se pueden escribir a mano. Reembolsos no: lo anota el sistema cuando
+ * Mercado Pago devuelve un pago, y anotarlo también a mano lo contaría dos veces.
+ */
+const CATEGORIAS_A_MANO = CATEGORIAS.filter(c => c.valor !== 'REEMBOLSOS');
 
 /**
  * Con qué se abre la pantalla: el año en curso, de enero al mes de hoy.
@@ -565,7 +575,7 @@ export default function FinanzasSuperadmin() {
           <div className="col-span-2">
             {tipo === 'gasto' ? (
               <Campo etiqueta="Categoría">
-                <Desplegable valor={nuevo.categoria} opciones={CATEGORIAS} vacio="Elegir"
+                <Desplegable valor={nuevo.categoria} opciones={CATEGORIAS_A_MANO} vacio="Elegir"
                   titulo="Categoría del gasto"
                   onElegir={v => setNuevo(n => ({ ...n, categoria: v }))} />
               </Campo>

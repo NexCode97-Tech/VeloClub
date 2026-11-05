@@ -670,6 +670,9 @@ enum CategoriaGasto {
   PUBLICIDAD
   HERRAMIENTAS
   OTROS
+  // Plata devuelta a un club. La anota el sistema solo, con origen
+  // `reembolso:<paymentId>`; no se escribe a mano.
+  REEMBOLSOS
 }
 
 // ─── Cupones de descuento (checkout de suscripción) ──────────────────────────

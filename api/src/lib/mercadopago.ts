@@ -125,6 +125,9 @@ export async function obtenerPago(paymentId: string): Promise<{
   id: number; status: string; transaction_amount: number; external_reference: string | null;
   fee_details?: DetalleComision[];
   date_approved?: string | null;
+  /** Lo devuelto hasta ahora, sumando todos los reembolsos del pago. */
+  transaction_amount_refunded?: number;
+  refunds?: { id: number; amount: number; status: string; date_created: string }[];
 }> {
   return mpFetch(`/v1/payments/${paymentId}`, { method: 'GET' });
 }

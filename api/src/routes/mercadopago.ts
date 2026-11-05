@@ -17,6 +17,7 @@ import { registrarEvento } from '../lib/auditoria';
 import { guessLimiter, paymentLimiter } from '../lib/rate-limit';
 import { activarClubTrasPago } from '../lib/sync-suscripciones';
 import { validarCupon, descuentoCupon, registrarCanje } from '../lib/cupones';
+import { registrarReembolso } from '../lib/reembolsos';
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -821,7 +822,8 @@ router.post('/cancelar', requireAuth, async (req, res) => {
   if (periodoNoIniciado && ultimoPago!.mpPaymentId) {
     try {
       await reembolsarPago(ultimoPago!.mpPaymentId);
-      await prisma.suscripcionPago.update({ where: { id: ultimoPago!.id }, data: { estado: 'REFUNDED' } });
+      // Marca el pago y anota la devolución como salida en las finanzas.
+      await registrarReembolso({ mpPaymentId: ultimoPago!.mpPaymentId, monto: ultimoPago!.monto });
       reembolsado = true;
     } catch (err) {
       console.error('[mercadopago/cancelar] no se pudo reembolsar', err instanceof Error ? err.message : err);
@@ -946,6 +948,19 @@ router.post('/webhook', async (req, res) => {
     }
 
     const pago = await obtenerPago(String(dataId));
+
+    // Un reembolso o un contracargo, venga de donde venga, incluido el panel de
+    // Mercado Pago: se anota como salida y el pago deja de cubrir el período.
+    if (pago.status === 'refunded' || pago.status === 'charged_back' || Number(pago.transaction_amount_refunded ?? 0) > 0) {
+      const ultimo = (pago.refunds ?? []).map(r => r.date_created).filter(Boolean).sort().pop();
+      await registrarReembolso({
+        mpPaymentId: String(pago.id),
+        monto: Number(pago.transaction_amount_refunded || pago.transaction_amount),
+        fecha: ultimo ? new Date(ultimo) : new Date(),
+      });
+      return;
+    }
+
     if (pago.status !== 'approved' || !pago.external_reference) return;
 
     // external_reference: "sub-{suscripcionId}-{timestamp}" (checkout) o "{suscripcionId}" (preapproval)

@@ -39,6 +39,7 @@ import { revisarSalud } from './lib/salud';
 import { avisarTrialesPorVencer } from './lib/trial';
 import { sincronizarMontosSuscripciones, recordarVencimientosProximos, desactivarClubesVencidos } from './lib/sync-suscripciones';
 import { conciliarComisiones } from './lib/finanzas-plataforma';
+import { conciliarReembolsos } from './lib/reembolsos';
 
 dotenv.config();
 
@@ -212,6 +213,7 @@ const server = app.listen(PORT, () => {
     avisarTrialesPorVencer().catch(err => console.error('[trial-por-vencer:boot]', err));
     desactivarClubesVencidos().catch(err => console.error('[desactivar-vencidos:boot]', err));
     conciliarComisiones().catch(err => console.error('[conciliar-comisiones:boot]', err));
+    conciliarReembolsos().catch(err => console.error('[conciliar-reembolsos:boot]', err));
     setInterval(() => {
       sincronizarMontosSuscripciones().catch(err => console.error('[sync-suscripciones-monto:interval]', err));
       recordarVencimientosProximos().catch(err => console.error('[recordar-vencimientos:interval]', err));
@@ -230,6 +232,7 @@ const server = app.listen(PORT, () => {
   setInterval(() => {
     reconciliarPagosPendientes().catch(err => console.error('[reconciliar-pagos:interval]', err));
     conciliarComisiones().catch(err => console.error('[conciliar-comisiones:interval]', err));
+    conciliarReembolsos().catch(err => console.error('[conciliar-reembolsos:interval]', err));
   }, 20 * 60 * 1000);
 });
 

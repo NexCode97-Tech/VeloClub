@@ -73,7 +73,7 @@ export async function mesesDe(desde: Date, hasta: Date, porDia = false): Promise
               COUNT(DISTINCT s."clubId")::int                AS clubes
          FROM "SuscripcionPago" p
          JOIN "ClubSuscripcion" s ON s.id = p."suscripcionId"
-        WHERE p.estado = 'PAID' AND ${MES_DEL_PAGO} >= $1 AND ${MES_DEL_PAGO} < $2
+        WHERE p.estado IN ('PAID', 'REFUNDED') AND ${MES_DEL_PAGO} >= $1 AND ${MES_DEL_PAGO} < $2
         GROUP BY 1`,
       desde, hasta,
     ),
@@ -261,7 +261,10 @@ export async function gastosPorCategoria(desde: Date, hasta: Date): Promise<Gast
     .sort((a, b) => b.monto - a.monto);
 }
 
-/** Cuánto ha pagado cada club, desde siempre. */
+/**
+ * Cuánto ha pagado cada club, desde siempre. Solo lo que se quedó: un pago
+ * reembolsado no cuenta, porque esa plata volvió al club.
+ */
 export async function clubesQuePagan(): Promise<ClubQuePaga[]> {
   const filas = await prisma.$queryRaw<{ clubId: string; nombre: string; total: number }[]>`
     SELECT c.id AS "clubId", c.name AS nombre, SUM(p.monto)::float8 AS total
@@ -381,7 +384,9 @@ export async function pulsoDelNegocio(): Promise<PulsoDelNegocio> {
 
   const [recaudado, sueltos, gastado, clubes, clubesQuePaganN, enPrueba, deportistas, primerClub] =
     await Promise.all([
-      prisma.suscripcionPago.aggregate({ where: { estado: 'PAID' }, _sum: { monto: true } }),
+      // Lo cobrado, aunque después se haya devuelto: el reembolso sale en
+      // gastadoSiempre, con categoría REEMBOLSOS, y el neto queda bien.
+      prisma.suscripcionPago.aggregate({ where: { estado: { in: ['PAID', 'REFUNDED'] } }, _sum: { monto: true } }),
       prisma.ingresoPlataforma.aggregate({ _sum: { monto: true } }),
       prisma.gastoPlataforma.aggregate({ _sum: { monto: true } }),
       prisma.club.count(),

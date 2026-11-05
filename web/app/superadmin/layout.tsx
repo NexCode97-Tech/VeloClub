@@ -9,12 +9,13 @@ import { apiFetch } from '@/lib/api-client';
 import LoadingScreen, { LoadingCurtain, CURTAIN_MS, esperarPantallaCarga } from '@/components/ui/loading-screen';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Info, CircleDollarSign, ArrowLeft } from 'lucide-react';
+import { Info, ArrowLeft } from 'lucide-react';
 // Finanzas lleva el ícono propio del módulo: es el mismo que usa el panel del
 // club en su barra lateral, y sería raro que el mismo módulo se dibuje distinto
 // según desde dónde se mire.
 import {
-  IconAjustes, IconClub, IconCupon, IconFinanzas, IconHome, IconReporte, IconSalir, IconStatistics,
+  IconAjustes, IconClub, IconCupon, IconDesactivar, IconFinanzas, IconHome, IconIngresos,
+  IconNotificaciones, IconPendiente, IconReporte, IconSalir, IconStatistics,
 } from '@/components/ui/custom-icons';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BottomCircleMenu, type CircleMenuItem } from '@/components/ui/bottom-circle-menu';
@@ -66,7 +67,7 @@ const SCREEN_LABELS: Record<string, string> = {
 // sidebar de escritorio como en la barra inferior de movil.
 const TABS_CLUB = [
   { slug: '',         label: 'Información', Icon: Info             },
-  { slug: 'finanzas', label: 'Finanzas',    Icon: CircleDollarSign },
+  { slug: 'finanzas', label: 'Finanzas',    Icon: IconFinanzas },
 ];
 
 function hrefClub(id: string, slug: string): string {
@@ -79,28 +80,18 @@ function slugActivo(pathname: string, id: string): string {
   return resto;
 }
 
-// Ícono SVG por tipo de notificación — sin emojis
+// Ícono por tipo de notificación, con los dibujos propios de la app: los mismos
+// que ve un club en su campana, en vez de dibujos sueltos escritos acá.
 function TipoIcono({ tipo }: { tipo: string }) {
+  const clase = 'w-[14px] h-[14px]';
   const map: Record<string, { icon: React.ReactNode; color: string; bg: string }> = {
-    CLUB_CREADO:      {
-      icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>,
-      color: '#381DA0', bg: 'rgba(56,29,160,0.10)',
-    },
-    CLUB_DESACTIVADO: {
-      icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="10" y1="15" x2="10" y2="9"/><line x1="14" y1="15" x2="14" y2="9"/></svg>,
-      color: '#FFB703', bg: 'rgba(255,183,3,0.10)',
-    },
-    PAGO_VENCIDO:     {
-      icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>,
-      color: '#EF476F', bg: 'rgba(239,71,111,0.10)',
-    },
-    PAGO_REGISTRADO:  {
-      icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>,
-      color: '#06D6A0', bg: 'rgba(6,214,160,0.10)',
-    },
+    CLUB_CREADO:      { icon: <IconClub className={clase} />,       color: '#381DA0', bg: 'rgba(56,29,160,0.10)' },
+    CLUB_DESACTIVADO: { icon: <IconDesactivar className={clase} />, color: '#FFB703', bg: 'rgba(255,183,3,0.10)' },
+    PAGO_VENCIDO:     { icon: <IconPendiente className={clase} />,  color: '#EF476F', bg: 'rgba(239,71,111,0.10)' },
+    PAGO_REGISTRADO:  { icon: <IconIngresos className={clase} />,   color: '#06D6A0', bg: 'rgba(6,214,160,0.10)' },
   };
-  const m = map[tipo] ?? {
-    icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>,
+  const m = new Map(Object.entries(map)).get(tipo) ?? {
+    icon: <IconNotificaciones className={clase} />,
     color: '#8E87A8', bg: 'rgba(142,135,168,0.10)',
   };
   return (
@@ -223,10 +214,7 @@ const SuperadminSidebar = memo(function SuperadminSidebar({ pathname, noLeidas, 
               style={{ width: 28, height: 28, color: '#8E87A8' }}
               title="Notificaciones"
             >
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-                <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-              </svg>
+              <IconNotificaciones className="w-[15px] h-[15px]" />
               {noLeidas > 0 && (
                 <div className="absolute flex items-center justify-center" style={{ top: 2, right: 2, minWidth: 13, height: 13, borderRadius: 7, background: '#EF476F', border: '1.5px solid #fff', fontSize: 7.5, fontWeight: 600, color: '#fff', padding: '0 3px' }}>
                   {noLeidas > 9 ? '9+' : noLeidas}
@@ -271,7 +259,7 @@ const SuperadminSidebar = memo(function SuperadminSidebar({ pathname, noLeidas, 
                   style={{ height: 44, padding: collapsed ? 0 : '0 12px', justifyContent: collapsed ? 'center' : undefined, color: active ? ACCENT : '#8E87A8', background: active ? 'rgba(56,29,160,0.10)' : undefined }}
                   {...tipHandlers(m.label)}
                 >
-                  <m.Icon size={18} strokeWidth={active ? 2.5 : 2} className="shrink-0" />
+                  <m.Icon strokeWidth={active ? 2.5 : 2} className="shrink-0 w-[18px] h-[18px]" />
                   {!collapsed && <span>{m.label}</span>}
                 </Link>
               );
@@ -528,10 +516,7 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
           className="md:hidden w-[34px] h-[34px] rounded-full flex items-center justify-center relative"
           style={{ background: '#F0EEF8', border: '1px solid rgba(120,80,200,0.10)', color: '#8E87A8' }}
         >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-            <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-          </svg>
+          <IconNotificaciones className="w-[18px] h-[18px]" />
           {noLeidas > 0 && (
             <div className="absolute flex items-center justify-center" style={{ top: 5, right: 5, minWidth: 14, height: 14, borderRadius: 7, background: '#EF476F', border: '1.5px solid #F7F7FB', fontSize: 8, fontWeight: 600, color: '#fff', padding: '0 3px' }}>
               {noLeidas > 9 ? '9+' : noLeidas}
@@ -584,10 +569,7 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 {/* Ícono campana */}
                 <div style={{ width: 36, height: 36, borderRadius: 11, background: 'rgba(56,29,160,0.10)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#381DA0', flexShrink: 0 }}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-                    <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-                  </svg>
+                  <IconNotificaciones className="w-[16px] h-[16px]" />
                 </div>
                 <div style={{ flex: 1 }}>
                   <h3 style={{ margin: 0, fontSize: 15, fontWeight: 600, color: '#1A1028', fontFamily: 'inherit', lineHeight: 1.2 }}>
@@ -632,10 +614,7 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
               ) : notifs.length === 0 ? (
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: 180, gap: 10 }}>
                   <div style={{ width: 52, height: 52, borderRadius: 16, background: 'rgba(56,29,160,0.07)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(142,135,168,0.40)' }}>
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-                      <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-                    </svg>
+                    <IconNotificaciones className="w-[24px] h-[24px]" />
                   </div>
                   <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: '#8E87A8' }}>Sin notificaciones</p>
                   <p style={{ margin: 0, fontSize: 11, color: '#C4BFD8' }}>Todo está al día</p>
@@ -690,8 +669,26 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
       </main>
 
 
-      {/* Bottom Tab Nav — glassmorphism, solo móvil */}
-      <div className="md:hidden shrink-0 flex justify-center" style={{ padding: '10px 16px 20px', background: 'transparent' }}>
+      {/* El mismo velo del club cuando se abre Mas: oscurece la pantalla y
+          tocarlo cierra el menu. Queda debajo de la barra (29 contra 30) para
+          que el abanico y el boton sigan encima. */}
+      <AnimatePresence>
+        {masAbierto && (
+          <motion.div
+            key="mas-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.22, ease: [0.23, 1, 0.32, 1] }}
+            className="md:hidden fixed inset-0"
+            style={{ background: 'rgba(15,10,30,0.52)', zIndex: 29 }}
+            onClick={() => setMasAbierto(false)}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Bottom Tab Nav — solo móvil */}
+      <div className="md:hidden shrink-0 flex justify-center relative" style={{ padding: '10px 16px 20px', background: 'transparent', zIndex: 30 }}>
         {clubId ? (
           // Dentro de un club la barra inferior muestra sus modulos, igual que
           // el sidebar en escritorio, con la salida de vuelta a la lista
@@ -716,7 +713,7 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
                 <Link key={m.slug || 'info'} href={hrefClub(clubId, m.slug)}
                   className="flex-1 flex flex-col items-center relative z-10" style={{ gap: 4, paddingBottom: 2 }}>
                   <div className="flex items-center justify-center" style={{ width: 44, height: 44, borderRadius: '50%', background: active ? '#381DA0' : 'transparent', boxShadow: active ? '0 4px 20px rgba(56,29,160,0.40)' : 'none' }}>
-                    <m.Icon size={24} color={active ? '#fff' : '#8E87A8'} strokeWidth={active ? 2.2 : 1.9} />
+                    <m.Icon strokeWidth={active ? 2.2 : 1.9} className="w-[24px] h-[24px]" style={{ color: active ? '#fff' : '#8E87A8' }} />
                   </div>
                   <span className="text-[9px] tracking-wide leading-none" style={{ color: active ? '#381DA0' : '#8E87A8', fontWeight: active ? 700 : 500 }}>{m.label}</span>
                 </Link>

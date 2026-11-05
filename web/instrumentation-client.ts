@@ -71,3 +71,6 @@ Sentry.init({
     return evento;
   },
 });
+
+// Para que Sentry mida la navegación entre pantallas.
+export const onRouterTransitionStart = Sentry.captureRouterTransitionStart;

@@ -17,10 +17,12 @@ import {
   IconAjustes, IconClub, IconCupon, IconFinanzas, IconHome, IconReporte, IconSalir, IconStatistics,
 } from '@/components/ui/custom-icons';
 import { motion, AnimatePresence } from 'framer-motion';
+import { BottomCircleMenu, type CircleMenuItem } from '@/components/ui/bottom-circle-menu';
 import { idClubDeRuta } from './club-context';
 import { ID_ACCIONES } from '@/components/superadmin/acciones-cabecera';
 
-// Config fue fusionado con Perfil (UserButton) — 3 tabs + UserButton = 4 slots
+// Los modulos del superadmin. El sidebar de escritorio los muestra todos; en
+// el celular solo van los principales y el resto detras de Mas (MAS_ITEMS).
 const TABS = [
   { href: '/superadmin',          label: 'Inicio',    exact: true,  Icon: IconHome         },
   { href: '/superadmin/clubs',    label: 'Clubes',    exact: false, Icon: IconClub         },
@@ -36,6 +38,19 @@ const TABS = [
   // proposito: alli se ve lo que un club paga, aca si lo esta aprovechando, y
   // un club al dia que lleva tres semanas sin entrar no renueva.
   { href: '/superadmin/uso',      label: 'Uso',       exact: false, Icon: IconStatistics   },
+];
+
+// La barra de abajo del celular, armada igual que la del club: dos modulos, el
+// boton Mas en el centro, Finanzas y el perfil. Seis modulos mas el perfil en
+// una fila no cabian en un telefono.
+const TABS_MOVIL_IZQ = ['/superadmin', '/superadmin/clubs'];
+const TABS_MOVIL_DER = ['/superadmin/finanzas'];
+
+// Lo que no se abre todos los dias va detras de Mas.
+const MAS_ITEMS: CircleMenuItem[] = [
+  { label: 'Cupones',  icon: IconCupon,      href: '/superadmin/cupones',  color: '#F59E0B' },
+  { label: 'Reportes', icon: IconReporte,    href: '/superadmin/reportes', color: '#EF476F' },
+  { label: 'Uso',      icon: IconStatistics, href: '/superadmin/uso',      color: '#4361EE' },
 ];
 
 const SCREEN_LABELS: Record<string, string> = {
@@ -377,6 +392,7 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
   }, [checking]);
   const [spin, setSpin]               = useState(false);
   const [panelOpen, setPanelOpen]     = useState(false);
+  const [masAbierto, setMasAbierto]   = useState(false);
 
 
   // Auth check — stale flag evita condición de carrera al cambiar sesión activa
@@ -695,49 +711,72 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
             })}
           </div>
         ) : (() => {
-          const activeIdx = TABS.findIndex(t => t.exact ? pathname === t.href : pathname.startsWith(t.href));
+          // Mismo orden y mismas piezas que la barra del club: dos tabs, el
+          // circulo de Mas con su joroba, y a la derecha Finanzas y el perfil.
+          const tab = (href: string) => TABS.find(t => t.href === href)!;
+          const esActivo = (t: (typeof TABS)[number]) => t.exact ? pathname === t.href : pathname.startsWith(t.href);
+          const ranuras = [...TABS_MOVIL_IZQ.map(tab), null, ...TABS_MOVIL_DER.map(tab)];
+          const total = ranuras.length + 1; // + el perfil
+          const activeIdx = ranuras.findIndex(t => t !== null && esActivo(t));
           return (
             <div
               className="relative flex w-full"
               style={{
-                background: 'rgba(255,255,255,0.82)',
-                backdropFilter: 'blur(20px)',
-                WebkitBackdropFilter: 'blur(20px)',
+                background: '#FFFFFF',
                 borderRadius: 40,
                 padding: '6px 0',
-                border: '1px solid rgba(56,29,160,0.14)',
-                boxShadow: '0 8px 32px rgba(56,29,160,0.13), 0 2px 8px rgba(0,0,0,0.06)',
+                overflow: 'visible',
+                boxShadow: '0 -2px 12px rgba(56,29,160,0.08), 0 4px 16px rgba(56,29,160,0.10)',
+                transform: 'translateZ(0)',
               }}
             >
-              {/* Círculo deslizante — mismo tamaño que el avatar del UserButton */}
+              {/* La joroba: la misma superficie del bar, detras del circulo de Mas */}
+              <div style={{
+                position: 'absolute', width: 76, height: 76, borderRadius: '50%', background: '#FFFFFF',
+                left: `calc(${TABS_MOVIL_IZQ.length + 0.5} / ${total} * 100% - 38px)`, top: -18,
+                zIndex: 0, pointerEvents: 'none',
+              }} />
+
               {activeIdx >= 0 && (
                 <div
                   className="absolute pointer-events-none"
                   style={{
-                    width: 44,
-                    height: 44,
-                    borderRadius: '50%',
-                    background: '#381DA0',
-                    left: `calc((${activeIdx} + 0.5) / ${TABS.length + 1} * 100% - 22px)`,
-                    top: 6,
+                    width: 44, height: 44, borderRadius: '50%', background: '#381DA0',
+                    left: `calc((${activeIdx} + 0.5) / ${total} * 100% - 22px)`,
+                    top: 6, zIndex: 1,
                     transition: 'left 0.35s cubic-bezier(0.34,1.2,0.64,1)',
                     boxShadow: '0 4px 20px rgba(56,29,160,0.40)',
                   }}
                 />
               )}
 
-              {/* Tabs de navegación */}
-              {TABS.map((tab) => {
-                const active = tab.exact ? pathname === tab.href : pathname.startsWith(tab.href);
+              {ranuras.map((t) => {
+                if (t === null) {
+                  return (
+                    <div key="mas" className="flex-1 flex flex-col items-center relative z-[41]" style={{ marginTop: -16 }}>
+                      <BottomCircleMenu
+                        items={MAS_ITEMS}
+                        pathname={pathname}
+                        isOpen={masAbierto}
+                        onToggle={() => setMasAbierto(v => !v)}
+                        onClose={() => setMasAbierto(false)}
+                      />
+                      <span className="text-[9px] tracking-wide leading-none mt-1" style={{ color: '#8E87A8', fontWeight: 500 }}>
+                        Más
+                      </span>
+                    </div>
+                  );
+                }
+                const active = esActivo(t);
                 return (
                   <Link
-                    key={tab.href}
-                    href={tab.href}
+                    key={t.href}
+                    href={t.href}
                     className="flex-1 flex flex-col items-center relative z-10"
                     style={{ gap: 4, paddingBottom: 2 }}
                   >
                     <div className="flex items-center justify-center" style={{ width: 44, height: 44 }}>
-                      <tab.Icon
+                      <t.Icon
                         className="w-[26px] h-[26px]"
                         strokeWidth={active ? 2.2 : 1.7}
                         style={{ color: active ? '#fff' : '#8E87A8', transition: 'color 0.2s' }}
@@ -745,23 +784,16 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
                     </div>
                     <span
                       className="text-[9px] tracking-wide leading-none"
-                      style={{
-                        color: active ? '#381DA0' : '#8E87A8',
-                        fontWeight: active ? 700 : 500,
-                        transition: 'color 0.2s',
-                      }}
+                      style={{ color: active ? '#381DA0' : '#8E87A8', fontWeight: active ? 700 : 500, transition: 'color 0.2s' }}
                     >
-                      {tab.label}
+                      {t.label}
                     </span>
                   </Link>
                 );
               })}
 
-              {/* Tab Perfil — UserButton (fusiona Config + Perfil) */}
-              <div
-                className="flex-1 flex flex-col items-center relative z-10"
-                style={{ gap: 4, paddingBottom: 2 }}
-              >
+              {/* Perfil — UserButton (fusiona Config + Perfil) */}
+              <div className="flex-1 flex flex-col items-center relative z-10" style={{ gap: 4, paddingBottom: 2 }}>
                 <div className="flex items-center justify-center" style={{ width: 44, height: 44 }}>
                   <UserButton
                     appearance={{

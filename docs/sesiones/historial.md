@@ -5,6 +5,34 @@ Actualizar al final de cada sesión o cuando se complete un bloque de trabajo im
 
 ---
 
+## 2026-11-05 — Mercado Pago cobraba la renovación antes de tiempo
+
+LANDI Piedecuesta y Correcaminos activaron la renovación automática estando en
+prueba. Mercado Pago cobró ese día y repitió a los tres meses (4 nov y 31 oct),
+con dos meses todavía cubiertos. La causa: la suscripción se creaba sin
+`auto_recurring.start_date` y Mercado Pago contaba el ciclo desde la creación.
+
+Lo que se hizo, con aprobación:
+
+- Reembolso de los dos cobros de $153.000 (MP 187709474000 y 186062388593),
+  pagos marcados `REFUNDED` y fila `PAGO_REEMBOLSADO` en la auditoría. LANDI
+  queda cubierto hasta el 5 de enero y Correcaminos hasta el 9.
+- **Mercado Pago no deja mover la fecha de una suscripción activa.** Se intentó
+  con `start_date` y con `next_payment_date`: responde bien y no cambia nada.
+  Correcaminos sigue con cobro el 31 de enero, así que se marcó
+  `activadoManualmente` para que no se desactive entre el 9 y el 31. Cortesía
+  nuestra; se quita sola con ese pago.
+- `inicioDelPeriodo` en `lib/pricing.ts`: un pago nunca cuenta desde antes de
+  que se acabe lo cubierto, sea prueba o período pagado.
+- `/subscribe` manda esa fecha como `start_date` cuando es futura, y no busca el
+  primer cobro, que encontraría uno viejo de la misma suscripción.
+
+Sin confirmar: que Mercado Pago difiera de verdad el primer cobro con un
+`start_date` futuro. La documentación no abrió; se confirma con el próximo club
+que active la renovación.
+
+---
+
 ## 2026-10-17 — Warrior Team, trimestre pagado por fuera
 
 El club pagó $180.000 directamente, sin pasar por la plataforma, y le salía que

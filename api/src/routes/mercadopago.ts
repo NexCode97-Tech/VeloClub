@@ -3,7 +3,7 @@ import * as Sentry from '@sentry/node';
 import { requireAuth } from '../auth/middleware';
 import { prisma } from '../db/client';
 import { notifyClubStaff } from '../lib/notify';
-import { calcularPrecioPlan, vigencia, type TipoPlan } from '../lib/pricing';
+import { calcularPrecioPlan, vigencia, inicioDelPeriodo, type TipoPlan } from '../lib/pricing';
 import { contarDeportistasActivos, contarDeportistasFacturables } from '../lib/deportistas';
 import {
   crearPreferenciaCheckout, crearPreapproval, cancelarPreapproval,
@@ -44,17 +44,19 @@ function resolverPayerEmail(req: import('express').Request, clubEmail: string | 
   return req.auth?.email || clubEmail || 'sin-correo@veloclubtech.com';
 }
 
-// Si el club paga estando todavía en su período de prueba, el plan pagado no
-// debe empezar a correr ese mismo día (desperdiciaría días gratis) — arranca
-// justo cuando termina la prueba, para que se aprovechen los días gratis
-// completos y después el período pagado completo, sin solaparse.
+// Si el club paga mientras todavía tiene tiempo cubierto, el plan pagado no
+// debe empezar a correr ese mismo día: arranca cuando termina lo que ya tiene,
+// sea la prueba o el período pagado anterior. Así no se pierden días gratis ni
+// días pagados, y los dos períodos no se cruzan. Ver `inicioDelPeriodo`.
 //
-// La duración no se asume aquí: sale de trialEndsAt, que hoy son 60 días por la
-// promoción vigente y 15 fuera de ella (ver diasDePrueba en routes/clubs.ts). El
-// período pagado tampoco es siempre un mes: puede ser trimestral o anual.
-function fechaEfectivaPago(trialEndsAt: Date | null | undefined): Date {
-  const ahora = new Date();
-  return trialEndsAt && trialEndsAt > ahora ? trialEndsAt : ahora;
+// La duración no se asume aquí: la prueba sale de trialEndsAt (60 días con la
+// promoción, 15 sin ella) y el período pagado del tipo de plan.
+async function fechaEfectivaPago(suscripcionId: string, trialEndsAt: Date | null | undefined): Promise<Date> {
+  const suscripcion = await prisma.clubSuscripcion.findUnique({
+    where: { id: suscripcionId },
+    select: { tipoPlan: true, pagos: { select: { estado: true, fecha: true } } },
+  });
+  return inicioDelPeriodo(suscripcion?.pagos ?? [], (suscripcion?.tipoPlan ?? 'MENSUAL') as TipoPlan, trialEndsAt);
 }
 
 // Reconciliación de respaldo: revisa los pagos que quedaron "en proceso"
@@ -351,7 +353,7 @@ router.post('/pagar', paymentLimiter, requireAuth, async (req, res) => {
           suscripcionId: suscripcion.id,
           concepto: `Suscripción VeloClub (cupón ${couponCode!.trim().toUpperCase()} — 100%)`,
           monto: 0,
-          fecha: fechaEfectivaPago(club?.trialEndsAt),
+          fecha: await fechaEfectivaPago(suscripcion.id, club?.trialEndsAt),
           estado: 'PAID',
         },
       });
@@ -427,7 +429,7 @@ router.post('/pagar', paymentLimiter, requireAuth, async (req, res) => {
           suscripcionId: suscripcion.id,
           concepto: 'Pago suscripción',
           monto: pago.transaction_amount,
-          fecha: fechaEfectivaPago(club?.trialEndsAt),
+          fecha: await fechaEfectivaPago(suscripcion.id, club?.trialEndsAt),
           estado: 'PAID',
           mpPaymentId: String(pago.id),
         },
@@ -453,7 +455,7 @@ router.post('/pagar', paymentLimiter, requireAuth, async (req, res) => {
             suscripcionId: suscripcion.id,
             concepto: 'Pago suscripción',
             monto: pago.transaction_amount,
-            fecha: fechaEfectivaPago(club?.trialEndsAt),
+            fecha: await fechaEfectivaPago(suscripcion.id, club?.trialEndsAt),
             estado: 'PENDING',
             mpPaymentId: String(pago.id),
           },
@@ -696,6 +698,12 @@ router.post('/subscribe', paymentLimiter, requireAuth, async (req, res) => {
   const payerEmail = resolverPayerEmail(req, club?.email);
   const meses = suscripcion.tipoPlan === 'MENSUAL' ? 1 : suscripcion.tipoPlan === 'TRIMESTRAL' ? 3 : 12;
 
+  // El primer cobro cae cuando se acaba lo que el club ya tiene cubierto, no
+  // hoy. Si no queda nada cubierto, va sin fecha y Mercado Pago cobra de una.
+  // Una hora de margen para no mandar como futura una fecha que es ya.
+  const inicio = await fechaEfectivaPago(suscripcion.id, club?.trialEndsAt);
+  const cobroDiferido = inicio.getTime() - Date.now() > 60 * 60 * 1000;
+
   try {
     const preapproval = await crearPreapproval({
       reference: suscripcion.id,
@@ -705,6 +713,7 @@ router.post('/subscribe', paymentLimiter, requireAuth, async (req, res) => {
       frequency: meses,
       frequencyType: 'months',
       backUrl: `${process.env.WEB_ORIGIN}/ajustes`,
+      ...(cobroDiferido ? { startDate: inicio } : {}),
     });
 
     await prisma.clubSuscripcion.update({
@@ -720,10 +729,12 @@ router.post('/subscribe', paymentLimiter, requireAuth, async (req, res) => {
       },
     });
 
-    // El Preapproval cobra el primer período de inmediato — intentamos confirmarlo
-    // ya mismo (en vez de esperar solo al webhook) para que el front no siga
-    // mostrando "Pagar suscripción ahora" mientras el webhook llega.
-    try {
+    // Sin cobro diferido, el Preapproval cobra el primer período de inmediato:
+    // se intenta confirmarlo ya mismo (en vez de esperar solo al webhook) para
+    // que el front no siga mostrando "Pagar suscripción ahora". Con cobro
+    // diferido no hay nada que buscar todavía, y buscar por la referencia
+    // encontraría un cobro viejo de la misma suscripción.
+    if (!cobroDiferido) try {
       const pago = await buscarPagoPorReferencia(suscripcion.id);
       if (pago && pago.status === 'approved') {
         const yaRegistrado = await prisma.suscripcionPago.findUnique({ where: { mpPaymentId: String(pago.id) } });
@@ -733,7 +744,7 @@ router.post('/subscribe', paymentLimiter, requireAuth, async (req, res) => {
               suscripcionId: suscripcion.id,
               concepto: 'Renovación automática',
               monto: pago.transaction_amount,
-              fecha: fechaEfectivaPago(club?.trialEndsAt),
+              fecha: await fechaEfectivaPago(suscripcion.id, club?.trialEndsAt),
               estado: 'PAID',
               mpPaymentId: String(pago.id),
             },
@@ -960,7 +971,7 @@ router.post('/webhook', async (req, res) => {
         suscripcionId: suscripcion.id,
         concepto: suscripcion.autoRenew ? 'Renovación automática' : 'Pago suscripción',
         monto: pago.transaction_amount,
-        fecha: fechaEfectivaPago(clubDelPago?.trialEndsAt),
+        fecha: await fechaEfectivaPago(suscripcion.id, clubDelPago?.trialEndsAt),
         estado: 'PAID',
         mpPaymentId: String(pago.id),
       },

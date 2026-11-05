@@ -38,6 +38,38 @@ export function mesesDelPlan(tipoPlan: TipoPlan): number {
 
 const PLAN_DAYS: Record<TipoPlan, number> = { MENSUAL: 30, TRIMESTRAL: 90, ANUAL: 365 };
 
+/**
+ * Desde cuándo debe correr un período pagado que entra ahora.
+ *
+ * Nunca antes de que se acabe lo que el club ya tiene cubierto: ni la prueba,
+ * ni el último período pagado. Si llega un pago mientras queda tiempo, el
+ * período nuevo empieza donde termina el anterior, sin cruzarse.
+ *
+ * Existe por LANDI y Correcaminos (5 nov 2026). Activaron la renovación
+ * automática estando en prueba, Mercado Pago les cobró ese día y repitió a los
+ * tres meses, cuando todavía tenían dos meses cubiertos. Como el pago nuevo
+ * contaba desde el día del cobro, además perdían el tramo que se cruzaba.
+ *
+ * También es la fecha que se le manda a Mercado Pago como inicio de la
+ * suscripción, para que el primer cobro automático caiga ahí y no antes.
+ */
+export function inicioDelPeriodo(
+  pagos: { estado: string; fecha: Date | null }[],
+  tipoPlan: TipoPlan,
+  trialEndsAt: Date | null | undefined,
+  ahora = new Date(),
+): Date {
+  let fin = ahora;
+  if (trialEndsAt && trialEndsAt > fin) fin = trialEndsAt;
+  const pagados = pagos.filter(p => p.estado === 'PAID' && p.fecha);
+  if (pagados.length > 0) {
+    const ultimo = pagados.reduce((a, b) => (a.fecha! > b.fecha! ? a : b));
+    const finPagado = new Date(ultimo.fecha!.getTime() + (new Map(Object.entries(PLAN_DAYS)).get(tipoPlan) ?? 30) * 86_400_000);
+    if (finPagado > fin) fin = finPagado;
+  }
+  return fin;
+}
+
 // Espejo del cálculo de vigencia que ya existe en el frontend (club-detail.tsx)
 // — mismo criterio: 100% el día que se paga, baja hasta 0% al vencer el período.
 export function vigencia(pagos: { estado: string; fecha: Date | null }[], tipoPlan: TipoPlan) {

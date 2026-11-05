@@ -63,6 +63,15 @@ export async function crearPreapproval(params: {
   frequency: number;
   frequencyType: 'months';
   backUrl: string;
+  /**
+   * Cuándo cae el primer cobro. Sin ella, Mercado Pago cobra el día en que se
+   * crea la suscripción y repite desde ahí, aunque el club todavía tenga la
+   * prueba o un período pagado por delante. Se fija al crearla y no se puede
+   * mover después: el 5 de noviembre de 2026 se intentó en una suscripción
+   * activa, con `start_date` y con `next_payment_date`, y Mercado Pago
+   * respondió bien pero no cambió nada.
+   */
+  startDate?: Date;
 }): Promise<{ id: string; status: string }> {
   return mpFetch('/preapproval', {
     method: 'POST',
@@ -78,6 +87,7 @@ export async function crearPreapproval(params: {
         frequency_type: params.frequencyType,
         transaction_amount: params.amount,
         currency_id: 'COP',
+        ...(params.startDate ? { start_date: params.startDate.toISOString() } : {}),
       },
     }),
   });

@@ -138,6 +138,9 @@ model User {
   coverUrl        String?
   coverPublicId   String?
   bio             String?
+  // El telefono de quien no tiene ficha de miembro: hoy, el superadmin. Los
+  // demas lo guardan en su Member, que es lo que ve el club.
+  phone           String?
   role            Role      @default(ADMIN)
   profileComplete Boolean   @default(false)
   termsAcceptedAt DateTime?

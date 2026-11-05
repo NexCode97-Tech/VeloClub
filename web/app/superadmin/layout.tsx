@@ -1,7 +1,7 @@
 'use client';
 
 import { usePathname, useRouter } from 'next/navigation';
-import { useAuth, useSession, useUser, useClerk, UserButton } from '@clerk/nextjs';
+import { useAuth, useSession, useUser } from '@clerk/nextjs';
 import { useEffect, useState, useRef, useCallback, memo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { createPortal } from 'react-dom';
@@ -15,7 +15,7 @@ import { Info, ArrowLeft } from 'lucide-react';
 // según desde dónde se mire.
 import {
   IconAjustes, IconClub, IconCupon, IconDesactivar, IconFinanzas, IconHome, IconIngresos,
-  IconNotificaciones, IconPendiente, IconReporte, IconSalir, IconStatistics,
+  IconNotificaciones, IconPendiente, IconReporte, IconStatistics,
 } from '@/components/ui/custom-icons';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BottomCircleMenu, type CircleMenuItem } from '@/components/ui/bottom-circle-menu';
@@ -61,6 +61,8 @@ const SCREEN_LABELS: Record<string, string> = {
   '/superadmin/finanzas': 'Finanzas',
   '/superadmin/reportes': 'Reportes',
   '/superadmin/uso':      'Uso',
+  '/superadmin/configuracion': 'Ajustes',
+  '/superadmin/ayuda':         'Centro de ayuda',
 };
 
 // Modulos de un club. Dentro del detalle, estos reemplazan a TABS tanto en el
@@ -69,6 +71,12 @@ const TABS_CLUB = [
   { slug: '',         label: 'Información', Icon: Info             },
   { slug: 'finanzas', label: 'Finanzas',    Icon: IconFinanzas },
 ];
+
+/** «Hotman Guevara» → «HG». Lo mismo que muestra el avatar del admin sin foto. */
+function iniciales(nombre: string): string {
+  const partes = nombre.trim().split(/\s+/).filter(Boolean);
+  return ((partes[0]?.[0] ?? 'S') + (partes.length > 1 ? partes[partes.length - 1][0] : '')).toUpperCase();
+}
 
 function hrefClub(id: string, slug: string): string {
   return slug ? `/superadmin/clubs/${id}/${slug}` : `/superadmin/clubs/${id}`;
@@ -124,8 +132,6 @@ const SuperadminSidebar = memo(function SuperadminSidebar({ pathname, noLeidas, 
   clubId: string | null;
 }) {
   const { user: clerkUser } = useUser();
-  const { signOut } = useClerk();
-  const router = useRouter();
   const [spin, setSpin] = useState(false);
 
   function handleRefresh() {
@@ -140,6 +146,7 @@ const SuperadminSidebar = memo(function SuperadminSidebar({ pathname, noLeidas, 
   // ~1.3s de tareas largas ("saltos"). Confirmado perfilando: con esa imagen
   // el toggle bloquea ~1300ms; con cualquier otra fuente, ~160ms.
   const avatarSrc = clerkUser?.externalAccounts?.find(a => a.provider === 'google')?.imageUrl ?? null;
+  const nombreYo = clerkUser?.fullName || 'Superadmin';
   const [collapsed, setCollapsed] = useState(() =>
     typeof window !== 'undefined' && localStorage.getItem('superadmin-sidebar-collapsed') === 'true'
   );
@@ -173,11 +180,6 @@ const SuperadminSidebar = memo(function SuperadminSidebar({ pathname, noLeidas, 
       if (typeof window !== 'undefined') localStorage.setItem('superadmin-sidebar-collapsed', String(next));
       return next;
     });
-  }
-
-  async function handleSignOut() {
-    await signOut();
-    router.push('/sign-in');
   }
 
   return (
@@ -299,29 +301,30 @@ const SuperadminSidebar = memo(function SuperadminSidebar({ pathname, noLeidas, 
           );
         })()}
 
-        {avatarSrc ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={avatarSrc} alt="Superadmin" className="shrink-0" style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover', border: '2px solid #fff', boxShadow: '0 2px 8px rgba(0,0,0,0.15)' }} />
-        ) : (
-          <div className="shrink-0 flex items-center justify-center" style={{ width: 32, height: 32, borderRadius: '50%', background: '#381DA0', color: '#fff', fontSize: 13, fontWeight: 600 }}>S</div>
-        )}
+        {/* La foto lleva a Ajustes, como la del admin lleva a su perfil. Sin
+            foto, las iniciales sobre el degradado del rol, con el mismo borde. */}
+        <Link href="/superadmin/configuracion" className="shrink-0" {...(collapsed ? tipHandlers('Ajustes') : {})}>
+          {avatarSrc ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={avatarSrc} alt={nombreYo} style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover', border: '2px solid #fff', boxShadow: '0 2px 8px rgba(0,0,0,0.15)' }} />
+          ) : (
+            <div className="flex items-center justify-center" style={{ width: 32, height: 32, borderRadius: '50%', background: 'linear-gradient(135deg,#EF476F,#C1121F)', color: '#fff', fontSize: 12, fontWeight: 600, lineHeight: 1, border: '2px solid #fff', boxShadow: '0 2px 8px rgba(0,0,0,0.12)' }}>
+              {iniciales(nombreYo)}
+            </div>
+          )}
+        </Link>
         {!collapsed && (
           <>
-            <div className="min-w-0 flex-1">
-              <p className="text-[12px] font-semibold m-0 truncate" style={{ color: '#1A1028' }}>Superadmin</p>
-              <p className="text-[9px] font-semibold m-0" style={{ color: '#EF476F', letterSpacing: '0.02em' }}>Panel global</p>
-            </div>
+            <Link href="/superadmin/configuracion" className="min-w-0 flex-1">
+              <p className="text-[12px] font-semibold m-0 truncate" style={{ color: '#1A1028' }}>{nombreYo}</p>
+              <p className="text-[9px] font-semibold m-0" style={{ color: '#EF476F', letterSpacing: '0.02em' }}>Super admin</p>
+            </Link>
             {/* Ícono de ajustes (expandido) — igual que el admin */}
             <Link href="/superadmin/configuracion" title="Ajustes"
               className="shrink-0 flex items-center justify-center transition-colors hover:bg-secondary rounded-lg"
               style={{ width: 28, height: 28, color: '#8E87A8' }}>
               <IconAjustes className="w-[14px] h-[14px]" />
             </Link>
-            <button onClick={handleSignOut} title="Cerrar sesión"
-              className="shrink-0 flex items-center justify-center rounded-lg transition-colors hover:bg-secondary"
-              style={{ width: 28, height: 28, color: '#8E87A8' }}>
-              <IconSalir className="w-[15px] h-[15px]" />
-            </button>
           </>
         )}
       </div>
@@ -381,6 +384,8 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
   const [spin, setSpin]               = useState(false);
   const [panelOpen, setPanelOpen]     = useState(false);
   const [masAbierto, setMasAbierto]   = useState(false);
+  const { user: yo } = useUser();
+  const fotoYo = yo?.externalAccounts?.find(a => a.provider === 'google')?.imageUrl ?? null;
 
 
   // Auth check — stale flag evita condición de carrera al cambiar sesión activa
@@ -525,17 +530,16 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
         </motion.button>
 
         {/* Mi perfil, como el del admin de un club: la persona a la derecha de
-            la cabecera, no en la barra de abajo, que queda para los modulos. */}
-        <div className="md:hidden w-[34px] h-[34px] flex items-center justify-center">
-          <UserButton
-            appearance={{
-              elements: {
-                avatarBox: { width: 34, height: 34, borderRadius: '50%' },
-                userButtonPopoverCard: { borderRadius: 16 },
-              },
-            }}
-          />
-        </div>
+            la cabecera, no en la barra de abajo, que queda para los modulos.
+            Lleva a Ajustes, igual que la del admin lleva a los suyos. */}
+        <Link href="/superadmin/configuracion" aria-label="Ajustes"
+          className="md:hidden shrink-0 rounded-full overflow-hidden flex items-center justify-center"
+          style={{ width: 34, height: 34, border: '2px solid rgba(56,29,160,0.28)', background: '#381DA0', boxShadow: '0 2px 8px rgba(56,29,160,0.18)' }}>
+          {fotoYo
+            // eslint-disable-next-line @next/next/no-img-element
+            ? <img src={fotoYo} alt="" className="w-full h-full object-cover" />
+            : <span className="text-[12px] font-semibold text-white" style={{ lineHeight: 1 }}>{iniciales(yo?.fullName || 'Superadmin')}</span>}
+        </Link>
         </>
         )}
       </div>

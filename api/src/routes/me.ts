@@ -387,6 +387,30 @@ router.patch('/name', requireAuth, async (req, res) => {
   res.json({ name });
 });
 
+// GET /me/cuenta — los datos de la propia cuenta, para Ajustes del superadmin.
+// El club los saca de su ficha de miembro; el superadmin no tiene ficha.
+router.get('/cuenta', requireAuth, async (req, res) => {
+  if (!req.user) return res.status(401).json({ error: 'No autenticado' });
+  const user = await prisma.user.findUnique({
+    where: { id: req.user.id },
+    select: { name: true, email: true, phone: true, picture: true, role: true, createdAt: true },
+  });
+  if (!user) return res.status(404).json({ error: 'Usuario no encontrado' });
+  res.json({ cuenta: user });
+});
+
+// PATCH /me/telefono — el telefono de quien no tiene ficha de miembro.
+router.patch('/telefono', requireAuth, async (req, res) => {
+  if (!req.user) return res.status(401).json({ error: 'No autenticado' });
+  const crudo = (req.body as { phone?: unknown }).phone;
+  const phone = typeof crudo === 'string' ? crudo.trim() : null;
+  if (phone !== null && phone.length > 30) {
+    return res.status(400).json({ error: 'El teléfono es muy largo.' });
+  }
+  await prisma.user.update({ where: { id: req.user.id }, data: { phone: phone || null } });
+  res.json({ phone: phone || null });
+});
+
 // PATCH /me/bio — actualizar bio del usuario
 router.patch('/bio', requireAuth, async (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'No autenticado' });

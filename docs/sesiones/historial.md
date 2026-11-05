@@ -5,6 +5,31 @@ Actualizar al final de cada sesión o cuando se complete un bloque de trabajo im
 
 ---
 
+## 2026-11-05 — Superadmin: barra, perfil y reembolsos en finanzas
+
+**Barra del celular** como la del club: Inicio, Clubes, Más, Finanzas y Uso,
+con Cupones y Reportes detrás de Más. Al abrir Más, el mismo velo oscuro del
+club. La campana y los íconos de avisos pasaron a los propios de la app.
+
+**Perfil**, aprobado sobre maqueta. La foto va arriba a la derecha en el
+celular y abajo en el menú lateral, con el diseño del admin (nombre, «Super
+admin», iniciales con borde blanco), y lleva a **Ajustes**: la antigua
+Configuración rehecha igual a los ajustes del club. Sin Mi club ni Mi
+suscripción, y sin Zona de peligro, porque borrar esa cuenta deja la
+plataforma sin administrador. El teléfono se guarda en `User.phone`
+(`/me/cuenta`, `/me/telefono`), porque el superadmin no tiene ficha. El Centro
+de ayuda se reutiliza en `/superadmin/ayuda`.
+
+**Reembolsos.** Un pago reembolsado desaparecía de finanzas. Ahora el ingreso
+queda en su mes y la devolución sale como gasto en la categoría `REEMBOLSOS`
+(`lib/reembolsos.ts`). Entra por la cancelación en prueba, por el aviso de
+Mercado Pago (reembolso o contracargo) y por un barrido cada 20 minutos que
+atrapa lo devuelto a mano en el panel de Mercado Pago. Los de LANDI y
+Correcaminos entran por migración. El ranking por club cuenta solo lo que se
+quedó.
+
+---
+
 ## 2026-11-05 — Mercado Pago cobraba la renovación antes de tiempo
 
 LANDI Piedecuesta y Correcaminos activaron la renovación automática estando en

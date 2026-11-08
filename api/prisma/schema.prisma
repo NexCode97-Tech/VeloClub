@@ -575,6 +575,12 @@ model ClubSuscripcion {
   mpPreapprovalId            String?
   mpPayerEmail               String?
   ultimoMontoSincronizado    Float?
+  // Whop: la renovación la dispara VeloClub cobrándole al medio guardado
+  whopMemberId               String?
+  whopPaymentMethodId        String?
+  // Cuándo toca el próximo cobro automático. Lo pone el pago que acaba de
+  // entrar: es el fin de la cobertura nueva, nunca antes.
+  proximoCobroAt             DateTime?
   // Tope de deportistas activos alcanzado en el ciclo de facturacion en curso.
   // Sin esto, un club podria desactivar a todos la vispera del cobro y
   // reactivarlos al dia siguiente para caer al tramo mas barato. El precio usa
@@ -593,6 +599,7 @@ model ClubSuscripcion {
   updatedAt                  DateTime          @updatedAt
 
   @@index([clubId])
+  @@index([proximoCobroAt])
 }
 
 model SuscripcionPago {
@@ -606,6 +613,9 @@ model SuscripcionPago {
   receiptUrl      String?
   receiptPublicId String?
   mpPaymentId     String?         @unique
+  whopPaymentId   String?         @unique
+  // Con qué pagó en Whop: card, apple_pay, pse, nequi...
+  medio           String?
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
 

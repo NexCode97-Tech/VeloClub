@@ -44,7 +44,7 @@ import type { PagoWhop } from '../lib/whop';
 const pagoWhop = (extra: Partial<PagoWhop> = {}): PagoWhop => ({
   id: 'pay_1', status: 'paid', presentment_total: 127500, presentment_refunded_amount: 0,
   total: 38.2, amount_after_fees: 36.4, member_id: 'mber_1', payment_method_id: 'payt_1',
-  payment_method_type: 'card', metadata: { suscripcionId: 's1', clubId: 'c1', tipo: 'pago' },
+  payment_method_type: 'card', metadata: { suscripcionId: 's1', clubId: 'c1', tipo: 'pago', renovacion: 'si' },
   paid_at: '2026-11-09T15:00:00Z', refunded_at: null, ...extra,
 });
 
@@ -95,13 +95,23 @@ describe('pago que entró', () => {
     expect(efectos.comision.mock.calls[0][0]).toMatchObject({ whopPaymentId: 'pay_1', monto: 6008 });
   });
 
-  it('sin renovación no guarda el medio ni agenda cobro', async () => {
-    db.suscripcion.mockResolvedValue(suscripcionDe({ autoRenew: false }));
+  it('si pagó sin renovación la apaga, olvida la tarjeta y no agenda cobro', async () => {
+    db.suscripcion.mockResolvedValue(suscripcionDe({ autoRenew: true }));
     db.pago.mockResolvedValue(null);
-    await pagoExitoso(pagoWhop());
+    await pagoExitoso(pagoWhop({ metadata: { suscripcionId: 's1', tipo: 'pago', renovacion: 'no' } }));
     const datos = db.actualizarSuscripcion.mock.calls[0][0].data;
-    expect(datos.whopPaymentMethodId).toBeUndefined();
+    expect(datos.autoRenew).toBe(false);
+    expect(datos.whopPaymentMethodId).toBeNull();
     expect(datos.proximoCobroAt).toBeNull();
+  });
+
+  it('una renovación cobrada por VeloClub mantiene la renovación prendida', async () => {
+    db.suscripcion.mockResolvedValue(suscripcionDe({ autoRenew: true }));
+    db.pago.mockResolvedValue(null);
+    await pagoExitoso(pagoWhop({ id: 'pay_r', metadata: { suscripcionId: 's1', tipo: 'renovacion' } }));
+    const datos = db.actualizarSuscripcion.mock.calls[0][0].data;
+    expect(datos.autoRenew).toBe(true);
+    expect(db.upsertPago.mock.calls[0][0].create.concepto).toBe('Renovación automática');
   });
 
   it('si ya estaba registrado no hace nada', async () => {

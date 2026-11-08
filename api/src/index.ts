@@ -30,6 +30,8 @@ import searchRouter from './routes/search';
 import notificationsRouter from './routes/notifications';
 import mercadopagoRouter, { reconciliarPagosPendientes } from './routes/mercadopago';
 import whopWebhookRouter from './routes/whop-webhook';
+import pagosRouter from './routes/pagos';
+import { cobrarRenovacionesVencidas } from './lib/renovaciones';
 import deportesRouter from './routes/deportes';
 import { clubEntero } from './auth/middleware';
 import { SinCarpeta } from './lib/deportes';
@@ -175,6 +177,7 @@ app.use('/profiles', profilesRouter);
 app.use('/search', searchRouter);
 app.use('/notifications', notificationsRouter);
 app.use('/mercadopago', mercadopagoRouter);
+app.use('/pagos', pagosRouter);
 
 // ── Sentry error handler (debe ir antes del error handler custom) ─────────────
 Sentry.setupExpressErrorHandler(app);
@@ -219,6 +222,7 @@ const server = app.listen(PORT, () => {
     desactivarClubesVencidos().catch(err => console.error('[desactivar-vencidos:boot]', err));
     conciliarComisiones().catch(err => console.error('[conciliar-comisiones:boot]', err));
     conciliarReembolsos().catch(err => console.error('[conciliar-reembolsos:boot]', err));
+    cobrarRenovacionesVencidas().catch(err => console.error('[renovaciones:boot]', err));
     setInterval(() => {
       sincronizarMontosSuscripciones().catch(err => console.error('[sync-suscripciones-monto:interval]', err));
       recordarVencimientosProximos().catch(err => console.error('[recordar-vencimientos:interval]', err));
@@ -238,6 +242,7 @@ const server = app.listen(PORT, () => {
     reconciliarPagosPendientes().catch(err => console.error('[reconciliar-pagos:interval]', err));
     conciliarComisiones().catch(err => console.error('[conciliar-comisiones:interval]', err));
     conciliarReembolsos().catch(err => console.error('[conciliar-reembolsos:interval]', err));
+    cobrarRenovacionesVencidas().catch(err => console.error('[renovaciones:interval]', err));
   }, 20 * 60 * 1000);
 });
 

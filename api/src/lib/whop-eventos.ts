@@ -68,6 +68,10 @@ export async function pagoExitoso(p: PagoWhop): Promise<void> {
   const inicio = inicioDelPeriodo(suscripcion.pagos, tipoPlan, suscripcion.club.trialEndsAt);
   const monto = Number(p.presentment_total ?? 0);
   const esRenovacion = p.metadata!.tipo === 'renovacion';
+  // En un pago que hace el club, la renovación queda como la eligió al pagar.
+  // Se decide aquí y no al tocar Pagar: si el pago no pasa, no queda prendida
+  // una renovación sin tarjeta con qué cobrarla.
+  const autoRenew = esRenovacion ? suscripcion.autoRenew : p.metadata!.renovacion === 'si';
 
   await prisma.suscripcionPago.upsert({
     where: { whopPaymentId: p.id },
@@ -83,14 +87,18 @@ export async function pagoExitoso(p: PagoWhop): Promise<void> {
     },
   });
 
-  const guardaMedio = suscripcion.autoRenew && !!p.payment_method_id && !!p.member_id;
+  const guardaMedio = autoRenew && !!p.payment_method_id && !!p.member_id;
   await prisma.clubSuscripcion.update({
     where: { id: suscripcion.id },
     data: {
+      autoRenew,
+      canceladaAt: null,
       intentosFallidos: 0,
       ultimoIntentoFallidoAt: null,
-      ...(guardaMedio ? { whopMemberId: p.member_id, whopPaymentMethodId: p.payment_method_id } : {}),
-      proximoCobroAt: suscripcion.autoRenew ? finDeCobertura(inicio, tipoPlan) : null,
+      ...(guardaMedio
+        ? { whopMemberId: p.member_id, whopPaymentMethodId: p.payment_method_id }
+        : autoRenew ? {} : { whopPaymentMethodId: null }),
+      proximoCobroAt: autoRenew ? finDeCobertura(inicio, tipoPlan) : null,
     },
   });
 

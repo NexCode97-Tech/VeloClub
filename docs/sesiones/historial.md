@@ -25,6 +25,11 @@ de pruebas y en producción.
 - En producción se creó un producto oculto con dos planes solo para mirar el
   checkout y se borró enseguida (`prod_XXL8YkiVuPnos`, devuelve 404). En el
   entorno de pruebas queda el producto oculto «VeloClub prueba».
+- **Confirmado tras verificar la identidad** (mismo día): en el pago único salen
+  PSE, Nequi, Bancolombia, Efecty y, detrás de «2 métodos de pago más», Bre-B y
+  cripto. En el recurrente siguen solo tarjeta, Google Pay y Apple Pay. La
+  segunda prueba (`prod_hcCkEI550gj4n`) también se borró. Queda pendiente el 2FA
+  obligatorio del equipo en Whop.
 - Maqueta del checkout aprobada en diseño: tres dispositivos con play, recibo en
   impresora térmica, logos oficiales en SVG. Addi fuera (15 %).
 

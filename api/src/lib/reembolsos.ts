@@ -16,22 +16,28 @@ import { prisma } from '../db/client';
  * sin código aparte.
  *
  * Entra por tres lados y tiene que poder correr tres veces sin duplicar nada:
- * la cancelación dentro de la prueba, el aviso de Mercado Pago y el barrido
+ * la cancelación dentro de la prueba, el aviso de la pasarela y el barrido
  * periódico, que también recoge lo que se devuelva a mano desde el panel de
  * Mercado Pago. De eso se encarga `origen`, que es único.
  *
+ * Sirve para las dos pasarelas: el pago se encuentra por `mpPaymentId` o por
+ * `whopPaymentId`. Los ids no se pisan entre sí (los de Whop empiezan por
+ * `pay_`), así que el origen `reembolso:<id>` sigue siendo único.
+ *
  * Nunca lanza: anotar el reembolso no puede tumbar lo que lo originó.
  */
-export async function registrarReembolso(params: {
-  mpPaymentId: string;
+type IdDelPago = { mpPaymentId: string; whopPaymentId?: never } | { whopPaymentId: string; mpPaymentId?: never };
+
+export async function registrarReembolso(params: IdDelPago & {
   monto: number;
   fecha?: Date | null;
 }): Promise<boolean> {
+  const id = params.mpPaymentId ?? params.whopPaymentId;
   try {
     if (!(params.monto > 0)) return false;
 
     const pago = await prisma.suscripcionPago.findUnique({
-      where: { mpPaymentId: params.mpPaymentId },
+      where: params.mpPaymentId ? { mpPaymentId: params.mpPaymentId } : { whopPaymentId: params.whopPaymentId },
       select: { id: true, estado: true, monto: true, suscripcion: { select: { club: { select: { name: true } } } } },
     });
     if (!pago) return false;
@@ -45,10 +51,10 @@ export async function registrarReembolso(params: {
 
     const club = pago.suscripcion.club?.name;
     await prisma.gastoPlataforma.upsert({
-      where:  { origen: `reembolso:${params.mpPaymentId}` },
+      where:  { origen: `reembolso:${id}` },
       update: { monto: params.monto },
       create: {
-        origen: `reembolso:${params.mpPaymentId}`,
+        origen: `reembolso:${id}`,
         fecha: params.fecha ?? new Date(),
         monto: params.monto,
         categoria: 'REEMBOLSOS',
@@ -57,8 +63,8 @@ export async function registrarReembolso(params: {
     });
     return true;
   } catch (err) {
-    console.error('[registrar-reembolso]', params.mpPaymentId, err instanceof Error ? err.message : err);
-    Sentry.captureException(err, { tags: { tarea: 'registrar-reembolso' }, extra: { mpPaymentId: params.mpPaymentId } });
+    console.error('[registrar-reembolso]', id, err instanceof Error ? err.message : err);
+    Sentry.captureException(err, { tags: { tarea: 'registrar-reembolso' }, extra: { pagoId: id } });
     return false;
   }
 }

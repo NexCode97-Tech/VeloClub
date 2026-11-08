@@ -55,6 +55,13 @@ describe('registrar un reembolso', () => {
     expect(db.upsert.mock.calls[0][0].create.monto).toBe(50000);
   });
 
+  it('un pago de Whop se busca por su id de Whop', async () => {
+    db.pago.mockResolvedValue(pagoDe('PAID', 127500));
+    expect(await registrarReembolso({ whopPaymentId: 'pay_9', monto: 127500 })).toBe(true);
+    expect(db.pago.mock.calls[0][0].where).toEqual({ whopPaymentId: 'pay_9' });
+    expect(db.upsert.mock.calls[0][0].where).toEqual({ origen: 'reembolso:pay_9' });
+  });
+
   it('un pago que no es de la plataforma no se toca', async () => {
     db.pago.mockResolvedValue(null);
     expect(await registrarReembolso({ mpPaymentId: 'otro', monto: 1000 })).toBe(false);

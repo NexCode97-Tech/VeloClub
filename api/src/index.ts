@@ -29,6 +29,7 @@ import profilesRouter from './routes/profiles';
 import searchRouter from './routes/search';
 import notificationsRouter from './routes/notifications';
 import mercadopagoRouter, { reconciliarPagosPendientes } from './routes/mercadopago';
+import whopWebhookRouter from './routes/whop-webhook';
 import deportesRouter from './routes/deportes';
 import { clubEntero } from './auth/middleware';
 import { SinCarpeta } from './lib/deportes';
@@ -59,6 +60,10 @@ app.disable('x-powered-by');
 const baseOrigin = (process.env.WEB_ORIGIN || 'http://localhost:3000').replace(/\/$/, '');
 const allowedOrigins = [baseOrigin, baseOrigin.replace('https://', 'https://www.')].filter(Boolean);
 app.use(cors({ origin: allowedOrigins, credentials: true }));
+
+// Avisos de Whop. Va antes de express.json: la firma se verifica sobre el
+// cuerpo crudo, byte por byte.
+app.use('/whop/webhook', whopWebhookRouter);
 
 // Límite ampliado para soportar upload de imágenes en base64
 app.use(express.json({ limit: '10mb' }));

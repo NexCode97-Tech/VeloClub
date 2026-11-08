@@ -5,6 +5,31 @@ Actualizar al final de cada sesión o cuando se complete un bloque de trabajo im
 
 ---
 
+## 2026-11-08 — Whop: qué medios de pago salen de verdad
+
+Se probó el checkout de Whop desde Colombia, con planes en pesos, en el entorno
+de pruebas y en producción.
+
+| Medio | Pago único (COP) | Recurrente cada 90 días (COP) |
+|---|---|---|
+| Tarjeta: Visa, Mastercard, Amex, Diners | sí | sí |
+| Apple Pay y Google Pay (botones arriba del formulario) | sí | sí |
+| Cripto | sí | no |
+| PSE, Nequi, Bancolombia, Bre-B, Efecty | no | no |
+
+- Whop cobra en pesos sin problema: «135.000 COP, pago único» y «127.500 COP cada 3 meses».
+- Los medios colombianos no salieron ni activándolos a la fuerza en el checkout
+  (`payment_method_configuration`). La cuenta de producción `biz_ogeiSmDPBkX42S`
+  tiene la **verificación de identidad pendiente** (`verify_identity: required`)
+  y los pagos a banco inactivos. Es la causa más probable; se confirma al verificar.
+- En producción se creó un producto oculto con dos planes solo para mirar el
+  checkout y se borró enseguida (`prod_XXL8YkiVuPnos`, devuelve 404). En el
+  entorno de pruebas queda el producto oculto «VeloClub prueba».
+- Maqueta del checkout aprobada en diseño: tres dispositivos con play, recibo en
+  impresora térmica, logos oficiales en SVG. Addi fuera (15 %).
+
+---
+
 ## 2026-11-05 — Superadmin: barra, perfil y reembolsos en finanzas
 
 **Barra del celular** como la del club: Inicio, Clubes, Más, Finanzas y Uso,

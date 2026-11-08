@@ -30,6 +30,12 @@ de pruebas y en producción.
   cripto. En el recurrente siguen solo tarjeta, Google Pay y Apple Pay. La
   segunda prueba (`prod_hcCkEI550gj4n`) también se borró. Queda pendiente el 2FA
   obligatorio del equipo en Whop.
+- **Dominio listo para Google Pay y Apple Pay:** `www.veloclubtech.com`
+  (`dom_7OcR21G3nYeDP9`) quedó `ready` en Whop. El archivo oficial está en
+  `web/public/.well-known/apple-developer-merchantid-domain-association`
+  (`c3d9a13`). Se registra **www** porque `veloclubtech.com` redirige con 307 y
+  Apple no sigue redirecciones; el registro sin www se borró. 2FA del equipo ya
+  activado por el dueño.
 - Maqueta del checkout aprobada en diseño: tres dispositivos con play, recibo en
   impresora térmica, logos oficiales en SVG. Addi fuera (15 %).
 

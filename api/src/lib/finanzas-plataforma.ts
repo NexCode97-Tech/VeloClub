@@ -190,6 +190,41 @@ export async function registrarComision(params: {
 }
 
 /**
+ * La comisión de Whop de un pago, ya pasada a pesos (ver `comisionEnPesos`).
+ *
+ * A diferencia de Mercado Pago, Whop la entrega completa con el pago
+ * (`amount_after_fees`), así que se anota en el mismo momento y no hace falta
+ * barrido. Lleva su propio origen, `whop:<id>`, para que el webhook repetido
+ * no la anote dos veces. Nunca lanza.
+ */
+export async function registrarComisionWhop(params: {
+  whopPaymentId: string;
+  monto: number;
+  fecha?: Date | null;
+  club?: string | null;
+}): Promise<boolean> {
+  try {
+    if (!(params.monto > 0)) return false;
+    await prisma.gastoPlataforma.upsert({
+      where:  { origen: `whop:${params.whopPaymentId}` },
+      update: { monto: params.monto },
+      create: {
+        origen: `whop:${params.whopPaymentId}`,
+        fecha: params.fecha ?? new Date(),
+        monto: params.monto,
+        categoria: 'COMISIONES',
+        descripcion: params.club ? `Comisión de Whop, pago de ${params.club}` : 'Comisión de Whop',
+      },
+    });
+    return true;
+  } catch (err) {
+    console.error('[registrar-comision-whop]', params.whopPaymentId, err instanceof Error ? err.message : err);
+    Sentry.captureException(err, { tags: { tarea: 'registrar-comision-whop' }, extra: { whopPaymentId: params.whopPaymentId } });
+    return false;
+  }
+}
+
+/**
  * Barrido: le pone comisión a todo pago acreditado que todavía no la tenga.
  *
  * Es el único enganche que hace falta, y por eso no se toca ninguna de las

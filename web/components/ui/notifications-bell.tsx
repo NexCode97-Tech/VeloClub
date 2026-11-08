@@ -123,7 +123,20 @@ export function NotificationsBell({ sobreOscuro = false }: { sobreOscuro?: boole
       try { const token = await getToken(); await apiFetch('/notifications/read', { token, method: 'PATCH', body: JSON.stringify({ id: n.id }) }); }
       catch { /* silencioso */ }
     }
-    if (n.link) router.push(n.link);
+    if (!n.link) return;
+    // El aviso de «confirma con tu banco» trae el enlace de Whop, que es de
+    // otro sitio: va como navegación completa, no por el enrutador de la app.
+    // Solo se siguen enlaces https de Whop; cualquier otro externo se ignora.
+    if (/^https?:\/\//.test(n.link)) {
+      try {
+        const url = new URL(n.link);
+        if (url.protocol === 'https:' && (url.hostname === 'whop.com' || url.hostname.endsWith('.whop.com'))) {
+          window.location.assign(url.toString());
+        }
+      } catch { /* enlace mal formado: no se abre */ }
+      return;
+    }
+    router.push(n.link);
   }
 
   return (

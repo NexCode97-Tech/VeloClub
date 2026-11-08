@@ -21,6 +21,7 @@ import { registrarReembolso } from '../lib/reembolsos';
 import { registrarEvento } from '../lib/auditoria';
 import { activarClubTrasPago } from '../lib/sync-suscripciones';
 import { notifyClubStaff } from '../lib/notify';
+import { cancelarPreapproval, reembolsarPago } from '../lib/mercadopago';
 
 const router = Router();
 
@@ -47,6 +48,21 @@ async function asegurarSuscripcion(clubId: string) {
   return prisma.clubSuscripcion.create({
     data: { clubId, año: new Date().getFullYear(), planMonto: calcularPrecioPlan(activos, 'MENSUAL') },
   });
+}
+
+/**
+ * Un club que venía de Mercado Pago puede tener todavía su cobro recurrente
+ * allá. Al apagar la renovación o cancelar se corta también ese, para que no
+ * le llegue un cobro de una pasarela que ya no usa.
+ */
+async function cortarRecurrenteMercadoPago(s: { id: string; clubId: string; mpPreapprovalId: string | null }) {
+  if (!s.mpPreapprovalId) return;
+  try {
+    await cancelarPreapproval(s.mpPreapprovalId);
+  } catch (err) {
+    Sentry.captureException(err, { tags: { route: 'pagos:cortar-mp' }, extra: { clubId: s.clubId, preapprovalId: s.mpPreapprovalId } });
+  }
+  await prisma.clubSuscripcion.update({ where: { id: s.id }, data: { mpPreapprovalId: null } });
 }
 
 const urlAjustes = () => (process.env.WEB_ORIGIN ?? 'https://www.veloclubtech.com').replace(/\/$/, '') + '/ajustes?tab=suscripcion';
@@ -204,6 +220,7 @@ router.post('/renovacion/apagar', requireAuth, async (req, res) => {
   if (!soloAdmin(req, res)) return;
   const s = await prisma.clubSuscripcion.findUnique({ where: { clubId: req.user!.clubId ?? '' } });
   if (!s) return res.status(404).json({ error: 'Suscripción no encontrada' });
+  await cortarRecurrenteMercadoPago(s);
   await prisma.clubSuscripcion.update({
     where: { id: s.id },
     data: { autoRenew: false, whopPaymentMethodId: null, proximoCobroAt: null, intentosFallidos: 0 },
@@ -229,16 +246,23 @@ router.post('/cancelar', requireAuth, async (req, res) => {
   const ultimo = pagados.reduce<typeof pagados[number] | null>((a, b) => (!a || b.fecha! > a.fecha! ? b : a), null);
 
   let reembolsado = false;
-  if (ultimo && ultimo.fecha! > new Date() && ultimo.whopPaymentId && ultimo.monto > 0) {
+  if (ultimo && ultimo.fecha! > new Date() && ultimo.monto > 0 && (ultimo.whopPaymentId || ultimo.mpPaymentId)) {
     try {
-      await reembolsarPagoWhop(ultimo.whopPaymentId, 'reembolso-' + ultimo.whopPaymentId);
-      await registrarReembolso({ whopPaymentId: ultimo.whopPaymentId, monto: ultimo.monto });
+      // El pago se devuelve por la pasarela por la que entró.
+      if (ultimo.whopPaymentId) {
+        await reembolsarPagoWhop(ultimo.whopPaymentId, 'reembolso-' + ultimo.whopPaymentId);
+        await registrarReembolso({ whopPaymentId: ultimo.whopPaymentId, monto: ultimo.monto });
+      } else {
+        await reembolsarPago(ultimo.mpPaymentId!);
+        await registrarReembolso({ mpPaymentId: ultimo.mpPaymentId!, monto: ultimo.monto });
+      }
       reembolsado = true;
     } catch (err) {
       console.error('[pagos/cancelar] no se pudo reembolsar', err instanceof Error ? err.message : err);
-      Sentry.captureException(err, { tags: { route: 'pagos/cancelar:reembolso' }, extra: { clubId, whopPaymentId: ultimo.whopPaymentId } });
+      Sentry.captureException(err, { tags: { route: 'pagos/cancelar:reembolso' }, extra: { clubId, pagoId: ultimo.whopPaymentId ?? ultimo.mpPaymentId } });
     }
   }
+  await cortarRecurrenteMercadoPago(s);
 
   await prisma.clubSuscripcion.update({
     where: { id: s.id },

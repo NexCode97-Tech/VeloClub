@@ -1,5 +1,6 @@
 import type { NextConfig } from "next";
 import { withSentryConfig } from "@sentry/nextjs";
+import { contentSecurityPolicy } from "@whop/elements";
 
 // La API a la que habla este despliegue, sacada de su propia variable. La de
 // producción va escrita abajo de todas formas; esta es para el entorno de
@@ -50,6 +51,11 @@ const CSP = [
   "upgrade-insecure-requests",
 ].join('; ');
 
+// Los Payment Elements de Whop: sus marcos, su SDK, su API y lo que tocan
+// Google Pay y Apple Pay. La lista la da el propio paquete de Whop y se suma a
+// la de arriba, así que no se queda vieja cuando Whop cambie de proveedor.
+const CSP_CON_WHOP = contentSecurityPolicy({ wallets: true, bankConnections: false }).merge(CSP);
+
 const nextConfig: NextConfig = {
   // Los modulos salieron de /dashboard y quedaron en la raiz. Esto es para los
   // que ya tenian la direccion vieja: un enlace guardado, una notificacion
@@ -68,7 +74,7 @@ const nextConfig: NextConfig = {
       {
         source: '/(.*)',
         headers: [
-          { key: 'Content-Security-Policy', value: CSP },
+          { key: 'Content-Security-Policy', value: CSP_CON_WHOP },
           { key: 'X-Frame-Options', value: 'DENY' },
           { key: 'X-Content-Type-Options', value: 'nosniff' },
           { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },

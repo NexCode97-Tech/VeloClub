@@ -10,6 +10,8 @@ import { useSdkMercadoPago } from '@/hooks/use-cliente';
 import { Desplegable } from '@/components/ui/desplegable';
 import { Interruptor } from '@/components/ui/interruptor';
 import { IconPendiente } from '@/components/ui/custom-icons';
+import { PagoWhop, PAGO_PENDIENTE_KEY } from '@/components/ajustes/pago-whop';
+import { ReciboPago, type DatosRecibo } from '@/components/ajustes/recibo-pago';
 import {
   CreditCard, ArrowLeft, Landmark, Banknote, RefreshCw, XCircle, Check, Star, Users, Zap, Copy, Upload,
 } from 'lucide-react';
@@ -17,6 +19,10 @@ import {
 const fmt = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 });
 const cop = fmt.format.bind(fmt);
 const EASE = [0.23, 1, 0.32, 1] as const;
+// Pasarela con que se cobra la suscripción. Con `whop`, el pago lo hace el
+// bloque de Whop (pago-whop.tsx) y la API de /pagos; con cualquier otro valor
+// sigue el flujo de Mercado Pago de siempre.
+const CON_WHOP = process.env.NEXT_PUBLIC_PAGOS === 'whop';
 
 // Deslizamiento horizontal entre formularios de pago (Tarjeta / PSE / Efecty),
 // con dirección según hacia qué lado del selector se mueve.
@@ -49,6 +55,8 @@ interface Suscripcion {
   planMontoConAutoRenew: number;
   autoRenew: boolean;
   canceladaAt: string | null;
+  // La API manda los pagos; aquí solo se usan para armar el recibo de Whop.
+  pagos: { monto: number; whopPaymentId?: string | null; medio?: string | null }[];
 }
 interface MiSuscripcionResponse {
   suscripcion: Suscripcion;
@@ -330,6 +338,8 @@ export default function SuscripcionCard() {
   const [confirmarCancelar, setConfirmarCancelar] = useState(false);
   const [reactivating, setReactivating] = useState(false);
   const [avisoReembolso, setAvisoReembolso] = useState(false);
+  const [recibo, setRecibo] = useState<DatosRecibo | null>(null);
+  const precioFinalActual = useRef(0);
   // Se le pregunta al navegador si el SDK ya esta, en vez de guardarlo en un
   // estado: pudo haberse cargado en una navegacion anterior.
   const sdkReady = useSdkMercadoPago();
@@ -540,6 +550,31 @@ export default function SuscripcionCard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Al volver de PSE, del banco o de 3D Secure con Whop: se pregunta por el
+  // pago que quedó en curso, sin esperar el aviso de Whop.
+  useEffect(() => {
+    if (!CON_WHOP) return;
+    let pendiente: string | null = null;
+    try { pendiente = sessionStorage.getItem(PAGO_PENDIENTE_KEY); } catch { /* sin almacenamiento no hay nada que retomar */ }
+    if (!pendiente) return;
+    const id = pendiente;
+    (async () => {
+      try {
+        const token = await getToken();
+        const r = await apiFetch<{ status: string }>('/pagos/estado/' + encodeURIComponent(id), { token });
+        if (r.status === 'paid') {
+          try { sessionStorage.removeItem(PAGO_PENDIENTE_KEY); } catch { /* nada que limpiar */ }
+          await load();
+        } else if (r.status === 'pending' || r.status === 'open') {
+          setPayPending(true);
+        } else {
+          try { sessionStorage.removeItem(PAGO_PENDIENTE_KEY); } catch { /* nada que limpiar */ }
+        }
+      } catch { /* respaldo: el aviso de Whop lo registra igual */ }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
 
 
 
@@ -712,7 +747,7 @@ export default function SuscripcionCard() {
     setUnsubscribing(true); setError(null);
     try {
       const token = await getToken();
-      await apiFetch('/mercadopago/unsubscribe', { method: 'POST', token });
+      await apiFetch(CON_WHOP ? '/pagos/renovacion/apagar' : '/mercadopago/unsubscribe', { method: 'POST', token });
       await load();
     } catch (e) { setError(e instanceof Error ? e.message : 'No se pudo desactivar'); }
     finally { setUnsubscribing(false); }
@@ -722,12 +757,57 @@ export default function SuscripcionCard() {
     setCanceling(true); setError(null);
     try {
       const token = await getToken();
-      const res = await apiFetch<{ ok: true; reembolsado: boolean }>('/mercadopago/cancelar', { method: 'POST', token });
+      const res = await apiFetch<{ ok: true; reembolsado: boolean }>(CON_WHOP ? '/pagos/cancelar' : '/mercadopago/cancelar', { method: 'POST', token });
       setConfirmarCancelar(false);
       setAvisoReembolso(res.reembolsado);
       await load();
     } catch (e) { setError(e instanceof Error ? e.message : 'No se pudo cancelar la suscripción'); }
     finally { setCanceling(false); }
+  }
+
+  /** El pago con Whop entró: se recarga la suscripción y se imprime el recibo. */
+  async function alPagarConWhop(pagoId: string) {
+    const montoPagado = precioFinalActual.current;
+    const renovacion = activarAutoRenovacion;
+    quitarCupon();
+    setAceptaTerminos(false);
+    try {
+      const token = await getToken();
+      const res = await apiFetch<MiSuscripcionResponse>('/mercadopago/mi-suscripcion', { token });
+      setData(res);
+      const pago = res.suscripcion.pagos.find(p => p.whopPaymentId === pagoId);
+      const dias = res.vigencia?.diasRestantes ?? MESES_POR_PLAN[res.suscripcion.tipoPlan] * 30;
+      setRecibo({
+        pagoId,
+        monto: pago?.monto ?? montoPagado,
+        plan: PLAN_LABEL[res.suscripcion.tipoPlan],
+        deportistas: res.cantidadDeportistas,
+        medio: pago?.medio ?? null,
+        vigenteHasta: new Date(Date.now() + dias * 86400000).toLocaleDateString('es-CO', { day: 'numeric', month: 'short', year: 'numeric' }),
+        renovacion,
+      });
+    } catch {
+      await load();
+    }
+  }
+
+  function alQuedarPendienteConWhop() {
+    setPayPending(true);
+    setVoucherUrl(null);
+  }
+
+  async function activarConCupon() {
+    if (!appliedCoupon) return;
+    setPaying(true); setError(null);
+    try {
+      const token = await getToken();
+      await apiFetch('/pagos/activar-cupon', {
+        method: 'POST', token, body: JSON.stringify({ couponCode: appliedCoupon.codigo, aceptaTerminos }),
+      });
+      quitarCupon();
+      await load();
+    } catch (e) { setError(e instanceof Error ? e.message : 'No se pudo activar con el cupón.'); }
+    finally { setPaying(false); }
   }
 
   async function handleReactivar() {
@@ -980,6 +1060,7 @@ export default function SuscripcionCard() {
   const cuponActivo = !activarAutoRenovacion ? appliedCoupon : null;
   const descuentoCuponPesos = cuponActivo ? Math.round(precioAPagar * (cuponActivo.porcentaje / 100)) : 0;
   const precioFinal = Math.max(0, precioAPagar - descuentoCuponPesos);
+  precioFinalActual.current = precioFinal;
   const estaCancelada = planActivo && !!suscripcion.canceladaAt;
   const fechaVencimiento = planActivo && vigencia
     ? new Date(Date.now() + vigencia.diasRestantes * 86400000).toLocaleDateString('es-CO', { day: '2-digit', month: 'long', year: 'numeric' })
@@ -1030,7 +1111,7 @@ export default function SuscripcionCard() {
   return (
     <>
       {/* El hook de arriba se entera solo: pregunta por window.MercadoPago. */}
-      <Script src="https://sdk.mercadopago.com/js/v2" strategy="afterInteractive" />
+      {!CON_WHOP && <Script src="https://sdk.mercadopago.com/js/v2" strategy="afterInteractive" />}
 
       <div className="bg-white border border-border rounded-2xl p-5 space-y-5">
         {!vigencia && (
@@ -1088,6 +1169,8 @@ export default function SuscripcionCard() {
 
         {error && <p className="text-[12px] text-red-500">{error}</p>}
 
+        {recibo && <ReciboPago datos={recibo} onCerrar={() => setRecibo(null)} />}
+
         {/* ══ CASO A: plan activo — gestionar renovación automática ══════════ */}
         {planActivo && (
           <>
@@ -1123,13 +1206,17 @@ export default function SuscripcionCard() {
                   <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(6,214,160,0.12)', color: '#06D6A0' }}>-5%</span>
                 </p>
                 <p className="text-[11px] text-muted-foreground">
-                  {suscripcion.autoRenew ? 'Se cobra sola cuando vence, con 5% de descuento' : 'Actívala y ahorra 5% en cada renovación'}
+                  {suscripcion.autoRenew
+                    ? 'Se cobra sola cuando vence, con 5% de descuento'
+                    : CON_WHOP
+                      ? 'La activas al pagar tu próximo período, y ahorras 5%'
+                      : 'Actívala y ahorra 5% en cada renovación'}
                 </p>
               </div>
               <Interruptor
                 etiqueta="Renovación automática"
                 checked={suscripcion.autoRenew || showActivarForm}
-                disabled={unsubscribing || activating}
+                disabled={unsubscribing || activating || (CON_WHOP && !suscripcion.autoRenew)}
                 onChange={(next) => {
                   if (suscripcion.autoRenew) { if (!next) handleDesactivarAutoRenew(); return; }
                   setShowActivarForm(next);
@@ -1214,7 +1301,9 @@ export default function SuscripcionCard() {
                 <p className="text-[12px] text-muted-foreground">
                   {voucherUrl
                     ? 'Generamos tu cupón de pago. Cuando lo pagues en un punto Efecty, tu plan se activará automáticamente.'
-                    : 'Cuando el pago se confirme, tu plan se activará automáticamente.'}
+                    : CON_WHOP
+                      ? 'Cuando tu banco o el punto de pago confirmen, tu plan se activa solo y te avisamos.'
+                      : 'Cuando el pago se confirme, tu plan se activará automáticamente.'}
                 </p>
                 {voucherUrl && (
                   <a href={voucherUrl} target="_blank" rel="noopener noreferrer" className="inline-block text-[13px] font-semibold text-primary underline">
@@ -1237,7 +1326,7 @@ export default function SuscripcionCard() {
                     tarjeta tokenizada en Mercado Pago, y una transferencia no
                     deja nada que volver a cobrar. Tampoco con un comprobante en
                     revisión, que es un pago que todavía no termina. */}
-                {metodo !== 'BREB' && !breb?.pendiente && (
+                {(CON_WHOP || metodo !== 'BREB') && !breb?.pendiente && (
                 <div className="rounded-xl p-3 flex items-center justify-between gap-3"
                   style={{ background: activarAutoRenovacion ? 'rgba(6,214,160,0.08)' : 'rgba(120,80,200,0.05)', transition: 'background 0.25s cubic-bezier(0.23,1,0.32,1)' }}>
                   <div className="flex items-center gap-2.5">
@@ -1304,7 +1393,7 @@ export default function SuscripcionCard() {
                 )}
 
                 {/* Selector de medio — oculto cuando la renovación automática está activa (solo tarjeta) */}
-                <Expand show={!activarAutoRenovacion && !breb?.pendiente}>
+                <Expand show={!CON_WHOP && !activarAutoRenovacion && !breb?.pendiente}>
                   {/* Cuatro medios ya no caben en una fila en movil: 2x2 abajo,
                       una sola fila desde tablet. */}
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pb-0.5">
@@ -1343,7 +1432,7 @@ export default function SuscripcionCard() {
 
                 {/* Formularios según medio (o tarjeta forzada si auto-renovación) */}
                 <AnimatePresence mode="wait" custom={direccionSlide} initial={false}>
-                {!breb?.pendiente && metodoEfectivo === 'CARD' && (
+                {!CON_WHOP && !breb?.pendiente && metodoEfectivo === 'CARD' && (
                   <motion.div
                     key="form-card"
                     custom={direccionSlide}
@@ -1362,7 +1451,7 @@ export default function SuscripcionCard() {
                   </motion.div>
                 )}
 
-                {!breb?.pendiente && metodoEfectivo === 'PSE' && (
+                {!CON_WHOP && !breb?.pendiente && metodoEfectivo === 'PSE' && (
                   <motion.div
                     key="form-pse"
                     custom={direccionSlide}
@@ -1426,7 +1515,7 @@ export default function SuscripcionCard() {
                   </motion.div>
                 )}
 
-                {!breb?.pendiente && metodoEfectivo === 'EFECTY' && (
+                {!CON_WHOP && !breb?.pendiente && metodoEfectivo === 'EFECTY' && (
                   <motion.div
                     key="form-efecty"
                     custom={direccionSlide}
@@ -1452,7 +1541,7 @@ export default function SuscripcionCard() {
                   </motion.div>
                 )}
 
-                {!breb?.pendiente && metodoEfectivo === 'BREB' && (
+                {!CON_WHOP && !breb?.pendiente && metodoEfectivo === 'BREB' && (
                   <motion.div
                     key="form-breb"
                     custom={direccionSlide}
@@ -1591,6 +1680,29 @@ export default function SuscripcionCard() {
                   </span>
                 </label>
 
+                {CON_WHOP ? (
+                  precioFinal <= 0 && cuponActivo ? (
+                    <motion.button
+                      onClick={activarConCupon}
+                      disabled={paying || !aceptaTerminos}
+                      whileTap={reduce ? {} : { scale: 0.98 }}
+                      transition={{ duration: 0.12, ease: EASE }}
+                      className="w-full py-3 rounded-xl bg-primary text-white text-[13px] font-semibold disabled:opacity-60"
+                    >
+                      {paying ? 'Activando...' : 'Activar con cupón'}
+                    </motion.button>
+                  ) : (
+                    <PagoWhop
+                      monto={precioFinal}
+                      renovacion={activarAutoRenovacion}
+                      aceptaTerminos={aceptaTerminos}
+                      couponCode={cuponActivo?.codigo ?? null}
+                      etiquetaBoton={<>Pagar <PrecioAnimado valor={precioFinal} /></>}
+                      onPagado={alPagarConWhop}
+                      onPendiente={alQuedarPendienteConWhop}
+                    />
+                  )
+                ) : (
                 <motion.button
                   onClick={esBreb ? enviarBreb : handlePagar}
                   disabled={
@@ -1608,11 +1720,20 @@ export default function SuscripcionCard() {
                       ? 'Ya transferí, enviar para verificación'
                       : <>Pagar <PrecioAnimado valor={precioFinal} /></>}
                 </motion.button>
+                )}
+                {CON_WHOP ? (
+                  <p className="text-[10px] text-muted-foreground text-center flex items-center justify-center gap-1.5">
+                    Pago seguro procesado por
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src="/marcas/whop.svg" alt="Whop" className="h-3 w-auto" />
+                  </p>
+                ) : (
                 <p className="text-[10px] text-muted-foreground text-center">
                   {esBreb
                     ? 'Bre-B solo funciona entre cuentas y billeteras de Colombia. Verificamos la transferencia manualmente antes de activar el plan, y no permite renovación automática: para eso paga con tarjeta.'
                     : 'Pago procesado de forma segura por Mercado Pago. Tus datos nunca se guardan en VeloClub.'}
                 </p>
+                )}
                 </>
                 )}
               </>

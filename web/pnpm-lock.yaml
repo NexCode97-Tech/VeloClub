@@ -60,6 +60,12 @@ importers:
       '@vercel/speed-insights':
         specifier: ^2.0.0
         version: 2.0.0(next@16.3.8(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@types/node@20.19.41)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react@19.2.4)
+      '@whop/elements':
+        specifier: ^1.9.0
+        version: 1.9.0
+      '@whop/elements-react':
+        specifier: ^1.9.0
+        version: 1.9.0(@whop/elements@1.9.0)(react@19.2.4)
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -2187,6 +2193,15 @@ packages:
 
   '@webassemblyjs/wast-printer@1.14.1':
     resolution: {integrity: sha512-kPSSXE6De1XOR820C90RIo2ogvZG+c3KiHzqUoO/F34Y2shGzesfqv7o57xrxovZJH/MetF5UjroJ/R/3isoiw==}
+
+  '@whop/elements-react@1.9.0':
+    resolution: {integrity: sha512-O3HMYMh8xp+8Dp71TusvpOU2FCN+76f6dCYKDB1brOZFUmfLHIQ3ap8Y4+ZsfpqPCAwXaC1ckmRX8H5EeSjmDQ==}
+    peerDependencies:
+      '@whop/elements': ^1.9.0
+      react: ^17.0.0 || ^18.0.0 || ^19.0.0
+
+  '@whop/elements@1.9.0':
+    resolution: {integrity: sha512-sUx/LixyyfHk+EdLFK47AYVWlP5rJdapVTN8UhRf18Q+oElY9ol7HqX+o+Z0clftrRIMDYLSh9S0hCBJ6qxalQ==}
 
   '@xtuc/ieee754@1.2.0':
     resolution: {integrity: sha512-DX8nKgqcGwsc0eJSqYt5lwP4DH5FlHnmuWWBRy7X0NcaGR0ZtuyeESgMwTYVEtxmsNGY+qit4QYT/MIYTOTPeA==}
@@ -6859,6 +6874,14 @@ snapshots:
     dependencies:
       '@webassemblyjs/ast': 1.14.1
       '@xtuc/long': 4.2.2
+
+  '@whop/elements-react@1.9.0(@whop/elements@1.9.0)(react@19.2.4)':
+    dependencies:
+      '@whop/elements': 1.9.0
+      react: 19.2.4
+      use-sync-external-store: 1.6.0(react@19.2.4)
+
+  '@whop/elements@1.9.0': {}
 
   '@xtuc/ieee754@1.2.0': {}
 

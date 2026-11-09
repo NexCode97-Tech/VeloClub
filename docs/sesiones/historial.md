@@ -5,6 +5,34 @@ Actualizar al final de cada sesión o cuando se complete un bloque de trabajo im
 
 ---
 
+## 2026-11-09 — La suscripción se cobra con Whop
+
+Desde hoy todos los clubes pagan con Whop (`PAGOS_PROVEEDOR=whop` en Railway).
+
+- **Cobro:** el bloque de pago de Mi suscripción son los Payment Elements de
+  Whop (`web/components/ajustes/pago-whop.tsx`). El precio lo pone la API en
+  cada cobro, con un plan en línea en pesos (`api/src/lib/whop.ts`).
+- **Renovación automática:** la dispara VeloClub (`api/src/lib/renovaciones.ts`),
+  cobrándole al medio guardado cuando termina lo cubierto y con el precio del
+  tramo de ese día. Tres intentos con tres días entre cada uno.
+- **Avisos:** `/whop/webhook` (`hook_VXnmr5R6gLgAJ`) con firma verificada:
+  pago, fallo, confirmación del banco, reembolso y disputa.
+- **Finanzas:** la comisión entra como `whop:<id>` y los reembolsos como
+  `reembolso:<id>`, en pesos.
+- **Interruptor por club:** `PAGOS_WHOP_CLUBES` (`api/src/lib/pasarela.ts`); la
+  pantalla recibe la pasarela en `mi-suscripcion`.
+- **Correcaminos:** su renovación de Mercado Pago se canceló y se avisó a sus 4
+  miembros del equipo (`api/prisma/pasar-a-whop.ts`). Su plan sigue hasta el 9
+  de enero de 2027; la cortesía `activadoManualmente` se dejó.
+- Producto de producción `prod_cO7BnYVGRALcZ`. Claves en Railway:
+  `WHOP_API_KEY`, `WHOP_WEBHOOK_SECRET`, `WHOP_ACCOUNT_ID`, `WHOP_PRODUCT_ID`.
+- **Sin probar con un pago real:** se salió directo a producción por decisión
+  del dueño. El primer pago de un club es la prueba; revisar que quede PAID,
+  con comisión y recibo.
+- Mercado Pago sigue montado 90 días para reembolsos y disputas de pagos viejos.
+
+---
+
 ## 2026-11-08 — Whop: qué medios de pago salen de verdad
 
 Se probó el checkout de Whop desde Colombia, con planes en pesos, en el entorno

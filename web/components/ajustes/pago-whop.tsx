@@ -25,6 +25,11 @@ const TEMA = {
 
 export const PAGO_PENDIENTE_KEY = 'veloclub:pago-whop-pendiente';
 
+// El orden de los medios en la lista. Whop muestra cuatro y el resto lo guarda
+// en «N métodos de pago más»: PSE va a la vista porque es el que más usan los
+// clubes, y Efecty queda detrás. Los que no estén aquí conservan el orden de Whop.
+const ORDEN_MEDIOS = ['card', 'bancolombia', 'bre_b', 'pse', 'nequi', 'efecty', 'crypto'];
+
 interface Props {
   /** Lo que se le muestra al club, en pesos. El cobro real lo recalcula la API. */
   monto: number;
@@ -117,7 +122,7 @@ function Formulario({ aceptaTerminos, renovacion, couponCode, etiquetaBoton, onP
 
   return (
     <div className="space-y-3">
-      <PaymentElement onChange={e => setCompleto(e.complete)} />
+      <PaymentElement order={ORDEN_MEDIOS} onChange={e => setCompleto(e.complete)} />
       <BrandingElement />
       {error && <p role="alert" className="text-[12px] text-red-500 m-0">{error}</p>}
       <button

@@ -18,6 +18,7 @@ import { guessLimiter, paymentLimiter } from '../lib/rate-limit';
 import { activarClubTrasPago } from '../lib/sync-suscripciones';
 import { validarCupon, descuentoCupon, registrarCanje } from '../lib/cupones';
 import { registrarReembolso } from '../lib/reembolsos';
+import { pasarelaDe } from '../lib/pasarela';
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -164,6 +165,7 @@ router.get('/mi-suscripcion', requireAuth, async (req, res) => {
     cantidadDeportistas,
     vigencia: vig,
     enTrial,
+    pasarela: pasarelaDe(clubId),
   });
 });
 

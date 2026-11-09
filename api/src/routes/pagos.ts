@@ -22,6 +22,7 @@ import { registrarEvento } from '../lib/auditoria';
 import { activarClubTrasPago } from '../lib/sync-suscripciones';
 import { notifyClubStaff } from '../lib/notify';
 import { cancelarPreapproval, reembolsarPago } from '../lib/mercadopago';
+import { pasarelaDe } from '../lib/pasarela';
 
 const router = Router();
 
@@ -75,6 +76,9 @@ router.post('/cobrar', paymentLimiter, requireAuth, async (req, res) => {
     confirmationToken?: unknown; renovacion?: unknown; aceptaTerminos?: unknown; couponCode?: unknown;
   };
 
+  if (pasarelaDe(clubId) !== 'whop') {
+    return res.status(409).json({ error: 'Tu club todavía paga con Mercado Pago. Recarga la página.' });
+  }
   if (aceptaTerminos !== true) {
     return res.status(400).json({ error: 'Debes aceptar los términos y condiciones para continuar' });
   }

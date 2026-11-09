@@ -73,10 +73,10 @@ describe('el temporizador', () => {
     expect(ext.fallo).toHaveBeenCalled();
   });
 
-  it('con Mercado Pago como proveedor no hace nada', async () => {
-    process.env.PAGOS_PROVEEDOR = 'mercadopago';
+  it('sin suscripciones con medio guardado en Whop no cobra nada', async () => {
+    db.buscar.mockResolvedValue([]);
     const r = await cobrarRenovacionesVencidas(ahora);
     expect(r).toEqual({ cobradas: 0, fallidas: 0 });
-    expect(db.buscar).not.toHaveBeenCalled();
+    expect(ext.cobrar).not.toHaveBeenCalled();
   });
 });

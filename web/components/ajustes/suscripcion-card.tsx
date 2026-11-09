@@ -19,10 +19,6 @@ import {
 const fmt = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 });
 const cop = fmt.format.bind(fmt);
 const EASE = [0.23, 1, 0.32, 1] as const;
-// Pasarela con que se cobra la suscripción. Con `whop`, el pago lo hace el
-// bloque de Whop (pago-whop.tsx) y la API de /pagos; con cualquier otro valor
-// sigue el flujo de Mercado Pago de siempre.
-const CON_WHOP = process.env.NEXT_PUBLIC_PAGOS === 'whop';
 
 // Deslizamiento horizontal entre formularios de pago (Tarjeta / PSE / Efecty),
 // con dirección según hacia qué lado del selector se mueve.
@@ -63,6 +59,7 @@ interface MiSuscripcionResponse {
   cantidadDeportistas: number;
   vigencia: { pct: number; diasRestantes: number; vencido: boolean } | null;
   enTrial: boolean;
+  pasarela?: 'whop' | 'mercadopago';
 }
 
 interface MpCardTokenParams {
@@ -339,6 +336,9 @@ export default function SuscripcionCard() {
   const [reactivating, setReactivating] = useState(false);
   const [avisoReembolso, setAvisoReembolso] = useState(false);
   const [recibo, setRecibo] = useState<DatosRecibo | null>(null);
+  // Con qué pasarela paga este club. La decide la API (lib/pasarela.ts), así
+  // el cambio a Whop se prende por club sin volver a desplegar la web.
+  const conWhop = data?.pasarela === 'whop';
   const precioFinalActual = useRef(0);
   // Se le pregunta al navegador si el SDK ya esta, en vez de guardarlo en un
   // estado: pudo haberse cargado en una navegacion anterior.
@@ -553,7 +553,6 @@ export default function SuscripcionCard() {
   // Al volver de PSE, del banco o de 3D Secure con Whop: se pregunta por el
   // pago que quedó en curso, sin esperar el aviso de Whop.
   useEffect(() => {
-    if (!CON_WHOP) return;
     let pendiente: string | null = null;
     try { pendiente = sessionStorage.getItem(PAGO_PENDIENTE_KEY); } catch { /* sin almacenamiento no hay nada que retomar */ }
     if (!pendiente) return;
@@ -747,7 +746,7 @@ export default function SuscripcionCard() {
     setUnsubscribing(true); setError(null);
     try {
       const token = await getToken();
-      await apiFetch(CON_WHOP ? '/pagos/renovacion/apagar' : '/mercadopago/unsubscribe', { method: 'POST', token });
+      await apiFetch(conWhop ? '/pagos/renovacion/apagar' : '/mercadopago/unsubscribe', { method: 'POST', token });
       await load();
     } catch (e) { setError(e instanceof Error ? e.message : 'No se pudo desactivar'); }
     finally { setUnsubscribing(false); }
@@ -757,7 +756,7 @@ export default function SuscripcionCard() {
     setCanceling(true); setError(null);
     try {
       const token = await getToken();
-      const res = await apiFetch<{ ok: true; reembolsado: boolean }>(CON_WHOP ? '/pagos/cancelar' : '/mercadopago/cancelar', { method: 'POST', token });
+      const res = await apiFetch<{ ok: true; reembolsado: boolean }>(conWhop ? '/pagos/cancelar' : '/mercadopago/cancelar', { method: 'POST', token });
       setConfirmarCancelar(false);
       setAvisoReembolso(res.reembolsado);
       await load();
@@ -1111,7 +1110,7 @@ export default function SuscripcionCard() {
   return (
     <>
       {/* El hook de arriba se entera solo: pregunta por window.MercadoPago. */}
-      {!CON_WHOP && <Script src="https://sdk.mercadopago.com/js/v2" strategy="afterInteractive" />}
+      {!conWhop && <Script src="https://sdk.mercadopago.com/js/v2" strategy="afterInteractive" />}
 
       <div className="bg-white border border-border rounded-2xl p-5 space-y-5">
         {!vigencia && (
@@ -1208,7 +1207,7 @@ export default function SuscripcionCard() {
                 <p className="text-[11px] text-muted-foreground">
                   {suscripcion.autoRenew
                     ? 'Se cobra sola cuando vence, con 5% de descuento'
-                    : CON_WHOP
+                    : conWhop
                       ? 'La activas al pagar tu próximo período, y ahorras 5%'
                       : 'Actívala y ahorra 5% en cada renovación'}
                 </p>
@@ -1216,7 +1215,7 @@ export default function SuscripcionCard() {
               <Interruptor
                 etiqueta="Renovación automática"
                 checked={suscripcion.autoRenew || showActivarForm}
-                disabled={unsubscribing || activating || (CON_WHOP && !suscripcion.autoRenew)}
+                disabled={unsubscribing || activating || (conWhop && !suscripcion.autoRenew)}
                 onChange={(next) => {
                   if (suscripcion.autoRenew) { if (!next) handleDesactivarAutoRenew(); return; }
                   setShowActivarForm(next);
@@ -1301,7 +1300,7 @@ export default function SuscripcionCard() {
                 <p className="text-[12px] text-muted-foreground">
                   {voucherUrl
                     ? 'Generamos tu cupón de pago. Cuando lo pagues en un punto Efecty, tu plan se activará automáticamente.'
-                    : CON_WHOP
+                    : conWhop
                       ? 'Cuando tu banco o el punto de pago confirmen, tu plan se activa solo y te avisamos.'
                       : 'Cuando el pago se confirme, tu plan se activará automáticamente.'}
                 </p>
@@ -1326,7 +1325,7 @@ export default function SuscripcionCard() {
                     tarjeta tokenizada en Mercado Pago, y una transferencia no
                     deja nada que volver a cobrar. Tampoco con un comprobante en
                     revisión, que es un pago que todavía no termina. */}
-                {(CON_WHOP || metodo !== 'BREB') && !breb?.pendiente && (
+                {(conWhop || metodo !== 'BREB') && !breb?.pendiente && (
                 <div className="rounded-xl p-3 flex items-center justify-between gap-3"
                   style={{ background: activarAutoRenovacion ? 'rgba(6,214,160,0.08)' : 'rgba(120,80,200,0.05)', transition: 'background 0.25s cubic-bezier(0.23,1,0.32,1)' }}>
                   <div className="flex items-center gap-2.5">
@@ -1393,7 +1392,7 @@ export default function SuscripcionCard() {
                 )}
 
                 {/* Selector de medio — oculto cuando la renovación automática está activa (solo tarjeta) */}
-                <Expand show={!CON_WHOP && !activarAutoRenovacion && !breb?.pendiente}>
+                <Expand show={!conWhop && !activarAutoRenovacion && !breb?.pendiente}>
                   {/* Cuatro medios ya no caben en una fila en movil: 2x2 abajo,
                       una sola fila desde tablet. */}
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pb-0.5">
@@ -1432,7 +1431,7 @@ export default function SuscripcionCard() {
 
                 {/* Formularios según medio (o tarjeta forzada si auto-renovación) */}
                 <AnimatePresence mode="wait" custom={direccionSlide} initial={false}>
-                {!CON_WHOP && !breb?.pendiente && metodoEfectivo === 'CARD' && (
+                {!conWhop && !breb?.pendiente && metodoEfectivo === 'CARD' && (
                   <motion.div
                     key="form-card"
                     custom={direccionSlide}
@@ -1451,7 +1450,7 @@ export default function SuscripcionCard() {
                   </motion.div>
                 )}
 
-                {!CON_WHOP && !breb?.pendiente && metodoEfectivo === 'PSE' && (
+                {!conWhop && !breb?.pendiente && metodoEfectivo === 'PSE' && (
                   <motion.div
                     key="form-pse"
                     custom={direccionSlide}
@@ -1515,7 +1514,7 @@ export default function SuscripcionCard() {
                   </motion.div>
                 )}
 
-                {!CON_WHOP && !breb?.pendiente && metodoEfectivo === 'EFECTY' && (
+                {!conWhop && !breb?.pendiente && metodoEfectivo === 'EFECTY' && (
                   <motion.div
                     key="form-efecty"
                     custom={direccionSlide}
@@ -1541,7 +1540,7 @@ export default function SuscripcionCard() {
                   </motion.div>
                 )}
 
-                {!CON_WHOP && !breb?.pendiente && metodoEfectivo === 'BREB' && (
+                {!conWhop && !breb?.pendiente && metodoEfectivo === 'BREB' && (
                   <motion.div
                     key="form-breb"
                     custom={direccionSlide}
@@ -1680,7 +1679,7 @@ export default function SuscripcionCard() {
                   </span>
                 </label>
 
-                {CON_WHOP ? (
+                {conWhop ? (
                   precioFinal <= 0 && cuponActivo ? (
                     <motion.button
                       onClick={activarConCupon}
@@ -1721,7 +1720,7 @@ export default function SuscripcionCard() {
                       : <>Pagar <PrecioAnimado valor={precioFinal} /></>}
                 </motion.button>
                 )}
-                {CON_WHOP ? (
+                {conWhop ? (
                   <p className="text-[10px] text-muted-foreground text-center flex items-center justify-center gap-1.5">
                     Pago seguro procesado por
                     {/* eslint-disable-next-line @next/next/no-img-element */}

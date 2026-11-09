@@ -48,8 +48,6 @@ export function llaveRenovacion(suscripcionId: string, proximoCobroAt: Date, int
 }
 
 export async function cobrarRenovacionesVencidas(ahora = new Date()): Promise<{ cobradas: number; fallidas: number }> {
-  if (process.env.PAGOS_PROVEEDOR !== 'whop') return { cobradas: 0, fallidas: 0 };
-
   const candidatas = await prisma.clubSuscripcion.findMany({
     where: {
       autoRenew: true,

@@ -5,6 +5,23 @@ Actualizar al final de cada sesión o cuando se complete un bloque de trabajo im
 
 ---
 
+## 2026-11-10 — La prueba gratis ya dice 15 días
+
+La promoción de 2 meses terminó el 1 de noviembre (`PROMO_FIN` en
+`api/src/routes/clubs.ts`) y desde entonces un club nuevo recibe 15 días, pero
+siete textos seguían prometiendo los dos meses. Ahora dicen 15 días:
+
+- Portada: la línea bajo los botones del hero (`landing-hero.tsx`) y el cierre
+  «¿Listo para empezar?» (`app/page.tsx`), que además nombraba el 31 de octubre.
+- Precios: la nota de la renovación automática (`app/precios/page.tsx`).
+- Crear club: la bajada, el tercer punto y el encabezado móvil.
+- Bienvenida (`app/onboarding/page.tsx`): la opción «Crear mi club» y la nota
+  bajo el botón.
+
+El cronómetro de la promoción ya se apagaba solo al vencer la fecha; no se tocó.
+
+---
+
 ## 2026-11-09 — La suscripción se cobra con Whop
 
 Desde hoy todos los clubes pagan con Whop (`PAGOS_PROVEEDOR=whop` en Railway).

@@ -71,7 +71,7 @@ export default function LandingHero() {
         </div>
 
         <p className="text-[12.5px] text-[#8E87A8] mt-3.5">
-          Dos meses sin costo. Sin tarjeta y sin compromiso.
+          15 días sin costo. Sin tarjeta y sin compromiso.
         </p>
 
       </div>

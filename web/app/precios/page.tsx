@@ -198,7 +198,7 @@ export default function PreciosPage() {
 
           <p className="text-[12.5px] text-[#8E87A8] text-center mx-auto mt-7 max-w-[62ch] leading-relaxed">
             Activa la renovación automática y se descuenta un 5% más en cada
-            cobro. Los dos meses gratis van antes de todo esto: el primer cobro
+            cobro. Los 15 días gratis van antes de todo esto. El primer cobro
             llega cuando se acaban, y puedes irte antes sin pagar nada.
           </p>
 

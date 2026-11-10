@@ -2298,3 +2298,6 @@ lo que el módulo aprendió a registrar ingresos.
   `pnpm-lock.yaml` en raíz y `web/`).
 - Nadie ha probado todavía registrar un ingreso desde el modal.
 - Confirmar tarifas reales de Wompi y Bold con un asesor.
+
+## 2026-11-10 — VeloClub es multideporte en el CLAUDE.md
+- El `CLAUDE.md` decía «clubes de patinaje». Ahora dice clubes deportivos de varios deportes y apunta al catálogo de 12 en `web/lib/deportes.ts`.

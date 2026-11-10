@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Proyecto
 
-SaaS multi-tenant para gestión de clubes de patinaje. Desarrollado por NexCode97. Monorepo con `web/` (Next.js en Vercel) y `api/` (Express en Railway), conectados a PostgreSQL. La base es un servicio de Postgres 18 dentro del mismo proyecto de Railway, no un proveedor aparte.
+SaaS multi-tenant para gestión de clubes deportivos de varios deportes (el catálogo de 12 está en `web/lib/deportes.ts`), no solo patinaje. Desarrollado por NexCode97. Monorepo con `web/` (Next.js en Vercel) y `api/` (Express en Railway), conectados a PostgreSQL. La base es un servicio de Postgres 18 dentro del mismo proyecto de Railway, no un proveedor aparte.
 
 - **Frontend:** https://veloclubtech.com
 - **Backend Railway:** variable `WEB_ORIGIN` debe apuntar al dominio del frontend (CORS)

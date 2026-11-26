@@ -2331,3 +2331,8 @@ lo que el módulo aprendió a registrar ingresos.
 - Se borró `api/railway.toml`. El SDK `railway` 3.16.0 vive en `api/.railway` con npm y su `node_modules` va en el `.gitignore`.
 - Documentado en `docs/ENTORNO-DEMO.md`.
 - Verificado: Railway desplegó `9792e27` (el primero sin `railway.toml`) sin errores, la API responde 200 y los registros muestran que el paso previo corrió («75 migrations found», «No pending migrations to apply»).
+
+## 2026-11-26 — Idea anotada: recordatorios que lleguen al celular
+- Pedido del usuario, sin decidir todavía: que los recordatorios lleguen al dispositivo como notificación del sistema.
+- Estado actual, revisado en el código: VeloClub solo tiene la campana dentro de la app (`api/src/lib/notify.ts` guarda la notificación y avisa en vivo por SSE mientras la app está abierta). No hay notificaciones push: no existe `web-push`, ni suscripción del navegador, ni evento `push` en `sw.js`.
+- Referencia para hacerlo: Wali ya tiene push web funcionando desde el 25 nov 2026 (`web-push` 3.6.7, claves VAPID, tabla de dispositivos y `sw.js`). En iPhone solo llega con la app agregada a la pantalla de inicio.

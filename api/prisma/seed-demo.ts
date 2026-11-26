@@ -1123,7 +1123,11 @@ async function main(): Promise<void> {
   console.log(EN_PRODUCCION
     ? '\nListo. El club de prueba quedó sembrado en producción, dentro de su burbuja.'
     : '\nListo. El club de demostración quedó sembrado.');
-  console.log('Falta a mano: el logo y la portada desde Ajustes, y el sello de verificado desde Superadmin.');
+  // En producción el sello no se pone nunca: un club verificado aparece en el
+  // buscador y en el carrusel, que es justo lo que la burbuja evita.
+  console.log(EN_PRODUCCION
+    ? 'Falta a mano: el logo y la portada desde Ajustes. El sello de verificado NO se le pone.'
+    : 'Falta a mano: el logo y la portada desde Ajustes, y el sello de verificado desde Superadmin.');
 }
 
 main()

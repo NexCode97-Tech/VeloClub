@@ -2320,3 +2320,6 @@ lo que el módulo aprendió a registrar ingresos.
 - Falta: push, que corra la migración en Railway, crear las tres cuentas en Clerk y sembrar el club.
 
 - 25 nov 2026: push de `2f16732` (service worker y formatDetection) y `e64e6cc` (club de prueba) a `main`. Revisando despliegues.
+- Railway desplegó `e64e6cc` sin errores y la migración `esPrueba` quedó aplicada. Vercel también quedó listo y la etiqueta `format-detection` ya sale en veloclubtech.com.
+- Creadas en la Clerk de producción las cuentas `nexcode97+admin@gmail.com`, `nexcode97+entrenador@gmail.com` y `nexcode97+deportista@gmail.com`, con contraseñas al azar guardadas solo en el escritorio del usuario.
+- Sembrado el Club Deportivo Aurora en producción con `CLUB_DE_PRUEBA=si`: 54 deportistas, 2540 asistencias, 299 mensualidades. Verificado con una consulta de solo lectura: `esPrueba` en true, sin suscripción, sin fin de prueba, y las tres cuentas amarradas a él. Quedan 22 clubes reales.

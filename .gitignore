@@ -41,3 +41,6 @@ web/public/capturas/
 # Restos de los scripts de mantenimiento
 __pycache__/
 *.pyc
+
+# SDK de Railway para la infraestructura como codigo (api/.railway)
+/api/.railway/node_modules

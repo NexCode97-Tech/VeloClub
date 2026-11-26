@@ -90,6 +90,9 @@ código deja de pedirse.
   lo sigue leyendo porque es anterior al cambio, pero `api-demo` no, y el primer
   despliegue arrancó sin tablas. El comando de migración quedó puesto
   directamente en el servicio. Si se crea otro servicio, hay que ponérselo igual.
+  Desde el 25 de noviembre de 2026 producción tampoco lo lee: Railway dejó de
+  leer `railway.toml` el 1 de diciembre, y el comando pasó a
+  `api/.railway/railway.ts` (infraestructura como código, ver abajo).
 - **Las variables de la web viven en `veloclub-demo`.** Si se agrega una
   variable nueva a la web, hay que decidir si la demo la necesita y ponerla
   también en ese proyecto.
@@ -132,8 +135,28 @@ Lo que cambia frente a producción, en las variables del servicio:
 | `CLERK_PUBLISHABLE_KEY` | la de la instancia de desarrollo de Clerk |
 | `CLOUDINARY_*` | se pueden repetir las de producción, o una carpeta aparte |
 
-Las migraciones se aplican solas: `api/railway.toml` corre
-`npx prisma migrate deploy` como `preDeployCommand`, igual que en producción.
+Las migraciones se aplican solas con `npx prisma migrate deploy` como
+comando previo al despliegue. En producción está declarado en
+`api/.railway/railway.ts`; en un servicio nuevo hay que ponerlo en su
+configuración.
+
+### La infraestructura de Railway como código
+
+`api/.railway/railway.ts` declara el servicio `VeloClub` de producción: el repo,
+la carpeta `api` y el comando de migraciones. Las variables NO las maneja
+(`variables: unmanaged`), así que los secretos siguen solo en Railway.
+
+```powershell
+# Desde PowerShell. Desde Git Bash el CLI no encuentra el proyecto enlazado.
+Set-Location C:\Users\nexco\GitHub\VeloClub\api
+$exe = "$env:APPDATA\npm\node_modules\@railway\cli\bin\railway.exe"; $env:_ = $exe
+& $exe config plan          # qué cambiaría, sin tocar nada
+& $exe config apply --yes   # aplicarlo
+```
+
+El SDK (`railway` 3.16.0) vive solo en `api/.railway`, con npm, y su
+`node_modules` no va al repo. En Windows hay que poner `$env:_` con la ruta del
+ejecutable, porque si no el SDK no encuentra el CLI.
 
 **No repetir los secretos de Mercado Pago.** Un entorno de demostración no cobra
 nada, y dejar ahí una llave de producción es la forma más fácil de que se

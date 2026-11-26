@@ -2324,3 +2324,9 @@ lo que el módulo aprendió a registrar ingresos.
 - Creadas en la Clerk de producción las cuentas `nexcode97+admin@gmail.com`, `nexcode97+entrenador@gmail.com` y `nexcode97+deportista@gmail.com`, con contraseñas al azar guardadas solo en el escritorio del usuario.
 - Sembrado el Club Deportivo Aurora en producción con `CLUB_DE_PRUEBA=si`: 54 deportistas, 2540 asistencias, 299 mensualidades. Verificado con una consulta de solo lectura: `esPrueba` en true, sin suscripción, sin fin de prueba, y las tres cuentas amarradas a él. Quedan 22 clubes reales.
 - 25 nov 2026: push de `ef279e0` y `6aea253` (historial y mensaje del script).
+
+## 2026-11-25 — Railway sin railway.toml
+- Railway deja de leer `railway.toml` el 1 de diciembre de 2026, y ahí vivía el comando de migraciones (`npx prisma migrate deploy`). La vista previa confirmó que el servicio no lo tenía guardado en su propia configuración: sin el cambio, la próxima migración no habría corrido.
+- `railway config migrate` generó `api/.railway/railway.ts` con las variables sin manejar (los secretos siguen solo en Railway). `railway config apply` le puso el comando al servicio `VeloClub` de producción, y un segundo `plan` dice que no queda nada pendiente.
+- Se borró `api/railway.toml`. El SDK `railway` 3.16.0 vive en `api/.railway` con npm y su `node_modules` va en el `.gitignore`.
+- Documentado en `docs/ENTORNO-DEMO.md`.

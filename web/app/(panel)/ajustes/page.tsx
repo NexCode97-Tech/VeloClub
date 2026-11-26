@@ -11,6 +11,7 @@ import {
 import { IconAjustesCuenta, IconAyuda, IconCheck, IconClub, IconPerfil, IconSalir, IconSuscripcion, IconEliminar } from '@/components/ui/custom-icons';
 import SuscripcionCard from '@/components/ajustes/suscripcion-card';
 import HorarioClases from '@/components/ajustes/horario-clases';
+import NotificacionesDispositivo from '@/components/ajustes/notificaciones-dispositivo';
 import { useDeporteActivo } from '@/lib/contexto-deporte';
 import { DIAS_SEMANA } from '@/lib/dias';
 import { PhoneInput } from '@/components/ui/phone-input';
@@ -1061,7 +1062,10 @@ function AjustesPageContent() {
               transition={{ duration: 0.24, ease: [0.23, 1, 0.32, 1] }}
               className="pb-28">
               {atrasMovil('Mi perfil')}
-              <div className="px-4">{datosMovil}</div>
+              <div className="px-4 space-y-4">
+                {datosMovil}
+                <NotificacionesDispositivo rol={role} />
+              </div>
             </motion.div>
           )}
 
@@ -1095,6 +1099,7 @@ function AjustesPageContent() {
             <div className="space-y-4">
               <SectionHeader label="Mi perfil" icon={IconPerfil} />
               {perfilCard}
+              <NotificacionesDispositivo rol={role} />
               {dangerCard}
             </div>
           )}

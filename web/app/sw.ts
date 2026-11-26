@@ -63,3 +63,54 @@ const serwist = new Serwist({
 });
 
 serwist.addEventListeners();
+
+// ── Notificaciones push ──────────────────────────────────────────────────────
+// Las manda el servidor (api/src/lib/push.ts) y llegan aunque la app esté
+// cerrada. En iPhone y iPad solo con VeloClub en la pantalla de inicio.
+
+interface AvisoPush {
+  titulo?: string;
+  cuerpo?: string;
+  link?: string;
+  etiqueta?: string;
+}
+
+/** Solo rutas de la propia app: un enlace de afuera no se abre desde un aviso. */
+function rutaSegura(link: unknown): string {
+  return typeof link === 'string' && link.startsWith('/') && !link.startsWith('//') ? link : '/inicio';
+}
+
+self.addEventListener('push', (event) => {
+  let aviso: AvisoPush = {};
+  try {
+    aviso = event.data?.json() ?? {};
+  } catch {
+    aviso = { cuerpo: event.data?.text() };
+  }
+  event.waitUntil(
+    self.registration.showNotification(aviso.titulo || 'VeloClub', {
+      body: aviso.cuerpo || '',
+      icon: '/icon-desktop-192.png',
+      badge: '/favicon.png',
+      // Un aviso nuevo del mismo asunto reemplaza al anterior en vez de apilarse.
+      tag: aviso.etiqueta,
+      data: { link: rutaSegura(aviso.link) },
+    }),
+  );
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const destino = new URL(rutaSegura((event.notification.data as { link?: string } | null)?.link), self.location.origin).href;
+  event.waitUntil((async () => {
+    // Si la app ya está abierta, se usa esa ventana en vez de abrir otra.
+    const ventanas = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    for (const v of ventanas) {
+      if (new URL(v.url).origin === self.location.origin && 'focus' in v) {
+        await v.navigate(destino).catch(() => undefined);
+        return v.focus();
+      }
+    }
+    return self.clients.openWindow(destino);
+  })());
+});

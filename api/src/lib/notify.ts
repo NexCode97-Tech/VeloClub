@@ -1,11 +1,16 @@
 import { prisma } from '../db/client';
 import { emitToClub } from './sse';
+import { enviarPush, PUSH_PERSONAL, PUSH_STAFF } from './push';
 
 interface NotifPayload {
   tipo: string;
   titulo: string;
   cuerpo: string;
   link?: string;
+}
+
+function aPush(payload: NotifPayload) {
+  return { titulo: payload.titulo, cuerpo: payload.cuerpo, link: payload.link, etiqueta: payload.tipo };
 }
 
 /** Crea una notificación para un usuario y avisa en vivo por SSE. */
@@ -16,6 +21,9 @@ export async function notify(recipientClerkId: string, clubId: string | null, pa
       data: { recipientClerkId, clubId: clubId ?? null, ...payload },
     });
     if (clubId) emitToClub(clubId, 'notifications');
+    // Los tipos aprobados salen también al dispositivo (lib/push.ts). Sin
+    // await: la respuesta de la ruta no espera a los servicios de push.
+    if (PUSH_PERSONAL.has(payload.tipo)) void enviarPush([recipientClerkId], aPush(payload));
   } catch {
     /* la notificación nunca debe tumbar la operación principal */
   }
@@ -37,6 +45,7 @@ export async function notifyClubStaff(clubId: string, payload: NotifPayload, exc
       data: recipients.map(recipientClerkId => ({ recipientClerkId, clubId, ...payload })),
     });
     emitToClub(clubId, 'notifications');
+    if (PUSH_STAFF.has(payload.tipo)) void enviarPush(recipients, aPush(payload));
   } catch {
     /* silencioso */
   }

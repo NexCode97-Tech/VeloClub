@@ -23,6 +23,8 @@ import clasesRouter from './routes/clases';
 import trainingRouter from './routes/training';
 import streamRouter from './routes/stream';
 import cronRouter from './routes/cron';
+import pushRouter from './routes/push';
+import { revisarRecordatorios } from './lib/recordatorios';
 import postsRouter from './routes/posts';
 import followsRouter from './routes/follows';
 import profilesRouter from './routes/profiles';
@@ -151,7 +153,7 @@ const superadminLimiter = rateLimit({
 // esa pantalla se vea vacia y alguien lo reporte el mismo dia. Al reves —
 // tener que acordarse de filtrar en cada consulta — el olvido muestra datos de
 // otro deporte y no lo nota nadie.
-app.use(['/me', '/superadmin', '/posts', '/profiles', '/search', '/follows', '/deportes'], clubEntero);
+app.use(['/me', '/superadmin', '/posts', '/profiles', '/search', '/follows', '/deportes', '/push'], clubEntero);
 
 app.use('/me', meLimiter, meRouter);
 app.use('/clubs', clubsRouter);
@@ -171,6 +173,7 @@ app.use('/clases', clasesRouter);
 app.use('/training', trainingRouter);
 app.use('/stream', strictLimiter, streamRouter);
 app.use('/cron', cronRouter);
+app.use('/push', pushRouter);
 app.use('/posts', postsRouter);
 app.use('/follows', followsRouter);
 app.use('/profiles', profilesRouter);
@@ -230,6 +233,16 @@ const server = app.listen(PORT, () => {
       desactivarClubesVencidos().catch(err => console.error('[desactivar-vencidos:interval]', err));
     }, 24 * 60 * 60 * 1000);
   }, 2 * 60 * 1000);
+
+  // Recordatorios al dispositivo: clase en una hora, evento de mañana y
+  // mensualidades por vencer o vencidas (lib/recordatorios.ts). Cada 5 minutos,
+  // y la primera vuelta al minuto de arrancar.
+  setTimeout(() => {
+    revisarRecordatorios().catch(err => console.error('[recordatorios:boot]', err));
+    setInterval(() => {
+      revisarRecordatorios().catch(err => console.error('[recordatorios:interval]', err));
+    }, 5 * 60 * 1000);
+  }, 60 * 1000);
 
   // Reconciliación de pagos PSE/Efecty en proceso — red de seguridad por si la
   // notificación de Mercado Pago se demora o falla. Corre cada 20 minutos.

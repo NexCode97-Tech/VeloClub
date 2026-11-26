@@ -2336,3 +2336,11 @@ lo que el módulo aprendió a registrar ingresos.
 - Pedido del usuario, sin decidir todavía: que los recordatorios lleguen al dispositivo como notificación del sistema.
 - Estado actual, revisado en el código: VeloClub solo tiene la campana dentro de la app (`api/src/lib/notify.ts` guarda la notificación y avisa en vivo por SSE mientras la app está abierta). No hay notificaciones push: no existe `web-push`, ni suscripción del navegador, ni evento `push` en `sw.js`.
 - Referencia para hacerlo: Wali ya tiene push web funcionando desde el 25 nov 2026 (`web-push` 3.6.7, claves VAPID, tabla de dispositivos y `sw.js`). En iPhone solo llega con la app agregada a la pantalla de inicio.
+
+## 2026-11-26 — Notificaciones push en computador, tablet y celular
+- Maqueta aprobada (artifact `8uXoSYxCW8rWUVsqfbCtZK`): tarjeta «Notificaciones en este dispositivo» en Ajustes > Mi perfil, entre el perfil y la zona de peligro. En iPhone desde Safari explica en tres pasos cómo agregar VeloClub a la pantalla de inicio.
+- API: `web-push` 3.6.7, tablas `PushDispositivo` y `RecordatorioEnviado` (migración `20261126120000_notificaciones_push`), `lib/push.ts` (solo servicios de push conocidos, borra los muertos), rutas `/push/clave` y `/push/dispositivos`, y `notify`/`notifyClubStaff` mandan al dispositivo los tipos aprobados: mensualidad pendiente, por vencer y vencida al deportista; comprobante subido e inscripción nueva al staff.
+- Recordatorios cada 5 minutos (`lib/recordatorios.ts`, hora de Colombia): clase en una hora (deportistas de la planilla y entrenadores del deporte), evento de mañana a las 6 p. m. (solo eventos de una vez), mensualidad 3 días antes desde las 9 a. m. y vencida el día siguiente si nadie la avisó.
+- Web: `components/ajustes/notificaciones-dispositivo.tsx` y los eventos `push` y `notificationclick` en `app/sw.ts` (solo abre rutas de la propia app).
+- Claves `VAPID_PUBLICA` y `VAPID_PRIVADA` generadas y guardadas en Railway, verificadas con sha256.
+- 12 pruebas nuevas; pasan las 228. Tipos, lint y build de la web y la API bien.

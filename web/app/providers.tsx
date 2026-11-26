@@ -2,6 +2,7 @@
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
+import { useSerwist } from '@serwist/next/react';
 
 // El worker de la PWA vive en /sw.js. Cualquier otro registro es heredado de
 // versiones anteriores y es el que hay que limpiar.
@@ -79,7 +80,32 @@ function useRecargarConVersionNueva() {
   }, []);
 }
 
+/**
+ * Registra el worker de la PWA, que SerwistProvider deja preparado en
+ * window.serwist con register={false}.
+ *
+ * El proveedor lo registraba sin atrapar el rechazo. En el navegador interno de
+ * Instagram y WhatsApp en iPhone (WKWebView) el registro siempre falla («Script
+ * sw.js load failed»), porque ahí no se pueden instalar service workers. La
+ * página funciona igual sin él: solo se pierde el modo sin conexión, que en ese
+ * navegador no existe de todas formas. Por eso el rechazo se atrapa y no se
+ * reporta.
+ *
+ * La bandera de módulo evita registrar dos veces si el árbol se vuelve a montar.
+ */
+let workerRegistrado = false;
+
+function useRegistrarServiceWorker() {
+  const { serwist } = useSerwist();
+  useEffect(() => {
+    if (!serwist || workerRegistrado) return;
+    workerRegistrado = true;
+    serwist.register().catch(() => {});
+  }, [serwist]);
+}
+
 export function Providers({ children }: { children: React.ReactNode }) {
+  useRegistrarServiceWorker();
   usePurgeLegacyServiceWorkers();
   useRecargarConVersionNueva();
   const [client] = useState(() => new QueryClient({

@@ -31,6 +31,19 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: "VeloClub",
   description: SITE_DESC,
+  // Safari en iPhone convierte en enlaces los teléfonos, fechas, direcciones y
+  // correos que encuentra en el texto, y lo hace antes de que React hidrate.
+  // El HTML ya no coincide con el del servidor y sale «Hydration Error»
+  // (VELOCLUB-WEB-B, con los teléfonos de ejemplo de la vitrina de la portada).
+  // La plataforma muestra teléfonos y fechas en casi todas las pantallas, así
+  // que se apaga para todo el sitio. Donde un teléfono deba llamar, va con su
+  // propio enlace tel:, como en el carné (carnet-tarjetas.tsx).
+  formatDetection: {
+    telephone: false,
+    date: false,
+    address: false,
+    email: false,
+  },
   icons: {
     icon: "/favicon.png",
     apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
@@ -67,9 +80,15 @@ export default function RootLayout({
           <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
         </head>
         <body className="min-h-full flex flex-col">
-          {/* Registra /sw.js, la misma direccion de siempre. Antes lo inyectaba
-              el complemento del compilador; en modo configurador se declara. */}
-          <SerwistProvider swUrl="/sw.js">
+          {/* Prepara /sw.js, la misma direccion de siempre. Antes lo inyectaba
+              el complemento del compilador; en modo configurador se declara.
+              El registro no lo hace el proveedor (register={false}): lo hace
+              useRegistrarServiceWorker en providers.tsx, que sí atrapa el
+              rechazo. El proveedor lo llama sin catch, y en el navegador
+              interno de Instagram o WhatsApp en iPhone, que no deja instalar
+              service workers, cada visita reventaba como error sin atender
+              (VELOCLUB-WEB-E). */}
+          <SerwistProvider swUrl="/sw.js" register={false}>
             <Providers>{children}</Providers>
           </SerwistProvider>
           <Analytics />

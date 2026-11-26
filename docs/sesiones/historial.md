@@ -2305,3 +2305,8 @@ lo que el módulo aprendió a registrar ingresos.
 ## 2026-11-10 — Push de los 15 días y del CLAUDE.md multideporte
 - Subidos a `main` los commits `370b472` (la prueba gratis dice 15 días) y `c3b6b0f` (VeloClub es multideporte).
 - Foco de la campaña de prospección: patinaje y fútbol en Bogotá, Medellín, Cali, Barranquilla, Cartagena y Bucaramanga.
+
+## 2026-11-25 — Los dos avisos de Sentry de la web
+- VELOCLUB-WEB-E, «sw.js load failed». Solo en iPhone, dentro del navegador interno de Instagram o WhatsApp (WKWebView), que no deja instalar service workers. SerwistProvider registraba sin atrapar el rechazo. Ahora el proveedor va con `register={false}` y el registro lo hace `useRegistrarServiceWorker` en `providers.tsx`, con `.catch`.
+- VELOCLUB-WEB-B, «Hydration Error» en la portada. Solo en Safari de iPhone: convierte en enlaces los teléfonos de ejemplo de la vitrina antes de que React hidrate. Se agregó `formatDetection` (teléfono, fecha, dirección y correo en falso) en el `layout.tsx` raíz, para todo el sitio.
+- Verificado con tsc, lint y build. La etiqueta `format-detection` sale en el HTML compilado. Falta el push y revisar en producción antes de marcarlos como resueltos en Sentry.

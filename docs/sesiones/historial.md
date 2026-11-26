@@ -2318,3 +2318,5 @@ lo que el módulo aprendió a registrar ingresos.
 - `seed-demo.ts` tiene el modo `CLUB_DE_PRUEBA=si` para sembrarlo en producción con cuentas de administrador, entrenador y deportista, sin suscripción y con enlaces al azar.
 - 13 pruebas nuevas; pasan las 216. Lint sin errores y build de la API bien.
 - Falta: push, que corra la migración en Railway, crear las tres cuentas en Clerk y sembrar el club.
+
+- 25 nov 2026: push de `2f16732` (service worker y formatDetection) y `e64e6cc` (club de prueba) a `main`. Revisando despliegues.

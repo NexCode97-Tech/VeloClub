@@ -2330,3 +2330,4 @@ lo que el módulo aprendió a registrar ingresos.
 - `railway config migrate` generó `api/.railway/railway.ts` con las variables sin manejar (los secretos siguen solo en Railway). `railway config apply` le puso el comando al servicio `VeloClub` de producción, y un segundo `plan` dice que no queda nada pendiente.
 - Se borró `api/railway.toml`. El SDK `railway` 3.16.0 vive en `api/.railway` con npm y su `node_modules` va en el `.gitignore`.
 - Documentado en `docs/ENTORNO-DEMO.md`.
+- Verificado: Railway desplegó `9792e27` (el primero sin `railway.toml`) sin errores, la API responde 200 y los registros muestran que el paso previo corrió («75 migrations found», «No pending migrations to apply»).

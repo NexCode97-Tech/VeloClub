@@ -10,6 +10,7 @@
 import { Router, type Request, type Response } from 'express';
 import * as Sentry from '@sentry/node';
 import { requireAuth } from '../auth/middleware';
+import { rechazarClubDePrueba } from '../lib/club-prueba';
 import { prisma } from '../db/client';
 import { calcularPrecioPlan, inicioDelPeriodo, vigencia, type TipoPlan } from '../lib/pricing';
 import { contarDeportistasActivos, contarDeportistasFacturables } from '../lib/deportistas';
@@ -69,7 +70,7 @@ async function cortarRecurrenteMercadoPago(s: { id: string; clubId: string; mpPr
 const urlAjustes = () => (process.env.WEB_ORIGIN ?? 'https://www.veloclubtech.com').replace(/\/$/, '') + '/ajustes?tab=suscripcion';
 
 // ── POST /pagos/cobrar ───────────────────────────────────────────────────────
-router.post('/cobrar', paymentLimiter, requireAuth, async (req, res) => {
+router.post('/cobrar', paymentLimiter, requireAuth, rechazarClubDePrueba, async (req, res) => {
   if (!soloAdmin(req, res)) return;
   const clubId = req.user!.clubId ?? '';
   const { confirmationToken, renovacion, aceptaTerminos, couponCode } = req.body as {
@@ -184,7 +185,7 @@ router.get('/estado/:id', requireAuth, async (req, res) => {
 // ── POST /pagos/activar-cupon ────────────────────────────────────────────────
 // Un cupón del 100 % deja el total en cero: no hay nada que cobrar y no pasa
 // por Whop. Se deja constancia con un pago de $0.
-router.post('/activar-cupon', paymentLimiter, requireAuth, async (req, res) => {
+router.post('/activar-cupon', paymentLimiter, requireAuth, rechazarClubDePrueba, async (req, res) => {
   if (!soloAdmin(req, res)) return;
   const clubId = req.user!.clubId ?? '';
   const { couponCode, aceptaTerminos } = req.body as { couponCode?: unknown; aceptaTerminos?: unknown };

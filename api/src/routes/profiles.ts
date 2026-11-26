@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { requireAuth } from '../auth/middleware';
 import { prisma } from '../db/client';
+import { cruzaLaFrontera, ladoDelVisitante, ladoDePersona } from '../lib/club-prueba';
 
 const router = Router();
 
@@ -44,6 +45,11 @@ router.get('/:clerkId', requireAuth, async (req, res) => {
 
   const clerkId = String(req.params.clerkId);
   const clubIdDelVisitante = req.user?.clubId ?? null;
+
+  // Entre un club de prueba y cualquier otro, el perfil no existe
+  // (lib/club-prueba.ts). Se pregunta antes de armar nada.
+  const [visitante, dueno] = await Promise.all([ladoDelVisitante(req), ladoDePersona(clerkId)]);
+  if (cruzaLaFrontera(visitante, dueno)) return res.status(404).json({ error: 'Perfil no encontrado' });
 
   // Buscar como User (ADMIN, ENTRENADOR)
   const user = await prisma.user.findUnique({

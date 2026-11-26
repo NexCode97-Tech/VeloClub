@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { requireAuth } from '../auth/middleware';
 import { prisma } from '../db/client';
 import { notify, notifyClubStaff } from '../lib/notify';
+import { cruzaLaFrontera, ladoDe, ladoDelVisitante, ladoDePersona } from '../lib/club-prueba';
 
 const router = Router();
 
@@ -23,6 +24,15 @@ router.post('/toggle/:targetClerkId', requireAuth, async (req, res) => {
     await prisma.follow.delete({ where: { id: existing.id } });
     return res.json({ following: false });
   }
+
+  // Entre un club de prueba y cualquier otro no se sigue a nadie: el seguidor
+  // le llegaria como notificacion a un cliente real (lib/club-prueba.ts).
+  // Dejar de seguir si se deja siempre, por eso va despues del borrado.
+  const [visitante, destino] = await Promise.all([
+    ladoDelVisitante(req),
+    followingClerkId.startsWith('club:') ? ladoDe(followingClerkId.slice(5)) : ladoDePersona(followingClerkId),
+  ]);
+  if (cruzaLaFrontera(visitante, destino)) return res.status(404).json({ error: 'Perfil no encontrado' });
 
   await prisma.follow.create({ data: { followerClerkId, followingClerkId } });
 

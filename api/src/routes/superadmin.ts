@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { requireAuth } from '../auth/middleware';
 import { prisma } from '../db/client';
+import { CLUB_REAL } from '../lib/club-prueba';
 import { invalidarTrustedCache, diasDePrueba } from './clubs';
 import { cacheDel, cacheDelPattern } from '../lib/redis';
 import { carpetaPorDefecto, primerDeporte } from '../lib/deportes';
@@ -515,7 +516,9 @@ router.delete('/clubs/:clubId/miembros/:memberId', requireAuth, requireSuperadmi
 // ─── Suscripciones ────────────────────────────────────────────────────────────
 
 router.get('/suscripciones', requireAuth, requireSuperadmin, async (_req, res) => {
+  // Un club de prueba no tiene ni tendra plan: en esta lista solo seria ruido.
   const clubs = await prisma.club.findMany({
+    where: CLUB_REAL,
     select: {
       id: true, name: true, active: true, createdAt: true, logoUrl: true, trialEndsAt: true,
       verificationStatus: true, nameFlagged: true,

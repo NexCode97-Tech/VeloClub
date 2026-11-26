@@ -13,6 +13,21 @@
  *
  *   ENTORNO_DEMO=si npm run seed:demo
  *
+ * ── El club de prueba de producción ─────────────────────────────────────────
+ * El mismo club se puede sembrar DENTRO de producción, marcado como club de
+ * prueba (`esPrueba`), para entrar a la plataforma real con cuentas propias de
+ * administrador, entrenador y deportista. Ahí vive en una burbuja: no sale en
+ * el muro público, en el buscador, en los perfiles ni en las cifras del
+ * negocio (ver src/lib/club-prueba.ts). Se declara con otra variable, a
+ * propósito distinta de la de la demo:
+ *
+ *   CLUB_DE_PRUEBA=si DEMO_ADMIN_CLERK_ID=… DEMO_ENTRENADOR_CLERK_ID=…
+ *   DEMO_DEPORTISTA_CLERK_ID=… npm run seed:demo
+ *
+ * En ese modo no crea suscripción ni cobros (sumarían en lo recaudado), y los
+ * enlaces de inscripción salen al azar en vez de fijos, porque en producción
+ * un enlace adivinable dejaría a cualquiera inscribirse en el club inventado.
+ *
  * ── Qué borra ───────────────────────────────────────────────────────────────
  * Solo el club de demostración, buscado por su nombre exacto, y lo vuelve a
  * crear. Nunca hace una limpieza general de la base. Correrlo dos veces deja
@@ -25,6 +40,7 @@
  * mensualidades y la caja van desde hace seis meses hasta hoy.
  */
 
+import { randomBytes } from 'node:crypto';
 import { PrismaClient, AttendanceStatus, PaymentStatus } from '@prisma/client';
 
 const prisma = new PrismaClient();
@@ -99,8 +115,15 @@ function soloFecha(f: Date): Date {
 }
 
 // ─── Guarda ─────────────────────────────────────────────────────────────────
+// En producción el club se siembra como club de prueba. Ver el encabezado.
+const EN_PRODUCCION = process.env.CLUB_DE_PRUEBA === 'si';
+
 function verificarEntorno(): void {
-  if (process.env.ENTORNO_DEMO !== 'si') {
+  if (process.env.ENTORNO_DEMO === 'si' && EN_PRODUCCION) {
+    console.error('\nSe declararon los dos modos a la vez. Elige ENTORNO_DEMO=si o CLUB_DE_PRUEBA=si.\n');
+    process.exit(1);
+  }
+  if (process.env.ENTORNO_DEMO !== 'si' && !EN_PRODUCCION) {
     console.error(
       '\nEste script solo corre en el entorno de demostración.\n\n' +
       'Crea datos inventados y borra el club de demostración antes de rehacerlo.\n' +
@@ -116,7 +139,25 @@ function verificarEntorno(): void {
   // oportunidad de frenar.
   const url = process.env.DATABASE_URL ?? '';
   const destino = url.replace(/\/\/[^@]*@/, '//***@').split('?')[0];
-  console.log(`Base de datos: ${destino || '(sin DATABASE_URL)'}\n`);
+  console.log(`Base de datos: ${destino || '(sin DATABASE_URL)'}`);
+  console.log(`Modo: ${EN_PRODUCCION ? 'club de prueba dentro de producción' : 'entorno de demostración'}\n`);
+
+  // En producción, sin las tres cuentas el club queda sin nadie que entre, que
+  // es para lo único que existe.
+  if (EN_PRODUCCION) {
+    const faltan = ['DEMO_ADMIN_CLERK_ID', 'DEMO_ENTRENADOR_CLERK_ID', 'DEMO_DEPORTISTA_CLERK_ID']
+      .filter(v => !process.env[v]);
+    if (faltan.length) {
+      console.error(`Faltan las cuentas de Clerk: ${faltan.join(', ')}\n`);
+      process.exit(1);
+    }
+  }
+}
+
+// El enlace de inscripción. Fijo en la demo, para que los pantallazos no
+// cambien; al azar en producción, para que nadie lo adivine.
+function tokenDeInscripcion(fijo: string): string {
+  return EN_PRODUCCION ? 'prueba-' + randomBytes(12).toString('hex') : fijo;
 }
 
 async function main(): Promise<void> {
@@ -125,7 +166,12 @@ async function main(): Promise<void> {
   // ── Borrón del club anterior ──────────────────────────────────────────────
   // Por nombre exacto y nada más. El borrado en cascada se lleva deportes,
   // sedes, miembros, asistencia, pagos, caja, competencias y publicaciones.
-  const previo = await prisma.club.findFirst({ where: { name: CLUB }, select: { id: true } });
+  // En producción además tiene que estar marcado como de prueba: un club real
+  // que se llame igual no se toca nunca.
+  const previo = await prisma.club.findFirst({
+    where: EN_PRODUCCION ? { name: CLUB, esPrueba: true } : { name: CLUB },
+    select: { id: true },
+  });
   if (previo) {
     await prisma.club.delete({ where: { id: previo.id } });
     console.log('Club de demostración anterior, borrado.');
@@ -160,6 +206,9 @@ async function main(): Promise<void> {
       active: true,
       verificationStatus: 'PENDING',
       trialEndsAt: null,
+      // Inventado, en los dos modos. En la demo no cambia nada; en producción
+      // es lo que lo encierra en su burbuja.
+      esPrueba: true,
     },
   });
   console.log(`Club creado: ${club.name}`);
@@ -168,10 +217,10 @@ async function main(): Promise<void> {
   // Dos deportes a propósito: es lo que hay que poder mostrar, que un club
   // maneje varias disciplinas sin que se le mezclen los datos.
   const patinaje = await prisma.deporte.create({
-    data: { clubId: club.id, nombre: 'Patinaje', activo: true, inscripcionAbierta: true, inscripcionToken: 'demo-aurora-patinaje' },
+    data: { clubId: club.id, nombre: 'Patinaje', activo: true, inscripcionAbierta: true, inscripcionToken: tokenDeInscripcion('demo-aurora-patinaje') },
   });
   const natacion = await prisma.deporte.create({
-    data: { clubId: club.id, nombre: 'Natación', activo: true, inscripcionAbierta: false, inscripcionToken: 'demo-aurora-natacion' },
+    data: { clubId: club.id, nombre: 'Natación', activo: true, inscripcionAbierta: false, inscripcionToken: tokenDeInscripcion('demo-aurora-natacion') },
   });
 
   // ── Staff ─────────────────────────────────────────────────────────────────
@@ -199,8 +248,9 @@ async function main(): Promise<void> {
   await prisma.user.createMany({
     data: [
       {
-        clerkId: `demo_entrenador_1_${club.id}`,
-        email: 'entrenador.patinaje@example.com',
+        // El entrenador con cuenta de verdad, para entrar como entrenador.
+        clerkId: process.env.DEMO_ENTRENADOR_CLERK_ID ?? `demo_entrenador_1_${club.id}`,
+        email: process.env.DEMO_ENTRENADOR_EMAIL ?? 'entrenador.patinaje@example.com',
         name: 'Andrés Cardona Vélez',
         role: 'ENTRENADOR',
         profileComplete: true,
@@ -915,7 +965,12 @@ async function main(): Promise<void> {
   // Al día, para que la demostración no salga con el aviso de vencimiento
   // encima de todo, y con historial de cobros para que esa pantalla tenga qué
   // mostrar.
+  //
+  // En producción no va: un club de prueba no paga, y estos cobros sumarían en
+  // lo recaudado del superadmin. Sin suscripción y sin fin de prueba, /me lo
+  // deja entrar siempre y ningún proceso de cobro lo toca.
   const activos = todos.filter(m => m.active).length;
+  if (!EN_PRODUCCION) {
   const suscripcion = await prisma.clubSuscripcion.create({
     data: {
       clubId: club.id,
@@ -941,6 +996,7 @@ async function main(): Promise<void> {
       };
     }),
   });
+  }
 
   // ── Publicaciones ─────────────────────────────────────────────────────────
   // Van las dos clases. Las privadas son del club y salen en Club; las públicas
@@ -1064,7 +1120,9 @@ async function main(): Promise<void> {
     ],
   });
 
-  console.log('\nListo. El club de demostración quedó sembrado.');
+  console.log(EN_PRODUCCION
+    ? '\nListo. El club de prueba quedó sembrado en producción, dentro de su burbuja.'
+    : '\nListo. El club de demostración quedó sembrado.');
   console.log('Falta a mano: el logo y la portada desde Ajustes, y el sello de verificado desde Superadmin.');
 }
 

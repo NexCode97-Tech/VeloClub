@@ -46,6 +46,11 @@ model Club {
   // vencimiento NO vuelve a desactivar el club (la decision manual manda).
   // Se limpia al registrar un pago real o al desactivar manualmente.
   activadoManualmente       Boolean           @default(false)
+  // Club inventado dentro de producción, para entrar con cuentas propias y
+  // datos falsos. Vive en una burbuja: no sale en el muro público, en los
+  // perfiles, en el buscador ni en las cifras del negocio. Ver
+  // `src/lib/club-prueba.ts`. Se crea sin suscripción y sin trialEndsAt.
+  esPrueba                  Boolean           @default(false)
   trialEndsAt               DateTime?
   // El ultimo aviso de fin de prueba que se le mando, en dias antes del
   // final: 7, 3 o 0. Sin esto el recorrido diario le repetiria el mismo

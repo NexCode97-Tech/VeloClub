@@ -7,6 +7,7 @@ import { v2 as cloudinary } from 'cloudinary';
 import { cacheGet, cacheSet, cacheDel } from '../lib/redis';
 import { validarSubida } from '../lib/upload-guard';
 import { uploadLimiter, createLimiter } from '../lib/rate-limit';
+import { CLUB_REAL, cruzaLaFrontera, ladoDe, ladoDelVisitante } from '../lib/club-prueba';
 
 // ── Normalización y similitud de nombres de club (anti-suplantación) ──────────
 // Quita tildes, pasa a minúsculas y colapsa espacios/puntuación para comparar
@@ -40,7 +41,9 @@ function levenshtein(a: string, b: string): number {
 async function checkNameCollision(rawName: string): Promise<'taken' | 'similar' | 'ok'> {
   const target = normalizeName(rawName);
   if (!target) return 'ok';
-  const clubs = await prisma.club.findMany({ select: { name: true, verificationStatus: true } });
+  // Los clubes de prueba no apartan nombres: uno inventado no le puede marcar
+  // como repetido el nombre a un club real que se registra (lib/club-prueba.ts).
+  const clubs = await prisma.club.findMany({ where: CLUB_REAL, select: { name: true, verificationStatus: true } });
   let similar = false;
   for (const c of clubs) {
     const other = normalizeName(c.name);
@@ -115,7 +118,7 @@ router.get('/trusted', async (_req, res) => {
   // Todos los clubes activos, verificados y con logo propio — sin límite, para
   // que cualquier club nuevo que cumpla aparezca solo en el carrusel del landing.
   const clubs = await prisma.club.findMany({
-    where: { active: true, verificationStatus: 'VERIFIED', logoUrl: { not: null } },
+    where: { active: true, verificationStatus: 'VERIFIED', logoUrl: { not: null }, ...CLUB_REAL },
     select: { id: true, name: true, logoUrl: true },
     orderBy: { createdAt: 'asc' },
   });
@@ -379,6 +382,11 @@ router.get('/profile', requireAuth, async (req, res) => {
 router.get('/:id/public', requireAuth, clubEntero, async (req, res) => {
   if (!req.auth) return res.status(401).json({ error: 'No autenticado' });
   const id = String(req.params.id);
+
+  // Entre un club de prueba y cualquier otro, la página no existe (lib/club-prueba.ts).
+  if (cruzaLaFrontera(await ladoDelVisitante(req), await ladoDe(id))) {
+    return res.status(404).json({ error: 'Club no encontrado' });
+  }
 
   // Solo clubes verificados son visibles públicamente (anti-suplantación).
   const club = await prisma.club.findFirst({

@@ -1,5 +1,6 @@
 import * as Sentry from '@sentry/node';
 import { prisma } from '../db/client';
+import { CLUB_REAL } from './club-prueba';
 import type { DetalleComision } from './mercadopago';
 
 /**
@@ -424,11 +425,12 @@ export async function pulsoDelNegocio(): Promise<PulsoDelNegocio> {
       prisma.suscripcionPago.aggregate({ where: { estado: { in: ['PAID', 'REFUNDED'] } }, _sum: { monto: true } }),
       prisma.ingresoPlataforma.aggregate({ _sum: { monto: true } }),
       prisma.gastoPlataforma.aggregate({ _sum: { monto: true } }),
-      prisma.club.count(),
+      // Los clubes de prueba no son negocio (lib/club-prueba.ts).
+      prisma.club.count({ where: CLUB_REAL }),
       prisma.clubSuscripcion.count({ where: { pagos: { some: { estado: 'PAID' } } } }),
-      prisma.club.count({ where: { trialEndsAt: { gt: ahora } } }),
-      prisma.member.count(),
-      prisma.club.findFirst({ orderBy: { createdAt: 'asc' }, select: { createdAt: true } }),
+      prisma.club.count({ where: { trialEndsAt: { gt: ahora }, ...CLUB_REAL } }),
+      prisma.member.count({ where: { club: CLUB_REAL } }),
+      prisma.club.findFirst({ where: CLUB_REAL, orderBy: { createdAt: 'asc' }, select: { createdAt: true } }),
     ]);
 
   const recaudadoSiempre = (recaudado._sum.monto ?? 0) + (sueltos._sum.monto ?? 0);

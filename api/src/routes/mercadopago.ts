@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import * as Sentry from '@sentry/node';
 import { requireAuth } from '../auth/middleware';
+import { rechazarClubDePrueba } from '../lib/club-prueba';
 import { prisma } from '../db/client';
 import { notifyClubStaff } from '../lib/notify';
 import { calcularPrecioPlan, vigencia, inicioDelPeriodo, type TipoPlan } from '../lib/pricing';
@@ -267,7 +268,7 @@ const RECHAZO_MSG: Record<string, string> = {
   expired:                           'La transacción expiró antes de completarse. Vuelve a intentarlo.',
 };
 
-router.post('/pagar', paymentLimiter, requireAuth, async (req, res) => {
+router.post('/pagar', paymentLimiter, requireAuth, rechazarClubDePrueba, async (req, res) => {
   if (!requireAdmin(req, res)) return;
   const clubId = req.user!.clubId ?? '';
 
@@ -558,7 +559,7 @@ router.get('/breb', requireAuth, async (req, res) => {
 });
 
 // POST /mercadopago/breb — registrar la transferencia con su comprobante
-router.post('/breb', paymentLimiter, requireAuth, async (req, res) => {
+router.post('/breb', paymentLimiter, requireAuth, rechazarClubDePrueba, async (req, res) => {
   if (!requireAdmin(req, res)) return;
   const clubId = req.user!.clubId ?? '';
 
@@ -644,7 +645,7 @@ router.post('/sincronizar', requireAuth, async (req, res) => {
 });
 
 // ── POST /mercadopago/checkout — pago único ──────────────────────────────────
-router.post('/checkout', paymentLimiter, requireAuth, async (req, res) => {
+router.post('/checkout', paymentLimiter, requireAuth, rechazarClubDePrueba, async (req, res) => {
   if (!requireAdmin(req, res)) return;
   const clubId = req.user!.clubId ?? '';
 

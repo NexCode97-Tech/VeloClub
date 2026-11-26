@@ -2310,3 +2310,11 @@ lo que el módulo aprendió a registrar ingresos.
 - VELOCLUB-WEB-E, «sw.js load failed». Solo en iPhone, dentro del navegador interno de Instagram o WhatsApp (WKWebView), que no deja instalar service workers. SerwistProvider registraba sin atrapar el rechazo. Ahora el proveedor va con `register={false}` y el registro lo hace `useRegistrarServiceWorker` en `providers.tsx`, con `.catch`.
 - VELOCLUB-WEB-B, «Hydration Error» en la portada. Solo en Safari de iPhone: convierte en enlaces los teléfonos de ejemplo de la vitrina antes de que React hidrate. Se agregó `formatDetection` (teléfono, fecha, dirección y correo en falso) en el `layout.tsx` raíz, para todo el sitio.
 - Verificado con tsc, lint y build. La etiqueta `format-detection` sale en el HTML compilado. Falta el push y revisar en producción antes de marcarlos como resueltos en Sentry.
+
+## 2026-11-25 — Club de prueba dentro de producción (código)
+- Campo `Club.esPrueba` (migración `20261125120000_club_de_prueba`) y `api/src/lib/club-prueba.ts`: el club de prueba vive en una burbuja.
+- Filtrado en el muro público y sus likes y comentarios (`posts.ts`), el buscador (`search.ts`), los perfiles (`profiles.ts`), los seguidores (`follows.ts`), el carrusel, la página pública y la revisión de nombre (`clubs.ts`), el pulso (`finanzas-plataforma.ts`), el uso por club (`uso-plataforma.ts`) y la lista de suscripciones (`superadmin.ts`).
+- Cobros cerrados con `rechazarClubDePrueba` en `/pagos/cobrar`, `/pagos/activar-cupon`, `/mercadopago/pagar`, `/mercadopago/breb` y `/mercadopago/checkout`.
+- `seed-demo.ts` tiene el modo `CLUB_DE_PRUEBA=si` para sembrarlo en producción con cuentas de administrador, entrenador y deportista, sin suscripción y con enlaces al azar.
+- 13 pruebas nuevas; pasan las 216. Lint sin errores y build de la API bien.
+- Falta: push, que corra la migración en Railway, crear las tres cuentas en Clerk y sembrar el club.

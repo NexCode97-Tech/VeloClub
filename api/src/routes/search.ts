@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { requireAuth } from '../auth/middleware';
 import { prisma } from '../db/client';
+import { CLUB_REAL, ladoDelVisitante, soloSuLado } from '../lib/club-prueba';
 
 const router = Router();
 
@@ -13,10 +14,17 @@ router.get('/', requireAuth, async (req, res) => {
   const q = String(req.query.q ?? '').trim();
   if (q.length < 2) return res.json({ clubs: [], athletes: [], coaches: [] });
 
+  // La burbuja de los clubes de prueba: quien esta en uno solo se encuentra a
+  // su propio club; los demas no lo encuentran nunca (lib/club-prueba.ts).
+  const visitante = await ladoDelVisitante(req);
+
   const [clubs, members] = await Promise.all([
     prisma.club.findMany({
       // Solo clubes verificados aparecen en el buscador de comunidad
-      where: { active: true, verificationStatus: 'VERIFIED', name: { contains: q, mode: 'insensitive' } },
+      where: {
+        active: true, verificationStatus: 'VERIFIED', name: { contains: q, mode: 'insensitive' },
+        ...(visitante.esPrueba ? { id: visitante.clubId ?? '__sin_club__' } : CLUB_REAL),
+      },
       select: {
         id: true, name: true, city: true, department: true,
         logoUrl: true, verified: true, deporte: true,
@@ -28,6 +36,7 @@ router.get('/', requireAuth, async (req, res) => {
       where: {
         fullName: { contains: q, mode: 'insensitive' },
         clerkId: { not: null }, // solo personas con perfil navegable (ya iniciaron sesión)
+        ...soloSuLado(visitante),
       },
       select: {
         id: true, clerkId: true, fullName: true, pictureUrl: true, role: true,

@@ -9,6 +9,17 @@ import { validarSubida, TipoSubida } from '../lib/upload-guard';
 import { resolverNombreAutor } from '../lib/nombre-autor';
 import { uploadLimiter, comunidadLimiter, reporteLimiter } from '../lib/rate-limit';
 import { notify } from '../lib/notify';
+import { cruzaLaFrontera, ladoDe, soloSuLado } from '../lib/club-prueba';
+
+// Likes y comentarios cruzan clubes en el muro publico. Entre un club de prueba
+// y cualquier otro club no hay cruce: la publicacion se responde como si no
+// existiera (lib/club-prueba.ts). Asi un club inventado nunca le llega como
+// notificacion a un cliente real.
+async function separaLaBurbuja(clubDelVisitante: string | null, clubDeLaPublicacion: string): Promise<boolean> {
+  if (clubDelVisitante === clubDeLaPublicacion) return false;
+  const [a, b] = await Promise.all([ladoDe(clubDelVisitante), ladoDe(clubDeLaPublicacion)]);
+  return cruzaLaFrontera(a, b);
+}
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME?.trim(),
@@ -99,9 +110,11 @@ router.get('/', requireAuth, async (req, res) => {
   // clubes y porque los likes y comentarios se hacen sobre publicaciones
   // ajenas. Por eso el muro privado lleva el deporte escrito a mano: es el
   // unico de los dos que si es de la carpeta.
+  // El muro publico respeta la burbuja de los clubes de prueba: el de prueba
+  // solo ve lo suyo y los reales no lo ven a el (lib/club-prueba.ts).
   const posts = await prisma.post.findMany({
     where: scope === 'PUBLIC'
-      ? { scope: 'PUBLIC' }
+      ? { scope: 'PUBLIC', ...soloSuLado(await ladoDe(clubId)) }
       : { scope: 'PRIVATE', clubId, deporteId: req.deporteId ?? '' },
     include: POST_INCLUDE,
     orderBy: { createdAt: 'desc' },
@@ -221,6 +234,7 @@ router.get('/:id/likes', requireAuth, async (req, res) => {
   const post = await prisma.post.findUnique({ where: { id: postId } });
   if (!post) return res.status(404).json({ error: 'Publicación no encontrada' });
   if (post.scope === 'PRIVATE' && post.clubId !== req.user.clubId) return res.status(403).json({ error: 'Sin permisos' });
+  if (await separaLaBurbuja(req.user.clubId, post.clubId)) return res.status(404).json({ error: 'Publicación no encontrada' });
 
   const postLikes = await prisma.postLike.findMany({
     where: { postId },
@@ -247,6 +261,7 @@ router.post('/:id/like', requireAuth, async (req, res) => {
   const post = await prisma.post.findUnique({ where: { id: postId } });
   if (!post) return res.status(404).json({ error: 'Publicación no encontrada' });
   if (post.scope === 'PRIVATE' && post.clubId !== req.user.clubId) return res.status(403).json({ error: 'Sin permisos' });
+  if (await separaLaBurbuja(req.user.clubId, post.clubId)) return res.status(404).json({ error: 'Publicación no encontrada' });
 
   // Consultar y despues escribir deja una rendija entre las dos consultas: con
   // dos toques seguidos, las dos peticiones ven que no hay «me gusta» y las dos
@@ -270,6 +285,7 @@ router.get('/:id/comments', requireAuth, async (req, res) => {
   const post = await prisma.post.findUnique({ where: { id: postId } });
   if (!post) return res.status(404).json({ error: 'Publicación no encontrada' });
   if (post.scope === 'PRIVATE' && post.clubId !== req.user.clubId) return res.status(403).json({ error: 'Sin permisos' });
+  if (await separaLaBurbuja(req.user.clubId, post.clubId)) return res.status(404).json({ error: 'Publicación no encontrada' });
 
   const comments = await prisma.postComment.findMany({
     where: { postId },
@@ -291,6 +307,7 @@ router.post('/:id/comments', comunidadLimiter, requireAuth, async (req, res) => 
   const post = await prisma.post.findUnique({ where: { id: postId } });
   if (!post) return res.status(404).json({ error: 'Publicación no encontrada' });
   if (post.scope === 'PRIVATE' && post.clubId !== req.user.clubId) return res.status(403).json({ error: 'Sin permisos' });
+  if (await separaLaBurbuja(req.user.clubId, post.clubId)) return res.status(404).json({ error: 'Publicación no encontrada' });
 
   // Resolver a quien cuelga la respuesta. El padre tiene que ser del mismo
   // post: los ids de comentario viajan en los posts publicos, y sin esta

@@ -24,6 +24,39 @@ al revés: no que el demo vea datos ajenos, sino que los ajenos lo vean a él.
 
 ---
 
+## El club de prueba dentro de producción
+
+Desde el 25 de noviembre de 2026 el mismo Club Deportivo Aurora también se
+puede sembrar **dentro de producción**, para entrar a veloclubtech.com con
+cuentas propias de administrador, entrenador y deportista sin pasarse a la
+demo. El problema de la sección anterior se resolvió con una marca y no con
+siete sitios a mano: el club lleva `esPrueba = true` y vive en una burbuja
+(`api/src/lib/club-prueba.ts`).
+
+- **No lo ven los clientes reales.** El muro público, el buscador, los perfiles,
+  los seguidores, la página pública del club y el carrusel de la landing lo
+  dejan por fuera. Los likes, comentarios y seguidores entre los dos lados se
+  responden como si la cosa no existiera, para que nunca le llegue una
+  notificación del club inventado a un cliente.
+- **Él tampoco ve a los reales** en esos mismos sitios.
+- **No es negocio.** Sale del pulso, del uso por club y de la lista de
+  suscripciones del superadmin, y su nombre no le aparta el nombre a un club
+  real que se registre.
+- **No paga.** Se siembra sin suscripción y sin fin de prueba, así que no lo
+  toca ni la renovación ni los avisos ni la desactivación. Las rutas que
+  arrancan un pago lo rechazan con `rechazarClubDePrueba`.
+- Las pruebas de la burbuja están en `api/src/tests/club-prueba.test.ts`.
+
+Se siembra con el mismo script, en el otro modo:
+
+```bash
+CLUB_DE_PRUEBA=si DEMO_ADMIN_CLERK_ID=user_… DEMO_ENTRENADOR_CLERK_ID=user_… DEMO_DEPORTISTA_CLERK_ID=user_… npm run seed:demo
+```
+
+Sin las tres cuentas no arranca. En ese modo borra solo un club que se llame
+igual **y** esté marcado como de prueba, y los enlaces de inscripción salen al
+azar.
+
 ## Lo que ya está montado
 
 Montado el 16 de septiembre de 2026. La siembra corrió a la primera.

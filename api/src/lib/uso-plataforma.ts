@@ -1,6 +1,7 @@
 import * as Sentry from '@sentry/node';
 import { createClerkClient } from '@clerk/backend';
 import { prisma } from '../db/client';
+import { CLUB_REAL } from './club-prueba';
 
 /**
  * Qué tanto usa cada club la plataforma.
@@ -151,7 +152,10 @@ export async function usoPorClub(desde: Date, hasta: Date): Promise<ResumenDeUso
   const nTramos = Math.max(1, Math.ceil(largo / ancho));
 
   const [clubes, deportistas, asistencias, ultimas, acciones, staff] = await Promise.all([
+    // Los clubes de prueba no entran al uso: su actividad es la nuestra
+    // probando, no la de un cliente (lib/club-prueba.ts).
     prisma.club.findMany({
+      where: CLUB_REAL,
       select: { id: true, name: true, active: true },
       orderBy: { name: 'asc' },
     }),
